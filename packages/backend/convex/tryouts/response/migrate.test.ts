@@ -8,6 +8,7 @@ import {
 } from "@effect/vitest";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import type { TryoutResponseSpec } from "@repo/backend/convex/tryouts/response/model";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
@@ -17,12 +18,8 @@ import { type DefaultFunctionArgs, makeFunctionReference } from "convex/server";
 const start = makeFunctionReference<"mutation", Record<string, never>, null>(
   "tryouts/response/migrate:start"
 );
-const contract = makeFunctionReference<"mutation", Record<string, never>, null>(
-  "tryouts/response/migrate:contract"
-);
 interface MigrationPageArgs extends DefaultFunctionArgs {
   cursor: string | null;
-  mode: "contract" | "hydrate";
   phase: "placements" | "responses";
 }
 const page = makeFunctionReference<"mutation", MigrationPageArgs, null>(
@@ -84,38 +81,6 @@ describe("tryouts/response/migrate", () => {
     expect(repeated.responses).toEqual(migrated.responses);
   });
 
-  it("contracts equivalent predecessor fields idempotently", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await seedMigrationFixture(t, 1);
-
-    await t.mutation(start, {});
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-    await t.mutation(contract, {});
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-
-    const contracted = await readMigrationState(t);
-    expect(
-      contracted.placements.every(
-        ({ choiceSnapshots, responseSpec }) =>
-          choiceSnapshots === undefined && responseSpec !== undefined
-      )
-    ).toBe(true);
-    expect(
-      contracted.responses.every(
-        ({ isComplete, selectedOptionId, selection }) =>
-          isComplete !== undefined &&
-          selectedOptionId === undefined &&
-          selection !== undefined
-      )
-    ).toBe(true);
-
-    await t.mutation(contract, {});
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-    const repeated = await readMigrationState(t);
-    expect(repeated.placements).toEqual(contracted.placements);
-    expect(repeated.responses).toEqual(contracted.responses);
-  });
-
   it("rejects a placement whose predecessor and replacement differ", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedMigrationFixture(t, 1);
@@ -149,12 +114,51 @@ describe("tryouts/response/migrate", () => {
     await expect(
       t.mutation(page, {
         cursor: null,
-        mode: "contract",
         phase: "placements",
       })
     ).rejects.toMatchObject({
       data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
     });
+  });
+
+  it("rejects a historical placement that hydration would oversize", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedMigrationFixture(t, 1);
+    const placementId = await t.mutation(async (ctx) => {
+      const placements = await ctx.db
+        .query("tryoutAttemptPlacements")
+        .collect();
+      const placement = placements.find(
+        ({ choiceSnapshots, responseSpec }) =>
+          choiceSnapshots !== undefined && responseSpec === undefined
+      );
+      const [firstChoice, ...remainingChoices] =
+        placement?.choiceSnapshots ?? [];
+      if (!(placement && firstChoice)) {
+        throw new Error("Expected one historical placement fixture.");
+      }
+      await ctx.db.patch(placement._id, {
+        choiceSnapshots: [
+          {
+            ...firstChoice,
+            label: "x".repeat(TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT),
+          },
+          ...remainingChoices,
+        ],
+      });
+      return placement._id;
+    });
+
+    await expect(
+      t.mutation(page, {
+        cursor: null,
+        phase: "placements",
+      })
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
+    });
+    const unchanged = await t.run((ctx) => ctx.db.get(placementId));
+    expect(unchanged?.responseSpec).toBeUndefined();
   });
 
   it("rejects a response whose predecessor and replacement differ", async () => {
@@ -179,7 +183,6 @@ describe("tryouts/response/migrate", () => {
     await expect(
       t.mutation(page, {
         cursor: null,
-        mode: "contract",
         phase: "responses",
       })
     ).rejects.toMatchObject({
@@ -197,7 +200,6 @@ describe("tryouts/response/migrate", () => {
     await expect(
       t.mutation(page, {
         cursor: null,
-        mode: "hydrate",
         phase: "responses",
       })
     ).rejects.toMatchObject({
@@ -215,7 +217,6 @@ describe("tryouts/response/migrate", () => {
     await expect(
       t.mutation(page, {
         cursor: null,
-        mode: "hydrate",
         phase: "responses",
       })
     ).rejects.toMatchObject({
@@ -234,7 +235,6 @@ describe("tryouts/response/migrate", () => {
     await expect(
       t.mutation(page, {
         cursor: null,
-        mode: "hydrate",
         phase: "responses",
       })
     ).rejects.toMatchObject({
@@ -265,7 +265,6 @@ describe("tryouts/response/migrate", () => {
     await expect(
       t.mutation(page, {
         cursor: null,
-        mode: "hydrate",
         phase: "responses",
       })
     ).rejects.toMatchObject({
@@ -302,7 +301,6 @@ describe("tryouts/response/migrate", () => {
     await expect(
       t.mutation(page, {
         cursor: null,
-        mode: "hydrate",
         phase: "responses",
       })
     ).rejects.toMatchObject({
@@ -319,7 +317,6 @@ describe("tryouts/response/migrate", () => {
     await expect(
       t.mutation(page, {
         cursor: null,
-        mode: "hydrate",
         phase: "responses",
       })
     ).rejects.toMatchObject({

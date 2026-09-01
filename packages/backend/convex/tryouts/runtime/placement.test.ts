@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -107,5 +108,57 @@ describe("tryouts/runtime/placement", () => {
         );
       })
     ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
+  });
+
+  it("rejects a dual-written placement beyond the section read budget", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.mutation(async (ctx) => {
+        const runtime = await insertRuntime(ctx);
+        const section = runtime.source.snapshot.sections[0];
+        const placement = section?.placements[0];
+        const [firstChoice, ...remainingChoices] = placement?.row.choices ?? [];
+        if (!(section && placement && firstChoice)) {
+          throw new Error("Expected one signed placement fixture.");
+        }
+
+        await runConvexProgram(
+          createAttemptPlacements(ctx, {
+            attempt: runtime.attempt,
+            source: {
+              ...runtime.source,
+              snapshot: {
+                ...runtime.source.snapshot,
+                sections: [
+                  {
+                    ...section,
+                    placements: [
+                      {
+                        ...placement,
+                        row: {
+                          ...placement.row,
+                          choices: [
+                            {
+                              ...firstChoice,
+                              label: "x".repeat(
+                                Math.ceil(
+                                  TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT / 2
+                                )
+                              ),
+                            },
+                            ...remainingChoices,
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          })
+        );
+      })
+    ).rejects.toThrow("runtime read ceiling");
   });
 });
