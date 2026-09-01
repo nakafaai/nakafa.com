@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { assert, beforeEach, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
   readPublishedTryoutSitemap,
@@ -21,31 +21,43 @@ describe("published try-out sitemap", () => {
     runtimeQueryMock.mockReset();
   });
 
-  it("reads route inventory and one exact bounded page", async () => {
-    runtimeQueryMock
-      .mockResolvedValueOnce({ pageCount: 1, routeCount: 2 })
-      .mockResolvedValueOnce({ paths: ["try-out/alpha", "try-out/zeta"] });
+  it.effect("reads route inventory and one exact bounded page", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock
+        .mockResolvedValueOnce({ pageCount: 1, routeCount: 2 })
+        .mockResolvedValueOnce({ paths: ["try-out/alpha", "try-out/zeta"] });
 
-    await expect(
-      Effect.runPromise(readPublishedTryoutSitemapCount("en"))
-    ).resolves.toEqual({ pageCount: 1, routeCount: 2 });
-    await expect(
-      Effect.runPromise(readPublishedTryoutSitemap("en", 0))
-    ).resolves.toEqual({ paths: ["try-out/alpha", "try-out/zeta"] });
-    expect(runtimeQueryMock).toHaveBeenNthCalledWith(1, expect.anything(), {
-      appLocale: "en",
-    });
-    expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
-      appLocale: "en",
-      page: 0,
-    });
-  });
+      assert.deepStrictEqual(yield* readPublishedTryoutSitemapCount("en"), {
+        pageCount: 1,
+        routeCount: 2,
+      });
+      assert.deepStrictEqual(yield* readPublishedTryoutSitemap("en", 0), {
+        paths: ["try-out/alpha", "try-out/zeta"],
+      });
+      assert.strictEqual(runtimeQueryMock.mock.calls.length, 2);
+      assert.deepStrictEqual(runtimeQueryMock.mock.calls[0]?.[1], {
+        appLocale: "en",
+      });
+      assert.deepStrictEqual(runtimeQueryMock.mock.calls[1]?.[1], {
+        appLocale: "en",
+        page: 0,
+      });
+    })
+  );
 
-  it("preserves runtime query failures in the Effect error channel", async () => {
-    runtimeQueryMock.mockRejectedValueOnce(new Error("sitemap unavailable"));
+  it.effect(
+    "preserves runtime query failures in the Effect error channel",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockRejectedValueOnce(
+          new Error("sitemap unavailable")
+        );
 
-    await expect(
-      Effect.runPromise(readPublishedTryoutSitemapCount("id"))
-    ).rejects.toThrow("sitemap unavailable");
-  });
+        const failure = yield* readPublishedTryoutSitemapCount("id").pipe(
+          Effect.flip
+        );
+        assert.strictEqual(failure._tag, "TestRuntimeQueryError");
+        assert.strictEqual(failure.message, "Error: sitemap unavailable");
+      })
+  );
 });

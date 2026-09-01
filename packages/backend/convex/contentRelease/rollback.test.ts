@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import {
   type RoutePage,
   RoutePageSchema,
@@ -191,39 +191,46 @@ describe("contentRelease/rollback", () => {
     );
   });
 
-  it("replays an immutable predecessor publication-date projection", async () => {
-    const t = convexTest(schema, convexModules);
-    const current = JSON.parse(testProjectionJson());
-    const { dateModified: _, datePublished, ...metadata } = current.metadata;
-    const priorProjectionJson = canonicalizeContentProjection(
-      Schema.decodeUnknownSync(PredecessorProjectionSchema)({
-        ...current,
-        metadata: { ...metadata, date: datePublished },
+  it.effect(
+    "replays an immutable predecessor publication-date projection",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const current = JSON.parse(testProjectionJson());
+        const {
+          dateModified: _,
+          datePublished,
+          ...metadata
+        } = current.metadata;
+        const predecessor = yield* Schema.decodeUnknownEffect(
+          PredecessorProjectionSchema
+        )({
+          ...current,
+          metadata: { ...metadata, date: datePublished },
+        });
+        const priorProjectionJson = canonicalizeContentProjection(predecessor);
+        const activeFailure = yield* decodeProjectionJson(
+          priorProjectionJson
+        ).pipe(Effect.flip);
+        assert.strictEqual(activeFailure.code, "CONTENT_RELEASE_INTEGRITY");
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            await activateRollbackFixture(ctx, 1);
+            await insertRollbackItem(ctx, 0, true, "return {};", {
+              priorProjectionJson,
+            });
+          })
+        );
+
+        const page = yield* Effect.promise(() => readPage(t, -1, 1));
+
+        const prior = page.records[0]?.prior;
+        assert.ok(prior && "projection" in prior);
+        assert.ok("date" in prior.projection.metadata);
+        assert.strictEqual(prior.projection.metadata.date, datePublished);
+        assert.ok(!("datePublished" in prior.projection.metadata));
       })
-    );
-    const activeFailure = await Effect.runPromise(
-      decodeProjectionJson(priorProjectionJson).pipe(Effect.flip)
-    );
-    expect(activeFailure).toMatchObject({
-      code: "CONTENT_RELEASE_INTEGRITY",
-    });
-    await t.mutation(async (ctx) => {
-      await activateRollbackFixture(ctx, 1);
-      await insertRollbackItem(ctx, 0, true, "return {};", {
-        priorProjectionJson,
-      });
-    });
-
-    const page = await readPage(t, -1, 1);
-
-    expect(page.records[0]?.prior).toHaveProperty(
-      "projection.metadata.date",
-      datePublished
-    );
-    expect(page.records[0]?.prior).not.toHaveProperty(
-      "projection.metadata.datePublished"
-    );
-  });
+  );
 
   it("rejects invalid identity, unreadable state, and cursor drift", async () => {
     const invalid = convexTest(schema, convexModules);

@@ -350,4 +350,32 @@ describe("tryouts/mutations/expiry", () => {
       },
     });
   });
+
+  it("rejects an expired section whose parent attempt is missing", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const sectionAttemptId = await t.mutation(async (ctx) => {
+      const fixture = await seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        suffix: "expiry-missing-parent",
+      });
+      await ctx.db.patch(fixture.sectionAttemptId, {
+        expiresAt: EXPIRED_AT,
+      });
+      await ctx.db.delete(fixture.attemptId);
+      return fixture.sectionAttemptId;
+    });
+
+    await expect(
+      t.mutation(internal.tryouts.mutations.expiry.section, {
+        expiresAt: EXPIRED_AT,
+        sectionAttemptId,
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "TRYOUT_ATTEMPT_NOT_FOUND",
+        message: "Try-out attempt not found.",
+      },
+    });
+  });
 });

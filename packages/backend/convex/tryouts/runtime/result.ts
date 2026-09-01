@@ -1,10 +1,11 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import type {
   TryoutScoreResult,
   TryoutScoringStrategy,
   TryoutSectionScore,
 } from "@repo/backend/convex/tryouts/score";
-import { ConvexError } from "convex/values";
+import { Effect } from "effect";
 
 /** Stores the complete score snapshot produced before finalizing an attempt. */
 export interface AttemptScore extends TryoutScoreResult {
@@ -34,9 +35,9 @@ export function scoreRawAnswers({
 }
 
 /** Stores the immutable section-owned subset of one calculated score. */
-export function getSectionScoreSnapshot(
-  score: AttemptScore
-): TryoutSectionScore {
+export const getSectionScoreSnapshot = Effect.fn(
+  "tryouts.runtime.getSectionScoreSnapshot"
+)(function* (score: AttemptScore) {
   const snapshot: TryoutSectionScore = {
     publishedScore: score.publishedScore,
     rawScore: score.rawScore,
@@ -49,7 +50,7 @@ export function getSectionScoreSnapshot(
   }
 
   if (score.theta === undefined || score.thetaSE === undefined) {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_SCORE_ESTIMATE_INCOMPLETE",
       message: "Try-out score estimate is missing theta or standard error.",
     });
@@ -60,7 +61,7 @@ export function getSectionScoreSnapshot(
     theta: score.theta,
     thetaSE: score.thetaSE,
   };
-}
+});
 
 /** Converts raw correctness into a bounded public percentage score. */
 export function getRawPercentage(
