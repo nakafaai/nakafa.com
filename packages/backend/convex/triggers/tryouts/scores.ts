@@ -67,7 +67,7 @@ const captureTryoutScoreEvent = Effect.fn(
       },
     },
     timestamp: new Date(score.finalizedAt),
-  }).pipe(Effect.mapError(toTryoutScoreAnalyticsError));
+  });
 });
 
 /** Runs completed-score analytics at the registered Convex trigger boundary. */

@@ -1,12 +1,23 @@
-import type { CheckoutSessionIoError } from "@repo/backend/convex/customers/checkout/spec";
+import {
+  type CheckoutAdmission,
+  type CheckoutSessionIoError,
+  CheckoutUnavailable,
+} from "@repo/backend/convex/customers/checkout/spec";
 import type {
   CheckoutSessionResult,
   PolarCheckoutError,
 } from "@repo/backend/convex/customers/polar/spec";
+import {
+  accountUnavailableCode,
+  accountUnavailableMessage,
+} from "@repo/backend/convex/lib/helpers/auth";
 import { Effect } from "effect";
 
 interface CheckoutSessionOperations {
-  readonly admitCheckout: () => Effect.Effect<boolean, CheckoutSessionIoError>;
+  readonly admitCheckout: () => Effect.Effect<
+    CheckoutAdmission,
+    CheckoutSessionIoError
+  >;
   readonly createCheckout: () => Effect.Effect<
     CheckoutSessionResult,
     PolarCheckoutError
@@ -18,7 +29,14 @@ export const createAdmittedCheckoutSession = Effect.fn(
   "customers.checkout.createAdmittedSession"
 )(function* (operations: CheckoutSessionOperations) {
   const checkout = yield* operations.createCheckout();
-  const isActive = yield* operations.admitCheckout();
+  const admission = yield* operations.admitCheckout();
 
-  return isActive ? checkout : null;
+  if (admission.kind === "unavailable") {
+    return yield* new CheckoutUnavailable({
+      code: accountUnavailableCode,
+      message: accountUnavailableMessage,
+    });
+  }
+
+  return checkout;
 });

@@ -170,7 +170,7 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
         },
       },
       timestamp: new Date(input.now),
-    }).pipe(Effect.mapError(toTryoutStartError));
+    });
   }
 );
 

@@ -82,27 +82,33 @@ const hasProductAnalyticsConsent = Effect.fn(
 /** Queues one backend event behind deletion-aware PostHog delivery. */
 export const captureProductEvent = Effect.fn(
   "analytics.capture.captureProductEvent"
-)(function* (
-  ctx: ProductAnalyticsCtx,
-  { distinctId, event, timestamp }: ProductAnalyticsCaptureArgs
-) {
-  if (!(yield* hasProductAnalyticsConsent(ctx, distinctId))) {
-    return false;
-  }
+)(
+  function* (
+    ctx: ProductAnalyticsCtx,
+    { distinctId, event, timestamp }: ProductAnalyticsCaptureArgs
+  ) {
+    if (!(yield* hasProductAnalyticsConsent(ctx, distinctId))) {
+      return;
+    }
 
-  yield* Effect.tryPromise({
-    catch: toProductAnalyticsCaptureError,
-    try: () =>
-      ctx.scheduler.runAfter(0, deliverProductEventReference, {
-        disableGeoip: true,
-        distinctId,
-        event: event.name,
-        properties: JSON.stringify(event.properties),
-        timestamp: timestamp?.getTime(),
-      }),
-  });
-  return true;
-});
+    yield* Effect.tryPromise({
+      catch: toProductAnalyticsCaptureError,
+      try: () =>
+        ctx.scheduler.runAfter(0, deliverProductEventReference, {
+          disableGeoip: true,
+          distinctId,
+          event: event.name,
+          properties: JSON.stringify(event.properties),
+          timestamp: timestamp?.getTime(),
+        }),
+    });
+  },
+  Effect.catchTag("ProductAnalyticsCaptureError", (error) =>
+    Effect.logWarning("Optional product analytics capture failed.").pipe(
+      Effect.annotateLogs({ code: error.code })
+    )
+  )
+);
 /** Delivers only for eligible users and erases writes overlapping withdrawal. */
 export const deliverProductAnalyticsProgram = Effect.fn(
   "analytics.capture.deliverProductAnalytics"

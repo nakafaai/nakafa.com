@@ -1,32 +1,10 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import type { ProductAnalyticsEvent } from "@repo/backend/convex/analytics/events";
-import {
-  getUnknownErrorMessage,
-  runConvexProgram,
-} from "@repo/backend/convex/lib/effect";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
-import { Effect, Schema } from "effect";
-
-const contentViewEventFailedCode = "CONTENT_VIEW_EVENT_FAILED";
-
-/** Raised when the content-view analytics trigger cannot read or emit graph data. */
-class ContentViewEventError extends Schema.TaggedError<ContentViewEventError>()(
-  "ContentViewEventError",
-  {
-    code: Schema.Literal(contentViewEventFailedCode),
-    message: Schema.String,
-  }
-) {}
-
-/** Maps thrown analytics trigger failures into a typed Effect error. */
-function toContentViewEventError(error: unknown) {
-  return new ContentViewEventError({
-    code: contentViewEventFailedCode,
-    message: getUnknownErrorMessage(error),
-  });
-}
+import { Effect } from "effect";
 
 /** Converts a graph route section into the product analytics event taxonomy. */
 function getContentViewEventType(
@@ -83,7 +61,7 @@ const captureContentViewEvent = Effect.fn(
       },
     },
     timestamp: new Date(view.lastViewedAt),
-  }).pipe(Effect.mapError(toContentViewEventError));
+  });
 });
 
 /**

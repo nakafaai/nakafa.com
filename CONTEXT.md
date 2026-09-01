@@ -64,7 +64,12 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Account consent decision**: A signed-in account's Analytics consent decision for one category, with a server-owned decision time. It never inherits an anonymous browser decision.
 - **Anonymous consent decision**: A browser-local Analytics consent decision used only while no account is authenticated. Account sign-out preserves it without treating it as account state.
 - **Analytics eligibility**: The current consent and account-lifecycle proof required before a browser or backend analytics event may be admitted. Queued backend delivery rechecks eligibility around external IO.
+- **Product analytics capture**: The consent-aware admission of one optional backend product event. Failure to admit or queue it never changes the business operation that produced the event.
 - **Operational exception report**: A minimized service-reliability report with a fixed error name and message, code stack frames, and bounded technical context. It carries no account or user identifier and no raw error message, cause, request payload, or user content. It is separate from optional product analytics.
+
+## Billing
+
+- **Checkout admission**: The account-lifecycle revalidation performed after a checkout is created and before its link is released. Its result is Admitted or Unavailable; integration failures remain distinct.
 
 ## Forum Conversation
 

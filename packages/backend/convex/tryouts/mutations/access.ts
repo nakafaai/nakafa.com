@@ -31,7 +31,7 @@ export const trackPaywallView = mutation({
             properties: { source: args.source },
           },
           timestamp: new Date(now),
-        }).pipe(Effect.mapError(toTryoutStartError));
+        });
 
         return null;
       })
