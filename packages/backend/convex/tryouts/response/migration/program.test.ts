@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {

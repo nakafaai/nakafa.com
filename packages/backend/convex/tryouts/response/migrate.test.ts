@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   readResponseMigrationState,
