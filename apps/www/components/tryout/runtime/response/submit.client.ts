@@ -3,7 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -18,15 +18,18 @@ export function useTryoutResponseSubmit() {
   const saveResponse = useMutation(
     api.tryouts.mutations.responses.save
   ).withOptimisticUpdate((localStore, args) => {
+    const selectedAt = Effect.runSync(Clock.currentTimeMillis);
     updateRuntimeQueries(
       localStore,
       api.tryouts.queries.runtime.getSectionAttemptState,
-      args
+      args,
+      selectedAt
     );
     updateRuntimeQueries(
       localStore,
       api.tryouts.queries.runtime.getSetAttemptState,
-      args
+      args,
+      selectedAt
     );
   });
   const tExercises = useTranslations("Exercises");
@@ -35,12 +38,13 @@ export function useTryoutResponseSubmit() {
     question: TryoutRuntimeQuestion,
     selection: TryoutResponseSelection | null
   ) => {
-    const request = saveResponse({
-      placementId: question.placementId,
-      selection,
-    });
-    Effect.runPromise(
-      Effect.tryPromise(() => request).pipe(
+    Effect.runFork(
+      Effect.tryPromise(() =>
+        saveResponse({
+          placementId: question.placementId,
+          selection,
+        })
+      ).pipe(
         Effect.catchTag("UnknownError", ({ cause }) =>
           handleSubmitError(cause, tExercises)
         )
@@ -60,7 +64,12 @@ function updateRuntimeQueries<
   Query extends
     | typeof api.tryouts.queries.runtime.getSectionAttemptState
     | typeof api.tryouts.queries.runtime.getSetAttemptState,
->(localStore: OptimisticStore, query: Query, args: SaveResponseArgs) {
+>(
+  localStore: OptimisticStore,
+  query: Query,
+  args: SaveResponseArgs,
+  selectedAt: number
+) {
   const queries = localStore.getAllQueries(query);
   for (const cached of queries) {
     const state = cached.value;
@@ -70,7 +79,7 @@ function updateRuntimeQueries<
     const runtime = applyOptimisticTryoutResponse(
       state.runtime,
       args,
-      Date.now()
+      selectedAt
     );
     if (runtime) {
       localStore.setQuery(query, cached.args, { ...state, runtime });

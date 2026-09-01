@@ -205,165 +205,200 @@ describe("try-out response evaluation", () => {
 });
 
 describe("try-out response persistence", () => {
-  it("persists exact multiple selections and clears their counters", async () => {
-    const fixture = await seedResponseSpec("multiple", multipleChoice);
-    const authed = authenticate(fixture.t, fixture.identity);
-    vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000));
+  it.effect(
+    "persists exact multiple selections and clears their counters",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* seedResponseSpec("multiple", multipleChoice);
+        const authed = authenticate(fixture.t, fixture.identity);
+        yield* Effect.sync(() =>
+          vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000))
+        );
 
-    await authed.mutation(api.tryouts.mutations.responses.save, {
-      placementId: fixture.placementId,
-      selection: {
-        kind: "multiple-choice",
-        optionKeys: ["option-2", "option-1"],
-      },
-    });
-    expect(await readResponseState(fixture)).toMatchObject({
-      response: {
-        isComplete: true,
-        isCorrect: true,
-        selection: {
-          kind: "multiple-choice",
-          optionKeys: ["option-1", "option-2"],
-        },
-      },
-      section: { answeredCount: 1, correctAnswers: 1 },
-    });
+        yield* Effect.promise(() =>
+          authed.mutation(api.tryouts.mutations.responses.save, {
+            placementId: fixture.placementId,
+            selection: {
+              kind: "multiple-choice",
+              optionKeys: ["option-2", "option-1"],
+            },
+          })
+        );
+        expect(yield* readResponseState(fixture)).toMatchObject({
+          response: {
+            isComplete: true,
+            isCorrect: true,
+            selection: {
+              kind: "multiple-choice",
+              optionKeys: ["option-1", "option-2"],
+            },
+          },
+          section: { answeredCount: 1, correctAnswers: 1 },
+        });
 
-    vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 9000));
-    await authed.mutation(api.tryouts.mutations.responses.save, {
-      placementId: fixture.placementId,
-      selection: null,
-    });
-    expect(await readResponseState(fixture)).toMatchObject({
-      response: null,
-      section: {
-        answeredCount: 0,
-        correctAnswers: 0,
-        lastActivityAt: TRYOUT_TEST_NOW + 9000,
-      },
-    });
-  });
-
-  it("counts a category response only after every statement is assigned", async () => {
-    const fixture = await seedResponseSpec("category", category);
-    const authed = authenticate(fixture.t, fixture.identity);
-    vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000));
-
-    await authed.mutation(api.tryouts.mutations.responses.save, {
-      placementId: fixture.placementId,
-      selection: {
-        assignments: [
-          { categoryKey: "category-1", statementKey: "statement-1" },
-        ],
-        kind: "category",
-      },
-    });
-    expect(await readResponseState(fixture)).toMatchObject({
-      response: { isComplete: false, isCorrect: false },
-      section: { answeredCount: 0, correctAnswers: 0 },
-    });
-
-    await authed.mutation(api.tryouts.mutations.responses.save, {
-      placementId: fixture.placementId,
-      selection: {
-        assignments: [
-          { categoryKey: "category-2", statementKey: "statement-2" },
-          { categoryKey: "category-1", statementKey: "statement-1" },
-        ],
-        kind: "category",
-      },
-    });
-    expect(await readResponseState(fixture)).toMatchObject({
-      response: {
-        isComplete: true,
-        isCorrect: true,
-        selection: {
-          assignments: [
-            { categoryKey: "category-1", statementKey: "statement-1" },
-            { categoryKey: "category-2", statementKey: "statement-2" },
-          ],
-          kind: "category",
-        },
-      },
-      section: { answeredCount: 1, correctAnswers: 1 },
-    });
-
-    await authed.mutation(api.tryouts.mutations.responses.save, {
-      placementId: fixture.placementId,
-      selection: {
-        assignments: [
-          { categoryKey: "category-2", statementKey: "statement-1" },
-          { categoryKey: "category-2", statementKey: "statement-2" },
-        ],
-        kind: "category",
-      },
-    });
-    expect(await readResponseState(fixture)).toMatchObject({
-      response: { isComplete: true, isCorrect: false },
-      section: { answeredCount: 1, correctAnswers: 0 },
-    });
-  });
-
-  it("rejects a learner selection from another response kind", async () => {
-    const fixture = await seedResponseSpec("kind-mismatch", multipleChoice);
-    const authed = authenticate(fixture.t, fixture.identity);
-    vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000));
-
-    await expect(
-      authed.mutation(api.tryouts.mutations.responses.save, {
-        placementId: fixture.placementId,
-        selection: { kind: "single-choice", optionKey: "option-1" },
+        yield* Effect.sync(() =>
+          vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 9000))
+        );
+        yield* Effect.promise(() =>
+          authed.mutation(api.tryouts.mutations.responses.save, {
+            placementId: fixture.placementId,
+            selection: null,
+          })
+        );
+        expect(yield* readResponseState(fixture)).toMatchObject({
+          response: null,
+          section: {
+            answeredCount: 0,
+            correctAnswers: 0,
+            lastActivityAt: TRYOUT_TEST_NOW + 9000,
+          },
+        });
       })
-    ).rejects.toMatchObject({
-      data: { code: "TRYOUT_RESPONSE_KIND_MISMATCH" },
-    });
-  });
+  );
 
-  it("requires exactly one expand-contract selection argument", async () => {
-    const fixture = await seedResponseSpec("argument", multipleChoice);
-    const authed = authenticate(fixture.t, fixture.identity);
-    vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000));
+  it.effect(
+    "counts a category response only after every statement is assigned",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* seedResponseSpec("category", category);
+        const authed = authenticate(fixture.t, fixture.identity);
+        yield* Effect.sync(() =>
+          vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000))
+        );
 
-    for (const args of [
-      { placementId: fixture.placementId },
-      {
-        placementId: fixture.placementId,
-        selectedOptionId: "option-1",
-        selection: {
-          kind: "multiple-choice" as const,
-          optionKeys: ["option-1"],
-        },
-      },
-    ]) {
-      await expect(
-        authed.mutation(api.tryouts.mutations.responses.save, args)
-      ).rejects.toMatchObject({
-        data: { code: "TRYOUT_RESPONSE_ARGUMENT_INVALID" },
+        yield* Effect.promise(() =>
+          authed.mutation(api.tryouts.mutations.responses.save, {
+            placementId: fixture.placementId,
+            selection: {
+              assignments: [
+                { categoryKey: "category-1", statementKey: "statement-1" },
+              ],
+              kind: "category",
+            },
+          })
+        );
+        expect(yield* readResponseState(fixture)).toMatchObject({
+          response: { isComplete: false, isCorrect: false },
+          section: { answeredCount: 0, correctAnswers: 0 },
+        });
+
+        yield* Effect.promise(() =>
+          authed.mutation(api.tryouts.mutations.responses.save, {
+            placementId: fixture.placementId,
+            selection: {
+              assignments: [
+                { categoryKey: "category-2", statementKey: "statement-2" },
+                { categoryKey: "category-1", statementKey: "statement-1" },
+              ],
+              kind: "category",
+            },
+          })
+        );
+        expect(yield* readResponseState(fixture)).toMatchObject({
+          response: {
+            isComplete: true,
+            isCorrect: true,
+            selection: {
+              assignments: [
+                { categoryKey: "category-1", statementKey: "statement-1" },
+                { categoryKey: "category-2", statementKey: "statement-2" },
+              ],
+              kind: "category",
+            },
+          },
+          section: { answeredCount: 1, correctAnswers: 1 },
+        });
+
+        yield* Effect.promise(() =>
+          authed.mutation(api.tryouts.mutations.responses.save, {
+            placementId: fixture.placementId,
+            selection: {
+              assignments: [
+                { categoryKey: "category-2", statementKey: "statement-1" },
+                { categoryKey: "category-2", statementKey: "statement-2" },
+              ],
+              kind: "category",
+            },
+          })
+        );
+        expect(yield* readResponseState(fixture)).toMatchObject({
+          response: { isComplete: true, isCorrect: false },
+          section: { answeredCount: 1, correctAnswers: 0 },
+        });
+      })
+  );
+
+  it.effect("rejects a learner selection from another response kind", () =>
+    Effect.gen(function* () {
+      const fixture = yield* seedResponseSpec("kind-mismatch", multipleChoice);
+      const authed = authenticate(fixture.t, fixture.identity);
+      yield* Effect.sync(() =>
+        vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000))
+      );
+
+      const failure = yield* Effect.tryPromise(() =>
+        authed.mutation(api.tryouts.mutations.responses.save, {
+          placementId: fixture.placementId,
+          selection: { kind: "single-choice", optionKey: "option-1" },
+        })
+      ).pipe(Effect.flip);
+      expect(failure.cause).toMatchObject({
+        data: { code: "TRYOUT_RESPONSE_KIND_MISMATCH" },
       });
-    }
-  });
+    })
+  );
+
+  it.effect("requires exactly one expand-contract selection argument", () =>
+    Effect.gen(function* () {
+      const fixture = yield* seedResponseSpec("argument", multipleChoice);
+      const authed = authenticate(fixture.t, fixture.identity);
+      yield* Effect.sync(() =>
+        vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000))
+      );
+
+      for (const args of [
+        { placementId: fixture.placementId },
+        {
+          placementId: fixture.placementId,
+          selectedOptionId: "option-1",
+          selection: {
+            kind: "multiple-choice" as const,
+            optionKeys: ["option-1"],
+          },
+        },
+      ]) {
+        const failure = yield* Effect.tryPromise(() =>
+          authed.mutation(api.tryouts.mutations.responses.save, args)
+        ).pipe(Effect.flip);
+        expect(failure.cause).toMatchObject({
+          data: { code: "TRYOUT_RESPONSE_ARGUMENT_INVALID" },
+        });
+      }
+    })
+  );
 });
 
 /** Seeds one canonical response definition for persistence integration. */
-async function seedResponseSpec(
-  suffix: string,
-  responseSpec: TryoutResponseSpec
-) {
-  const t = createConvexTestWithBetterAuth();
-  const seeded = await t.mutation(async (ctx) => {
-    const state = await seedTryoutContentAccessState(ctx, {
-      attemptStatus: "in-progress",
-      sectionStatus: "in-progress",
-      suffix: `response-format-${suffix}`,
-    });
-    await ctx.db.patch(state.placementId, {
-      choiceSnapshots: undefined,
-      responseSpec,
-    });
-    return state;
-  });
-  return { t, ...seeded };
-}
+const seedResponseSpec = Effect.fn("test.tryout.responseEvaluation.seed")(
+  function* (suffix: string, responseSpec: TryoutResponseSpec) {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = yield* Effect.promise(() =>
+      t.mutation(async (ctx) => {
+        const state = await seedTryoutContentAccessState(ctx, {
+          attemptStatus: "in-progress",
+          sectionStatus: "in-progress",
+          suffix: `response-format-${suffix}`,
+        });
+        await ctx.db.patch(state.placementId, {
+          choiceSnapshots: undefined,
+          responseSpec,
+        });
+        return state;
+      })
+    );
+    return { t, ...seeded };
+  }
+);
 
 /** Authenticates the learner who owns one seeded attempt. */
 function authenticate(
@@ -377,16 +412,18 @@ function authenticate(
 }
 
 /** Reads the persisted learner response and its section counters. */
-async function readResponseState(
-  fixture: Awaited<ReturnType<typeof seedResponseSpec>>
-) {
-  return await fixture.t.query(async (ctx) => ({
-    response: await ctx.db
-      .query("tryoutResponses")
-      .withIndex("by_placementId", (index) =>
-        index.eq("placementId", fixture.placementId)
-      )
-      .unique(),
-    section: await ctx.db.get(fixture.sectionAttemptId),
-  }));
-}
+const readResponseState = Effect.fn("test.tryout.responseEvaluation.readState")(
+  function* (fixture: Effect.Success<ReturnType<typeof seedResponseSpec>>) {
+    return yield* Effect.promise(() =>
+      fixture.t.query(async (ctx) => ({
+        response: await ctx.db
+          .query("tryoutResponses")
+          .withIndex("by_placementId", (index) =>
+            index.eq("placementId", fixture.placementId)
+          )
+          .unique(),
+        section: await ctx.db.get(fixture.sectionAttemptId),
+      }))
+    );
+  }
+);

@@ -15,7 +15,7 @@ const SECOND_IDENTITY = {
 };
 
 describe("projectTryoutReview", () => {
-  it.live("pairs signed questions and answers in frozen runtime order", () =>
+  it.effect("pairs signed questions and answers in frozen runtime order", () =>
     Effect.gen(function* () {
       const content = createContent([SECOND_IDENTITY, FIRST_IDENTITY]);
       const questions = [
@@ -52,7 +52,7 @@ describe("projectTryoutReview", () => {
     })
   );
 
-  it.live("fails with a typed error when one signed answer is missing", () =>
+  it.effect("fails with a typed error when one signed answer is missing", () =>
     Effect.gen(function* () {
       const content = createContent([FIRST_IDENTITY]);
       const incompleteContent = {
@@ -74,14 +74,16 @@ describe("projectTryoutReview", () => {
     })
   );
 
-  it.live("fails with a typed error when one signed question is missing", () =>
-    expectProjectionError({
-      content: createContent([]),
-      questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
-    })
+  it.effect(
+    "fails with a typed error when one signed question is missing",
+    () =>
+      expectProjectionError({
+        content: createContent([]),
+        questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
+      })
   );
 
-  it.live("fails with a typed error for duplicate content identity", () =>
+  it.effect("fails with a typed error for duplicate content identity", () =>
     Effect.gen(function* () {
       const content = createContent([FIRST_IDENTITY, FIRST_IDENTITY]);
 
@@ -102,7 +104,7 @@ describe("projectTryoutReview", () => {
     })
   );
 
-  it.live("fails with a typed error for duplicate answer identity", () =>
+  it.effect("fails with a typed error for duplicate answer identity", () =>
     Effect.gen(function* () {
       const content = createContent([FIRST_IDENTITY, SECOND_IDENTITY]);
 
@@ -119,7 +121,7 @@ describe("projectTryoutReview", () => {
     })
   );
 
-  it.live("fails with a typed error for duplicate runtime order", () =>
+  it.effect("fails with a typed error for duplicate runtime order", () =>
     expectProjectionError({
       content: createContent([FIRST_IDENTITY, SECOND_IDENTITY]),
       questions: [
@@ -129,7 +131,7 @@ describe("projectTryoutReview", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "fails with a typed error for runtime and signed identity drift",
     () =>
       expectProjectionError({
@@ -138,7 +140,7 @@ describe("projectTryoutReview", () => {
       })
   );
 
-  it.live("fails with a typed error for empty signed answer content", () =>
+  it.effect("fails with a typed error for empty signed answer content", () =>
     Effect.gen(function* () {
       const content = createContent([FIRST_IDENTITY]);
 

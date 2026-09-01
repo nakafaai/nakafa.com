@@ -9,6 +9,7 @@ import { readSectionAttemptState } from "@repo/backend/convex/tryouts/runtime/se
 import { readSetAttemptState } from "@repo/backend/convex/tryouts/runtime/set/state";
 import { tryoutRuntimeStateValidator } from "@repo/backend/convex/tryouts/runtime/spec";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 /** Loads compact mutable set state through one exact owned attempt ID. */
 export const getSetAttemptState = query({
@@ -17,15 +18,16 @@ export const getSetAttemptState = query({
     responseContract: tryoutResponseContractValidator,
   },
   returns: v.union(v.null(), tryoutRuntimeStateValidator),
-  handler: async (ctx, args) => {
-    const state = await runConvexProgram(
-      readSetAttemptState(ctx, args.attemptId)
-    );
-    if (state) {
-      observeTryoutResponseContract(args.responseContract);
-    }
-    return state;
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(
+      readSetAttemptState(ctx, args.attemptId).pipe(
+        Effect.tap((state) =>
+          state
+            ? observeTryoutResponseContract(args.responseContract)
+            : Effect.void
+        )
+      )
+    ),
 });
 
 /** Loads compact mutable section state through one exact owned attempt ID. */
@@ -36,11 +38,14 @@ export const getSectionAttemptState = query({
     sectionKey: tryoutRouteKeyValidator,
   },
   returns: v.union(v.null(), tryoutRuntimeStateValidator),
-  handler: async (ctx, args) => {
-    const state = await runConvexProgram(readSectionAttemptState(ctx, args));
-    if (state) {
-      observeTryoutResponseContract(args.responseContract);
-    }
-    return state;
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(
+      readSectionAttemptState(ctx, args).pipe(
+        Effect.tap((state) =>
+          state
+            ? observeTryoutResponseContract(args.responseContract)
+            : Effect.void
+        )
+      )
+    ),
 });
