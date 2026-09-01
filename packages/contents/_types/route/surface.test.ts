@@ -1,8 +1,8 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   PUBLIC_ROUTE_SURFACES,
   readNamespaceSegment,
 } from "@repo/contents/_types/route/surface";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 afterEach(() => {
   vi.restoreAllMocks();

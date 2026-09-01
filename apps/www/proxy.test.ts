@@ -1,7 +1,7 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
 import { config, proxy } from "@/proxy";
 

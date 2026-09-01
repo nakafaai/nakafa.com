@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { toggleVariants } from "@repo/design-system/lib/toggle/variants";
-import { describe, expect, it } from "vitest";
 
 describe("toggleVariants", () => {
   it.each(["default", "outline"] as const)(

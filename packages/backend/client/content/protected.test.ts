@@ -41,7 +41,6 @@ import {
 } from "@repo/backend/test/content/proof";
 import { testPublicationScope } from "@repo/backend/test/content/release";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const endpoint = `https://example.convex.site${PROTECTED_CONTENT_RUNTIME_PATH}`;
 const target = {

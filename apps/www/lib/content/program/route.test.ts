@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   getPublishedProgramRoute,
   readPublishedProgramRoute,

@@ -19,7 +19,6 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const polarGateway = vi.hoisted(() => ({
   getCustomerById: vi.fn(),

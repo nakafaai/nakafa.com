@@ -1,7 +1,7 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
-    "types": ["@repo/internationalization/i18n.d.ts"],
+    "types": ["@repo/internationalization/i18n.d.ts", "vitest/globals"],
     "plugins": [
       {
         "name": "next"

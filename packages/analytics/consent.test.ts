@@ -1,4 +1,4 @@
-import { it as effectIt } from "@effect/vitest";
+import { describe, it as effectIt, expect, it } from "@effect/vitest";
 import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   AnonymousAnalyticsConsentRecordSchema,
@@ -11,7 +11,6 @@ import {
   resolveAnalyticsConsentState,
 } from "@repo/analytics/consent";
 import { Effect, Option, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const grantedAnonymousConsent = Schema.decodeSync(
   AnonymousAnalyticsConsentRecordSchema

@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { BookOpen02Icon, EvilIcon } from "@hugeicons/core-free-icons";
 import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
-import { describe, expect, it } from "vitest";
 import { getArticleCategoryIcon } from "@/components/articles/category";
 
 describe("article category presentation", () => {

@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import type { PublishedProjectionIdentity } from "@/lib/content/published/errors";
 import {
   decodeContentReleasePin,

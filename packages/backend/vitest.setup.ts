@@ -1,4 +1,4 @@
-import { afterEach, vi } from "vitest";
+import { afterEach } from "@effect/vitest";
 
 // @posthog/convex reads component env from process.env under convex-test.
 // Override shell env so tests never send real analytics events.

@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { scopeSources } from "@repo/ai/agents/research/search/scope";
-import { describe, expect, it } from "vitest";
 
 function makeSearchSource(title: string, url: string) {
   return {

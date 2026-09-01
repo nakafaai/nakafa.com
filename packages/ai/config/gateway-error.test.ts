@@ -1,6 +1,6 @@
 import { GatewayInternalServerError } from "@ai-sdk/gateway";
+import { describe, expect, it } from "@effect/vitest";
 import { getGatewayErrorContext } from "@repo/ai/config/gateway-error";
-import { describe, expect, it } from "vitest";
 
 describe("Gateway error context", () => {
   it("extracts Gateway metadata for production log correlation", () => {

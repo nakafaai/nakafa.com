@@ -1,7 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import { vi } from "vitest";
 import {
   type LlmsProxyRouteDecision,
   type LlmsProxyRouteRequest,

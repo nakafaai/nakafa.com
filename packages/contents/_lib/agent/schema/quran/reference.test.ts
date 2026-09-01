@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   type QuranEmbeddedSourceId,
@@ -6,7 +7,6 @@ import {
 } from "@nakafa/aksara-contracts/quran/identity";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const ARTIFACT = {
   byte_count: 1,

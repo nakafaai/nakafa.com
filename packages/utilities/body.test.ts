@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { Deferred, Effect, Fiber } from "effect";
-import { vi } from "vitest";
 
 /** Builds one bounded body read for the Effect test runtime. */
 function read(body: ReadableStream<Uint8Array> | null, maxBytes = 8) {

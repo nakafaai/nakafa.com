@@ -1,7 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { formatCurriculumPreferencePromptContext } from "@repo/ai/prompt/curriculum-preference";
 import type { AgentCurriculumPreference } from "@repo/ai/types/agents";
-import { describe, expect, it } from "vitest";
 
 const preference: AgentCurriculumPreference = {
   program: {

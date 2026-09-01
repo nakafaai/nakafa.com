@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   createNinaPrepareStep,
   type NinaPrepareStep,
 } from "@repo/ai/nina/runtime/step";
 import type { ModelMessage } from "ai";
-import { describe, expect, it } from "vitest";
 
 const emptyMessages = [] satisfies ModelMessage[];
 const instructions = "Base system prompt";

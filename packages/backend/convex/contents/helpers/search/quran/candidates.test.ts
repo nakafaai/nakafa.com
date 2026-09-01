@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { QURAN_SEARCH_RESULT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { readTextCandidates } from "@repo/backend/convex/contents/helpers/search/quran/candidates";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -6,7 +7,6 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contents/helpers/search/quran/candidates", () => {
   it("preserves prefix matching for every alternate text variant", async () => {

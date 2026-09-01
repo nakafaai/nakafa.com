@@ -1,4 +1,6 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import {
   createCircleArcLine,
   createCircleArcPoints,
@@ -8,7 +10,6 @@ import {
   createCircleRadiusPoints,
   createCircleSegmentBoundaryLines,
 } from "@repo/design-system/components/contents/mathematics/circle";
-import { describe, expect, it } from "vitest";
 
 const EXPECTED_PRECISION = 12;
 

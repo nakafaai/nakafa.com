@@ -7,7 +7,6 @@ import type { MathToolInput } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
 import type { UIMessageStreamWriter } from "ai";
 import { ConfigProvider, Effect } from "effect";
-import { vi } from "vitest";
 
 type WrittenPart = Parameters<UIMessageStreamWriter<MyUIMessage>["write"]>[0];
 const input = {

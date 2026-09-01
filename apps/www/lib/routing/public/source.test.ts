@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect } from "effect";
-import { vi } from "vitest";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
 const publishedMocks = vi.hoisted(() => ({

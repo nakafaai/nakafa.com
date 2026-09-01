@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { readTryoutSetSort } from "@/components/tryout/catalog/table/sort";
 
 describe("readTryoutSetSort", () => {

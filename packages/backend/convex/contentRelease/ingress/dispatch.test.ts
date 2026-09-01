@@ -29,7 +29,6 @@ import {
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_ID, TEST_KEY_RESOLVER } = await import(

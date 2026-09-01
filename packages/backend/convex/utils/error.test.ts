@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { getErrorMessage } from "@repo/backend/convex/utils/error";
 import { ConvexError } from "convex/values";
-import { describe, expect, it } from "vitest";
 
 describe("utils/error", () => {
   it("extracts readable messages from known thrown values", () => {

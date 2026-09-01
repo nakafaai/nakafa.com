@@ -1,10 +1,9 @@
-import { it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import {
   MdxAgentProjectionError,
   projectMdxForAgentMarkdown,
 } from "@repo/contents/_types/llms/mdx";
 import { Effect } from "effect";
-import { describe, expect } from "vitest";
 
 describe("MDX agent markdown projection", () => {
   it.effect(

@@ -2,7 +2,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
-import { vi } from "vitest";
 import {
   getLlmsMarkdownText,
   hasLlmsMarkdownSource,

@@ -1,3 +1,4 @@
+import { expect } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
@@ -11,7 +12,6 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
-import { expect } from "vitest";
 
 const ARTICLE_VIEW_PROJECTION = testArticleProjection(0);
 

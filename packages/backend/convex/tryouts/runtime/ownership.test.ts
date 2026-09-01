@@ -1,4 +1,4 @@
-import { assert, beforeEach, describe, it, vi } from "@effect/vitest";
+import { assert, beforeEach, describe, it } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { loadTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";

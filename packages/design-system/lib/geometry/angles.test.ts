@@ -1,11 +1,12 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import {
   getCos,
   getRadians,
   getSin,
   getTan,
 } from "@repo/design-system/lib/geometry/angles";
-import { describe, expect, it } from "vitest";
 
 describe("math degree helpers", () => {
   it("converts degrees to radians", () => {

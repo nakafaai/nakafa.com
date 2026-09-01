@@ -6,7 +6,6 @@ import {
   PostHogErasureRequestError,
 } from "@repo/backend/convex/analytics/erasure/action";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const config = {
   deletionApiKey: "phx_test",

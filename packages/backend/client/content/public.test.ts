@@ -32,7 +32,6 @@ import {
   testRendererJson,
 } from "@repo/backend/test/content/release";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
 const batchEndpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_BATCH_PATH}`;

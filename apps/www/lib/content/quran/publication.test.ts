@@ -9,7 +9,6 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,

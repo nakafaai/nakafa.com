@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MathGeometryInputSchema } from "@repo/math/schema/tool/geometry";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("MathGeometryInputSchema", () => {
   const decodeGeometryInput = Schema.decodeUnknownSync(MathGeometryInputSchema);

@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { readPreviewManifestForPrerender } from "@/lib/content/preview/manifest";
 import { makePendingManifest } from "@/test/content-preview";
 

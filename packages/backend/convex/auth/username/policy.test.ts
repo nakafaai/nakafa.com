@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   createGoogleUsernameFields,
   usernameOptions,
 } from "@repo/backend/convex/auth/username/policy";
-import { describe, expect, it } from "vitest";
 
 describe("auth/username policy", () => {
   it("creates a valid Better Auth username from a Google profile", () => {

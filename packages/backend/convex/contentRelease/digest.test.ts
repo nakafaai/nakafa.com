@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import { Effect } from "effect";
 

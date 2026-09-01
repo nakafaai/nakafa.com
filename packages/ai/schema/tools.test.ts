@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   formatSpecialistToolTask,
   mathToolInputSchema,
@@ -7,7 +8,6 @@ import {
 import { asSchema } from "ai";
 import dedent from "dedent";
 import { Predicate } from "effect";
-import { describe, expect, it } from "vitest";
 
 function readJsonSchema(schema: ReturnType<typeof asSchema>) {
   const jsonSchema = schema.jsonSchema;

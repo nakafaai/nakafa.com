@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { fetchSourceMarkdown } from "@repo/ai/agents/research/tools/markdown";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 describe("source markdown fetcher", () => {
   afterEach(() => {

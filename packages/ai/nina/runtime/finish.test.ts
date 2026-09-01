@@ -1,11 +1,11 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   getNinaResponseFailure,
   IncompleteNinaResponseError,
 } from "@repo/ai/nina/runtime/finish";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { describe, expect, it } from "vitest";
 
 const completeAssistantMessage = {
   id: "assistant-complete",

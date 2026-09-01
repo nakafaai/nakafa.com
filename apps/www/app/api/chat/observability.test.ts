@@ -1,9 +1,9 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
 
 const observabilityMocks = vi.hoisted(() => ({

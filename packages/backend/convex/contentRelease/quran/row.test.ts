@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -6,7 +7,6 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeQuranSurah } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/quran/row", () => {
   it("reads one exact verified row and rejects a missing identity", async () => {

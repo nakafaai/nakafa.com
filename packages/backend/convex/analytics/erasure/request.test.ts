@@ -1,5 +1,5 @@
 import workflowTest from "@convex-dev/workflow/test";
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { requestAnalyticsErasure } from "@repo/backend/convex/analytics/erasure/request";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";

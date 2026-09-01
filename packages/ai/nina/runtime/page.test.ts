@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   createPageFetchState,
   determinePageFetchNeed,
@@ -14,7 +15,6 @@ import {
   type NakafaAgentSection,
 } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
-import { describe, expect, it } from "vitest";
 
 const englishLocale = "en" satisfies Locale;
 const materialSection = "material" satisfies NakafaAgentSection;

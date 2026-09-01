@@ -5,7 +5,7 @@
       "@repo/*": ["../*"],
       "@repo/utilities/*": ["./*"]
     },
-    "types": ["node"]
+    "types": ["node", "vitest/globals"]
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "coverage"]

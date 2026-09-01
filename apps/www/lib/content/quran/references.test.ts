@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   makeQuranLocaleSources,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
-import { describe, expect, it } from "vitest";
 import { getQuranReferences } from "@/lib/content/quran/references";
 
 const expectedSourceIds = {

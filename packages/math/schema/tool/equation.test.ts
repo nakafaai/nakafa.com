@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MathEquationInputSchema } from "@repo/math/schema/tool/equation";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("MathEquationInputSchema", () => {
   const decodeEquationInput = Schema.decodeUnknownSync(MathEquationInputSchema);

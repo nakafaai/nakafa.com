@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
-import { describe, expect, it } from "vitest";
 
 describe("parseQuranSurahNumber", () => {
   it.each(["1", "114"])("accepts canonical surah segment %s", (value) => {

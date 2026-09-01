@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   readPublishedArticleBuckets,
   readPublishedArticleSitemap,

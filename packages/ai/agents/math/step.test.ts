@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { prepareMathStep } from "@repo/ai/agents/math/step";
-import { describe, expect, it } from "vitest";
 
 describe("prepareMathStep", () => {
   it("requires one deterministic math tool on the first step", () => {

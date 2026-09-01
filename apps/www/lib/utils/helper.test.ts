@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { getInitialName } from "@/lib/utils/helper";
 
 describe("getInitialName", () => {

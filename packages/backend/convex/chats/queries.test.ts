@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { ninaContextSnapshotValidator } from "@repo/backend/convex/chats/context";
 import {
@@ -5,7 +6,6 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import type { Infer } from "convex/values";
-import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 13, 12, 0, 0);
 

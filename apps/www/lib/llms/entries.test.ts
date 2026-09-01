@@ -1,4 +1,6 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
@@ -12,7 +14,6 @@ import {
   PageKeySchema,
   PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
-import { describe, expect, it } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
   buildPublishedContentLlmsEntries,

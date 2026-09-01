@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,

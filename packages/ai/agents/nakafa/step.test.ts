@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   prepareAnswerFromNakafaEvidenceStep,
   prepareReadStep,
@@ -8,7 +9,6 @@ import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
-import { describe, expect, it } from "vitest";
 
 /** Builds a typed Nakafa search item fixture from canonical route parts. */
 function contentSummary({

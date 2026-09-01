@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { CAPABILITY_TRACE_BATCH_SIZE } from "@repo/backend/convex/chats/traces/spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 5, 22, 12, 0, 0);
 

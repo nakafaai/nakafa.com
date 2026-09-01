@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import { Data, Effect } from "effect";
-import { vi } from "vitest";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),

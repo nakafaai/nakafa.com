@@ -1,8 +1,8 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   getPowerPreference,
   isMobileDevice,
 } from "@repo/design-system/lib/device";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 const IPHONE_USER_AGENT =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)";

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 describe("active locale", () => {

@@ -10,7 +10,6 @@ import {
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   getPublishedPageCatalog,
   readPublishedPageCatalog,

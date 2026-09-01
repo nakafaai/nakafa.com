@@ -24,7 +24,6 @@ import type {
 } from "ai";
 import { ToolLoopAgent, tool, toUIMessageStream } from "ai";
 import { Cause, Effect, Exit, Option } from "effect";
-import { vi } from "vitest";
 
 interface CapturedAgentSettings {
   readonly id?: string;

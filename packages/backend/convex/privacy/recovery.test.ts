@@ -1,4 +1,5 @@
 import type { WorkflowId } from "@convex-dev/workflow";
+import { describe, expect, it } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   cleanupWorkflowStorageProgram,
@@ -8,7 +9,6 @@ import { cleanupSource } from "@repo/backend/convex/privacy/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
 
 describe("privacy workflow recovery", () => {
   it("restarts a retained failed cleanup asynchronously", async () => {

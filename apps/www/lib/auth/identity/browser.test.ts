@@ -5,7 +5,6 @@ import {
   resetBrowserAnalyticsIdentity,
 } from "@repo/analytics/posthog/browser";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { authClient } from "@/lib/auth/client";
 import {
   AccountSignOutFailed,

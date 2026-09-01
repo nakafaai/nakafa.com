@@ -5,7 +5,6 @@ import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),

@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { slugify, truncateText } from "@repo/backend/convex/utils/text";
-import { describe, expect, it } from "vitest";
 
 describe("utils/text", () => {
   it("turns display text into a stable slug", () => {

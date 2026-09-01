@@ -8,7 +8,6 @@ import {
 } from "@nakafa/aksara-contracts/preview/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { Data, Effect, Option, Schema } from "effect";
-import { vi } from "vitest";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import {
   readPreviewManifestForPrerender,

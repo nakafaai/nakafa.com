@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { describe, expect, it } from "vitest";
 
 describe("JSON content type", () => {
   it.each([

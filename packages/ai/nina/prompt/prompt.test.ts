@@ -1,7 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
 import { createNinaPrompt } from "@repo/ai/nina/prompt/prompt";
-import { describe, expect, it } from "vitest";
 
 const nina = {
   learning: {

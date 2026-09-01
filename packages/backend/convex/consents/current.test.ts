@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   ANALYTICS_CONSENT_CATEGORY,
@@ -11,7 +12,6 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import type { FunctionArgs } from "convex/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 7, 20, 16, 0, 0);
 const analyticsCategory = ANALYTICS_CONSENT_CATEGORY;

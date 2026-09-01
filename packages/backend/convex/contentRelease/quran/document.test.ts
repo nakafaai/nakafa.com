@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readQuranDocument } from "@repo/backend/convex/contentRelease/quran/document";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -12,7 +13,6 @@ import {
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 /** Builds every signed row needed by one two-chunk technical document. */
 function documentRows() {

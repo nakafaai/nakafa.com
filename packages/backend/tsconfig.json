@@ -18,7 +18,7 @@
         "allowedDuplicatedPackages": ["@nakafa/aksara-contracts"]
       }
     ],
-    "types": ["node"],
+    "types": ["node", "vitest/globals"],
     "paths": {
       "@/*": ["./*"],
       "@repo/*": ["../../packages/*"]

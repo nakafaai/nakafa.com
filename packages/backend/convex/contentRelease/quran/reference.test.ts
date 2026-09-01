@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -10,7 +11,6 @@ import {
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 /** Creates two chunks and their signed metadata for one seven-verse surah. */
 function referenceRows() {

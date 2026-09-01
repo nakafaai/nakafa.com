@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { formatCodeBlockData } from "@repo/contents/_types/llms/code";
-import { describe, expect, it } from "vitest";
 
 describe("CodeBlock data formatting", () => {
   it("ignores missing and blank code", () => {

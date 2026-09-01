@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import type { ProviderMetadata } from "ai";
-import { describe, expect, it } from "vitest";
 
 const ref = readNakafaContentRefFixture(
   "en",

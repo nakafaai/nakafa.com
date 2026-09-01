@@ -7,7 +7,6 @@ import {
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
-import { vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
   readPublishedMarkdown: vi.fn(),

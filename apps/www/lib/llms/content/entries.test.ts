@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
 import type { LlmsEntry } from "@/lib/llms/entries";

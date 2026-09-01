@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const postHogMocks = vi.hoisted(() => ({
   captureExceptionImmediate: vi.fn(),

@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("NakafaAgentQuranReferenceOptionsSchema", () => {
   it("applies default Quran options", () => {

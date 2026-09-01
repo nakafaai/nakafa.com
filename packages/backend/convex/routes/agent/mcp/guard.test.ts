@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const MCP_SECRET = "technical-mcp-edge-secret";
 const ORIGINS_ENVIRONMENT = "NAKAFA_MCP_ALLOWED_ORIGINS";

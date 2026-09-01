@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { mathPrompt } from "@repo/ai/agents/math/prompt";
 import { mathOperations } from "@repo/math/schema/operations";
-import { describe, expect, it } from "vitest";
 
 const base = {
   context: {

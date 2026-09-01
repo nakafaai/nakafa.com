@@ -1,7 +1,7 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { runSidebarStateProgram } from "@repo/design-system/lib/sidebar/boundary";
 import { SidebarStatePersistenceError } from "@repo/design-system/lib/sidebar/persistence";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { captureExceptionMock } = vi.hoisted(() => ({
   captureExceptionMock: vi.fn(),

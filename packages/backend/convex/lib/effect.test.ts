@@ -7,7 +7,6 @@ import {
 } from "@repo/backend/convex/lib/effect";
 import { ConvexError } from "convex/values";
 import { Cause, Clock, Effect, Schema } from "effect";
-import { vi } from "vitest";
 
 const boundaryFailureCode = "BOUNDARY_FAILURE";
 

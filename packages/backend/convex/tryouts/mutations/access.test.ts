@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -5,7 +6,6 @@ import {
   seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 22, 9, 0, 0);
 

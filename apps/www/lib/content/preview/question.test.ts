@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import { vi } from "vitest";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 import {

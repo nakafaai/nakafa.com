@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   getOnboardingDestination,
   getOnboardingRegionDefaults,
 } from "@repo/backend/convex/onboarding/spec";
-import { describe, expect, it } from "vitest";
 
 describe("onboarding product defaults", () => {
   it.each([

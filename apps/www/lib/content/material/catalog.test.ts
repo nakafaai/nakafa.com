@@ -7,7 +7,6 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   getPublishedMaterialRoutes,
   readPublishedMaterialPage,

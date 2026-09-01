@@ -11,7 +11,6 @@ import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const MCP_SECRET = "technical-mcp-edge-secret";
 const MCP_PATH = NAKAFA_MCP_EDGE_CONTRACT.originPath;

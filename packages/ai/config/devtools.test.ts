@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { registerTelemetry } from "ai";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const originalAiSdkDevTools = process.env.AI_SDK_DEVTOOLS;
 const originalNodeEnv = process.env.NODE_ENV;

@@ -2,7 +2,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { getPathname } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 
 const mockReadSitemapRoutePage = vi.hoisted(() => vi.fn());

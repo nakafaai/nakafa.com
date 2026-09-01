@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ANALYTICS_CONSENT_CATEGORY,
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
-import { describe, expect, it } from "vitest";
 import {
   type AnalyticsConsentSessionOverrides,
   canCommitAnalyticsConsentRevocation,

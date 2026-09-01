@@ -7,7 +7,6 @@ import {
   type HttpClientRequest,
   HttpClientResponse,
 } from "effect/unstable/http";
-import { vi } from "vitest";
 
 interface TestClientInput {
   makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response;

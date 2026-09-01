@@ -1,7 +1,7 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   type CurriculumRouteModel,
   isRenderableCurriculumView,

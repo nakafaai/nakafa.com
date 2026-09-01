@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import workflowTest from "@convex-dev/workflow/test";
-import { afterEach, describe, expect, it, vi } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { cleanupProofWorkflow } from "@repo/backend/convex/contentRelease/proof/coordinator";

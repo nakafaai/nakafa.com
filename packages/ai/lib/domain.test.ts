@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { extractDomain } from "@repo/ai/lib/domain";
-import { describe, expect, it } from "vitest";
 
 describe("extractDomain", () => {
   it("extracts the registrable domain label from full and partial URLs", () => {

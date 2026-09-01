@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
 
 describe("internal content authorization", () => {

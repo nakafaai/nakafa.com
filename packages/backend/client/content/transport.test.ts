@@ -17,7 +17,6 @@ import {
 } from "@repo/backend/content/endpoint";
 import { Duration, Effect, Fiber, Logger } from "effect";
 import { TestClock } from "effect/testing";
-import { vi } from "vitest";
 
 const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
 const target = {

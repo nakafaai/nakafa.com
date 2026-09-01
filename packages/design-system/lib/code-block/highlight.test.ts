@@ -6,7 +6,6 @@ import {
 } from "@repo/design-system/lib/code-block/highlight";
 import { Effect } from "effect";
 import type { CodeOptionsMultipleThemes } from "shiki";
-import { vi } from "vitest";
 
 const { codeToHtmlMock } = vi.hoisted(() => ({
   codeToHtmlMock: vi.fn(),

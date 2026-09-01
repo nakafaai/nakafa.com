@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { generateSEOMetadata } from "@/lib/seo/generator";
 
 const { mockGetTranslations } = vi.hoisted(() => ({

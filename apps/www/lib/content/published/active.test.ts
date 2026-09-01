@@ -6,7 +6,6 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { createTestRuntimeQuery } from "@/test/runtime-query";
 

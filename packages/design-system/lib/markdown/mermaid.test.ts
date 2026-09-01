@@ -1,9 +1,10 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import {
   normalizeMermaidChart,
   readMermaidMetadata,
 } from "@repo/design-system/lib/markdown/mermaid";
-import { describe, expect, it } from "vitest";
 
 describe("readMermaidMetadata", () => {
   it("uses distinct fallback copy when metadata is missing", () => {

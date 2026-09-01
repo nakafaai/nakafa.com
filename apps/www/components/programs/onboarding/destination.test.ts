@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { getOnboardingDestinationHref } from "@/components/programs/onboarding/destination";
 
 describe("onboarding destination", () => {

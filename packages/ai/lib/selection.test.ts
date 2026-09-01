@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
-import { describe, expect, it } from "vitest";
 
 describe("selectRelevantContent", () => {
   it("returns empty content unchanged", () => {

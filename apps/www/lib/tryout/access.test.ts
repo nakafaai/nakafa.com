@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ConvexError } from "convex/values";
-import { describe, expect, it } from "vitest";
 import {
   getTryoutStartDialogKind,
   isTryoutAccessRequired,

@@ -11,7 +11,6 @@ import {
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { authClient } from "@/lib/auth/client";
 import { deleteCurrentAccount } from "@/lib/auth/deletion/delete";
 import {

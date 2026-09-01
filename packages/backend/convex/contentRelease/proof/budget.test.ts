@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import {
   PROOF_QUERY_HEADROOM,
   TRANSACTION_READ_HEADROOM,
 } from "@repo/backend/convex/contentRelease/spec";
-import { describe, expect, it } from "vitest";
 
 /** Builds measured transaction capacity for one deterministic budget test. */
 function transactionMetrics(bytesRemaining: number, queryRemaining: number) {

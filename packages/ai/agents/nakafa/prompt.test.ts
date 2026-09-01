@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
-import { describe, expect, it } from "vitest";
 
 const context = {
   currentDate: "May 15, 2026",

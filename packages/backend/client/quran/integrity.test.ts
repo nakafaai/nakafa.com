@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   hasExactQuranVerseRange,
   hasExpectedQuranNeighbors,
 } from "@repo/backend/client/quran/integrity";
-import { describe, expect, it } from "vitest";
 
 /** Builds the minimal validator-independent verse identity used by integrity checks. */
 function verses(...numbers: number[]) {

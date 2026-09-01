@@ -10,7 +10,6 @@ import {
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect, Schema } from "effect";
 import { NextRequest } from "next/server";
-import { vi } from "vitest";
 
 const nonce = PreviewRendererNonceSchema.make("n".repeat(43));
 const secret = PreviewRendererSecretSchema.make("s".repeat(43));

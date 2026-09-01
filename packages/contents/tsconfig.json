@@ -1,6 +1,7 @@
 {
   "extends": "@repo/typescript-config/library.json",
   "compilerOptions": {
+    "types": ["vitest/globals"],
     "paths": {
       "@repo/*": ["../*"],
       "@repo/contents/*": ["./*"]

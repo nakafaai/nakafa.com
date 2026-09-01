@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ABORT_DOCUMENT_HEADROOM,
   ABORT_QUERY_HEADROOM,
@@ -6,7 +7,6 @@ import {
 } from "@repo/backend/convex/contentRelease/abort/budget";
 import { TRANSACTION_READ_HEADROOM } from "@repo/backend/convex/contentRelease/spec";
 import type { TransactionMetrics } from "convex/server";
-import { describe, expect, it } from "vitest";
 
 /** Builds deterministic remaining capacity for one abort budget assertion. */
 function transactionMetrics(

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 const EXPECTED_STATIC_PARAM_LIMIT = 512;

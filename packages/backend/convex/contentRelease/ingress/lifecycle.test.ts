@@ -41,7 +41,6 @@ import {
 import { completeContentProof } from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
-import { vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(

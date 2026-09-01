@@ -3,7 +3,6 @@ import { searchWeb } from "@repo/ai/agents/research/tools/search";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const firecrawlApp = vi.hoisted(() => ({
   search: vi.fn(),

@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import { vi } from "vitest";
 import { getContentListingLlmsEntries } from "@/lib/llms/content/listing";
 
 const mockReadPublishedCategoryArticles = vi.hoisted(() => vi.fn());

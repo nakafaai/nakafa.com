@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
-import { describe, expect, it } from "vitest";
 
 describe("auth/deletion/state", () => {
   it.each([

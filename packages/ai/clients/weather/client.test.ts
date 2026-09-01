@@ -6,7 +6,6 @@ import {
   type HttpClientRequest,
   HttpClientResponse,
 } from "effect/unstable/http";
-import { vi } from "vitest";
 
 const latitude = "-6.2088";
 const longitude = "106.8456";

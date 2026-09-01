@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { describe, expect, it } from "vitest";
 import { markTranscriptRead } from "@/components/school/classes/forum/read/state";
 
 /** Create a typed post id for pure state fixtures. */

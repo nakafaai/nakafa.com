@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
@@ -37,7 +38,6 @@ import {
   TRANSACTION_READ_HEADROOM,
   TRANSACTION_READ_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/spec", () => {
   it("preserves four MiB around worst-case lifecycle pages", () => {

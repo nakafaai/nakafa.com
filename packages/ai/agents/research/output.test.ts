@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   addEligibleCitationUrl,
   addEligibleSourceUrls,
@@ -5,7 +6,6 @@ import {
   normalizeResearchCitationUrl,
 } from "@repo/ai/agents/research/citations";
 import { formatResearchOutput } from "@repo/ai/agents/research/output";
-import { describe, expect, it } from "vitest";
 
 describe("formatResearchOutput", () => {
   it("renders citations inline from structured research output", () => {

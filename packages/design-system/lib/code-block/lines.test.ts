@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { preserveShikiLineBreaks } from "@repo/design-system/lib/code-block/lines";
-import { describe, expect, it } from "vitest";
 
 describe("preserveShikiLineBreaks", () => {
   it("adds text newlines between rendered Shiki line spans", () => {

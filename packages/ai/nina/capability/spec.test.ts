@@ -1,11 +1,11 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   CapabilityTrace,
   EvidenceEnvelope,
   encodeCapabilityTrace,
 } from "@repo/ai/nina/capability/spec";
-import { describe, expect, it } from "vitest";
 
 describe("nina/capability/spec", () => {
   it("encodes schema class traces into plain operational values", () => {

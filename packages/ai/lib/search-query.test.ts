@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   getDistinctiveSearchTerms,
   hasSearchableTerms,
@@ -5,7 +6,6 @@ import {
   normalizeSearchTerm,
   planSearchQueries,
 } from "@repo/ai/lib/search-query";
-import { describe, expect, it } from "vitest";
 
 describe("search query planning", () => {
   it("keeps generated queries as executable search text", () => {

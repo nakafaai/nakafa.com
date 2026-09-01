@@ -1,6 +1,6 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Stream } from "effect";
 import type { RefObject } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BrowserViewportScroller } from "@/components/school/classes/forum/conversation/viewport/browser";
 import { viewportTestTranscript } from "@/components/school/classes/forum/conversation/viewport/fixture";
 import {

@@ -1,6 +1,7 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import { createCuboidLines } from "@repo/design-system/components/contents/mathematics/cuboid";
-import { describe, expect, it } from "vitest";
 
 function getEdgeLength({
   points,

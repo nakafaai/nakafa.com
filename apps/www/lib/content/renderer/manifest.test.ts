@@ -12,7 +12,6 @@ import {
 } from "@nakafa/aksara-contracts/renderer/manifest";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
 import { Effect, Exit, Schema } from "effect";
-import { vi } from "vitest";
 import { baseComponentLoaders } from "@/lib/content/renderer/domain/base";
 import { loadRendererDomainModule } from "@/lib/content/renderer/selection";
 

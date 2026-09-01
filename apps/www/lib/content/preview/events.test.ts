@@ -2,7 +2,6 @@
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect, Option } from "effect";
-import { vi } from "vitest";
 import {
   PreviewConfigError,
   readPreviewConfig,

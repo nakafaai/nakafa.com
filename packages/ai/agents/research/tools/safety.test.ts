@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { assertPublicResearchUrl } from "@repo/ai/agents/research/tools/safety";
 import { Effect, Result } from "effect";
-import { vi } from "vitest";
 
 const lookup = vi.hoisted(() => vi.fn());
 vi.mock("node:dns/promises", () => ({

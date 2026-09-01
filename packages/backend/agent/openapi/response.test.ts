@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   NAKAFA_OPENAPI_ETAG,
   NAKAFA_OPENAPI_JSON,
@@ -6,7 +7,6 @@ import {
   createOpenApiOptionsResponse,
   createOpenApiResponse,
 } from "@repo/backend/agent/openapi/response";
-import { describe, expect, it } from "vitest";
 
 const WEAK_ETAG_PREFIX = /^W\//;
 

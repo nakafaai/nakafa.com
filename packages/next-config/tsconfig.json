@@ -1,6 +1,7 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
+    "types": ["vitest/globals"],
     "paths": {
       "@repo/*": ["../*"],
       "@repo/next-config/*": ["./*"]

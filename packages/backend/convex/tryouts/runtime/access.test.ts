@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { readOwnedTryoutSectionContent } from "@repo/backend/convex/tryouts/runtime/access";

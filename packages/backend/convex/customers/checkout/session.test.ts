@@ -11,7 +11,6 @@ import {
   accountUnavailableMessage,
 } from "@repo/backend/convex/lib/helpers/auth";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const checkout = { url: "https://polar.sh/checkout/test" };
 describe("customers/checkout/session", () => {

@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
   ORGANIZATION,
   ORGANIZATION_ID,
   ORGANIZATION_REFERENCE,
 } from "@repo/seo/json-ld/constants";
-import { describe, expect, it } from "vitest";
 
 describe("organization JSON-LD", () => {
   it("preserves every registered locality component", () => {

@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   isReservedSchoolSlug,
   SCHOOL_ROUTE_SLUGS,
 } from "@repo/backend/convex/schools/slug";
-import { describe, expect, it } from "vitest";
 
 describe("schools/slug", () => {
   it("owns the static School route tokens", () => {

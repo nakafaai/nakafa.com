@@ -10,7 +10,6 @@ import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Duration, Effect, Fiber } from "effect";
 import { TestClock } from "effect/testing";
-import { vi } from "vitest";
 
 const clientState = vi.hoisted(() => {
   const constructorFailure: { error: Error | undefined } = {

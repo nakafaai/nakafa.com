@@ -1,7 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import { nakafaDataValidator } from "@repo/backend/convex/chats/nakafa";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { validate } from "convex-helpers/validators";
-import { describe, expect, it } from "vitest";
 
 const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
 const input = {
