@@ -2,6 +2,7 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import { getTranslations } from "next-intl/server";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb-header";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
@@ -9,7 +10,6 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
 import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
 import { readTryoutHubPage } from "@/components/tryout/catalog/server";
-import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
@@ -92,7 +92,7 @@ async function TryoutHubRoute({
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <TryoutHeader
+          <BreadcrumbHeader
             value={{
               homeLabel: tCommon("home"),
               items: [{ label: title }],

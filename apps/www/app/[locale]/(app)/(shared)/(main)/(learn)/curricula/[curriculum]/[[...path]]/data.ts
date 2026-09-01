@@ -10,23 +10,3 @@ export function readMaterialCardChapters(cards: MaterialList): ParsedHeading[] {
     label: card.title,
   }));
 }
-
-/** Groups sibling curriculum rows by their signed display labels. */
-export function groupCurriculumChildren<
-  Route extends {
-    readonly displayGroupTitle?: string;
-  },
->(routes: readonly Route[]) {
-  const groups = new Map<string, Route[]>();
-
-  for (const route of routes) {
-    const groupTitle = route.displayGroupTitle ?? "";
-    groups.set(groupTitle, [...(groups.get(groupTitle) ?? []), route]);
-  }
-
-  return [...groups.entries()].map(([title, children]) => ({
-    children,
-    key: title || "curriculum",
-    title: title || undefined,
-  }));
-}

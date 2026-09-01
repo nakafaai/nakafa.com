@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb-header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutExamPageClient } from "@/components/tryout/catalog/exam.client";
@@ -12,7 +13,6 @@ import {
   readTryoutExamPage,
 } from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
-import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Builds route-owned metadata for one localized try-out exam. */
@@ -69,7 +69,7 @@ async function TryoutExamRoute({
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
-        <TryoutHeader
+        <BreadcrumbHeader
           value={{
             action: (
               <TryoutExamSelector

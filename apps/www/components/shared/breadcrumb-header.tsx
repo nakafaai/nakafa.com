@@ -20,22 +20,22 @@ import type { ReactNode } from "react";
 
 const VISIBLE_PATH_ITEM_COUNT = 2;
 
-export type TryoutBreadcrumbItem = Readonly<{
+export type BreadcrumbHeaderItem = Readonly<{
   href?: string;
   label: string;
   menuLabel?: string;
 }>;
 
-/** Cohesive render model for the sticky try-out breadcrumb header. */
-export interface TryoutHeaderValue {
+/** Complete render value for one sticky, bounded breadcrumb header. */
+export interface BreadcrumbHeaderValue {
   action?: ReactNode;
   homeLabel: string;
-  items: readonly TryoutBreadcrumbItem[];
+  items: readonly BreadcrumbHeaderItem[];
   title: string;
 }
 
-/** Renders the sticky try-out navigation header used by chooser pages. */
-export function TryoutHeader({ value }: { value: TryoutHeaderValue }) {
+/** Renders at most Home and the two nearest path items. */
+export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
   const { action, homeLabel, items, title } = value;
   const hiddenItems = items.slice(0, -VISIBLE_PATH_ITEM_COUNT);
   const visibleItems = items.slice(-VISIBLE_PATH_ITEM_COUNT);
@@ -51,9 +51,9 @@ export function TryoutHeader({ value }: { value: TryoutHeaderValue }) {
                 render={<IntentLink href="/home">{homeLabel}</IntentLink>}
               />
             </BreadcrumbItem>
-            <TryoutHiddenBreadcrumbs items={hiddenItems} />
+            <HiddenBreadcrumbs items={hiddenItems} />
             {visibleItems.map((item, index) => (
-              <TryoutBreadcrumbSegment
+              <BreadcrumbSegment
                 isCurrent={index === visibleItems.length - 1}
                 item={item}
                 key={`${item.label}:${item.href ?? "current"}`}
@@ -68,24 +68,20 @@ export function TryoutHeader({ value }: { value: TryoutHeaderValue }) {
 }
 
 /** Renders the collapsed breadcrumb group only when the path exceeds its cap. */
-function TryoutHiddenBreadcrumbs({
+function HiddenBreadcrumbs({
   items,
 }: {
-  items: readonly TryoutBreadcrumbItem[];
+  items: readonly BreadcrumbHeaderItem[];
 }) {
   if (items.length === 0) {
     return null;
   }
 
-  return <TryoutBreadcrumbMenu items={items} />;
+  return <BreadcrumbMenu items={items} />;
 }
 
 /** Renders collapsed middle breadcrumb items inside an ellipsis menu. */
-function TryoutBreadcrumbMenu({
-  items,
-}: {
-  items: readonly TryoutBreadcrumbItem[];
-}) {
+function BreadcrumbMenu({ items }: { items: readonly BreadcrumbHeaderItem[] }) {
   return (
     <>
       <BreadcrumbSeparator />
@@ -106,7 +102,7 @@ function TryoutBreadcrumbMenu({
             <DropdownMenuGroup>
               <DropdownMenuLabel>Menu</DropdownMenuLabel>
               {items.map((item) => (
-                <TryoutBreadcrumbMenuItem
+                <BreadcrumbMenuItem
                   item={item}
                   key={`${item.label}:${item.href ?? "current"}`}
                 />
@@ -120,7 +116,7 @@ function TryoutBreadcrumbMenu({
 }
 
 /** Renders one linked or inert collapsed breadcrumb menu item. */
-function TryoutBreadcrumbMenuItem({ item }: { item: TryoutBreadcrumbItem }) {
+function BreadcrumbMenuItem({ item }: { item: BreadcrumbHeaderItem }) {
   const label = item.menuLabel ?? item.label;
 
   if (!item.href) {
@@ -134,13 +130,13 @@ function TryoutBreadcrumbMenuItem({ item }: { item: TryoutBreadcrumbItem }) {
   );
 }
 
-/** Render one visible current or linked try-out breadcrumb segment. */
-function TryoutBreadcrumbSegment({
+/** Renders one visible current or linked breadcrumb segment. */
+function BreadcrumbSegment({
   isCurrent,
   item,
 }: {
   isCurrent: boolean;
-  item: TryoutBreadcrumbItem;
+  item: BreadcrumbHeaderItem;
 }) {
   if (isCurrent || !item.href) {
     return (
