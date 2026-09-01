@@ -8,7 +8,7 @@ import {
 } from "@/lib/tryout/artwork";
 
 describe("try-out artwork", () => {
-  it.live.each(["en", "id", "de"] as const)(
+  it.effect.each(["en", "id", "de"] as const)(
     "uses English-default exam artwork for %s",
     (appLocale) =>
       Effect.gen(function* () {
@@ -30,7 +30,7 @@ describe("try-out artwork", () => {
       })
   );
 
-  it.live("keeps stable source keys separate from localized slugs", () =>
+  it.effect("keeps stable source keys separate from localized slugs", () =>
     Effect.gen(function* () {
       expect(
         yield* resolveTryoutExamArtwork({
@@ -46,7 +46,7 @@ describe("try-out artwork", () => {
     })
   );
 
-  it.live("keeps unknown exams on generated social artwork", () =>
+  it.effect("keeps unknown exams on generated social artwork", () =>
     Effect.gen(function* () {
       expect(
         yield* resolveTryoutExamArtwork({
@@ -109,7 +109,7 @@ describe("try-out artwork", () => {
     ).toBeUndefined();
   });
 
-  it.live.each([
+  it.effect.each([
     { appLocale: "en", countryKey: "Indonesia", examKey: "snbt" },
     { appLocale: "en", countryKey: "indonesia", examKey: "TKA" },
   ])(
@@ -130,7 +130,7 @@ describe("try-out artwork", () => {
       })
   );
 
-  it.live.each([
+  it.effect.each([
     "try-out",
     "try-out/indonesien",
     "try-out/indonesien/snbt/2027",

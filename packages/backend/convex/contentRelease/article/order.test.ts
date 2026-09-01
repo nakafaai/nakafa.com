@@ -5,6 +5,7 @@ import {
   PROJECTION_PAGE_LIMIT,
   PUBLICATION_SCAN_LIMIT,
 } from "@repo/backend/convex/contentRelease/paging";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -13,7 +14,6 @@ import {
 } from "@repo/backend/test/content/runtime";
 import { ARTICLE_PUBLICATION_CURSOR_PREFIX } from "@repo/contents/_types/publication";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
 
 describe("contentRelease/article/order", () => {
   it("returns one full page without a false split boundary", async () => {
@@ -26,7 +26,7 @@ describe("contentRelease/article/order", () => {
     );
 
     const first = await t.query(async (ctx) => {
-      const result = await Effect.runPromise(
+      const result = await runConvexProgram(
         paginateArticles(ctx, "blue", "en", "politics", {
           cursor: null,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
@@ -50,7 +50,7 @@ describe("contentRelease/article/order", () => {
     );
 
     const second = await t.query(async (ctx) => {
-      const result = await Effect.runPromise(
+      const result = await runConvexProgram(
         paginateArticles(ctx, "blue", "en", "politics", {
           cursor: first.result.continueCursor,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
@@ -80,7 +80,7 @@ describe("contentRelease/article/order", () => {
     await t.mutation((ctx) => insertRuntimeArticles(ctx, 3));
 
     const rowBound = await t.query(async (ctx) => {
-      const result = await Effect.runPromise(
+      const result = await runConvexProgram(
         paginateArticles(ctx, "blue", "en", "politics", {
           cursor: null,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
@@ -102,7 +102,7 @@ describe("contentRelease/article/order", () => {
     expect(rowBound.metrics.documentsRead.used).toBeLessThanOrEqual(4);
 
     const byteBound = await t.query(async (ctx) => {
-      const result = await Effect.runPromise(
+      const result = await runConvexProgram(
         paginateArticles(ctx, "blue", "en", "politics", {
           cursor: null,
           maximumBytesRead: 1,

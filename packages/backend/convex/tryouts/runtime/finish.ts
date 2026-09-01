@@ -91,6 +91,7 @@ const createExpiredSectionAttempt = Effect.fn(
     source: args.scoreSource,
     totalQuestions: args.snapshot.questionCount,
   });
+  const sectionScore = yield* getSectionScoreSnapshot(score);
 
   yield* tryRuntimePromise(() =>
     ctx.db.insert("tryoutSectionAttempts", {
@@ -103,7 +104,7 @@ const createExpiredSectionAttempt = Effect.fn(
       sectionIdentity: args.snapshot.sectionIdentity,
       sectionKey: args.snapshot.sectionKey,
       sectionOrder: args.snapshot.sectionOrder,
-      score: getSectionScoreSnapshot(score),
+      score: sectionScore,
       startedAt: args.attempt.expiresAt,
       status: "expired",
       totalQuestions: args.snapshot.questionCount,
@@ -360,10 +361,11 @@ const readSectionFinalization = Effect.fn(
     source: args.scoreSource,
     totalQuestions: args.section.totalQuestions,
   });
+  const sectionScore = yield* getSectionScoreSnapshot(score);
 
   return {
     ...summary,
-    score: getSectionScoreSnapshot(score),
+    score: sectionScore,
   };
 });
 

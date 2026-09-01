@@ -2,14 +2,17 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { tryRuntimePromise } from "@repo/backend/convex/tryouts/runtime/error";
+import {
+  TryoutRuntimeError,
+  tryRuntimePromise,
+} from "@repo/backend/convex/tryouts/runtime/error";
 import {
   expireAttempt,
   finalizeSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { makeFunctionReference } from "convex/server";
-import { ConvexError, v } from "convex/values";
-import { Effect } from "effect";
+import { v } from "convex/values";
+import { Clock, Effect } from "effect";
 
 const EXPIRY_SWEEP_LIMIT = 50;
 const EXPIRY_SWEEP_ATTEMPT_BYTES = 6 * 1024 * 1024;
@@ -39,6 +42,64 @@ const sectionReconciliationReference = makeFunctionReference<
   null
 >("tryouts/mutations/expiry:reconcileSections");
 
+/** Expires one still-matching attempt through the typed runtime program. */
+const expireScheduledAttempt = Effect.fn("tryouts.expiry.attempt")(function* (
+  ctx: MutationCtx,
+  args: { attemptId: Id<"tryoutAttempts">; expiresAt: number }
+) {
+  const attemptRow = yield* tryRuntimePromise(() => ctx.db.get(args.attemptId));
+  const now = yield* Clock.currentTimeMillis;
+
+  if (!shouldExpire(attemptRow, args.expiresAt, now)) {
+    return null;
+  }
+
+  yield* expireAttempt(ctx, { attempt: attemptRow, now });
+  return null;
+});
+
+/** Expires one still-matching section through the typed runtime program. */
+const expireScheduledSection = Effect.fn("tryouts.expiry.section")(function* (
+  ctx: MutationCtx,
+  args: { expiresAt: number; sectionAttemptId: Id<"tryoutSectionAttempts"> }
+) {
+  const sectionRow = yield* tryRuntimePromise(() =>
+    ctx.db.get(args.sectionAttemptId)
+  );
+  const now = yield* Clock.currentTimeMillis;
+
+  if (!shouldExpire(sectionRow, args.expiresAt, now)) {
+    return null;
+  }
+
+  const attemptRow = yield* tryRuntimePromise(() =>
+    ctx.db.get(sectionRow.tryoutAttemptId)
+  );
+  if (!attemptRow) {
+    return yield* new TryoutRuntimeError({
+      code: "TRYOUT_ATTEMPT_NOT_FOUND",
+      message: "Try-out attempt not found.",
+    });
+  }
+
+  if (attemptRow.status !== "in-progress") {
+    return null;
+  }
+
+  if (now >= attemptRow.expiresAt) {
+    yield* expireAttempt(ctx, { attempt: attemptRow, now });
+    return null;
+  }
+
+  yield* finalizeSectionAttempt(ctx, {
+    attempt: attemptRow,
+    endReason: "time-expired",
+    now,
+    section: sectionRow,
+  });
+  return null;
+});
+
 /** Expires one overall try-out attempt at its scheduled deadline. */
 export const attempt = internalMutation({
   args: {
@@ -46,17 +107,7 @@ export const attempt = internalMutation({
     expiresAt: v.number(),
   },
   returns: v.null(),
-  handler: async (ctx, args) => {
-    const attemptRow = await ctx.db.get(args.attemptId);
-    const now = Date.now();
-
-    if (!shouldExpire(attemptRow, args.expiresAt, now)) {
-      return null;
-    }
-
-    await runConvexProgram(expireAttempt(ctx, { attempt: attemptRow, now }));
-    return null;
-  },
+  handler: (ctx, args) => runConvexProgram(expireScheduledAttempt(ctx, args)),
 });
 
 /** Expires one section attempt at its scheduled section deadline. */
@@ -66,53 +117,7 @@ export const section = internalMutation({
     sectionAttemptId: v.id("tryoutSectionAttempts"),
   },
   returns: v.null(),
-  handler: async (ctx, args) => {
-    const sectionRow = await ctx.db.get(args.sectionAttemptId);
-    const now = Date.now();
-
-    if (!shouldExpire(sectionRow, args.expiresAt, now)) {
-      return null;
-    }
-
-    const attemptRow = await ctx.db.get(sectionRow.tryoutAttemptId);
-
-    if (!attemptRow) {
-      throw new ConvexError({
-        code: "TRYOUT_ATTEMPT_NOT_FOUND",
-        message: "Try-out attempt not found.",
-      });
-    }
-
-    if (attemptRow.status !== "in-progress") {
-      return null;
-    }
-
-    if (now >= attemptRow.expiresAt) {
-      await runConvexProgram(expireAttempt(ctx, { attempt: attemptRow, now }));
-      return null;
-    }
-
-    await runConvexProgram(
-      finalizeSectionAttempt(ctx, {
-        attempt: attemptRow,
-        endReason: "time-expired",
-        now,
-        section: sectionRow,
-      })
-    );
-
-    return null;
-  },
-});
-
-/** Reconciles missed try-out expiry jobs in bounded pages. */
-export const sweep = internalMutation({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    await runConvexProgram(startExpiryReconciliation(ctx, Date.now()));
-    return null;
-  },
+  handler: (ctx, args) => runConvexProgram(expireScheduledSection(ctx, args)),
 });
 
 /** Starts one sequential, byte-bounded missed-expiry reconciliation. */
@@ -124,14 +129,27 @@ const startExpiryReconciliation = Effect.fn(
   );
 });
 
+/** Starts one current-time expiry sweep through the typed runtime program. */
+const startExpirySweep = Effect.fn("tryouts.expiry.sweep")(function* (
+  ctx: MutationCtx
+) {
+  yield* startExpiryReconciliation(ctx, yield* Clock.currentTimeMillis);
+  return null;
+});
+
+/** Reconciles missed try-out expiry jobs in bounded pages. */
+export const sweep = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: (ctx) => runConvexProgram(startExpirySweep(ctx)),
+});
+
 /** Queues missed attempt expiries before handing off section reconciliation. */
 export const reconcileAttempts = internalMutation({
   args: { before: v.number() },
   returns: v.null(),
-  handler: async (ctx, args) => {
-    await runConvexProgram(reconcileMissedAttemptExpiries(ctx, args.before));
-    return null;
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(reconcileMissedAttemptExpiries(ctx, args.before)),
 });
 
 const reconcileMissedAttemptExpiries = Effect.fn(
@@ -171,6 +189,7 @@ const reconcileMissedAttemptExpiries = Effect.fn(
       scheduledAttemptIds,
     })
   );
+  return null;
 });
 
 /** Queues section expiries whose parent was not handled by the attempt phase. */
@@ -180,15 +199,13 @@ export const reconcileSections = internalMutation({
     scheduledAttemptIds: v.array(v.id("tryoutAttempts")),
   },
   returns: v.null(),
-  handler: async (ctx, args) => {
-    await runConvexProgram(
+  handler: (ctx, args) =>
+    runConvexProgram(
       reconcileMissedSectionExpiries(ctx, {
         before: args.before,
         scheduledAttemptIds: args.scheduledAttemptIds,
       })
-    );
-    return null;
-  },
+    ),
 });
 
 const reconcileMissedSectionExpiries = Effect.fn(
@@ -227,6 +244,7 @@ const reconcileMissedSectionExpiries = Effect.fn(
       ),
     { concurrency: "unbounded", discard: true }
   );
+  return null;
 });
 
 /** Returns true when a scheduled expiry job still matches an active row. */

@@ -1,7 +1,6 @@
 // @vitest-environment node
 
-import { beforeAll, describe, expect, it } from "@effect/vitest";
-import type { CheckResult } from "afdocs";
+import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { runAfdocs } from "@/checks/afdocs";
 
@@ -31,29 +30,26 @@ function formatFailureDetails(details: Record<string, unknown> | undefined) {
 }
 
 describe("AFDocs", () => {
-  let results: readonly {
-    readonly check: { readonly id: string };
-    readonly result: CheckResult | undefined;
-  }[];
+  it.live(
+    "runs the configured site contract",
+    () =>
+      Effect.gen(function* () {
+        const results = yield* runAfdocs();
+        assert.ok(results.length > 0);
 
-  beforeAll(async () => {
-    results = await Effect.runPromise(runAfdocs());
-  }, TIMEOUT_MS);
-
-  it("runs the configured site contract", () => {
-    expect(results.length).toBeGreaterThan(0);
-
-    for (const { check, result } of results) {
-      expect(result, `${check.id} did not run`).toBeDefined();
-      if (!result || result.status === "pass") {
-        continue;
-      }
-      if (result.status === "skip" && ALLOWED_SKIPS.has(result.id)) {
-        continue;
-      }
-      expect.fail(
-        `[${result.status}] ${result.message}${formatFailureDetails(result.details)}`
-      );
-    }
-  });
+        for (const { check, result } of results) {
+          assert.ok(result, `${check.id} did not run`);
+          if (!result || result.status === "pass") {
+            continue;
+          }
+          if (result.status === "skip" && ALLOWED_SKIPS.has(result.id)) {
+            continue;
+          }
+          assert.fail(
+            `[${result.status}] ${result.message}${formatFailureDetails(result.details)}`
+          );
+        }
+      }),
+    TIMEOUT_MS
+  );
 });

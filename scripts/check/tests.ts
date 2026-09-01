@@ -1,5 +1,6 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path, Schema } from "effect";
+import { effectTestViolations } from "#scripts/check/effect";
 import { writeError, writeOutput } from "#scripts/output";
 
 const TEST_FILE_PATTERN = /\.test\.tsx?$/u;
@@ -86,11 +87,16 @@ const hasColocatedOwner = Effect.fn("RepositoryPolicy.hasColocatedOwner")(
 /** Validates test ownership and final repository test layout. */
 export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   function* (root: string) {
+    const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const files = yield* Effect.forEach(["apps", "packages"], (directory) =>
       readFiles(path.join(root, directory))
     ).pipe(Effect.map((groups) => groups.flat()));
+    const scriptFiles = yield* readFiles(path.join(root, "scripts"));
     const tests = files.filter((file) => TEST_FILE_PATTERN.test(file));
+    const effectTests = [...tests, ...scriptFiles].filter((file) =>
+      TEST_FILE_PATTERN.test(file)
+    );
     const ownership = yield* Effect.forEach(tests, (test) =>
       hasColocatedOwner(test).pipe(
         Effect.map((hasOwner) => ({ hasOwner, test }))
@@ -105,11 +111,24 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     const nestedTestFiles = files.filter((file) =>
       file.split(path.sep).some((segment) => TEST_DIRECTORIES.has(segment))
     );
+    const effectViolations = (yield* Effect.forEach(effectTests, (test) =>
+      fileSystem.readFileString(test).pipe(
+        Effect.map(effectTestViolations.bind(undefined, test)),
+        Effect.mapError(
+          (cause) =>
+            new TestPolicyReadError({
+              cause,
+              message: `Unable to read ${test}.`,
+            })
+        )
+      )
+    )).flat();
 
     if (
       orphanTests.length === 0 &&
       tsxTestFiles.length === 0 &&
-      nestedTestFiles.length === 0
+      nestedTestFiles.length === 0 &&
+      effectViolations.length === 0
     ) {
       yield* writeOutput("Test ownership checks passed.\n");
       return 0;
@@ -135,6 +154,9 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
           .map((file) => `  - ${path.relative(root, file)}`)
           .join("\n")}\n`
       );
+    }
+    if (effectViolations.length > 0) {
+      yield* writeError(`${effectViolations.join("\n")}\n`);
     }
 
     return 1;
