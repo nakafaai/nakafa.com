@@ -12,7 +12,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
@@ -32,13 +31,12 @@ export interface BreadcrumbHeaderValue {
   homeLabel: string;
   items: readonly BreadcrumbHeaderItem[];
   menuLabel: string;
-  openMenuLabel: string;
   title: string;
 }
 
 /** Renders at most Home and the two nearest path items. */
 export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
-  const { action, homeLabel, items, menuLabel, openMenuLabel, title } = value;
+  const { action, homeLabel, items, menuLabel, title } = value;
   const hiddenItems = items.slice(0, -VISIBLE_PATH_ITEM_COUNT);
   const visibleItems = items.slice(-VISIBLE_PATH_ITEM_COUNT);
 
@@ -53,11 +51,7 @@ export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
                 render={<IntentLink href="/home">{homeLabel}</IntentLink>}
               />
             </BreadcrumbItem>
-            <HiddenBreadcrumbs
-              items={hiddenItems}
-              menuLabel={menuLabel}
-              openMenuLabel={openMenuLabel}
-            />
+            <HiddenBreadcrumbs items={hiddenItems} menuLabel={menuLabel} />
             {visibleItems.map((item, index) => (
               <BreadcrumbSegment
                 isCurrent={index === visibleItems.length - 1}
@@ -77,34 +71,24 @@ export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
 function HiddenBreadcrumbs({
   items,
   menuLabel,
-  openMenuLabel,
 }: {
   items: readonly BreadcrumbHeaderItem[];
   menuLabel: string;
-  openMenuLabel: string;
 }) {
   if (items.length === 0) {
     return null;
   }
 
-  return (
-    <BreadcrumbMenu
-      items={items}
-      menuLabel={menuLabel}
-      openMenuLabel={openMenuLabel}
-    />
-  );
+  return <BreadcrumbMenu items={items} menuLabel={menuLabel} />;
 }
 
 /** Renders collapsed middle breadcrumb items inside an ellipsis menu. */
 function BreadcrumbMenu({
   items,
   menuLabel,
-  openMenuLabel,
 }: {
   items: readonly BreadcrumbHeaderItem[];
   menuLabel: string;
-  openMenuLabel: string;
 }) {
   return (
     <>
@@ -114,7 +98,7 @@ function BreadcrumbMenu({
           <DropdownMenuTrigger
             render={
               <button
-                aria-label={openMenuLabel}
+                aria-label={menuLabel}
                 className="flex size-6 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 type="button"
               >
@@ -124,7 +108,6 @@ function BreadcrumbMenu({
           />
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuGroup>
-              <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
               {items.map((item) => (
                 <BreadcrumbMenuItem
                   item={item}

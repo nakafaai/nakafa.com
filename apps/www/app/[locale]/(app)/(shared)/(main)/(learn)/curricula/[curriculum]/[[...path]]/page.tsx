@@ -171,7 +171,6 @@ async function CurriculumNestedRoute({
           homeLabel={homeLabel}
           locale={locale}
           menuLabel={tCommon("navigate")}
-          openMenuLabel={tCommon("navigate")}
           subjectLabel={subjectLabel}
         />
       ) : (

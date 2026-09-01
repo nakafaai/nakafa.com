@@ -88,7 +88,6 @@ async function TryoutExamRoute({
               { label: page.exam.title },
             ],
             menuLabel: tCommon("navigate"),
-            openMenuLabel: tCommon("navigate"),
             title: page.exam.title,
           }}
         />
