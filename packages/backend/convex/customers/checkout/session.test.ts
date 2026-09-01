@@ -1,9 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import { createAdmittedCheckoutSession } from "@repo/backend/convex/customers/checkout/session";
 import {
+  type CheckoutAdmission,
   CheckoutSessionIoError,
+  CheckoutUnavailable,
   checkoutSessionIoErrorCode,
 } from "@repo/backend/convex/customers/checkout/spec";
+import {
+  accountUnavailableCode,
+  accountUnavailableMessage,
+} from "@repo/backend/convex/lib/helpers/auth";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
@@ -12,10 +18,18 @@ describe("customers/checkout/session", () => {
   it.effect("withholds a checkout created before deletion starts", () =>
     Effect.gen(function* () {
       const createCheckout = vi.fn(() => Effect.succeed(checkout));
-      const admitCheckout = vi.fn(() => Effect.succeed(false));
-      expect(
-        yield* createAdmittedCheckoutSession({ admitCheckout, createCheckout })
-      ).toBeNull();
+      const admitCheckout = vi.fn(() =>
+        Effect.succeed({ kind: "unavailable" } satisfies CheckoutAdmission)
+      );
+      const failure = yield* createAdmittedCheckoutSession({
+        admitCheckout,
+        createCheckout,
+      }).pipe(Effect.flip);
+      expect(failure).toBeInstanceOf(CheckoutUnavailable);
+      expect(failure).toMatchObject({
+        code: accountUnavailableCode,
+        message: accountUnavailableMessage,
+      });
       expect(createCheckout).toHaveBeenCalledOnce();
       expect(admitCheckout).toHaveBeenCalledOnce();
       expect(createCheckout.mock.invocationCallOrder[0]).toBeLessThan(
@@ -26,7 +40,9 @@ describe("customers/checkout/session", () => {
   it.effect("returns a checkout admitted after Polar IO", () =>
     Effect.gen(function* () {
       const createCheckout = vi.fn(() => Effect.succeed(checkout));
-      const admitCheckout = vi.fn(() => Effect.succeed(true));
+      const admitCheckout = vi.fn(() =>
+        Effect.succeed({ kind: "admitted" } satisfies CheckoutAdmission)
+      );
       expect(
         yield* createAdmittedCheckoutSession({ admitCheckout, createCheckout })
       ).toEqual(checkout);

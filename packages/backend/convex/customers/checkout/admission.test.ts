@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { ProductAnalyticsCaptureError } from "@repo/backend/convex/analytics/capture";
 import type { ProductAnalyticsEvent } from "@repo/backend/convex/analytics/events";
 import { admitCheckoutProgram } from "@repo/backend/convex/customers/checkout/impl";
 import { CheckoutSessionIoError } from "@repo/backend/convex/customers/checkout/spec";
@@ -50,7 +49,7 @@ describe("customers/checkout/admission", () => {
         t.query((ctx) => ctx.db.system.query("_scheduled_functions").collect())
       );
 
-      expect(admitted).toBe(true);
+      expect(admitted).toEqual({ kind: "admitted" });
       expect(scheduledJobs).toEqual([]);
     })
   );
@@ -87,7 +86,7 @@ describe("customers/checkout/admission", () => {
         t.query((ctx) => ctx.db.system.query("_scheduled_functions").collect())
       );
 
-      expect(admitted).toBe(true);
+      expect(admitted).toEqual({ kind: "admitted" });
       expect(scheduledJobs).toEqual([
         expect.objectContaining({
           args: [
@@ -127,30 +126,13 @@ describe("customers/checkout/admission", () => {
         })
       );
 
-      expect(admitted).toBe(false);
-    })
-  );
-
-  it.effect("does not block checkout when optional analytics fails", () =>
-    Effect.gen(function* () {
-      const admitted = yield* admitCheckoutProgram({
-        captureEvent: () =>
-          Effect.fail(
-            new ProductAnalyticsCaptureError({
-              code: "PRODUCT_ANALYTICS_CAPTURE_FAILED",
-              message: "PostHog unavailable",
-            })
-          ),
-        loadUser: () => Promise.resolve({}),
-      });
-
-      expect(admitted).toBe(true);
+      expect(admitted).toEqual({ kind: "unavailable" });
     })
   );
 
   it.effect("preserves account revalidation failures", () =>
     Effect.gen(function* () {
-      const captureEvent = vi.fn(() => Effect.succeed(true));
+      const captureEvent = vi.fn(() => Effect.void);
       const failure = yield* admitCheckoutProgram({
         captureEvent,
         loadUser: () => Promise.reject(new Error("Convex unavailable")),

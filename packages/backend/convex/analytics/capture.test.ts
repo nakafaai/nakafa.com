@@ -73,6 +73,44 @@ describe("analytics/capture", () => {
       })
   );
 
+  it.effect("contains optional analytics scheduling failures", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const scheduledJobs = yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const userId = await ctx.db.insert("users", {
+            authId: "analytics-scheduling-failure-auth",
+            credits: 10,
+            creditsResetAt: NOW,
+            email: "analytics-scheduling-failure@example.com",
+            name: "Analytics Scheduling Failure",
+            plan: "free",
+          });
+          await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
+          const runAfter = vi
+            .spyOn(ctx.scheduler, "runAfter")
+            .mockRejectedValueOnce(new Error("scheduler unavailable"));
+
+          await runConvexProgram(
+            captureProductEvent(ctx, {
+              distinctId: userId,
+              event: {
+                name: "content viewed",
+                properties: contentViewProperties,
+              },
+              timestamp: new Date(NOW),
+            })
+          );
+
+          expect(runAfter).toHaveBeenCalledOnce();
+          return await ctx.db.system.query("_scheduled_functions").collect();
+        })
+      );
+
+      expect(scheduledJobs).toEqual([]);
+    })
+  );
+
   it.effect("drops a queued event when deletion starts before delivery", () =>
     Effect.gen(function* () {
       const capture = vi.fn(() => Promise.resolve(undefined));

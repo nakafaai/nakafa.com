@@ -165,7 +165,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
           },
         },
         timestamp,
-      }).pipe(Effect.mapError(toSubscriptionPlanSyncIoError));
+      });
 
       yield* captureProductEvent(ctx, {
         distinctId: user._id,
@@ -177,7 +177,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
           },
         },
         timestamp,
-      }).pipe(Effect.mapError(toSubscriptionPlanSyncIoError));
+      });
 
       return;
     }
@@ -230,7 +230,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
           },
         },
         timestamp,
-      }).pipe(Effect.mapError(toSubscriptionPlanSyncIoError));
+      });
     }
 
     yield* captureProductEvent(ctx, {
@@ -243,7 +243,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
         },
       },
       timestamp,
-    }).pipe(Effect.mapError(toSubscriptionPlanSyncIoError));
+    });
   }
 );
 

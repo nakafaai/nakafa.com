@@ -3,16 +3,14 @@ import { validateCheckoutRequest } from "@repo/backend/convex/customers/checkout
 import { checkoutLocaleValidator } from "@repo/backend/convex/customers/checkout/localization";
 import { createAdmittedCheckoutSession } from "@repo/backend/convex/customers/checkout/session";
 import {
+  type CheckoutAdmission,
   type CheckoutAdmissionArgs,
   checkoutSessionIoError,
 } from "@repo/backend/convex/customers/checkout/spec";
 import { polarGateway } from "@repo/backend/convex/customers/polar/live";
 import { requireCustomer } from "@repo/backend/convex/customers/sync/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import {
-  accountUnavailableError,
-  requireAuthForAction,
-} from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
 import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -20,7 +18,7 @@ import { Effect } from "effect";
 const admitCheckoutSessionReference = makeFunctionReference<
   "mutation",
   CheckoutAdmissionArgs,
-  boolean
+  CheckoutAdmission
 >("customers/checkout/admission:admitCheckoutSession");
 
 /**
@@ -42,7 +40,7 @@ export const generateCheckoutLink = action({
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthForAction(ctx);
     const appUserId = appUser._id;
-    const checkout = await runConvexProgram(
+    return runConvexProgram(
       Effect.gen(function* () {
         const request = yield* validateCheckoutRequest(args);
         const requestMetadata = yield* Effect.tryPromise({
@@ -80,15 +78,9 @@ export const generateCheckoutLink = action({
             }),
         });
 
-        return checkout;
+        return { url: checkout.url };
       })
     );
-
-    if (!checkout) {
-      throw accountUnavailableError();
-    }
-
-    return { url: checkout.url };
   },
 });
 

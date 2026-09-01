@@ -28,11 +28,14 @@ interface AuthContext {
   readonly authUser: AuthUser;
 }
 
+export const accountUnavailableCode = "UNAUTHORIZED";
+export const accountUnavailableMessage = "User not found.";
+
 /** Keeps every rejected account state on the same public auth contract. */
 export function accountUnavailableError() {
   return new ConvexError({
-    code: "UNAUTHORIZED",
-    message: "User not found.",
+    code: accountUnavailableCode,
+    message: accountUnavailableMessage,
   });
 }
 

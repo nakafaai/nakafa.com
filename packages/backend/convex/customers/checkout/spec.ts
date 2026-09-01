@@ -5,6 +5,7 @@ import {
   type ConvexTaggedError,
   getUnknownErrorMessage,
 } from "@repo/backend/convex/lib/effect";
+import { accountUnavailableCode } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { type Infer, v } from "convex/values";
 import { Schema } from "effect";
@@ -31,9 +32,27 @@ export const checkoutAdmissionArgsValidator = v.object({
   userId: vv.id("users"),
 });
 
+export const checkoutAdmissionValidator = v.union(
+  v.object({ kind: v.literal("admitted") }),
+  v.object({ kind: v.literal("unavailable") })
+);
+
 export type CheckoutAdmissionArgs = Infer<
   typeof checkoutAdmissionArgsValidator
 >;
+export type CheckoutAdmission = Infer<typeof checkoutAdmissionValidator>;
+
+/** Raised when account revalidation withholds a newly created checkout. */
+export class CheckoutUnavailable
+  extends Schema.TaggedError<CheckoutUnavailable>()("CheckoutUnavailable", {
+    code: Schema.Literal(accountUnavailableCode),
+    message: Schema.String,
+  })
+  implements ConvexTaggedError
+{
+  declare readonly code: typeof accountUnavailableCode;
+  declare readonly message: string;
+}
 
 export class CheckoutSessionIoError
   extends Schema.TaggedError<CheckoutSessionIoError>()(

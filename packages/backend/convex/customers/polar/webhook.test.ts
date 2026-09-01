@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
@@ -15,6 +16,7 @@ import {
 import schema from "@repo/backend/convex/schema";
 import type { SubscriptionRecord } from "@repo/backend/convex/subscriptions/records/spec";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { products } from "@repo/backend/convex/utils/polar/products";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -67,6 +69,36 @@ function readWebhookState(ctx: QueryCtx) {
   });
 }
 
+/** Loads the exact revenue state granted by one accepted Pro subscription. */
+function readPurchaseCompletionState(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  polarCustomerId: string,
+  subscriptionId: string
+) {
+  return Effect.all({
+    creditTransactions: Effect.promise(() =>
+      ctx.db
+        .query("creditTransactions")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .take(10)
+    ),
+    customer: Effect.promise(() =>
+      ctx.db
+        .query("customers")
+        .withIndex("by_polarId", (q) => q.eq("id", polarCustomerId))
+        .unique()
+    ),
+    subscription: Effect.promise(() =>
+      ctx.db
+        .query("subscriptions")
+        .withIndex("by_subscriptionId", (q) => q.eq("id", subscriptionId))
+        .unique()
+    ),
+    user: Effect.promise(() => ctx.db.get("users", userId)),
+  });
+}
+
 /** Records one durable Polar customer deletion marker. */
 function insertCustomerTombstone(ctx: MutationCtx, polarCustomerId: string) {
   return Effect.promise(() =>
@@ -106,6 +138,79 @@ beforeEach(() => {
 });
 
 describe("customers/polar/webhook", () => {
+  it.effect("grants the complete Pro entitlement from one Polar webhook", () =>
+    Effect.gen(function* () {
+      const t = yield* createWebhookTestConvex();
+      const userId = yield* Effect.promise(() =>
+        t.mutation((ctx) => runConvexProgram(insertUser(ctx, "purchase")))
+      );
+      const subscription = {
+        ...buildSubscription("polar-purchase", "purchase"),
+        productId: products.pro.id,
+        status: "active",
+      } satisfies SubscriptionRecord;
+      polarGateway.getCustomerById.mockReturnValue(
+        Effect.succeed({
+          email: "purchase@example.com",
+          externalId: "auth-purchase",
+          id: subscription.customerId,
+          metadata: { userId },
+          name: "User purchase",
+        })
+      );
+
+      const disposition = yield* Effect.promise(() =>
+        t.action((ctx) =>
+          runConvexActionProgram(
+            upsertPolarSubscriptionWebhook(ctx, subscription, "create")
+          )
+        )
+      );
+      const state = yield* Effect.promise(() =>
+        t.query((ctx) =>
+          runConvexProgram(
+            readPurchaseCompletionState(
+              ctx,
+              userId,
+              subscription.customerId,
+              subscription.id
+            )
+          )
+        )
+      );
+
+      expect(disposition).toBe("stored");
+      expect(state.customer).toMatchObject({
+        id: subscription.customerId,
+        userId,
+      });
+      expect(state.subscription).toMatchObject({
+        customerId: subscription.customerId,
+        id: subscription.id,
+        productId: products.pro.id,
+        status: "active",
+      });
+      expect(state.user).toMatchObject({
+        credits: 3000,
+        plan: "pro",
+      });
+      expect(state.creditTransactions).toEqual([
+        expect.objectContaining({
+          amount: 3000,
+          balanceAfter: 3000,
+          metadata: {
+            "new-plan": "pro",
+            "previous-plan": "free",
+            reason: "plan-upgrade",
+            "subscription-id": subscription.id,
+          },
+          type: "purchase",
+          userId,
+        }),
+      ]);
+    })
+  );
+
   it.effect(
     "resolves the current Polar customer before storing a subscription",
     () =>

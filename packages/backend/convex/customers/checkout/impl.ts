@@ -1,7 +1,7 @@
-import type { ProductAnalyticsCaptureError } from "@repo/backend/convex/analytics/capture";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import { getPolarCheckoutLocale } from "@repo/backend/convex/customers/checkout/localization";
 import {
+  type CheckoutAdmission,
   type CheckoutRequest,
   type CheckoutRequestInput,
   checkoutSessionIoError,
@@ -15,10 +15,7 @@ import { Effect } from "effect";
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];
 
 interface CheckoutAdmissionOperations {
-  readonly captureEvent: () => Effect.Effect<
-    boolean,
-    ProductAnalyticsCaptureError
-  >;
+  readonly captureEvent: () => Effect.Effect<void>;
   readonly loadUser: () => Promise<CheckoutAdmissionUser | null>;
 }
 
@@ -67,18 +64,10 @@ export const admitCheckoutProgram = Effect.fn(
   });
 
   if (!user || isAccountDeletionPending(user)) {
-    return false;
+    return { kind: "unavailable" } satisfies CheckoutAdmission;
   }
 
-  yield* operations
-    .captureEvent()
-    .pipe(
-      Effect.catchTag("ProductAnalyticsCaptureError", (error) =>
-        Effect.logWarning("Checkout analytics capture failed.").pipe(
-          Effect.annotateLogs({ code: error.code, reason: error.message })
-        )
-      )
-    );
+  yield* operations.captureEvent();
 
-  return true;
+  return { kind: "admitted" } satisfies CheckoutAdmission;
 });
