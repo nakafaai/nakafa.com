@@ -9,7 +9,6 @@ import {
   TRYOUT_QUERY_LEASE_MS,
   type TryoutDataIntent,
 } from "@/components/tryout/navigation/intent";
-import { tryoutRuntimeQueryContract } from "@/components/tryout/runtime/types";
 
 /**
  * Prewarms the exact authenticated Convex queries mounted by a set or section.
@@ -45,7 +44,6 @@ export function useTryoutDataIntent() {
       convex.prewarmQuery({
         args: {
           attemptId: intent.attemptId,
-          ...tryoutRuntimeQueryContract,
         },
         extendSubscriptionFor: TRYOUT_QUERY_LEASE_MS,
         query: api.tryouts.queries.runtime.getSetAttemptState,
@@ -54,7 +52,6 @@ export function useTryoutDataIntent() {
       convex.prewarmQuery({
         args: {
           attemptId: intent.attemptId,
-          ...tryoutRuntimeQueryContract,
           sectionKey: intent.sectionKey,
         },
         extendSubscriptionFor: TRYOUT_QUERY_LEASE_MS,

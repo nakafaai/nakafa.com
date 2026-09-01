@@ -1,11 +1,6 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-/** Declares that the mounted client consumes canonical response selections. */
-export const tryoutRuntimeQueryContract = {
-  responseContract: "structured" as const,
-};
-
 /** Cohesive reactive state returned for one try-out section route. */
 export type TryoutSectionState = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.runtime.getSectionAttemptState>

@@ -10,46 +10,23 @@ import {
   tryoutSetAttemptPageRequestValidator,
   tryoutSetAttemptPageResultValidator,
 } from "@repo/backend/convex/tryouts/attemptPage/spec";
-import {
-  observeTryoutResponseContract,
-  tryoutResponseContractValidator,
-} from "@repo/backend/convex/tryouts/response/contract";
-import { Effect } from "effect";
 
 /** Fetches one current set overlay or exact frozen set page. */
 export const getSet = query({
   args: {
     request: tryoutSetAttemptPageRequestValidator,
-    responseContract: tryoutResponseContractValidator,
   },
   returns: tryoutSetAttemptPageResultValidator,
   handler: (ctx, args) =>
-    runConvexProgram(
-      readSetAttemptPage(ctx, args.request).pipe(
-        Effect.tap((result) =>
-          result
-            ? observeTryoutResponseContract(args.responseContract)
-            : Effect.void
-        )
-      )
-    ),
+    runConvexProgram(readSetAttemptPage(ctx, args.request)),
 });
 
 /** Fetches one current section redirect or exact frozen section page. */
 export const getSection = query({
   args: {
     request: tryoutSectionAttemptPageRequestValidator,
-    responseContract: tryoutResponseContractValidator,
   },
   returns: tryoutSectionAttemptPageResultValidator,
   handler: (ctx, args) =>
-    runConvexProgram(
-      readSectionAttemptPage(ctx, args.request).pipe(
-        Effect.tap((result) =>
-          result
-            ? observeTryoutResponseContract(args.responseContract)
-            : Effect.void
-        )
-      )
-    ),
+    runConvexProgram(readSectionAttemptPage(ctx, args.request)),
 });

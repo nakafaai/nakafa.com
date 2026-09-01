@@ -82,7 +82,6 @@ describe("tryouts/queries/runtime", () => {
         const exact = yield* Effect.promise(() =>
           authed.query(api.tryouts.queries.runtime.getSetAttemptState, {
             attemptId: started.attemptId,
-            responseContract: "structured",
           })
         );
         expect(exact).toMatchObject({
@@ -143,16 +142,9 @@ describe("tryouts/queries/runtime", () => {
           attemptId: started.attemptId,
           sectionKey: TRYOUT_START_SECTION,
         };
-        const structuredArgs = {
-          ...args,
-          responseContract: "structured" as const,
-        };
 
         const initial = yield* Effect.promise(() =>
-          authed.query(
-            api.tryouts.queries.runtime.getSectionAttemptState,
-            structuredArgs
-          )
+          authed.query(api.tryouts.queries.runtime.getSectionAttemptState, args)
         );
         expect(initial).toMatchObject({
           attempt: {
@@ -161,21 +153,12 @@ describe("tryouts/queries/runtime", () => {
           },
           runtime: { questions: expect.any(Array) },
         });
-        expect(
-          yield* Effect.promise(() =>
-            authed.query(
-              api.tryouts.queries.runtime.getSectionAttemptState,
-              args
-            )
-          )
-        ).toEqual(initial);
-
         yield* Effect.promise(() => t.mutation(activateReusedTryoutStartPath));
         expect(
           yield* Effect.promise(() =>
             authed.query(
               api.tryouts.queries.runtime.getSectionAttemptState,
-              structuredArgs
+              args
             )
           )
         ).toEqual(initial);

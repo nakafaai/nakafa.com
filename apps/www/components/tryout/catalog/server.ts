@@ -10,7 +10,6 @@ import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
-import { tryoutRuntimeQueryContract } from "@/components/tryout/runtime/types";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 
@@ -162,7 +161,7 @@ export const readTryoutSetAttemptPage = Effect.fn(
     try: () =>
       fetchQuery(
         api.tryouts.queries.attemptPage.getSet,
-        { request, ...tryoutRuntimeQueryContract },
+        { request },
         { token }
       ),
   });
@@ -196,7 +195,7 @@ export const readTryoutSectionAttemptPage = Effect.fn(
     try: () =>
       fetchQuery(
         api.tryouts.queries.attemptPage.getSection,
-        { request, ...tryoutRuntimeQueryContract },
+        { request },
         { token }
       ),
   });

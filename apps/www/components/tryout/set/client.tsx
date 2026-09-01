@@ -17,7 +17,6 @@ import {
   getTryoutRuntimeState,
   isTryoutStateLive,
 } from "@/components/tryout/runtime/state";
-import { tryoutRuntimeQueryContract } from "@/components/tryout/runtime/types";
 import { TryoutSetEntry } from "@/components/tryout/set/entry";
 import type {
   LoadedRuntime,
@@ -112,12 +111,7 @@ function LiveTryoutSetPage({
   const [terminalState, setTerminalState] = useState<SetState | undefined>();
   const liveState = useQuery(
     api.tryouts.queries.runtime.getSetAttemptState,
-    terminalState === undefined
-      ? {
-          attemptId: binding.attemptId,
-          ...tryoutRuntimeQueryContract,
-        }
-      : "skip"
+    terminalState === undefined ? { attemptId: binding.attemptId } : "skip"
   );
 
   if (
