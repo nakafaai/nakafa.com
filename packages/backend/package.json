@@ -34,6 +34,7 @@
     "@effect/platform-node": "catalog:",
     "@modelcontextprotocol/server": "2.0.0",
     "@nakafa/aksara-contracts": "0.33.0",
+    "@nakafa/aksara-predecessor": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.26.0/nakafa-aksara-contracts-0.26.0.tgz",
     "@polar-sh/sdk": "^0.49.0",
     "@posthog/convex": "2.1.1",
     "@repo/ai": "workspace:*",

@@ -5,6 +5,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import {
   type CoordinateFrame,
+  type CoordinatePoint,
   createAxisGeometry,
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
@@ -23,6 +24,7 @@ export function Axes({
   showZAxis = true,
   labelSize = "diagram",
   labelOffset = 0.5,
+  origin,
   ...props
 }: {
   frame?: CoordinateFrame;
@@ -31,10 +33,16 @@ export function Axes({
   showZAxis?: boolean;
   labelSize?: ThreeFontSize | number;
   labelOffset?: number;
+  origin?: CoordinatePoint;
 } & ComponentProps<"group">) {
   const geometry = useMemo(
-    () => createAxisGeometry(frame ?? createSymmetricFrame(size), labelOffset),
-    [frame, labelOffset, size]
+    () =>
+      createAxisGeometry(
+        frame ?? createSymmetricFrame(size),
+        labelOffset,
+        origin
+      ),
+    [frame, labelOffset, origin, size]
   );
   const vectors = useMemo(
     () => ({

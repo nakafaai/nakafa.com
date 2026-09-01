@@ -13,6 +13,7 @@ import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import {
   type CoordinateFrame,
+  type CoordinatePoint,
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
 import { CoordinateGrid } from "@repo/design-system/components/three/grid";
@@ -63,6 +64,8 @@ interface Props {
   frame?: CoordinateFrame;
   /** Size of the grid */
   gridSize?: number;
+  /** Projected world coordinate of the mathematical origin. */
+  origin?: CoordinatePoint;
   /** Show the coordinate axes */
   showAxes?: boolean;
   /** Show the gizmo helper for orientation */
@@ -96,6 +99,7 @@ export function CoordinateSystem({
   cameraProjection,
   cameraTarget,
   frame,
+  origin,
   children,
   className,
 }: Props) {
@@ -221,6 +225,7 @@ export function CoordinateSystem({
           {/* Coordinate System */}
           <Axes
             frame={axisFrame}
+            origin={origin}
             showLabels={showLabels}
             showZAxis={showZAxis}
             size={size}
@@ -228,13 +233,18 @@ export function CoordinateSystem({
           />
 
           {/* Origin */}
-          <Origin color={originColor} visible={showOrigin} />
+          <Origin
+            color={originColor}
+            position={origin ? [origin.x, origin.y, origin.z] : undefined}
+            visible={showOrigin}
+          />
 
           {/* Grid */}
           {showGrid ? (
             <CoordinateGrid
               cellColor={gridColors.secondary}
               frame={gridFrame}
+              origin={origin}
               sectionColor={gridColors.main}
             />
           ) : null}

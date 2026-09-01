@@ -20,6 +20,7 @@ import {
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
+import { decodeStoredSnapshotRow } from "@repo/backend/convex/contentRelease/tryout/row";
 import { Effect, Schema } from "effect";
 
 const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
@@ -240,16 +241,32 @@ export const decodeSnapshotJson = Effect.fn(
     )
   )
 );
-/** Strictly decodes one immutable structured-family row. */
-export const decodeSnapshotRowJson = Effect.fn(
-  "contentRelease.decodeSnapshotRowJson"
+/** Strictly decodes one current row at publication ingress. */
+export const decodeCurrentSnapshotRowJson = Effect.fn(
+  "contentRelease.decodeCurrentSnapshotRowJson"
 )((source: string) =>
-  parseStoredJson(source, "Content snapshot row").pipe(
+  parseStoredJson(source, "Current content snapshot row").pipe(
     Effect.flatMap(
       Schema.decodeUnknownEffect(ContentSnapshotRowSchema, {
         onExcessProperty: "error",
       })
     ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "New content snapshot row does not satisfy the current contract.",
+        })
+    )
+  )
+);
+/** Strictly decodes one immutable structured-family row from storage. */
+export const decodeSnapshotRowJson = Effect.fn(
+  "contentRelease.decodeSnapshotRowJson"
+)((source: string) =>
+  parseStoredJson(source, "Content snapshot row").pipe(
+    Effect.flatMap(decodeStoredSnapshotRow),
     Effect.mapError(
       () =>
         new ReleaseError({

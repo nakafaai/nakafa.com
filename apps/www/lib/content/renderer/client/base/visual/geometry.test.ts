@@ -10,6 +10,10 @@ import type {
   SpaceObject,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
+import {
+  projectSpaceFrame,
+  resolveSpaceProjection,
+} from "@/lib/content/renderer/client/base/visual/transform";
 
 function plane(first: PlaneObject, ...rest: PlaneObject[]): PlaneVisual {
   return {
@@ -228,6 +232,40 @@ describe("MathVisual geometry", () => {
           start.z !== end.z,
         ].filter(Boolean);
         expect(changedAxes).toHaveLength(1);
+      }
+    }
+  });
+
+  it("clips every cuboid edge to the authored frame before projection", () => {
+    const visual = space({
+      appearance: "primary",
+      center: { x: 5, y: 0, z: 0 },
+      id: "clipped-box",
+      kind: "cuboid",
+      size: { height: 4, length: 4, width: 4 },
+    });
+    const projection = resolveSpaceProjection(visual);
+    const frame = projectSpaceFrame(visual.frame, projection);
+    const geometry = resolveSpaceGeometry(visual, projection);
+
+    expect(geometry.markers).toEqual([]);
+    expect(geometry.paths).toHaveLength(8);
+    expect(geometry.paths.map(({ id }) => id)).not.toEqual(
+      expect.arrayContaining([
+        "clipped-box:edge:2",
+        "clipped-box:edge:6",
+        "clipped-box:edge:10",
+        "clipped-box:edge:11",
+      ])
+    );
+    for (const { points } of geometry.paths) {
+      for (const point of points) {
+        expect(point.x).toBeGreaterThanOrEqual(frame.x.min);
+        expect(point.x).toBeLessThanOrEqual(frame.x.max);
+        expect(point.y).toBeGreaterThanOrEqual(frame.y.min);
+        expect(point.y).toBeLessThanOrEqual(frame.y.max);
+        expect(point.z).toBeGreaterThanOrEqual(frame.z.min);
+        expect(point.z).toBeLessThanOrEqual(frame.z.max);
       }
     }
   });

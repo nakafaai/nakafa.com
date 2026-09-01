@@ -65,6 +65,7 @@ export function MathSpace({ labels, scene }: MathSpaceProps) {
   const frame = projectSpaceFrame(scene.frame, projection);
   const geometry = resolveSpaceGeometry(scene, projection);
   const view = resolveSpaceView(scene, projection);
+  const origin = projectSpacePoint({ x: 0, y: 0, z: 0 }, projection);
   const extent = Math.max(
     frame.x.max - frame.x.min,
     frame.y.max - frame.y.min,
@@ -80,6 +81,7 @@ export function MathSpace({ labels, scene }: MathSpaceProps) {
       cameraProjection={view.projection}
       cameraTarget={view.target}
       frame={frame}
+      origin={origin}
       showAxes={scene.frame.axes === "visible"}
       showGrid={scene.frame.grid === "visible"}
       showLabels={scene.frame.axes === "visible"}

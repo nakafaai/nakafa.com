@@ -61,6 +61,43 @@ describe("coordinate frame geometry", () => {
     });
   });
 
+  it("anchors axes and grid planes to a projected mathematical origin", () => {
+    const origin = { x: 0.2, y: -0.1, z: 0.3 };
+    const axes = createAxisGeometry(asymmetricFrame, 0.5, origin);
+    const grid = createGridGeometry(asymmetricFrame, origin);
+
+    expect(axes).toMatchObject({
+      x: {
+        from: { x: asymmetricFrame.x.min, y: origin.y, z: origin.z },
+        to: { x: asymmetricFrame.x.max, y: origin.y, z: origin.z },
+        visible: true,
+      },
+      y: {
+        from: { x: origin.x, y: asymmetricFrame.y.min, z: origin.z },
+        to: { x: origin.x, y: asymmetricFrame.y.max, z: origin.z },
+        visible: true,
+      },
+      z: {
+        from: { x: origin.x, y: origin.y, z: asymmetricFrame.z.min },
+        to: { x: origin.x, y: origin.y, z: asymmetricFrame.z.max },
+        visible: true,
+      },
+    });
+    expect(grid.xy.boundary.every(([, , z]) => z === origin.z)).toBe(true);
+    expect(grid.xz.boundary.every(([, y]) => y === origin.y)).toBe(true);
+    expect(grid.yz.boundary.every(([x]) => x === origin.x)).toBe(true);
+    expect(grid.xy.sections).toContainEqual([
+      origin.x,
+      asymmetricFrame.y.min,
+      origin.z,
+    ]);
+    expect(grid.xy.sections).toContainEqual([
+      origin.x,
+      asymmetricFrame.y.max,
+      origin.z,
+    ]);
+  });
+
   it("omits labels and axes that are outside one-sided frames", () => {
     const positive = createAxisGeometry(
       {

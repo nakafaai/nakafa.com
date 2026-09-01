@@ -3,6 +3,7 @@
 import { Line } from "@react-three/drei";
 import {
   type CoordinateFrame,
+  type CoordinatePoint,
   createGridGeometry,
   type GridPlaneGeometry,
 } from "@repo/design-system/components/three/frame";
@@ -57,13 +58,18 @@ function GridPlane({ cellColor, geometry, sectionColor }: GridPlaneProps) {
 export function CoordinateGrid({
   cellColor,
   frame,
+  origin,
   sectionColor,
 }: {
   readonly cellColor: ColorRepresentation;
   readonly frame: CoordinateFrame;
+  readonly origin?: CoordinatePoint;
   readonly sectionColor: ColorRepresentation;
 }) {
-  const geometry = useMemo(() => createGridGeometry(frame), [frame]);
+  const geometry = useMemo(
+    () => createGridGeometry(frame, origin),
+    [frame, origin]
+  );
 
   return (
     <>

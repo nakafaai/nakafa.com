@@ -40,6 +40,7 @@ export interface GridGeometry {
   readonly yz: GridPlaneGeometry;
 }
 
+const ORIGIN: CoordinatePoint = { x: 0, y: 0, z: 0 };
 const MINIMUM_CELL_STEP = 0.5;
 const MAXIMUM_AXIS_DIVISIONS = 200;
 const MAXIMUM_AXIS_COORDINATES = MAXIMUM_AXIS_DIVISIONS + 2;
@@ -48,19 +49,32 @@ function decimal(value: number) {
   return BigDecimal.fromNumberUnsafe(value);
 }
 
-function containsOrigin({ max, min }: CoordinateRange) {
-  return min <= 0 && max >= 0;
+function containsCoordinate({ max, min }: CoordinateRange, coordinate: number) {
+  return min <= coordinate && max >= coordinate;
 }
 
 function span({ max, min }: CoordinateRange) {
   return BigDecimal.subtract(decimal(max), decimal(min));
 }
 
-function coordinateValues(range: CoordinateRange, step: number) {
+function coordinateValues(
+  range: CoordinateRange,
+  step: number,
+  anchor: number
+) {
   const exactStep = decimal(step);
-  const first = BigDecimal.multiply(
-    BigDecimal.ceil(BigDecimal.divideUnsafe(decimal(range.min), exactStep)),
-    exactStep
+  const exactAnchor = decimal(anchor);
+  const first = BigDecimal.sum(
+    exactAnchor,
+    BigDecimal.multiply(
+      BigDecimal.ceil(
+        BigDecimal.divideUnsafe(
+          BigDecimal.subtract(decimal(range.min), exactAnchor),
+          exactStep
+        )
+      ),
+      exactStep
+    )
   );
   const values: number[] = [];
 
@@ -126,8 +140,12 @@ function offset(value: number, delta: number) {
   return result < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
 }
 
-function isSectionCoordinate(value: number, sectionStep: number) {
-  const quotient = value / sectionStep;
+function isSectionCoordinate(
+  value: number,
+  sectionStep: number,
+  anchor: number
+) {
+  const quotient = (value - anchor) / sectionStep;
   return Math.abs(quotient - Math.round(quotient)) <= Number.EPSILON * 128;
 }
 
@@ -136,18 +154,24 @@ function createPlaneGeometry(
   second: CoordinateRange,
   cellStep: number,
   project: (first: number, second: number) => CoordinateTuple,
-  visible: boolean
+  visible: boolean,
+  firstAnchor: number,
+  secondAnchor: number
 ): GridPlaneGeometry {
   const sectionStep = cellStep * 2;
   const sections: CoordinateTuple[] = [];
   const cells: CoordinateTuple[] = [];
 
-  for (const value of coordinateValues(first, cellStep)) {
-    const target = isSectionCoordinate(value, sectionStep) ? sections : cells;
+  for (const value of coordinateValues(first, cellStep, firstAnchor)) {
+    const target = isSectionCoordinate(value, sectionStep, firstAnchor)
+      ? sections
+      : cells;
     target.push(project(value, second.min), project(value, second.max));
   }
-  for (const value of coordinateValues(second, cellStep)) {
-    const target = isSectionCoordinate(value, sectionStep) ? sections : cells;
+  for (const value of coordinateValues(second, cellStep, secondAnchor)) {
+    const target = isSectionCoordinate(value, sectionStep, secondAnchor)
+      ? sections
+      : cells;
     target.push(project(first.min, value), project(first.max, value));
   }
 
@@ -180,61 +204,95 @@ export function createSymmetricFrame(size: number): CoordinateFrame {
 /** Resolves exact axis endpoints, visibility, and endpoint labels for a frame. */
 export function createAxisGeometry(
   frame: CoordinateFrame,
-  labelOffset: number
+  labelOffset: number,
+  origin: CoordinatePoint = ORIGIN
 ): {
   readonly x: AxisGeometry;
   readonly y: AxisGeometry;
   readonly z: AxisGeometry;
 } {
-  const xVisible = containsOrigin(frame.y) && containsOrigin(frame.z);
-  const yVisible = containsOrigin(frame.x) && containsOrigin(frame.z);
-  const zVisible = containsOrigin(frame.x) && containsOrigin(frame.y);
+  const xVisible =
+    containsCoordinate(frame.y, origin.y) &&
+    containsCoordinate(frame.z, origin.z);
+  const yVisible =
+    containsCoordinate(frame.x, origin.x) &&
+    containsCoordinate(frame.z, origin.z);
+  const zVisible =
+    containsCoordinate(frame.x, origin.x) &&
+    containsCoordinate(frame.y, origin.y);
 
   return {
     x: {
-      from: { x: frame.x.min, y: 0, z: 0 },
+      from: { x: frame.x.min, y: origin.y, z: origin.z },
       negativeLabel:
-        frame.x.min < 0
-          ? { x: offset(frame.x.min, -labelOffset), y: 0, z: 0 }
+        frame.x.min < origin.x
+          ? {
+              x: offset(frame.x.min, -labelOffset),
+              y: origin.y,
+              z: origin.z,
+            }
           : undefined,
       positiveLabel:
-        frame.x.max > 0
-          ? { x: offset(frame.x.max, labelOffset), y: 0, z: 0 }
+        frame.x.max > origin.x
+          ? {
+              x: offset(frame.x.max, labelOffset),
+              y: origin.y,
+              z: origin.z,
+            }
           : undefined,
-      to: { x: frame.x.max, y: 0, z: 0 },
+      to: { x: frame.x.max, y: origin.y, z: origin.z },
       visible: xVisible,
     },
     y: {
-      from: { x: 0, y: frame.y.min, z: 0 },
+      from: { x: origin.x, y: frame.y.min, z: origin.z },
       negativeLabel:
-        frame.y.min < 0
-          ? { x: 0, y: offset(frame.y.min, -labelOffset), z: 0 }
+        frame.y.min < origin.y
+          ? {
+              x: origin.x,
+              y: offset(frame.y.min, -labelOffset),
+              z: origin.z,
+            }
           : undefined,
       positiveLabel:
-        frame.y.max > 0
-          ? { x: 0, y: offset(frame.y.max, labelOffset), z: 0 }
+        frame.y.max > origin.y
+          ? {
+              x: origin.x,
+              y: offset(frame.y.max, labelOffset),
+              z: origin.z,
+            }
           : undefined,
-      to: { x: 0, y: frame.y.max, z: 0 },
+      to: { x: origin.x, y: frame.y.max, z: origin.z },
       visible: yVisible,
     },
     z: {
-      from: { x: 0, y: 0, z: frame.z.min },
+      from: { x: origin.x, y: origin.y, z: frame.z.min },
       negativeLabel:
-        frame.z.min < 0
-          ? { x: 0, y: 0, z: offset(frame.z.min, -labelOffset) }
+        frame.z.min < origin.z
+          ? {
+              x: origin.x,
+              y: origin.y,
+              z: offset(frame.z.min, -labelOffset),
+            }
           : undefined,
       positiveLabel:
-        frame.z.max > 0
-          ? { x: 0, y: 0, z: offset(frame.z.max, labelOffset) }
+        frame.z.max > origin.z
+          ? {
+              x: origin.x,
+              y: origin.y,
+              z: offset(frame.z.max, labelOffset),
+            }
           : undefined,
-      to: { x: 0, y: 0, z: frame.z.max },
+      to: { x: origin.x, y: origin.y, z: frame.z.max },
       visible: zVisible,
     },
   };
 }
 
-/** Resolves finite, world-origin-aligned grid segments for an exact frame. */
-export function createGridGeometry(frame: CoordinateFrame): GridGeometry {
+/** Resolves finite grid segments anchored to the projected mathematical origin. */
+export function createGridGeometry(
+  frame: CoordinateFrame,
+  origin: CoordinatePoint = ORIGIN
+): GridGeometry {
   const cellStep = resolveCellStep(frame);
 
   return {
@@ -242,22 +300,28 @@ export function createGridGeometry(frame: CoordinateFrame): GridGeometry {
       frame.x,
       frame.y,
       cellStep,
-      (x, y) => [x, y, 0],
-      containsOrigin(frame.z)
+      (x, y) => [x, y, origin.z],
+      containsCoordinate(frame.z, origin.z),
+      origin.x,
+      origin.y
     ),
     xz: createPlaneGeometry(
       frame.x,
       frame.z,
       cellStep,
-      (x, z) => [x, 0, z],
-      containsOrigin(frame.y)
+      (x, z) => [x, origin.y, z],
+      containsCoordinate(frame.y, origin.y),
+      origin.x,
+      origin.z
     ),
     yz: createPlaneGeometry(
       frame.y,
       frame.z,
       cellStep,
-      (y, z) => [0, y, z],
-      containsOrigin(frame.x)
+      (y, z) => [origin.x, y, z],
+      containsCoordinate(frame.x, origin.x),
+      origin.y,
+      origin.z
     ),
   };
 }

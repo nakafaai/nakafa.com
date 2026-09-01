@@ -77,43 +77,52 @@ function ReviewedCategoryResponse({
   );
   return (
     <div className="space-y-6">
-      {responseSpec.statements.map((statement) => (
-        <section className="space-y-3" key={statement.statementKey}>
-          <TryoutResponseLabel
-            id={`review-question-${questionOrder}-${statement.statementKey}`}
-          >
-            {statement.label}
-          </TryoutResponseLabel>
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-            {responseSpec.categories.map((category) => (
-              <TryoutReviewedChoice
-                checked={
-                  assigned.get(statement.statementKey) === category.categoryKey
-                }
-                id={`review-question-${questionOrder}-${statement.statementKey}-${category.categoryKey}`}
-                isCorrect={
-                  statement.correctCategoryKey === undefined
-                    ? undefined
-                    : statement.correctCategoryKey === category.categoryKey
-                }
-                key={category.categoryKey}
-                label={
-                  <TryoutResponseLabel
-                    correctness={
-                      statement.correctCategoryKey === undefined
-                        ? undefined
-                        : statement.correctCategoryKey === category.categoryKey
-                    }
-                    id={`review-question-${questionOrder}-${statement.statementKey}-${category.categoryKey}`}
-                  >
-                    {category.label}
-                  </TryoutResponseLabel>
-                }
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+      {responseSpec.statements.map((statement) => {
+        const statementId = `review-question-${questionOrder}-${statement.statementKey}`;
+        const statementLabelId = `${statementId}-label`;
+        return (
+          <section className="space-y-3" key={statement.statementKey}>
+            <div id={statementLabelId}>
+              <TryoutResponseLabel id={statementId}>
+                {statement.label}
+              </TryoutResponseLabel>
+            </div>
+            <fieldset
+              aria-labelledby={statementLabelId}
+              className="m-0 grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2"
+            >
+              {responseSpec.categories.map((category) => (
+                <TryoutReviewedChoice
+                  checked={
+                    assigned.get(statement.statementKey) ===
+                    category.categoryKey
+                  }
+                  id={`${statementId}-${category.categoryKey}`}
+                  isCorrect={
+                    statement.correctCategoryKey === undefined
+                      ? undefined
+                      : statement.correctCategoryKey === category.categoryKey
+                  }
+                  key={category.categoryKey}
+                  label={
+                    <TryoutResponseLabel
+                      correctness={
+                        statement.correctCategoryKey === undefined
+                          ? undefined
+                          : statement.correctCategoryKey ===
+                            category.categoryKey
+                      }
+                      id={`${statementId}-${category.categoryKey}`}
+                    >
+                      {category.label}
+                    </TryoutResponseLabel>
+                  }
+                />
+              ))}
+            </fieldset>
+          </section>
+        );
+      })}
     </div>
   );
 }

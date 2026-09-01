@@ -6,7 +6,7 @@ import {
   CONTENT_RUNTIME_CACHE_CONTRACT,
   CONTENT_RUNTIME_TABLES,
   fingerprintRuntimeSchema,
-  readContentRuntimeContractIdentity,
+  readContentRuntimeContractIdentities,
   readContentRuntimeSchemaFingerprint,
   validateContentRuntimeTableDefinitions,
   validateRuntimeTableDefinitions,
@@ -16,11 +16,21 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "da8900581109fa63df971285e4cb75d7ee86a325b71a206d8020502d698e490a";
-const DECODER_CONTRACT_IDENTITY = {
-  name: "@nakafa/aksara-contracts" as const,
+  "33def10905a084c8334a093fff93b385ed82af5d7d02c8478d0db2745620ac20";
+const CURRENT_DECODER_CONTRACT_IDENTITY = Object.freeze({
+  name: "@nakafa/aksara-contracts",
+  specifier: "@nakafa/aksara-contracts",
   version: "0.33.0",
-};
+});
+const PREDECESSOR_DECODER_CONTRACT_IDENTITY = Object.freeze({
+  name: "@nakafa/aksara-contracts",
+  specifier: "@nakafa/aksara-predecessor",
+  version: "0.26.0",
+});
+const DECODER_CONTRACT_IDENTITIES = [
+  CURRENT_DECODER_CONTRACT_IDENTITY,
+  PREDECESSOR_DECODER_CONTRACT_IDENTITY,
+];
 
 describe("content runtime tables", () => {
   it.live(
@@ -89,8 +99,8 @@ describe("content runtime tables", () => {
             ],
           },
         });
-        expect(yield* readContentRuntimeContractIdentity()).toEqual(
-          DECODER_CONTRACT_IDENTITY
+        expect(yield* readContentRuntimeContractIdentities()).toEqual(
+          DECODER_CONTRACT_IDENTITIES
         );
         expect(yield* readContentRuntimeSchemaFingerprint()).toBe(
           EXPECTED_RUNTIME_SCHEMA_FINGERPRINT
@@ -111,22 +121,23 @@ describe("content runtime tables", () => {
     ] as const;
 
     expect(
-      fingerprintRuntimeSchema(changedValidator, DECODER_CONTRACT_IDENTITY)
-    ).not.toBe(fingerprintRuntimeSchema(baseline, DECODER_CONTRACT_IDENTITY));
+      fingerprintRuntimeSchema(changedValidator, DECODER_CONTRACT_IDENTITIES)
+    ).not.toBe(fingerprintRuntimeSchema(baseline, DECODER_CONTRACT_IDENTITIES));
     expect(
-      fingerprintRuntimeSchema(changedIndex, DECODER_CONTRACT_IDENTITY)
-    ).not.toBe(fingerprintRuntimeSchema(baseline, DECODER_CONTRACT_IDENTITY));
+      fingerprintRuntimeSchema(changedIndex, DECODER_CONTRACT_IDENTITIES)
+    ).not.toBe(fingerprintRuntimeSchema(baseline, DECODER_CONTRACT_IDENTITIES));
   });
 
   it("changes when the external decoder package changes", () => {
     const tables = [["example", defineTable({ value: v.string() })]] as const;
+    const changedPredecessor = [
+      CURRENT_DECODER_CONTRACT_IDENTITY,
+      { ...PREDECESSOR_DECODER_CONTRACT_IDENTITY, version: "0.25.0" },
+    ];
 
-    expect(
-      fingerprintRuntimeSchema(tables, {
-        ...DECODER_CONTRACT_IDENTITY,
-        version: "0.34.0",
-      })
-    ).not.toBe(fingerprintRuntimeSchema(tables, DECODER_CONTRACT_IDENTITY));
+    expect(fingerprintRuntimeSchema(tables, changedPredecessor)).not.toBe(
+      fingerprintRuntimeSchema(tables, DECODER_CONTRACT_IDENTITIES)
+    );
   });
 
   it("changes when the runtime table order changes", () => {
@@ -139,7 +150,7 @@ describe("content runtime tables", () => {
           ["first", first],
           ["second", second],
         ],
-        DECODER_CONTRACT_IDENTITY
+        DECODER_CONTRACT_IDENTITIES
       )
     ).not.toBe(
       fingerprintRuntimeSchema(
@@ -147,7 +158,7 @@ describe("content runtime tables", () => {
           ["second", second],
           ["first", first],
         ],
-        DECODER_CONTRACT_IDENTITY
+        DECODER_CONTRACT_IDENTITIES
       )
     );
   });

@@ -17,7 +17,6 @@ import type {
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
 import {
-  projectSpaceMeasure,
   projectSpacePoint,
   resolveSpaceProjection,
   type SpaceProjection,
@@ -86,6 +85,34 @@ function isCollapsedSpacePath(points: readonly SpacePoint[]) {
       ({ x, y, z }) => x === first.x && y === first.y && z === first.z
     )
   );
+}
+
+function appendProjectedSpacePath(
+  markers: ResolvedSpaceMarker[],
+  paths: ResolvedSpacePath[],
+  input: {
+    readonly appearance: MathAppearance;
+    readonly arrows: MathPathArrows;
+    readonly id: string;
+    readonly points: readonly SpacePoint[];
+  },
+  projection: SpaceProjection
+) {
+  const first = input.points[0];
+  if (first && isCollapsedSpacePath(input.points)) {
+    markers.push({
+      appearance: input.appearance,
+      at: projectSpacePoint(first, projection),
+      id: input.id,
+    });
+    return;
+  }
+  paths.push({
+    appearance: input.appearance,
+    arrows: input.arrows,
+    id: input.id,
+    points: input.points.map((point) => projectSpacePoint(point, projection)),
+  });
 }
 
 function resolvePlanePaths(
@@ -189,21 +216,17 @@ function appendSpacePaths(
   }
 
   for (const [index, points] of clipped.entries()) {
-    const first = points[0];
-    if (first && isCollapsedSpacePath(points)) {
-      markers.push({
+    appendProjectedSpacePath(
+      markers,
+      paths,
+      {
         appearance: object.appearance,
-        at: projectSpacePoint(first, projection),
+        arrows: resolvePathArrows(object.kind),
         id: privatePathId(object.id, index, clipped.length),
-      });
-      continue;
-    }
-    paths.push({
-      appearance: object.appearance,
-      arrows: resolvePathArrows(object.kind),
-      id: privatePathId(object.id, index, clipped.length),
-      points: points.map((point) => projectSpacePoint(point, projection)),
-    });
+        points,
+      },
+      projection
+    );
   }
 }
 
@@ -228,18 +251,27 @@ export function resolveSpaceGeometry(
     }
     if (object.kind === "cuboid") {
       const cuboid = createCuboid({
-        center: projectSpacePoint(object.center, projection),
-        height: projectSpaceMeasure(object.size.height, projection),
-        length: projectSpaceMeasure(object.size.length, projection),
-        width: projectSpaceMeasure(object.size.width, projection),
+        center: object.center,
+        height: object.size.height,
+        length: object.size.length,
+        width: object.size.width,
       });
       for (const [index, edge] of cuboid.edges.entries()) {
-        paths.push({
-          appearance: object.appearance,
-          arrows: "none",
-          id: `${object.id}:edge:${index + 1}`,
-          points: edge,
-        });
+        const clipped = clipSpacePath(scene.frame, edge)[0];
+        if (!clipped) {
+          continue;
+        }
+        appendProjectedSpacePath(
+          markers,
+          paths,
+          {
+            appearance: object.appearance,
+            arrows: "none",
+            id: `${object.id}:edge:${index + 1}`,
+            points: clipped,
+          },
+          projection
+        );
       }
       continue;
     }
