@@ -24,7 +24,10 @@ import {
   FUNCTION_MATERIAL,
   testProjectionJson,
 } from "@repo/backend/test/content/material";
-import { TEST_PAGE_PROJECTION } from "@repo/backend/test/content/page";
+import {
+  TEST_HISTORICAL_QUESTION_PROJECTION,
+  TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
+} from "@repo/backend/test/content/question";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -107,23 +110,16 @@ describe("contentRelease/parse", () => {
     })
   );
 
-  it.live("rejects retained recovery Page metadata from new staging", () =>
+  it.live("admits prior Question bytes only through readable decoding", () =>
     Effect.gen(function* () {
-      const storedJson = JSON.stringify({
-        ...TEST_PAGE_PROJECTION,
-        metadata: {
-          description: TEST_PAGE_PROJECTION.metadata.description,
-          lastModified: TEST_PAGE_PROJECTION.metadata.datePublished,
-          title: TEST_PAGE_PROJECTION.metadata.title,
-        },
-      });
+      const storedJson = TEST_HISTORICAL_QUESTION_PROJECTION_JSON;
 
       const stored = yield* decodeProjectionJson(storedJson);
       const rejected = yield* decodeCurrentProjectionJson(storedJson).pipe(
         Effect.flip
       );
 
-      expect(stored.metadata).toHaveProperty("lastModified");
+      expect(stored).toEqual(TEST_HISTORICAL_QUESTION_PROJECTION);
       expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
     })
   );

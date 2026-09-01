@@ -1,3 +1,4 @@
+import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
@@ -13,6 +14,7 @@ import {
   RollbackSnapshotEntrySchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import {
@@ -30,8 +32,10 @@ import {
   testUpsertJson,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
+import { Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 23, 12);
+type RollbackFixtureFamily = "material" | "question";
 
 /** Inserts one signed route owner into a rollback fixture. */
 export function insertRoute(
@@ -141,9 +145,12 @@ async function insertVersion(
   options: {
     readonly artifactHash: string;
     readonly contentKey: string;
+    readonly delivery: ContentDeliveryClass;
+    readonly family: RollbackFixtureFamily;
     readonly index: number;
     readonly projectionJson: string;
     readonly releaseId: string;
+    readonly rendererDomain: RendererDomain;
     readonly sequence: number;
     readonly sourceHash?: typeof Sha256HashSchema.Type;
     readonly sourcePath: string;
@@ -153,21 +160,22 @@ async function insertVersion(
     artifactHash: options.artifactHash,
     compiledCode,
     contentKey: options.contentKey,
+    rendererDomain: options.rendererDomain,
   })
 ) {
   await ctx.db.insert("contentHeads", {
     artifactHash: options.artifactHash,
     compilerConfigHash: TEST_DIGEST,
     contentKey: options.contentKey,
-    delivery: "public",
-    family: "material",
+    delivery: options.delivery,
+    family: options.family,
     index: options.index,
     artifactLocale: "en",
     operation: "upsert",
     projectionHash: testTextHash(options.projectionJson),
     projectionJson: options.projectionJson,
     releaseId: options.releaseId,
-    rendererDomain: "mathematics",
+    rendererDomain: options.rendererDomain,
     sequence: options.sequence,
     sourceHash: options.sourceHash ?? TEST_DIGEST,
     sourcePath: options.sourcePath,
@@ -189,21 +197,30 @@ export async function insertRollbackItem(
   options?: {
     readonly authenticatedArtifact?: boolean;
     readonly contentKey?: typeof ContentKeySchema.Type;
+    readonly currentProjectionJson?: string;
+    readonly currentSourcePath?: typeof CorpusSourcePathSchema.Type;
+    readonly delivery?: ContentDeliveryClass;
+    readonly family?: RollbackFixtureFamily;
     readonly priorProjectionJson?: string;
     readonly priorSourcePath?: typeof CorpusSourcePathSchema.Type;
+    readonly rendererDomain?: RendererDomain;
   }
 ) {
+  const delivery = options?.delivery ?? "public";
+  const family = options?.family ?? "material";
   const contentKey =
     options?.contentKey ?? ContentKeySchema.make(`test:head-${index}`);
+  const rendererDomain = options?.rendererDomain ?? "mathematics";
   const signedArtifact = options?.authenticatedArtifact
-    ? testSignedArtifact("mathematics", { compiledCode, contentKey })
+    ? testSignedArtifact(rendererDomain, { compiledCode, contentKey })
     : undefined;
   const currentHash =
     signedArtifact?.artifactHash ?? rollbackArtifactHash(index, "current");
-  const currentProjection = testProjectionJson({
-    contentKey,
-    index,
-  });
+  const currentProjection =
+    options?.currentProjectionJson ?? testProjectionJson({ contentKey, index });
+  const currentSourcePath =
+    options?.currentSourcePath ??
+    CorpusSourcePathSchema.make(`packages/corpus/test/head-${index}/en.mdx`);
   const priorHash = rollbackArtifactHash(index, "prior");
   const priorPath = PublicPathSchema.make(testMaterialPublicPath(index + 100));
   const priorProjection =
@@ -214,7 +231,7 @@ export async function insertRollbackItem(
     CorpusSourcePathSchema.make(`packages/corpus/test/prior-${index}/en.mdx`);
   const rollbackJson = previousExists
     ? canonicalizeRollbackSnapshotEntry(
-        RollbackSnapshotEntrySchema.make({
+        Schema.decodeUnknownSync(RollbackSnapshotEntrySchema)({
           index,
           releaseId: TEST_RELEASE_ID,
           snapshot: {
@@ -222,22 +239,22 @@ export async function insertRollbackItem(
               artifactHash: priorHash,
               compilerConfigHash: Sha256HashSchema.make(TEST_DIGEST),
               contentKey,
-              delivery: "public",
-              family: "material",
+              delivery,
+              family,
               artifactLocale: ArtifactLocaleSchema.make("en"),
               projectionHash: Sha256HashSchema.make(
                 testTextHash(priorProjection)
               ),
-              publicPath: priorPath,
-              rendererDomain: "mathematics",
+              ...(family === "question" ? {} : { publicPath: priorPath }),
+              rendererDomain,
               sourceHash: Sha256HashSchema.make(TEST_DIGEST),
               sourcePath: priorSourcePath,
             },
-            state: "material",
+            state: family,
           },
         })
       )
-    : testRollbackJson({ contentKey, index });
+    : testRollbackJson({ contentKey, family, index });
   await ctx.db.insert("contentItems", {
     artifactHash: currentHash,
     artifactBatchHash: TEST_DIGEST,
@@ -250,7 +267,11 @@ export async function insertRollbackItem(
     itemJson: testUpsertJson({
       artifactHash: currentHash,
       contentKey,
+      delivery,
+      family,
       index,
+      rendererDomain,
+      sourcePath: currentSourcePath,
     }),
     artifactLocale: "en",
     priorSequence: previousExists ? 0 : undefined,
@@ -268,12 +289,15 @@ export async function insertRollbackItem(
     {
       artifactHash: currentHash,
       contentKey,
+      delivery,
+      family,
       index,
       projectionJson: currentProjection,
       releaseId: TEST_RELEASE_ID,
+      rendererDomain,
       sequence: 1,
       sourceHash: signedArtifact?.payload.sourceHash,
-      sourcePath: `packages/corpus/test/head-${index}/en.mdx`,
+      sourcePath: currentSourcePath,
     },
     compiledCode,
     signedArtifact ? JSON.stringify(signedArtifact) : undefined
@@ -284,9 +308,12 @@ export async function insertRollbackItem(
       {
         artifactHash: priorHash,
         contentKey,
+        delivery,
+        family,
         index,
         projectionJson: priorProjection,
         releaseId: "release-prior",
+        rendererDomain,
         sequence: 0,
         sourcePath: priorSourcePath,
       },

@@ -184,6 +184,45 @@ function makeSecondTrackPlacement(locale: ActiveAppLocaleCode) {
   });
 }
 
+/** Makes the first authored placement exercise the full response contract. */
+function makeMultipleChoicePlacement(locale: ActiveAppLocaleCode) {
+  const placement = makeTryoutStartPlacement(locale);
+  return Schema.decodeSync(TryoutPlacementSchema)({
+    ...placement,
+    response: {
+      kind: "multiple-choice",
+      options: [
+        { isCorrect: true, label: "A", optionKey: "option-1", order: 1 },
+        { isCorrect: true, label: "B", optionKey: "option-2", order: 2 },
+        { isCorrect: false, label: "C", optionKey: "option-3", order: 3 },
+      ],
+    },
+  });
+}
+
+/** Makes the first authored placement exercise category assignments. */
+function makeCategoryPlacement(locale: ActiveAppLocaleCode) {
+  const placement = makeTryoutStartPlacement(locale);
+  return Schema.decodeSync(TryoutPlacementSchema)({
+    ...placement,
+    response: {
+      categories: [
+        { categoryKey: "category-1", label: "Benar", order: 1 },
+        { categoryKey: "category-2", label: "Salah", order: 2 },
+      ],
+      kind: "category",
+      statements: [
+        {
+          correctCategoryKey: "category-1",
+          label: "Pernyataan",
+          order: 1,
+          statementKey: "statement-1",
+        },
+      ],
+    },
+  });
+}
+
 describe("tryouts/catalog/featured", () => {
   it.effect(
     "returns the first visible signed question for the public landing demo",
@@ -282,6 +321,69 @@ describe("tryouts/catalog/featured", () => {
           `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}/`
         );
       })
+  );
+
+  it.effect(
+    "returns the first authored question for every response format",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const snapshotId = await activateTryoutSnapshot(ctx, {
+              catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+                makeTryoutStartHierarchy(locale, "visible")
+              ),
+              placements: ACTIVE_APP_LOCALE_CODES.map(
+                makeMultipleChoicePlacement
+              ),
+            });
+            await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+          })
+        );
+
+        const featured = yield* Effect.promise(() =>
+          t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
+        );
+
+        expect(featured.response.kind).toBe("multiple-choice");
+        expect(featured.question.questionOrder).toBe(1);
+      })
+  );
+
+  it.effect("returns a category response without narrowing its structure", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const snapshotId = await activateTryoutSnapshot(ctx, {
+            catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+              makeTryoutStartHierarchy(locale, "visible")
+            ),
+            placements: ACTIVE_APP_LOCALE_CODES.map(makeCategoryPlacement),
+          });
+          await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+        })
+      );
+
+      const featured = yield* Effect.promise(() =>
+        t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
+      );
+
+      expect(featured.response).toMatchObject({
+        categories: [
+          { categoryKey: "category-1" },
+          { categoryKey: "category-2" },
+        ],
+        kind: "category",
+        statements: [
+          {
+            correctCategoryKey: "category-1",
+            statementKey: "statement-1",
+          },
+        ],
+      });
+    })
   );
 
   it.effect("continues to the next track when the first track is private", () =>

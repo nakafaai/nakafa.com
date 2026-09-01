@@ -271,6 +271,7 @@
   "Exercises": {
     "exercises": "Latihan",
     "answer": "Jawaban",
+    "check-answer": "Cek jawaban",
     "correct": "Benar",
     "incorrect": "Salah",
     "score": "Nilai",

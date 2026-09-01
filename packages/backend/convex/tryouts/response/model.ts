@@ -28,15 +28,12 @@ const runtimeResponseStatementValidator = responseStatementValidator
   .omit("correctCategoryKey")
   .extend({ correctCategoryKey: v.optional(v.string()) });
 
-/** Immutable single-choice response accepted by single-choice consumers. */
-export const tryoutSingleChoiceResponseSpecValidator = v.object({
-  kind: v.literal("single-choice"),
-  options: v.array(responseOptionValidator),
-});
-
 /** Complete immutable response definition frozen into one attempt placement. */
 export const tryoutResponseSpecValidator = v.union(
-  tryoutSingleChoiceResponseSpecValidator,
+  v.object({
+    kind: v.literal("single-choice"),
+    options: v.array(responseOptionValidator),
+  }),
   v.object({
     kind: v.literal("multiple-choice"),
     options: v.array(responseOptionValidator),

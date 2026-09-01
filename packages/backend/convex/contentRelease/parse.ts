@@ -11,6 +11,7 @@ import {
   ReleaseVerificationEvidenceSchema,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
 import {
   ContentSnapshotManifestSchema,
@@ -19,7 +20,6 @@ import {
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
-import { StoredSnapshotEntrySchema } from "@repo/backend/convex/contentRelease/rollback/stored";
 import { Effect, Schema } from "effect";
 
 const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
@@ -146,7 +146,7 @@ export const decodeProjectionJson = Effect.fn(
     )
   )
 );
-/** Rejects retained recovery Page bytes from newly staged content. */
+/** Rejects readable historical projections from newly staged content. */
 export const decodeCurrentProjectionJson = Effect.fn(
   "contentRelease.decodeCurrentProjectionJson"
 )((source: string) =>
@@ -208,7 +208,7 @@ export const decodeRollbackJson = Effect.fn(
 )((source: string) =>
   parseStoredJson(source, "Rollback snapshot").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(StoredSnapshotEntrySchema, {
+      Schema.decodeUnknownEffect(RollbackSnapshotEntrySchema, {
         onExcessProperty: "error",
       })
     ),

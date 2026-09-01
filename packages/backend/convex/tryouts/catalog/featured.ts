@@ -1,4 +1,5 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
@@ -9,7 +10,7 @@ import {
   readPublishedSetSections,
   sortCatalogRows,
 } from "@repo/backend/convex/tryouts/catalog/hierarchy";
-import { tryoutSingleChoiceResponseSpecValidator } from "@repo/backend/convex/tryouts/response/model";
+import { tryoutResponseSpecValidator } from "@repo/backend/convex/tryouts/response/model";
 import {
   type TryoutQuestionSelector,
   tryoutQuestionSelectorValidator,
@@ -22,7 +23,7 @@ import { Effect } from "effect";
  */
 export const featuredTryoutValidator = v.object({
   question: tryoutQuestionSelectorValidator,
-  response: tryoutSingleChoiceResponseSpecValidator,
+  response: tryoutResponseSpecValidator,
 });
 
 /** Selects the first authored question from the canonical try-out hierarchy. */
@@ -34,7 +35,6 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     if (!section) {
       return yield* missingFeaturedTryout("section");
     }
-
     const source = yield* readTryoutSection(ctx, {
       countryKey: section.countryKey,
       examKey: section.examKey,
@@ -46,9 +46,6 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     const placement = source.placements[0]?.row;
     if (!(placement && catalog.activeReleaseId && catalog.bundleHash)) {
       return yield* missingFeaturedTryout("question");
-    }
-    if (placement.response.kind !== "single-choice") {
-      return yield* missingFeaturedTryout("response");
     }
 
     const question: TryoutQuestionSelector = {
@@ -67,10 +64,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
 
     return {
       question,
-      response: {
-        kind: placement.response.kind,
-        options: placement.response.options.map((option) => ({ ...option })),
-      },
+      response: canonicalQuestionResponse(placement.response),
     };
   }
 );
@@ -135,14 +129,7 @@ const readFirstVisibleSection = Effect.fn(
 
 /** Creates one fail-closed integrity error for an incomplete featured path. */
 function missingFeaturedTryout(
-  kind:
-    | "country"
-    | "exam"
-    | "question"
-    | "response"
-    | "section"
-    | "set"
-    | "track"
+  kind: "country" | "exam" | "question" | "section" | "set" | "track"
 ) {
   return releaseFail(
     "CONTENT_RELEASE_INTEGRITY",

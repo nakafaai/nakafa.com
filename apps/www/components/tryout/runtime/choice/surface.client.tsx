@@ -10,10 +10,10 @@ import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/choice-variant"
 import {
   getTryoutPreviewChoiceVariant,
   getTryoutReviewedChoiceVariant,
-  getTryoutSelectableChoiceVariant,
 } from "@/lib/tryout/choice-variant";
 
 interface TryoutSelectableRadioOptionProps {
+  readonly appearance?: TryoutPreviewChoiceAppearance;
   checked: boolean;
   disabled: boolean;
   id: string;
@@ -23,6 +23,7 @@ interface TryoutSelectableRadioOptionProps {
 
 /** Renders one radio option through the established choice frame. */
 export function TryoutSelectableRadioOption({
+  appearance = { kind: "selectable" },
   checked,
   disabled,
   id,
@@ -33,7 +34,7 @@ export function TryoutSelectableRadioOption({
     <TryoutChoiceFrame
       id={id}
       label={label}
-      variant={getTryoutSelectableChoiceVariant({ checked })}
+      variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
     >
       <Radio
         aria-labelledby={`${id}-label`}
@@ -46,6 +47,7 @@ export function TryoutSelectableRadioOption({
 }
 
 interface TryoutSelectableMultipleChoiceProps {
+  readonly appearance?: TryoutPreviewChoiceAppearance;
   checked: boolean;
   disabled: boolean;
   id: string;
@@ -55,6 +57,7 @@ interface TryoutSelectableMultipleChoiceProps {
 
 /** Renders one independently selectable option for an exact-set response. */
 export function TryoutSelectableMultipleChoice({
+  appearance = { kind: "selectable" },
   checked,
   disabled,
   id,
@@ -65,7 +68,7 @@ export function TryoutSelectableMultipleChoice({
     <TryoutChoiceFrame
       id={id}
       label={label}
-      variant={getTryoutSelectableChoiceVariant({ checked })}
+      variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
     >
       <Checkbox
         aria-labelledby={`${id}-label`}
@@ -73,43 +76,6 @@ export function TryoutSelectableMultipleChoice({
         className="mt-1 shrink-0 cursor-pointer"
         disabled={disabled}
         onCheckedChange={onCheckedChange}
-      />
-    </TryoutChoiceFrame>
-  );
-}
-
-interface TryoutPreviewChoiceProps {
-  appearance: TryoutPreviewChoiceAppearance;
-  checked: boolean;
-  disabled: boolean;
-  id: string;
-  label: ReactNode;
-  onSelect: () => void;
-}
-
-/** Keeps one stable preview choice while its correctness appearance changes. */
-export function TryoutPreviewChoice({
-  appearance,
-  checked,
-  disabled,
-  id,
-  label,
-  onSelect,
-}: TryoutPreviewChoiceProps) {
-  return (
-    <TryoutChoiceFrame
-      id={id}
-      label={label}
-      variant={getTryoutPreviewChoiceVariant({
-        appearance,
-        checked,
-      })}
-    >
-      <TryoutChoiceCheckbox
-        checked={checked}
-        disabled={disabled}
-        id={id}
-        onSelect={onSelect}
       />
     </TryoutChoiceFrame>
   );
@@ -142,35 +108,6 @@ export function TryoutReviewedChoice({
         disabled
       />
     </TryoutChoiceFrame>
-  );
-}
-
-interface TryoutChoiceCheckboxProps {
-  checked: boolean;
-  disabled: boolean;
-  id: string;
-  onSelect: () => void;
-}
-
-/** Owns the checkbox interaction shared by active and preview choices. */
-function TryoutChoiceCheckbox({
-  checked,
-  disabled,
-  id,
-  onSelect,
-}: TryoutChoiceCheckboxProps) {
-  return (
-    <Checkbox
-      aria-labelledby={`${id}-label`}
-      checked={checked}
-      className="mt-1 shrink-0 cursor-pointer"
-      disabled={disabled}
-      onCheckedChange={(nextChecked) => {
-        if (nextChecked) {
-          onSelect();
-        }
-      }}
-    />
   );
 }
 

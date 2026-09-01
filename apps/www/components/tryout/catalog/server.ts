@@ -44,8 +44,8 @@ export async function readFeaturedTryout(locale: Locale) {
       const question = yield* loadTryoutQuestion(featured.question);
 
       return {
-        choices: featured.response.options,
         question: question.content,
+        response: featured.response,
       };
     })
   );

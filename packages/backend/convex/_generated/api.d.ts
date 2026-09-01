@@ -280,7 +280,6 @@ import type * as contentRelease_renderer from "../contentRelease/renderer.js";
 import type * as contentRelease_retention from "../contentRelease/retention.js";
 import type * as contentRelease_rollback from "../contentRelease/rollback.js";
 import type * as contentRelease_rollback_state from "../contentRelease/rollback/state.js";
-import type * as contentRelease_rollback_stored from "../contentRelease/rollback/stored.js";
 import type * as contentRelease_route from "../contentRelease/route.js";
 import type * as contentRelease_routes from "../contentRelease/routes.js";
 import type * as contentRelease_runtime_active from "../contentRelease/runtime/active.js";
@@ -864,7 +863,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/retention": typeof contentRelease_retention;
   "contentRelease/rollback": typeof contentRelease_rollback;
   "contentRelease/rollback/state": typeof contentRelease_rollback_state;
-  "contentRelease/rollback/stored": typeof contentRelease_rollback_stored;
   "contentRelease/route": typeof contentRelease_route;
   "contentRelease/routes": typeof contentRelease_routes;
   "contentRelease/runtime/active": typeof contentRelease_runtime_active;

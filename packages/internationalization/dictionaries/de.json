@@ -271,6 +271,7 @@
   "Exercises": {
     "exercises": "Übungen",
     "answer": "Antwort",
+    "check-answer": "Antwort prüfen",
     "correct": "Richtig",
     "incorrect": "Falsch",
     "score": "Punktzahl",

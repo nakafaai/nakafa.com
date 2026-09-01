@@ -28,10 +28,6 @@ import type { RenderableContent } from "@/lib/content/published/artifact";
 type QuestionPreviewDocument =
   | QuestionAnswerPreviewDocument
   | QuestionPromptPreviewDocument;
-type SingleChoiceQuestionResponse = Extract<
-  QuestionResponse,
-  { readonly kind: "single-choice" }
->;
 type ReadyPreviewManifest = Extract<
   LocalPreviewManifest,
   {
@@ -49,7 +45,7 @@ export interface QuestionPreviewContent {
   readonly appLocale: AppLocale;
   readonly metadata: QuestionMetadata;
   readonly Question: RenderableContent["Content"];
-  readonly response: SingleChoiceQuestionResponse;
+  readonly response: QuestionResponse;
   readonly selectedBodyKind: QuestionPreviewDocument["identity"]["bodyKind"];
   readonly target: TryoutPreviewTarget;
 }
@@ -59,14 +55,7 @@ function decodePromptProjection(artifact: PreviewArtifact) {
     artifact.projection,
     { onExcessProperty: "error" }
   ).pipe(
-    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" })),
-    Effect.flatMap((projection) => {
-      const response = projection.response;
-      if (response.kind !== "single-choice") {
-        return new PreviewIntegrityError({ check: "response" });
-      }
-      return Effect.succeed({ ...projection, response });
-    })
+    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
   );
 }
 /** Decodes one answer projection without weakening the manifest contract. */

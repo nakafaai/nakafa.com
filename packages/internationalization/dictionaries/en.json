@@ -271,6 +271,7 @@
   "Exercises": {
     "exercises": "Exercises",
     "answer": "Answer",
+    "check-answer": "Check answer",
     "correct": "Correct",
     "incorrect": "Incorrect",
     "score": "Score",

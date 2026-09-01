@@ -2,7 +2,6 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { StageGroupRequestSchema } from "@nakafa/aksara-contracts/transport/group";
@@ -12,17 +11,18 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
-  TEST_PAGE_KEY,
-  TEST_PAGE_PROJECTION,
-  TEST_PAGE_SOURCE,
-} from "@repo/backend/test/content/page";
-import {
   TEST_KEY_ID,
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
+import {
+  TEST_HISTORICAL_QUESTION_PROJECTION,
+  TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
+  TEST_QUESTION_CONTENT_KEY,
+  TEST_QUESTION_SOURCE,
+} from "@repo/backend/test/content/question";
 import {
   testPublicationScope,
   testUpsertJson,
@@ -44,16 +44,8 @@ class UnexpectedGroupTestState extends Data.TaggedError(
 }> {}
 
 describe("content release staging groups", () => {
-  it.effect("stages historical Page bytes only through a recovery group", () =>
+  it.effect("stages prior Question bytes only through a recovery group", () =>
     Effect.gen(function* () {
-      const historicalProjection = {
-        ...TEST_PAGE_PROJECTION,
-        metadata: {
-          description: TEST_PAGE_PROJECTION.metadata.description,
-          lastModified: TEST_PAGE_PROJECTION.metadata.datePublished,
-          title: TEST_PAGE_PROJECTION.metadata.title,
-        },
-      };
       const request = yield* Schema.decodeEffect(StageGroupRequestSchema)({
         operation: "stageGroup",
         releaseId,
@@ -63,11 +55,11 @@ describe("content release staging groups", () => {
             items: [
               JSON.parse(
                 testUpsertJson({
-                  contentKey: TEST_PAGE_KEY,
-                  family: "page",
+                  contentKey: TEST_QUESTION_CONTENT_KEY,
+                  family: "question",
                   releaseId,
-                  rendererDomain: "site",
-                  sourcePath: TEST_PAGE_SOURCE,
+                  rendererDomain: "snbt-general",
+                  sourcePath: TEST_QUESTION_SOURCE,
                 })
               ),
             ],
@@ -77,7 +69,7 @@ describe("content release staging groups", () => {
           {
             batchIndex: 0,
             operation: "stageRollbackProjectionBatch",
-            projections: [historicalProjection],
+            projections: [TEST_HISTORICAL_QUESTION_PROJECTION],
             releaseId,
           },
         ],
@@ -112,7 +104,7 @@ describe("content release staging groups", () => {
           t.run((ctx) => ctx.db.query("contentItems").unique())
         )
       ).toMatchObject({
-        projectionJson: canonicalizePublicPageProjection(historicalProjection),
+        projectionJson: TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
         projectionReady: true,
       });
     })

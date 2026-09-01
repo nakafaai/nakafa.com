@@ -176,18 +176,18 @@ describe("local question preview", () => {
     })
   );
 
-  it.effect("fails closed for a response unsupported by the preview UI", () =>
+  it.effect("preserves multiple-choice and category response formats", () =>
     Effect.gen(function* () {
-      const manifest = makeQuestionReadyManifest(previewManifestHash);
+      const multipleManifest = makeQuestionReadyManifest(previewManifestHash);
       const response = questionPromptProjection.response;
       if (response.kind === "category") {
         return yield* Effect.die("Expected one option-based test response.");
       }
       provideManifest({
-        ...manifest,
+        ...multipleManifest,
         artifacts: [
           {
-            ...manifest.artifacts[0],
+            ...multipleManifest.artifacts[0],
             projection: {
               ...questionPromptProjection,
               response: {
@@ -205,12 +205,40 @@ describe("local question preview", () => {
           },
         ],
       });
+      const multiple = Option.getOrThrow(yield* runPreview());
+      expect(multiple.response).toMatchObject({ kind: "multiple-choice" });
 
-      expect(yield* runFailure()).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "response",
+      const categoryManifest = makeQuestionReadyManifest(previewManifestHash);
+      provideManifest({
+        ...categoryManifest,
+        artifacts: [
+          {
+            ...categoryManifest.artifacts[0],
+            projection: {
+              ...questionPromptProjection,
+              response: {
+                categories: [
+                  { categoryKey: "category-1", label: "True", order: 1 },
+                  { categoryKey: "category-2", label: "False", order: 2 },
+                ],
+                kind: "category",
+                statements: [
+                  {
+                    correctCategoryKey: "category-1",
+                    label: "The statement is correct.",
+                    order: 1,
+                    statementKey: "statement-1",
+                  },
+                ],
+              },
+            },
+          },
+        ],
       });
-      expect(executeMock).not.toHaveBeenCalled();
+      const category = Option.getOrThrow(yield* runPreview());
+
+      expect(category.response).toMatchObject({ kind: "category" });
+      expect(executeMock).toHaveBeenCalledTimes(2);
     })
   );
 

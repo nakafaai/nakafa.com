@@ -1,6 +1,7 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs } from "convex/server";
 import type {
+  TryoutRenderableResponseSpec,
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
@@ -14,7 +15,7 @@ export type TryoutResponseSelection = Exclude<
 >;
 
 interface TryoutResponseState {
-  readonly responseSpec: TryoutRuntimeQuestion["responseSpec"];
+  readonly responseSpec: TryoutRenderableResponseSpec;
   readonly selection: TryoutResponseSelection | null;
 }
 

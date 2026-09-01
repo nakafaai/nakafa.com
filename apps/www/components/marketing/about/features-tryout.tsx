@@ -1,17 +1,16 @@
 import type { api } from "@repo/backend/convex/_generated/api";
-import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { TryoutChoicePreview } from "@/components/tryout/runtime/preview.client";
+import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
 
 type FeaturedTryout = FunctionReturnType<
   typeof api.tryouts.queries.catalog.getFeaturedQuestion
 >;
 
 export interface FeaturesTryoutModel {
-  readonly choices: FeaturedTryout["response"]["options"];
   readonly question: ReactNode;
+  readonly response: FeaturedTryout["response"];
 }
 
 /** Shows one signed production question with the established landing surface. */
@@ -32,18 +31,9 @@ export function FeaturesTryout({
       <article className="mt-auto px-8 pt-10 pb-8 lg:px-10 lg:pt-12 lg:pb-10">
         <section className="my-6">{value.question}</section>
         <section className="my-8">
-          <TryoutChoicePreview
-            choices={value.choices.map((choice) => ({
-              ...choice,
-              content: (
-                <MarkdownContent
-                  className="wrap-anywhere h-auto whitespace-normal"
-                  id={`features-tryout-choice-${choice.optionKey}`}
-                >
-                  {choice.label}
-                </MarkdownContent>
-              ),
-            }))}
+          <TryoutResponsePreview
+            id="features-tryout-response"
+            responseSpec={value.response}
           />
         </section>
       </article>

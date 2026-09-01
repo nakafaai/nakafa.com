@@ -32,7 +32,6 @@ export class PreviewIntegrityError extends Schema.TaggedError<PreviewIntegrityEr
       "renderer",
       "projection",
       "artifact",
-      "response",
     ]),
   }
 ) {}

@@ -1,7 +1,7 @@
-import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface.client";
+import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label.client";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
-import type { TryoutRuntimeResponseSpec } from "@/components/tryout/runtime/types";
+import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 
 /** Renders one immutable response with answer-key review styling. */
 export function TryoutReviewedResponse({
@@ -10,7 +10,7 @@ export function TryoutReviewedResponse({
   selection,
 }: {
   readonly questionOrder: number;
-  readonly responseSpec: TryoutRuntimeResponseSpec;
+  readonly responseSpec: TryoutRenderableResponseSpec;
   readonly selection: TryoutResponseSelection | null;
 }) {
   if (responseSpec.kind === "category") {
@@ -32,12 +32,12 @@ export function TryoutReviewedResponse({
           isCorrect={option.isCorrect}
           key={option.optionKey}
           label={
-            <MarkdownContent
-              className="wrap-anywhere h-auto whitespace-normal"
-              id={`review-question-${questionOrder}-${option.optionKey}-label-content`}
+            <TryoutResponseLabel
+              correctness={option.isCorrect}
+              id={`review-question-${questionOrder}-${option.optionKey}`}
             >
               {option.label}
-            </MarkdownContent>
+            </TryoutResponseLabel>
           }
         />
       ))}
@@ -62,7 +62,7 @@ function ReviewedCategoryResponse({
 }: {
   readonly questionOrder: number;
   readonly responseSpec: Extract<
-    TryoutRuntimeResponseSpec,
+    TryoutRenderableResponseSpec,
     { kind: "category" }
   >;
   readonly selection: TryoutResponseSelection | null;
@@ -79,12 +79,11 @@ function ReviewedCategoryResponse({
     <div className="space-y-6">
       {responseSpec.statements.map((statement) => (
         <section className="space-y-3" key={statement.statementKey}>
-          <MarkdownContent
-            className="wrap-anywhere h-auto whitespace-normal"
-            id={`review-question-${questionOrder}-${statement.statementKey}-label-content`}
+          <TryoutResponseLabel
+            id={`review-question-${questionOrder}-${statement.statementKey}`}
           >
             {statement.label}
-          </MarkdownContent>
+          </TryoutResponseLabel>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {responseSpec.categories.map((category) => (
               <TryoutReviewedChoice
@@ -99,12 +98,16 @@ function ReviewedCategoryResponse({
                 }
                 key={category.categoryKey}
                 label={
-                  <MarkdownContent
-                    className="wrap-anywhere h-auto whitespace-normal"
-                    id={`review-question-${questionOrder}-${statement.statementKey}-${category.categoryKey}-label-content`}
+                  <TryoutResponseLabel
+                    correctness={
+                      statement.correctCategoryKey === undefined
+                        ? undefined
+                        : statement.correctCategoryKey === category.categoryKey
+                    }
+                    id={`review-question-${questionOrder}-${statement.statementKey}-${category.categoryKey}`}
                   >
                     {category.label}
-                  </MarkdownContent>
+                  </TryoutResponseLabel>
                 }
               />
             ))}

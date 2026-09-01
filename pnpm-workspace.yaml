@@ -73,3 +73,7 @@ allowBuilds:
   msw: true
   protobufjs: true
   sharp: true
+
+# Same-day Aksara contracts are adopted only after immutable release verification.
+minimumReleaseAgeExclude:
+  - '@nakafa/aksara-contracts@0.32.0'
