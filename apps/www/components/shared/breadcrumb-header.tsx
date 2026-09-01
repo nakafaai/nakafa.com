@@ -31,12 +31,14 @@ export interface BreadcrumbHeaderValue {
   action?: ReactNode;
   homeLabel: string;
   items: readonly BreadcrumbHeaderItem[];
+  menuLabel: string;
+  openMenuLabel: string;
   title: string;
 }
 
 /** Renders at most Home and the two nearest path items. */
 export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
-  const { action, homeLabel, items, title } = value;
+  const { action, homeLabel, items, menuLabel, openMenuLabel, title } = value;
   const hiddenItems = items.slice(0, -VISIBLE_PATH_ITEM_COUNT);
   const visibleItems = items.slice(-VISIBLE_PATH_ITEM_COUNT);
 
@@ -51,7 +53,11 @@ export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
                 render={<IntentLink href="/home">{homeLabel}</IntentLink>}
               />
             </BreadcrumbItem>
-            <HiddenBreadcrumbs items={hiddenItems} />
+            <HiddenBreadcrumbs
+              items={hiddenItems}
+              menuLabel={menuLabel}
+              openMenuLabel={openMenuLabel}
+            />
             {visibleItems.map((item, index) => (
               <BreadcrumbSegment
                 isCurrent={index === visibleItems.length - 1}
@@ -70,18 +76,36 @@ export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
 /** Renders the collapsed breadcrumb group only when the path exceeds its cap. */
 function HiddenBreadcrumbs({
   items,
+  menuLabel,
+  openMenuLabel,
 }: {
   items: readonly BreadcrumbHeaderItem[];
+  menuLabel: string;
+  openMenuLabel: string;
 }) {
   if (items.length === 0) {
     return null;
   }
 
-  return <BreadcrumbMenu items={items} />;
+  return (
+    <BreadcrumbMenu
+      items={items}
+      menuLabel={menuLabel}
+      openMenuLabel={openMenuLabel}
+    />
+  );
 }
 
 /** Renders collapsed middle breadcrumb items inside an ellipsis menu. */
-function BreadcrumbMenu({ items }: { items: readonly BreadcrumbHeaderItem[] }) {
+function BreadcrumbMenu({
+  items,
+  menuLabel,
+  openMenuLabel,
+}: {
+  items: readonly BreadcrumbHeaderItem[];
+  menuLabel: string;
+  openMenuLabel: string;
+}) {
   return (
     <>
       <BreadcrumbSeparator />
@@ -90,7 +114,7 @@ function BreadcrumbMenu({ items }: { items: readonly BreadcrumbHeaderItem[] }) {
           <DropdownMenuTrigger
             render={
               <button
-                aria-label="Open breadcrumb menu"
+                aria-label={openMenuLabel}
                 className="flex size-6 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 type="button"
               >
@@ -100,7 +124,7 @@ function BreadcrumbMenu({ items }: { items: readonly BreadcrumbHeaderItem[] }) {
           />
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Menu</DropdownMenuLabel>
+              <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
               {items.map((item) => (
                 <BreadcrumbMenuItem
                   item={item}

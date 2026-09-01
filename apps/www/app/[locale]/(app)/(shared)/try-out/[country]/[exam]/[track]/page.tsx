@@ -109,6 +109,8 @@ async function TryoutTrackRoute({
               },
               { label: page.track.title },
             ],
+            menuLabel: tCommon("breadcrumb-menu"),
+            openMenuLabel: tCommon("open-breadcrumb-menu"),
             title: page.track.title,
           }}
         />

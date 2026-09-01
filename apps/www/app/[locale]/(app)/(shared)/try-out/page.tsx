@@ -96,6 +96,8 @@ async function TryoutHubRoute({
             value={{
               homeLabel: tCommon("home"),
               items: [{ label: title }],
+              menuLabel: tCommon("breadcrumb-menu"),
+              openMenuLabel: tCommon("open-breadcrumb-menu"),
               title,
             }}
           />

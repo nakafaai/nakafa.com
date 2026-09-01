@@ -97,12 +97,16 @@ export function CurriculumNestedHeader({
   currentRoute,
   homeLabel,
   locale,
+  menuLabel,
+  openMenuLabel,
   subjectLabel,
 }: {
   ancestors: readonly CurriculumViewRoute[];
   currentRoute: CurriculumViewRoute;
   homeLabel: string;
   locale: Locale;
+  menuLabel: string;
+  openMenuLabel: string;
   subjectLabel: string;
 }) {
   return (
@@ -120,6 +124,8 @@ export function CurriculumNestedHeader({
           })),
           { label: currentRoute.title },
         ],
+        menuLabel,
+        openMenuLabel,
         title: currentRoute.title,
       }}
     />
