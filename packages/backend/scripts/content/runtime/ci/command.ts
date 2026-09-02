@@ -45,17 +45,17 @@ interface RuntimeCommand {
  * Convex strips internal methods from its public declarations, so this runtime
  * capability is validated before any production read is attempted.
  */
-const setConvexAdminAuth = Effect.fn("contentRuntime.setConvexAdminAuth")(
-  function* (client: ConvexHttpClient, deployKey: string) {
-    const authenticate: unknown = Reflect.get(client, "setAdminAuth");
-    if (typeof authenticate !== "function") {
-      return yield* contentRuntimeCiError(
-        "Convex HTTP client does not expose admin authentication."
-      );
-    }
-    yield* Effect.sync(() => Reflect.apply(authenticate, client, [deployKey]));
+export const setConvexAdminAuth = Effect.fn(
+  "contentRuntime.setConvexAdminAuth"
+)(function* (client: object, deployKey: string) {
+  const authenticate: unknown = Reflect.get(client, "setAdminAuth");
+  if (typeof authenticate !== "function") {
+    return yield* contentRuntimeCiError(
+      "Convex HTTP client does not expose admin authentication."
+    );
   }
-);
+  yield* Effect.sync(() => Reflect.apply(authenticate, client, [deployKey]));
+});
 
 /**
  * Runs one runtime command with mode-600 output captured at process startup.
