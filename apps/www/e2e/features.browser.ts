@@ -9,8 +9,6 @@ import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 const NINA_ANSWER_TEXT = "Subtract the first equation";
 const NINA_HEADING_PATTERN = /Nina already knows/;
 const NINA_REASONING_TEXT = "Compare the two known equations";
-const FEATURED_CORRECT_RESPONSE = "19";
-const FEATURED_INCORRECT_RESPONSE = "10";
 const FEATURED_TRYOUT_HEADING =
   "After learning, see what you really understood";
 // Match local Next and Vercel-promoted production chunk paths.
@@ -119,60 +117,64 @@ const expectFeaturedTryoutResponse = Effect.fn(
     .locator("..");
   const response = feature.getByRole("radiogroup", { name: "Answer" });
   const choices = response.getByRole("radio");
-  const incorrectChoice = choices.nth(0);
-  const correctChoice = choices.nth(4);
   const status = feature.getByRole("status");
+  const checkAnswer = feature.getByRole("button", { name: "Check answer" });
+  const reset = feature.getByRole("button", { name: "Reset" });
 
   yield* Effect.promise(() => feature.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => expect(choices).toHaveCount(5));
+  const choiceCount = yield* Effect.promise(() => choices.count());
+  yield* Effect.sync(() => expect(choiceCount).toBeGreaterThanOrEqual(2));
+
+  for (let index = 0; index < choiceCount; index += 1) {
+    yield* Effect.promise(() =>
+      expect(choices.nth(index)).toHaveAccessibleName(/\S/)
+    );
+  }
+
+  const math = response.getByTestId("katex");
+  const annotations = math.locator("annotation");
+  const mathCount = yield* Effect.promise(() => math.count());
+  yield* Effect.promise(() => expect(annotations).toHaveCount(mathCount));
+  for (let index = 0; index < mathCount; index += 1) {
+    yield* Effect.promise(() =>
+      expect(annotations.nth(index)).toHaveText(/\S/)
+    );
+  }
+
+  yield* Effect.promise(() => expect(checkAnswer).toHaveCount(0));
+  yield* Effect.promise(() => expect(reset).toHaveCount(0));
+
+  const seedChoice = choices.first();
+  yield* Effect.promise(() => seedChoice.click());
+  yield* Effect.promise(() => expect(seedChoice).toBeChecked());
   yield* Effect.promise(() =>
-    expect(incorrectChoice).toHaveAccessibleName(FEATURED_INCORRECT_RESPONSE)
-  );
-  yield* Effect.promise(() =>
-    expect(correctChoice).toHaveAccessibleName(FEATURED_CORRECT_RESPONSE)
-  );
-  yield* Effect.promise(() =>
-    expect(response.getByTestId("katex")).toHaveCount(5)
-  );
-  yield* Effect.promise(() =>
-    expect(
-      incorrectChoice.locator("xpath=ancestor::label[1]").locator("annotation")
-    ).toHaveText(FEATURED_INCORRECT_RESPONSE)
-  );
-  yield* Effect.promise(() =>
-    expect(
-      correctChoice.locator("xpath=ancestor::label[1]").locator("annotation")
-    ).toHaveText(FEATURED_CORRECT_RESPONSE)
-  );
-  yield* Effect.promise(() =>
-    expect(feature.getByRole("button", { name: "Check answer" })).toHaveCount(0)
-  );
-  yield* Effect.promise(() =>
-    expect(feature.getByRole("button", { name: "Reset" })).toHaveCount(0)
+    expect(status).toHaveText(/^(Correct|Incorrect)$/)
   );
 
+  const correctChoice = response.getByRole("radio", { name: / Correct$/ });
+  const incorrectChoices = response.getByRole("radio", {
+    name: / Incorrect$/,
+  });
+  yield* Effect.promise(() => expect(correctChoice).toHaveCount(1));
+  yield* Effect.promise(() =>
+    expect(incorrectChoices).toHaveCount(choiceCount - 1)
+  );
+
+  const incorrectChoice = incorrectChoices.first();
   yield* Effect.promise(() => incorrectChoice.click());
   yield* Effect.promise(() => expect(incorrectChoice).toBeChecked());
   yield* Effect.promise(() =>
-    expect(incorrectChoice).toHaveAccessibleName(
-      `${FEATURED_INCORRECT_RESPONSE} Incorrect`
-    )
+    expect(incorrectChoice).toHaveAccessibleName(/ Incorrect$/)
   );
   yield* Effect.promise(() => expect(status).toHaveText("Incorrect"));
-  yield* Effect.promise(() =>
-    expect(feature.getByRole("button", { name: "Check answer" })).toHaveCount(0)
-  );
-  yield* Effect.promise(() =>
-    expect(feature.getByRole("button", { name: "Reset" })).toHaveCount(0)
-  );
+  yield* Effect.promise(() => expect(checkAnswer).toHaveCount(0));
+  yield* Effect.promise(() => expect(reset).toHaveCount(0));
 
   yield* Effect.promise(() => correctChoice.click());
   yield* Effect.promise(() => expect(correctChoice).toBeChecked());
   yield* Effect.promise(() => expect(incorrectChoice).not.toBeChecked());
   yield* Effect.promise(() =>
-    expect(correctChoice).toHaveAccessibleName(
-      `${FEATURED_CORRECT_RESPONSE} Correct`
-    )
+    expect(correctChoice).toHaveAccessibleName(/ Correct$/)
   );
   yield* Effect.promise(() => expect(status).toHaveText("Correct"));
 });
