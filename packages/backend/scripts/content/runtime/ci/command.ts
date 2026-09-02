@@ -1,33 +1,32 @@
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
+import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/scripts/content/runtime/ci/config";
+import {
+  contentRuntimeCiError,
+  sanitizeRuntimeCommandError,
+} from "@repo/backend/scripts/content/runtime/ci/error";
+import { collectConvexTableRows } from "@repo/backend/scripts/content/runtime/ci/pagination";
+import { ConvexHttpClient } from "convex/browser";
+import { makeFunctionReference } from "convex/server";
 import { Effect, FileSystem, Stream } from "effect";
 import { ChildProcess } from "effect/unstable/process";
-import stripAnsi from "strip-ansi";
 
-const MAX_COMMAND_ERROR_LENGTH = 500;
-const WHITESPACE = /\s+/u;
+export { sanitizeRuntimeCommandError };
+
 const SHARED_OUTPUT_REDIRECT =
   'output_path=$1; shift; exec "$@" >| "$output_path" 2>&1';
 const SPLIT_OUTPUT_REDIRECT =
   'stdout_path=$1; stderr_path=$2; shift 2; exec "$@" >| "$stdout_path" 2>| "$stderr_path"';
-
-export const sanitizeRuntimeCommandError = (
-  text: string,
-  sensitiveValues: readonly string[]
-) => {
-  let sanitized = stripAnsi(text);
-
-  for (const sensitiveValue of sensitiveValues) {
-    if (sensitiveValue.length > 0) {
-      sanitized = sanitized.replaceAll(sensitiveValue, "[redacted]");
-    }
-  }
-
-  return sanitized
-    .trim()
-    .split(WHITESPACE)
-    .join(" ")
-    .slice(0, MAX_COMMAND_ERROR_LENGTH);
-};
+const CONVEX_TABLE_DATA_QUERY = makeFunctionReference<
+  "query",
+  {
+    order: "asc" | "desc";
+    paginationOpts: {
+      cursor: null | string;
+      numItems: number;
+    };
+    table: string;
+  },
+  unknown
+>("_system/cli/tableData");
 
 interface RuntimeCommand {
   readonly args: readonly string[];
@@ -121,25 +120,37 @@ export const runConvexData = Effect.fn("contentRuntime.readProductionTable")(
     readonly outputPath: string;
     readonly table: string;
   }) {
-    yield* runRuntimeCommand({
-      args: [
-        "exec",
-        "convex",
-        "data",
-        options.table,
-        "--limit",
-        String(options.limit),
-        "--format",
-        "jsonArray",
-      ],
-      command: "pnpm",
-      deployKey: options.deployKey,
-      operation: `Production read for ${options.table}`,
-      reportStderr: true,
+    const fileSystem = yield* FileSystem.FileSystem;
+    const outputPaths = new Set([options.logPath, options.outputPath]);
+
+    for (const path of outputPaths) {
+      yield* fileSystem.writeFileString(path, "", { mode: 0o600 });
+      yield* fileSystem.chmod(path, 0o600);
+    }
+
+    const client = new ConvexHttpClient(
+      `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`,
+      { logger: false }
+    );
+    client.setDebug(false);
+    client.setAdminAuth(options.deployKey);
+
+    const rows = yield* collectConvexTableRows({
+      limit: options.limit,
+      readPage: ({ cursor, numItems }) =>
+        client.query(CONVEX_TABLE_DATA_QUERY, {
+          order: "desc",
+          paginationOpts: { cursor, numItems },
+          table: options.table,
+        }),
       sensitiveValues: [options.deployKey],
-      stderrPath: options.logPath,
-      stdoutPath: options.outputPath,
+      table: options.table,
+    }).pipe(Effect.ensuring(Effect.sync(() => client.clearAuth())));
+
+    yield* fileSystem.writeFileString(options.outputPath, JSON.stringify(rows), {
+      mode: 0o600,
     });
+    yield* fileSystem.chmod(options.outputPath, 0o600);
   }
 );
 
