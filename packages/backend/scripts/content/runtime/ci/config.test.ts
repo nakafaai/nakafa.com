@@ -84,7 +84,7 @@ describe("content runtime CI config", () => {
     })
   );
 
-  it.live("rejects limits above the Convex CLI truncation boundary", () =>
+  it.live("rejects limits above the bounded snapshot capacity", () =>
     Effect.gen(function* () {
       stubProductionConfig();
       stubCacheIdentity("1".repeat(64));

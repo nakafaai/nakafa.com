@@ -53,7 +53,7 @@ overrides:
   "auth@1.6.30>@babel/core": "7.29.7"
   "convex-helpers": "0.1.123"
   "depcheck@1.4.7>js-yaml": "3.15.1"
-  "fast-uri": "3.1.5"
+  "fast-uri": "3.1.6"
   "ip-address": "10.4.0"
   "lodash": "4.18.1"
   "minimatch@3.1.5>brace-expansion": "1.1.18"
