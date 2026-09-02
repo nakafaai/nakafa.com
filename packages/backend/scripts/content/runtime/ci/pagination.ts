@@ -35,12 +35,13 @@ export const collectConvexTableRows = Effect.fn(
 }) {
   const rows: JsonObject[] = [];
   const cursors = new Set<string>();
+  const maximumRowsToRead = options.limit + 1;
   let cursor: null | string = null;
 
-  while (rows.length < options.limit) {
+  while (rows.length < maximumRowsToRead) {
     const numItems = Math.min(
       CONTENT_RUNTIME_TABLE_PAGE_SIZE,
-      options.limit - rows.length
+      maximumRowsToRead - rows.length
     );
     const rawPage = yield* Effect.tryPromise({
       catch: (cause) =>
@@ -61,9 +62,14 @@ export const collectConvexTableRows = Effect.fn(
       )
     );
 
-    const remaining = options.limit - rows.length;
+    const remaining = maximumRowsToRead - rows.length;
     rows.push(...page.page.slice(0, remaining));
-    if (page.isDone || page.page.length >= remaining) {
+    if (rows.length > options.limit) {
+      return yield* contentRuntimeCiError(
+        `Production read for ${options.table} exceeded the bounded snapshot capacity of ${options.limit} rows.`
+      );
+    }
+    if (page.isDone) {
       return rows;
     }
     if (
@@ -81,5 +87,7 @@ export const collectConvexTableRows = Effect.fn(
     cursor = page.continueCursor;
   }
 
-  return rows;
+  return yield* contentRuntimeCiError(
+    `Production read for ${options.table} exceeded the bounded snapshot capacity of ${options.limit} rows.`
+  );
 });

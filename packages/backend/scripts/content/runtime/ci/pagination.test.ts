@@ -49,16 +49,19 @@ describe("content runtime production pagination", () => {
     })
   );
 
-  it.effect("stops once the fail-closed export cap is reached", () =>
+  it.effect("returns exactly the fail-closed export capacity", () =>
     Effect.gen(function* () {
-      let requests = 0;
+      const requests: Array<{
+        cursor: null | string;
+        numItems: number;
+      }> = [];
       const rows = yield* collectConvexTableRows({
         limit: 2,
-        readPage: async () => {
-          requests += 1;
+        readPage: async (request) => {
+          requests.push(request);
           return {
-            continueCursor: "more-data",
-            isDone: false,
+            continueCursor: "done",
+            isDone: true,
             page: [row("first"), row("second")],
           };
         },
@@ -66,7 +69,51 @@ describe("content runtime production pagination", () => {
       });
 
       expect(rows).toEqual([row("first"), row("second")]);
-      expect(requests).toBe(1);
+      expect(requests).toEqual([{ cursor: null, numItems: 3 }]);
+    })
+  );
+
+  it.effect("rejects snapshots above the fail-closed export capacity", () =>
+    Effect.gen(function* () {
+      const requests: Array<{
+        cursor: null | string;
+        numItems: number;
+      }> = [];
+      const pages = [
+        {
+          continueCursor: "cursor-1",
+          isDone: false,
+          page: [row("first"), row("second")],
+        },
+        {
+          continueCursor: "done",
+          isDone: true,
+          page: [row("overflow")],
+        },
+      ];
+
+      const failure = yield* collectConvexTableRows({
+        limit: 2,
+        readPage: async (request) => {
+          requests.push(request);
+          const page = pages.shift();
+          if (page === undefined) {
+            throw new Error("Unexpected pagination request.");
+          }
+          return page;
+        },
+        table: "contentKeys",
+      }).pipe(Effect.flip);
+
+      expect(failure).toMatchObject({
+        _tag: "ContentRuntimeCiError",
+        message:
+          "Production read for contentKeys exceeded the bounded snapshot capacity of 2 rows.",
+      });
+      expect(requests).toEqual([
+        { cursor: null, numItems: 3 },
+        { cursor: "cursor-1", numItems: 1 },
+      ]);
     })
   );
 
