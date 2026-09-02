@@ -41,6 +41,23 @@ interface RuntimeCommand {
 }
 
 /**
+ * Authenticates the HTTP client for Convex's CLI-only system query.
+ * Convex strips internal methods from its public declarations, so this runtime
+ * capability is validated before any production read is attempted.
+ */
+export const setConvexAdminAuth = Effect.fn(
+  "contentRuntime.setConvexAdminAuth"
+)(function* (client: object, deployKey: string) {
+  const authenticate: unknown = Reflect.get(client, "setAdminAuth");
+  if (typeof authenticate !== "function") {
+    return yield* contentRuntimeCiError(
+      "Convex HTTP client does not expose admin authentication."
+    );
+  }
+  yield* Effect.sync(() => Reflect.apply(authenticate, client, [deployKey]));
+});
+
+/**
  * Runs one runtime command with mode-600 output captured at process startup.
  * Paths and arguments stay positional so the shell never reparses them.
  * @see https://github.com/Effect-TS/effect/blob/66114151c2b4640bf773f2b3456ce70d679422f6/packages/effect/src/unstable/process/ChildProcess.ts
@@ -132,8 +149,7 @@ export const runConvexData = Effect.fn("contentRuntime.readProductionTable")(
       `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`,
       { logger: false }
     );
-    client.setDebug(false);
-    client.setAdminAuth(options.deployKey);
+    yield* setConvexAdminAuth(client, options.deployKey);
 
     const rows = yield* collectConvexTableRows({
       limit: options.limit,
