@@ -81,9 +81,17 @@ describe("material lesson navigation", () => {
   });
 
   it("orders signed siblings and handles pagination edges", async () => {
+    const missingRoute = {
+      ...previewProjection,
+      publicPath: PublicPathSchema.make(
+        `${previewProjection.parentPath}/missing`
+      ),
+    };
+
     await expect(
       readMaterialNavigation(publishedPage, undefined)
     ).resolves.toMatchObject({
+      currentHref: toMaterialHref(previewProjection),
       pagination: {
         next: {
           href: toMaterialHref(previewNextProjection),
@@ -101,6 +109,7 @@ describe("material lesson navigation", () => {
         undefined
       )
     ).resolves.toMatchObject({
+      currentHref: toMaterialHref(previewNextProjection),
       pagination: {
         next: emptyItem,
         prev: { href: toMaterialHref(previewProjection) },
@@ -110,16 +119,12 @@ describe("material lesson navigation", () => {
       readMaterialNavigation(
         {
           ...publishedPage,
-          route: {
-            ...previewProjection,
-            publicPath: PublicPathSchema.make(
-              `${previewProjection.parentPath}/missing`
-            ),
-          },
+          route: missingRoute,
         },
         undefined
       )
     ).resolves.toMatchObject({
+      currentHref: toMaterialHref(missingRoute),
       pagination: { next: emptyItem, prev: emptyItem },
     });
   });
@@ -145,6 +150,7 @@ describe("material lesson navigation", () => {
       readMaterialNavigation(previewPage, context)
     ).resolves.toMatchObject({
       context: undefined,
+      currentHref: toMaterialHref(previewProjection),
       link: undefined,
       pagination: {
         next: { href: toMaterialHref(previewNextProjection) },
@@ -162,6 +168,7 @@ describe("material lesson navigation", () => {
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({
       context,
+      currentHref: `${toMaterialHref(previewProjection)}?ctx=merdeka~${context.nodeKey}`,
       link: {
         href: "/en/curriculum/merdeka#functions",
         label: "Functions",
@@ -186,6 +193,7 @@ describe("material lesson navigation", () => {
     await expect(
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({
+      currentHref: `${toMaterialHref(previewProjection)}?ctx=merdeka~${context.nodeKey}`,
       pagination: {
         next: { href: toMaterialHref(previewNextProjection) },
       },
@@ -194,6 +202,7 @@ describe("material lesson navigation", () => {
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({
       context: undefined,
+      currentHref: toMaterialHref(previewProjection),
       link: undefined,
       pagination: {
         next: { href: toMaterialHref(previewNextProjection) },

@@ -139,6 +139,7 @@ async function MaterialRouteContent({
         content={{ body: page.body, metadata: page.metadata }}
         copyContent={page.copySourceUrl ? undefined : page.body}
         copySourceUrl={page.copySourceUrl}
+        currentHref={navigation.currentHref}
         footer={
           allowsInteractions ? <DeferredComments slug={contentKey} /> : null
         }
@@ -173,6 +174,7 @@ async function MaterialLessonPage({
   content,
   copyContent,
   copySourceUrl,
+  currentHref,
   footer,
   headerLink,
   icon,
@@ -188,6 +190,7 @@ async function MaterialLessonPage({
   content: MaterialBody;
   copyContent?: string;
   copySourceUrl: null | string;
+  currentHref: string;
   footer: ReactNode;
   headerLink?: {
     href: string;
@@ -273,7 +276,7 @@ async function MaterialLessonPage({
         githubUrl={sourceUrl ?? undefined}
         header={{
           title: metadata.title,
-          href: toMaterialHref(route),
+          href: currentHref,
           description: metadata.description ?? metadata.subject,
         }}
         showComments={showComments}
