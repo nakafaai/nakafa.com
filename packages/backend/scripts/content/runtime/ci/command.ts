@@ -1,18 +1,16 @@
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/scripts/content/runtime/ci/config";
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import {
-  type JsonObject,
-  JsonObjectSchema,
-} from "@repo/backend/scripts/content/runtime/ci/json";
+  contentRuntimeCiError,
+  sanitizeRuntimeCommandError,
+} from "@repo/backend/scripts/content/runtime/ci/error";
+import { collectConvexTableRows } from "@repo/backend/scripts/content/runtime/ci/pagination";
 import { ConvexHttpClient } from "convex/browser";
 import { makeFunctionReference } from "convex/server";
-import { Effect, FileSystem, Schema, Stream } from "effect";
+import { Effect, FileSystem, Stream } from "effect";
 import { ChildProcess } from "effect/unstable/process";
-import stripAnsi from "strip-ansi";
 
-const MAX_COMMAND_ERROR_LENGTH = 500;
-export const CONTENT_RUNTIME_TABLE_PAGE_SIZE = 4096;
-const WHITESPACE = /\s+/u;
+export { sanitizeRuntimeCommandError };
+
 const SHARED_OUTPUT_REDIRECT =
   'output_path=$1; shift; exec "$@" >| "$output_path" 2>&1';
 const SPLIT_OUTPUT_REDIRECT =
@@ -29,114 +27,6 @@ const CONVEX_TABLE_DATA_QUERY = makeFunctionReference<
   },
   unknown
 >("_system/cli/tableData");
-const ConvexTablePageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(JsonObjectSchema),
-});
-
-interface ConvexTablePageRequest {
-  readonly cursor: null | string;
-  readonly numItems: number;
-}
-
-type ReadConvexTablePage = (
-  request: ConvexTablePageRequest
-) => Promise<unknown>;
-
-export const sanitizeRuntimeCommandError = (
-  text: string,
-  sensitiveValues: readonly string[]
-) => {
-  let sanitized = stripAnsi(text);
-
-  for (const sensitiveValue of sensitiveValues) {
-    if (sensitiveValue.length > 0) {
-      sanitized = sanitized.replaceAll(sensitiveValue, "[redacted]");
-    }
-  }
-
-  return sanitized
-    .trim()
-    .split(WHITESPACE)
-    .join(" ")
-    .slice(0, MAX_COMMAND_ERROR_LENGTH);
-};
-
-const productionReadError = (
-  table: string,
-  cause: unknown,
-  sensitiveValues: readonly string[]
-) => {
-  const detail = sanitizeRuntimeCommandError(
-    cause instanceof Error ? cause.message : String(cause),
-    sensitiveValues
-  );
-  const message = `Production read for ${table} failed`;
-
-  return contentRuntimeCiError(
-    detail.length > 0 ? `${message}: ${detail}` : `${message}.`
-  );
-};
-
-export const collectConvexTableRows = Effect.fn(
-  "contentRuntime.collectProductionTable"
-)(function* (options: {
-  readonly limit: number;
-  readonly readPage: ReadConvexTablePage;
-  readonly sensitiveValues?: readonly string[];
-  readonly table: string;
-}) {
-  const rows: JsonObject[] = [];
-  const cursors = new Set<string>();
-  let cursor: null | string = null;
-
-  while (rows.length < options.limit) {
-    const numItems = Math.min(
-      CONTENT_RUNTIME_TABLE_PAGE_SIZE,
-      options.limit - rows.length
-    );
-    const rawPage = yield* Effect.tryPromise({
-      catch: (cause) =>
-        productionReadError(
-          options.table,
-          cause,
-          options.sensitiveValues ?? []
-        ),
-      try: () => options.readPage({ cursor, numItems }),
-    });
-    const page = yield* Schema.decodeUnknownEffect(ConvexTablePageSchema)(
-      rawPage
-    ).pipe(
-      Effect.mapError(() =>
-        contentRuntimeCiError(
-          `Production read for ${options.table} returned invalid pagination data.`
-        )
-      )
-    );
-
-    const remaining = options.limit - rows.length;
-    rows.push(...page.page.slice(0, remaining));
-    if (page.isDone || page.page.length >= remaining) {
-      return rows;
-    }
-    if (
-      page.page.length === 0 ||
-      page.continueCursor.length === 0 ||
-      page.continueCursor === cursor ||
-      cursors.has(page.continueCursor)
-    ) {
-      return yield* contentRuntimeCiError(
-        `Production read for ${options.table} returned an invalid pagination cursor.`
-      );
-    }
-
-    cursors.add(page.continueCursor);
-    cursor = page.continueCursor;
-  }
-
-  return rows;
-});
 
 interface RuntimeCommand {
   readonly args: readonly string[];

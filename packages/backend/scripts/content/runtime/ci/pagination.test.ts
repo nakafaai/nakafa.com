@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   collectConvexTableRows,
   CONTENT_RUNTIME_TABLE_PAGE_SIZE,
-} from "@repo/backend/scripts/content/runtime/ci/command";
+} from "@repo/backend/scripts/content/runtime/ci/pagination";
 import { Effect } from "effect";
 
 const row = (value: string) => ({ value });

@@ -7,7 +7,7 @@ export const CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT = "dapper-antelope-269";
  * Bounded trusted-snapshot capacity for active and retained content history.
  * Production table reads use smaller pages and fail closed at this total cap.
  */
-export const MAX_CONTENT_RUNTIME_EXPORT_LIMIT = 31_999;
+export const MAX_CONTENT_RUNTIME_EXPORT_LIMIT = 100_000;
 
 export const DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT =
   MAX_CONTENT_RUNTIME_EXPORT_LIMIT;
