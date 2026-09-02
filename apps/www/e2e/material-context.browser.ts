@@ -48,10 +48,9 @@ test(
                   )
                 );
 
-                const header = page.locator("aside").getByRole("link", {
-                  exact: true,
-                  name: "Function Concept",
-                });
+                const header = page
+                  .locator("aside")
+                  .getByRole("link", { name: /^Function Concept\b/ });
                 yield* Effect.promise(() => expect(header).toHaveCount(1));
                 yield* Effect.promise(() =>
                   expect(header).toHaveAttribute(
