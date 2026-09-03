@@ -2,9 +2,12 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { ConvexHttpClient } from "convex/browser";
+import { makeFunctionReference } from "convex/server";
 import {
   runRuntimeCommand,
   sanitizeRuntimeCommandError,
+  setConvexAdminAuth,
 } from "@repo/backend/scripts/content/runtime/ci/command";
 import { Effect, FileSystem } from "effect";
 
@@ -12,6 +15,55 @@ describe("content runtime command diagnostics", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
+
+  it.effect("authenticates and clears Convex system-query requests", () =>
+    Effect.gen(function* () {
+      const authorizations: Array<null | string> = [];
+      const client = new ConvexHttpClient(
+        "https://happy-animal-123.convex.cloud",
+        {
+          fetch: async (_input, init) => {
+            authorizations.push(
+              new Headers(init?.headers).get("Authorization")
+            );
+            return new Response(
+              JSON.stringify({ status: "success", value: null }),
+              {
+                headers: { "Content-Type": "application/json" },
+                status: 200,
+              }
+            );
+          },
+          logger: false,
+        }
+      );
+      const query = makeFunctionReference<
+        "query",
+        Record<string, never>,
+        null
+      >("test:query");
+
+      yield* setConvexAdminAuth(client, "test-admin-key");
+      yield* Effect.promise(() => client.query(query, {}));
+      client.clearAuth();
+      yield* Effect.promise(() => client.query(query, {}));
+
+      expect(authorizations).toEqual(["Convex test-admin-key", null]);
+    })
+  );
+
+  it.effect("fails closed when Convex removes runtime admin auth", () =>
+    Effect.gen(function* () {
+      const failure = yield* setConvexAdminAuth({}, "test-admin-key").pipe(
+        Effect.flip
+      );
+
+      expect(failure).toMatchObject({
+        _tag: "ContentRuntimeCiError",
+        message: "Convex HTTP client does not expose admin authentication.",
+      });
+    })
+  );
 
   it("keeps a bounded single-line diagnostic and redacts secrets", () => {
     const deployKey = "sensitive-deploy-key";
