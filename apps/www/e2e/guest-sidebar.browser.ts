@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
@@ -141,8 +142,12 @@ test("provider failures land on one clean generic retry", async ({ page }) => {
         yield* Effect.promise(() =>
           expect(page).toHaveURL(new URL(retryHref, page.url()).toString())
         );
+        const providerError = page.getByText(en.Auth["provider-error"], {
+          exact: true,
+        });
+        yield* Effect.promise(() => expect(providerError).toBeVisible());
         yield* Effect.promise(() =>
-          expect(page.getByRole("alert")).toBeVisible()
+          expect(providerError).toHaveAttribute("role", "alert")
         );
         yield* Effect.sync(() => {
           expect(page.url()).not.toContain("access_denied");
