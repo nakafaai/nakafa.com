@@ -93,6 +93,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
       "packages/ai/package.json",
       "packages/backend/package.json",
       "packages/contents/package.json",
+      "packages/email/package.json",
       "packages/internationalization/package.json",
     ],
     dependency: "@nakafa/aksara-contracts",

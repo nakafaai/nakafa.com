@@ -496,8 +496,8 @@ importers:
         specifier: 0.3.2
         version: 0.3.2(convex@1.45.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/resend':
-        specifier: ^0.2.7
-        version: 0.2.7(@react-email/render@2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))(react@19.2.8)
+        specifier: ^0.2.8
+        version: 0.2.8(@react-email/render@2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/workflow':
         specifier: ^0.4.6
         version: 0.4.6(@convex-dev/workpool@0.4.10(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))(react@19.2.8))(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))
@@ -900,6 +900,9 @@ importers:
 
   packages/email:
     dependencies:
+      '@nakafa/aksara-contracts':
+        specifier: 0.33.0
+        version: 0.33.0(effect@4.0.0-rc.110)
       '@react-email/render':
         specifier: 2.1.0
         version: 2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -909,9 +912,6 @@ importers:
       '@repo/seo':
         specifier: workspace:*
         version: link:../seo
-      class-variance-authority:
-        specifier: ^0.7.1
-        version: 0.7.1
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.110
@@ -925,6 +925,12 @@ importers:
         specifier: 6.9.2
         version: 6.9.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@7.2.0)
     devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.110(effect@4.0.0-rc.110)(vitest@4.1.11)
+      '@repo/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -934,6 +940,12 @@ importers:
       '@types/react-dom':
         specifier: 19.2.5
         version: 19.2.5(@types/react@19.2.18)
+      '@vitest/coverage-istanbul':
+        specifier: ^4.1.11
+        version: 4.1.11(supports-color@7.2.0)(vitest@4.1.11)
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@edge-runtime/vm@5.0.0)(@types/node@24.13.3)(@vitest/coverage-istanbul@4.1.11)(@vitest/ui@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
 
   packages/internationalization:
     dependencies:
@@ -1636,8 +1648,8 @@ packages:
       react:
         optional: true
 
-  '@convex-dev/resend@0.2.7':
-    resolution: {integrity: sha512-n5KTnTKEGPI2vwCS2WqSXITvkUmEk0vGOuB9beAeBMmsK53Y/O0+KDjPINVy1EW4jAtnByFbAqgwyt20humdDQ==}
+  '@convex-dev/resend@0.2.8':
+    resolution: {integrity: sha512-N7S7+cZEjP0wi1EEfTg4lhrmq4+SskDnx7AM6jPh2tqaIpjK5b7YJqXYe2avds8ojBMNq1MGmW7oSf0bvjISrA==}
     peerDependencies:
       convex: ^1.43.0
       convex-helpers: 0.1.123
@@ -8545,7 +8557,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@convex-dev/resend@0.2.7(@react-email/render@2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))(react@19.2.8)':
+  '@convex-dev/resend@0.2.8(@react-email/render@2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@convex-dev/rate-limiter': 0.3.2(convex@1.45.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/workpool': 0.4.10(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))(react@19.2.8)

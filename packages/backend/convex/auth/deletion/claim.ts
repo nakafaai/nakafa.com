@@ -10,6 +10,7 @@ import {
   accountDeletionPreparationOutcome,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { cancelPendingWelcomeEmail } from "@repo/backend/convex/emails/deletion";
+import { removeWelcomeIntent } from "@repo/backend/convex/emails/welcome/impl";
 import { Clock, Effect } from "effect";
 
 /**
@@ -51,25 +52,26 @@ export const claimAccountDeletion: (
       return accountDeletionPreparationOutcome.ready;
     }
 
-    if (
-      !preparation ||
-      preparation.attemptId !== attemptId ||
-      preparation.cancellationStartedAt !== undefined ||
-      preparation.finalizedAt !== undefined ||
-      preparation.readyAt === undefined ||
-      user.deletionPreparedAt === undefined
-    ) {
-      return accountDeletionPreparationOutcome.temporarilyUnavailable;
-    }
+    /*
+     * For an active user, prepareAccountDeletion returns ready only after the
+     * matching preparation and user marker are durable in this transaction.
+     * Missing state here is therefore a violated internal invariant, not a
+     * recoverable preparation outcome.
+     */
+    const claimedPreparation = yield* Effect.fromNullishOr(preparation).pipe(
+      Effect.orDie
+    );
 
     yield* cancelPendingWelcomeEmail(ctx, user);
+    yield* removeWelcomeIntent(ctx, user._id);
     const deletionStartedAt = yield* Clock.currentTimeMillis;
 
     yield* tryUserCleanup(() =>
-      ctx.db.patch("accountDeletionPreparations", preparation._id, {
-        deletionStartedAt: preparation.deletionStartedAt ?? deletionStartedAt,
+      ctx.db.patch("accountDeletionPreparations", claimedPreparation._id, {
+        deletionStartedAt:
+          claimedPreparation.deletionStartedAt ?? deletionStartedAt,
         recoveryAt: deletionStartedAt + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
-        recoveryGeneration: preparation.recoveryGeneration + 1,
+        recoveryGeneration: claimedPreparation.recoveryGeneration + 1,
       })
     );
 

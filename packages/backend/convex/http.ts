@@ -11,24 +11,24 @@ import { registerPublicContentRuntimeRoute } from "@repo/backend/convex/contentR
 import { registerContentReleaseRoutes } from "@repo/backend/convex/contentRelease/ingress/route";
 import { registerAgentApiRoutes } from "@repo/backend/convex/routes/agent/api";
 import { registerAgentMcpRoutes } from "@repo/backend/convex/routes/agent/mcp/route";
+import { createQueryFreeRequestLogger } from "@repo/backend/convex/routes/middleware/logger";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
+import { registerResendRoutes } from "@repo/backend/convex/routes/resend";
 import {
   type HonoWithConvex,
   HttpRouterWithHono,
 } from "convex-helpers/server/hono";
 import { Hono } from "hono";
-import { logger } from "hono/logger";
-import stripAnsi from "strip-ansi";
 
 const app: HonoWithConvex<ActionCtx, { requestId: string }> = new Hono();
 
 // Request ID middleware - must be first for distributed tracing
 app.use("*", requestId);
 
-// Logging middleware - strip ANSI for Convex dashboard
-const requestLogger = logger((...args) => {
-  console.info(...args.map(stripAnsi));
+// Request queries may contain OAuth diagnostics or other private credentials.
+const requestLogger = createQueryFreeRequestLogger((message) => {
+  console.info(message);
 });
 
 app.use("*", (c, next) =>
@@ -54,6 +54,7 @@ registerAgentMcpRoutes(app);
 
 // Register webhook routes (internal - called by external services)
 registerPolarRoutes(app);
+registerResendRoutes(app);
 
 // Register capability-authenticated forum attachment uploads.
 registerForumAttachmentUploadRoute(app);

@@ -27,7 +27,7 @@ import { Effect, Schema } from "effect";
 const WELCOME_LOCALE = AppLocaleSchema.make("en");
 const PRIVACY_POLICY_PAGE_KEY = PageKeySchema.make("privacy-policy");
 const TERMS_OF_SERVICE_PAGE_KEY = PageKeySchema.make("terms-of-service");
-const WELCOME_EMAIL_SUBJECT = "Welcome to Nakafa";
+const WELCOME_EMAIL_SUBJECT = "Your Nakafa account is ready";
 const canonicalSiteUrl = new URL(siteOrigin);
 
 interface PageCatalogInput {

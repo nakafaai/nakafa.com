@@ -133,8 +133,12 @@ export function isApplicationRoutePath(
     return isPublicSurfacePath(publicSurface, segments);
   }
 
-  if (["auth", "contributor", "home", "pricing", "search"].includes(root)) {
+  if (["contributor", "home", "pricing", "search"].includes(root)) {
     return segments.length === 0;
+  }
+
+  if (root === "auth") {
+    return ["", "continue", "error"].includes(segments.join("/"));
   }
 
   if (root === "chat") {

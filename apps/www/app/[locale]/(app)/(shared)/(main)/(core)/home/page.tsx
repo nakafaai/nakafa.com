@@ -43,6 +43,10 @@ async function AuthenticatedHome({
   }
 
   const onboardingStatus = await Effect.runPromise(readOnboardingStatus(token));
+  if (!onboardingStatus.isAuthenticated) {
+    redirect({ href: "/auth", locale });
+    return null;
+  }
   if (onboardingStatus.isRequired) {
     redirect({ href: "/onboarding", locale });
     return null;

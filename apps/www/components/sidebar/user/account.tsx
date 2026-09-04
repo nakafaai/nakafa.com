@@ -31,10 +31,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
@@ -42,6 +39,7 @@ import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
@@ -51,11 +49,10 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const tLegal = useTranslations("Legal");
   const pageNavigation = usePageNavigation((navigation) => navigation);
-  const pathname = usePathname();
   const router = useRouter();
   const [open, { close, set }] = useDisclosure(false);
   const { isMobile } = useSidebar();
-  const authHref = `/auth?redirect=${pathname}`;
+  const authNavigation = useCurrentAuthNavigation();
   const dropdownSide = isMobile ? "bottom" : "right";
   const submenuSide = isMobile ? "top" : "right";
   const planLabelByPlan = {
@@ -73,7 +70,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
     );
     if (Result.isSuccess(result)) {
       Effect.runSync(clearAiDraftText);
-      router.replace(authHref);
+      router.replace(authNavigation.readHref());
     }
   }
 

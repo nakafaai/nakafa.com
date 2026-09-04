@@ -1,26 +1,29 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { activateWelcomeIntent } from "@repo/backend/convex/emails/welcome/impl";
 import { setPreferredCurriculumProgram } from "@repo/backend/convex/learningPreferences/impl";
 import { readCurriculumProgram } from "@repo/backend/convex/learningPreferences/program";
 import type {
   OnboardingCompletion,
-  OnboardingFocus,
-  OnboardingRegion,
   onboardingAnswerValidator,
 } from "@repo/backend/convex/onboarding/schema";
 import {
   getOnboardingDestination,
   getOnboardingRegionDefaults,
 } from "@repo/backend/convex/onboarding/spec";
-import type { SelfSelectableUserRole } from "@repo/backend/convex/users/roles";
+import {
+  toOnboardingProfile,
+  toOnboardingStatus,
+} from "@repo/backend/convex/onboarding/status";
 import type { Infer } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 
 type OnboardingAnswer = Infer<typeof onboardingAnswerValidator>;
 type OnboardingCtx = MutationCtx | QueryCtx;
+type OnboardingProfile = Doc<"onboardingProfiles">;
 const onboardingAlreadyCompleteCode = "ONBOARDING_ALREADY_COMPLETE";
 const onboardingPersistenceFailedCode = "ONBOARDING_PERSISTENCE_FAILED";
 const onboardingPersistenceFailedMessage =
@@ -64,25 +67,6 @@ function tryOnboardingPersistence<A>(operation: () => Promise<A>) {
   });
 }
 
-/** Projects one private database row into the public draft shape. */
-export function toOnboardingProfile(profile: {
-  readonly completedAt?: number;
-  readonly focus?: OnboardingFocus;
-  readonly region?: OnboardingRegion;
-  readonly role?: SelfSelectableUserRole;
-  readonly updatedAt: number;
-}) {
-  return {
-    ...(profile.completedAt === undefined
-      ? {}
-      : { completedAt: profile.completedAt }),
-    ...(profile.focus === undefined ? {} : { focus: profile.focus }),
-    ...(profile.region === undefined ? {} : { region: profile.region }),
-    ...(profile.role === undefined ? {} : { role: profile.role }),
-    updatedAt: profile.updatedAt,
-  };
-}
-
 /** Reads one user's resumable onboarding profile. */
 export const readOnboardingProfileByUserId = Effect.fn(
   "onboarding.readProfileByUserId"
@@ -102,45 +86,104 @@ function insertOnboardingAnswer(
   answer: OnboardingAnswer,
   now: number
 ) {
-  const base = { updatedAt: now, userId };
+  const base = {
+    admittedAt: now,
+    startedAt: now,
+    updatedAt: now,
+    userId,
+  };
 
   if (answer.kind === "role") {
-    return ctx.db.insert("onboardingProfiles", {
+    const profile = {
       ...base,
       role: answer.value,
-    });
+    };
+    return tryOnboardingPersistence(() =>
+      ctx.db.insert("onboardingProfiles", profile)
+    ).pipe(Effect.as(profile));
   }
 
   if (answer.kind === "region") {
-    return ctx.db.insert("onboardingProfiles", {
+    const profile = {
       ...base,
       region: answer.value,
-    });
+    };
+    return tryOnboardingPersistence(() =>
+      ctx.db.insert("onboardingProfiles", profile)
+    ).pipe(Effect.as(profile));
   }
 
-  return ctx.db.insert("onboardingProfiles", {
+  const profile = {
     ...base,
     focus: answer.value,
-  });
+  };
+  return tryOnboardingPersistence(() =>
+    ctx.db.insert("onboardingProfiles", profile)
+  ).pipe(Effect.as(profile));
 }
 
 /** Patches exactly one answer on an incomplete onboarding profile. */
 function patchOnboardingAnswer(
   ctx: MutationCtx,
-  profileId: Id<"onboardingProfiles">,
+  profile: OnboardingProfile,
   answer: OnboardingAnswer,
   now: number
 ) {
+  const lifecycle = {
+    ...(profile.admittedAt === undefined ? { admittedAt: now } : {}),
+    ...(profile.startedAt === undefined ? { startedAt: now } : {}),
+    updatedAt: now,
+  };
+
   if (answer.kind === "role") {
-    return ctx.db.patch(profileId, { role: answer.value, updatedAt: now });
+    const saved = { ...profile, ...lifecycle, role: answer.value };
+    return tryOnboardingPersistence(() =>
+      ctx.db.patch(profile._id, { ...lifecycle, role: answer.value })
+    ).pipe(Effect.as(saved));
   }
 
   if (answer.kind === "region") {
-    return ctx.db.patch(profileId, { region: answer.value, updatedAt: now });
+    const saved = { ...profile, ...lifecycle, region: answer.value };
+    return tryOnboardingPersistence(() =>
+      ctx.db.patch(profile._id, { ...lifecycle, region: answer.value })
+    ).pipe(Effect.as(saved));
   }
 
-  return ctx.db.patch(profileId, { focus: answer.value, updatedAt: now });
+  const saved = { ...profile, ...lifecycle, focus: answer.value };
+  return tryOnboardingPersistence(() =>
+    ctx.db.patch(profile._id, { ...lifecycle, focus: answer.value })
+  ).pipe(Effect.as(saved));
 }
+
+/** Records the first authoritative decision requiring user onboarding. */
+export const admitOnboarding = Effect.fn("onboarding.admit")(function* (
+  ctx: MutationCtx,
+  user: Pick<Doc<"users">, "_id" | "role">
+) {
+  const profile = yield* readOnboardingProfileByUserId(ctx, user._id);
+  const status = toOnboardingStatus(user, profile);
+  if (!status.isRequired || profile?.admittedAt !== undefined) {
+    return status;
+  }
+
+  const now = yield* Clock.currentTimeMillis;
+  if (profile) {
+    yield* tryOnboardingPersistence(() =>
+      ctx.db.patch(profile._id, { admittedAt: now })
+    );
+  } else {
+    yield* tryOnboardingPersistence(() =>
+      ctx.db.insert("onboardingProfiles", {
+        admittedAt: now,
+        updatedAt: now,
+        userId: user._id,
+      })
+    );
+  }
+
+  const admittedProfile = yield* readOnboardingProfileByUserId(ctx, user._id);
+  return toOnboardingStatus(user, admittedProfile);
+});
 
 /** Saves one draft answer without applying user settings early. */
 export const saveOnboardingAnswer = Effect.fn("onboarding.saveAnswer")(
@@ -154,20 +197,9 @@ export const saveOnboardingAnswer = Effect.fn("onboarding.saveAnswer")(
     }
 
     const now = yield* Clock.currentTimeMillis;
-    if (current) {
-      yield* tryOnboardingPersistence(() =>
-        patchOnboardingAnswer(ctx, current._id, answer, now)
-      );
-    } else {
-      yield* tryOnboardingPersistence(() =>
-        insertOnboardingAnswer(ctx, userId, answer, now)
-      );
-    }
-
-    const saved = yield* readOnboardingProfileByUserId(ctx, userId);
-    if (!saved) {
-      return yield* toOnboardingPersistenceError();
-    }
+    const saved = yield* current
+      ? patchOnboardingAnswer(ctx, current, answer, now)
+      : insertOnboardingAnswer(ctx, userId, answer, now);
     return toOnboardingProfile(saved);
   }
 );
@@ -187,14 +219,15 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
   }
 
   const defaults = getOnboardingRegionDefaults(answers.region);
-  const curriculum = defaults.curriculumProgramKey
-    ? yield* readCurriculumProgram(
-        ctx,
-        defaults.locale,
-        defaults.curriculumProgramKey
-      ).pipe(Effect.mapError(toOnboardingCurriculumError))
-    : null;
-  if (defaults.curriculumProgramKey && !curriculum) {
+  const curriculumProgramKey = yield* Effect.fromNullishOr(
+    defaults.curriculumProgramKey
+  ).pipe(Effect.mapError(toOnboardingCurriculumError));
+  const curriculum = yield* readCurriculumProgram(
+    ctx,
+    defaults.locale,
+    curriculumProgramKey
+  ).pipe(Effect.mapError(toOnboardingCurriculumError));
+  if (!curriculum) {
     return yield* new OnboardingProfileError({
       code: onboardingCurriculumMissingCode,
       message: "The default curriculum is unavailable.",
@@ -209,7 +242,7 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
   yield* setPreferredCurriculumProgram({
     ctx,
     now,
-    programKey: curriculum?.key ?? null,
+    programKey: curriculum.key,
     userId,
   }).pipe(Effect.mapError(toOnboardingPersistenceError));
 
@@ -217,7 +250,9 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
     yield* tryOnboardingPersistence(() =>
       ctx.db.patch(profile._id, {
         ...answers,
+        admittedAt: profile.admittedAt ?? now,
         completedAt: now,
+        startedAt: profile.startedAt ?? now,
         updatedAt: now,
       })
     );
@@ -225,17 +260,23 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
     yield* tryOnboardingPersistence(() =>
       ctx.db.insert("onboardingProfiles", {
         ...answers,
+        admittedAt: now,
         completedAt: now,
+        startedAt: now,
         updatedAt: now,
         userId,
       })
     );
   }
 
+  yield* activateWelcomeIntent(ctx, userId, defaults.locale).pipe(
+    Effect.mapError(toOnboardingPersistenceError)
+  );
+
   return {
     destination: getOnboardingDestination({
       focus: answers.focus,
-      ...(curriculum ? { publicSlug: curriculum.publicSlug } : {}),
+      publicSlug: curriculum.publicSlug,
     }),
     locale: defaults.locale,
   };

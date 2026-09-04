@@ -11,7 +11,7 @@ const currentUser = {
   _id: "user_current" as Id<"users">,
   email: "nabil@example.test",
   image: "https://example.test/nabil.png",
-  name: "Nabil Fatih",
+  name: "Test Learner",
 };
 
 describe("conversation/input/optimistic", () => {

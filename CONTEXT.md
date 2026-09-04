@@ -31,6 +31,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Curriculum preference**: A signed-in learner's default school curriculum for browsing curriculum surfaces. It does not replace an explicit curriculum URL and it is not the source of generated learning plans.
 - **Curriculum index**: A public discovery surface that lists school curricula and links to their curriculum roots. It is not personalized.
 - **Onboarding profile**: A signed-in user's three first-run answers and completion state. Incomplete answers are resumable drafts; after completion, normal role and preference settings may change independently.
+- **Post-auth admission**: The server-verified first-run decision after authentication that either requires onboarding or resumes one sanitized internal destination. It does not authorize access to destination data.
 - **Learning region**: The onboarding choice that initializes an application locale and, when one exists, a Curriculum preference. It includes the product region `international`, so it is not an ISO country value.
 - **Learning focus**: The onboarding choice between opening curriculum learning or try-out discovery first. It selects the first destination without restricting later access to either surface.
 - **Material placement**: A source-owned relation connecting one canonical material asset to the exact Learning program and curriculum card group that presented it. It is interaction context, not canonical URL identity or a learner preference.

@@ -1061,4 +1061,39 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    retirement: {
+      audit: FunctionReference<
+        "query",
+        "internal",
+        {
+          cursor: null | string;
+          target: "credentials" | "resets" | "usernames";
+        },
+        {
+          blocked: number;
+          continueCursor: string;
+          isDone: boolean;
+          matched: number;
+          scanned: number;
+        },
+        Name
+      >;
+      retire: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: null | string;
+          target: "credentials" | "resets" | "usernames";
+        },
+        {
+          blocked: number;
+          continueCursor: string;
+          isDone: boolean;
+          matched: number;
+          retired: number;
+          scanned: number;
+        },
+        Name
+      >;
+    };
   };

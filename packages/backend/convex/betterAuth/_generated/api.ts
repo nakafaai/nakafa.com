@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as deletion from "../deletion.js";
 import type * as mutations from "../mutations.js";
 import type * as queries from "../queries.js";
+import type * as retirement from "../retirement.js";
 
 import type {
   ApiFromModules,
@@ -27,6 +28,7 @@ const fullApi: ApiFromModules<{
   deletion: typeof deletion;
   mutations: typeof mutations;
   queries: typeof queries;
+  retirement: typeof retirement;
 }> = anyApi as any;
 
 /**

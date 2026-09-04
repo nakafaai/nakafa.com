@@ -49,17 +49,27 @@ export const currentOnboardingProfileValidator = v.union(
   onboardingProfileValidator
 );
 
-export const onboardingStatusValidator = v.object({
-  isRequired: v.boolean(),
-  profile: currentOnboardingProfileValidator,
-});
+export const onboardingStatusValidator = v.union(
+  v.object({
+    isAuthenticated: v.literal(false),
+    isRequired: v.literal(false),
+    profile: v.null(),
+  }),
+  v.object({
+    isAuthenticated: v.literal(true),
+    isRequired: v.boolean(),
+    profile: currentOnboardingProfileValidator,
+  })
+);
 
 const tables = {
   onboardingProfiles: defineTable({
+    admittedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
     focus: v.optional(onboardingFocusValidator),
     region: v.optional(onboardingRegionValidator),
     role: v.optional(selfSelectableUserRoleValidator),
+    startedAt: v.optional(v.number()),
     updatedAt: v.number(),
     userId: v.id("users"),
   }).index("by_userId", ["userId"]),

@@ -22,6 +22,7 @@ const CONTRACT_MANIFEST_PATHS = [
   "packages/ai/package.json",
   "packages/backend/package.json",
   "packages/contents/package.json",
+  "packages/email/package.json",
   "packages/internationalization/package.json",
 ] as const;
 

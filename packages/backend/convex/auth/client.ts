@@ -9,6 +9,8 @@ import {
   DEFAULT_USER_PLAN,
 } from "@repo/backend/convex/credits/constants";
 import { getCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
+import { declareWelcomeIntent } from "@repo/backend/convex/emails/welcome/impl";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
 
 const authFunctions: AuthFunctions = internal.auth.lifecycle;
@@ -43,6 +45,8 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             ),
           });
 
+          await runConvexProgram(declareWelcomeIntent(ctx, userId));
+
           await ctx.db.insert("notificationPreferences", {
             disabledTypes: [],
             userId,
@@ -65,14 +69,6 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
           await ctx.scheduler.runAfter(
             0,
             internal.customers.actions.internal.syncCustomer,
-            {
-              userId,
-            }
-          );
-
-          await ctx.scheduler.runAfter(
-            0,
-            internal.emails.delivery.sendWelcomeEmail,
             {
               userId,
             }

@@ -7,7 +7,7 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("emails/retention", () => {
-  it.effect("schedules both component-owned retention sweeps", () =>
+  it.effect("schedules component retention and app-handle reconciliation", () =>
     Effect.gen(function* () {
       const test = convexTest(schema, convexModules);
 
@@ -33,6 +33,10 @@ describe("emails/retention", () => {
         expect.objectContaining({
           args: [{}],
           name: expect.stringContaining("cleanupAbandonedEmails"),
+        }),
+        expect.objectContaining({
+          args: [{ cursor: null, phase: "scheduled" }],
+          name: expect.stringContaining("reconcileWelcomeIntentLifecycle"),
         }),
       ]);
     })

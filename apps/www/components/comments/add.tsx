@@ -18,12 +18,13 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
-import { Link, usePathname } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { type SubmitEventHandler, useState, useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -155,8 +156,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
 /** Render the current commenter identity or an authentication link. */
 function UserAvatar() {
-  const pathname = usePathname();
-
+  const authNavigation = useCurrentAuthNavigation();
   const t = useTranslations("Auth");
 
   const user = useUser((s) => s.user);
@@ -165,7 +165,7 @@ function UserAvatar() {
     return (
       <Link
         className={cn(buttonVariants({ variant: "ghost" }), "rounded-lg")}
-        href={`/auth?redirect=${pathname}`}
+        {...authNavigation.linkProps}
       >
         <HugeIcons icon={Login01Icon} />
         {t("login")}

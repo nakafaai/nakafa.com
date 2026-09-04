@@ -9,6 +9,7 @@ import { accountDeletionPreparationOutcome } from "@repo/backend/convex/auth/del
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { seedDeletionUser } from "@repo/backend/test/deletion/seed";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -20,6 +21,69 @@ const testResend = new Resend(components.resend, {
 });
 
 describe("auth/deletion/claim", () => {
+  it.effect("does not claim a canceled browser attempt", () =>
+    Effect.gen(function* () {
+      const test = convexTest(schema, convexModules);
+      const userId = yield* Effect.promise(() =>
+        test.mutation(async (ctx) => {
+          const insertedUserId = await seedDeletionUser(
+            ctx,
+            "canceled-claim-owner"
+          );
+          await ctx.db.insert("accountDeletionAttemptCancellations", {
+            attemptId: ATTEMPT_ID,
+            canceledAt: NOW,
+          });
+          return insertedUserId;
+        })
+      );
+
+      const outcome = yield* Effect.promise(() =>
+        test.mutation((ctx) =>
+          runConvexProgram(
+            claimAccountDeletion(ctx, "canceled-claim-owner", ATTEMPT_ID)
+          )
+        )
+      );
+      const state = yield* Effect.promise(() =>
+        test.query(async (ctx) => ({
+          preparation: await ctx.db
+            .query("accountDeletionPreparations")
+            .unique(),
+          user: await ctx.db.get("users", userId),
+        }))
+      );
+
+      expect(outcome).toBe(
+        accountDeletionPreparationOutcome.temporarilyUnavailable
+      );
+      expect(state.preparation).toBeNull();
+      expect(state.user).not.toHaveProperty("deletionPreparedAt");
+    })
+  );
+
+  it.effect("treats an account already absent as deleted", () =>
+    Effect.gen(function* () {
+      const test = convexTest(schema, convexModules);
+
+      const outcome = yield* Effect.promise(() =>
+        test.mutation((ctx) =>
+          runConvexProgram(
+            claimAccountDeletion(ctx, "already-absent", ATTEMPT_ID)
+          )
+        )
+      );
+      const preparation = yield* Effect.promise(() =>
+        test.query((ctx) =>
+          ctx.db.query("accountDeletionPreparations").unique()
+        )
+      );
+
+      expect(outcome).toBe(accountDeletionPreparationOutcome.ready);
+      expect(preparation).toBeNull();
+    })
+  );
+
   it.effect(
     "claims the irreversible phase only from the auth delete hook",
     () =>
@@ -58,12 +122,33 @@ describe("auth/deletion/claim", () => {
             )
           )
         );
-        yield* Effect.promise(() =>
+        const intentEmailId = yield* Effect.promise(() =>
           test.mutation((ctx) =>
             runConvexProgram(
               Effect.promise(() =>
-                ctx.db.patch("users", userId, { welcomeEmailId: emailId })
+                testResend.sendEmail(ctx, {
+                  from: "Nakafa <nakafa@notifications.nakafa.com>",
+                  subject: "Account ready",
+                  text: "Account ready",
+                  to: "delivered@resend.dev",
+                })
               )
+            )
+          )
+        );
+        yield* Effect.promise(() =>
+          test.mutation((ctx) =>
+            runConvexProgram(
+              Effect.promise(async () => {
+                await ctx.db.patch("users", userId, {
+                  welcomeEmailId: emailId,
+                });
+                await ctx.db.insert("welcomeEmailIntents", {
+                  componentEmailId: intentEmailId,
+                  phase: "enqueued",
+                  userId,
+                });
+              })
             )
           )
         );
@@ -92,6 +177,11 @@ describe("auth/deletion/claim", () => {
         const cancelableEmail = yield* Effect.promise(() =>
           test.query(components.resend.lib.getStatus, { emailId })
         );
+        const cancelableIntentEmail = yield* Effect.promise(() =>
+          test.query(components.resend.lib.getStatus, {
+            emailId: intentEmailId,
+          })
+        );
 
         yield* Effect.sync(() => vi.setSystemTime(NOW + 1000));
         const claimed = yield* Effect.promise(() =>
@@ -118,11 +208,20 @@ describe("auth/deletion/claim", () => {
         const committedEmail = yield* Effect.promise(() =>
           test.query(components.resend.lib.getStatus, { emailId })
         );
+        const committedIntentEmail = yield* Effect.promise(() =>
+          test.query(components.resend.lib.getStatus, {
+            emailId: intentEmailId,
+          })
+        );
+        const committedIntent = yield* Effect.promise(() =>
+          test.query((ctx) => ctx.db.query("welcomeEmailIntents").unique())
+        );
 
         expect(prepared).toBe(accountDeletionPreparationOutcome.ready);
         expect(cancelablePreparation).not.toHaveProperty("deletionStartedAt");
         expect(cancelableUser?.welcomeEmailId).toBe(emailId);
         expect(cancelableEmail).toMatchObject({ status: "waiting" });
+        expect(cancelableIntentEmail).toMatchObject({ status: "waiting" });
         expect(claimed).toBe(accountDeletionPreparationOutcome.ready);
         expect(committedPreparation).toMatchObject({
           attemptId: ATTEMPT_ID,
@@ -132,6 +231,8 @@ describe("auth/deletion/claim", () => {
         });
         expect(committedUser).not.toHaveProperty("welcomeEmailId");
         expect(committedEmail).toMatchObject({ status: "cancelled" });
+        expect(committedIntentEmail).toMatchObject({ status: "cancelled" });
+        expect(committedIntent).toBeNull();
       }).pipe(Effect.ensuring(Effect.sync(() => vi.useRealTimers())))
   );
 });

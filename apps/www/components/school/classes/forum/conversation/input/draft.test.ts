@@ -5,7 +5,7 @@ import { restoreForumPostInputDraft } from "@/components/school/classes/forum/co
 
 const replyTarget = {
   postId: "post_1" as Id<"schoolClassForumPosts">,
-  userName: "Nabil Fatih",
+  userName: "Test Learner",
 };
 
 describe("conversation/input/draft", () => {

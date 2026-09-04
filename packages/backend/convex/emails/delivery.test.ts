@@ -59,6 +59,17 @@ describe("emails/delivery", () => {
       });
     });
 
+    const input = await t.query(internal.emails.welcome.readWelcomeEmailInput, {
+      userId,
+    });
+    expect(input).toEqual({
+      email: "delivered@resend.dev",
+      name: "Welcome Owner",
+      privacyPolicyUrl: "http://localhost:3000/en/privacy-current",
+      startLearningUrl: "http://localhost:3000/en",
+      termsOfServiceUrl: "http://localhost:3000/en/terms-current",
+    });
+
     await t.action(internal.emails.delivery.sendWelcomeEmail, { userId });
 
     const user = await t.query((ctx) => ctx.db.get("users", userId));
@@ -69,14 +80,16 @@ describe("emails/delivery", () => {
     const email = await t.query((ctx) => testResend.get(ctx, welcomeEmailId));
 
     expect(email).toMatchObject({
-      subject: "Welcome to Nakafa",
+      subject: "Your Nakafa account is ready",
       to: ["delivered@resend.dev"],
     });
     expect(email).not.toHaveProperty("template");
-    expect(email?.html).toContain("Welcome Owner");
+    expect(email?.html).not.toContain("Welcome Owner");
+    expect(email?.html).toContain("http://localhost:3000/en");
     expect(email?.html).toContain("http://localhost:3000/en/privacy-current");
     expect(email?.html).toContain("http://localhost:3000/en/terms-current");
-    expect(email?.text).toContain("Welcome Owner");
+    expect(email?.text).not.toContain("Welcome Owner");
+    expect(email?.text).toContain("http://localhost:3000/en");
     expect(email?.text).toContain("http://localhost:3000/en/privacy-current");
     expect(email?.text).toContain("http://localhost:3000/en/terms-current");
   });

@@ -11,10 +11,7 @@ import {
 } from "@repo/design-system/components/ai/conversation";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
@@ -23,6 +20,7 @@ import { useAi } from "@/components/ai/context/use-ai";
 import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 import { loadChatRuntime } from "@/components/ai/helpers/runtime-loader";
 import { SheetInput } from "@/components/ai/sheet-input";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useUser } from "@/lib/context/use-user";
 
 /** Renders Nina's empty state and starts a new study chat. */
@@ -30,7 +28,7 @@ export function SheetNew() {
   const t = useTranslations("Ai");
 
   const router = useRouter();
-  const pathname = usePathname();
+  const authNavigation = useCurrentAuthNavigation();
 
   const getModel = useAi((state) => state.getModel);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
@@ -61,7 +59,7 @@ export function SheetNew() {
 
       if (!user) {
         setOpen(false);
-        router.push(`/auth?redirect=${pathname}`);
+        router.push(authNavigation.readHref());
         return;
       }
 
