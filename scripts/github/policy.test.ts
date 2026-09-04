@@ -80,9 +80,14 @@ describe("GitHub Action policy", () => {
             },
             jobs: {
               publish: expect.objectContaining({
-                if: "github.ref == 'refs/heads/main' && github.repository == 'nakafaai/nakafa.com'",
+                if: expect.stringContaining(
+                  "github.event.deployment_status.state == 'success'"
+                ),
                 name: "Publish",
                 steps: expect.arrayContaining([
+                  expect.objectContaining({
+                    name: "Verify current main deployment",
+                  }),
                   expect.objectContaining({
                     name: "Export snapshot",
                     run: "pnpm --silent --dir packages/backend runtime:ci export",
@@ -98,7 +103,7 @@ describe("GitHub Action policy", () => {
               }),
             },
             on: {
-              push: { branches: ["main"] },
+              deployment_status: {},
               workflow_dispatch: {},
             },
           })
@@ -113,6 +118,12 @@ describe("GitHub Action policy", () => {
             on: expect.objectContaining({ pull_request: expect.anything() }),
           })
         );
+        expect(snapshotWorkflow).not.toEqual(
+          expect.objectContaining({
+            on: expect.objectContaining({ push: expect.anything() }),
+          })
+        );
+        expect(snapshotSource).toContain("Production – www");
         expect(snapshotSource).not.toContain("actions/cache/");
         expect(snapshotSource).toContain(
           "This release contains exactly one current encrypted signed snapshot."

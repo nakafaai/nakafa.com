@@ -118,19 +118,21 @@ download_snapshot() {
   local download="$target.download"
   mkdir -m 700 "$directory"
 
-  for _attempt in {1..180}; do
-    rm -f -- "$download"
-    if curl --fail --location --silent \
-      "https://github.com/nakafaai/nakafa.com/releases/download/runtime/$asset" \
-      --output "$download" && [[ -s "$download" && ! -L "$download" ]]; then
-      chmod 600 "$download"
-      mv -- "$download" "$target"
-      return
-    fi
-    sleep 5
-  done
+  rm -f -- "$download"
+  if curl --fail --location --silent --show-error \
+    --retry 5 --retry-all-errors --retry-delay 2 \
+    "https://github.com/nakafaai/nakafa.com/releases/download/runtime/$asset" \
+    --output "$download" && [[ -s "$download" && ! -L "$download" ]]; then
+    chmod 600 "$download"
+    mv -- "$download" "$target"
+    return
+  fi
 
-  fail "The exact signed runtime snapshot is unavailable."
+  rm -f -- "$download"
+  pnpm --silent --dir "$backend_root" runtime:ci export
+  if [[ ! -f "$target" || -L "$target" || ! -s "$target" ]]; then
+    fail "The post-deployment signed runtime export is unavailable."
+  fi
 }
 
 load_fingerprint
