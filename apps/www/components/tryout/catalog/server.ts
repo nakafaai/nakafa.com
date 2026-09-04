@@ -12,6 +12,7 @@ import type { Locale } from "next-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
+import { fetchRuntimeQuery } from "@/lib/content/runtime/query";
 
 type TryoutMetadataKind = FunctionArgs<
   typeof api.tryouts.queries.catalog.getMetadata
@@ -34,7 +35,7 @@ export async function readFeaturedTryout(locale: Locale) {
   "use cache";
   applyContentRuntimeCache();
 
-  const featured = await fetchQuery(
+  const featured = await fetchRuntimeQuery(
     api.tryouts.queries.catalog.getFeaturedQuestion,
     { appLocale: AppLocaleSchema.make(locale) }
   );
@@ -56,7 +57,7 @@ export async function readTryoutMetadata(args: TryoutMetadataArgs) {
   "use cache";
   applyContentRuntimeCache();
 
-  return await fetchQuery(api.tryouts.queries.catalog.getMetadata, args);
+  return await fetchRuntimeQuery(api.tryouts.queries.catalog.getMetadata, args);
 }
 
 /** Reads the public country-first try-out catalog from the tagged content cache. */
@@ -69,7 +70,7 @@ export async function readTryoutHubPage(locale: Locale) {
     Effect.tryPromise({
       catch: (cause) => new TryoutCatalogReadError({ cause }),
       try: () =>
-        fetchQuery(api.tryouts.queries.catalog.getHubPage, {
+        fetchRuntimeQuery(api.tryouts.queries.catalog.getHubPage, {
           appLocale,
         }),
     }).pipe(
@@ -96,7 +97,7 @@ export async function readTryoutCountryPage(
     Effect.tryPromise({
       catch: (cause) => new TryoutCatalogReadError({ cause }),
       try: () =>
-        fetchQuery(api.tryouts.queries.catalog.getCountryPage, {
+        fetchRuntimeQuery(api.tryouts.queries.catalog.getCountryPage, {
           appLocale,
           publicPath,
         }),
@@ -119,7 +120,7 @@ export async function readTryoutExamPage(locale: Locale, publicPath: string) {
   "use cache";
   applyContentRuntimeCache();
 
-  return await fetchQuery(api.tryouts.queries.catalog.getExamPage, {
+  return await fetchRuntimeQuery(api.tryouts.queries.catalog.getExamPage, {
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });
@@ -130,7 +131,7 @@ export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
   "use cache";
   applyContentRuntimeCache();
 
-  return await fetchQuery(api.tryouts.queries.catalog.getTrackPage, {
+  return await fetchRuntimeQuery(api.tryouts.queries.catalog.getTrackPage, {
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });
@@ -141,7 +142,7 @@ export async function readTryoutSetPage(locale: Locale, publicPath: string) {
   "use cache";
   applyContentRuntimeCache();
 
-  return await fetchQuery(api.tryouts.queries.catalog.getSetPage, {
+  return await fetchRuntimeQuery(api.tryouts.queries.catalog.getSetPage, {
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });
@@ -175,7 +176,7 @@ export async function readTryoutSectionPage(
   "use cache";
   applyContentRuntimeCache();
 
-  return await fetchQuery(api.tryouts.queries.catalog.getSectionPage, {
+  return await fetchRuntimeQuery(api.tryouts.queries.catalog.getSectionPage, {
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });

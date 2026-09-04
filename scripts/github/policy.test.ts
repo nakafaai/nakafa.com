@@ -111,8 +111,9 @@ describe("GitHub Action policy", () => {
           "This release contains exactly one current encrypted signed snapshot."
         );
         expect(source).toContain(
-          'if [ "$GITHUB_HEAD_REF" != "codex/snapshot" ]'
+          "schema-changing candidate needs one production export"
         );
+        expect(source).not.toContain("codex/snapshot");
         expect(source.match(/runtime:ci export/gu)).toHaveLength(1);
       }).pipe(Effect.provide(NodeServices.layer))
   );

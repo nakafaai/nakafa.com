@@ -4,26 +4,33 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
+import {
+  fetchRuntimeQuery,
+  readRuntimeQuery,
+} from "@/lib/content/runtime/query";
 
-const { productionUrl, readMock, runtimeEnv, runtimeUrl } = vi.hoisted(() => {
-  const isolatedUrl = "http://127.0.0.1:3210";
-  const publicUrl = "https://production.example";
-  return {
-    productionUrl: publicUrl,
-    readMock: vi.fn(),
-    runtimeEnv: {
-      CONTENT_BUILD_URL: isolatedUrl as string | undefined,
-      NEXT_PUBLIC_CONVEX_URL: publicUrl,
-    },
-    runtimeUrl: isolatedUrl,
-  };
-});
+const { fetchMock, productionUrl, readMock, runtimeEnv, runtimeUrl } =
+  vi.hoisted(() => {
+    const isolatedUrl = "http://127.0.0.1:3210";
+    const publicUrl = "https://production.example";
+    return {
+      fetchMock: vi.fn(),
+      productionUrl: publicUrl,
+      readMock: vi.fn(),
+      runtimeEnv: {
+        CONTENT_BUILD_URL: isolatedUrl as string | undefined,
+        NEXT_PUBLIC_CONVEX_URL: publicUrl,
+      },
+      runtimeUrl: isolatedUrl,
+    };
+  });
 
 vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
   ...(await importOriginal()),
   readConvexRuntimeQuery: readMock,
 }));
+
+vi.mock("convex/nextjs", () => ({ fetchQuery: fetchMock }));
 
 vi.mock("@/env", () => ({
   env: runtimeEnv,
@@ -38,11 +45,35 @@ const input = {
 } as const;
 
 beforeEach(() => {
+  fetchMock.mockReset();
   readMock.mockReset();
   runtimeEnv.CONTENT_BUILD_URL = runtimeUrl;
 });
 
 describe("content runtime query", () => {
+  it("keeps direct prerender reads inside the isolated build", async () => {
+    fetchMock.mockResolvedValueOnce(42);
+    await expect(
+      fetchRuntimeQuery(api.contentRelease.reference.read, input)
+    ).resolves.toBe(42);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      api.contentRelease.reference.read,
+      input,
+      { url: runtimeUrl }
+    );
+
+    runtimeEnv.CONTENT_BUILD_URL = undefined;
+    fetchMock.mockResolvedValueOnce(43);
+    await expect(
+      fetchRuntimeQuery(api.contentRelease.reference.read, input)
+    ).resolves.toBe(43);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      api.contentRelease.reference.read,
+      input,
+      { url: productionUrl }
+    );
+  });
+
   it.effect("maps isolated build reads into the typed data-read channel", () =>
     Effect.gen(function* () {
       readMock.mockReturnValueOnce(Effect.succeed(42));

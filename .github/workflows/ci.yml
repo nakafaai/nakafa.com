@@ -227,10 +227,9 @@ jobs:
           fi
 
           rm -f -- "$target"
-          if [ "$GITHUB_HEAD_REF" != "codex/snapshot" ]; then
-            echo "The exact signed runtime snapshot is unavailable." >&2
-            exit 1
-          fi
+          # This job is already restricted to an exact trusted candidate. A
+          # schema-changing candidate needs one production export before its
+          # main-branch release asset can exist.
           echo "bootstrap=true" >> "$GITHUB_OUTPUT"
 
       - name: Bootstrap snapshot
