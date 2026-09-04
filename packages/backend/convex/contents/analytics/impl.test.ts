@@ -125,24 +125,28 @@ describe("contents/analytics/impl", () => {
     vi.restoreAllMocks();
   });
 
-  it("schedules only partitions that have queued views", async () => {
+  it("uses one indexed existence read per partition while idle", async () => {
     const empty = convexTest(schema, convexModules);
     const idle = await measureScheduleAll(empty);
 
     expect(idle.result).toEqual({
       enqueuedPartitions: 0,
     });
-    expect(idle.metrics.databaseQueries.used).toBe(1);
+    expect(idle.metrics.databaseQueries.used).toBe(
+      CONTENT_ANALYTICS_PARTITIONS.length
+    );
     expect(idle.metrics.documentsRead.used).toBe(0);
     await expect(
       empty.query((ctx) =>
         ctx.db.system.query("_scheduled_functions").collect()
       )
     ).resolves.toEqual([]);
+  });
 
+  it("recovers a later partition behind a saturated oldest queue page", async () => {
     const populated = convexTest(schema, convexModules);
     await populated.mutation(async (ctx) => {
-      await enqueueViews(ctx, 1, 0);
+      await enqueueViews(ctx, CONTENT_ANALYTICS_BATCH_SIZE, 0);
       await enqueueViews(ctx, 1, 3);
     });
 

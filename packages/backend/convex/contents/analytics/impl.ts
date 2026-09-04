@@ -1,5 +1,4 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { CONTENT_ANALYTICS_PAGE_BYTES } from "@repo/backend/convex/contents/analytics/budget";
 import {
   InvalidContentAnalyticsPartitionError,
   invalidContentAnalyticsPartitionCode,
@@ -10,8 +9,8 @@ import {
   toContentAnalyticsIoError,
 } from "@repo/backend/convex/contents/analytics/spec";
 import {
-  CONTENT_ANALYTICS_BATCH_SIZE,
   CONTENT_ANALYTICS_LEASE_DURATION_MS,
+  CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/convex/contents/constants";
 import { isContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import type { FunctionReference } from "convex/server";
@@ -33,34 +32,40 @@ type ProcessContentAnalyticsPartitionReference = FunctionReference<
   ProcessContentAnalyticsPartitionResult
 >;
 
-/** Schedules each partition represented in one bounded oldest-queue page. */
+/** Recovers every non-empty partition through one indexed existence read. */
 export const scheduleAllContentAnalyticsPartitions = Effect.fn(
   "contents.analytics.scheduleAllContentAnalyticsPartitions"
 )(function* (
   ctx: MutationCtx,
   schedulePartition: ScheduleContentAnalyticsPartitionReference
 ) {
-  const queued = yield* Effect.tryPromise({
-    try: () =>
-      ctx.db.query("learningEngagementQueue").paginate({
-        cursor: null,
-        maximumBytesRead: CONTENT_ANALYTICS_PAGE_BYTES,
-        maximumRowsRead: CONTENT_ANALYTICS_BATCH_SIZE,
-        numItems: CONTENT_ANALYTICS_BATCH_SIZE,
-      }),
-    catch: toContentAnalyticsIoError,
-  });
-  const partitions = new Set(queued.page.map((item) => item.partition));
+  let enqueuedPartitions = 0;
 
-  for (const partition of partitions) {
+  for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
+    const queuedItem = yield* Effect.tryPromise({
+      try: () =>
+        ctx.db
+          .query("learningEngagementQueue")
+          .withIndex("by_partition_and_insertedAt", (q) =>
+            q.eq("partition", partition)
+          )
+          .first(),
+      catch: toContentAnalyticsIoError,
+    });
+
+    if (!queuedItem) {
+      continue;
+    }
+
     yield* Effect.tryPromise({
       try: () => ctx.scheduler.runAfter(0, schedulePartition, { partition }),
       catch: toContentAnalyticsIoError,
     });
+    enqueuedPartitions += 1;
   }
 
   return {
-    enqueuedPartitions: partitions.size,
+    enqueuedPartitions,
   };
 });
 
