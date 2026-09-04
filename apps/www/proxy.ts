@@ -8,7 +8,6 @@ import {
   routing,
 } from "@repo/internationalization/src/routing";
 import { mergeVaryHeader } from "@repo/utilities/http/accept";
-import { getSessionCookie } from "better-auth/cookies";
 import { Effect, Option } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
@@ -19,6 +18,7 @@ import {
   AGENT_DISCOVERY_LINK_HEADER,
   LLMS_TEXT_PATH,
 } from "@/lib/agent-discovery";
+import { readSchoolAuthRedirect } from "@/lib/auth/school";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   matchesInternalPreviewRoute,
@@ -180,38 +180,6 @@ function readCandidateLocale(pathname: string): AppLocaleCode | null {
   }
 
   return locale;
-}
-
-/**
- * Performs the official optimistic cookie check before protected School routes.
- * Convex functions and server data seams still own authoritative authorization.
- */
-function readSchoolAuthRedirect(request: NextRequest) {
-  const routeSegments = request.nextUrl.pathname.split("/").filter(Boolean);
-  const firstSegment = routeSegments[0];
-  const hasLocalePrefix =
-    firstSegment !== undefined && hasLocale(routing.locales, firstSegment);
-  const schoolSegments = hasLocalePrefix
-    ? routeSegments.slice(1)
-    : routeSegments;
-
-  if (schoolSegments[0] !== "school" || schoolSegments.length === 1) {
-    return null;
-  }
-
-  if (getSessionCookie(request)) {
-    return null;
-  }
-
-  const locale = hasLocalePrefix ? firstSegment : routing.defaultLocale;
-  const redirectPathname = hasLocalePrefix
-    ? request.nextUrl.pathname
-    : `/${locale}${request.nextUrl.pathname}`;
-  const redirectPath = `${redirectPathname}${request.nextUrl.search}`;
-  const redirectUrl = new URL(`/${locale}/auth`, request.url);
-  redirectUrl.searchParams.set("redirect", redirectPath);
-
-  return redirectUrl;
 }
 
 /** Applies next-intl routing and Nakafa discovery headers once per pass. */
