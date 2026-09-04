@@ -1,47 +1,20 @@
 import workflowTest from "@convex-dev/workflow/test";
 import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { declareWelcomeIntent } from "@repo/backend/convex/emails/welcome/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
-import { activateOnboardingPrograms } from "@repo/backend/test/onboarding";
+  activateOnboardingPrograms,
+  createOnboardingTest,
+} from "@repo/backend/test/onboarding";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 7, 31, 12, 0, 0);
 
-/** Creates one isolated authenticated test boundary for onboarding behavior. */
-const createOnboardingTest = Effect.fn("test.onboarding.create")(function* (
-  role?: Doc<"users">["role"]
-) {
-  vi.setSystemTime(new Date(NOW));
-  const test = createConvexTestWithBetterAuth();
-  const identity = yield* Effect.promise(() =>
-    test.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
-        now: NOW,
-        ...(role === undefined ? {} : { role }),
-      })
-    )
-  );
-  return {
-    authenticated: test.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    }),
-    identity,
-    test,
-  };
-});
-
 describe("onboarding", () => {
   it.effect("records first-run admission exactly once", () =>
     Effect.gen(function* () {
-      const { authenticated, test } = yield* createOnboardingTest();
-
+      const { authenticated, test } = yield* createOnboardingTest(NOW);
       const first = yield* Effect.promise(() =>
         authenticated.mutation(api.onboarding.mutations.admit, {})
       );
@@ -55,7 +28,6 @@ describe("onboarding", () => {
       const status = yield* Effect.promise(() =>
         authenticated.query(api.onboarding.queries.getStatus, {})
       );
-
       expect(first).toEqual({
         isAuthenticated: true,
         isRequired: true,
@@ -78,8 +50,10 @@ describe("onboarding", () => {
 
   it.effect("keeps privileged admission outside learner lifecycle state", () =>
     Effect.gen(function* () {
-      const { authenticated, test } =
-        yield* createOnboardingTest("administrator");
+      const { authenticated, test } = yield* createOnboardingTest(
+        NOW,
+        "administrator"
+      );
 
       const admission = yield* Effect.promise(() =>
         authenticated.mutation(api.onboarding.mutations.admit, {})
@@ -99,15 +73,13 @@ describe("onboarding", () => {
 
   it.effect("reports an unauthenticated admission without creating state", () =>
     Effect.gen(function* () {
-      const { test } = yield* createOnboardingTest();
-
+      const { test } = yield* createOnboardingTest(NOW);
       const admission = yield* Effect.promise(() =>
         test.mutation(api.onboarding.mutations.admit, {})
       );
       const stored = yield* Effect.promise(() =>
         test.query((ctx) => ctx.db.query("onboardingProfiles").unique())
       );
-
       expect(admission).toEqual({
         isAuthenticated: false,
         isRequired: false,
@@ -121,7 +93,7 @@ describe("onboarding", () => {
     "records questionnaire start without rewriting admission time",
     () =>
       Effect.gen(function* () {
-        const { authenticated, test } = yield* createOnboardingTest();
+        const { authenticated, test } = yield* createOnboardingTest(NOW);
         yield* Effect.promise(() =>
           authenticated.mutation(api.onboarding.mutations.admit, {})
         );
@@ -148,7 +120,8 @@ describe("onboarding", () => {
     "keeps every draft answer separate from applied user settings",
     () =>
       Effect.gen(function* () {
-        const { authenticated, identity, test } = yield* createOnboardingTest();
+        const { authenticated, identity, test } =
+          yield* createOnboardingTest(NOW);
 
         const profile = yield* Effect.promise(() =>
           authenticated.mutation(api.onboarding.mutations.saveAnswer, {
@@ -175,7 +148,8 @@ describe("onboarding", () => {
 
   it.effect("applies role and Indonesian curriculum atomically on Finish", () =>
     Effect.gen(function* () {
-      const { authenticated, identity, test } = yield* createOnboardingTest();
+      const { authenticated, identity, test } =
+        yield* createOnboardingTest(NOW);
       yield* activateOnboardingPrograms(test);
 
       const result = yield* Effect.promise(() =>
@@ -218,7 +192,8 @@ describe("onboarding", () => {
     "activates the declared welcome delivery with the selected locale",
     () =>
       Effect.gen(function* () {
-        const { authenticated, identity, test } = yield* createOnboardingTest();
+        const { authenticated, identity, test } =
+          yield* createOnboardingTest(NOW);
         workflowTest.register(test);
         yield* activateOnboardingPrograms(test);
         yield* Effect.promise(() =>
@@ -256,7 +231,8 @@ describe("onboarding", () => {
     "rolls back every setting when the default curriculum is missing",
     () =>
       Effect.gen(function* () {
-        const { authenticated, identity, test } = yield* createOnboardingTest();
+        const { authenticated, identity, test } =
+          yield* createOnboardingTest(NOW);
 
         yield* Effect.promise(() =>
           expect(
@@ -291,7 +267,7 @@ describe("onboarding", () => {
     "uses English and the Singapore curriculum before opening try-out",
     () =>
       Effect.gen(function* () {
-        const { authenticated, test } = yield* createOnboardingTest();
+        const { authenticated, test } = yield* createOnboardingTest(NOW);
         yield* activateOnboardingPrograms(test);
 
         const result = yield* Effect.promise(() =>
@@ -317,7 +293,8 @@ describe("onboarding", () => {
 
   it.effect("uses German and Cambridge as the Germany default", () =>
     Effect.gen(function* () {
-      const { authenticated, identity, test } = yield* createOnboardingTest();
+      const { authenticated, identity, test } =
+        yield* createOnboardingTest(NOW);
       yield* activateOnboardingPrograms(test);
       yield* Effect.promise(() =>
         test.mutation((ctx) =>
@@ -356,7 +333,8 @@ describe("onboarding", () => {
 
   it.effect("does not let a completed profile rewrite user settings", () =>
     Effect.gen(function* () {
-      const { authenticated, identity, test } = yield* createOnboardingTest();
+      const { authenticated, identity, test } =
+        yield* createOnboardingTest(NOW);
       yield* activateOnboardingPrograms(test);
       yield* Effect.promise(() =>
         authenticated.mutation(api.onboarding.mutations.finish, {
@@ -406,7 +384,10 @@ describe("onboarding", () => {
 
   it.effect("keeps privileged accounts outside self-service onboarding", () =>
     Effect.gen(function* () {
-      const { authenticated } = yield* createOnboardingTest("administrator");
+      const { authenticated } = yield* createOnboardingTest(
+        NOW,
+        "administrator"
+      );
 
       const status = yield* Effect.promise(() =>
         authenticated.query(api.onboarding.queries.getStatus, {})
@@ -451,8 +432,7 @@ describe("onboarding", () => {
 
   it.effect("rejects a signed-out draft write", () =>
     Effect.gen(function* () {
-      const { test } = yield* createOnboardingTest();
-
+      const { test } = yield* createOnboardingTest(NOW);
       yield* Effect.promise(() =>
         expect(
           test.mutation(api.onboarding.mutations.saveAnswer, {
@@ -467,7 +447,8 @@ describe("onboarding", () => {
 
   it.effect("rejects admission while account deletion is pending", () =>
     Effect.gen(function* () {
-      const { authenticated, identity, test } = yield* createOnboardingTest();
+      const { authenticated, identity, test } =
+        yield* createOnboardingTest(NOW);
       yield* Effect.promise(() =>
         test.mutation((ctx) =>
           ctx.db.patch("users", identity.userId, {
@@ -475,7 +456,6 @@ describe("onboarding", () => {
           })
         )
       );
-
       yield* Effect.promise(() =>
         expect(
           authenticated.mutation(api.onboarding.mutations.admit, {})
@@ -488,7 +468,8 @@ describe("onboarding", () => {
 
   it.effect("redacts inconsistent account linkage during a draft write", () =>
     Effect.gen(function* () {
-      const { authenticated, identity, test } = yield* createOnboardingTest();
+      const { authenticated, identity, test } =
+        yield* createOnboardingTest(NOW);
       yield* Effect.promise(() =>
         test.mutation((ctx) =>
           ctx.db.insert("users", {
@@ -501,7 +482,6 @@ describe("onboarding", () => {
           })
         )
       );
-
       yield* Effect.promise(() =>
         expect(
           authenticated.mutation(api.onboarding.mutations.saveAnswer, {
