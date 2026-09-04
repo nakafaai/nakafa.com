@@ -1,6 +1,9 @@
+import workflowTest from "@convex-dev/workflow/test";
 import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { declareWelcomeIntent } from "@repo/backend/convex/emails/welcome/impl";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -209,6 +212,44 @@ describe("onboarding", () => {
       expect(stored.profile?.admittedAt).toBe(NOW);
       expect(stored.profile?.startedAt).toBe(NOW);
     })
+  );
+
+  it.effect(
+    "activates the declared welcome delivery with the selected locale",
+    () =>
+      Effect.gen(function* () {
+        const { authenticated, identity, test } = yield* createOnboardingTest();
+        workflowTest.register(test);
+        yield* activateOnboardingPrograms(test);
+        yield* Effect.promise(() =>
+          test.mutation((ctx) =>
+            runConvexProgram(declareWelcomeIntent(ctx, identity.userId))
+          )
+        );
+
+        yield* Effect.promise(() =>
+          authenticated.mutation(api.onboarding.mutations.finish, {
+            answers: {
+              focus: "learning",
+              region: "germany",
+              role: "student",
+            },
+          })
+        );
+        const delivery = yield* Effect.promise(() =>
+          test.query((ctx) => ctx.db.query("welcomeEmailIntents").unique())
+        );
+
+        expect(delivery).toMatchObject({
+          locale: "de",
+          phase: "scheduled",
+          userId: identity.userId,
+        });
+        if (delivery?.phase !== "scheduled") {
+          throw new Error("Expected one scheduled synthetic welcome intent.");
+        }
+        expect(delivery.workflowId).toEqual(expect.any(String));
+      })
   );
 
   it.effect(

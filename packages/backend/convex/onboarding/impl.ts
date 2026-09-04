@@ -3,6 +3,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { activateWelcomeIntent } from "@repo/backend/convex/emails/welcome/impl";
 import { setPreferredCurriculumProgram } from "@repo/backend/convex/learningPreferences/impl";
 import { readCurriculumProgram } from "@repo/backend/convex/learningPreferences/program";
 import type {
@@ -267,6 +268,10 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
       })
     );
   }
+
+  yield* activateWelcomeIntent(ctx, userId, defaults.locale).pipe(
+    Effect.mapError(toOnboardingPersistenceError)
+  );
 
   return {
     destination: getOnboardingDestination({
