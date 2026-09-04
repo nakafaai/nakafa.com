@@ -62,7 +62,7 @@ describe("contentRelease/material/model", () => {
     ]);
   });
 
-  it("saves five queries by reusing the requested material", async () => {
+  it("uses 13 queries for three alternates and one sibling", async () => {
     const target = convexTest(schema, convexModules);
     const projections = (["en", "id", "de"] as const).map((appLocale) =>
       makeMaterialProjection(appLocale, 1)
@@ -82,16 +82,32 @@ describe("contentRelease/material/model", () => {
 
     expect(result.alternateJson).toHaveLength(3);
     expect(result.siblingJson).toHaveLength(1);
-    const priorDatabaseQueries = 18;
     expect(metrics.databaseQueries.used).toBe(13);
-    expect(priorDatabaseQueries - metrics.databaseQueries.used).toBe(5);
   });
 
   it.each([
-    ["requested", makeMaterialProjection("en", 1)],
-    ["locale counterpart", makeMaterialProjection("id", 1)],
-    ["sibling", makeMaterialProjection("en", 2)],
-  ])("rejects a stale %s row", async (_label, stale) => {
+    [
+      "requested publicPath",
+      makeMaterialProjection("en", 1),
+      { publicPath: "subjects/test/functions/corrupted-section" },
+    ],
+    [
+      "requested releaseId",
+      makeMaterialProjection("en", 1),
+      { releaseId: "stale-release" },
+    ],
+    ["requested sequence", makeMaterialProjection("en", 1), { sequence: 0 }],
+    [
+      "locale counterpart",
+      makeMaterialProjection("id", 1),
+      { releaseId: "stale-release", sequence: 0 },
+    ],
+    [
+      "sibling",
+      makeMaterialProjection("en", 2),
+      { releaseId: "stale-release", sequence: 0 },
+    ],
+  ])("rejects a corrupted %s row", async (_label, stale, patch) => {
     const target = convexTest(schema, convexModules);
     const requested = makeMaterialProjection("en", 1);
     await activateMaterialCatalog(target);
@@ -108,10 +124,7 @@ describe("contentRelease/material/model", () => {
       if (!row) {
         throw new Error("Expected one related material row.");
       }
-      await ctx.db.patch("materialCatalog", row._id, {
-        releaseId: "stale-release",
-        sequence: 0,
-      });
+      await ctx.db.patch("materialCatalog", row._id, patch);
     });
 
     await expect(
