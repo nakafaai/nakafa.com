@@ -13,6 +13,10 @@ import {
 } from "@repo/backend/convex/contents/metrics/cycle";
 import { repairPopularityCounter } from "@repo/backend/convex/contents/metrics/repair";
 import {
+  type RetentionPageReference,
+  startLearningPopularityRetention,
+} from "@repo/backend/convex/contents/metrics/retention";
+import {
   getFinitePopularityWindows,
   getPopularitySignalDay,
   learningPopularityScopeValues,
@@ -78,7 +82,8 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   args: RefreshLearningPopularityWindowPageArgs,
-  refreshWindowPage: RefreshLearningPopularityWindowPageReference
+  refreshWindowPage: RefreshLearningPopularityWindowPageReference,
+  retentionPage: RetentionPageReference
 ) {
   const timestamp = yield* Clock.currentTimeMillis;
   const cycle = yield* getPopularityCyclePage(ctx, {
@@ -152,6 +157,7 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
 
   if (page.isDone) {
     yield* completePopularityCycle(ctx, cycle.cycleId, args.day);
+    yield* startLearningPopularityRetention(ctx, args.day, retentionPage);
   }
 
   return {

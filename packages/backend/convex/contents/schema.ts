@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/convex/contents/graph";
 import {
   learningPopularityFiniteWindowValues,
+  learningPopularityRetentionPhaseValues,
   learningPopularityScopeValues,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
@@ -25,6 +26,9 @@ const learningPopularityFiniteWindowValidator = literals(
 );
 const learningPopularityScopeValidator = literals(
   ...learningPopularityScopeValues
+);
+const learningPopularityRetentionPhaseValidator = literals(
+  ...learningPopularityRetentionPhaseValues
 );
 const tables = {
   /**
@@ -157,13 +161,15 @@ const tables = {
     signalDay: v.number(),
     viewedAt: v.number(),
     viewerKey: v.string(),
-  }).index("by_viewer_content_day_scope_context", [
-    "viewerKey",
-    "content_id",
-    "signalDay",
-    "scopeMode",
-    "contextKey",
-  ]),
+  })
+    .index("by_viewer_content_day_scope_context", [
+      "viewerKey",
+      "content_id",
+      "signalDay",
+      "scopeMode",
+      "contextKey",
+    ])
+    .index("by_signalDay", ["signalDay"]),
 
   /** Daily verified popularity signals used for audited window rebuilds. */
   learningPopularitySignals: defineTable({
@@ -202,7 +208,8 @@ const tables = {
       "content_id",
       "contextKey",
       "signalDay",
-    ]),
+    ])
+    .index("by_signalDay", ["signalDay"]),
 
   /**
    * Completion watermark for each finite popularity maintenance cycle.
@@ -216,6 +223,14 @@ const tables = {
     startedDay: v.number(),
     windowKey: learningPopularityFiniteWindowValidator,
   }).index("by_scopeMode_and_windowKey", ["scopeMode", "windowKey"]),
+
+  /** Durable singleton for one idempotent popularity retention chain. */
+  learningPopularityRetention: defineTable({
+    completedDay: v.optional(v.number()),
+    day: v.number(),
+    key: v.literal("popularity"),
+    phase: learningPopularityRetentionPhaseValidator,
+  }).index("by_key", ["key"]),
 
   /** Ranked popularity read model for bounded homepage and route queries. */
   learningPopularityCounters: defineTable({

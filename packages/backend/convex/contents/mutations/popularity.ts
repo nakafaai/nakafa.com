@@ -8,8 +8,11 @@ import {
   refreshLearningPopularityWindowPageResultValidator,
   type ScheduleLearningPopularityExpiriesResult,
   type ScheduleLearningPopularityRefreshesResult,
+  type SweepLearningPopularityRetentionResult,
   scheduleLearningPopularityExpiriesResultValidator,
   scheduleLearningPopularityRefreshesResultValidator,
+  sweepLearningPopularityRetentionArgs,
+  sweepLearningPopularityRetentionResultValidator,
 } from "@repo/backend/convex/contents/analytics/spec";
 import {
   expireLearningPopularityWindowPage as expireLearningPopularityWindowPageProgram,
@@ -19,6 +22,7 @@ import {
   refreshLearningPopularityWindowPage as refreshLearningPopularityWindowPageProgram,
   scheduleLearningPopularityRefreshes as scheduleLearningPopularityRefreshesProgram,
 } from "@repo/backend/convex/contents/metrics/refresh";
+import { sweepLearningPopularityRetention as sweepLearningPopularityRetentionProgram } from "@repo/backend/convex/contents/metrics/retention";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
@@ -65,7 +69,8 @@ export const refreshLearningPopularityWindowPage = internalMutation({
         ctx,
         args,
         internal.contents.mutations.popularity
-          .refreshLearningPopularityWindowPage
+          .refreshLearningPopularityWindowPage,
+        internal.contents.mutations.popularity.sweepLearningPopularityRetention
       )
     ),
 });
@@ -83,7 +88,22 @@ export const expireLearningPopularityWindowPage = internalMutation({
         ctx,
         args,
         internal.contents.mutations.popularity
-          .expireLearningPopularityWindowPage
+          .expireLearningPopularityWindowPage,
+        internal.contents.mutations.popularity.sweepLearningPopularityRetention
+      )
+    ),
+});
+
+/** Deletes one indexed page after all finite daily maintenance completes. */
+export const sweepLearningPopularityRetention = internalMutation({
+  args: sweepLearningPopularityRetentionArgs,
+  returns: sweepLearningPopularityRetentionResultValidator,
+  handler: async (ctx, args): Promise<SweepLearningPopularityRetentionResult> =>
+    await runConvexProgram(
+      sweepLearningPopularityRetentionProgram(
+        ctx,
+        args,
+        internal.contents.mutations.popularity.sweepLearningPopularityRetention
       )
     ),
 });

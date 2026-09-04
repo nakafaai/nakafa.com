@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/convex/contents/popularity";
 import { Effect } from "effect";
 
-export type PopularityCycleMode = "expiry" | "repair";
+type PopularityCycleMode = "expiry" | "repair";
 
 interface CycleKey {
   readonly day: number;

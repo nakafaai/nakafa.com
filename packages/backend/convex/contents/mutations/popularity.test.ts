@@ -486,13 +486,13 @@ describe("contents/mutations/popularity", () => {
       await readBoundedState(repair)
     );
     expect(expiryMetrics).toEqual({
-      databaseQueries: 91,
-      documentsRead: 119,
+      databaseQueries: 126,
+      documentsRead: 153,
       documentsWritten: 28,
     });
     expect(repairMetrics).toEqual({
-      databaseQueries: 91,
-      documentsRead: 799,
+      databaseQueries: 126,
+      documentsRead: 833,
       documentsWritten: 28,
     });
   });

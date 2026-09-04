@@ -4,7 +4,10 @@ import {
   buildMetricsBatch,
   groupMetricsQueueItems,
 } from "@repo/backend/convex/contents/metrics/batch";
-import { learningPopularityWindowValues } from "@repo/backend/convex/contents/popularity";
+import {
+  learningPopularityWindowValues,
+  POPULARITY_DAY_MS,
+} from "@repo/backend/convex/contents/popularity";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
@@ -21,6 +24,7 @@ async function insertQueueItem(
     readonly contentId: string;
     readonly contextKey: string;
     readonly index: number;
+    readonly viewedAt?: number;
   }
 ) {
   const graph = testMaterialGraph("vector", "addition", "en", "mathematics");
@@ -40,7 +44,7 @@ async function insertQueueItem(
     sourcePath: "material/lesson/mathematics/vector/addition",
     title: `Vector ${input.index}`,
     viewerKey: `device:${input.index}`,
-    viewedAt: NOW,
+    viewedAt: input.viewedAt ?? NOW,
   });
 }
 
@@ -92,6 +96,43 @@ describe("contents/metrics/batch", () => {
     ).toEqual([
       { contentId: SHORT_ID, viewCount: 1 },
       { contentId: LONG_ID, viewCount: 3 },
+    ]);
+  });
+
+  it("retains the repair boundary and applies older events only to lifetime", async () => {
+    const target = convexTest(schema, convexModules);
+    await target.mutation(async (ctx) => {
+      await insertQueueItem(ctx, {
+        contentId: "retained",
+        contextKey: "canonical",
+        index: 0,
+        viewedAt: NOW - 364 * POPULARITY_DAY_MS,
+      });
+      await insertQueueItem(ctx, {
+        contentId: "expired",
+        contextKey: "canonical",
+        index: 1,
+        viewedAt: NOW - 365 * POPULARITY_DAY_MS,
+      });
+    });
+
+    const queueItems = await target.query(
+      async (ctx) => await ctx.db.query("learningEngagementQueue").collect()
+    );
+    const batch = buildMetricsBatch({ queueItems, updatedAt: NOW });
+
+    expect(
+      [...batch.signals.values()].map((signal) => signal.ref.content_id)
+    ).toEqual(["retained"]);
+    expect(
+      [...batch.counters.values()].map(({ ref, windowKey }) => ({
+        contentId: ref.content_id,
+        windowKey,
+      }))
+    ).toEqual([
+      { contentId: "retained", windowKey: "365d" },
+      { contentId: "retained", windowKey: "lifetime" },
+      { contentId: "expired", windowKey: "lifetime" },
     ]);
   });
 });

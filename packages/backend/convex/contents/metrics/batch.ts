@@ -169,12 +169,20 @@ export function buildMetricsBatch({
       queueItem.content_id,
       queueItem.contextKey,
     ]);
-    const signalCount = signals.get(signalKey);
+    if (
+      isPopularitySignalInWindow({
+        signalDay,
+        timestamp: updatedAt,
+        windowKey: "365d",
+      })
+    ) {
+      const signalCount = signals.get(signalKey);
 
-    signals.set(signalKey, {
-      ...createPopularitySignalDelta(queueItem),
-      viewCount: (signalCount?.viewCount ?? 0) + 1,
-    });
+      signals.set(signalKey, {
+        ...createPopularitySignalDelta(queueItem),
+        viewCount: (signalCount?.viewCount ?? 0) + 1,
+      });
+    }
 
     for (const windowKey of learningPopularityWindowValues) {
       if (

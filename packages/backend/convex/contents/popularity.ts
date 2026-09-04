@@ -21,6 +21,11 @@ export type LearningPopularityWindow =
 
 export const learningPopularityScopeValues = ["global", "placement"] as const;
 
+export const learningPopularityRetentionPhaseValues = [
+  "viewers",
+  "signals",
+] as const;
+
 export type LearningPopularityScope =
   (typeof learningPopularityScopeValues)[number];
 
