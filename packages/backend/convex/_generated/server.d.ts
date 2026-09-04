@@ -33,6 +33,7 @@ type Env = {
   readonly AKSARA_AGENT_SIGNING_KEY_ID: string | undefined;
   readonly AKSARA_AGENT_SIGNING_PUBLIC_KEY: string | undefined;
   readonly AKSARA_PUBLICATION_TOKEN: string;
+  readonly CONTENT_ARCHIVE_TOKEN: string;
   readonly CONTENT_RUNTIME_TOKEN: string;
   readonly NAKAFA_API_EDGE_SECRET: string;
   readonly NAKAFA_MCP_ALLOWED_ORIGINS: string | undefined;

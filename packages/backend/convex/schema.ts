@@ -4,6 +4,7 @@ import chatsSchema from "@repo/backend/convex/chats/tables/schema";
 import classesSchema from "@repo/backend/convex/classes/schema";
 import commentsSchema from "@repo/backend/convex/comments/schema";
 import consentsSchema from "@repo/backend/convex/consents/schema";
+import archiveSchema from "@repo/backend/convex/contentRelease/archive/schema";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
 import contentsSchema from "@repo/backend/convex/contents/schema";
 import creditsSchema from "@repo/backend/convex/credits/schema";
@@ -23,6 +24,7 @@ import { defineSchema } from "convex/server";
 export default defineSchema(
   {
     ...usersSchema,
+    ...archiveSchema,
     ...authDeletionSchema,
     ...chatsSchema,
     ...commentsSchema,

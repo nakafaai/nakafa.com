@@ -28,6 +28,11 @@ export const exportSignedRuntime = Effect.fn(
   const encryptedPath = `${cacheRoot}/${CONTENT_RUNTIME_CACHE_FILE}`;
 
   return Effect.gen(function* () {
+    yield* verifyStableRuntimeExport(
+      config,
+      yield* readProductionGenerations(config)
+    );
+
     const fileSystem = yield* FileSystem.FileSystem;
     const cacheExists = yield* fileSystem.exists(cacheRoot);
     if (

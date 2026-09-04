@@ -26,9 +26,12 @@ const hasDisallowedDeployKeyCharacter = (value: string) =>
     );
   });
 
-export interface CacheIdentity {
-  readonly contentStateHash: string;
+export interface RuntimeSchemaIdentity {
   readonly runtimeSchemaFingerprint: string;
+}
+
+export interface CacheIdentity extends RuntimeSchemaIdentity {
+  readonly contentStateHash: string;
 }
 
 export interface RuntimeSelectionIdentity {
@@ -92,29 +95,32 @@ export const validateProductionDeployKey = (deployKey: string) => {
   return Effect.succeed(deployKey);
 };
 
-const readCacheIdentity = Effect.gen(function* () {
-  const values = yield* Config.all({
-    contentStateHash: Config.nonEmptyString("CONTENT_RUNTIME_STATE_HASH"),
-    runtimeSchemaFingerprint: Config.nonEmptyString(
-      "CONTENT_RUNTIME_SCHEMA_HASH"
-    ),
-  });
-
-  const contentStateHash = yield* validateHex(
-    "CONTENT_RUNTIME_STATE_HASH",
-    values.contentStateHash
-  );
+export const readRuntimeSchemaIdentity = Effect.gen(function* () {
+  const value = yield* Config.nonEmptyString("CONTENT_RUNTIME_SCHEMA_HASH");
   const runtimeSchemaFingerprint = yield* validateHex(
     "CONTENT_RUNTIME_SCHEMA_HASH",
-    values.runtimeSchemaFingerprint
+    value
   );
+
+  return { runtimeSchemaFingerprint } satisfies RuntimeSchemaIdentity;
+});
+
+export const readCacheIdentity = Effect.gen(function* () {
+  const contentStateHashValue = yield* Config.nonEmptyString(
+    "CONTENT_RUNTIME_STATE_HASH"
+  );
+  const contentStateHash = yield* validateHex(
+    "CONTENT_RUNTIME_STATE_HASH",
+    contentStateHashValue
+  );
+  const runtimeSchemaIdentity = yield* readRuntimeSchemaIdentity;
   return {
     contentStateHash,
-    runtimeSchemaFingerprint,
+    ...runtimeSchemaIdentity,
   } satisfies CacheIdentity;
 });
 
-const readRuntimeSelectionIdentity = Effect.gen(function* () {
+export const readRuntimeSelectionIdentity = Effect.gen(function* () {
   const runtimeSelectionHash = yield* Config.nonEmptyString(
     "CONTENT_RUNTIME_SELECTION_HASH"
   ).pipe(

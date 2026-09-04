@@ -133,6 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
+      CONTENT_ARCHIVE_TOKEN: ci-archive
       CONTENT_RUNTIME_TOKEN: ci-runtime
       AKSARA_PUBLICATION_TOKEN: ci-runtime
       NAKAFA_API_EDGE_SECRET: ci-runtime-api-edge
@@ -269,6 +270,7 @@ jobs:
           AUTH_GOOGLE_ID=ci-disabled
           AUTH_GOOGLE_SECRET=ci-disabled
           BETTER_AUTH_SECRET=ci-inert-secret-00000000
+          CONTENT_ARCHIVE_TOKEN=$CONTENT_ARCHIVE_TOKEN
           CONTENT_RUNTIME_TOKEN=$CONTENT_RUNTIME_TOKEN
           FIRECRAWL_API_KEY=ci-disabled
           JWKS=[]
@@ -346,6 +348,7 @@ jobs:
           CONTENT_RUNTIME_STATE_HASH: ""
           CONTENT_RUNTIME_SELECTION_HASH: ""
           CONTENT_RUNTIME_SCHEMA_HASH: ""
+          CONTENT_ARCHIVE_TOKEN: ""
           CONTENT_RUNTIME_TOKEN: ""
           AKSARA_PUBLICATION_TOKEN: ""
           CONVEX_SITE_URL: ""

@@ -35,11 +35,13 @@ Do not copy Convex deployment identity from another task.
 ## Signed runtime validation
 
 ```sh
-pnpm --filter @repo/backend runtime:ci
+pnpm --filter @repo/backend runtime:ci fingerprint
 ```
 
-`runtime:ci` validates the configured signed Aksara artifact and its Nakafa
-runtime projections without publishing or repairing content.
+`runtime:ci` requires an explicit mode. The validation, export, and import modes
+preserve the current signed runtime workflow. `produce` stores one encrypted
+archive for an active runtime selection, and `download` restores that exact
+archive. These modes never publish or repair authored content.
 
 ## Customer verification
 

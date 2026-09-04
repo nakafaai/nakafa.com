@@ -60,7 +60,7 @@ describe("content runtime generations", () => {
   );
 
   it.live(
-    "accepts compaction and inactive-slot drift only for runtime selection",
+    "keeps candidate, recovery, compaction, and updatedAt drift on one archive identity",
     () =>
       Effect.gen(function* () {
         const baseline = yield* buildRuntimeGenerations(contentState);
