@@ -2,7 +2,7 @@ import { redirect } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { AdmissionPending } from "@/components/auth/admission-pending";
+import { AdmissionPending } from "@/components/auth/pending";
 import {
   getPostAuthDestination,
   getPostAuthOnboardingHref,

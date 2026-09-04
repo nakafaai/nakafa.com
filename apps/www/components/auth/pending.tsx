@@ -9,7 +9,7 @@ import {
   EntryShellPanel,
 } from "@/components/shared/entry-shell";
 
-/** Shows truthful progress while first-run admission resolves. */
+/** Shows progress while first-run admission resolves. */
 export function AdmissionPending() {
   const t = useTranslations("Auth");
 

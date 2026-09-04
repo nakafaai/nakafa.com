@@ -1,9 +1,11 @@
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
 import { render } from "@react-email/render";
 import { Tailwind } from "@repo/email/tailwind";
+import {
+  type AccountReadyEmailInput,
+  AccountReadyEmailInputSchema,
+  getAccountReadyEmailCopy,
+  getPublicEmailUrl,
+} from "@repo/email/templates/ready/content";
 import {
   COMPANY_IDENTITY,
   COMPANY_REGISTERED_ADDRESS,
@@ -24,36 +26,7 @@ import {
   Text,
 } from "react-email";
 
-const loopbackHostnames = new Set(["127.0.0.1", "[::1]", "localhost"]);
-
-function isEmailUrl(value: string) {
-  if (!URL.canParse(value)) {
-    return false;
-  }
-
-  const url = new URL(value);
-  return (
-    url.protocol === "https:" ||
-    (url.protocol === "http:" && loopbackHostnames.has(url.hostname))
-  );
-}
-
-const EmailUrlSchema = Schema.String.check(
-  Schema.makeFilter(isEmailUrl, {
-    message: "Expected HTTPS or a loopback HTTP URL.",
-  })
-);
-
-export const AccountReadyEmailInputSchema = Schema.Struct({
-  continueUrl: EmailUrlSchema,
-  locale: ActiveAppLocaleCodeSchema,
-  privacyPolicyUrl: EmailUrlSchema,
-  termsOfServiceUrl: EmailUrlSchema,
-});
-
-export type AccountReadyEmailInput = Schema.Schema.Type<
-  typeof AccountReadyEmailInputSchema
->;
+export type { AccountReadyEmailInput } from "@repo/email/templates/ready/content";
 
 /** Expected invalid input at the account-ready email boundary. */
 export class AccountReadyEmailInputError extends Schema.TaggedError<AccountReadyEmailInputError>()(
@@ -73,50 +46,7 @@ export class AccountReadyEmailRenderError extends Schema.TaggedError<AccountRead
   }
 ) {}
 
-interface AccountReadyEmailCopy {
-  readonly body: string;
-  readonly cta: string;
-  readonly footerReason: string;
-  readonly privacyPolicy: string;
-  readonly subject: string;
-  readonly termsOfService: string;
-}
-
-const accountReadyEmailCopy = {
-  de: {
-    body: "Dein Konto ist eingerichtet. Wähle ein Fach oder starte einen Probetest, wenn du bereit bist.",
-    cta: "Weiterlernen",
-    footerReason:
-      "Wir senden dir diese E-Mail, weil du ein Nakafa-Konto erstellt hast.",
-    privacyPolicy: "Datenschutzerklärung",
-    subject: "Dein Nakafa-Konto ist bereit",
-    termsOfService: "Nutzungsbedingungen",
-  },
-  en: {
-    body: "Your account is set up. Explore a subject or start a Tryout whenever you're ready.",
-    cta: "Continue learning",
-    footerReason: "We sent this email because you created a Nakafa account.",
-    privacyPolicy: "Privacy Policy",
-    subject: "Your Nakafa account is ready",
-    termsOfService: "Terms of Service",
-  },
-  id: {
-    body: "Akunmu sudah siap. Pilih mata pelajaran atau mulai try out kapan pun kamu siap.",
-    cta: "Lanjut belajar",
-    footerReason: "Kami mengirim email ini karena kamu membuat akun Nakafa.",
-    privacyPolicy: "Kebijakan Privasi",
-    subject: "Akun Nakafa kamu sudah siap",
-    termsOfService: "Syarat dan Ketentuan",
-  },
-} satisfies Record<ActiveAppLocaleCode, AccountReadyEmailCopy>;
-
-const canonicalSiteUrl = new URL(COMPANY_IDENTITY.url);
-
-function publicSiteUrl(pathname: string) {
-  return new URL(pathname, canonicalSiteUrl).href;
-}
-
-const EMAIL_LOGO_URL = publicSiteUrl("/logo.png");
+const EMAIL_LOGO_URL = getPublicEmailUrl("/logo.png");
 
 /** Renders the privacy-safe account-ready message for one supported locale. */
 export function AccountReadyEmail({
@@ -125,7 +55,7 @@ export function AccountReadyEmail({
   privacyPolicyUrl,
   termsOfServiceUrl,
 }: AccountReadyEmailInput) {
-  const copy = accountReadyEmailCopy[locale];
+  const copy = getAccountReadyEmailCopy(locale);
 
   return (
     <Html dir="ltr" lang={locale}>
@@ -232,7 +162,7 @@ export const renderAccountReadyEmail = Effect.fn("email.accountReady.render")(
           })
       )
     );
-    const copy = accountReadyEmailCopy[props.locale];
+    const copy = getAccountReadyEmailCopy(props.locale);
     const email = <AccountReadyEmail {...props} />;
     const renderFailure = () =>
       new AccountReadyEmailRenderError({
@@ -258,10 +188,10 @@ export const renderAccountReadyEmail = Effect.fn("email.accountReady.render")(
 );
 
 AccountReadyEmail.PreviewProps = {
-  continueUrl: publicSiteUrl("/en/home"),
+  continueUrl: getPublicEmailUrl("/en/home"),
   locale: "en",
-  privacyPolicyUrl: publicSiteUrl("/en/privacy-policy"),
-  termsOfServiceUrl: publicSiteUrl("/en/terms-of-service"),
+  privacyPolicyUrl: getPublicEmailUrl("/en/privacy-policy"),
+  termsOfServiceUrl: getPublicEmailUrl("/en/terms-of-service"),
 } satisfies AccountReadyEmailInput;
 
 export default AccountReadyEmail;

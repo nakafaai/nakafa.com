@@ -1,7 +1,7 @@
 import {
   AccountReadyEmail,
   renderAccountReadyEmail,
-} from "@repo/email/templates/account-ready";
+} from "@repo/email/templates/ready/email";
 import { Effect, Schema } from "effect";
 
 export interface WelcomeProps {

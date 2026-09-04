@@ -11,8 +11,8 @@ import { registerPublicContentRuntimeRoute } from "@repo/backend/convex/contentR
 import { registerContentReleaseRoutes } from "@repo/backend/convex/contentRelease/ingress/route";
 import { registerAgentApiRoutes } from "@repo/backend/convex/routes/agent/api";
 import { registerAgentMcpRoutes } from "@repo/backend/convex/routes/agent/mcp/route";
+import { createQueryFreeRequestLogger } from "@repo/backend/convex/routes/middleware/logger";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
-import { createQueryFreeRequestLogger } from "@repo/backend/convex/routes/middleware/requestLogger";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
 import { registerResendRoutes } from "@repo/backend/convex/routes/resend";
 import {

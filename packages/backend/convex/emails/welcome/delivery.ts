@@ -6,7 +6,7 @@ import { tryWelcomeIntent } from "@repo/backend/convex/emails/welcome/impl";
 import type { WelcomeIntentInput } from "@repo/backend/convex/emails/welcome/input";
 import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { renderAccountReadyEmail } from "@repo/email/templates/account-ready";
+import { renderAccountReadyEmail } from "@repo/email/templates/ready/email";
 import { v } from "convex/values";
 import { Effect } from "effect";
 

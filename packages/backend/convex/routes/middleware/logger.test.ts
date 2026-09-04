@@ -1,5 +1,5 @@
 import { expect, it } from "@effect/vitest";
-import { createQueryFreeRequestLogger } from "@repo/backend/convex/routes/middleware/requestLogger";
+import { createQueryFreeRequestLogger } from "@repo/backend/convex/routes/middleware/logger";
 import { Effect } from "effect";
 import { Hono } from "hono";
 
