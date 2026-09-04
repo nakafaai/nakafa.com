@@ -1,10 +1,17 @@
 import { type EmailStatus, Resend } from "@convex-dev/resend";
 import resendTest from "@convex-dev/resend/test";
+import workflowTest from "@convex-dev/workflow/test";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import { resend } from "@repo/backend/convex/emails/client";
+import {
+  activateWelcomeIntent,
+  declareWelcomeIntent,
+} from "@repo/backend/convex/emails/welcome/impl";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { workflow } from "@repo/backend/convex/workflow";
 import { convexTest, type TestConvex } from "convex-test";
 
 const testResend = new Resend(components.resend, {
@@ -55,7 +62,67 @@ async function insertEnqueuedIntent(
   });
 }
 
+async function insertScheduledIntent(
+  test: TestConvex<typeof schema>,
+  suffix: string
+) {
+  const userId = await test.mutation((ctx) =>
+    ctx.db.insert("users", {
+      authId: `scheduled-${suffix}`,
+      credits: 0,
+      creditsResetAt: 0,
+      email: `${suffix}@example.com`,
+      name: `Synthetic ${suffix}`,
+      plan: "free",
+    })
+  );
+  const intentId = await test.mutation((ctx) =>
+    runConvexProgram(declareWelcomeIntent(ctx, userId))
+  );
+  await test.mutation((ctx) =>
+    runConvexProgram(activateWelcomeIntent(ctx, userId, "en"))
+  );
+  return intentId;
+}
+
 describe("emails/welcome/reconciliation", () => {
+  it("retains a scheduled intent while its workflow is still running", async () => {
+    const test = convexTest(schema, convexModules);
+    workflowTest.register(test);
+    const intentId = await insertScheduledIntent(test, "in-progress");
+
+    await test.mutation(
+      internal.emails.welcome.reconciliation.reconcileWelcomeIntentLifecycle,
+      { cursor: null, phase: "scheduled" }
+    );
+
+    expect(
+      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
+    ).toMatchObject({ phase: "scheduled" });
+  });
+
+  it("fails closed when a terminal workflow cannot be cleaned", async () => {
+    const test = convexTest(schema, convexModules);
+    workflowTest.register(test);
+    const intentId = await insertScheduledIntent(test, "uncleanable");
+    vi.spyOn(workflow, "status").mockResolvedValueOnce({
+      result: null,
+      type: "completed",
+    });
+    vi.spyOn(workflow, "cleanup").mockResolvedValueOnce(false);
+
+    await expect(
+      test.mutation(
+        internal.emails.welcome.reconciliation.reconcileWelcomeIntentLifecycle,
+        { cursor: null, phase: "scheduled" }
+      )
+    ).rejects.toThrow("Unable to process the welcome email intent.");
+
+    expect(
+      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
+    ).toMatchObject({ phase: "scheduled" });
+  });
+
   it("retains only component deliveries that account deletion can cancel", async () => {
     const test = convexTest(schema, convexModules);
     resendTest.register(test);

@@ -169,8 +169,5 @@ export const removeWelcomeIntent: (
     }
   }
 
-  const remainingIntent = yield* tryUserCleanup(() => ctx.db.get(intent._id));
-  if (remainingIntent) {
-    yield* tryUserCleanup(() => ctx.db.delete(remainingIntent._id));
-  }
+  yield* tryUserCleanup(() => ctx.db.delete(intent._id));
 });

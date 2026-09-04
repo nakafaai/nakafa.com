@@ -85,11 +85,7 @@ const reconcileWelcomeIntentLifecycleProgram = Effect.fn(
   );
 
   for (const intent of page.page) {
-    if (intent.phase === "awaiting-onboarding") {
-      continue;
-    }
-
-    const workflowId = intent.workflowId;
+    const workflowId = "workflowId" in intent ? intent.workflowId : undefined;
     if (workflowId !== undefined) {
       const status = yield* tryWelcomeIntent(() =>
         workflow.status(ctx, workflowId)
@@ -110,35 +106,32 @@ const reconcileWelcomeIntentLifecycleProgram = Effect.fn(
       }
       if (intent.phase === "scheduled") {
         yield* tryWelcomeIntent(() => ctx.db.delete(intent._id));
+      } else {
+        yield* tryWelcomeIntent(() =>
+          ctx.db.patch(intent._id, { workflowId: undefined })
+        );
+      }
+    }
+
+    if (intent.phase === "enqueued") {
+      const status = yield* Effect.result(
+        tryWelcomeIntent(() => resend.status(ctx, intent.componentEmailId))
+      );
+      if (Result.isFailure(status)) {
+        yield* Effect.logWarning(
+          "Welcome intent retained after component status inspection failed."
+        );
+        continue;
+      }
+      if (
+        status.success?.status === "waiting" ||
+        status.success?.status === "queued"
+      ) {
         continue;
       }
 
-      yield* tryWelcomeIntent(() =>
-        ctx.db.patch(intent._id, { workflowId: undefined })
-      );
+      yield* tryWelcomeIntent(() => ctx.db.delete(intent._id));
     }
-
-    if (intent.phase !== "enqueued") {
-      continue;
-    }
-
-    const status = yield* Effect.result(
-      tryWelcomeIntent(() => resend.status(ctx, intent.componentEmailId))
-    );
-    if (Result.isFailure(status)) {
-      yield* Effect.logWarning(
-        "Welcome intent retained after component status inspection failed."
-      );
-      continue;
-    }
-    if (
-      status.success?.status === "waiting" ||
-      status.success?.status === "queued"
-    ) {
-      continue;
-    }
-
-    yield* tryWelcomeIntent(() => ctx.db.delete(intent._id));
   }
 
   yield* scheduleNextReconciliationPage(ctx, phase, page);

@@ -10,6 +10,8 @@ import {
   declareWelcomeIntent,
   removeWelcomeIntent,
 } from "@repo/backend/convex/emails/welcome/impl";
+import { WELCOME_EMAIL_RETRY } from "@repo/backend/convex/emails/welcome/spec";
+import { runWelcomeEmailDelivery } from "@repo/backend/convex/emails/welcome/workflow";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -95,6 +97,22 @@ async function completeWelcomeWorkflow(
 }
 
 describe("emails/welcome/delivery", () => {
+  it("runs the provider action with the deletion-aware retry policy", async () => {
+    const test = convexTest(schema, convexModules);
+    workflowTest.register(test);
+    const { intentId } = await createActivatedIntent(test, "workflow");
+    const runAction = vi.fn(async () => null);
+
+    const result = await runWelcomeEmailDelivery({ runAction }, { intentId });
+
+    expect(result).toBeNull();
+    expect(runAction).toHaveBeenCalledExactlyOnceWith(
+      internal.emails.welcome.delivery.sendWelcomeEmail,
+      { intentId },
+      { retry: WELCOME_EMAIL_RETRY }
+    );
+  });
+
   it("enqueues one localized provider message across action retries", async () => {
     const test = convexTest(schema, convexModules);
     resendTest.register(test);
@@ -225,6 +243,99 @@ describe("emails/welcome/delivery", () => {
     expect(
       await test.query((ctx) => ctx.db.query("welcomeEmailIntents").unique())
     ).toBeNull();
+  });
+
+  it("ignores a rendered retry after the intent left the scheduled phase", async () => {
+    const test = convexTest(schema, convexModules);
+    const userId = await test.mutation((ctx) =>
+      ctx.db.insert("users", {
+        authId: "awaiting-render-owner",
+        credits: 0,
+        creditsResetAt: 0,
+        email: "delivered@resend.dev",
+        name: "Synthetic Awaiting Learner",
+        plan: "free",
+      })
+    );
+    const intentId = await test.mutation((ctx) =>
+      runConvexProgram(declareWelcomeIntent(ctx, userId))
+    );
+    const send = vi.spyOn(resend, "sendEmail");
+
+    await test.mutation(
+      internal.emails.welcome.internal.enqueueRenderedWelcome,
+      {
+        intentId,
+        html: "<p>Account ready</p>",
+        subject: "Account ready",
+        text: "Account ready",
+      }
+    );
+
+    expect(send).not.toHaveBeenCalled();
+    expect(
+      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
+    ).toMatchObject({ phase: "awaiting-onboarding" });
+  });
+
+  it("drops a scheduled intent when its owner was deleted before enqueue", async () => {
+    const test = convexTest(schema, convexModules);
+    resendTest.register(test);
+    workflowTest.register(test);
+    const { intentId, userId } = await createActivatedIntent(
+      test,
+      "deleted-before-enqueue"
+    );
+    await test.mutation((ctx) => ctx.db.delete(userId));
+    const send = vi.spyOn(resend, "sendEmail");
+
+    expect(
+      await test.query(internal.emails.welcome.internal.readIntentInput, {
+        intentId,
+      })
+    ).toBeNull();
+    await test.mutation(
+      internal.emails.welcome.internal.enqueueRenderedWelcome,
+      {
+        intentId,
+        html: "<p>Account ready</p>",
+        subject: "Account ready",
+        text: "Account ready",
+      }
+    );
+
+    expect(send).not.toHaveBeenCalled();
+    expect(
+      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
+    ).toBeNull();
+  });
+
+  it("defers enqueue when deletion starts after the message was rendered", async () => {
+    const test = convexTest(schema, convexModules);
+    resendTest.register(test);
+    workflowTest.register(test);
+    const { intentId, userId } = await createActivatedIntent(
+      test,
+      "deletion-after-render"
+    );
+    await test.mutation((ctx) =>
+      ctx.db.patch("users", userId, { deletionPreparedAt: NOW })
+    );
+    const send = vi.spyOn(resend, "sendEmail");
+
+    await expect(
+      test.mutation(internal.emails.welcome.internal.enqueueRenderedWelcome, {
+        intentId,
+        html: "<p>Account ready</p>",
+        subject: "Account ready",
+        text: "Account ready",
+      })
+    ).rejects.toThrow();
+
+    expect(send).not.toHaveBeenCalled();
+    expect(
+      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intentId))
+    ).toMatchObject({ phase: "scheduled" });
   });
 
   it("defers during reversible deletion and delivers after cancellation", async () => {

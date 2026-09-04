@@ -11,6 +11,7 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { workflow } from "@repo/backend/convex/workflow";
 import { convexTest, type TestConvex } from "convex-test";
 
 const testResend = new Resend(components.resend, {
@@ -115,6 +116,9 @@ describe("emails/welcome/impl", () => {
     await test.mutation((ctx) =>
       runConvexProgram(removeWelcomeIntent(ctx, userId))
     );
+    await test.mutation((ctx) =>
+      runConvexProgram(removeWelcomeIntent(ctx, userId))
+    );
 
     expect(
       await test.query((ctx) => ctx.db.query("welcomeEmailIntents").unique())
@@ -187,6 +191,37 @@ describe("emails/welcome/impl", () => {
         })
       )
     ).rejects.toThrow();
+  });
+
+  it("retains the intent when its terminal workflow cannot be cleaned", async () => {
+    const test = convexTest(schema, convexModules);
+    workflowTest.register(test);
+    const userId = await insertUser(test, "uncleanable-workflow");
+    await test.mutation((ctx) =>
+      runConvexProgram(declareWelcomeIntent(ctx, userId))
+    );
+    await test.mutation((ctx) =>
+      runConvexProgram(activateWelcomeIntent(ctx, userId, "en"))
+    );
+    const intent = await test.query((ctx) =>
+      ctx.db.query("welcomeEmailIntents").unique()
+    );
+    if (intent?.phase !== "scheduled") {
+      throw new Error("Expected one scheduled synthetic intent.");
+    }
+    vi.spyOn(workflow, "status").mockResolvedValueOnce({
+      result: null,
+      type: "completed",
+    });
+    vi.spyOn(workflow, "cleanup").mockResolvedValueOnce(false);
+
+    await expect(
+      test.mutation((ctx) => runConvexProgram(removeWelcomeIntent(ctx, userId)))
+    ).rejects.toThrow("Unable to clean the welcome email workflow.");
+
+    expect(
+      await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intent._id))
+    ).toMatchObject({ phase: "scheduled", workflowId: intent.workflowId });
   });
 
   it("cancels a queued component email before removing its intent", async () => {
