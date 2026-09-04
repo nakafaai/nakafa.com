@@ -9,23 +9,30 @@ import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/
 import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
 import { Effect } from "effect";
 
+type AuthenticatedMaterial = NonNullable<
+  Effect.Success<ReturnType<typeof resolveMaterialRoute>>["material"]
+>;
+
 /** Reads every locale-specific counterpart for one stable material identity. */
 const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
   function* (
     ctx: QueryCtx,
-    row: Doc<"materialCatalog">,
+    requested: AuthenticatedMaterial,
     activeAppLocales: ActiveAppLocaleList,
     activeSequence: number
   ) {
     const counterparts = yield* Effect.forEach(activeAppLocales, (appLocale) =>
       Effect.gen(function* () {
+        if (appLocale === requested.row.appLocale) {
+          return requested;
+        }
         const alternate = yield* Effect.promise(() =>
           ctx.db
             .query("materialCatalog")
             .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
               index
-                .eq("slot", row.slot)
-                .eq("contentKey", row.contentKey)
+                .eq("slot", requested.row.slot)
+                .eq("contentKey", requested.row.contentKey)
                 .eq("appLocale", appLocale)
             )
             .unique()
@@ -44,7 +51,7 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
         }
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",
-          `Material ${row.contentKey} lost locale ${appLocale}.`
+          `Material ${requested.row.contentKey} lost locale ${appLocale}.`
         );
       })
     );
@@ -56,7 +63,7 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
 const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
   function* (
     ctx: QueryCtx,
-    row: Doc<"materialCatalog">,
+    requested: AuthenticatedMaterial,
     activeSequence: number
   ) {
     const siblings = yield* Effect.promise(() =>
@@ -66,20 +73,23 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
           "by_slot_and_appLocale_and_materialKey_and_order_and_publicPath",
           (index) =>
             index
-              .eq("slot", row.slot)
-              .eq("appLocale", row.appLocale)
-              .eq("materialKey", row.materialKey)
+              .eq("slot", requested.row.slot)
+              .eq("appLocale", requested.row.appLocale)
+              .eq("materialKey", requested.row.materialKey)
         )
         .take(MATERIAL_GROUP_LIMIT + 1)
     );
     if (siblings.length > MATERIAL_GROUP_LIMIT) {
       return yield* releaseFail(
         "CONTENT_RELEASE_LIMIT",
-        `Material ${row.appLocale}/${row.materialKey} exceeds ${MATERIAL_GROUP_LIMIT} lesson sections.`
+        `Material ${requested.row.appLocale}/${requested.row.materialKey} exceeds ${MATERIAL_GROUP_LIMIT} lesson sections.`
       );
     }
-    const verified = yield* Effect.forEach(siblings, (sibling) =>
-      Effect.gen(function* () {
+    const verified = yield* Effect.forEach(siblings, (sibling) => {
+      if (sibling._id === requested.row._id) {
+        return Effect.succeed(requested);
+      }
+      return Effect.gen(function* () {
         const { projection, resolved } = yield* verifyEffectiveMaterial(
           ctx,
           sibling,
@@ -90,17 +100,16 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
           projectionJson: resolved.projectionJson,
           row: sibling,
         };
-      })
-    );
+      });
+    });
     if (
-      !verified.some(({ row: candidate }) => candidate._id === row._id) ||
       verified.some(
-        ({ projection }) => projection.parentPath !== row.parentPath
+        ({ projection }) => projection.parentPath !== requested.row.parentPath
       )
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Material ${row.appLocale}/${row.materialKey} lost its coherent lesson group.`
+        `Material ${requested.row.appLocale}/${requested.row.materialKey} lost its coherent lesson group.`
       );
     }
     return verified;
@@ -142,15 +151,16 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
         sourceRevision: readSourceRevision(route.active),
       };
     }
-    const { projectionJson, row } = route.material;
+    const requested = route.material;
+    const { projectionJson, row } = requested;
     const [alternates, siblings] = yield* Effect.all([
       readAlternates(
         ctx,
-        row,
+        requested,
         route.active.signed.manifest.activeAppLocales,
         route.active.sequence
       ),
-      readSiblings(ctx, row, route.active.sequence),
+      readSiblings(ctx, requested, route.active.sequence),
     ]);
     const alternateJson = alternates.map((material) => material.projectionJson);
     const siblingJson = siblings.map((material) => material.projectionJson);

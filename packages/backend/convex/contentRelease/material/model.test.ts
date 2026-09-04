@@ -62,10 +62,52 @@ describe("contentRelease/material/model", () => {
     ]);
   });
 
+  it("uses 13 queries for three alternates and one sibling", async () => {
+    const target = convexTest(schema, convexModules);
+    const projections = (["en", "id", "de"] as const).map((appLocale) =>
+      makeMaterialProjection(appLocale, 1)
+    );
+    const requested = projections[0];
+    await activateMaterialCatalog(target, projections);
+
+    const { metrics, result } = await target.query(async (ctx) => {
+      const material = await runConvexProgram(
+        readMaterialModel(ctx, requested.appLocale, requested.publicPath)
+      );
+      return {
+        metrics: await ctx.meta.getTransactionMetrics(),
+        result: material,
+      };
+    });
+
+    expect(result.alternateJson).toHaveLength(3);
+    expect(result.siblingJson).toHaveLength(1);
+    expect(metrics.databaseQueries.used).toBe(13);
+  });
+
   it.each([
-    ["locale counterpart", makeMaterialProjection("id", 1)],
-    ["sibling", makeMaterialProjection("en", 2)],
-  ])("rejects a stale %s row", async (_label, stale) => {
+    [
+      "requested publicPath",
+      makeMaterialProjection("en", 1),
+      { publicPath: "subjects/test/functions/corrupted-section" },
+    ],
+    [
+      "requested releaseId",
+      makeMaterialProjection("en", 1),
+      { releaseId: "stale-release" },
+    ],
+    ["requested sequence", makeMaterialProjection("en", 1), { sequence: 0 }],
+    [
+      "locale counterpart",
+      makeMaterialProjection("id", 1),
+      { releaseId: "stale-release", sequence: 0 },
+    ],
+    [
+      "sibling",
+      makeMaterialProjection("en", 2),
+      { releaseId: "stale-release", sequence: 0 },
+    ],
+  ])("rejects a corrupted %s row", async (_label, stale, patch) => {
     const target = convexTest(schema, convexModules);
     const requested = makeMaterialProjection("en", 1);
     await activateMaterialCatalog(target);
@@ -82,10 +124,38 @@ describe("contentRelease/material/model", () => {
       if (!row) {
         throw new Error("Expected one related material row.");
       }
-      await ctx.db.patch("materialCatalog", row._id, {
-        releaseId: "stale-release",
-        sequence: 0,
-      });
+      await ctx.db.patch("materialCatalog", row._id, patch);
+    });
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects a published route whose catalog row was removed", async () => {
+    const target = convexTest(schema, convexModules);
+    const requested = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(target);
+    await target.mutation(async (ctx) => {
+      const row = await ctx.db
+        .query("materialCatalog")
+        .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
+          index
+            .eq("slot", "blue")
+            .eq("appLocale", requested.appLocale)
+            .eq("publicPath", requested.publicPath)
+        )
+        .unique();
+      if (!row) {
+        throw new Error("Expected one current material row.");
+      }
+      await ctx.db.delete("materialCatalog", row._id);
     });
 
     await expect(
@@ -203,7 +273,7 @@ describe("contentRelease/material/model", () => {
       requested,
       conflicting,
       makeMaterialProjection("id", 1),
-      makeMaterialProjection("id", 2),
+      makeMaterialProjection("de", 1),
     ]);
 
     await expect(
