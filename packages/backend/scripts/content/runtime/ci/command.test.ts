@@ -2,13 +2,13 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { ConvexHttpClient } from "convex/browser";
-import { makeFunctionReference } from "convex/server";
 import {
   runRuntimeCommand,
-  sanitizeRuntimeCommandError,
   setConvexAdminAuth,
 } from "@repo/backend/scripts/content/runtime/ci/command";
+import { sanitizeRuntimeCommandError } from "@repo/backend/scripts/content/runtime/ci/error";
+import { ConvexHttpClient } from "convex/browser";
+import { makeFunctionReference } from "convex/server";
 import { Effect, FileSystem } from "effect";
 
 describe("content runtime command diagnostics", () => {
@@ -22,26 +22,23 @@ describe("content runtime command diagnostics", () => {
       const client = new ConvexHttpClient(
         "https://happy-animal-123.convex.cloud",
         {
-          fetch: async (_input, init) => {
+          fetch: (_input, init) => {
             authorizations.push(
               new Headers(init?.headers).get("Authorization")
             );
-            return new Response(
-              JSON.stringify({ status: "success", value: null }),
-              {
+            return Promise.resolve(
+              new Response(JSON.stringify({ status: "success", value: null }), {
                 headers: { "Content-Type": "application/json" },
                 status: 200,
-              }
+              })
             );
           },
           logger: false,
         }
       );
-      const query = makeFunctionReference<
-        "query",
-        Record<string, never>,
-        null
-      >("test:query");
+      const query = makeFunctionReference<"query", Record<string, never>, null>(
+        "test:query"
+      );
 
       yield* setConvexAdminAuth(client, "test-admin-key");
       yield* Effect.promise(() => client.query(query, {}));
