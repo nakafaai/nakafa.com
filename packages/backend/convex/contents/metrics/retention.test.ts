@@ -204,6 +204,10 @@ describe("contents/metrics/retention", () => {
     );
 
     expect(nextClaim.result).toBe(true);
+    expect(nextClaim.metrics.databaseQueries.used).toBe(15);
+    expect(nextClaim.metrics.documentsRead.used).toBe(16);
+    expect(nextClaim.metrics.documentsWritten.used).toBe(1);
+    expect(nextClaim.metrics.functionsScheduled.used).toBe(1);
     expect(retained).toMatchObject({
       day: nextDay,
       phase: "viewers",
