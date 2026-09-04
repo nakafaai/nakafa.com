@@ -45,16 +45,27 @@ async function insertPopularityRefreshRows(ctx: MutationCtx) {
 
   const subjectCounterId = await ctx.db.insert("learningPopularityCounters", {
     ...subject,
-    contextKey: "canonical",
+    alignmentId: "stale-alignment",
+    assetId: "stale-asset",
+    conceptId: "stale-concept",
+    contextKey: "placement:mathematics:addition",
+    contextMaterialKey: "stale-material",
     contextMode: "canonical",
+    contextNodeKey: "stale-node",
+    contextParentPath: "stale/parent",
+    contextProgramKey: "stale-program",
+    contextPublicPath: "stale/public",
+    contextSourcePath: "stale/source",
     description: "Stale subject description",
+    learningObjectId: "stale-learning-object",
+    lensId: "stale-lens",
     locale: "en",
-    materialDomain: "mathematics",
-    route: SUBJECT_ROUTE,
-    score: 99,
+    materialDomain: "physics",
+    route: "stale/subject/route",
+    score: 2,
     section: "material",
     scopeMode: "global",
-    sourcePath: SUBJECT_ROUTE,
+    sourcePath: "stale/subject/source",
     title: "Stale Vector Addition",
     updatedAt: NOW - POPULARITY_DAY_MS,
     windowKey: "7d",
@@ -88,8 +99,14 @@ async function insertPopularityRefreshRows(ctx: MutationCtx) {
 
   await ctx.db.insert("learningPopularitySignals", {
     ...subject,
-    contextKey: "canonical",
-    contextMode: "canonical",
+    contextKey: "placement:mathematics:addition",
+    contextMaterialKey: "vector-addition",
+    contextMode: "placement",
+    contextNodeKey: "addition",
+    contextParentPath: "subjects/mathematics/vector",
+    contextProgramKey: "mathematics",
+    contextPublicPath: SUBJECT_ROUTE,
+    contextSourcePath: "material/lesson/mathematics/vector/addition",
     description: "Current subject description",
     locale: "en",
     materialDomain: "mathematics",
@@ -119,6 +136,44 @@ async function insertPopularityRefreshRows(ctx: MutationCtx) {
   });
 }
 
+/** Reads stored counters and their aggregate ranking output together. */
+async function readPopularitySnapshot(
+  target: ReturnType<typeof createPopularityConvexTest>
+) {
+  return await target.query(async (ctx) => {
+    const counters = await ctx.db.query("learningPopularityCounters").collect();
+    const ranking = await learningPopularityRankings.paginate(ctx, {
+      namespace: ["material", "en", "global", "7d"],
+      order: "asc",
+      pageSize: 10,
+    });
+
+    return {
+      counters,
+      ranking: ranking.page,
+    };
+  });
+}
+
+/** Runs the registered refresh interface and exposes its transaction cost. */
+async function runRefresh(
+  target: ReturnType<typeof createPopularityConvexTest>
+) {
+  return await target.mutation(async (ctx) => {
+    const result = await ctx.runMutation(
+      internal.contents.mutations.popularity
+        .refreshLearningPopularityWindowPage,
+      {
+        scopeMode: "global",
+        windowKey: "7d",
+      }
+    );
+    const metrics = await ctx.meta.getTransactionMetrics();
+
+    return { metrics, result };
+  });
+}
+
 describe("contents/mutations/popularity", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -130,35 +185,72 @@ describe("contents/mutations/popularity", () => {
     vi.restoreAllMocks();
   });
 
-  it("rebuilds finite windows from daily signals and removes expired counters", async () => {
+  it("repairs finite windows from daily signals and removes expired counters", async () => {
     const t = createPopularityConvexTest();
 
     await t.mutation(insertPopularityRefreshRows);
 
-    const result = await t.mutation(
-      internal.contents.mutations.popularity
-        .refreshLearningPopularityWindowPage,
-      {
-        scopeMode: "global",
-        windowKey: "7d",
-      }
-    );
+    const refresh = await runRefresh(t);
     const counters = await t.query(
       async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
     );
+    const subject = withContentId(
+      testMaterialGraph("vector", "addition", "en", "mathematics")
+    );
 
-    expect(result).toEqual({
+    expect(refresh.result).toEqual({
       continueCursor: expect.any(String),
       isDone: true,
       refreshedCounters: 1,
       removedCounters: 1,
       skipped: false,
     });
+    expect(refresh.metrics.documentsWritten.used).toBeGreaterThan(0);
     expect(counters).toHaveLength(1);
     expect(counters[0]).toMatchObject({
+      alignmentId: subject.alignmentId,
+      assetId: subject.assetId,
+      conceptId: subject.conceptId,
+      contextKey: "placement:mathematics:addition",
+      contextMaterialKey: "vector-addition",
+      contextMode: "placement",
+      contextNodeKey: "addition",
+      contextParentPath: "subjects/mathematics/vector",
+      contextProgramKey: "mathematics",
+      contextPublicPath: SUBJECT_ROUTE,
+      contextSourcePath: "material/lesson/mathematics/vector/addition",
+      description: "Current subject description",
+      learningObjectId: subject.learningObjectId,
+      lensId: subject.lensId,
+      materialDomain: "mathematics",
       route: SUBJECT_ROUTE,
       score: 2,
+      sourcePath: SUBJECT_ROUTE,
       title: "Current Vector Addition",
+      updatedAt: NOW,
     });
+  });
+
+  it("does not rewrite or rerank an unchanged rebuilt counter", async () => {
+    const t = createPopularityConvexTest();
+
+    await t.mutation(insertPopularityRefreshRows);
+    await runRefresh(t);
+    const before = await readPopularitySnapshot(t);
+
+    vi.setSystemTime(new Date(NOW + POPULARITY_DAY_MS / 2));
+    const replay = await runRefresh(t);
+    const after = await readPopularitySnapshot(t);
+
+    expect(replay.result).toEqual({
+      continueCursor: expect.any(String),
+      isDone: true,
+      refreshedCounters: 0,
+      removedCounters: 0,
+      skipped: false,
+    });
+    expect(replay.metrics.documentsWritten.used).toBe(0);
+    expect(after).toEqual(before);
+    expect(after.counters[0]?.updatedAt).toBe(NOW);
   });
 });

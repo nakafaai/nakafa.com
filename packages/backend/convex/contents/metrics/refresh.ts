@@ -20,6 +20,30 @@ import { Clock, Effect } from "effect";
 type PopularityCounter = Doc<"learningPopularityCounters">;
 type PopularitySignal = Doc<"learningPopularitySignals">;
 
+/** Rebuilt semantics; `updatedAt` advances only when one of these changes. */
+const refreshFields = [
+  "alignmentId",
+  "assetId",
+  "conceptId",
+  "contextMaterialKey",
+  "contextMode",
+  "contextNodeKey",
+  "contextParentPath",
+  "contextProgramKey",
+  "contextPublicPath",
+  "contextSourcePath",
+  "description",
+  "learningObjectId",
+  "lensId",
+  "materialDomain",
+  "route",
+  "score",
+  "sourcePath",
+  "title",
+] as const satisfies readonly (keyof PopularityCounter)[];
+
+type Refresh = Pick<PopularityCounter, (typeof refreshFields)[number]>;
+
 /** Generated internal mutation reference accepted by Convex refresh scheduling. */
 type RefreshLearningPopularityWindowPageReference = FunctionReference<
   "mutation",
@@ -91,6 +115,40 @@ const recomputePopularityCounter = Effect.fn(
   };
 });
 
+/** Projects the stored counter state produced by one authoritative rebuild. */
+function projectPopularityRefresh(
+  counter: PopularityCounter,
+  latestSignal: PopularitySignal | null,
+  score: number
+): Refresh {
+  return {
+    alignmentId: latestSignal?.alignmentId ?? counter.alignmentId,
+    assetId: latestSignal?.assetId ?? counter.assetId,
+    conceptId: latestSignal?.conceptId ?? counter.conceptId,
+    contextMaterialKey:
+      latestSignal?.contextMaterialKey ?? counter.contextMaterialKey,
+    contextMode: latestSignal?.contextMode ?? counter.contextMode,
+    contextNodeKey: latestSignal?.contextNodeKey ?? counter.contextNodeKey,
+    contextParentPath:
+      latestSignal?.contextParentPath ?? counter.contextParentPath,
+    contextProgramKey:
+      latestSignal?.contextProgramKey ?? counter.contextProgramKey,
+    contextPublicPath:
+      latestSignal?.contextPublicPath ?? counter.contextPublicPath,
+    contextSourcePath:
+      latestSignal?.contextSourcePath ?? counter.contextSourcePath,
+    description: latestSignal?.description ?? counter.description,
+    learningObjectId:
+      latestSignal?.learningObjectId ?? counter.learningObjectId,
+    lensId: latestSignal?.lensId ?? counter.lensId,
+    materialDomain: latestSignal?.materialDomain ?? counter.materialDomain,
+    route: latestSignal?.route ?? counter.route,
+    score,
+    sourcePath: latestSignal?.sourcePath ?? counter.sourcePath,
+    title: latestSignal?.title ?? counter.title,
+  };
+}
+
 /** Applies a recomputed finite-window score to one popularity counter row. */
 const refreshPopularityCounter = Effect.fn(
   "contents.metrics.refreshPopularityCounter"
@@ -109,35 +167,27 @@ const refreshPopularityCounter = Effect.fn(
     };
   }
 
-  const latestSignal = refresh.latestSignal;
+  const update = projectPopularityRefresh(
+    counter,
+    refresh.latestSignal,
+    refresh.score
+  );
+
+  const changed = refreshFields.some(
+    (field) => counter[field] !== update[field]
+  );
+
+  if (!changed) {
+    return {
+      removed: false,
+      refreshed: false,
+    };
+  }
 
   yield* Effect.tryPromise({
     try: () =>
       ctx.db.patch(counter._id, {
-        alignmentId: latestSignal?.alignmentId ?? counter.alignmentId,
-        assetId: latestSignal?.assetId ?? counter.assetId,
-        conceptId: latestSignal?.conceptId ?? counter.conceptId,
-        contextMaterialKey:
-          latestSignal?.contextMaterialKey ?? counter.contextMaterialKey,
-        contextMode: latestSignal?.contextMode ?? counter.contextMode,
-        contextNodeKey: latestSignal?.contextNodeKey ?? counter.contextNodeKey,
-        contextParentPath:
-          latestSignal?.contextParentPath ?? counter.contextParentPath,
-        contextProgramKey:
-          latestSignal?.contextProgramKey ?? counter.contextProgramKey,
-        contextPublicPath:
-          latestSignal?.contextPublicPath ?? counter.contextPublicPath,
-        contextSourcePath:
-          latestSignal?.contextSourcePath ?? counter.contextSourcePath,
-        description: latestSignal?.description ?? counter.description,
-        learningObjectId:
-          latestSignal?.learningObjectId ?? counter.learningObjectId,
-        lensId: latestSignal?.lensId ?? counter.lensId,
-        materialDomain: latestSignal?.materialDomain ?? counter.materialDomain,
-        route: latestSignal?.route ?? counter.route,
-        score: refresh.score,
-        sourcePath: latestSignal?.sourcePath ?? counter.sourcePath,
-        title: latestSignal?.title ?? counter.title,
+        ...update,
         updatedAt: timestamp,
       }),
     catch: toContentAnalyticsIoError,
