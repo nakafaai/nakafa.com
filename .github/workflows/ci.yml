@@ -92,6 +92,7 @@ jobs:
     # Exact source proof may replace only deterministic tests in the queue.
     if: always() && needs.scope.result == 'success'
     runs-on: ubuntu-latest
+    # Keep bounded fail-closed advisory retries inside the aggregate job budget.
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -114,7 +115,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Audit dependencies
-        run: pnpm security:audit
+        run: bash scripts/osv
 
       - name: Run tests
         if: needs.scope.outputs.reuse != 'true'

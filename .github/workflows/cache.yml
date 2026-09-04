@@ -3,17 +3,19 @@ name: Content Snapshot Cache
 on:
   push:
     branches: [main]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
 
 concurrency:
   group: content-snapshot-cache-main
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   publish:
     name: Publish
+    if: github.ref == 'refs/heads/main' && github.repository == 'nakafaai/nakafa.com'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

@@ -1,3 +1,4 @@
+import { rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -73,9 +74,23 @@ const readRevision = Effect.fn("VercelScopeTest.readRevision")(function* (
 const makeRepository = Effect.fn("VercelScopeTest.makeRepository")(
   function* () {
     const fileSystem = yield* FileSystem.FileSystem;
-    const repository = yield* fileSystem.makeTempDirectoryScoped({
-      prefix: "vercel-scope-test-",
-    });
+    const repository = yield* Effect.acquireRelease(
+      fileSystem.makeTempDirectory({ prefix: "vercel-scope-test-" }),
+      (path) =>
+        Effect.tryPromise({
+          try: () =>
+            rm(path, {
+              force: true,
+              maxRetries: 5,
+              recursive: true,
+              retryDelay: 50,
+            }),
+          catch: () =>
+            new ScopeFixtureError({
+              message: "Unable to remove the temporary Git repository.",
+            }),
+        }).pipe(Effect.orDie)
+    );
     yield* runGit(repository, ["init", "--initial-branch=main"]);
     yield* runGit(repository, ["config", "user.name", "CI Fixture"]);
     yield* runGit(repository, [
