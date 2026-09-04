@@ -249,8 +249,14 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
   yield* Effect.promise(() =>
     instant(page, () =>
       (hasTouch
-        ? link.tap({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
-        : link.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
+        ? link.tap({
+            noWaitAfter: true,
+            timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+          })
+        : link.click({
+            noWaitAfter: true,
+            timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+          })
       )
         .then(() =>
           page.waitForURL((url) => url.pathname === target.href, {
