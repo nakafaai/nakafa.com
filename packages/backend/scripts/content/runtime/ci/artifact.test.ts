@@ -7,6 +7,7 @@ import type {
   RuntimeArchiveWriteConfig,
 } from "@repo/backend/scripts/content/runtime/ci/access";
 import {
+  CONTENT_RUNTIME_STATE_FILE,
   downloadRuntimeArchive,
   publishRuntimeArchive,
 } from "@repo/backend/scripts/content/runtime/ci/artifact";
@@ -218,16 +219,23 @@ describe("content runtime durable artifact", () => {
           .mockResolvedValueOnce(new Response(archiveBytes, { status: 200 }));
         const cacheRoot = `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`;
         const archivePath = `${cacheRoot}/${CONTENT_RUNTIME_CACHE_FILE}`;
+        const statePath = `${runnerTemp}/${CONTENT_RUNTIME_STATE_FILE}`;
         const rename = fileSystem.rename.bind(fileSystem);
         const renameSpy = vi
           .spyOn(fileSystem, "rename")
           .mockImplementation((temporaryPath, destinationPath) =>
             Effect.gen(function* () {
-              expect(destinationPath).toBe(archivePath);
-              expect(yield* fileSystem.exists(archivePath)).toBe(false);
-              expect(
-                Array.from(yield* fileSystem.readFile(temporaryPath))
-              ).toEqual(Array.from(archiveBytes));
+              if (destinationPath === archivePath) {
+                expect(yield* fileSystem.exists(archivePath)).toBe(false);
+                expect(
+                  Array.from(yield* fileSystem.readFile(temporaryPath))
+                ).toEqual(Array.from(archiveBytes));
+              } else {
+                expect(destinationPath).toBe(statePath);
+                expect(yield* fileSystem.readFileString(temporaryPath)).toBe(
+                  `CONTENT_RUNTIME_STATE_HASH=${metadata.sourceStateHash}\n`
+                );
+              }
               yield* rename(temporaryPath, destinationPath);
             })
           );
@@ -244,6 +252,10 @@ describe("content runtime durable artifact", () => {
         expect(yield* fileSystem.readDirectory(cacheRoot)).toEqual([
           CONTENT_RUNTIME_CACHE_FILE,
         ]);
+        expect(yield* fileSystem.readFileString(statePath)).toBe(
+          `CONTENT_RUNTIME_STATE_HASH=${metadata.sourceStateHash}\n`
+        );
+        expect((yield* fileSystem.stat(statePath)).mode % 0o1000).toBe(0o600);
       }).pipe(Effect.provide(NodeServices.layer))
     )
   );
@@ -258,6 +270,7 @@ describe("content runtime durable artifact", () => {
         });
         const cacheRoot = `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`;
         const archivePath = `${cacheRoot}/${CONTENT_RUNTIME_CACHE_FILE}`;
+        const statePath = `${runnerTemp}/${CONTENT_RUNTIME_STATE_FILE}`;
         const fetcher = vi
           .fn<typeof fetch>()
           .mockResolvedValueOnce(
@@ -270,8 +283,10 @@ describe("content runtime durable artifact", () => {
         const rename = fileSystem.rename.bind(fileSystem);
         const renameSpy = vi
           .spyOn(fileSystem, "rename")
-          .mockImplementation((_temporaryPath, destinationPath) =>
-            rename(`${cacheRoot}/missing`, destinationPath)
+          .mockImplementation((temporaryPath, destinationPath) =>
+            destinationPath === statePath
+              ? rename(`${cacheRoot}/missing`, destinationPath)
+              : rename(temporaryPath, destinationPath)
           );
 
         expect(
@@ -281,6 +296,7 @@ describe("content runtime durable artifact", () => {
           )
         ).toMatchObject({ _tag: "PlatformError" });
         expect(yield* fileSystem.exists(archivePath)).toBe(false);
+        expect(yield* fileSystem.exists(statePath)).toBe(false);
         expect(yield* fileSystem.readDirectory(cacheRoot)).toEqual([]);
       }).pipe(Effect.provide(NodeServices.layer))
     )

@@ -13,6 +13,8 @@ import {
 } from "@repo/backend/scripts/content/runtime/ci/snapshot";
 import { Effect, FileSystem, Option } from "effect";
 
+export const CONTENT_RUNTIME_STATE_FILE = "runtime-state.env";
+
 function encryptedArchivePath(config: { readonly runnerTemp: string }) {
   return `${config.runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}/${CONTENT_RUNTIME_CACHE_FILE}`;
 }
@@ -57,6 +59,7 @@ export const downloadRuntimeArchive = Effect.fn(
 )(function* (config: RuntimeArchiveReadConfig, fetcher: typeof fetch) {
   const fileSystem = yield* FileSystem.FileSystem;
   const cacheRoot = `${config.runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`;
+  const statePath = `${config.runnerTemp}/${CONTENT_RUNTIME_STATE_FILE}`;
   if (
     (yield* fileSystem.exists(cacheRoot)) &&
     (yield* fileSystem.readDirectory(cacheRoot)).length > 0
@@ -75,15 +78,37 @@ export const downloadRuntimeArchive = Effect.fn(
   yield* fileSystem.makeDirectory(cacheRoot, { recursive: true });
   yield* fileSystem.chmod(cacheRoot, 0o700);
   yield* Effect.acquireUseRelease(
-    Effect.succeed(
-      `${cacheRoot}/.${CONTENT_RUNTIME_CACHE_FILE}.${randomUUID()}.tmp`
-    ),
-    (temporaryPath) =>
+    Effect.succeed({
+      archive: `${cacheRoot}/.${CONTENT_RUNTIME_CACHE_FILE}.${randomUUID()}.tmp`,
+      state: `${config.runnerTemp}/.${CONTENT_RUNTIME_STATE_FILE}.${randomUUID()}.tmp`,
+    }),
+    (temporary) =>
       Effect.gen(function* () {
-        yield* fileSystem.writeFile(temporaryPath, bytes, { mode: 0o600 });
-        yield* fileSystem.rename(temporaryPath, encryptedArchivePath(config));
+        yield* fileSystem.writeFile(temporary.archive, bytes, { mode: 0o600 });
+        yield* fileSystem.writeFileString(
+          temporary.state,
+          `CONTENT_RUNTIME_STATE_HASH=${metadata.sourceStateHash}\n`,
+          { mode: 0o600 }
+        );
+        yield* fileSystem.rename(
+          temporary.archive,
+          encryptedArchivePath(config)
+        );
+        yield* fileSystem
+          .rename(temporary.state, statePath)
+          .pipe(
+            Effect.onError(() =>
+              fileSystem
+                .remove(encryptedArchivePath(config), { force: true })
+                .pipe(Effect.ignore)
+            )
+          );
       }),
-    (temporaryPath) => fileSystem.remove(temporaryPath, { force: true })
+    (temporary) =>
+      Effect.all([
+        fileSystem.remove(temporary.archive, { force: true }),
+        fileSystem.remove(temporary.state, { force: true }),
+      ])
   );
   return metadata;
 });

@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 
 export const MAX_CONTENT_RUNTIME_ARCHIVES = 32;
-export const CONTENT_RUNTIME_ARCHIVE_ORPHAN_GRACE_MS = 60 * 60 * 1000;
 export const CONTENT_RUNTIME_ARCHIVE_SWEEP_BATCH_SIZE = 32;
 
 export const runtimeArchiveIdentityValidator = {
@@ -62,6 +61,4 @@ export const runtimeArchiveReleaseResultValidator = v.object({
 export const runtimeArchiveSweepResultValidator = v.object({
   archivesDeleted: v.number(),
   claimsDeleted: v.number(),
-  deleted: v.number(),
-  scanned: v.number(),
 });

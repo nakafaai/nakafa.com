@@ -131,6 +131,11 @@ describe("content runtime archive remote boundary", () => {
         oversizedBody,
         new Response(null, { status: 404 }),
         jsonResponse({ downloadUrl: "not-a-url" }),
+        jsonResponse({
+          ...metadata,
+          downloadUrl: "https://storage.example.test/archive",
+          sourceStateHash: "invalid\nCONTENT_RUNTIME_STATE_HASH=unsafe",
+        }),
       ];
       for (const response of responses) {
         const fetcher = vi.fn<typeof fetch>().mockResolvedValue(response);

@@ -5,7 +5,10 @@ import {
   readProducerConfig,
   readRuntimeArchiveAccessConfig,
 } from "@repo/backend/scripts/content/runtime/ci/access";
-import { downloadRuntimeArchive } from "@repo/backend/scripts/content/runtime/ci/artifact";
+import {
+  CONTENT_RUNTIME_STATE_FILE,
+  downloadRuntimeArchive,
+} from "@repo/backend/scripts/content/runtime/ci/artifact";
 import {
   clearContentRuntimeSecrets,
   readExportConfig,
@@ -34,7 +37,7 @@ import { Config, ConfigProvider, Effect, FileSystem } from "effect";
 
 const INVALID_TABLE_NAME = /[^A-Za-z0-9_]/;
 const FINGERPRINT_ENVIRONMENT_FILE = "runtime-schema.env";
-const GENERATION_ENVIRONMENT_FILE = "runtime-state.env";
+const GENERATION_ENVIRONMENT_FILE = CONTENT_RUNTIME_STATE_FILE;
 
 export interface RuntimeCiOperations {
   readonly clearArchiveSecrets: typeof clearRuntimeArchiveSecrets;

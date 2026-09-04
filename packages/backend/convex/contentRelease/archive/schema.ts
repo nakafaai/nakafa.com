@@ -31,12 +31,6 @@ const tables = {
       "runtimeSchemaFingerprint",
     ])
     .index("by_expiresAt", ["expiresAt"]),
-
-  /** Resumable cursor for the bounded orphan storage metadata sweep. */
-  contentRuntimeArchiveSweeps: defineTable({
-    cursor: v.union(v.null(), v.string()),
-    updatedAt: v.number(),
-  }),
 };
 
 export default tables;

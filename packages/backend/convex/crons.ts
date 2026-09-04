@@ -81,7 +81,7 @@ crons.interval(
   {}
 );
 
-/** Advances one bounded page of old unreferenced runtime archive storage. */
+/** Removes expired archive claims and proven canonical rollback history. */
 crons.interval(
   "sweep runtime archive storage",
   { hours: CONTENT_RUNTIME_ARCHIVE_SWEEP_INTERVAL_HOURS },
