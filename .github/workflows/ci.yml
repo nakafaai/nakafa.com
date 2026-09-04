@@ -28,7 +28,7 @@ jobs:
       - name: Set fail-closed default
         id: default
         env:
-          REQUIRED: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' }}
+          REQUIRED: true
         run: |
           echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
 

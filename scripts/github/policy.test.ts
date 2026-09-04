@@ -150,6 +150,7 @@ describe("GitHub Action policy", () => {
           expect(source).toContain(
             `required: \${{ steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}`
           );
+          expect(source).toContain("          REQUIRED: true");
           expect(source).not.toContain("actions/github-script");
           expect(source).not.toContain("merge_group");
           expect(source).not.toContain("pnpm ci:queue");

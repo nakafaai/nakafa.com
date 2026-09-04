@@ -1,6 +1,12 @@
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
-import { type GateInput, validateGate } from "#scripts/github/gate";
+import { ConfigProvider, Effect, Result } from "effect";
+import {
+  type GateInput,
+  launchGate,
+  runGate,
+  validateGate,
+} from "#scripts/github/gate";
 
 const required: GateInput = {
   fullOutcome: "success",
@@ -10,6 +16,25 @@ const required: GateInput = {
   scopeOutcome: "success",
   trusted: true,
 };
+
+const validEnvironment = {
+  FULL_OUTCOME: "success",
+  PRODUCTION_OUTCOME: "success",
+  PRODUCTION_REQUIRED: "true",
+  SCOPE_OUTCOME: "success",
+  TRUSTED_CANDIDATE: "true",
+};
+
+const withEnvironment = <Value, Error>(
+  program: Effect.Effect<Value, Error>,
+  environment: Record<string, string>
+) =>
+  program.pipe(
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromEnvRecord(environment)
+    )
+  );
 
 describe("terminal CI gate", () => {
   it.effect("accepts complete trusted production proof", () =>
@@ -85,5 +110,74 @@ describe("terminal CI gate", () => {
         })
       )
     )
+  );
+
+  it.live("decodes the complete required-check environment", () =>
+    runGate("required").pipe(Effect.provide(NodeServices.layer), (program) =>
+      withEnvironment(program, validEnvironment)
+    )
+  );
+
+  it.live.each([
+    {
+      expected: "CI gate role is invalid.",
+      environment: validEnvironment,
+      role: "unknown",
+    },
+    {
+      expected: "FULL_OUTCOME has an invalid CI value.",
+      environment: { ...validEnvironment, FULL_OUTCOME: "unknown" },
+      role: "required",
+    },
+    {
+      expected: "CI gate flags are incomplete.",
+      environment: {
+        FULL_OUTCOME: "success",
+        PRODUCTION_OUTCOME: "success",
+        SCOPE_OUTCOME: "success",
+      },
+      role: "required",
+    },
+  ])("rejects $expected", ({ environment, expected, role }) =>
+    Effect.gen(function* () {
+      expect(
+        yield* withEnvironment(
+          runGate(role).pipe(Effect.provide(NodeServices.layer)),
+          environment
+        ).pipe(Effect.flip)
+      ).toMatchObject({ message: expected });
+    })
+  );
+
+  it.live("launches only the executable gate module", () =>
+    Effect.gen(function* () {
+      const programs: Effect.Effect<void, unknown>[] = [];
+      const runner = (program: Effect.Effect<void, unknown>) => {
+        programs.push(program);
+      };
+
+      launchGate(false, "doctor", runner);
+      expect(programs).toHaveLength(0);
+      launchGate(true, "doctor", runner);
+      expect(programs).toHaveLength(1);
+      const program = programs[0];
+      expect(program).toBeDefined();
+      if (program) {
+        yield* withEnvironment(program, {
+          ...validEnvironment,
+          PRODUCTION_OUTCOME: "skipped",
+        });
+      }
+
+      launchGate(true, "unknown", runner);
+      expect(programs).toHaveLength(2);
+      const invalidProgram = programs[1];
+      expect(invalidProgram).toBeDefined();
+      if (invalidProgram) {
+        expect(yield* invalidProgram.pipe(Effect.flip)).toMatchObject({
+          message: "CI gate role is invalid.",
+        });
+      }
+    })
   );
 });
