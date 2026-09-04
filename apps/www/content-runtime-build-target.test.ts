@@ -14,9 +14,29 @@ const productionTarget = {
   convexSiteUrl: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.site`,
   convexUrl: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`,
   vercel: undefined,
+  vercelDeploymentId: undefined,
   vercelEnvironment: undefined,
+  vercelGitCommitRef: undefined,
   vercelGitCommitSha: undefined,
+  vercelGitProvider: undefined,
+  vercelGitRepoOwner: undefined,
+  vercelGitRepoSlug: undefined,
+  vercelProjectId: undefined,
+  vercelTargetEnvironment: undefined,
 } satisfies ContentRuntimeBuildTarget;
+
+const protectedVercelIdentity = {
+  vercel: "1",
+  vercelDeploymentId: "dpl_CRMGPNJvKacYy5e7i77WkJXLS3FK",
+  vercelEnvironment: "production",
+  vercelGitCommitRef: "main",
+  vercelGitCommitSha: "c0730ceec243abd58cf8e0cc98bd04f2da5164c2",
+  vercelGitProvider: "github",
+  vercelGitRepoOwner: "nakafaai",
+  vercelGitRepoSlug: "nakafa.com",
+  vercelProjectId: "prj_QfxvXBST46wuSTOXPn4PE32NqbF4",
+  vercelTargetEnvironment: "production",
+} as const;
 
 const failureMessages = {
   "anonymous-production":
@@ -89,9 +109,7 @@ describe("content runtime build target", () => {
       expect(
         yield* assertContentRuntimeBuildTarget({
           ...productionTarget,
-          vercel: "1",
-          vercelEnvironment: "production",
-          vercelGitCommitSha: "c0730ceec243abd58cf8e0cc98bd04f2da5164c2",
+          ...protectedVercelIdentity,
         })
       ).toBeUndefined();
     })
@@ -104,13 +122,24 @@ describe("content runtime build target", () => {
         expect(
           yield* assertContentRuntimeBuildTarget({
             ...productionTarget,
+            ...protectedVercelIdentity,
             convexSiteUrl: undefined,
-            vercel: "1",
-            vercelEnvironment: "production",
-            vercelGitCommitSha: "c0730ceec243abd58cf8e0cc98bd04f2da5164c2",
           })
         ).toBeUndefined();
       })
+  );
+
+  it.effect("accepts protected custom Convex production domains", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* assertContentRuntimeBuildTarget({
+          ...productionTarget,
+          ...protectedVercelIdentity,
+          convexSiteUrl: "https://content-api.nakafa.com",
+          convexUrl: "https://content.nakafa.com",
+        })
+      ).toBeUndefined();
+    })
   );
 
   it.effect("rejects production targets from a local build", () =>
@@ -141,7 +170,11 @@ describe("content runtime build target", () => {
 
   it.effect("rejects production hidden behind anonymous Agent Mode", () =>
     expectFailure(
-      { ...productionTarget, agentMode: "anonymous" },
+      {
+        ...productionTarget,
+        ...protectedVercelIdentity,
+        agentMode: "anonymous",
+      },
       "anonymous-production"
     )
   );
@@ -150,9 +183,8 @@ describe("content runtime build target", () => {
     expectFailure(
       {
         ...productionTarget,
-        vercel: "1",
+        ...protectedVercelIdentity,
         vercelEnvironment: "preview",
-        vercelGitCommitSha: "c0730ceec243abd58cf8e0cc98bd04f2da5164c2",
       },
       "untrusted-production"
     )
@@ -160,24 +192,96 @@ describe("content runtime build target", () => {
 
   it.effect.each([
     {
-      name: "a missing commit identity",
-      target: {
-        ...productionTarget,
-        vercel: "1" as const,
-        vercelEnvironment: "production",
-      },
+      field: "deployment ID",
+      value: { vercelDeploymentId: undefined },
     },
     {
-      name: "a blank commit identity",
-      target: {
-        ...productionTarget,
-        vercel: "1" as const,
-        vercelEnvironment: "production",
-        vercelGitCommitSha: "   ",
-      },
+      field: "deployment ID format",
+      value: { vercelDeploymentId: "not-a-deployment" },
     },
-  ])("rejects production from Vercel with $name", ({ target }) =>
-    expectFailure(target, "untrusted-production")
+    {
+      field: "environment",
+      value: { vercelEnvironment: "preview" },
+    },
+    {
+      field: "target environment",
+      value: { vercelTargetEnvironment: "preview" },
+    },
+    {
+      field: "project",
+      value: { vercelProjectId: "prj_other" },
+    },
+    {
+      field: "Git provider",
+      value: { vercelGitProvider: "gitlab" },
+    },
+    {
+      field: "repository owner",
+      value: { vercelGitRepoOwner: "other" },
+    },
+    {
+      field: "repository slug",
+      value: { vercelGitRepoSlug: "other" },
+    },
+    {
+      field: "production branch",
+      value: { vercelGitCommitRef: "feature/cost" },
+    },
+    {
+      field: "commit identity",
+      value: { vercelGitCommitSha: undefined },
+    },
+    {
+      field: "commit identity format",
+      value: { vercelGitCommitSha: "not-a-commit" },
+    },
+    {
+      field: "Vercel marker",
+      value: { vercel: undefined },
+    },
+  ])("rejects production with the wrong Vercel $field", ({ value }) =>
+    expectFailure(
+      {
+        ...productionTarget,
+        ...protectedVercelIdentity,
+        ...value,
+      },
+      "untrusted-production"
+    )
+  );
+
+  it.effect("rejects custom production domains outside protected Vercel", () =>
+    expectFailure(
+      {
+        ...productionTarget,
+        convexSiteUrl: "https://content-api.nakafa.com",
+        convexUrl: "https://content.nakafa.com",
+      },
+      "untrusted-production"
+    )
+  );
+
+  it.effect("rejects anonymous cloud targets", () =>
+    expectFailure(
+      {
+        ...productionTarget,
+        agentMode: "anonymous",
+        convexSiteUrl: "https://helpful-capybara-123.convex.site",
+        convexUrl: "https://helpful-capybara-123.convex.cloud",
+      },
+      "anonymous-production"
+    )
+  );
+
+  it.effect("rejects mismatched development deployments", () =>
+    expectFailure(
+      {
+        ...productionTarget,
+        convexSiteUrl: "https://different-capybara-456.convex.site",
+        convexUrl: "https://helpful-capybara-123.convex.cloud",
+      },
+      "mixed-production"
+    )
   );
 
   it.effect("rejects mixed production query and HTTP targets", () =>
@@ -211,6 +315,34 @@ describe("content runtime build target", () => {
     expectFailure(
       { ...productionTarget, convexSiteUrl: "not a URL" },
       "invalid-target"
+    )
+  );
+
+  it.effect("rejects a target URL with credentials", () =>
+    expectFailure(
+      {
+        ...productionTarget,
+        convexUrl: "https://user:password@example.convex.cloud",
+      },
+      "invalid-target"
+    )
+  );
+
+  it.effect("rejects a non-HTTP target URL", () =>
+    expectFailure(
+      { ...productionTarget, convexUrl: "file:///tmp/convex" },
+      "invalid-target"
+    )
+  );
+
+  it.effect("rejects an empty Convex deployment hostname", () =>
+    expectFailure(
+      {
+        ...productionTarget,
+        convexSiteUrl: undefined,
+        convexUrl: "https://.convex.cloud",
+      },
+      "untrusted-production"
     )
   );
 });

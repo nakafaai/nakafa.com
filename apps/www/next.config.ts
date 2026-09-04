@@ -32,8 +32,29 @@ const configEnv = createEnv({
       Schema.UndefinedOr(Schema.Literal("true"))
     ),
     VERCEL: Schema.toStandardSchemaV1(Schema.UndefinedOr(Schema.Literal("1"))),
+    VERCEL_DEPLOYMENT_ID: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
     VERCEL_ENV: Schema.toStandardSchemaV1(Schema.UndefinedOr(Schema.String)),
+    VERCEL_GIT_COMMIT_REF: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
     VERCEL_GIT_COMMIT_SHA: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
+    VERCEL_GIT_PROVIDER: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
+    VERCEL_GIT_REPO_OWNER: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
+    VERCEL_GIT_REPO_SLUG: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
+    VERCEL_PROJECT_ID: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
+    VERCEL_TARGET_ENV: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.String)
     ),
   },
@@ -47,8 +68,15 @@ const configEnv = createEnv({
     NEXT_EXPOSE_TESTING_API: process.env.NEXT_EXPOSE_TESTING_API,
     NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
     VERCEL: process.env.VERCEL,
+    VERCEL_DEPLOYMENT_ID: process.env.VERCEL_DEPLOYMENT_ID,
     VERCEL_ENV: process.env.VERCEL_ENV,
+    VERCEL_GIT_COMMIT_REF: process.env.VERCEL_GIT_COMMIT_REF,
     VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
+    VERCEL_GIT_PROVIDER: process.env.VERCEL_GIT_PROVIDER,
+    VERCEL_GIT_REPO_OWNER: process.env.VERCEL_GIT_REPO_OWNER,
+    VERCEL_GIT_REPO_SLUG: process.env.VERCEL_GIT_REPO_SLUG,
+    VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
+    VERCEL_TARGET_ENV: process.env.VERCEL_TARGET_ENV,
   },
 });
 Effect.runSync(
@@ -57,8 +85,15 @@ Effect.runSync(
     convexSiteUrl: configEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
     convexUrl: configEnv.NEXT_PUBLIC_CONVEX_URL,
     vercel: configEnv.VERCEL,
+    vercelDeploymentId: configEnv.VERCEL_DEPLOYMENT_ID,
     vercelEnvironment: configEnv.VERCEL_ENV,
+    vercelGitCommitRef: configEnv.VERCEL_GIT_COMMIT_REF,
     vercelGitCommitSha: configEnv.VERCEL_GIT_COMMIT_SHA,
+    vercelGitProvider: configEnv.VERCEL_GIT_PROVIDER,
+    vercelGitRepoOwner: configEnv.VERCEL_GIT_REPO_OWNER,
+    vercelGitRepoSlug: configEnv.VERCEL_GIT_REPO_SLUG,
+    vercelProjectId: configEnv.VERCEL_PROJECT_ID,
+    vercelTargetEnvironment: configEnv.VERCEL_TARGET_ENV,
   })
 );
 const localConvexConnectSources = createLoopbackConnectSources(
