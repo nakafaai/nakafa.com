@@ -8,19 +8,22 @@ import { GradientBlock } from "@repo/design-system/components/ui/gradient-block"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
+import { fetchQuery } from "convex/nextjs";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { fetchRuntimeQuery } from "@/lib/content/runtime/query";
+import { env } from "@/env";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /**
  * Reads one point-in-time homepage popularity snapshot.
  *
  * Trending is a low-freshness aggregate, so keeping one live subscription per
- * homepage visitor would amplify every popularity-counter update. The cached
- * build-aware Promise stays direct because starting an Effect runtime during
- * static prerender reads current time, which Cache Components reject.
+ * homepage visitor would amplify every popularity-counter update. Popularity
+ * is live analytics rather than signed content, so it stays on the production
+ * deployment while authored content builds from the isolated snapshot. The
+ * cached Promise stays direct because starting an Effect runtime during static
+ * prerender reads current time, which Cache Components reject.
  *
  * @see https://nextjs.org/docs/messages/next-prerender-current-time
  * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering#using-convex-to-render-server-components
@@ -30,12 +33,13 @@ async function getHomeTrendingSubjects(locale: PublicAppLocale) {
 
   cacheLife("minutes");
 
-  return await fetchRuntimeQuery(
+  return await fetchQuery(
     api.contents.queries.trending.getTrendingSubjects,
     {
       locale,
       windowKey: "7d",
-    }
+    },
+    { url: env.NEXT_PUBLIC_CONVEX_URL }
   );
 }
 
