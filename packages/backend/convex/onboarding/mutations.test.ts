@@ -407,4 +407,72 @@ describe("onboarding", () => {
       );
     })
   );
+
+  it.effect("rejects a signed-out draft write", () =>
+    Effect.gen(function* () {
+      const { test } = yield* createOnboardingTest();
+
+      yield* Effect.promise(() =>
+        expect(
+          test.mutation(api.onboarding.mutations.saveAnswer, {
+            answer: { kind: "focus", value: "learning" },
+          })
+        ).rejects.toMatchObject({
+          data: { code: "UNAUTHENTICATED", message: "Unauthenticated" },
+        })
+      );
+    })
+  );
+
+  it.effect("rejects admission while account deletion is pending", () =>
+    Effect.gen(function* () {
+      const { authenticated, identity, test } = yield* createOnboardingTest();
+      yield* Effect.promise(() =>
+        test.mutation((ctx) =>
+          ctx.db.patch("users", identity.userId, {
+            deletionPreparedAt: NOW,
+          })
+        )
+      );
+
+      yield* Effect.promise(() =>
+        expect(
+          authenticated.mutation(api.onboarding.mutations.admit, {})
+        ).rejects.toMatchObject({
+          data: { code: "UNAUTHORIZED", message: "User not found." },
+        })
+      );
+    })
+  );
+
+  it.effect("redacts inconsistent account linkage during a draft write", () =>
+    Effect.gen(function* () {
+      const { authenticated, identity, test } = yield* createOnboardingTest();
+      yield* Effect.promise(() =>
+        test.mutation((ctx) =>
+          ctx.db.insert("users", {
+            authId: identity.authUserId,
+            credits: 0,
+            creditsResetAt: NOW,
+            email: "duplicate-mutation-linkage@example.com",
+            name: "Duplicate Mutation Linkage",
+            plan: "free",
+          })
+        )
+      );
+
+      yield* Effect.promise(() =>
+        expect(
+          authenticated.mutation(api.onboarding.mutations.saveAnswer, {
+            answer: { kind: "role", value: "student" },
+          })
+        ).rejects.toMatchObject({
+          data: {
+            code: "ONBOARDING_AUTH_FAILED",
+            message: "Unable to authenticate the onboarding request.",
+          },
+        })
+      );
+    })
+  );
 });

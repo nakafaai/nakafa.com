@@ -93,23 +93,32 @@ function insertOnboardingAnswer(
   };
 
   if (answer.kind === "role") {
-    return ctx.db.insert("onboardingProfiles", {
+    const profile = {
       ...base,
       role: answer.value,
-    });
+    };
+    return tryOnboardingPersistence(() =>
+      ctx.db.insert("onboardingProfiles", profile)
+    ).pipe(Effect.as(profile));
   }
 
   if (answer.kind === "region") {
-    return ctx.db.insert("onboardingProfiles", {
+    const profile = {
       ...base,
       region: answer.value,
-    });
+    };
+    return tryOnboardingPersistence(() =>
+      ctx.db.insert("onboardingProfiles", profile)
+    ).pipe(Effect.as(profile));
   }
 
-  return ctx.db.insert("onboardingProfiles", {
+  const profile = {
     ...base,
     focus: answer.value,
-  });
+  };
+  return tryOnboardingPersistence(() =>
+    ctx.db.insert("onboardingProfiles", profile)
+  ).pipe(Effect.as(profile));
 }
 
 /** Patches exactly one answer on an incomplete onboarding profile. */
@@ -126,14 +135,23 @@ function patchOnboardingAnswer(
   };
 
   if (answer.kind === "role") {
-    return ctx.db.patch(profile._id, { ...lifecycle, role: answer.value });
+    const saved = { ...profile, ...lifecycle, role: answer.value };
+    return tryOnboardingPersistence(() =>
+      ctx.db.patch(profile._id, { ...lifecycle, role: answer.value })
+    ).pipe(Effect.as(saved));
   }
 
   if (answer.kind === "region") {
-    return ctx.db.patch(profile._id, { ...lifecycle, region: answer.value });
+    const saved = { ...profile, ...lifecycle, region: answer.value };
+    return tryOnboardingPersistence(() =>
+      ctx.db.patch(profile._id, { ...lifecycle, region: answer.value })
+    ).pipe(Effect.as(saved));
   }
 
-  return ctx.db.patch(profile._id, { ...lifecycle, focus: answer.value });
+  const saved = { ...profile, ...lifecycle, focus: answer.value };
+  return tryOnboardingPersistence(() =>
+    ctx.db.patch(profile._id, { ...lifecycle, focus: answer.value })
+  ).pipe(Effect.as(saved));
 }
 
 /** Records the first authoritative decision requiring user onboarding. */
@@ -178,20 +196,9 @@ export const saveOnboardingAnswer = Effect.fn("onboarding.saveAnswer")(
     }
 
     const now = yield* Clock.currentTimeMillis;
-    if (current) {
-      yield* tryOnboardingPersistence(() =>
-        patchOnboardingAnswer(ctx, current, answer, now)
-      );
-    } else {
-      yield* tryOnboardingPersistence(() =>
-        insertOnboardingAnswer(ctx, userId, answer, now)
-      );
-    }
-
-    const saved = yield* readOnboardingProfileByUserId(ctx, userId);
-    if (!saved) {
-      return yield* toOnboardingPersistenceError();
-    }
+    const saved = yield* current
+      ? patchOnboardingAnswer(ctx, current, answer, now)
+      : insertOnboardingAnswer(ctx, userId, answer, now);
     return toOnboardingProfile(saved);
   }
 );
@@ -211,14 +218,15 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
   }
 
   const defaults = getOnboardingRegionDefaults(answers.region);
-  const curriculum = defaults.curriculumProgramKey
-    ? yield* readCurriculumProgram(
-        ctx,
-        defaults.locale,
-        defaults.curriculumProgramKey
-      ).pipe(Effect.mapError(toOnboardingCurriculumError))
-    : null;
-  if (defaults.curriculumProgramKey && !curriculum) {
+  const curriculumProgramKey = yield* Effect.fromNullishOr(
+    defaults.curriculumProgramKey
+  ).pipe(Effect.mapError(toOnboardingCurriculumError));
+  const curriculum = yield* readCurriculumProgram(
+    ctx,
+    defaults.locale,
+    curriculumProgramKey
+  ).pipe(Effect.mapError(toOnboardingCurriculumError));
+  if (!curriculum) {
     return yield* new OnboardingProfileError({
       code: onboardingCurriculumMissingCode,
       message: "The default curriculum is unavailable.",
@@ -233,7 +241,7 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
   yield* setPreferredCurriculumProgram({
     ctx,
     now,
-    programKey: curriculum?.key ?? null,
+    programKey: curriculum.key,
     userId,
   }).pipe(Effect.mapError(toOnboardingPersistenceError));
 
@@ -263,7 +271,7 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
   return {
     destination: getOnboardingDestination({
       focus: answers.focus,
-      ...(curriculum ? { publicSlug: curriculum.publicSlug } : {}),
+      publicSlug: curriculum.publicSlug,
     }),
     locale: defaults.locale,
   };

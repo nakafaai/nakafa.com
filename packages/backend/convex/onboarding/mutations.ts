@@ -47,16 +47,16 @@ class OnboardingAuthError extends Schema.TaggedError<OnboardingAuthError>()(
 function toOnboardingAuthError(error: unknown) {
   const known = readConvexErrorData(error);
   const message = known?.message ?? getUnknownErrorMessage(error);
-  if (
-    known?.code === unauthenticatedCode ||
-    known?.code === unauthorizedCode ||
-    message === "Unauthenticated"
-  ) {
+  if (known?.code === unauthorizedCode) {
     return new OnboardingAuthError({
-      code:
-        known?.code === unauthorizedCode
-          ? unauthorizedCode
-          : unauthenticatedCode,
+      code: unauthorizedCode,
+      message,
+    });
+  }
+
+  if (message === "Unauthenticated") {
+    return new OnboardingAuthError({
+      code: unauthenticatedCode,
       message,
     });
   }
