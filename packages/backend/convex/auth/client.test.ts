@@ -7,21 +7,67 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helper
 import { getFunctionName, makeFunctionReference } from "convex/server";
 
 const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
+const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
+const BASE64_PADDING_PATTERN = /[=]+$/;
 const finalizeDeletedUserCleanupReference = makeFunctionReference<
   "mutation",
   { authId: string },
   null
 >("customers/deletion/workflow:finalizeDeletedUserCleanup");
 
-async function signUpSyntheticLearner(
+function encodeGoogleTokenPart(value: object) {
+  return btoa(JSON.stringify(value))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(BASE64_PADDING_PATTERN, "");
+}
+
+function createGoogleIdToken(suffix: string) {
+  const issuedAt = Math.floor(NOW / 1000);
+
+  return [
+    encodeGoogleTokenPart({ alg: "none", typ: "JWT" }),
+    encodeGoogleTokenPart({
+      aud: "test-google-client",
+      email: `${suffix}@example.com`,
+      email_verified: true,
+      exp: issuedAt + 3600,
+      iat: issuedAt,
+      iss: "https://accounts.google.com",
+      name: `Synthetic ${suffix}`,
+      picture: `https://example.com/${suffix}.png`,
+      sub: `google-${suffix}`,
+    }),
+    "test-signature",
+  ].join(".");
+}
+
+async function signUpGoogleLearner(
   test: ReturnType<typeof createConvexTestWithBetterAuth>,
   suffix: string
 ) {
-  return await test.fetch("/api/auth/sign-up/email", {
+  const tokenExchange = vi.fn<typeof fetch>((input, init) => {
+    expect(String(input)).toBe(GOOGLE_TOKEN_ENDPOINT);
+    expect(init?.method).toBe("POST");
+    expect(String(init?.body)).toContain("code=synthetic-authorization-code");
+
+    return Promise.resolve(
+      Response.json({
+        access_token: `access-${suffix}`,
+        expires_in: 3600,
+        id_token: createGoogleIdToken(suffix),
+        refresh_token: `refresh-${suffix}`,
+        scope: "openid email profile",
+        token_type: "Bearer",
+      })
+    );
+  });
+  vi.stubGlobal("fetch", tokenExchange);
+
+  const signInResponse = await test.fetch("/api/auth/sign-in/social", {
     body: JSON.stringify({
-      email: `${suffix}@example.com`,
-      name: `Synthetic ${suffix}`,
-      password: "synthetic-password-12345",
+      callbackURL: "/en",
+      provider: "google",
     }),
     headers: {
       "content-type": "application/json",
@@ -29,6 +75,29 @@ async function signUpSyntheticLearner(
     },
     method: "POST",
   });
+  const authorizationLocation = signInResponse.headers.get("location");
+  if (!authorizationLocation) {
+    throw new Error("Expected Google authorization redirect.");
+  }
+  const state = new URL(authorizationLocation).searchParams.get("state");
+  if (!state) {
+    throw new Error("Expected Google authorization state.");
+  }
+  const cookie = signInResponse.headers
+    .getSetCookie()
+    .map((value) => value.split(";", 1)[0])
+    .join("; ");
+
+  const response = await test.fetch(
+    `/api/auth/callback/google?${new URLSearchParams({
+      code: "synthetic-authorization-code",
+      state,
+    })}`,
+    { headers: { cookie } }
+  );
+
+  expect(tokenExchange).toHaveBeenCalledOnce();
+  return response;
 }
 
 beforeEach(() => {
@@ -38,24 +107,28 @@ beforeEach(() => {
     "BETTER_AUTH_SECRET",
     "synthetic-better-auth-secret-for-lifecycle-tests"
   );
+  vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
+  vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
 });
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 
 describe("auth/client", () => {
   it("creates one awaiting intent through the Better Auth user lifecycle", async () => {
     const test = createConvexTestWithBetterAuth();
-    const response = await signUpSyntheticLearner(test, "learner");
+    const response = await signUpGoogleLearner(test, "learner");
     const stored = await test.query(async (ctx) => ({
       intents: await ctx.db.query("welcomeEmailIntents").take(2),
       jobs: await ctx.db.system.query("_scheduled_functions").take(8),
       users: await ctx.db.query("users").take(2),
     }));
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe("/en");
     expect(stored.users).toHaveLength(1);
     expect(stored.intents).toHaveLength(1);
     expect(stored.intents[0]).toMatchObject({
@@ -78,10 +151,8 @@ describe("auth/client", () => {
 
   it("projects each Better Auth profile field without scheduling unchanged writes", async () => {
     const test = createConvexTestWithBetterAuth();
-    await expect(
-      signUpSyntheticLearner(test, "profile")
-    ).resolves.toMatchObject({
-      status: 200,
+    await expect(signUpGoogleLearner(test, "profile")).resolves.toMatchObject({
+      status: 302,
     });
     const original = await test.query((ctx) => ctx.db.query("users").unique());
     if (!original) {
@@ -134,7 +205,7 @@ describe("auth/client", () => {
 
   it("ignores profile propagation after deletion preparation begins", async () => {
     const test = createConvexTestWithBetterAuth();
-    await signUpSyntheticLearner(test, "deleting");
+    await signUpGoogleLearner(test, "deleting");
     const original = await test.query((ctx) => ctx.db.query("users").unique());
     if (!original) {
       throw new Error(
@@ -221,7 +292,7 @@ describe("auth/client", () => {
 
   it("schedules both immediate and recovery cleanup after auth deletion", async () => {
     const test = createConvexTestWithBetterAuth();
-    await signUpSyntheticLearner(test, "deleted");
+    await signUpGoogleLearner(test, "deleted");
     const original = await test.query((ctx) => ctx.db.query("users").unique());
     if (!original) {
       throw new Error(

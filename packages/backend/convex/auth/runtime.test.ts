@@ -152,6 +152,30 @@ describe("auth/runtime", () => {
       }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
 
+  it.each([
+    ["POST", "/api/auth/change-password"],
+    ["POST", "/api/auth/request-password-reset"],
+    ["POST", "/api/auth/reset-password"],
+    ["GET", "/api/auth/reset-password/legacy-token?callbackURL=%2Fen"],
+    ["POST", "/api/auth/set-password"],
+    ["POST", "/api/auth/sign-in/email"],
+    ["POST", "/api/auth/sign-in/username"],
+    ["POST", "/api/auth/sign-up/email"],
+    ["POST", "/api/auth/verify-password"],
+  ] as const)(
+    "returns 404 for retired credential route %s %s",
+    async (method, path) => {
+      const test = createConvexTestWithBetterAuth();
+      const response = await test.fetch(path, {
+        headers: { origin: "http://localhost:3000" },
+        method,
+      });
+
+      expect(response.status).toBe(404);
+      expect(await response.text()).toBe("Not Found");
+    }
+  );
+
   it.effect("accepts one ready preparation step", () =>
     Effect.gen(function* () {
       const prepare = vi.fn(() =>

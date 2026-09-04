@@ -19,7 +19,10 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import aggregateSchema from "@repo/backend/node_modules/@convex-dev/aggregate/src/component/schema";
 import { convexTest, type TestConvex } from "convex-test";
 
-const betterAuthModules = import.meta.glob(["./betterAuth/**/*.ts"]);
+const betterAuthModules = import.meta.glob([
+  "./betterAuth/**/*.ts",
+  "!./betterAuth/**/*.test.ts",
+]);
 const aggregateModules = import.meta.glob([
   "../node_modules/@convex-dev/aggregate/src/component/**/*.ts",
 ]);

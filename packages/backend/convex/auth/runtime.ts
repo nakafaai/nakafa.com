@@ -15,16 +15,11 @@ import {
   type AccountDeletionPreparationOutcome,
   accountDeletionPreparationOutcome,
 } from "@repo/backend/convex/auth/deletion/spec";
-import { generatedUsername } from "@repo/backend/convex/auth/username/plugin";
-import {
-  createGoogleUsernameFields,
-  usernameOptions,
-} from "@repo/backend/convex/auth/username/policy";
 import authConfig from "@repo/backend/convex/auth.config";
 import { siteOrigin, siteUrl } from "@repo/backend/convex/utils/site";
 import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
-import { openAPI, username } from "better-auth/plugins";
+import { openAPI } from "better-auth/plugins";
 import { makeFunctionReference } from "convex/server";
 import { Effect, Schema } from "effect";
 
@@ -44,6 +39,18 @@ const deletionUnavailableError = () =>
 const providerErrorRoutePathnames = new Set(
   ACTIVE_APP_LOCALE_CODES.map((locale) => `/${locale}/auth/error`)
 );
+const disabledCredentialPaths = [
+  "/change-password",
+  "/request-password-reset",
+  "/reset-password",
+  "/set-password",
+  "/sign-in/email",
+  "/sign-in/username",
+  "/sign-up/email",
+  "/verify-password",
+] as const;
+const resetPasswordCallbackPath = "/reset-password/";
+const trailingSlashPattern = /\/$/;
 
 /**
  * Removes provider-owned diagnostics before the redirect crosses into the app.
@@ -90,6 +97,23 @@ const providerErrorRedirectPrivacy = {
   onResponse: (response: Response) => {
     const sanitized = sanitizeProviderErrorRedirectResponse(response);
     return Promise.resolve(sanitized ? { response: sanitized } : undefined);
+  },
+} satisfies NonNullable<BetterAuthOptions["plugins"]>[number];
+const credentialSurfaceDisabled = {
+  id: "credential-surface-disabled",
+  onRequest: (request: Request, context: { readonly baseURL: string }) => {
+    const basePath = new URL(context.baseURL).pathname.replace(
+      trailingSlashPattern,
+      ""
+    );
+    const requestPath = new URL(request.url).pathname;
+    if (!requestPath.startsWith(`${basePath}${resetPasswordCallbackPath}`)) {
+      return Promise.resolve();
+    }
+
+    return Promise.resolve({
+      response: new Response("Not Found", { status: 404 }),
+    });
   },
 } satisfies NonNullable<BetterAuthOptions["plugins"]>[number];
 /** Requires the server-side claim to confirm deletion readiness. */
@@ -157,8 +181,9 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
         allowDifferentEmails: false,
       },
     },
+    disabledPaths: [...disabledCredentialPaths],
     emailAndPassword: {
-      enabled: true,
+      enabled: false,
     },
     socialProviders: {
       google: {
@@ -166,7 +191,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
         clientSecret: process.env.AUTH_GOOGLE_SECRET || "",
         accessType: "offline",
         prompt: "select_account consent",
-        mapProfileToUser: createGoogleUsernameFields,
       },
     },
     user: {
@@ -183,13 +207,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       },
     },
     plugins: [
-      /*
-       * generatedUsername() must run before Better Auth's username plugin so
-       * Google-created users are normalized before username validation runs.
-       * Source: the installed better-auth/dist/plugins/username/index.mjs.
-       */
-      generatedUsername(),
-      username(usernameOptions),
+      credentialSurfaceDisabled,
       openAPI(),
       convex({
         authConfig,
