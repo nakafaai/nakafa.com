@@ -103,9 +103,6 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
       });
     });
     if (
-      !verified.some(
-        ({ row: candidate }) => candidate._id === requested.row._id
-      ) ||
       verified.some(
         ({ projection }) => projection.parentPath !== requested.row.parentPath
       )
