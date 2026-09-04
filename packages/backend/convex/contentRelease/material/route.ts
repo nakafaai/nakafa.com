@@ -55,7 +55,10 @@ export const resolveMaterialRoute = Effect.fn(
   const verified = yield* verifyMaterial(row);
   if (
     row.projectionHash !== route.projection.projectionHash ||
+    row.publicPath !== route.projection.publicPath ||
+    row.releaseId !== route.projection.releaseId ||
     row.rendererDomain !== route.projection.rendererDomain ||
+    row.sequence !== route.projection.sequence ||
     row.sourcePath !== route.projection.sourcePath ||
     verified.projectionJson !== route.projection.projectionJson
   ) {
