@@ -20,6 +20,30 @@ import { Clock, Effect } from "effect";
 type PopularityCounter = Doc<"learningPopularityCounters">;
 type PopularitySignal = Doc<"learningPopularitySignals">;
 
+/** Rebuilt semantics; `updatedAt` advances only when one of these changes. */
+const refreshFields = [
+  "alignmentId",
+  "assetId",
+  "conceptId",
+  "contextMaterialKey",
+  "contextMode",
+  "contextNodeKey",
+  "contextParentPath",
+  "contextProgramKey",
+  "contextPublicPath",
+  "contextSourcePath",
+  "description",
+  "learningObjectId",
+  "lensId",
+  "materialDomain",
+  "route",
+  "score",
+  "sourcePath",
+  "title",
+] as const satisfies readonly (keyof PopularityCounter)[];
+
+type Refresh = Pick<PopularityCounter, (typeof refreshFields)[number]>;
+
 /** Generated internal mutation reference accepted by Convex refresh scheduling. */
 type RefreshLearningPopularityWindowPageReference = FunctionReference<
   "mutation",
@@ -63,18 +87,16 @@ const loadPopularitySignals = Effect.fn(
 /** Recomputes one finite-window counter from durable daily signal rows. */
 const recomputePopularityCounter = Effect.fn(
   "contents.metrics.recomputePopularityCounter"
-)(function* (ctx: MutationCtx, counter: PopularityCounter, timestamp: number) {
-  if (!isFinitePopularityWindow(counter.windowKey)) {
-    return {
-      latestSignal: null,
-      score: counter.score,
-    };
-  }
-
+)(function* (
+  ctx: MutationCtx,
+  counter: PopularityCounter,
+  windowKey: Exclude<PopularityCounter["windowKey"], "lifetime">,
+  timestamp: number
+) {
   const signals = yield* loadPopularitySignals(
     ctx,
     counter,
-    counter.windowKey,
+    windowKey,
     timestamp
   );
   let latestSignal: PopularitySignal | null = null;
@@ -85,19 +107,55 @@ const recomputePopularityCounter = Effect.fn(
     latestSignal = signal;
   }
 
-  return {
-    latestSignal,
-    score,
-  };
+  return latestSignal === null
+    ? { kind: "empty" as const }
+    : { kind: "active" as const, latestSignal, score };
 });
+
+/** Projects the stored counter state produced by one authoritative rebuild. */
+function projectPopularityRefresh(
+  latestSignal: PopularitySignal,
+  score: number
+): Refresh {
+  return {
+    alignmentId: latestSignal.alignmentId,
+    assetId: latestSignal.assetId,
+    conceptId: latestSignal.conceptId,
+    contextMaterialKey: latestSignal.contextMaterialKey,
+    contextMode: latestSignal.contextMode,
+    contextNodeKey: latestSignal.contextNodeKey,
+    contextParentPath: latestSignal.contextParentPath,
+    contextProgramKey: latestSignal.contextProgramKey,
+    contextPublicPath: latestSignal.contextPublicPath,
+    contextSourcePath: latestSignal.contextSourcePath,
+    description: latestSignal.description,
+    learningObjectId: latestSignal.learningObjectId,
+    lensId: latestSignal.lensId,
+    materialDomain: latestSignal.materialDomain,
+    route: latestSignal.route,
+    score,
+    sourcePath: latestSignal.sourcePath,
+    title: latestSignal.title,
+  };
+}
 
 /** Applies a recomputed finite-window score to one popularity counter row. */
 const refreshPopularityCounter = Effect.fn(
   "contents.metrics.refreshPopularityCounter"
-)(function* (ctx: MutationCtx, counter: PopularityCounter, timestamp: number) {
-  const refresh = yield* recomputePopularityCounter(ctx, counter, timestamp);
+)(function* (
+  ctx: MutationCtx,
+  counter: PopularityCounter,
+  windowKey: Exclude<PopularityCounter["windowKey"], "lifetime">,
+  timestamp: number
+) {
+  const refresh = yield* recomputePopularityCounter(
+    ctx,
+    counter,
+    windowKey,
+    timestamp
+  );
 
-  if (refresh.score <= 0) {
+  if (refresh.kind === "empty" || refresh.score <= 0) {
     yield* Effect.tryPromise({
       try: () => ctx.db.delete(counter._id),
       catch: toContentAnalyticsIoError,
@@ -109,35 +167,23 @@ const refreshPopularityCounter = Effect.fn(
     };
   }
 
-  const latestSignal = refresh.latestSignal;
+  const update = projectPopularityRefresh(refresh.latestSignal, refresh.score);
+
+  const changed = refreshFields.some(
+    (field) => counter[field] !== update[field]
+  );
+
+  if (!changed) {
+    return {
+      removed: false,
+      refreshed: false,
+    };
+  }
 
   yield* Effect.tryPromise({
     try: () =>
       ctx.db.patch(counter._id, {
-        alignmentId: latestSignal?.alignmentId ?? counter.alignmentId,
-        assetId: latestSignal?.assetId ?? counter.assetId,
-        conceptId: latestSignal?.conceptId ?? counter.conceptId,
-        contextMaterialKey:
-          latestSignal?.contextMaterialKey ?? counter.contextMaterialKey,
-        contextMode: latestSignal?.contextMode ?? counter.contextMode,
-        contextNodeKey: latestSignal?.contextNodeKey ?? counter.contextNodeKey,
-        contextParentPath:
-          latestSignal?.contextParentPath ?? counter.contextParentPath,
-        contextProgramKey:
-          latestSignal?.contextProgramKey ?? counter.contextProgramKey,
-        contextPublicPath:
-          latestSignal?.contextPublicPath ?? counter.contextPublicPath,
-        contextSourcePath:
-          latestSignal?.contextSourcePath ?? counter.contextSourcePath,
-        description: latestSignal?.description ?? counter.description,
-        learningObjectId:
-          latestSignal?.learningObjectId ?? counter.learningObjectId,
-        lensId: latestSignal?.lensId ?? counter.lensId,
-        materialDomain: latestSignal?.materialDomain ?? counter.materialDomain,
-        route: latestSignal?.route ?? counter.route,
-        score: refresh.score,
-        sourcePath: latestSignal?.sourcePath ?? counter.sourcePath,
-        title: latestSignal?.title ?? counter.title,
+        ...update,
         updatedAt: timestamp,
       }),
     catch: toContentAnalyticsIoError,
@@ -217,7 +263,12 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
   let removedCounters = 0;
 
   for (const counter of page.page) {
-    const result = yield* refreshPopularityCounter(ctx, counter, timestamp);
+    const result = yield* refreshPopularityCounter(
+      ctx,
+      counter,
+      args.windowKey,
+      timestamp
+    );
 
     if (result.refreshed) {
       refreshedCounters += 1;

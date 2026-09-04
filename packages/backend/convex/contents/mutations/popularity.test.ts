@@ -119,6 +119,25 @@ async function insertPopularityRefreshRows(ctx: MutationCtx) {
   });
 }
 
+/** Runs the registered refresh interface and exposes its transaction cost. */
+async function runRefresh(
+  target: ReturnType<typeof createPopularityConvexTest>
+) {
+  return await target.mutation(async (ctx) => {
+    const result = await ctx.runMutation(
+      internal.contents.mutations.popularity
+        .refreshLearningPopularityWindowPage,
+      {
+        scopeMode: "global",
+        windowKey: "7d",
+      }
+    );
+    const metrics = await ctx.meta.getTransactionMetrics();
+
+    return { metrics, result };
+  });
+}
+
 describe("contents/mutations/popularity", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -135,19 +154,11 @@ describe("contents/mutations/popularity", () => {
 
     await t.mutation(insertPopularityRefreshRows);
 
-    const result = await t.mutation(
-      internal.contents.mutations.popularity
-        .refreshLearningPopularityWindowPage,
-      {
-        scopeMode: "global",
-        windowKey: "7d",
-      }
-    );
+    const refresh = await runRefresh(t);
     const counters = await t.query(
       async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
     );
-
-    expect(result).toEqual({
+    expect(refresh.result).toEqual({
       continueCursor: expect.any(String),
       isDone: true,
       refreshedCounters: 1,
@@ -160,5 +171,32 @@ describe("contents/mutations/popularity", () => {
       score: 2,
       title: "Current Vector Addition",
     });
+  });
+
+  it("does not rewrite or rerank an unchanged rebuilt counter", async () => {
+    const t = createPopularityConvexTest();
+
+    await t.mutation(insertPopularityRefreshRows);
+    const repair = await runRefresh(t);
+    const before = await t.query(
+      async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
+    );
+
+    vi.setSystemTime(new Date(NOW + POPULARITY_DAY_MS / 2));
+    const replay = await runRefresh(t);
+    const after = await t.query(
+      async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
+    );
+
+    expect(repair.metrics.documentsWritten.used).toBeGreaterThan(0);
+    expect(replay.result).toEqual({
+      continueCursor: expect.any(String),
+      isDone: true,
+      refreshedCounters: 0,
+      removedCounters: 0,
+      skipped: false,
+    });
+    expect(replay.metrics.documentsWritten.used).toBe(0);
+    expect(after).toEqual(before);
   });
 });
