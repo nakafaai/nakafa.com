@@ -54,13 +54,6 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     reason: "The v2 release API and renamed inputs are migrated together.",
   },
   {
-    action: "google/osv-scanner-action/osv-scanner-action",
-    approvedSha: "baa4139e56d6312335d899e6ba045fa16d1d3d0b",
-    expectedTag: "v2.5.1",
-    expectedUsages: 1,
-    reason: "The reviewed OSV scanner audits the complete pnpm lockfile.",
-  },
-  {
     action: "astral-sh/setup-uv",
     approvedSha: "20cfd1bf945f4377ade1205e4dbc17946fc9a30d",
     expectedTag: "v10.0.1",

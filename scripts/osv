@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly osv_version="2.5.1"
+
+case "$(uname -s):$(uname -m)" in
+  Darwin:arm64)
+    readonly osv_asset="osv-scanner_darwin_arm64"
+    readonly osv_checksum="75c44d6332f892a1e56286f4105a98ed751ae28d215ca0a8b65cc00d84103054"
+    ;;
+  Darwin:x86_64)
+    readonly osv_asset="osv-scanner_darwin_amd64"
+    readonly osv_checksum="9f89beb6c3d784893cb1cae0a3d56c529bfe91075418c2f9440c45b79654198b"
+    ;;
+  Linux:aarch64)
+    readonly osv_asset="osv-scanner_linux_arm64"
+    readonly osv_checksum="3d0f5aa5a6baa8eb32bcef247388e149ef6030a6634ccae6fa0d62681fb27a6d"
+    ;;
+  Linux:x86_64)
+    readonly osv_asset="osv-scanner_linux_amd64"
+    readonly osv_checksum="f9f25499a2c8cc367b3af45df2ea7eeca7fbccceab9c35079968f4b3652194be"
+    ;;
+  *)
+    echo "OSV Scanner does not publish a binary for this platform." >&2
+    exit 1
+    ;;
+esac
+
+readonly osv_temp="$(mktemp -d "${TMPDIR:-/tmp}/osv.XXXXXX")"
+readonly osv_binary="${osv_temp}/${osv_asset}"
+
+cleanup_osv() {
+  rm -f -- "${osv_binary}"
+  rmdir -- "${osv_temp}"
+}
+trap cleanup_osv EXIT
+
+curl \
+  --connect-timeout 10 \
+  --fail \
+  --location \
+  --max-time 120 \
+  --output "${osv_binary}" \
+  --proto '=https' \
+  --retry 3 \
+  --retry-all-errors \
+  --show-error \
+  --silent \
+  --tlsv1.2 \
+  "https://github.com/google/osv-scanner/releases/download/v${osv_version}/${osv_asset}"
+
+readonly osv_actual="$(openssl dgst -sha256 "${osv_binary}" | awk '{print $2}')"
+if [[ "${osv_actual}" != "${osv_checksum}" ]]; then
+  echo "OSV Scanner checksum verification failed." >&2
+  exit 1
+fi
+
+chmod 700 "${osv_binary}"
+"${osv_binary}" scan source --lockfile=pnpm-lock.yaml
