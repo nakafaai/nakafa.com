@@ -1,9 +1,8 @@
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentPagination } from "@repo/contents/_types/content";
 import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
-import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
-import { getPublishedMaterialContext } from "@/lib/content/material/context";
+import type { PublishedMaterialContext } from "@/lib/content/material/context";
 
 const emptyItem = { href: "", title: "" };
 
@@ -55,47 +54,42 @@ function readRoutePagination(
   };
 }
 
-/** Resolves one verified curriculum link and signed sibling pagination model. */
-export async function readMaterialNavigation(
+/** Builds navigation from signed routes and an already verified context. */
+export function readMaterialNavigation(
   page: MaterialPageContent,
-  context: MaterialContextIdentity | undefined
+  published: PublishedMaterialContext | null
 ) {
-  if (!context || page.kind === "preview") {
+  const currentHref = toMaterialHref(page.route);
+
+  if (!published || page.kind === "preview") {
     return {
       context: undefined,
+      currentHref,
       link: undefined,
       pagination: readRoutePagination(page.route, page.siblings),
     };
   }
 
-  const published = await getPublishedMaterialContext(
-    page.appLocale,
-    page.route,
-    context,
-    page.activeReleaseId
-  );
-  const toHref = published
-    ? (target: MaterialLessonProjection) => {
-        const href = toMaterialHref(target);
-        if (
-          !(
-            published.mapping.canonicalPath === target.publicPath ||
-            published.mapping.canonicalPath === target.parentPath
-          )
-        ) {
-          return href;
-        }
-        return toContextualMaterialHref({
-          href,
-          ref: published.context,
-        });
-      }
-    : undefined;
+  const toHref = (target: MaterialLessonProjection) => {
+    const href = toMaterialHref(target);
+    if (
+      !(
+        published.mapping.canonicalPath === target.publicPath ||
+        published.mapping.canonicalPath === target.parentPath
+      )
+    ) {
+      return href;
+    }
+    return toContextualMaterialHref({
+      href,
+      ref: published.context,
+    });
+  };
+
   return {
-    context: published?.context,
-    link: published
-      ? { href: published.href, label: published.label }
-      : undefined,
+    context: published.context,
+    currentHref: toHref(page.route),
+    link: { href: published.href, label: published.label },
     pagination: readRoutePagination(page.route, page.siblings, toHref),
   };
 }
