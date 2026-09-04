@@ -89,7 +89,6 @@ jobs:
         run: pnpm --silent --dir packages/backend runtime:ci export
 
       - name: Verify selection
-        if: steps.snapshot.outputs.exists != 'true'
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: pnpm --silent --dir packages/backend runtime:ci verify-generations

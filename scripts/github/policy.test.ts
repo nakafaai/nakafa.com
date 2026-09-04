@@ -87,6 +87,13 @@ describe("GitHub Action policy", () => {
                     name: "Export snapshot",
                     run: "pnpm --silent --dir packages/backend runtime:ci export",
                   }),
+                  {
+                    env: expect.objectContaining({
+                      CONVEX_DEPLOY_KEY: expect.any(String),
+                    }),
+                    name: "Verify selection",
+                    run: "pnpm --silent --dir packages/backend runtime:ci verify-generations",
+                  },
                 ]),
               }),
             },
