@@ -14,6 +14,7 @@ import {
   getPopularitySignalDay,
   type LearningPopularityScope,
 } from "@repo/backend/convex/contents/popularity";
+import { isPopularityResetting } from "@repo/backend/convex/contents/reset/state";
 import {
   type RecordContentViewArgs,
   toContentViewIoError,
@@ -189,6 +190,10 @@ export const enqueuePopularitySignals = Effect.fn(
     readonly userId?: Doc<"users">["_id"];
   }
 ) {
+  if (yield* isPopularityResetting(db)) {
+    return [];
+  }
+
   const partitions = new Set<number>();
 
   for (const scope of createSignalScopes(context)) {

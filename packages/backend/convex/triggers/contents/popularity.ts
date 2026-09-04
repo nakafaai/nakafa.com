@@ -5,4 +5,4 @@ import { learningPopularityRankings } from "@repo/backend/convex/contents/rankin
  * write, so homepage top-N reads never fall back to table scans.
  */
 export const learningPopularityRankingsTrigger =
-  learningPopularityRankings.trigger();
+  learningPopularityRankings.idempotentTrigger();

@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  createContextKey,
+  type LearningContextStorage,
+} from "@repo/backend/convex/contents/context";
+import { enqueuePopularitySignals } from "@repo/backend/convex/contents/views/signals";
+import type { ContentViewTarget } from "@repo/backend/convex/contents/views/target";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import {
   createConvexTestWithBetterAuth,
@@ -7,6 +15,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testMaterialGraph } from "@repo/backend/test/content/material";
 import {
   ARTICLE_VIEW_ID as ARTICLE_CONTENT_ID,
   ARTICLE_VIEW_ROUTE as ARTICLE_ROUTE,
@@ -85,6 +94,79 @@ describe("contents/views/impl", () => {
     expect(state.scheduledJobs.map((job) => job.args[0])).toEqual([
       { partition: getSignalPartition(article.contentId) },
     ]);
+  });
+
+  it("enqueues both global and placement popularity for a verified context", async () => {
+    const t = convexTest(schema, convexModules);
+    const graph = testMaterialGraph("vector", "addition", "en", "mathematics");
+    const route = {
+      ...graph,
+      contentKey: "material.lesson.mathematics.vector.addition",
+      content_id: graph.assetId,
+      kind: "curriculum-lesson",
+      locale: "en",
+      materialDomain: MaterialDomainSchema.make("mathematics"),
+      materialKey: "lesson.mathematics.vector.addition",
+      parentPath: "material/lesson/mathematics/vector",
+      route: "material/lesson/mathematics/vector/addition",
+      section: "material",
+      sourcePath: "material.lesson.mathematics.vector.addition.en.mdx",
+      title: "Vector Addition",
+    } satisfies ContentViewTarget;
+    const context = {
+      contextKey: createContextKey({
+        mode: "placement",
+        nodeKey: "class-10-mathematics-vector",
+        programKey: "merdeka",
+      }),
+      contextMaterialKey: route.materialKey,
+      contextMode: "placement",
+      contextNodeKey: "class-10-mathematics-vector",
+      contextParentPath: "curriculum/merdeka/class-10/mathematics",
+      contextProgramKey: "merdeka",
+      contextPublicPath: "curriculum/merdeka/class-10/mathematics/vector",
+      contextSourcePath: route.contentKey,
+    } satisfies LearningContextStorage;
+
+    const partitions = await t.mutation((ctx) =>
+      runConvexProgram(
+        enqueuePopularitySignals(
+          ctx.db,
+          route,
+          {
+            contentId: route.content_id,
+            deviceId: "placement-device",
+            locale: "en",
+            publicPath: route.route,
+            section: "material",
+          },
+          context,
+          { now: NOW }
+        )
+      )
+    );
+    const state = await t.query(async (ctx) => ({
+      queue: await ctx.db.query("learningEngagementQueue").collect(),
+      signals: await ctx.db.query("learningPopularityViewerSignals").collect(),
+    }));
+
+    expect(partitions).toHaveLength(2);
+    expect(state.queue).toHaveLength(2);
+    expect(state.signals).toHaveLength(2);
+    expect(state.signals).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          contextKey: "canonical",
+          contextMode: "canonical",
+          scopeMode: "global",
+        }),
+        expect.objectContaining({
+          contextKey: context.contextKey,
+          contextMode: "placement",
+          scopeMode: "placement",
+        }),
+      ])
+    );
   });
 
   it("updates an existing device view without queuing duplicate analytics", async () => {

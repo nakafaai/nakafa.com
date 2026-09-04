@@ -130,6 +130,30 @@ describe("contents/mutations/popularity", () => {
     vi.restoreAllMocks();
   });
 
+  it("schedules every finite window for both popularity scopes", async () => {
+    const t = createPopularityConvexTest();
+
+    const result = await t.mutation(
+      internal.contents.mutations.popularity
+        .scheduleLearningPopularityRefreshes,
+      {}
+    );
+    const jobs = await t.query(
+      async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
+    );
+
+    expect(result).toEqual({ scheduledWindows: 14 });
+    expect(jobs.map((job) => job.args)).toEqual(
+      expect.arrayContaining([
+        [{ scopeMode: "global", windowKey: "1d" }],
+        [{ scopeMode: "global", windowKey: "365d" }],
+        [{ scopeMode: "placement", windowKey: "1d" }],
+        [{ scopeMode: "placement", windowKey: "365d" }],
+      ])
+    );
+    expect(jobs).toHaveLength(14);
+  });
+
   it("rebuilds finite windows from daily signals and removes expired counters", async () => {
     const t = createPopularityConvexTest();
 
