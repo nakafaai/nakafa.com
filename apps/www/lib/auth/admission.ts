@@ -6,7 +6,6 @@ const URL_PARSE_BASE = "https://internal.invalid";
 const CONTROL_CHARACTER_PATTERN = /\p{Cc}/u;
 const MAX_INTENT_LENGTH = 4096;
 const AUTH_PATH = "/auth";
-const CONTINUATION_PATH = "/auth/continue";
 const PROVIDER_ERROR_PATH = "/auth/error";
 const HOME_PATH = "/home";
 const INTENT_PARAM = "intent";
@@ -195,19 +194,19 @@ function withIntent(pathname: string, resolution: PostAuthIntentResolution) {
   })}`;
 }
 
-/** Builds the sole Better Auth callback path for the current locale. */
-export function getPostAuthContinuationHref(
+/** Builds the authoritative onboarding callback path for the current locale. */
+export function getPostAuthOnboardingHref(
   rawIntent: unknown,
   rawLocale: string
 ) {
   const locale = hasLocale(routing.locales, rawLocale)
     ? rawLocale
     : routing.defaultLocale;
-  const continuation = withIntent(
-    CONTINUATION_PATH,
+  const onboarding = withIntent(
+    ONBOARDING_PATH,
     resolvePostAuthIntent(rawIntent, locale)
   );
-  return `/${locale}${continuation}`;
+  return `/${locale}${onboarding}`;
 }
 
 /** Rebuilds a trusted browser location into one exact intent source. */
@@ -276,13 +275,6 @@ export function getPostAuthProviderRetryHref(
 /** Returns whether a sanitized retry represents a social-provider failure. */
 export function isPostAuthProviderError(rawError: unknown) {
   return rawError === PROVIDER_ERROR_VALUE;
-}
-
-/** Returns onboarding while preserving only one validated continuation intent. */
-export function getPostAuthOnboardingHref(
-  resolution: PostAuthIntentResolution
-) {
-  return withIntent(ONBOARDING_PATH, resolution);
 }
 
 /** Returns the requested localized destination, or current-locale Home. */

@@ -3,7 +3,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { getTestInstance } from "better-auth/test";
 import { Effect, Option } from "effect";
 import {
-  getPostAuthContinuationHref,
   getPostAuthDestination,
   getPostAuthIntentSource,
   getPostAuthOnboardingHref,
@@ -17,12 +16,10 @@ import {
 } from "@/lib/auth/admission";
 
 describe("post-auth admission", () => {
-  it("uses localized continuation without inventing an intent", () => {
-    expect(getPostAuthContinuationHref(undefined, "id")).toBe(
-      "/id/auth/continue"
-    );
-    expect(getPostAuthContinuationHref(undefined, "unsupported")).toBe(
-      "/en/auth/continue"
+  it("uses localized onboarding without inventing an intent", () => {
+    expect(getPostAuthOnboardingHref(undefined, "id")).toBe("/id/onboarding");
+    expect(getPostAuthOnboardingHref(undefined, "unsupported")).toBe(
+      "/en/onboarding"
     );
   });
 
@@ -68,8 +65,8 @@ describe("post-auth admission", () => {
   });
 
   it("keeps an explicit source locale authoritative across auth", () => {
-    expect(getPostAuthContinuationHref("/en/search", "id")).toBe(
-      "/id/auth/continue?intent=%2Fen%2Fsearch"
+    expect(getPostAuthOnboardingHref("/en/search", "id")).toBe(
+      "/id/onboarding?intent=%2Fen%2Fsearch"
     );
   });
 
@@ -85,7 +82,7 @@ describe("post-auth admission", () => {
     const source =
       "/id/try-out/indonesia/snbt/2027/set-1?attemptId=attempt%2Fone";
     const callback = new URL(
-      getPostAuthContinuationHref(source, "id"),
+      getPostAuthOnboardingHref(source, "id"),
       "https://nakafa.com"
     );
     const intent = callback.searchParams.get("intent");
@@ -113,7 +110,7 @@ describe("post-auth admission", () => {
         auth.handler(
           new Request("http://localhost:3000/api/auth/sign-in/social", {
             body: JSON.stringify({
-              callbackURL: "/en/auth/continue",
+              callbackURL: "/en/onboarding",
               errorCallbackURL,
               provider: "google",
             }),
@@ -193,7 +190,7 @@ describe("post-auth admission", () => {
       kind: "none",
       reason: "marketing-root",
     });
-    expect(resolvePostAuthIntent("/id/auth/continue?intent=/search")).toEqual({
+    expect(resolvePostAuthIntent("/id/auth/error?intent=/search")).toEqual({
       kind: "none",
       reason: "entry-route",
     });
@@ -285,15 +282,15 @@ describe("post-auth admission", () => {
     expect(getPostAuthSignInHref(resume)).toBe(
       "/auth?redirect=%2Fen%2Fchat%2Fchat-id"
     );
-    expect(getPostAuthOnboardingHref(resume)).toBe(
-      "/onboarding?intent=%2Fen%2Fchat%2Fchat-id"
+    expect(getPostAuthOnboardingHref("/chat/chat-id", "en")).toBe(
+      "/en/onboarding?intent=%2Fen%2Fchat%2Fchat-id"
     );
     expect(getPostAuthDestination(resume, "id")).toEqual({
       href: "/chat/chat-id",
       locale: "en",
     });
     expect(getPostAuthSignInHref(none)).toBe("/auth");
-    expect(getPostAuthOnboardingHref(none)).toBe("/onboarding");
+    expect(getPostAuthOnboardingHref(undefined, "id")).toBe("/id/onboarding");
     expect(getPostAuthDestination(none, "id")).toEqual({
       href: "/home",
       locale: "id",

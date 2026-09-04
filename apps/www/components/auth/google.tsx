@@ -8,7 +8,7 @@ import { useQueryState } from "nuqs";
 import { useState, useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
 import {
-  getPostAuthContinuationHref,
+  getPostAuthOnboardingHref,
   getPostAuthProviderErrorHref,
   isPostAuthProviderError,
 } from "@/lib/auth/admission";
@@ -38,7 +38,7 @@ export function AuthGoogle({ redirect }: Props) {
     startTransition(async () => {
       const intentSource =
         redirect ?? redirectQuery ?? authNavigation.readIntentSource();
-      const callbackURL = getPostAuthContinuationHref(intentSource, locale);
+      const callbackURL = getPostAuthOnboardingHref(intentSource, locale);
       const errorCallbackURL = getPostAuthProviderErrorHref(
         intentSource,
         locale
@@ -64,9 +64,12 @@ export function AuthGoogle({ redirect }: Props) {
   }
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-2">
+    <div className="flex flex-col items-center gap-2">
       {hasProviderError ? (
-        <p className="text-center text-destructive text-sm" role="alert">
+        <p
+          className="max-w-sm text-center text-destructive text-sm"
+          role="alert"
+        >
           {t("provider-error")}
         </p>
       ) : null}

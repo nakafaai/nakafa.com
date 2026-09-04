@@ -1,16 +1,12 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { Suspense } from "react";
 import { Auth } from "@/components/auth";
 import { Theme } from "@/components/marketing/shared/footer-action";
 import { BackButton } from "@/components/shared/back-button";
 import {
-  EntryShell,
-  EntryShellArtwork,
   EntryShellBody,
   EntryShellHeader,
-  EntryShellPanel,
 } from "@/components/shared/entry-shell";
 import {
   getShellPageNavigation,
@@ -23,25 +19,20 @@ export default async function Page(props: PageProps<"/[locale]/auth">) {
   const pageNavigation = await getShellPageNavigation(locale);
 
   return (
-    <EntryShell>
-      <EntryShellPanel>
-        <EntryShellHeader>
-          <BackButton />
+    <>
+      <EntryShellHeader>
+        <BackButton />
 
-          <Theme variant="ghost" />
-        </EntryShellHeader>
-        <EntryShellBody>
-          <PageTitle />
+        <Theme variant="ghost" />
+      </EntryShellHeader>
+      <EntryShellBody>
+        <PageTitle />
 
-          <Suspense fallback={null}>
-            <Auth />
-          </Suspense>
+        <Auth />
 
-          <PageFooter locale={locale} pageNavigation={pageNavigation} />
-        </EntryShellBody>
-      </EntryShellPanel>
-      <EntryShellArtwork />
-    </EntryShell>
+        <PageFooter locale={locale} pageNavigation={pageNavigation} />
+      </EntryShellBody>
+    </>
   );
 }
 

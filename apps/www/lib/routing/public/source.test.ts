@@ -330,7 +330,6 @@ describe("public HTML route rejection", () => {
         "/de",
         "/de/pricing",
         "/de/search",
-        "/de/auth/continue",
         "/de/auth/error",
         "/de/chat/new",
         "/de/lehrplaene/merdeka",

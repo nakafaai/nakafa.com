@@ -104,7 +104,7 @@ describe("auth/runtime", () => {
         const signInResponse = yield* Effect.promise(() =>
           test.fetch("/api/auth/sign-in/social", {
             body: JSON.stringify({
-              callbackURL: "/en/auth/continue",
+              callbackURL: "/en/onboarding",
               errorCallbackURL,
               provider: "google",
             }),
