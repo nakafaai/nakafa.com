@@ -137,6 +137,7 @@ describe("auth/client", () => {
     });
     expect(stored.users[0]).toMatchObject({
       email: "learner@example.com",
+      image: "https://example.com/learner.png",
       name: "Synthetic learner",
     });
     expect(stored.users[0]?.welcomeEmailId).toBeUndefined();
@@ -183,6 +184,11 @@ describe("auth/client", () => {
         update: { email: "updated-profile@example.com" },
         where: [{ field: "_id", operator: "eq", value: original.authId }],
       });
+      await adapter.update({
+        model: "user",
+        update: { image: null },
+        where: [{ field: "_id", operator: "eq", value: original.authId }],
+      });
     });
     const stored = await test.query(async (ctx) => ({
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
@@ -191,16 +197,16 @@ describe("auth/client", () => {
 
     expect(stored.user).toMatchObject({
       email: "updated-profile@example.com",
-      image: "https://example.com/avatar.png",
       name: "Updated name",
     });
+    expect(stored.user).not.toHaveProperty("image");
     expect(
       stored.jobs.filter(
         ({ name }) =>
           name ===
           getFunctionName(internal.customers.actions.internal.syncCustomer)
       )
-    ).toHaveLength(4);
+    ).toHaveLength(5);
   });
 
   it("ignores profile propagation after deletion preparation begins", async () => {
@@ -265,7 +271,7 @@ describe("auth/client", () => {
     ).resolves.toBeNull();
   });
 
-  it("preserves an explicit profile image during adapter-driven creation", async () => {
+  it("omits an absent profile image during adapter-driven creation", async () => {
     const test = createConvexTestWithBetterAuth();
 
     await test.mutation(async (ctx) => {
@@ -275,7 +281,6 @@ describe("auth/client", () => {
           createdAt: NOW,
           email: "image@example.com",
           emailVerified: true,
-          image: "https://example.com/created-avatar.png",
           name: "Image learner",
           updatedAt: NOW,
         },
@@ -283,11 +288,9 @@ describe("auth/client", () => {
       });
     });
 
-    await expect(
-      test.query((ctx) => ctx.db.query("users").unique())
-    ).resolves.toMatchObject({
-      image: "https://example.com/created-avatar.png",
-    });
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+    expect(user).not.toBeNull();
+    expect(user).not.toHaveProperty("image");
   });
 
   it("schedules both immediate and recovery cleanup after auth deletion", async () => {
