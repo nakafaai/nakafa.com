@@ -94,7 +94,7 @@ load_fingerprint() {
 }
 
 load_selection() {
-  local output="$RUNNER_TEMP/runtime-selection.env"
+  local output="$RUNNER_TEMP/runtime-state.env"
   rm -f -- "$output"
   pnpm --silent --dir "$backend_root" runtime:ci generations
 

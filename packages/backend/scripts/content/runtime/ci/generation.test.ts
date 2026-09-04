@@ -207,7 +207,7 @@ describe("content runtime generations", () => {
           Effect.flip
         )
       ).toMatchObject({ _tag: "ContentRuntimeCiError" });
-      const sparse: Record<string, unknown>[] = [];
+      const sparse: (typeof contentStateRow)[] = [];
       sparse.length = 1;
       expect(
         yield* buildRuntimeGenerations(sparse).pipe(Effect.flip)

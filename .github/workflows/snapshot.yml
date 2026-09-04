@@ -51,7 +51,7 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
-          output="$RUNNER_TEMP/runtime-selection.env"
+          output="$RUNNER_TEMP/runtime-state.env"
           rm -f -- "$output"
           pnpm --silent --dir packages/backend runtime:ci generations
 
@@ -133,7 +133,7 @@ jobs:
           rm -rf -- "$RUNNER_TEMP/runtime-cache"
           rm -f -- \
             "$RUNNER_TEMP/runtime-schema.env" \
-            "$RUNNER_TEMP/runtime-selection.env"
+            "$RUNNER_TEMP/runtime-state.env"
           find "$RUNNER_TEMP" -maxdepth 1 -type f \
             -name 'snapshot.*.gpg' -delete
 

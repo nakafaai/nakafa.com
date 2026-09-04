@@ -189,7 +189,7 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
-          output="$RUNNER_TEMP/runtime-selection.env"
+          output="$RUNNER_TEMP/runtime-state.env"
           rm -f -- "$output"
           pnpm --silent --dir packages/backend runtime:ci generations
 
@@ -492,7 +492,7 @@ jobs:
           rm -f -- \
             packages/backend/.env.local \
             "$RUNNER_TEMP/runtime-schema.env" \
-            "$RUNNER_TEMP/runtime-selection.env" \
+            "$RUNNER_TEMP/runtime-state.env" \
             "$RUNNER_TEMP/runtime-convex.log" \
             "$RUNNER_TEMP/runtime-convex.pid" \
             "$RUNNER_TEMP/runtime-www.log" \
