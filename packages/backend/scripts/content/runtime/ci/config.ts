@@ -64,7 +64,7 @@ const validateHex = (name: string, value: string) => {
 
 export const validateProductionDeployKey = (deployKey: string) => {
   const parts = deployKey.split("|");
-  const identity = parts[0] ?? "";
+  const identity = parts[0];
   const secret = parts[1] ?? "";
   const identitySegments = identity.split(":");
   const deploymentType = identitySegments[0];
