@@ -4,15 +4,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { AdmissionPending } from "@/components/auth/pending";
 import { Theme } from "@/components/marketing/shared/footer-action";
 import { OnboardingQuestionnaire } from "@/components/programs/onboarding/questionnaire";
 import {
-  EntryShell,
-  EntryShellArtwork,
   EntryShellBody,
   EntryShellHeader,
-  EntryShellPanel,
 } from "@/components/shared/entry-shell";
 import {
   getPostAuthDestination,
@@ -40,12 +36,19 @@ export async function generateMetadata({
 
 export default function Page(props: PageProps<"/[locale]/onboarding">) {
   return (
-    <Suspense fallback={<AdmissionPending />}>
-      <AuthenticatedOnboarding
-        params={props.params}
-        searchParams={props.searchParams}
-      />
-    </Suspense>
+    <>
+      <EntryShellHeader>
+        <div className="ms-auto">
+          <Theme variant="ghost" />
+        </div>
+      </EntryShellHeader>
+      <Suspense fallback={null}>
+        <AuthenticatedOnboarding
+          params={props.params}
+          searchParams={props.searchParams}
+        />
+      </Suspense>
+    </>
   );
 }
 
@@ -83,21 +86,11 @@ async function AuthenticatedOnboarding({
   }
 
   return (
-    <EntryShell>
-      <EntryShellPanel>
-        <EntryShellHeader>
-          <div className="ms-auto">
-            <Theme variant="ghost" />
-          </div>
-        </EntryShellHeader>
-        <EntryShellBody>
-          <OnboardingQuestionnaire
-            initialProfile={status.profile}
-            intent={intent}
-          />
-        </EntryShellBody>
-      </EntryShellPanel>
-      <EntryShellArtwork />
-    </EntryShell>
+    <EntryShellBody>
+      <OnboardingQuestionnaire
+        initialProfile={status.profile}
+        intent={intent}
+      />
+    </EntryShellBody>
   );
 }

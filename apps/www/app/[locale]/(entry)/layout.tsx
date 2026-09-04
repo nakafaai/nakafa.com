@@ -1,10 +1,14 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ConvexProvider } from "@/components/providers/convex";
+import {
+  EntryShell,
+  EntryShellArtwork,
+  EntryShellPanel,
+} from "@/components/shared/entry-shell";
 import { env } from "@/env";
-import { UserContextProvider } from "@/lib/context/use-user";
 
 /**
- * Mounts the minimal auth-capable runtime shared by auth and onboarding.
+ * Keeps one visual entry shell mounted while auth and onboarding content changes.
  *
  * Entry pages intentionally live outside the shared `(app)` subtree so account
  * changes fully tear down the authenticated Convex provider and onboarding
@@ -15,10 +19,15 @@ import { UserContextProvider } from "@/lib/context/use-user";
  */
 export default function Layout({ children }: LayoutProps<"/[locale]">) {
   return (
-    <NuqsAdapter>
-      <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
-        <UserContextProvider>{children}</UserContextProvider>
-      </ConvexProvider>
-    </NuqsAdapter>
+    <EntryShell>
+      <EntryShellPanel>
+        <NuqsAdapter>
+          <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
+            {children}
+          </ConvexProvider>
+        </NuqsAdapter>
+      </EntryShellPanel>
+      <EntryShellArtwork />
+    </EntryShell>
   );
 }

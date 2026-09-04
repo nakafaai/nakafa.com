@@ -1,13 +1,12 @@
 "use client";
 
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { Authenticated, Unauthenticated } from "convex/react";
 import { AuthGoogle } from "@/components/auth/google";
 import { AuthLogout } from "@/components/auth/logout";
 
 export function Auth() {
   return (
-    <>
+    <div className="flex min-h-9 items-center justify-center">
       <Unauthenticated>
         <AuthGoogle />
       </Unauthenticated>
@@ -15,10 +14,6 @@ export function Auth() {
       <Authenticated>
         <AuthLogout />
       </Authenticated>
-
-      <AuthLoading>
-        <Skeleton className="mx-auto h-9 w-1/2" />
-      </AuthLoading>
-    </>
+    </div>
   );
 }

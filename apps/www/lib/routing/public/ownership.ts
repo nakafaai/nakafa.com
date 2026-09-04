@@ -138,7 +138,7 @@ export function isApplicationRoutePath(
   }
 
   if (root === "auth") {
-    return ["", "continue", "error"].includes(segments.join("/"));
+    return ["", "error"].includes(segments.join("/"));
   }
 
   if (root === "chat") {

@@ -12,7 +12,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import {
-  getPostAuthContinuationHref,
+  getPostAuthOnboardingHref,
   getPostAuthProviderErrorHref,
 } from "@/lib/auth/admission";
 import { startGoogleSignIn } from "@/lib/auth/social";
@@ -26,7 +26,7 @@ export function BillingButton() {
   const locale = useLocale();
   const t = useTranslations("Pricing");
   const tAuth = useTranslations("Auth");
-  const callbackURL = getPostAuthContinuationHref("/pricing", locale);
+  const callbackURL = getPostAuthOnboardingHref("/pricing", locale);
   const errorCallbackURL = getPostAuthProviderErrorHref("/pricing", locale);
   const currentUser = useUser((state) => state.user);
   const billing = useBillingNavigation();

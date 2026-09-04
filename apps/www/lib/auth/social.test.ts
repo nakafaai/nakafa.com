@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { SocialSignInFailed, startGoogleSignIn } from "@/lib/auth/social";
 
 const input = {
-  callbackURL: "/id/auth/continue",
+  callbackURL: "/id/onboarding",
   errorCallbackURL: "/id/auth/error",
 };
 
