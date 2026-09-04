@@ -90,6 +90,21 @@ crons.interval(
   {}
 );
 
+/** Expires the one outgoing day from each finite popularity window. */
+crons.cron(
+  "expire learning popularity windows",
+  "15 0 * * 1-6",
+  internal.contents.mutations.popularity.scheduleLearningPopularityExpiries,
+  {}
+);
+
+/** Rebuilds every finite window weekly from audited daily signals. */
+crons.cron(
+  "repair learning popularity windows",
+  "15 0 * * 0",
+  internal.contents.mutations.popularity.scheduleLearningPopularityRefreshes,
+  {}
+);
 /**
  * Rebuilds finite popularity windows from audited daily signals.
  */

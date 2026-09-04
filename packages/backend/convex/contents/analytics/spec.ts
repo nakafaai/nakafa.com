@@ -56,8 +56,15 @@ export const scheduleLearningPopularityRefreshesResultValidator = v.object({
   scheduledWindows: v.number(),
 });
 
+export const scheduleLearningPopularityExpiriesResultValidator = v.object({
+  expiryWindows: v.number(),
+  repairWindows: v.number(),
+  skippedWindows: v.number(),
+});
+
 export const refreshLearningPopularityWindowPageArgs = {
   cursor: v.optional(v.string()),
+  day: v.number(),
   scopeMode: learningPopularityScopeValidator,
   windowKey: learningPopularityWindowValidator,
 };
@@ -73,6 +80,26 @@ export const refreshLearningPopularityWindowPageResultValidator = v.object({
   isDone: v.boolean(),
   refreshedCounters: v.number(),
   removedCounters: v.number(),
+  skipped: v.boolean(),
+});
+
+export const expireLearningPopularityWindowPageArgs = {
+  cursor: v.optional(v.string()),
+  day: v.number(),
+  scopeMode: learningPopularityScopeValidator,
+  windowKey: learningPopularityWindowValidator,
+};
+
+export const expireLearningPopularityWindowPageArgsValidator = v.object(
+  expireLearningPopularityWindowPageArgs
+);
+
+export const expireLearningPopularityWindowPageResultValidator = v.object({
+  continueCursor: v.string(),
+  expiredCounters: v.number(),
+  isDone: v.boolean(),
+  removedCounters: v.number(),
+  repairedCounters: v.number(),
   skipped: v.boolean(),
 });
 
@@ -100,12 +127,24 @@ export type ScheduleLearningPopularityRefreshesResult = Infer<
   typeof scheduleLearningPopularityRefreshesResultValidator
 >;
 
+export type ScheduleLearningPopularityExpiriesResult = Infer<
+  typeof scheduleLearningPopularityExpiriesResultValidator
+>;
+
 export type RefreshLearningPopularityWindowPageArgs = Infer<
   typeof refreshLearningPopularityWindowPageArgsValidator
 >;
 
 export type RefreshLearningPopularityWindowPageResult = Infer<
   typeof refreshLearningPopularityWindowPageResultValidator
+>;
+
+export type ExpireLearningPopularityWindowPageArgs = Infer<
+  typeof expireLearningPopularityWindowPageArgsValidator
+>;
+
+export type ExpireLearningPopularityWindowPageResult = Infer<
+  typeof expireLearningPopularityWindowPageResultValidator
 >;
 
 /** Raised when a requested analytics partition is outside the configured set. */

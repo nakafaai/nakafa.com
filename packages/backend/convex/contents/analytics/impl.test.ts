@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { processClaimedContentAnalyticsPartition } from "@repo/backend/convex/contents/analytics/drain";
 import {
   claimContentAnalyticsPartition,
-  processClaimedContentAnalyticsPartition,
   scheduleAllContentAnalyticsPartitions,
 } from "@repo/backend/convex/contents/analytics/impl";
 import { invalidContentAnalyticsPartitionCode } from "@repo/backend/convex/contents/analytics/spec";

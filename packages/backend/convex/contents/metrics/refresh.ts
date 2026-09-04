@@ -1,4 +1,3 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type {
   RefreshLearningPopularityWindowPageArgs,
@@ -7,42 +6,20 @@ import type {
 import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analytics/spec";
 import { LEARNING_POPULARITY_REFRESH_BATCH_SIZE } from "@repo/backend/convex/contents/constants";
 import {
+  advancePopularityCycle,
+  beginPopularityCycle,
+  completePopularityCycle,
+  getPopularityCyclePage,
+} from "@repo/backend/convex/contents/metrics/cycle";
+import { repairPopularityCounter } from "@repo/backend/convex/contents/metrics/repair";
+import {
   getFinitePopularityWindows,
   getPopularitySignalDay,
-  getPopularityWindowDayCount,
-  getPopularityWindowStartDay,
   isFinitePopularityWindow,
   learningPopularityScopeValues,
 } from "@repo/backend/convex/contents/popularity";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
-
-type PopularityCounter = Doc<"learningPopularityCounters">;
-type PopularitySignal = Doc<"learningPopularitySignals">;
-
-/** Rebuilt semantics; `updatedAt` advances only when one of these changes. */
-const refreshFields = [
-  "alignmentId",
-  "assetId",
-  "conceptId",
-  "contextMaterialKey",
-  "contextMode",
-  "contextNodeKey",
-  "contextParentPath",
-  "contextProgramKey",
-  "contextPublicPath",
-  "contextSourcePath",
-  "description",
-  "learningObjectId",
-  "lensId",
-  "materialDomain",
-  "route",
-  "score",
-  "sourcePath",
-  "title",
-] as const satisfies readonly (keyof PopularityCounter)[];
-
-type Refresh = Pick<PopularityCounter, (typeof refreshFields)[number]>;
 
 /** Generated internal mutation reference accepted by Convex refresh scheduling. */
 type RefreshLearningPopularityWindowPageReference = FunctionReference<
@@ -52,163 +29,35 @@ type RefreshLearningPopularityWindowPageReference = FunctionReference<
   RefreshLearningPopularityWindowPageResult
 >;
 
-/** Loads bounded daily signal rows for one counter and finite window. */
-const loadPopularitySignals = Effect.fn(
-  "contents.metrics.loadPopularitySignals"
-)(function* (
-  ctx: MutationCtx,
-  counter: PopularityCounter,
-  windowKey: Exclude<PopularityCounter["windowKey"], "lifetime">,
-  timestamp: number
-) {
-  const currentDay = getPopularitySignalDay(timestamp);
-  const startDay = getPopularityWindowStartDay(windowKey, timestamp);
-  const dayCount = getPopularityWindowDayCount(windowKey);
-
-  return yield* Effect.tryPromise({
-    try: () =>
-      ctx.db
-        .query("learningPopularitySignals")
-        .withIndex(
-          "by_scopeMode_and_content_id_and_contextKey_and_signalDay",
-          (q) =>
-            q
-              .eq("scopeMode", counter.scopeMode)
-              .eq("content_id", counter.content_id)
-              .eq("contextKey", counter.contextKey)
-              .gte("signalDay", startDay)
-              .lte("signalDay", currentDay)
-        )
-        .take(dayCount),
-    catch: toContentAnalyticsIoError,
-  });
-});
-
-/** Recomputes one finite-window counter from durable daily signal rows. */
-const recomputePopularityCounter = Effect.fn(
-  "contents.metrics.recomputePopularityCounter"
-)(function* (
-  ctx: MutationCtx,
-  counter: PopularityCounter,
-  windowKey: Exclude<PopularityCounter["windowKey"], "lifetime">,
-  timestamp: number
-) {
-  const signals = yield* loadPopularitySignals(
-    ctx,
-    counter,
-    windowKey,
-    timestamp
-  );
-  let latestSignal: PopularitySignal | null = null;
-  let score = 0;
-
-  for (const signal of signals) {
-    score += signal.viewCount;
-    latestSignal = signal;
-  }
-
-  return latestSignal === null
-    ? { kind: "empty" as const }
-    : { kind: "active" as const, latestSignal, score };
-});
-
-/** Projects the stored counter state produced by one authoritative rebuild. */
-function projectPopularityRefresh(
-  latestSignal: PopularitySignal,
-  score: number
-): Refresh {
-  return {
-    alignmentId: latestSignal.alignmentId,
-    assetId: latestSignal.assetId,
-    conceptId: latestSignal.conceptId,
-    contextMaterialKey: latestSignal.contextMaterialKey,
-    contextMode: latestSignal.contextMode,
-    contextNodeKey: latestSignal.contextNodeKey,
-    contextParentPath: latestSignal.contextParentPath,
-    contextProgramKey: latestSignal.contextProgramKey,
-    contextPublicPath: latestSignal.contextPublicPath,
-    contextSourcePath: latestSignal.contextSourcePath,
-    description: latestSignal.description,
-    learningObjectId: latestSignal.learningObjectId,
-    lensId: latestSignal.lensId,
-    materialDomain: latestSignal.materialDomain,
-    route: latestSignal.route,
-    score,
-    sourcePath: latestSignal.sourcePath,
-    title: latestSignal.title,
-  };
-}
-
-/** Applies a recomputed finite-window score to one popularity counter row. */
-const refreshPopularityCounter = Effect.fn(
-  "contents.metrics.refreshPopularityCounter"
-)(function* (
-  ctx: MutationCtx,
-  counter: PopularityCounter,
-  windowKey: Exclude<PopularityCounter["windowKey"], "lifetime">,
-  timestamp: number
-) {
-  const refresh = yield* recomputePopularityCounter(
-    ctx,
-    counter,
-    windowKey,
-    timestamp
-  );
-
-  if (refresh.kind === "empty" || refresh.score <= 0) {
-    yield* Effect.tryPromise({
-      try: () => ctx.db.delete(counter._id),
-      catch: toContentAnalyticsIoError,
-    });
-
-    return {
-      removed: true,
-      refreshed: false,
-    };
-  }
-
-  const update = projectPopularityRefresh(refresh.latestSignal, refresh.score);
-
-  const changed = refreshFields.some(
-    (field) => counter[field] !== update[field]
-  );
-
-  if (!changed) {
-    return {
-      removed: false,
-      refreshed: false,
-    };
-  }
-
-  yield* Effect.tryPromise({
-    try: () =>
-      ctx.db.patch(counter._id, {
-        ...update,
-        updatedAt: timestamp,
-      }),
-    catch: toContentAnalyticsIoError,
-  });
-
-  return {
-    removed: false,
-    refreshed: true,
-  };
-});
-
-/** Schedules bounded refresh work for every finite popularity window and scope. */
+/** Schedules bounded repair work for every finite popularity namespace. */
 export const scheduleLearningPopularityRefreshes = Effect.fn(
   "contents.metrics.scheduleLearningPopularityRefreshes"
 )(function* (
   ctx: MutationCtx,
   refreshWindowPage: RefreshLearningPopularityWindowPageReference
 ) {
+  const timestamp = yield* Clock.currentTimeMillis;
+  const day = getPopularitySignalDay(timestamp);
   let scheduledWindows = 0;
 
   for (const scopeMode of learningPopularityScopeValues) {
     for (const windowKey of getFinitePopularityWindows()) {
+      const cycle = yield* beginPopularityCycle(ctx, {
+        day,
+        forceRepair: true,
+        scopeMode,
+        windowKey,
+      });
+
+      if (cycle.mode === "skipped") {
+        continue;
+      }
+
       yield* Effect.tryPromise({
         try: () =>
           ctx.scheduler.runAfter(0, refreshWindowPage, {
+            ...(cycle.cursor === undefined ? {} : { cursor: cycle.cursor }),
+            day,
             scopeMode,
             windowKey,
           }),
@@ -224,7 +73,7 @@ export const scheduleLearningPopularityRefreshes = Effect.fn(
   };
 });
 
-/** Refreshes one bounded page of finite-window popularity counters. */
+/** Repairs one bounded page of finite-window popularity counters. */
 export const refreshLearningPopularityWindowPage = Effect.fn(
   "contents.metrics.refreshLearningPopularityWindowPage"
 )(function* (
@@ -243,6 +92,24 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
   }
 
   const timestamp = yield* Clock.currentTimeMillis;
+  const cycle = yield* getPopularityCyclePage(ctx, {
+    cursor: args.cursor,
+    day: args.day,
+    mode: "repair",
+    scopeMode: args.scopeMode,
+    windowKey: args.windowKey,
+  });
+
+  if (!cycle.current) {
+    return {
+      continueCursor: cycle.continueCursor,
+      isDone: true,
+      refreshedCounters: 0,
+      removedCounters: 0,
+      skipped: true,
+    };
+  }
+
   const page = yield* Effect.tryPromise({
     try: () =>
       ctx.db
@@ -263,10 +130,11 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
   let removedCounters = 0;
 
   for (const counter of page.page) {
-    const result = yield* refreshPopularityCounter(
+    const result = yield* repairPopularityCounter(
       ctx,
       counter,
       args.windowKey,
+      args.day,
       timestamp
     );
 
@@ -280,15 +148,21 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
   }
 
   if (!page.isDone) {
+    yield* advancePopularityCycle(ctx, cycle.cycleId, page.continueCursor);
     yield* Effect.tryPromise({
       try: () =>
         ctx.scheduler.runAfter(0, refreshWindowPage, {
           cursor: page.continueCursor,
+          day: args.day,
           scopeMode: args.scopeMode,
           windowKey: args.windowKey,
         }),
       catch: toContentAnalyticsIoError,
     });
+  }
+
+  if (page.isDone) {
+    yield* completePopularityCycle(ctx, cycle.cycleId, args.day);
   }
 
   return {

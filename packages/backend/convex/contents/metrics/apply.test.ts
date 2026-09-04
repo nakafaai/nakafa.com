@@ -31,8 +31,11 @@ function withContentId(graph: ReturnType<typeof testArticleGraph>) {
 async function insertQueueItem(
   ctx: MutationCtx,
   input: {
+    readonly contextMode?: "canonical" | "placement";
     readonly kind: "article" | "material";
+    readonly route?: string;
     readonly suffix: string;
+    readonly title?: string;
     readonly viewedAt?: number;
   }
 ) {
@@ -47,16 +50,17 @@ async function insertQueueItem(
   return await ctx.db.insert("learningEngagementQueue", {
     ...graph,
     ...canonicalContext,
+    contextMode: input.contextMode ?? canonicalContext.contextMode,
     description: material ? "Subject description" : "Article description",
     insertedAt: NOW,
     locale: "en",
     ...(material ? { materialDomain: "mathematics" as const } : {}),
     partition: 0,
-    route,
+    route: input.route ?? route,
     section: material ? "material" : "articles",
     scopeMode: "global",
     sourcePath: route,
-    title: material ? "Vector Addition" : "Dynastic Politics",
+    title: input.title ?? (material ? "Vector Addition" : "Dynastic Politics"),
     viewerKey: `device:${input.suffix}`,
     viewedAt: input.viewedAt ?? NOW,
   });
@@ -66,9 +70,12 @@ async function insertQueueItem(
 function applyQueue(target: TestConvex<typeof schema>) {
   return target.mutation(async (ctx) => {
     const queueItems = await ctx.db.query("learningEngagementQueue").collect();
-    return await runConvexProgram(
+    await runConvexProgram(
       applyContentAnalyticsBatch(ctx, { queueItems, updatedAt: NOW })
     );
+    for (const item of queueItems) {
+      await ctx.db.delete(item._id);
+    }
   });
 }
 
@@ -117,9 +124,51 @@ describe("contents/metrics/apply", () => {
       updatedAt: NOW,
     });
     expect(subjectSignal).toMatchObject({
+      applied: {
+        "1d": 2,
+        "7d": 2,
+        "14d": 2,
+        "30d": 2,
+        "90d": 2,
+        "180d": 2,
+        "365d": 2,
+      },
       signalDay: getPopularitySignalDay(NOW),
       updatedAt: NOW,
       viewCount: 2,
+    });
+
+    await target.mutation((ctx) =>
+      insertQueueItem(ctx, { kind: "material", suffix: "subject-3" })
+    );
+    await applyQueue(target);
+
+    const accumulated = await target.query(
+      async (ctx) =>
+        await ctx.db
+          .query("learningPopularitySignals")
+          .withIndex(
+            "by_scopeMode_and_signalDay_and_content_id_and_contextKey",
+            (q) =>
+              q
+                .eq("scopeMode", "global")
+                .eq("signalDay", NOW)
+                .eq("content_id", subjectSignal?.content_id ?? "missing")
+                .eq("contextKey", "canonical")
+          )
+          .unique()
+    );
+    expect(accumulated).toMatchObject({
+      applied: {
+        "1d": 3,
+        "7d": 3,
+        "14d": 3,
+        "30d": 3,
+        "90d": 3,
+        "180d": 3,
+        "365d": 3,
+      },
+      viewCount: 3,
     });
   });
 
@@ -151,8 +200,229 @@ describe("contents/metrics/apply", () => {
       )
     ).toMatchObject({ score: 1 });
     expect(state.signal).toMatchObject({
+      applied: {
+        "1d": 0,
+        "7d": 0,
+        "14d": 1,
+        "30d": 1,
+        "90d": 1,
+        "180d": 1,
+        "365d": 1,
+      },
       signalDay: getPopularitySignalDay(staleViewedAt),
       viewCount: 1,
     });
+  });
+
+  it("projects the newest payload from an out-of-order queue batch", async () => {
+    const target = convexTest(schema, convexModules);
+    await target.mutation(async (ctx) => {
+      await insertQueueItem(ctx, {
+        kind: "material",
+        route: "material/newest-vector",
+        suffix: "newest",
+        title: "Newest Vector Addition",
+      });
+      await insertQueueItem(ctx, {
+        contextMode: "placement",
+        kind: "material",
+        route: "material/older-vector",
+        suffix: "older",
+        title: "Older Vector Addition",
+        viewedAt: NOW - 3 * POPULARITY_DAY_MS,
+      });
+    });
+
+    await applyQueue(target);
+
+    const counters = await target.query(
+      async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
+    );
+    expect(
+      counters
+        .filter(
+          ({ windowKey }) => windowKey === "7d" || windowKey === "lifetime"
+        )
+        .map(({ contextMode, latestDay, route, score, title, windowKey }) => ({
+          contextMode,
+          latestDay,
+          route,
+          score,
+          title,
+          windowKey,
+        }))
+    ).toEqual([
+      {
+        contextMode: "canonical",
+        latestDay: NOW,
+        route: "material/newest-vector",
+        score: 2,
+        title: "Newest Vector Addition",
+        windowKey: "7d",
+      },
+      {
+        contextMode: "canonical",
+        latestDay: NOW,
+        route: "material/newest-vector",
+        score: 2,
+        title: "Newest Vector Addition",
+        windowKey: "lifetime",
+      },
+    ]);
+  });
+
+  it("preserves newer finite and lifetime payloads while accepting late events", async () => {
+    const target = convexTest(schema, convexModules);
+    const subject = withContentId(
+      testMaterialGraph("vector", "addition", "en", "mathematics")
+    );
+    const lateDay = NOW - 3 * POPULARITY_DAY_MS;
+
+    await target.mutation(async (ctx) => {
+      const base = {
+        ...subject,
+        contextKey: "canonical",
+        contextMode: "canonical" as const,
+        description: "Current subject description",
+        locale: "en" as const,
+        materialDomain: "mathematics" as const,
+        route: "material/current-vector",
+        scopeMode: "global" as const,
+        section: "material" as const,
+        sourcePath: SUBJECT_ROUTE,
+        title: "Newest Vector Addition",
+        updatedAt: NOW - POPULARITY_DAY_MS,
+      };
+      await ctx.db.insert("learningPopularitySignals", {
+        ...base,
+        applied: {
+          "1d": 5,
+          "7d": 5,
+          "14d": 5,
+          "30d": 5,
+          "90d": 5,
+          "180d": 5,
+          "365d": 5,
+        },
+        signalDay: NOW,
+        viewCount: 5,
+      });
+      await ctx.db.insert("learningPopularitySignals", {
+        ...base,
+        applied: {
+          "1d": 0,
+          "7d": 1,
+          "14d": 1,
+          "30d": 1,
+          "90d": 1,
+          "180d": 1,
+          "365d": 1,
+        },
+        route: "material/older-vector",
+        signalDay: lateDay,
+        title: "Older Vector Addition",
+        viewCount: 1,
+      });
+      for (const windowKey of ["7d", "lifetime"] as const) {
+        await ctx.db.insert("learningPopularityCounters", {
+          ...base,
+          latestDay: NOW,
+          score: 6,
+          windowKey,
+        });
+      }
+      await insertQueueItem(ctx, {
+        contextMode: "placement",
+        kind: "material",
+        route: "material/late-vector",
+        suffix: "late-rollout-1",
+        title: "Late Vector Addition",
+        viewedAt: lateDay,
+      });
+    });
+
+    await applyQueue(target);
+
+    const repaired = await target.query(
+      async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
+    );
+    expect(
+      repaired
+        .filter(
+          ({ windowKey }) => windowKey === "7d" || windowKey === "lifetime"
+        )
+        .map(({ contextMode, latestDay, route, score, title, windowKey }) => ({
+          contextMode,
+          latestDay,
+          route,
+          score,
+          title,
+          windowKey,
+        }))
+    ).toEqual([
+      {
+        contextMode: "canonical",
+        latestDay: NOW,
+        route: "material/current-vector",
+        score: 7,
+        title: "Newest Vector Addition",
+        windowKey: "7d",
+      },
+      {
+        contextMode: "canonical",
+        latestDay: NOW,
+        route: "material/current-vector",
+        score: 7,
+        title: "Newest Vector Addition",
+        windowKey: "lifetime",
+      },
+    ]);
+
+    await target.mutation((ctx) =>
+      insertQueueItem(ctx, {
+        contextMode: "placement",
+        kind: "material",
+        route: "material/later-processed-vector",
+        suffix: "late-rollout-2",
+        title: "Later Processed Vector Addition",
+        viewedAt: lateDay,
+      })
+    );
+    await applyQueue(target);
+
+    const stable = await target.query(
+      async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
+    );
+    expect(
+      stable
+        .filter(
+          ({ windowKey }) => windowKey === "7d" || windowKey === "lifetime"
+        )
+        .map(({ contextMode, latestDay, route, score, title, windowKey }) => ({
+          contextMode,
+          latestDay,
+          route,
+          score,
+          title,
+          windowKey,
+        }))
+    ).toEqual([
+      {
+        contextMode: "canonical",
+        latestDay: NOW,
+        route: "material/current-vector",
+        score: 8,
+        title: "Newest Vector Addition",
+        windowKey: "7d",
+      },
+      {
+        contextMode: "canonical",
+        latestDay: NOW,
+        route: "material/current-vector",
+        score: 8,
+        title: "Newest Vector Addition",
+        windowKey: "lifetime",
+      },
+    ]);
   });
 });

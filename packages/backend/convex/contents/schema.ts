@@ -168,12 +168,19 @@ const tables = {
       "signalDay",
     ]),
 
-  /**
-   * Daily verified popularity signals used for audited window rebuilds.
-   */
+  /** Daily verified popularity signals used for audited window rebuilds. */
   learningPopularitySignals: defineTable({
     ...learningGraphIdentityValidator.fields,
     ...learningContextStorageFields,
+    applied: v.object({
+      "1d": v.number(),
+      "7d": v.number(),
+      "14d": v.number(),
+      "30d": v.number(),
+      "90d": v.number(),
+      "180d": v.number(),
+      "365d": v.number(),
+    }),
     content_id: graphContentIdValidator,
     description: v.optional(v.string()),
     locale: localeValidator,
@@ -207,13 +214,25 @@ const tables = {
     ]),
 
   /**
-   * Ranked popularity read model for bounded homepage and route queries.
+   * Completion watermark for each finite popularity maintenance cycle.
+   * A missing or stale day makes the next daily run repair instead of expire.
    */
+  learningPopularityCycles: defineTable({
+    completedDay: v.optional(v.number()),
+    cursor: v.optional(v.string()),
+    mode: v.union(v.literal("expiry"), v.literal("repair")),
+    scopeMode: learningPopularityScopeValidator,
+    startedDay: v.number(),
+    windowKey: learningPopularityWindowValidator,
+  }).index("by_scopeMode_and_windowKey", ["scopeMode", "windowKey"]),
+
+  /** Ranked popularity read model for bounded homepage and route queries. */
   learningPopularityCounters: defineTable({
     ...learningGraphIdentityValidator.fields,
     ...learningContextStorageFields,
     content_id: graphContentIdValidator,
     description: v.optional(v.string()),
+    latestDay: v.number(),
     locale: localeValidator,
     materialDomain: v.optional(materialDomainValidator),
     route: v.string(),

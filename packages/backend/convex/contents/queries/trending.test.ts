@@ -50,6 +50,7 @@ async function insertMaterialCounter(
     ...canonicalContext,
     content_id: projection.graph.assetId,
     description: "Stale copied description",
+    latestDay: NOW,
     locale,
     materialDomain: "biology",
     route: projection.publicPath,
