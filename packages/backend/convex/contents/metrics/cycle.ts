@@ -2,8 +2,8 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analytics/spec";
 import {
+  type LearningPopularityFiniteWindow,
   type LearningPopularityScope,
-  type LearningPopularityWindow,
   POPULARITY_DAY_MS,
 } from "@repo/backend/convex/contents/popularity";
 import { Effect } from "effect";
@@ -13,7 +13,7 @@ export type PopularityCycleMode = "expiry" | "repair";
 interface CycleKey {
   readonly day: number;
   readonly scopeMode: LearningPopularityScope;
-  readonly windowKey: LearningPopularityWindow;
+  readonly windowKey: LearningPopularityFiniteWindow;
 }
 
 interface CyclePageKey extends CycleKey {
@@ -54,13 +54,14 @@ export const beginPopularityCycle = Effect.fn(
     return { mode: "skipped" as const };
   }
 
-  if (cycle?.startedDay === key.day) {
-    if (!(key.forceRepair && cycle.mode === "expiry")) {
-      return {
-        cursor: cycle.cursor,
-        mode: cycle.mode,
-      };
-    }
+  if (
+    cycle?.startedDay === key.day &&
+    !(key.forceRepair && cycle.mode === "expiry")
+  ) {
+    return {
+      cursor: cycle.cursor,
+      mode: cycle.mode,
+    };
   }
 
   const mode =

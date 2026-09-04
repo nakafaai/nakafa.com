@@ -18,7 +18,6 @@ import {
 import { isContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/metrics/apply";
 import { groupMetricsQueueItems } from "@repo/backend/convex/contents/metrics/batch";
-import { isPopularityResetting } from "@repo/backend/convex/contents/reset/state";
 import { logger } from "@repo/backend/convex/utils/logger";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
@@ -62,15 +61,6 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
       code: invalidContentAnalyticsPartitionCode,
       message: "Content analytics partition is out of range.",
     });
-  }
-
-  if (yield* isPopularityResetting(ctx.db)) {
-    return {
-      hasMore: false,
-      partition: args.partition,
-      processed: 0,
-      skipped: true,
-    };
   }
 
   const now = yield* Clock.currentTimeMillis;

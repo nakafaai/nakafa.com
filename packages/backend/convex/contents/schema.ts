@@ -4,6 +4,7 @@ import {
   learningGraphIdentityValidator,
 } from "@repo/backend/convex/contents/graph";
 import {
+  learningPopularityFiniteWindowValues,
   learningPopularityScopeValues,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
@@ -18,6 +19,9 @@ import { literals } from "convex-helpers/validators";
 
 const learningPopularityWindowValidator = literals(
   ...learningPopularityWindowValues
+);
+const learningPopularityFiniteWindowValidator = literals(
+  ...learningPopularityFiniteWindowValues
 );
 const learningPopularityScopeValidator = literals(
   ...learningPopularityScopeValues
@@ -153,33 +157,26 @@ const tables = {
     signalDay: v.number(),
     viewedAt: v.number(),
     viewerKey: v.string(),
-  })
-    .index("by_viewer_content_day_scope_context", [
-      "viewerKey",
-      "content_id",
-      "signalDay",
-      "scopeMode",
-      "contextKey",
-    ])
-    .index("by_section_and_locale_and_scopeMode_and_signalDay", [
-      "section",
-      "locale",
-      "scopeMode",
-      "signalDay",
-    ]),
+  }).index("by_viewer_content_day_scope_context", [
+    "viewerKey",
+    "content_id",
+    "signalDay",
+    "scopeMode",
+    "contextKey",
+  ]),
 
   /** Daily verified popularity signals used for audited window rebuilds. */
   learningPopularitySignals: defineTable({
     ...learningGraphIdentityValidator.fields,
     ...learningContextStorageFields,
     applied: v.object({
-      "1d": v.number(),
-      "7d": v.number(),
-      "14d": v.number(),
-      "30d": v.number(),
-      "90d": v.number(),
-      "180d": v.number(),
-      "365d": v.number(),
+      d1: v.number(),
+      d7: v.number(),
+      d14: v.number(),
+      d30: v.number(),
+      d90: v.number(),
+      d180: v.number(),
+      d365: v.number(),
     }),
     content_id: graphContentIdValidator,
     description: v.optional(v.string()),
@@ -205,12 +202,6 @@ const tables = {
       "content_id",
       "contextKey",
       "signalDay",
-    ])
-    .index("by_section_and_locale_and_scopeMode_and_signalDay", [
-      "section",
-      "locale",
-      "scopeMode",
-      "signalDay",
     ]),
 
   /**
@@ -223,7 +214,7 @@ const tables = {
     mode: v.union(v.literal("expiry"), v.literal("repair")),
     scopeMode: learningPopularityScopeValidator,
     startedDay: v.number(),
-    windowKey: learningPopularityWindowValidator,
+    windowKey: learningPopularityFiniteWindowValidator,
   }).index("by_scopeMode_and_windowKey", ["scopeMode", "windowKey"]),
 
   /** Ranked popularity read model for bounded homepage and route queries. */
@@ -243,21 +234,12 @@ const tables = {
     title: v.string(),
     updatedAt: v.number(),
     windowKey: learningPopularityWindowValidator,
-  })
-    .index("by_windowKey_and_scopeMode_and_content_id_and_contextKey", [
-      "windowKey",
-      "scopeMode",
-      "content_id",
-      "contextKey",
-    ])
-    .index("by_section_locale_scope_window_score_id", [
-      "section",
-      "locale",
-      "scopeMode",
-      "windowKey",
-      "score",
-      "content_id",
-    ]),
+  }).index("by_windowKey_and_scopeMode_and_content_id_and_contextKey", [
+    "windowKey",
+    "scopeMode",
+    "content_id",
+    "contextKey",
+  ]),
 };
 
 export default tables;

@@ -60,21 +60,18 @@ function identity(index: number) {
 /** Returns exact current-window provenance for one existing signal. */
 function applied() {
   return {
-    "1d": 1,
-    "7d": 1,
-    "14d": 1,
-    "30d": 1,
-    "90d": 1,
-    "180d": 1,
-    "365d": 1,
+    d1: 1,
+    d7: 1,
+    d14: 1,
+    d30: 1,
+    d90: 1,
+    d180: 1,
+    d365: 1,
   };
 }
 
 /** Seeds one existing identity and its queued update without firing triggers. */
-async function seedIdentity(
-  ctx: MutationCtx,
-  index: number
-) {
+async function seedIdentity(ctx: MutationCtx, index: number) {
   const graph = identity(index);
   const previous = {
     ...graph,
@@ -206,123 +203,121 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("drains 64 dense identities through bounded production pages", async () => {
-      const target = createTarget();
-      await seedDrain(target);
-      const pages: Awaited<ReturnType<typeof runDrainPage>>[] = [];
+    const target = createTarget();
+    await seedDrain(target);
+    const pages: Awaited<ReturnType<typeof runDrainPage>>[] = [];
 
-      while (true) {
-        const page = await runDrainPage(target);
-        pages.push(page);
-        if (!page.result.hasMore) {
-          break;
-        }
-        if (pages.length >= IDENTITY_COUNT) {
-          throw new Error("Expected the bounded drain to converge.");
-        }
+    while (true) {
+      const page = await runDrainPage(target);
+      pages.push(page);
+      if (!page.result.hasMore) {
+        break;
       }
-
-      expect(pages.length).toBeGreaterThan(1);
-      expect(
-        pages.reduce((total, page) => total + page.result.processed, 0)
-      ).toBe(IDENTITY_COUNT + CONTENT_ANALYTICS_GROUP_SIZE - 1);
-      for (const { metrics, result } of pages) {
-        expect(result).toMatchObject({ partition: 0, skipped: false });
-        for (const key of METRIC_KEYS) {
-          expect(metrics[key].remaining).toBeGreaterThanOrEqual(
-            CONTENT_ANALYTICS_FINALIZATION_RESERVE[key]
-          );
-        }
+      if (pages.length >= IDENTITY_COUNT) {
+        throw new Error("Expected the bounded drain to converge.");
       }
+    }
 
-      const scheduled = await target.query(
-        async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
-      );
-      expect(scheduled).toHaveLength(pages.length - 1);
-      expect(scheduled.map((job) => job.args[0])).toEqual(
-        Array.from({ length: pages.length - 1 }, () => ({
-          leaseVersion: 1,
-          partition: 0,
-        }))
-      );
-
-      await target.finishAllScheduledFunctions(vi.runAllTimers);
-
-      const state = await readDrainState(target);
-      expect(state.queue).toEqual([]);
-      expect(state.partition).toMatchObject({
-        lastProcessedAt: NOW,
-        leaseExpiresAt: 0,
-        leaseVersion: 1,
-      });
-      expect(state.signals).toHaveLength(IDENTITY_COUNT);
-      expect(
-        state.signals.filter(
-          (signal) =>
-            signal.viewCount === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
-            signal.applied["1d"] === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
-            signal.applied["365d"] === CONTENT_ANALYTICS_GROUP_SIZE + 1
-        )
-      ).toHaveLength(1);
-      expect(
-        state.signals.filter(
-          (signal) =>
-            signal.viewCount === 2 &&
-            signal.applied["1d"] === 2 &&
-            signal.applied["365d"] === 2
-        )
-      ).toHaveLength(IDENTITY_COUNT - 1);
-      expect(
-        state.signals.every((signal) =>
-          signal.title.startsWith("Current title ")
-        )
-      ).toBe(true);
-      expect(state.counters).toHaveLength(
-        IDENTITY_COUNT * learningPopularityWindowValues.length
-      );
-      expect(
-        state.counters.filter(
-          (counter) =>
-            counter.score === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
-            counter.latestDay === SIGNAL_DAY
-        )
-      ).toHaveLength(learningPopularityWindowValues.length);
-      expect(
-        state.counters.filter(
-          (counter) => counter.score === 2 && counter.latestDay === SIGNAL_DAY
-        )
-      ).toHaveLength(
-        (IDENTITY_COUNT - 1) * learningPopularityWindowValues.length
-      );
-      expect(
-        state.counters.every((counter) =>
-          counter.title.startsWith("Current title ")
-        )
-      ).toBe(true);
-      expect(
-        state.rankings.every(
-          (ranking) =>
-            ranking.length === IDENTITY_COUNT &&
-            ranking.filter(
-              ([score]) => score === -(CONTENT_ANALYTICS_GROUP_SIZE + 1)
-            ).length === 1 &&
-            ranking.filter(([score]) => score === -2).length ===
-              IDENTITY_COUNT - 1
-        )
-      ).toBe(true);
-
-      const minimumRemaining = Object.fromEntries(
-        METRIC_KEYS.map((key) => [
-          key,
-          Math.min(...pages.map((page) => page.metrics[key].remaining)),
-        ])
-      );
+    expect(pages.length).toBeGreaterThan(1);
+    expect(
+      pages.reduce((total, page) => total + page.result.processed, 0)
+    ).toBe(IDENTITY_COUNT + CONTENT_ANALYTICS_GROUP_SIZE - 1);
+    for (const { metrics, result } of pages) {
+      expect(result).toMatchObject({ partition: 0, skipped: false });
       for (const key of METRIC_KEYS) {
-        expect(minimumRemaining[key]).toBeGreaterThanOrEqual(
-          CONTENT_ANALYTICS_FINALIZATION_RESERVE[key]
-        );
-        expect(CONTENT_ANALYTICS_HEADROOM[key]).toBeGreaterThan(
+        expect(metrics[key].remaining).toBeGreaterThanOrEqual(
           CONTENT_ANALYTICS_FINALIZATION_RESERVE[key]
         );
       }
-    }, 15_000);
+    }
+
+    const scheduled = await target.query(
+      async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(scheduled).toHaveLength(pages.length - 1);
+    expect(scheduled.map((job) => job.args[0])).toEqual(
+      Array.from({ length: pages.length - 1 }, () => ({
+        leaseVersion: 1,
+        partition: 0,
+      }))
+    );
+
+    await target.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const state = await readDrainState(target);
+    expect(state.queue).toEqual([]);
+    expect(state.partition).toMatchObject({
+      lastProcessedAt: NOW,
+      leaseExpiresAt: 0,
+      leaseVersion: 1,
+    });
+    expect(state.signals).toHaveLength(IDENTITY_COUNT);
+    expect(
+      state.signals.filter(
+        (signal) =>
+          signal.viewCount === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
+          signal.applied.d1 === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
+          signal.applied.d365 === CONTENT_ANALYTICS_GROUP_SIZE + 1
+      )
+    ).toHaveLength(1);
+    expect(
+      state.signals.filter(
+        (signal) =>
+          signal.viewCount === 2 &&
+          signal.applied.d1 === 2 &&
+          signal.applied.d365 === 2
+      )
+    ).toHaveLength(IDENTITY_COUNT - 1);
+    expect(
+      state.signals.every((signal) => signal.title.startsWith("Current title "))
+    ).toBe(true);
+    expect(state.counters).toHaveLength(
+      IDENTITY_COUNT * learningPopularityWindowValues.length
+    );
+    expect(
+      state.counters.filter(
+        (counter) =>
+          counter.score === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
+          counter.latestDay === SIGNAL_DAY
+      )
+    ).toHaveLength(learningPopularityWindowValues.length);
+    expect(
+      state.counters.filter(
+        (counter) => counter.score === 2 && counter.latestDay === SIGNAL_DAY
+      )
+    ).toHaveLength(
+      (IDENTITY_COUNT - 1) * learningPopularityWindowValues.length
+    );
+    expect(
+      state.counters.every((counter) =>
+        counter.title.startsWith("Current title ")
+      )
+    ).toBe(true);
+    expect(
+      state.rankings.every(
+        (ranking) =>
+          ranking.length === IDENTITY_COUNT &&
+          ranking.filter(
+            ([score]) => score === -(CONTENT_ANALYTICS_GROUP_SIZE + 1)
+          ).length === 1 &&
+          ranking.filter(([score]) => score === -2).length ===
+            IDENTITY_COUNT - 1
+      )
+    ).toBe(true);
+
+    const minimumRemaining = Object.fromEntries(
+      METRIC_KEYS.map((key) => [
+        key,
+        Math.min(...pages.map((page) => page.metrics[key].remaining)),
+      ])
+    );
+    for (const key of METRIC_KEYS) {
+      expect(minimumRemaining[key]).toBeGreaterThanOrEqual(
+        CONTENT_ANALYTICS_FINALIZATION_RESERVE[key]
+      );
+      expect(CONTENT_ANALYTICS_HEADROOM[key]).toBeGreaterThan(
+        CONTENT_ANALYTICS_FINALIZATION_RESERVE[key]
+      );
+    }
+  }, 15_000);
 });

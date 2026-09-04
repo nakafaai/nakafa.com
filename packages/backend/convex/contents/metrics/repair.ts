@@ -5,13 +5,12 @@ import {
   getPopularitySignalDay,
   getPopularityWindowDayCount,
   getPopularityWindowStartDay,
-  type LearningPopularityWindow,
+  type LearningPopularityFiniteWindow,
 } from "@repo/backend/convex/contents/popularity";
 import { Effect } from "effect";
 
 type PopularityCounter = Doc<"learningPopularityCounters">;
 type PopularitySignal = Doc<"learningPopularitySignals">;
-type FinitePopularityWindow = Exclude<LearningPopularityWindow, "lifetime">;
 
 /** Rebuilt semantics; `updatedAt` advances only when one of these changes. */
 const refreshFields = [
@@ -44,7 +43,7 @@ const loadPopularitySignals = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   counter: PopularityCounter,
-  windowKey: FinitePopularityWindow,
+  windowKey: LearningPopularityFiniteWindow,
   timestamp: number
 ) {
   const currentDay = getPopularitySignalDay(timestamp);
@@ -76,7 +75,7 @@ const recomputePopularityCounter = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   counter: PopularityCounter,
-  windowKey: FinitePopularityWindow,
+  windowKey: LearningPopularityFiniteWindow,
   timestamp: number
 ) {
   const signals = yield* loadPopularitySignals(
@@ -139,7 +138,7 @@ export const repairPopularityCounter = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   counter: PopularityCounter,
-  windowKey: FinitePopularityWindow,
+  windowKey: LearningPopularityFiniteWindow,
   day: number,
   updatedAt: number
 ) {

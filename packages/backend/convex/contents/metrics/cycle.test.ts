@@ -110,7 +110,7 @@ describe("contents/metrics/cycle", () => {
     });
   });
 
-  it("rejects invalid windows and pages superseded by a newer cycle", async () => {
+  it("rejects pages superseded by a newer cycle", async () => {
     const target = createTarget();
     const completion = await target.mutation(async (ctx) => {
       const cycleId = await ctx.db.insert("learningPopularityCycles", {
@@ -134,28 +134,9 @@ describe("contents/metrics/cycle", () => {
       );
     });
 
-    const invalid = await target.mutation(
-      internal.contents.mutations.popularity.expireLearningPopularityWindowPage,
-      { day: DAY, scopeMode: "global", windowKey: "lifetime" }
-    );
     const superseded = await target.mutation(
       internal.contents.mutations.popularity.expireLearningPopularityWindowPage,
       { day: DAY, scopeMode: "global", windowKey: "7d" }
-    );
-    const invalidRepair = await target.mutation(
-      internal.contents.mutations.popularity
-        .refreshLearningPopularityWindowPage,
-      {
-        cursor: "invalid",
-        day: DAY,
-        scopeMode: "global",
-        windowKey: "lifetime",
-      }
-    );
-    const invalidRepairFromStart = await target.mutation(
-      internal.contents.mutations.popularity
-        .refreshLearningPopularityWindowPage,
-      { day: DAY, scopeMode: "global", windowKey: "lifetime" }
     );
     const supersededRepair = await target.mutation(
       internal.contents.mutations.popularity
@@ -164,16 +145,7 @@ describe("contents/metrics/cycle", () => {
     );
 
     expect(completion).toMatchObject({ current: false });
-    expect(invalid).toMatchObject({ skipped: true });
     expect(superseded).toMatchObject({ skipped: true });
-    expect(invalidRepair).toMatchObject({
-      continueCursor: "invalid",
-      skipped: true,
-    });
-    expect(invalidRepairFromStart).toMatchObject({
-      continueCursor: "",
-      skipped: true,
-    });
     expect(supersededRepair).toMatchObject({
       continueCursor: "",
       skipped: true,

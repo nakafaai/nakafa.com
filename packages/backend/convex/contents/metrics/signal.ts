@@ -4,16 +4,35 @@ import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analyti
 import type { PopularitySignalDelta } from "@repo/backend/convex/contents/metrics/batch";
 import {
   isPopularitySignalInWindow,
+  type LearningPopularityFiniteWindow,
 } from "@repo/backend/convex/contents/popularity";
 import { Effect } from "effect";
 
 type PopularitySignal = Doc<"learningPopularitySignals">;
 type Applied = PopularitySignal["applied"];
 
+const appliedField = {
+  "1d": "d1",
+  "7d": "d7",
+  "14d": "d14",
+  "30d": "d30",
+  "90d": "d90",
+  "180d": "d180",
+  "365d": "d365",
+} as const satisfies Record<LearningPopularityFiniteWindow, keyof Applied>;
+
+/** Reads the contribution actually applied to one finite counter window. */
+export function getAppliedCount(
+  applied: Applied,
+  windowKey: LearningPopularityFiniteWindow
+) {
+  return applied[appliedField[windowKey]];
+}
+
 /** Returns the batch count actually added to one finite-window counter. */
 function getAppliedDelta(
   delta: PopularitySignalDelta & { readonly updatedAt: number },
-  windowKey: keyof Applied
+  windowKey: LearningPopularityFiniteWindow
 ) {
   return isPopularitySignalInWindow({
     signalDay: delta.signalDay,
@@ -29,13 +48,13 @@ function createApplied(
   delta: PopularitySignalDelta & { readonly updatedAt: number }
 ): Applied {
   return {
-    "1d": getAppliedDelta(delta, "1d"),
-    "7d": getAppliedDelta(delta, "7d"),
-    "14d": getAppliedDelta(delta, "14d"),
-    "30d": getAppliedDelta(delta, "30d"),
-    "90d": getAppliedDelta(delta, "90d"),
-    "180d": getAppliedDelta(delta, "180d"),
-    "365d": getAppliedDelta(delta, "365d"),
+    d1: getAppliedDelta(delta, "1d"),
+    d7: getAppliedDelta(delta, "7d"),
+    d14: getAppliedDelta(delta, "14d"),
+    d30: getAppliedDelta(delta, "30d"),
+    d90: getAppliedDelta(delta, "90d"),
+    d180: getAppliedDelta(delta, "180d"),
+    d365: getAppliedDelta(delta, "365d"),
   };
 }
 
@@ -45,13 +64,13 @@ function mergeApplied(
   delta: PopularitySignalDelta & { readonly updatedAt: number }
 ): Applied {
   return {
-    "1d": current.applied["1d"] + getAppliedDelta(delta, "1d"),
-    "7d": current.applied["7d"] + getAppliedDelta(delta, "7d"),
-    "14d": current.applied["14d"] + getAppliedDelta(delta, "14d"),
-    "30d": current.applied["30d"] + getAppliedDelta(delta, "30d"),
-    "90d": current.applied["90d"] + getAppliedDelta(delta, "90d"),
-    "180d": current.applied["180d"] + getAppliedDelta(delta, "180d"),
-    "365d": current.applied["365d"] + getAppliedDelta(delta, "365d"),
+    d1: current.applied.d1 + getAppliedDelta(delta, "1d"),
+    d7: current.applied.d7 + getAppliedDelta(delta, "7d"),
+    d14: current.applied.d14 + getAppliedDelta(delta, "14d"),
+    d30: current.applied.d30 + getAppliedDelta(delta, "30d"),
+    d90: current.applied.d90 + getAppliedDelta(delta, "90d"),
+    d180: current.applied.d180 + getAppliedDelta(delta, "180d"),
+    d365: current.applied.d365 + getAppliedDelta(delta, "365d"),
   };
 }
 

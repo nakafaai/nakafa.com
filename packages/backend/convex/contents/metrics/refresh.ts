@@ -15,7 +15,6 @@ import { repairPopularityCounter } from "@repo/backend/convex/contents/metrics/r
 import {
   getFinitePopularityWindows,
   getPopularitySignalDay,
-  isFinitePopularityWindow,
   learningPopularityScopeValues,
 } from "@repo/backend/convex/contents/popularity";
 import type { FunctionReference } from "convex/server";
@@ -81,16 +80,6 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
   args: RefreshLearningPopularityWindowPageArgs,
   refreshWindowPage: RefreshLearningPopularityWindowPageReference
 ) {
-  if (!isFinitePopularityWindow(args.windowKey)) {
-    return {
-      continueCursor: args.cursor ?? "",
-      isDone: true,
-      refreshedCounters: 0,
-      removedCounters: 0,
-      skipped: true,
-    };
-  }
-
   const timestamp = yield* Clock.currentTimeMillis;
   const cycle = yield* getPopularityCyclePage(ctx, {
     cursor: args.cursor,

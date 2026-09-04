@@ -6,7 +6,7 @@ import {
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
-const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
+const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
@@ -62,12 +62,10 @@ crons.interval(
   {}
 );
 
-/**
- * Backstops content analytics scheduling in case a per-view trigger is missed.
- */
+/** Recovers queued views whose immediate partition schedule was missed. */
 crons.interval(
   "schedule content analytics partitions",
-  { minutes: CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES },
+  { hours: CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS },
   internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
   {}
 );
@@ -81,7 +79,8 @@ crons.interval(
 );
 
 /**
- * Applies component retention and releases terminal app-owned email handles.
+ * Applies the Resend component's bounded finalized and abandoned email
+ * retention windows instead of retaining delivery records indefinitely.
  */
 crons.interval(
   "sweep retained email delivery data",
@@ -102,15 +101,6 @@ crons.cron(
 crons.cron(
   "repair learning popularity windows",
   "15 0 * * 0",
-  internal.contents.mutations.popularity.scheduleLearningPopularityRefreshes,
-  {}
-);
-/**
- * Rebuilds finite popularity windows from audited daily signals.
- */
-crons.cron(
-  "refresh learning popularity windows",
-  "15 0 * * *",
   internal.contents.mutations.popularity.scheduleLearningPopularityRefreshes,
   {}
 );

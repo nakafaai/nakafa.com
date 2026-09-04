@@ -283,6 +283,8 @@ import type * as contentRelease_verify_delete from "../contentRelease/verify/del
 import type * as contentRelease_verify_item from "../contentRelease/verify/item.js";
 import type * as contentRelease_verify_upsert from "../contentRelease/verify/upsert.js";
 import type * as contentRelease_wire from "../contentRelease/wire.js";
+import type * as contents_analytics_budget from "../contents/analytics/budget.js";
+import type * as contents_analytics_drain from "../contents/analytics/drain.js";
 import type * as contents_analytics_impl from "../contents/analytics/impl.js";
 import type * as contents_analytics_spec from "../contents/analytics/spec.js";
 import type * as contents_constants from "../contents/constants.js";
@@ -303,7 +305,12 @@ import type * as contents_helpers_search_terms from "../contents/helpers/search/
 import type * as contents_helpers_search_tryout from "../contents/helpers/search/tryout.js";
 import type * as contents_metrics_apply from "../contents/metrics/apply.js";
 import type * as contents_metrics_batch from "../contents/metrics/batch.js";
+import type * as contents_metrics_counter from "../contents/metrics/counter.js";
+import type * as contents_metrics_cycle from "../contents/metrics/cycle.js";
+import type * as contents_metrics_expiry from "../contents/metrics/expiry.js";
 import type * as contents_metrics_refresh from "../contents/metrics/refresh.js";
+import type * as contents_metrics_repair from "../contents/metrics/repair.js";
+import type * as contents_metrics_signal from "../contents/metrics/signal.js";
 import type * as contents_mutations_analytics from "../contents/mutations/analytics.js";
 import type * as contents_mutations_popularity from "../contents/mutations/popularity.js";
 import type * as contents_mutations_views from "../contents/mutations/views.js";
@@ -814,6 +821,8 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/verify/item": typeof contentRelease_verify_item;
   "contentRelease/verify/upsert": typeof contentRelease_verify_upsert;
   "contentRelease/wire": typeof contentRelease_wire;
+  "contents/analytics/budget": typeof contents_analytics_budget;
+  "contents/analytics/drain": typeof contents_analytics_drain;
   "contents/analytics/impl": typeof contents_analytics_impl;
   "contents/analytics/spec": typeof contents_analytics_spec;
   "contents/constants": typeof contents_constants;
@@ -834,7 +843,12 @@ declare const fullApi: ApiFromModules<{
   "contents/helpers/search/tryout": typeof contents_helpers_search_tryout;
   "contents/metrics/apply": typeof contents_metrics_apply;
   "contents/metrics/batch": typeof contents_metrics_batch;
+  "contents/metrics/counter": typeof contents_metrics_counter;
+  "contents/metrics/cycle": typeof contents_metrics_cycle;
+  "contents/metrics/expiry": typeof contents_metrics_expiry;
   "contents/metrics/refresh": typeof contents_metrics_refresh;
+  "contents/metrics/repair": typeof contents_metrics_repair;
+  "contents/metrics/signal": typeof contents_metrics_signal;
   "contents/mutations/analytics": typeof contents_mutations_analytics;
   "contents/mutations/popularity": typeof contents_mutations_popularity;
   "contents/mutations/views": typeof contents_mutations_views;

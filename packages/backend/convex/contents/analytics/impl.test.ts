@@ -2,10 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { processClaimedContentAnalyticsPartition } from "@repo/backend/convex/contents/analytics/drain";
-import {
-  claimContentAnalyticsPartition,
-  scheduleAllContentAnalyticsPartitions,
-} from "@repo/backend/convex/contents/analytics/impl";
+import { scheduleAllContentAnalyticsPartitions } from "@repo/backend/convex/contents/analytics/impl";
 import { invalidContentAnalyticsPartitionCode } from "@repo/backend/convex/contents/analytics/spec";
 import {
   CONTENT_ANALYTICS_BATCH_SIZE,
@@ -67,26 +64,33 @@ async function enqueueViews(ctx: MutationCtx, count: number, partition = 0) {
 
 /** Runs the production schedule-all implementation in one test transaction. */
 function scheduleAll(target: TestConvex<typeof schema>) {
-  return target.mutation((ctx) =>
-    runConvexProgram(
+  return target.mutation(
+    internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
+    {}
+  );
+}
+
+/** Captures the idle recovery scan cost from the production implementation. */
+function measureScheduleAll(target: TestConvex<typeof schema>) {
+  return target.mutation(async (ctx) => {
+    const result = await runConvexProgram(
       scheduleAllContentAnalyticsPartitions(
         ctx,
         internal.contents.mutations.analytics.scheduleContentAnalyticsPartition
       )
-    )
-  );
+    );
+    return {
+      metrics: await ctx.meta.getTransactionMetrics(),
+      result,
+    };
+  });
 }
 
 /** Runs the production lease claim implementation in one test transaction. */
 function claim(target: TestConvex<typeof schema>, partition = 0) {
-  return target.mutation((ctx) =>
-    runConvexProgram(
-      claimContentAnalyticsPartition(
-        ctx,
-        { partition },
-        internal.contents.mutations.analytics.processContentAnalyticsPartition
-      )
-    )
+  return target.mutation(
+    internal.contents.mutations.analytics.scheduleContentAnalyticsPartition,
+    { partition }
   );
 }
 
@@ -123,10 +127,13 @@ describe("contents/analytics/impl", () => {
 
   it("schedules only partitions that have queued views", async () => {
     const empty = convexTest(schema, convexModules);
+    const idle = await measureScheduleAll(empty);
 
-    await expect(scheduleAll(empty)).resolves.toEqual({
+    expect(idle.result).toEqual({
       enqueuedPartitions: 0,
     });
+    expect(idle.metrics.databaseQueries.used).toBe(1);
+    expect(idle.metrics.documentsRead.used).toBe(0);
     await expect(
       empty.query((ctx) =>
         ctx.db.system.query("_scheduled_functions").collect()

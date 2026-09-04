@@ -26,18 +26,8 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 export const scheduleLearningPopularityExpiries = internalMutation({
   args: {},
   returns: scheduleLearningPopularityExpiriesResultValidator,
-  handler: async (ctx): Promise<ScheduleLearningPopularityExpiriesResult> => {
-    const resetting = await runConvexProgram(isPopularityResetting(ctx.db));
-
-    if (resetting) {
-      return {
-        expiryWindows: 0,
-        repairWindows: 0,
-        skippedWindows: 0,
-      };
-    }
-
-    return await runConvexProgram(
+  handler: async (ctx): Promise<ScheduleLearningPopularityExpiriesResult> =>
+    await runConvexProgram(
       scheduleLearningPopularityExpiriesProgram(
         ctx,
         internal.contents.mutations.popularity
@@ -45,8 +35,7 @@ export const scheduleLearningPopularityExpiries = internalMutation({
         internal.contents.mutations.popularity
           .refreshLearningPopularityWindowPage
       )
-    );
-  },
+    ),
 });
 
 /** Schedules finite popularity-window read-model refresh work. */
@@ -88,27 +77,13 @@ export const expireLearningPopularityWindowPage = internalMutation({
   handler: async (
     ctx,
     args
-  ): Promise<ExpireLearningPopularityWindowPageResult> => {
-    const resetting = await runConvexProgram(isPopularityResetting(ctx.db));
-
-    if (resetting) {
-      return {
-        continueCursor: args.cursor ?? "",
-        expiredCounters: 0,
-        isDone: true,
-        removedCounters: 0,
-        repairedCounters: 0,
-        skipped: true,
-      };
-    }
-
-    return await runConvexProgram(
+  ): Promise<ExpireLearningPopularityWindowPageResult> =>
+    await runConvexProgram(
       expireLearningPopularityWindowPageProgram(
         ctx,
         args,
         internal.contents.mutations.popularity
           .expireLearningPopularityWindowPage
       )
-    );
-  },
+    ),
 });

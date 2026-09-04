@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { getAppliedCount } from "@repo/backend/convex/contents/metrics/signal";
 import {
   getFinitePopularityWindows,
   getPopularitySignalDay,
   getPopularityWindowDayCount,
+  type LearningPopularityFiniteWindow,
   POPULARITY_DAY_MS,
 } from "@repo/backend/convex/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
@@ -29,13 +30,13 @@ function appliedAt(offset: number, viewCount: number) {
     return offset === days ? 1 : 0;
   };
   return {
-    "1d": count(1),
-    "7d": count(7),
-    "14d": count(14),
-    "30d": count(30),
-    "90d": count(90),
-    "180d": count(180),
-    "365d": count(365),
+    d1: count(1),
+    d7: count(7),
+    d14: count(14),
+    d30: count(30),
+    d90: count(90),
+    d180: count(180),
+    d365: count(365),
   };
 }
 
@@ -192,7 +193,7 @@ async function runRefresh(
   target: ReturnType<typeof createPopularityConvexTest>,
   input: {
     readonly day?: number;
-    readonly windowKey?: Doc<"learningPopularityCounters">["windowKey"];
+    readonly windowKey?: LearningPopularityFiniteWindow;
   } = {}
 ) {
   return await target.mutation(async (ctx) => {
@@ -215,7 +216,7 @@ async function runRefresh(
 async function runExpiry(
   target: ReturnType<typeof createPopularityConvexTest>,
   day: number,
-  windowKey: Doc<"learningPopularityCounters">["windowKey"]
+  windowKey: LearningPopularityFiniteWindow
 ) {
   return await target.mutation(async (ctx) => {
     const result = await ctx.runMutation(
@@ -258,7 +259,7 @@ async function insertBoundedHistory(
     const viewCount = boundaries.has(offset) ? 2 : 1;
     const applied = appliedAt(offset, viewCount);
     for (const windowKey of getFinitePopularityWindows()) {
-      scores[windowKey] += applied[windowKey];
+      scores[windowKey] += getAppliedCount(applied, windowKey);
     }
     await ctx.db.insert("learningPopularitySignals", {
       ...subject,
@@ -353,6 +354,7 @@ describe("contents/mutations/popularity", () => {
 
   it("schedules every finite window for both popularity scopes", async () => {
     const t = createPopularityConvexTest();
+    const day = getPopularitySignalDay(NOW);
 
     const result = await t.mutation(
       internal.contents.mutations.popularity
@@ -366,10 +368,10 @@ describe("contents/mutations/popularity", () => {
     expect(result).toEqual({ scheduledWindows: 14 });
     expect(jobs.map((job) => job.args)).toEqual(
       expect.arrayContaining([
-        [{ scopeMode: "global", windowKey: "1d" }],
-        [{ scopeMode: "global", windowKey: "365d" }],
-        [{ scopeMode: "placement", windowKey: "1d" }],
-        [{ scopeMode: "placement", windowKey: "365d" }],
+        [{ day, scopeMode: "global", windowKey: "1d" }],
+        [{ day, scopeMode: "global", windowKey: "365d" }],
+        [{ day, scopeMode: "placement", windowKey: "1d" }],
+        [{ day, scopeMode: "placement", windowKey: "365d" }],
       ])
     );
     expect(jobs).toHaveLength(14);

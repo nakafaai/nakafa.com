@@ -1,6 +1,6 @@
 import {
+  learningPopularityFiniteWindowValues,
   learningPopularityScopeValues,
-  learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
@@ -12,7 +12,7 @@ export const invalidContentAnalyticsPartitionCode =
 export const contentAnalyticsIoFailedCode = "CONTENT_ANALYTICS_IO_FAILED";
 
 const learningPopularityWindowValidator = literals(
-  ...learningPopularityWindowValues
+  ...learningPopularityFiniteWindowValues
 );
 const learningPopularityScopeValidator = literals(
   ...learningPopularityScopeValues

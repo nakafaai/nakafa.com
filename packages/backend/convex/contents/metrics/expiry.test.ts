@@ -68,13 +68,13 @@ async function insertSignal(
   await ctx.db.insert("learningPopularitySignals", {
     ...graph(),
     applied: {
-      "1d": 0,
-      "7d": input.applied,
-      "14d": input.applied,
-      "30d": input.applied,
-      "90d": input.applied,
-      "180d": input.applied,
-      "365d": input.applied,
+      d1: 0,
+      d7: input.applied,
+      d14: input.applied,
+      d30: input.applied,
+      d90: input.applied,
+      d180: input.applied,
+      d365: input.applied,
     },
     contextKey: input.contextKey,
     contextMode: "canonical",
@@ -151,7 +151,6 @@ describe("contents/metrics/expiry", () => {
         title: "Repaired title",
         viewCount: 4,
       });
-
     });
 
     const result = await target.mutation(

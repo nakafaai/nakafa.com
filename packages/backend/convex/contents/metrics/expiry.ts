@@ -15,11 +15,12 @@ import {
   getPopularityCyclePage,
 } from "@repo/backend/convex/contents/metrics/cycle";
 import { repairPopularityCounter } from "@repo/backend/convex/contents/metrics/repair";
+import { getAppliedCount } from "@repo/backend/convex/contents/metrics/signal";
 import {
   getFinitePopularityWindows,
   getPopularitySignalDay,
   getPopularityWindowStartDay,
-  isFinitePopularityWindow,
+  type LearningPopularityFiniteWindow,
   learningPopularityScopeValues,
   POPULARITY_DAY_MS,
 } from "@repo/backend/convex/contents/popularity";
@@ -47,7 +48,7 @@ const loadExpiringSignal = Effect.fn("contents.metrics.loadExpiringSignal")(
   function* (
     ctx: MutationCtx,
     counter: PopularityCounter,
-    windowKey: Exclude<PopularityCounter["windowKey"], "lifetime">,
+    windowKey: LearningPopularityFiniteWindow,
     day: number
   ) {
     const signalDay =
@@ -78,12 +79,12 @@ const expirePopularityCounter = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   counter: PopularityCounter,
-  windowKey: Exclude<PopularityCounter["windowKey"], "lifetime">,
+  windowKey: LearningPopularityFiniteWindow,
   day: number,
   updatedAt: number
 ) {
   const signal = yield* loadExpiringSignal(ctx, counter, windowKey, day);
-  const expiredCount = signal?.applied[windowKey] ?? 0;
+  const expiredCount = signal ? getAppliedCount(signal.applied, windowKey) : 0;
   const score = counter.score - expiredCount;
 
   if (expiredCount < 0 || score < 0) {
@@ -196,17 +197,6 @@ export const expireLearningPopularityWindowPage = Effect.fn(
   args: ExpireLearningPopularityWindowPageArgs,
   expirePage: ExpirePageReference
 ) {
-  if (!isFinitePopularityWindow(args.windowKey)) {
-    return {
-      continueCursor: args.cursor ?? "",
-      expiredCounters: 0,
-      isDone: true,
-      removedCounters: 0,
-      repairedCounters: 0,
-      skipped: true,
-    };
-  }
-
   const cycle = yield* getPopularityCyclePage(ctx, {
     cursor: args.cursor,
     day: args.day,
