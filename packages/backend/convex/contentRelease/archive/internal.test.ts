@@ -1,162 +1,47 @@
 // @vitest-environment node
 
-import { createHash } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE,
+  CONTENT_RUNTIME_ARCHIVE_LEASE_MS,
   MAX_CONTENT_RUNTIME_ARCHIVE_BYTES,
 } from "@repo/backend/content/archive";
 import {
-  CONTENT_RUNTIME_ARCHIVE_ABORT_PATH,
   CONTENT_RUNTIME_ARCHIVE_CLAIM_PATH,
-  CONTENT_RUNTIME_ARCHIVE_FINALIZE_PATH,
+  CONTENT_RUNTIME_ARCHIVE_RELEASE_PATH,
+  CONTENT_RUNTIME_ARCHIVE_UPLOAD_PATH,
 } from "@repo/backend/content/endpoint";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { storeArchiveFixture } from "@repo/backend/test/archive";
+import {
+  claim,
+  claimId,
+  clearEnvironment,
+  finalize,
+  hash,
+  identity,
+  insert,
+  read,
+  setEnvironment,
+  storeArchiveFixture as store,
+  write,
+} from "@repo/backend/test/archive";
 
-const ARCHIVE_TOKEN = "technical-archive-token";
-const archiveTokenName = "CONTENT_ARCHIVE_TOKEN";
-const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
-const polarName = "POLAR_WEBHOOK_SECRET";
-type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
-
-function identity(index: number) {
-  return {
-    runtimeSelectionHash: index.toString(16).padStart(64, "0"),
-    runtimeSchemaFingerprint: "f".repeat(64),
-  };
-}
-
-function sourceStateHash(index: number) {
-  return (index + 1000).toString(16).padStart(64, "0");
-}
-
-function claimId(index: number) {
-  return `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
-}
-
-function sha256(value: string) {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-function write(target: RuntimeTest, path: string, body: unknown) {
-  return target.fetch(path, {
-    body: JSON.stringify(body),
-    headers: {
-      "content-type": "application/json",
-      "x-nakafa-archive-token": ARCHIVE_TOKEN,
-    },
-    method: "POST",
-  });
-}
-
-function claim(target: RuntimeTest, index: number) {
-  return write(target, CONTENT_RUNTIME_ARCHIVE_CLAIM_PATH, {
-    ...identity(index),
-    claimId: claimId(index),
-  });
-}
-
-function store(target: RuntimeTest, value: string, contentType: string) {
-  return storeArchiveFixture(target, value, contentType);
-}
-
-function finalize(
-  target: RuntimeTest,
-  index: number,
-  storageId: string,
-  value: string,
-  overrides: Record<string, unknown> = {}
-) {
-  return write(target, CONTENT_RUNTIME_ARCHIVE_FINALIZE_PATH, {
-    ...identity(index),
-    archiveSha256: sha256(value),
-    byteLength: Buffer.byteLength(value),
-    claimId: claimId(index),
-    sourceStateHash: sourceStateHash(index),
-    storageId,
-    ...overrides,
-  });
-}
-
-function abort(target: RuntimeTest, index: number, storageId: string) {
-  return write(target, CONTENT_RUNTIME_ARCHIVE_ABORT_PATH, {
-    ...identity(index),
-    claimId: claimId(index),
-    storageId,
-  });
-}
-
-function insertCanonical(
-  target: RuntimeTest,
-  index: number,
-  storageId: Id<"_storage">,
-  value: string,
-  overrides: {
-    readonly archiveSha256?: string;
-    readonly byteLength?: number;
-  } = {}
-) {
-  return target.run((ctx) =>
-    ctx.db.insert("contentRuntimeArchives", {
-      ...identity(index),
-      archiveSha256: overrides.archiveSha256 ?? sha256(value),
-      byteLength: overrides.byteLength ?? Buffer.byteLength(value),
-      createdAt: Date.now(),
-      sourceStateHash: sourceStateHash(index),
-      storageId,
-    })
-  );
-}
-
-function readCanonical(target: RuntimeTest, index: number) {
-  return target.run((ctx) =>
-    ctx.db
-      .query("contentRuntimeArchives")
-      .withIndex(
-        "by_runtimeSelectionHash_and_runtimeSchemaFingerprint",
-        (query) =>
-          query
-            .eq("runtimeSelectionHash", identity(index).runtimeSelectionHash)
-            .eq(
-              "runtimeSchemaFingerprint",
-              identity(index).runtimeSchemaFingerprint
-            )
-      )
-      .unique()
-  );
-}
-
-beforeEach(() => {
-  process.env[archiveTokenName] = ARCHIVE_TOKEN;
-  process.env[runtimeTokenName] = "technical-runtime-token";
-  process.env[polarName] = "technical-webhook-secret";
-});
+beforeEach(setEnvironment);
 
 afterEach(() => {
-  delete process.env[archiveTokenName];
-  delete process.env[runtimeTokenName];
-  delete process.env[polarName];
+  vi.useRealTimers();
+  clearEnvironment();
 });
 
-describe("content runtime archive mutation boundary", () => {
+describe("content runtime archive internals", () => {
   it("converges duplicates but rejects any digest or length identity conflict", async () => {
     const target = createConvexTestWithBetterAuth();
     const value = "canonical-runtime-archive";
-    const canonicalId = await store(
-      target,
-      value,
-      CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
-    );
+    const canonicalId = await store(target, value);
     await claim(target, 1);
     await finalize(target, 1, canonicalId, value);
 
-    const duplicateId = await store(
-      target,
-      value,
-      CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
-    );
+    const duplicateId = await store(target, value);
     const duplicate = await finalize(target, 1, duplicateId, value);
     const digestConflict = await finalize(target, 1, canonicalId, value, {
       archiveSha256: "a".repeat(64),
@@ -195,9 +80,9 @@ describe("content runtime archive mutation boundary", () => {
         value,
         testCase.contentType ?? CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
       );
-      const archiveSha256 = testCase.archiveSha256 ?? sha256(value);
+      const archiveSha256 = testCase.archiveSha256 ?? hash(value);
       const byteLength = testCase.byteLength ?? Buffer.byteLength(value);
-      await insertCanonical(target, index, storageId, value, {
+      await insert(target, index, storageId, value, {
         archiveSha256,
         byteLength,
       });
@@ -220,7 +105,7 @@ describe("content runtime archive mutation boundary", () => {
       });
 
       expect(response.status).toBe(testCase.name === "sha256" ? 400 : 409);
-      await expect(readCanonical(target, index)).resolves.toBeNull();
+      await expect(read(target, index)).resolves.toBeNull();
       const stored = await target.run((ctx) =>
         ctx.db.system.get("_storage", storageId)
       );
@@ -236,26 +121,18 @@ describe("content runtime archive mutation boundary", () => {
     const target = createConvexTestWithBetterAuth();
     const index = 50;
     const staleValue = "stale-runtime-archive";
-    const staleId = await store(
-      target,
-      staleValue,
-      CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
-    );
+    const staleId = await store(target, staleValue);
     const replacementValue = "replacement-runtime-archive";
-    const replacementId = await store(
-      target,
-      replacementValue,
-      CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
-    );
+    const replacementId = await store(target, replacementValue);
     await claim(target, index);
-    await insertCanonical(target, index, staleId, staleValue, {
+    await insert(target, index, staleId, staleValue, {
       archiveSha256: "d".repeat(64),
     });
 
     await expect(
       (await finalize(target, index, replacementId, replacementValue)).json()
     ).resolves.toMatchObject({ kind: "stored" });
-    await expect(readCanonical(target, index)).resolves.toMatchObject({
+    await expect(read(target, index)).resolves.toMatchObject({
       storageId: replacementId,
     });
     await expect(
@@ -266,36 +143,16 @@ describe("content runtime archive mutation boundary", () => {
   it("normalizes storage IDs and rejects archive metadata above the hard bound", async () => {
     const target = createConvexTestWithBetterAuth();
     const value = "bounded-runtime-archive";
-    const storageId = await store(
-      target,
-      value,
-      CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
-    );
+    const storageId = await store(target, value);
     await claim(target, 2);
 
     const malformed = await finalize(target, 2, "not-a-storage-id", value);
     const oversized = await finalize(target, 2, storageId, value, {
       byteLength: MAX_CONTENT_RUNTIME_ARCHIVE_BYTES + 1,
     });
-    const malformedAbort = await write(
-      target,
-      CONTENT_RUNTIME_ARCHIVE_ABORT_PATH,
-      {
-        ...identity(2),
-        claimId: claimId(2),
-        storageId: "not-a-storage-id",
-      }
-    );
-    const cleanup = await write(target, CONTENT_RUNTIME_ARCHIVE_ABORT_PATH, {
-      ...identity(2),
-      claimId: claimId(2),
-      storageId,
-    });
 
     expect(malformed.status).toBe(400);
     expect(oversized.status).toBe(400);
-    expect(malformedAbort.status).toBe(400);
-    await expect(cleanup.json()).resolves.toEqual({ kind: "deferred" });
     await expect(
       target.run((ctx) => ctx.db.system.get("_storage", storageId))
     ).resolves.not.toBeNull();
@@ -343,11 +200,7 @@ describe("content runtime archive mutation boundary", () => {
     }
 
     const unclaimedValue = "unclaimed-runtime-archive";
-    const unclaimedId = await store(
-      target,
-      unclaimedValue,
-      CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
-    );
+    const unclaimedId = await store(target, unclaimedValue);
     const unclaimed = await finalize(target, 20, unclaimedId, unclaimedValue);
     expect(unclaimed.status).toBe(409);
     await expect(
@@ -355,150 +208,82 @@ describe("content runtime archive mutation boundary", () => {
     ).resolves.not.toBeNull();
   });
 
-  it("never deletes foreign or another identity's canonical storage", async () => {
+  it("serializes concurrent claims and recovers expired leases", async () => {
     const target = createConvexTestWithBetterAuth();
-    const foreignValue = "foreign-storage";
-    const foreignId = await store(
-      target,
-      foreignValue,
-      "application/octet-stream"
+    const archiveIdentity = identity(1);
+    const firstId = claimId(1);
+    const secondId = claimId(2);
+    const requestClaim = (id: string) =>
+      write(target, CONTENT_RUNTIME_ARCHIVE_CLAIM_PATH, {
+        ...archiveIdentity,
+        claimId: id,
+      });
+    const responses = await Promise.all([
+      requestClaim(firstId),
+      requestClaim(secondId),
+    ]);
+    const results = await Promise.all(
+      responses.map((response) => response.json())
     );
-    const canonicalValue = "other-identity-canonical";
-    const canonicalId = await store(
-      target,
-      canonicalValue,
-      CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
+    const ownerIndex = results.findIndex(
+      (result) => (result as { kind?: string }).kind === "claimed"
     );
-    await claim(target, 60);
-    await finalize(target, 60, canonicalId, canonicalValue);
+    const ownerId = ownerIndex === 0 ? firstId : secondId;
+    const blockedId = ownerIndex === 0 ? secondId : firstId;
 
-    let index = 61;
-    for (const candidate of [
-      { storageId: foreignId, value: foreignValue },
-      { storageId: canonicalId, value: canonicalValue },
-    ]) {
-      for (const operation of ["finalize", "abort"] as const) {
-        for (const claimState of ["missing", "expired"] as const) {
-          if (claimState === "expired") {
-            await target.run((ctx) =>
-              ctx.db.insert("contentRuntimeArchiveClaims", {
-                ...identity(index),
-                claimId: claimId(index),
-                expiresAt: Date.now() - 1,
-              })
-            );
-          }
-          const response =
-            operation === "finalize"
-              ? await finalize(
-                  target,
-                  index,
-                  candidate.storageId,
-                  candidate.value
-                )
-              : await abort(target, index, candidate.storageId);
-          expect(response.status).toBe(operation === "finalize" ? 409 : 200);
-          index += 1;
-        }
-      }
-    }
-
-    await claim(target, index);
+    expect(responses.every((response) => response.status === 200)).toBe(true);
     expect(
-      (await finalize(target, index, canonicalId, canonicalValue)).status
-    ).toBe(409);
-    await expect(readCanonical(target, index)).resolves.toBeNull();
-    await expect(readCanonical(target, 60)).resolves.not.toBeNull();
+      results.map((result) => (result as { kind: string }).kind).sort()
+    ).toEqual(["busy", "claimed"]);
     await expect(
-      target.run((ctx) => ctx.db.system.get("_storage", foreignId))
-    ).resolves.not.toBeNull();
+      write(target, CONTENT_RUNTIME_ARCHIVE_UPLOAD_PATH, {
+        ...archiveIdentity,
+        claimId: blockedId,
+      })
+    ).resolves.toMatchObject({ status: 409 });
     await expect(
-      target.run((ctx) => ctx.db.system.get("_storage", canonicalId))
-    ).resolves.not.toBeNull();
-  });
+      write(target, CONTENT_RUNTIME_ARCHIVE_UPLOAD_PATH, {
+        ...archiveIdentity,
+        claimId: ownerId,
+      })
+    ).resolves.toMatchObject({ status: 200 });
+    const released = await write(target, CONTENT_RUNTIME_ARCHIVE_RELEASE_PATH, {
+      ...archiveIdentity,
+      claimId: ownerId,
+    });
+    expect(await released.json()).toEqual({ released: true });
 
-  it("repairs corrupt canonical rows during abort without false convergence", async () => {
-    const target = createConvexTestWithBetterAuth();
-    const cases = [
-      { deleted: true, kind: "deferred", name: "missing" },
-      {
-        contentType: "application/octet-stream",
-        kind: "deferred",
-        name: "content-type",
-      },
-      { archiveSha256: "c".repeat(64), kind: "deleted", name: "sha256" },
-      { byteLength: 1, kind: "deferred", name: "size" },
-    ];
-
-    for (const [offset, testCase] of cases.entries()) {
-      const index = offset + 80;
-      const value = `abort-corrupt-${testCase.name}`;
-      const storageId = await store(
-        target,
-        value,
-        testCase.contentType ?? CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
-      );
-      await insertCanonical(target, index, storageId, value, testCase);
-      if (testCase.deleted) {
-        await target.run((ctx) => ctx.storage.delete(storageId));
+    await requestClaim(firstId);
+    await target.run(async (ctx) => {
+      const lease = await ctx.db.query("contentRuntimeArchiveClaims").unique();
+      if (lease) {
+        await ctx.db.patch(lease._id, { expiresAt: Date.now() - 1 });
       }
-      const abortStorageId =
-        testCase.name === "size"
-          ? await store(
-              target,
-              "unproven-abort-candidate",
-              CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
-            )
-          : storageId;
-
-      await expect(
-        (await abort(target, index, abortStorageId)).json()
-      ).resolves.toEqual({ kind: testCase.kind });
-      await expect(readCanonical(target, index)).resolves.toBeNull();
-      const stored = await target.run((ctx) =>
-        ctx.db.system.get("_storage", storageId)
-      );
-      if (testCase.contentType) {
-        expect(stored).not.toBeNull();
-      } else {
-        expect(stored).toBeNull();
-      }
-      if (abortStorageId !== storageId) {
-        await expect(
-          target.run((ctx) => ctx.db.system.get("_storage", abortStorageId))
-        ).resolves.not.toBeNull();
-      }
-    }
-  });
-
-  it("defers uncertain duplicates and preserves canonical storage", async () => {
-    const target = createConvexTestWithBetterAuth();
-    const value = "uncertain-finalization-runtime-archive";
-    const storageId = await store(
+    });
+    await expect(
+      requestClaim(secondId).then((response) => response.json())
+    ).resolves.toMatchObject({ kind: "claimed" });
+    const claimedAt = Date.now();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(claimedAt);
+    await expect(
+      write(target, CONTENT_RUNTIME_ARCHIVE_UPLOAD_PATH, {
+        ...archiveIdentity,
+        claimId: secondId,
+      })
+    ).resolves.toMatchObject({ status: 200 });
+    vi.setSystemTime(claimedAt + CONTENT_RUNTIME_ARCHIVE_LEASE_MS + 1000);
+    await expect(
+      write(target, CONTENT_RUNTIME_ARCHIVE_UPLOAD_PATH, {
+        ...archiveIdentity,
+        claimId: secondId,
+      })
+    ).resolves.toMatchObject({ status: 409 });
+    const staleRelease = await write(
       target,
-      value,
-      CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
+      CONTENT_RUNTIME_ARCHIVE_RELEASE_PATH,
+      { ...archiveIdentity, claimId: firstId }
     );
-    await claim(target, 30);
-    await finalize(target, 30, storageId, value);
-    const duplicateId = await store(
-      target,
-      value,
-      CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
-    );
-
-    await expect(
-      (await abort(target, 30, duplicateId)).json()
-    ).resolves.toEqual({ kind: "deferred" });
-    await expect(
-      target.run((ctx) => ctx.db.system.get("_storage", duplicateId))
-    ).resolves.not.toBeNull();
-
-    const aborted = await abort(target, 30, storageId);
-
-    await expect(aborted.json()).resolves.toMatchObject({ kind: "canonical" });
-    await expect(
-      target.run((ctx) => ctx.db.system.get("_storage", storageId))
-    ).resolves.not.toBeNull();
+    expect(await staleRelease.json()).toEqual({ released: false });
   });
 });

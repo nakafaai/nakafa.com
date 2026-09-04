@@ -52,39 +52,32 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 describe("content runtime archive producer", () => {
-  it.live("reuses the selection archive after source state drift", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
-          directory: "/tmp",
-          prefix: "runtime-producer-existing-",
-        });
-        const fetcher = vi
-          .fn<typeof fetch>()
-          .mockResolvedValue(jsonResponse({ kind: "existing", metadata }));
-        const exporter = vi.fn(exportSignedRuntime);
+  it.effect("reuses the selection archive after source state drift", () =>
+    Effect.gen(function* () {
+      const fetcher = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(jsonResponse({ kind: "existing", metadata }));
+      const exporter = vi.fn(exportSignedRuntime);
 
-        expect(
-          yield* produceRuntimeArchive(
-            config(runnerTemp, "9".repeat(64)),
-            fetcher,
-            exporter
-          )
-        ).toEqual({ kind: "unchanged", metadata });
-        expect(exporter).not.toHaveBeenCalled();
-        expect(fetcher).toHaveBeenCalledTimes(1);
-        expect(
-          JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body))
-        ).toMatchObject({
-          runtimeSchemaFingerprint: metadata.runtimeSchemaFingerprint,
-          runtimeSelectionHash: metadata.runtimeSelectionHash,
-        });
-        expect(String(fetcher.mock.calls[0]?.[1]?.body)).not.toContain(
-          "contentStateHash"
-        );
-      }).pipe(Effect.provide(NodeServices.layer))
-    )
+      expect(
+        yield* produceRuntimeArchive(
+          config("/tmp", "9".repeat(64)),
+          fetcher,
+          exporter
+        )
+      ).toEqual({ kind: "unchanged", metadata });
+      expect(exporter).not.toHaveBeenCalled();
+      expect(fetcher).toHaveBeenCalledTimes(1);
+      expect(
+        JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body))
+      ).toMatchObject({
+        runtimeSchemaFingerprint: metadata.runtimeSchemaFingerprint,
+        runtimeSelectionHash: metadata.runtimeSelectionHash,
+      });
+      expect(String(fetcher.mock.calls[0]?.[1]?.body)).not.toContain(
+        "contentStateHash"
+      );
+    }).pipe(Effect.provide(NodeServices.layer))
   );
 
   it.effect("interrupts export before the producer lease can expire", () =>
@@ -125,35 +118,26 @@ describe("content runtime archive producer", () => {
     })
   );
 
-  it.live("does not export while another producer owns the lease", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
-          directory: "/tmp",
-          prefix: "runtime-producer-busy-",
-        });
-        const fetcher = vi
-          .fn<typeof fetch>()
-          .mockResolvedValue(
-            jsonResponse({ expiresAt: Date.now() + 60_000, kind: "busy" })
-          );
-        const exporter = vi.fn(exportSignedRuntime);
+  it.effect("does not export while another producer owns the lease", () =>
+    Effect.gen(function* () {
+      const fetcher = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          jsonResponse({ expiresAt: Date.now() + 60_000, kind: "busy" })
+        );
+      const exporter = vi.fn(exportSignedRuntime);
 
-        expect(
-          yield* produceRuntimeArchive(
-            config(runnerTemp),
-            fetcher,
-            exporter
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          message:
-            "Immutable signed runtime archive is being produced by another run.",
-        });
-        expect(exporter).not.toHaveBeenCalled();
-        expect(fetcher).toHaveBeenCalledTimes(1);
-      }).pipe(Effect.provide(NodeServices.layer))
-    )
+      expect(
+        yield* produceRuntimeArchive(config("/tmp"), fetcher, exporter).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({
+        message:
+          "Immutable signed runtime archive is being produced by another run.",
+      });
+      expect(exporter).not.toHaveBeenCalled();
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    }).pipe(Effect.provide(NodeServices.layer))
   );
 
   it.live(
@@ -208,82 +192,32 @@ describe("content runtime archive producer", () => {
       )
   );
 
-  it.live("releases its claim without masking an export failure", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
-          directory: "/tmp",
-          prefix: "runtime-producer-failure-",
-        });
-        const fetcher = vi
-          .fn<typeof fetch>()
-          .mockResolvedValueOnce(
-            jsonResponse({ expiresAt: Date.now() + 60_000, kind: "claimed" })
-          )
-          .mockResolvedValueOnce(jsonResponse({ code: "internal" }, 500));
-        const exporter = vi.fn<typeof exportSignedRuntime>(() =>
-          Effect.fail(contentRuntimeCiError("export failed"))
-        );
+  it.effect("releases its claim without masking an export failure", () =>
+    Effect.gen(function* () {
+      const fetcher = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          jsonResponse({ expiresAt: Date.now() + 60_000, kind: "claimed" })
+        )
+        .mockResolvedValueOnce(jsonResponse({ code: "internal" }, 500));
+      const exporter = vi.fn<typeof exportSignedRuntime>(() =>
+        Effect.fail(contentRuntimeCiError("export failed"))
+      );
 
-        expect(
-          yield* produceRuntimeArchive(
-            config(runnerTemp),
-            fetcher,
-            exporter
-          ).pipe(Effect.flip)
-        ).toMatchObject({ message: "export failed" });
-        expect(fetcher).toHaveBeenCalledTimes(2);
-        expect(String(fetcher.mock.calls[1]?.[0])).toContain(
-          "/archive/release"
-        );
-      }).pipe(Effect.provide(NodeServices.layer))
-    )
+      expect(
+        yield* produceRuntimeArchive(config("/tmp"), fetcher, exporter).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({ message: "export failed" });
+      expect(fetcher).toHaveBeenCalledTimes(2);
+      expect(String(fetcher.mock.calls[1]?.[0])).toContain("/archive/release");
+    }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.live(
+  it.effect(
     "does not upload when another run stores the archive during export",
     () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fileSystem = yield* FileSystem.FileSystem;
-          const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
-            directory: "/tmp",
-            prefix: "runtime-producer-converged-",
-          });
-          const exporter = vi.fn<typeof exportSignedRuntime>(() =>
-            Effect.void.pipe(Effect.as(undefined))
-          );
-          const fetcher = vi
-            .fn<typeof fetch>()
-            .mockResolvedValueOnce(
-              jsonResponse({ expiresAt: Date.now() + 60_000, kind: "claimed" })
-            )
-            .mockResolvedValueOnce(jsonResponse({ kind: "existing", metadata }))
-            .mockResolvedValueOnce(jsonResponse({ released: false }));
-
-          expect(
-            yield* produceRuntimeArchive(config(runnerTemp), fetcher, exporter)
-          ).toEqual({ kind: "unchanged", metadata });
-          expect(exporter).toHaveBeenCalledTimes(1);
-          expect(fetcher).toHaveBeenCalledTimes(3);
-          expect(fetcher.mock.calls.map((call) => String(call[0]))).toEqual([
-            expect.stringContaining("/archive/claim"),
-            expect.stringContaining("/archive/claim"),
-            expect.stringContaining("/archive/release"),
-          ]);
-        }).pipe(Effect.provide(NodeServices.layer))
-      )
-  );
-
-  it.live("stops before upload when its lease changes during export", () =>
-    Effect.scoped(
       Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
-          directory: "/tmp",
-          prefix: "runtime-producer-lease-change-",
-        });
         const exporter = vi.fn<typeof exportSignedRuntime>(() =>
           Effect.void.pipe(Effect.as(undefined))
         );
@@ -292,21 +226,12 @@ describe("content runtime archive producer", () => {
           .mockResolvedValueOnce(
             jsonResponse({ expiresAt: Date.now() + 60_000, kind: "claimed" })
           )
-          .mockResolvedValueOnce(
-            jsonResponse({ expiresAt: Date.now() + 60_000, kind: "busy" })
-          )
+          .mockResolvedValueOnce(jsonResponse({ kind: "existing", metadata }))
           .mockResolvedValueOnce(jsonResponse({ released: false }));
 
         expect(
-          yield* produceRuntimeArchive(
-            config(runnerTemp),
-            fetcher,
-            exporter
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          message:
-            "Immutable signed runtime archive lease changed during export.",
-        });
+          yield* produceRuntimeArchive(config("/tmp"), fetcher, exporter)
+        ).toEqual({ kind: "unchanged", metadata });
         expect(exporter).toHaveBeenCalledTimes(1);
         expect(fetcher).toHaveBeenCalledTimes(3);
         expect(fetcher.mock.calls.map((call) => String(call[0]))).toEqual([
@@ -315,6 +240,38 @@ describe("content runtime archive producer", () => {
           expect.stringContaining("/archive/release"),
         ]);
       }).pipe(Effect.provide(NodeServices.layer))
-    )
+  );
+
+  it.effect("stops before upload when its lease changes during export", () =>
+    Effect.gen(function* () {
+      const exporter = vi.fn<typeof exportSignedRuntime>(() =>
+        Effect.void.pipe(Effect.as(undefined))
+      );
+      const fetcher = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          jsonResponse({ expiresAt: Date.now() + 60_000, kind: "claimed" })
+        )
+        .mockResolvedValueOnce(
+          jsonResponse({ expiresAt: Date.now() + 60_000, kind: "busy" })
+        )
+        .mockResolvedValueOnce(jsonResponse({ released: false }));
+
+      expect(
+        yield* produceRuntimeArchive(config("/tmp"), fetcher, exporter).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({
+        message:
+          "Immutable signed runtime archive lease changed during export.",
+      });
+      expect(exporter).toHaveBeenCalledTimes(1);
+      expect(fetcher).toHaveBeenCalledTimes(3);
+      expect(fetcher.mock.calls.map((call) => String(call[0]))).toEqual([
+        expect.stringContaining("/archive/claim"),
+        expect.stringContaining("/archive/claim"),
+        expect.stringContaining("/archive/release"),
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer))
   );
 });

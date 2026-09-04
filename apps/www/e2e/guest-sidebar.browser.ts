@@ -185,26 +185,24 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
           expect(loginLink).toHaveAttribute("href", fallbackHref)
         );
 
-        const nativePagePromise = page
-          .context()
-          .waitForEvent("page", (candidate) => candidate !== page);
-        yield* Effect.promise(() => loginLink.click({ button: "middle" }));
-        const nativePage = yield* Effect.promise(() => nativePagePromise);
-        yield* Effect.promise(() =>
-          expect(nativePage).toHaveURL(
-            new URL(exactHref, page.url()).toString()
-          )
-        );
-        yield* Effect.promise(() => nativePage.close());
-
-        yield* Effect.promise(() =>
-          page.reload({ waitUntil: "domcontentloaded" })
-        );
-        yield* Effect.promise(() => expect(loginLink).toBeVisible());
-        yield* Effect.promise(() => loginLink.dispatchEvent("contextmenu"));
-        yield* Effect.promise(() =>
-          expect(loginLink).toHaveAttribute("href", exactHref)
-        );
+        const nativeActions = [
+          { button: 1, event: "pointerdown" },
+          { button: 1, event: "auxclick" },
+          { button: 2, event: "contextmenu" },
+        ] as const;
+        for (const action of nativeActions) {
+          yield* Effect.promise(() =>
+            loginLink.evaluate((link, href) => {
+              link.setAttribute("href", href);
+            }, fallbackHref)
+          );
+          yield* Effect.promise(() =>
+            loginLink.dispatchEvent(action.event, { button: action.button })
+          );
+          yield* Effect.promise(() =>
+            expect(loginLink).toHaveAttribute("href", exactHref)
+          );
+        }
       })
     )
   );

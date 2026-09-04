@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE } from "@repo/backend/content/archive";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -8,7 +7,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { CONTENT_RUNTIME_ARCHIVE_SWEEP_BATCH_SIZE } from "@repo/backend/convex/contentRelease/archive/spec";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/convex/contentRelease/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { storeArchiveFixture } from "@repo/backend/test/archive";
+import { hash, storeArchiveFixture as store } from "@repo/backend/test/archive";
 
 const NOW = 1_800_000_000_000;
 
@@ -21,17 +20,17 @@ describe("content runtime archive cleanup", () => {
   it("bounds expired lease cleanup and enforces archive age without another finalize", async () => {
     vi.useFakeTimers({ now: NOW });
     const target = createConvexTestWithBetterAuth();
-    const unownedStorageId = await storeArchiveFixture(
+    const unownedStorageId = await store(
       target,
       "unowned-archive-mime",
       CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
     );
-    const expiredStorageId = await storeArchiveFixture(
+    const expiredStorageId = await store(
       target,
       "expired-canonical-archive",
       CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
     );
-    const retainedStorageId = await storeArchiveFixture(
+    const retainedStorageId = await store(
       target,
       "retained-canonical-archive",
       CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE
@@ -45,7 +44,7 @@ describe("content runtime archive cleanup", () => {
         createdAt: number
       ) =>
         ctx.db.insert("contentRuntimeArchives", {
-          archiveSha256: createHash("sha256").update(value).digest("hex"),
+          archiveSha256: hash(value),
           byteLength: Buffer.byteLength(value),
           createdAt,
           runtimeSelectionHash: index.toString(16).padStart(64, "0"),

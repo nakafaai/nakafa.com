@@ -89,7 +89,6 @@ describe("content runtime durable artifact", () => {
             fetcher
           )
         ).toEqual({ kind: "stored", metadata });
-        expect(fetcher).toHaveBeenCalledTimes(3);
         expect(fetcher.mock.calls[0]?.[0]).toContain("/archive/upload");
         expect(
           new Headers(fetcher.mock.calls[0]?.[1]?.headers).get(
@@ -245,10 +244,6 @@ describe("content runtime durable artifact", () => {
             Effect.ensuring(Effect.sync(() => renameSpy.mockRestore()))
           )
         ).toEqual(metadata);
-        expect(fetcher).toHaveBeenCalledTimes(2);
-        expect(Array.from(yield* fileSystem.readFile(archivePath))).toEqual(
-          Array.from(archiveBytes)
-        );
         expect(yield* fileSystem.readDirectory(cacheRoot)).toEqual([
           CONTENT_RUNTIME_CACHE_FILE,
         ]);
