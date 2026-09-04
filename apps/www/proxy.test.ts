@@ -300,6 +300,14 @@ describe("proxy", () => {
       "/school/onboarding",
       "http://localhost:3000/en/auth?redirect=%2Fen%2Fschool%2Fonboarding",
     ],
+    [
+      "/id/school/classes/algebra/forum?q=persamaan&sort=new",
+      "http://localhost:3000/id/auth?redirect=%2Fid%2Fschool%2Fclasses%2Falgebra%2Fforum%3Fq%3Dpersamaan%26sort%3Dnew",
+    ],
+    [
+      "/school/classes/algebra/forum?q=linear%20equations&sort=top",
+      "http://localhost:3000/en/auth?redirect=%2Fen%2Fschool%2Fclasses%2Falgebra%2Fforum%3Fq%3Dlinear%2520equations%26sort%3Dtop",
+    ],
   ])(
     "optimistically redirects the protected School route %s",
     async (path, expected) => {

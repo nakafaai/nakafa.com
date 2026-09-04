@@ -35,6 +35,112 @@ const createOnboardingTest = Effect.fn("test.onboarding.create")(function* (
 });
 
 describe("onboarding", () => {
+  it.effect("records first-run admission exactly once", () =>
+    Effect.gen(function* () {
+      const { authenticated, test } = yield* createOnboardingTest();
+
+      const first = yield* Effect.promise(() =>
+        authenticated.mutation(api.onboarding.mutations.admit, {})
+      );
+      vi.setSystemTime(new Date(NOW + 1000));
+      const repeated = yield* Effect.promise(() =>
+        authenticated.mutation(api.onboarding.mutations.admit, {})
+      );
+      const stored = yield* Effect.promise(() =>
+        test.query((ctx) => ctx.db.query("onboardingProfiles").unique())
+      );
+      const status = yield* Effect.promise(() =>
+        authenticated.query(api.onboarding.queries.getStatus, {})
+      );
+
+      expect(first).toEqual({
+        isAuthenticated: true,
+        isRequired: true,
+        profile: { updatedAt: NOW },
+      });
+      expect(repeated).toEqual({
+        isAuthenticated: true,
+        isRequired: true,
+        profile: { updatedAt: NOW },
+      });
+      expect(stored).toMatchObject({ admittedAt: NOW, updatedAt: NOW });
+      expect(stored?.startedAt).toBeUndefined();
+      expect(status).toEqual({
+        isAuthenticated: true,
+        isRequired: true,
+        profile: { updatedAt: NOW },
+      });
+    })
+  );
+
+  it.effect("keeps privileged admission outside learner lifecycle state", () =>
+    Effect.gen(function* () {
+      const { authenticated, test } =
+        yield* createOnboardingTest("administrator");
+
+      const admission = yield* Effect.promise(() =>
+        authenticated.mutation(api.onboarding.mutations.admit, {})
+      );
+      const stored = yield* Effect.promise(() =>
+        test.query((ctx) => ctx.db.query("onboardingProfiles").unique())
+      );
+
+      expect(admission).toEqual({
+        isAuthenticated: true,
+        isRequired: false,
+        profile: null,
+      });
+      expect(stored).toBeNull();
+    })
+  );
+
+  it.effect("reports an unauthenticated admission without creating state", () =>
+    Effect.gen(function* () {
+      const { test } = yield* createOnboardingTest();
+
+      const admission = yield* Effect.promise(() =>
+        test.mutation(api.onboarding.mutations.admit, {})
+      );
+      const stored = yield* Effect.promise(() =>
+        test.query((ctx) => ctx.db.query("onboardingProfiles").unique())
+      );
+
+      expect(admission).toEqual({
+        isAuthenticated: false,
+        isRequired: false,
+        profile: null,
+      });
+      expect(stored).toBeNull();
+    })
+  );
+
+  it.effect(
+    "records questionnaire start without rewriting admission time",
+    () =>
+      Effect.gen(function* () {
+        const { authenticated, test } = yield* createOnboardingTest();
+        yield* Effect.promise(() =>
+          authenticated.mutation(api.onboarding.mutations.admit, {})
+        );
+
+        vi.setSystemTime(new Date(NOW + 1000));
+        yield* Effect.promise(() =>
+          authenticated.mutation(api.onboarding.mutations.saveAnswer, {
+            answer: { kind: "region", value: "germany" },
+          })
+        );
+        const stored = yield* Effect.promise(() =>
+          test.query((ctx) => ctx.db.query("onboardingProfiles").unique())
+        );
+
+        expect(stored).toMatchObject({
+          admittedAt: NOW,
+          startedAt: NOW + 1000,
+          updatedAt: NOW + 1000,
+        });
+      })
+  );
+
   it.effect(
     "keeps every draft answer separate from applied user settings",
     () =>
@@ -49,12 +155,17 @@ describe("onboarding", () => {
         const stored = yield* Effect.promise(() =>
           test.query(async (ctx) => ({
             preference: await ctx.db.query("learningPreferences").unique(),
+            profile: await ctx.db.query("onboardingProfiles").unique(),
             user: await ctx.db.get("users", identity.userId),
           }))
         );
 
         expect(profile).toEqual({ role: "teacher", updatedAt: NOW });
         expect(stored.preference).toBeNull();
+        expect(stored.profile).toMatchObject({
+          admittedAt: NOW,
+          startedAt: NOW,
+        });
         expect(stored.user?.role).toBeUndefined();
       })
   );
@@ -73,6 +184,9 @@ describe("onboarding", () => {
           },
         })
       );
+      const admission = yield* Effect.promise(() =>
+        authenticated.mutation(api.onboarding.mutations.admit, {})
+      );
       const stored = yield* Effect.promise(() =>
         test.query(async (ctx) => ({
           preference: await ctx.db.query("learningPreferences").unique(),
@@ -89,8 +203,11 @@ describe("onboarding", () => {
         locale: "id",
       });
       expect(stored.user?.role).toBe("student");
+      expect(admission).toMatchObject({ isRequired: false });
       expect(stored.preference?.preferredCurriculumProgramKey).toBe("merdeka");
       expect(stored.profile?.completedAt).toBe(NOW);
+      expect(stored.profile?.admittedAt).toBe(NOW);
+      expect(stored.profile?.startedAt).toBe(NOW);
     })
   );
 
@@ -253,7 +370,11 @@ describe("onboarding", () => {
       const status = yield* Effect.promise(() =>
         authenticated.query(api.onboarding.queries.getStatus, {})
       );
-      expect(status).toEqual({ isRequired: false, profile: null });
+      expect(status).toEqual({
+        isAuthenticated: true,
+        isRequired: false,
+        profile: null,
+      });
 
       yield* Effect.promise(() =>
         expect(

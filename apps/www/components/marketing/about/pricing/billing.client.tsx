@@ -6,9 +6,17 @@ import { products } from "@repo/backend/convex/utils/polar/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { authClient } from "@/lib/auth/client";
+import { toast } from "sonner";
+import { reportClientException } from "@/lib/analytics/client";
+import {
+  getPostAuthContinuationHref,
+  getPostAuthProviderErrorHref,
+} from "@/lib/auth/admission";
+import { startGoogleSignIn } from "@/lib/auth/social";
+import { requestGoogleSignIn } from "@/lib/auth/social.client";
 import { useBillingNavigation } from "@/lib/billing/use-navigation.client";
 import { useUser } from "@/lib/context/use-user";
 import { isActiveLocale } from "@/lib/i18n/active";
@@ -17,7 +25,9 @@ import { isActiveLocale } from "@/lib/i18n/active";
 export function BillingButton() {
   const locale = useLocale();
   const t = useTranslations("Pricing");
-  const callbackURL = `/${locale}/pricing`;
+  const tAuth = useTranslations("Auth");
+  const callbackURL = getPostAuthContinuationHref("/pricing", locale);
+  const errorCallbackURL = getPostAuthProviderErrorHref("/pricing", locale);
   const currentUser = useUser((state) => state.user);
   const billing = useBillingNavigation();
   const [isAuthPending, startAuthTransition] = useTransition();
@@ -35,11 +45,27 @@ export function BillingButton() {
     }
 
     if (!currentUser) {
-      startAuthTransition(() =>
-        authClient.signIn
-          .social({ callbackURL, provider: "google" })
-          .then(() => undefined)
-      );
+      startAuthTransition(async () => {
+        const started = await Effect.runPromise(
+          startGoogleSignIn(
+            { callbackURL, errorCallbackURL },
+            requestGoogleSignIn
+          ).pipe(
+            Effect.tapError((error) =>
+              reportClientException(error, {
+                source: "pricing-google-sign-in",
+              })
+            ),
+            Effect.match({
+              onFailure: () => false,
+              onSuccess: () => true,
+            })
+          )
+        );
+        if (!started) {
+          toast.error(tAuth("provider-error"));
+        }
+      });
       return;
     }
 

@@ -1,12 +1,9 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
-import {
-  readOnboardingProfileByUserId,
-  toOnboardingProfile,
-} from "@repo/backend/convex/onboarding/impl";
+import { readOnboardingProfileByUserId } from "@repo/backend/convex/onboarding/impl";
 import { onboardingStatusValidator } from "@repo/backend/convex/onboarding/schema";
-import { isSelfSelectableUserRole } from "@repo/backend/convex/users/roles";
+import { toOnboardingStatus } from "@repo/backend/convex/onboarding/status";
 import { Effect, Schema } from "effect";
 
 const onboardingReadFailedCode = "ONBOARDING_READ_FAILED";
@@ -36,21 +33,18 @@ export const getStatus = query({
           try: () => getOptionalAppUserForRead(ctx),
         });
         if (!user) {
-          return { isRequired: false, profile: null };
+          return {
+            isAuthenticated: false as const,
+            isRequired: false as const,
+            profile: null,
+          };
         }
 
         const profile = yield* readOnboardingProfileByUserId(
           ctx,
           user.appUser._id
         );
-        const publicProfile = profile ? toOnboardingProfile(profile) : null;
-        const maySelfSelectRole =
-          user.appUser.role === undefined ||
-          isSelfSelectableUserRole(user.appUser.role);
-        return {
-          isRequired: maySelfSelectRole && profile?.completedAt === undefined,
-          profile: publicProfile,
-        };
+        return toOnboardingStatus(user.appUser, profile);
       })
     ),
 });

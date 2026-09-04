@@ -204,9 +204,10 @@ function readSchoolAuthRedirect(request: NextRequest) {
   }
 
   const locale = hasLocalePrefix ? firstSegment : routing.defaultLocale;
-  const redirectPath = hasLocalePrefix
+  const redirectPathname = hasLocalePrefix
     ? request.nextUrl.pathname
     : `/${locale}${request.nextUrl.pathname}`;
+  const redirectPath = `${redirectPathname}${request.nextUrl.search}`;
   const redirectUrl = new URL(`/${locale}/auth`, request.url);
   redirectUrl.searchParams.set("redirect", redirectPath);
 

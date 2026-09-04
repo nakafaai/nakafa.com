@@ -11,10 +11,7 @@ import {
   TextPrompt,
   TextPromptTextarea,
 } from "@repo/design-system/components/ai/prompt/text";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
@@ -23,14 +20,15 @@ import { AiChatModel } from "@/components/ai/chat-model";
 import { useAi } from "@/components/ai/context/use-ai";
 import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 import { loadChatRuntime } from "@/components/ai/helpers/runtime-loader";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useUser } from "@/lib/context/use-user";
 
 /** Renders the standalone new-chat input and starts the first message. */
 export function ChatNew() {
   const t = useTranslations("Ai");
 
-  const pathname = usePathname();
   const router = useRouter();
+  const authNavigation = useCurrentAuthNavigation();
 
   const text = useAi((state) => state.text);
   const getModel = useAi((state) => state.getModel);
@@ -59,7 +57,7 @@ export function ChatNew() {
       }
 
       if (!user) {
-        router.push(`/auth?redirect=${encodeURIComponent(pathname)}`);
+        router.push(authNavigation.readHref());
         return;
       }
 

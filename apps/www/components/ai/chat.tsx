@@ -27,6 +27,7 @@ import { useAi } from "@/components/ai/context/use-ai";
 import { useChat } from "@/components/ai/context/use-chat";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useUser } from "@/lib/context/use-user";
 
 export function AiChat() {
@@ -73,6 +74,7 @@ function AiChatToolbar() {
   const t = useTranslations("Ai");
 
   const router = useRouter();
+  const authNavigation = useCurrentAuthNavigation();
 
   const chat = useCurrentChat((s) => s.chat);
 
@@ -101,7 +103,7 @@ function AiChatToolbar() {
     }
 
     if (!user) {
-      router.push(`/auth?redirect=/chat/${chat?._id}`);
+      router.push(authNavigation.readHref());
       return;
     }
 

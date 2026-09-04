@@ -7,10 +7,7 @@ import {
 } from "@repo/design-system/components/ai/conversation";
 import { Message } from "@repo/design-system/components/ai/message";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+import { useRouter } from "@repo/internationalization/src/navigation";
 
 import { AiChatError } from "@/components/ai/chat-error";
 import { AiChatMessage } from "@/components/ai/chat-message";
@@ -21,6 +18,7 @@ import { ChatProvider, useChat } from "@/components/ai/context/use-chat";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
 import { SheetInput } from "@/components/ai/sheet-input";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useUser } from "@/lib/context/use-user";
 
 /** Ignores submits while the active chat payload is loading. */
@@ -68,7 +66,7 @@ function SheetMainPlaceholder() {
 /** Renders messages and the active chat input inside Nina sheet. */
 function SheetConversation() {
   const router = useRouter();
-  const pathname = usePathname();
+  const authNavigation = useCurrentAuthNavigation();
 
   const messages = useChat((state) => state.chat.messages);
   const setText = useAi((state) => state.setText);
@@ -95,7 +93,7 @@ function SheetConversation() {
     }
 
     if (!user) {
-      router.push(`/auth?redirect=${pathname}`);
+      router.push(authNavigation.readHref());
       return;
     }
 

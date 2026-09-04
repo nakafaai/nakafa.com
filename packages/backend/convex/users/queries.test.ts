@@ -12,7 +12,7 @@ describe("users/queries", () => {
       const userId = await ctx.db.insert("users", {
         authId: "auth_user_real_example",
         email: "nabil@example.com",
-        name: "Nabil Fatih",
+        name: "Test Learner",
         plan: "free",
         credits: 7,
         creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),

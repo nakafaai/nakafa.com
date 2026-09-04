@@ -5,7 +5,7 @@
       "@repo/*": ["../*"],
       "@repo/email/*": ["./*"]
     },
-    "types": ["node"]
+    "types": ["node", "vitest/globals"]
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
   "exclude": ["node_modules"]

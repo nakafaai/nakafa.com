@@ -1,5 +1,7 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
+import type { PostAuthIntentResolution } from "@/lib/auth/admission";
+import { getPostAuthDestination } from "@/lib/auth/admission";
 import {
   getCurriculumIndexHref,
   getCurriculumProgramHref,
@@ -10,17 +12,30 @@ type OnboardingFinishResult = FunctionReturnType<
 >;
 
 /** Converts the backend destination contract into one localized app href. */
-export function getOnboardingDestinationHref(result: OnboardingFinishResult) {
+export function getOnboardingDestination(
+  result: OnboardingFinishResult,
+  intent: PostAuthIntentResolution
+) {
+  if (intent.kind === "resume") {
+    return getPostAuthDestination(intent, result.locale);
+  }
+
   if (result.destination.kind === "tryout") {
-    return "/try-out";
+    return { href: "/try-out", locale: result.locale };
   }
 
   if (result.destination.kind === "curriculum-index") {
-    return getCurriculumIndexHref(result.locale);
+    return {
+      href: getCurriculumIndexHref(result.locale),
+      locale: result.locale,
+    };
   }
 
-  return getCurriculumProgramHref({
+  return {
+    href: getCurriculumProgramHref({
+      locale: result.locale,
+      publicSlug: result.destination.publicSlug,
+    }),
     locale: result.locale,
-    publicSlug: result.destination.publicSlug,
-  });
+  };
 }

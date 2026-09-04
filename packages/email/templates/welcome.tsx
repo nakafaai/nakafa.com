@@ -1,32 +1,8 @@
-import { render } from "@react-email/render";
-import { Button } from "@repo/email/components/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/email/components/card";
-import { WrapperIcon } from "@repo/email/components/wrapper";
-import { Tailwind } from "@repo/email/tailwind";
-import {
-  COMPANY_IDENTITY,
-  COMPANY_REGISTERED_ADDRESS,
-} from "@repo/seo/company";
+  AccountReadyEmail,
+  renderAccountReadyEmail,
+} from "@repo/email/templates/account-ready";
 import { Effect, Schema } from "effect";
-import {
-  Body,
-  Column,
-  Container,
-  Head,
-  Hr,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Row,
-  Section,
-  Text,
-} from "react-email";
 
 export interface WelcomeProps {
   readonly name: string;
@@ -35,7 +11,7 @@ export interface WelcomeProps {
   readonly termsOfServiceUrl: string;
 }
 
-/** Typed failure for repository-owned React Email rendering. */
+/** Typed failure for the retiring welcome-email delivery contract. */
 export class WelcomeEmailRenderError extends Schema.TaggedError<WelcomeEmailRenderError>()(
   "WelcomeEmailRenderError",
   {
@@ -44,208 +20,52 @@ export class WelcomeEmailRenderError extends Schema.TaggedError<WelcomeEmailRend
   }
 ) {}
 
-const COPYRIGHT_YEAR = new Date().getFullYear();
-const EMAIL_LOGO_URL = new URL("/logo.png", COMPANY_IDENTITY.url).href;
-
+/**
+ * Preserves the in-flight welcome action's prop contract without rendering PII.
+ * New delivery uses the account-ready renderer directly.
+ */
 export function Welcome({
-  name,
   privacyPolicyUrl,
   startLearningUrl,
   termsOfServiceUrl,
 }: WelcomeProps) {
   return (
-    <Html>
-      <Head />
-      <Tailwind>
-        <Body className="bg-background font-sans text-foreground antialiased">
-          <Preview>Welcome to Nakafa - Your journey begins here</Preview>
-          <Container className="mx-auto my-8 max-w-md p-5">
-            <Section className="mt-6">
-              <Img
-                alt="Nakafa"
-                className="mx-auto"
-                height="64"
-                src={EMAIL_LOGO_URL}
-                width="64"
-              />
-            </Section>
-
-            <Section className="mt-6 text-center">
-              <Text className="m-0 font-semibold text-2xl text-foreground tracking-tight">
-                You're in! Welcome to Nakafa 🚀
-              </Text>
-              <Text className="mt-2 text-muted-foreground text-sm">
-                Let's make learning something you actually enjoy.
-              </Text>
-            </Section>
-
-            <Section className="mt-6">
-              <Text className="text-base text-foreground leading-6">
-                Hi {name},
-              </Text>
-              <Text className="mt-4 text-base text-foreground leading-6">
-                So glad you're here. We built Nakafa because we believe
-                high-quality education should be accessible (and fun) for
-                everyone.
-              </Text>
-              <Text className="mt-4 text-base text-foreground leading-6">
-                Whether you're prepping for exams or just curious about how the
-                world works, you've got this.
-              </Text>
-            </Section>
-
-            <Card
-              className="mt-6 w-full border-border bg-muted/30"
-              style={{ width: "100%" }}
-            >
-              <CardHeader
-                className="w-full border-border/50"
-                style={{ width: "100%" }}
-              >
-                <CardTitle className="text-lg">Where to start?</CardTitle>
-              </CardHeader>
-              <CardContent className="w-full" style={{ width: "100%" }}>
-                <Section>
-                  <Row className="mb-4">
-                    <Column className="w-8 pr-3 align-top">
-                      <WrapperIcon>
-                        <Text className="m-0 text-center text-lg leading-8">
-                          📚
-                        </Text>
-                      </WrapperIcon>
-                    </Column>
-                    <Column className="align-top">
-                      <Text className="m-0 font-medium text-sm">
-                        Dive into Subjects
-                      </Text>
-                      <Text className="m-0 text-muted-foreground text-xs">
-                        Find a topic that sparks your interest.
-                      </Text>
-                    </Column>
-                  </Row>
-                  <Row className="mb-4">
-                    <Column className="w-8 pr-3 align-top">
-                      <WrapperIcon>
-                        <Text className="m-0 text-center text-lg leading-8">
-                          ✍️
-                        </Text>
-                      </WrapperIcon>
-                    </Column>
-                    <Column className="align-top">
-                      <Text className="m-0 font-medium text-sm">
-                        Test Your Knowledge
-                      </Text>
-                      <Text className="m-0 text-muted-foreground text-xs">
-                        Practice with interactive exercises.
-                      </Text>
-                    </Column>
-                  </Row>
-                  <Row>
-                    <Column className="w-8 pr-3 align-top">
-                      <WrapperIcon>
-                        <Text className="m-0 text-center text-lg leading-8">
-                          🤝
-                        </Text>
-                      </WrapperIcon>
-                    </Column>
-                    <Column className="align-top">
-                      <Text className="m-0 font-medium text-sm">
-                        Meet the Community
-                      </Text>
-                      <Text className="m-0 text-muted-foreground text-xs">
-                        Learn alongside others.
-                      </Text>
-                    </Column>
-                  </Row>
-                </Section>
-              </CardContent>
-            </Card>
-
-            <Section className="mt-6 text-center">
-              <Button href={startLearningUrl} size="lg">
-                Start Learning
-              </Button>
-            </Section>
-
-            <Section className="mt-6">
-              <Text className="mt-4 text-base text-foreground leading-6">
-                Cheers,
-                <br />
-                The Nakafa Team
-              </Text>
-            </Section>
-
-            <Hr className="mx-0 my-6 w-full border border-border" />
-
-            <Section className="text-center">
-              <Text className="m-0 text-muted-foreground text-xs leading-relaxed">
-                © {COPYRIGHT_YEAR} {COMPANY_IDENTITY.legalName}. All rights
-                reserved.
-              </Text>
-              <Text className="m-0 mt-1 text-muted-foreground text-xs leading-relaxed">
-                {COMPANY_REGISTERED_ADDRESS}
-              </Text>
-              <Section align="center" className="mt-4 w-auto">
-                <Row>
-                  <Column className="pr-2">
-                    <Link
-                      className="text-muted-foreground text-xs"
-                      href={privacyPolicyUrl}
-                      style={{ textDecoration: "underline" }}
-                    >
-                      Privacy Policy
-                    </Link>
-                  </Column>
-                  <Column className="pl-2">
-                    <Link
-                      className="text-muted-foreground text-xs"
-                      href={termsOfServiceUrl}
-                      style={{ textDecoration: "underline" }}
-                    >
-                      Terms of Service
-                    </Link>
-                  </Column>
-                </Row>
-              </Section>
-            </Section>
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+    <AccountReadyEmail
+      continueUrl={startLearningUrl}
+      locale="en"
+      privacyPolicyUrl={privacyPolicyUrl}
+      termsOfServiceUrl={termsOfServiceUrl}
+    />
   );
 }
 
-/** Renders the production HTML and text bodies from one source template. */
+/** Renders the privacy-safe body while retaining the in-flight result shape. */
 export const renderWelcomeEmail = Effect.fn("email.welcome.render")(function* (
   props: WelcomeProps
 ) {
-  const email = <Welcome {...props} />;
-  const renderFailure = () =>
-    new WelcomeEmailRenderError({
-      code: "WELCOME_EMAIL_RENDER_FAILED",
-      message: "Unable to render the welcome email.",
-    });
-  const [html, text] = yield* Effect.all(
-    [
-      Effect.tryPromise({
-        catch: renderFailure,
-        try: () => render(email),
-      }),
-      Effect.tryPromise({
-        catch: renderFailure,
-        try: () => render(email, { plainText: true }),
-      }),
-    ],
-    { concurrency: "unbounded" }
+  const message = yield* renderAccountReadyEmail({
+    continueUrl: props.startLearningUrl,
+    locale: "en",
+    privacyPolicyUrl: props.privacyPolicyUrl,
+    termsOfServiceUrl: props.termsOfServiceUrl,
+  }).pipe(
+    Effect.mapError(
+      () =>
+        new WelcomeEmailRenderError({
+          code: "WELCOME_EMAIL_RENDER_FAILED",
+          message: "Unable to render the welcome email.",
+        })
+    )
   );
-  return { html, text };
+
+  return { html: message.html, text: message.text };
 });
 
 Welcome.PreviewProps = {
-  name: "Nabil Fatih",
-  privacyPolicyUrl: "https://example.com/privacy-policy",
-  startLearningUrl: "https://example.com/start-learning",
-  termsOfServiceUrl: "https://example.com/terms-of-service",
-};
+  name: "not-rendered",
+  privacyPolicyUrl: "https://nakafa.com/en/privacy-policy",
+  startLearningUrl: "https://nakafa.com/en",
+  termsOfServiceUrl: "https://nakafa.com/en/terms-of-service",
+} satisfies WelcomeProps;
 
 export default Welcome;

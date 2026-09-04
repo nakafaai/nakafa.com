@@ -14,14 +14,11 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex, useMutation } from "convex/react";
 import { Effect, Result } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { FormBlock } from "@/components/shared/form-block";
 import {
   clearAccountDeletionAttempt,
@@ -33,6 +30,7 @@ import {
   clearDeletedAccountBrowserIdentity,
   signOutAccountBrowserIdentity,
 } from "@/lib/auth/identity/browser";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 
 const dialogError = {
   generic: "generic",
@@ -45,8 +43,8 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Auth");
   const common = useTranslations("Common");
   const locale = useLocale();
-  const pathname = usePathname();
   const router = useRouter();
+  const authNavigation = useCurrentAuthNavigation();
   const convex = useConvex();
   const cancelAccountDeletion = useMutation(
     api.auth.deletion.cancelAccountDeletionAttempt
@@ -56,7 +54,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   );
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<DialogError>(null);
-  const [isPending, setIsPending] = useState(false);
+  const [isPending, startTransition] = useTransition();
   /** Keeps the confirmation dialog open while deletion work is in flight. */
   function handleOpenChange(nextOpen: boolean) {
     if (isPending && !nextOpen) {
@@ -68,58 +66,59 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
     }
   }
   /** Runs the durable account-deletion flow from the browser event boundary. */
-  async function handleDelete() {
+  function handleDelete() {
     setError(null);
-    setIsPending(true);
-    const result = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt(userId).pipe(
-        Effect.flatMap((attempt) =>
-          deleteCurrentAccount({
-            attempt,
-            cancelPreparation: (attemptId) =>
-              cancelAccountDeletion({ attemptId }),
-            clearAttempt: clearAccountDeletionAttempt(),
-            persist: saveAccountDeletionAttempt,
-            prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
-            reconcile: (attemptId) =>
-              convex.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
-                attemptId,
-              }),
-          })
-        ),
-        Effect.andThen(clearDeletedAccountBrowserIdentity()),
-        Effect.result,
-        Effect.ensuring(Effect.sync(() => setIsPending(false)))
-      )
-    );
-    if (Result.isSuccess(result)) {
-      window.location.replace(`/${locale}`);
-      return;
-    }
-    if (result.failure._tag === "AccountDeletionSessionExpired") {
-      setError(dialogError.sessionExpired);
-      return;
-    }
-    setError(
-      result.failure._tag === "AccountDeletionSchoolMemberRequired"
-        ? dialogError.schoolMemberRequired
-        : dialogError.generic
-    );
+    startTransition(async () => {
+      const result = await Effect.runPromise(
+        loadOrCreateAccountDeletionAttempt(userId).pipe(
+          Effect.flatMap((attempt) =>
+            deleteCurrentAccount({
+              attempt,
+              cancelPreparation: (attemptId) =>
+                cancelAccountDeletion({ attemptId }),
+              clearAttempt: clearAccountDeletionAttempt(),
+              persist: saveAccountDeletionAttempt,
+              prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
+              reconcile: (attemptId) =>
+                convex.query(
+                  api.auth.deletion.getAccountDeletionAttemptStatus,
+                  { attemptId }
+                ),
+            })
+          ),
+          Effect.andThen(clearDeletedAccountBrowserIdentity()),
+          Effect.result
+        )
+      );
+      if (Result.isSuccess(result)) {
+        window.location.replace(`/${locale}`);
+        return;
+      }
+
+      let nextError: Exclude<DialogError, null> = dialogError.generic;
+      if (result.failure._tag === "AccountDeletionSessionExpired") {
+        nextError = dialogError.sessionExpired;
+      } else if (
+        result.failure._tag === "AccountDeletionSchoolMemberRequired"
+      ) {
+        nextError = dialogError.schoolMemberRequired;
+      }
+      startTransition(() => setError(nextError));
+    });
   }
   /** Signs out an expired session before returning to the localized auth page. */
-  async function handleReauthenticate() {
+  function handleReauthenticate() {
     setError(null);
-    setIsPending(true);
-    const result = await Effect.runPromise(
-      Effect.result(signOutAccountBrowserIdentity()).pipe(
-        Effect.ensuring(Effect.sync(() => setIsPending(false)))
-      )
-    );
-    if (Result.isSuccess(result)) {
-      router.replace(`/auth?redirect=${encodeURIComponent(pathname)}`);
-      return;
-    }
-    setError(dialogError.generic);
+    startTransition(async () => {
+      const result = await Effect.runPromise(
+        Effect.result(signOutAccountBrowserIdentity())
+      );
+      if (Result.isSuccess(result)) {
+        router.replace(authNavigation.readHref());
+        return;
+      }
+      startTransition(() => setError(dialogError.generic));
+    });
   }
   let errorMessage = t("delete-account-error");
   if (error === dialogError.sessionExpired) {

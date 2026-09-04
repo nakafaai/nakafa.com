@@ -27,10 +27,10 @@ import { redirect, useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { OnboardingOption } from "@/components/programs/onboarding/choice";
-import { getOnboardingDestinationHref } from "@/components/programs/onboarding/destination";
+import { getOnboardingDestination } from "@/components/programs/onboarding/destination";
 import { useSaveOnboardingAnswerMutation } from "@/components/programs/onboarding/mutation.client";
 import {
   focusOptions,
@@ -54,12 +54,19 @@ import {
   saveOnboardingDraft,
 } from "@/components/programs/onboarding/submit";
 import { reportClientException } from "@/lib/analytics/client";
+import {
+  getPostAuthDestination,
+  getPostAuthSignInHref,
+  type PostAuthIntentResolution,
+} from "@/lib/auth/admission";
 
 /** Runs the complete resumable questionnaire inside the shared entry shell. */
 export function OnboardingQuestionnaire({
   initialProfile,
+  intent,
 }: {
   initialProfile: OnboardingProfile;
+  intent: PostAuthIntentResolution;
 }) {
   const t = useTranslations("LearningPrograms");
   const locale = useLocale();
@@ -78,12 +85,19 @@ export function OnboardingQuestionnaire({
   const [activeItem, setActiveItem] = useState<OnboardingItemName>(() =>
     getInitialOnboardingItem(getOnboardingAnswers(initialProfile))
   );
-  const [isFinishing, setIsFinishing] = useState(false);
+  const [isFinishing, startFinishTransition] = useTransition();
   const saveAnswer = useSaveOnboardingAnswerMutation(initialProfile);
   const finish = useMutation(api.onboarding.mutations.finish);
 
-  if (reactiveStatus?.isRequired === false && !isFinishing) {
-    redirect({ href: "/home", locale });
+  if (reactiveStatus?.isAuthenticated === false && !isFinishing) {
+    redirect({ href: getPostAuthSignInHref(intent), locale });
+  }
+  if (
+    reactiveStatus?.isAuthenticated === true &&
+    reactiveStatus.isRequired === false &&
+    !isFinishing
+  ) {
+    redirect(getPostAuthDestination(intent, locale));
   }
 
   function persistDraft(item: OnboardingItemName) {
@@ -116,11 +130,7 @@ export function OnboardingQuestionnaire({
     setActiveItem(nextItem);
   }
 
-  function updateAnswer(answer: OnboardingAnswer) {
-    setPendingAnswer(answer);
-  }
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const completeAnswers = getCompleteOnboardingAnswers(answers);
     if (!completeAnswers) {
@@ -128,27 +138,28 @@ export function OnboardingQuestionnaire({
       return;
     }
 
-    setIsFinishing(true);
-    const outcome = await Effect.runPromise(
-      finishOnboarding(finish, { answers: completeAnswers }).pipe(
-        Effect.matchEffect({
-          onFailure: (error) =>
-            reportClientException(error.cause, {
-              source: "onboarding-finish",
-            }).pipe(Effect.as({ status: "error" } as const)),
-          onSuccess: (result) =>
-            Effect.succeed({ result, status: "success" } as const),
-        })
-      )
-    );
-    if (outcome.status === "error") {
-      setIsFinishing(false);
-      toast.error(t("onboarding.finish-error"));
-      return;
-    }
+    startFinishTransition(async () => {
+      const outcome = await Effect.runPromise(
+        finishOnboarding(finish, { answers: completeAnswers }).pipe(
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error.cause, {
+                source: "onboarding-finish",
+              }).pipe(Effect.as({ status: "error" } as const)),
+            onSuccess: (result) =>
+              Effect.succeed({ result, status: "success" } as const),
+          })
+        )
+      );
+      if (outcome.status === "error") {
+        toast.error(t("onboarding.finish-error"));
+        return;
+      }
 
-    router.replace(getOnboardingDestinationHref(outcome.result), {
-      locale: outcome.result.locale,
+      const destination = getOnboardingDestination(outcome.result, intent);
+      startFinishTransition(() =>
+        router.replace(destination.href, { locale: destination.locale })
+      );
     });
   }
 
@@ -195,7 +206,7 @@ export function OnboardingQuestionnaire({
               key={option.value}
               onChange={(event) => {
                 if (event.target.checked) {
-                  updateAnswer({ kind: "role", value: option.value });
+                  setPendingAnswer({ kind: "role", value: option.value });
                 }
               }}
               value={option.value}
@@ -221,7 +232,7 @@ export function OnboardingQuestionnaire({
               key={option.value}
               onChange={(event) => {
                 if (event.target.checked) {
-                  updateAnswer({ kind: "region", value: option.value });
+                  setPendingAnswer({ kind: "region", value: option.value });
                 }
               }}
               value={option.value}
@@ -244,7 +255,7 @@ export function OnboardingQuestionnaire({
               key={option.value}
               onChange={(event) => {
                 if (event.target.checked) {
-                  updateAnswer({ kind: "focus", value: option.value });
+                  setPendingAnswer({ kind: "focus", value: option.value });
                 }
               }}
               value={option.value}
@@ -259,27 +270,15 @@ export function OnboardingQuestionnaire({
       </QuestionnaireItem>
 
       <QuestionnaireActions>
-        <QuestionnairePrevious
-          disabled={isFinishing}
-          size="default"
-          variant="ghost"
-        >
+        <QuestionnairePrevious disabled={isFinishing} variant="ghost">
           <HugeIcons data-icon="inline-start" icon={ArrowLeft02Icon} />
           {t("onboarding.back")}
         </QuestionnairePrevious>
-        <QuestionnaireNext
-          disabled={isFinishing}
-          size="default"
-          variant="default"
-        >
+        <QuestionnaireNext disabled={isFinishing}>
           {t("onboarding.continue")}
           <HugeIcons data-icon="inline-end" icon={ArrowRight02Icon} />
         </QuestionnaireNext>
-        <QuestionnaireSubmit
-          disabled={isFinishing}
-          size="default"
-          variant="default"
-        >
+        <QuestionnaireSubmit disabled={isFinishing}>
           <Spinner
             data-icon="inline-start"
             icon={PartyIcon}

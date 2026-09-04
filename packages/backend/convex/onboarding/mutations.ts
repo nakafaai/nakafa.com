@@ -5,8 +5,12 @@ import {
   readConvexErrorData,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
-import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
+  getOptionalActiveAppUser,
+  requireAuth,
+} from "@repo/backend/convex/lib/helpers/auth";
+import {
+  admitOnboarding,
   finishOnboarding,
   saveOnboardingAnswer,
 } from "@repo/backend/convex/onboarding/impl";
@@ -14,6 +18,7 @@ import {
   onboardingAnswerValidator,
   onboardingCompletionValidator,
   onboardingProfileValidator,
+  onboardingStatusValidator,
 } from "@repo/backend/convex/onboarding/schema";
 import { onboardingFinishResultValidator } from "@repo/backend/convex/onboarding/spec";
 import { isSelfSelectableUserRole } from "@repo/backend/convex/users/roles";
@@ -63,13 +68,31 @@ function toOnboardingAuthError(error: unknown) {
 }
 
 /** Resolves the authenticated app user inside the Effect error channel. */
-const requireOnboardingUser = Effect.fn("onboarding.requireUser")(function* (
-  ctx: MutationCtx
-) {
-  const user = yield* Effect.tryPromise({
+const requireActiveOnboardingUser = Effect.fn("onboarding.requireActiveUser")(
+  function* (ctx: MutationCtx) {
+    const user = yield* Effect.tryPromise({
+      catch: toOnboardingAuthError,
+      try: () => requireAuth(ctx),
+    });
+    return user;
+  }
+);
+
+/** Resolves optional auth so admission can preserve a signed-out continuation. */
+const readOptionalActiveOnboardingUser = Effect.fn(
+  "onboarding.readOptionalActiveUser"
+)(function* (ctx: MutationCtx) {
+  return yield* Effect.tryPromise({
     catch: toOnboardingAuthError,
-    try: () => requireAuth(ctx),
+    try: () => getOptionalActiveAppUser(ctx),
   });
+});
+
+/** Restricts self-service answers to roles owned by learner onboarding. */
+const requireSelfSelectableOnboardingUser = Effect.fn(
+  "onboarding.requireSelfSelectableUser"
+)(function* (ctx: MutationCtx) {
+  const user = yield* requireActiveOnboardingUser(ctx);
   if (
     user.appUser.role !== undefined &&
     !isSelfSelectableUserRole(user.appUser.role)
@@ -83,12 +106,32 @@ const requireOnboardingUser = Effect.fn("onboarding.requireUser")(function* (
   return user;
 });
 
+/** Records the first authoritative first-run admission for this app user. */
+export const admit = mutation({
+  args: {},
+  returns: onboardingStatusValidator,
+  handler: (ctx) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const user = yield* readOptionalActiveOnboardingUser(ctx);
+        if (!user) {
+          return {
+            isAuthenticated: false as const,
+            isRequired: false as const,
+            profile: null,
+          };
+        }
+        return yield* admitOnboarding(ctx, user.appUser);
+      })
+    ),
+});
+
 /** Saves one authenticated onboarding answer as resumable draft state. */
 const saveAnswerProgram = Effect.fn("onboarding.saveAnswerMutation")(function* (
   ctx: MutationCtx,
   answer: OnboardingAnswer
 ) {
-  const user = yield* requireOnboardingUser(ctx);
+  const user = yield* requireSelfSelectableOnboardingUser(ctx);
   return yield* saveOnboardingAnswer(ctx, user.appUser._id, answer);
 });
 
@@ -107,7 +150,7 @@ export const finish = mutation({
   handler: (ctx, { answers }) =>
     runConvexProgram(
       Effect.gen(function* () {
-        const user = yield* requireOnboardingUser(ctx);
+        const user = yield* requireSelfSelectableOnboardingUser(ctx);
         return yield* finishOnboarding(ctx, user.appUser._id, answers);
       })
     ),

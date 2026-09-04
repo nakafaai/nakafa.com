@@ -8,6 +8,7 @@ import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
 import contentsSchema from "@repo/backend/convex/contents/schema";
 import creditsSchema from "@repo/backend/convex/credits/schema";
 import customersSchema from "@repo/backend/convex/customers/schema";
+import welcomeEmailIntentsSchema from "@repo/backend/convex/emails/welcome/schema";
 import irtSchema from "@repo/backend/convex/irt/schema";
 import learningPreferencesSchema from "@repo/backend/convex/learningPreferences/schema";
 import notificationsSchema from "@repo/backend/convex/notifications/schema";
@@ -35,6 +36,7 @@ export default defineSchema(
     ...bookmarksSchema,
     ...contentsSchema,
     ...creditsSchema,
+    ...welcomeEmailIntentsSchema,
     ...irtSchema,
     ...learningPreferencesSchema,
     ...onboardingSchema,

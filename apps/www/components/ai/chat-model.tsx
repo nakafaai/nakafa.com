@@ -12,19 +12,17 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context/use-ai";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useUser } from "@/lib/context/use-user";
 import { aiModels, getAiModel } from "@/lib/data/models";
 
 export function AiChatModel() {
   const t = useTranslations("Ai");
-  const pathname = usePathname();
   const router = useRouter();
+  const authNavigation = useCurrentAuthNavigation();
   const user = useUser((state) => state.user);
 
   const model = useAi((state) => state.model);
@@ -36,7 +34,7 @@ export function AiChatModel() {
   const handleModelChange = (value: ModelId) => {
     if (!user) {
       setOpen(false);
-      router.push(`/auth?redirect=${pathname}`);
+      router.push(authNavigation.readHref());
       return;
     }
 

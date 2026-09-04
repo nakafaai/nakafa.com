@@ -92,7 +92,7 @@ for (const viewport of targetViewports) {
           yield* Effect.promise(() =>
             expect(loginButton).toHaveAttribute(
               "href",
-              "/en/auth?redirect=/search"
+              "/en/auth?redirect=%2Fen%2Fsearch"
             )
           );
           const languageButton = footer.getByRole("button", {
@@ -116,6 +116,95 @@ for (const viewport of targetViewports) {
     );
   });
 }
+
+test("provider failures land on one clean generic retry", async ({ page }) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        const intent = "/en/search?q=geometry#results";
+        const providerLanding = `/en/auth/error?${new URLSearchParams({
+          error: "access_denied",
+          error_description: "provider diagnostic",
+          intent,
+        })}`;
+        const response = yield* Effect.promise(() =>
+          page.goto(providerLanding, { waitUntil: "domcontentloaded" })
+        );
+        yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+
+        const retryHref = `/en/auth?${new URLSearchParams({
+          redirect: intent,
+          error: "oauth",
+        })}`;
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL(retryHref, page.url()).toString())
+        );
+        yield* Effect.promise(() =>
+          expect(page.getByRole("alert")).toBeVisible()
+        );
+        yield* Effect.sync(() => {
+          expect(page.url()).not.toContain("access_denied");
+          expect(page.url()).not.toContain("error_description");
+          expect(page.url()).not.toContain("provider+diagnostic");
+        });
+      })
+    )
+  );
+});
+
+test("guest auth link preserves a dynamic query and hash for native actions", async ({
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        yield* Effect.promise(() =>
+          page.setViewportSize({ height: 900, width: 1440 })
+        );
+        const pathnameAndQuery = "/en/curriculum/merdeka?view=all";
+        const intent = `${pathnameAndQuery}#curriculum-overview`;
+        const response = yield* Effect.promise(() =>
+          page.goto(intent, { waitUntil: "domcontentloaded" })
+        );
+        yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+
+        const loginButton = page.getByRole("button", {
+          exact: true,
+          name: "Log in",
+        });
+        const fallbackHref = `/en/auth?redirect=${encodeURIComponent(
+          pathnameAndQuery
+        )}`;
+        const exactHref = `/en/auth?redirect=${encodeURIComponent(intent)}`;
+        yield* Effect.promise(() => expect(loginButton).toBeVisible());
+        yield* Effect.promise(() =>
+          expect(loginButton).toHaveAttribute("href", fallbackHref)
+        );
+
+        const popupPromise = page.waitForEvent("popup");
+        yield* Effect.promise(() => loginButton.click({ button: "middle" }));
+        const popup = yield* Effect.promise(() => popupPromise);
+        yield* Effect.promise(() =>
+          expect(popup).toHaveURL(new URL(exactHref, page.url()).toString())
+        );
+        yield* Effect.promise(() => popup.close());
+
+        yield* Effect.promise(() =>
+          page.reload({ waitUntil: "domcontentloaded" })
+        );
+        yield* Effect.promise(() => expect(loginButton).toBeVisible());
+        yield* Effect.promise(() => loginButton.dispatchEvent("contextmenu"));
+        yield* Effect.promise(() =>
+          expect(loginButton).toHaveAttribute("href", exactHref)
+        );
+      })
+    )
+  );
+});
 
 test("guest reaches authentication only when starting a public tryout", async ({
   page,

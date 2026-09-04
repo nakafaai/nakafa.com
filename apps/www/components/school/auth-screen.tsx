@@ -2,7 +2,6 @@
 
 import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
-import { usePathname } from "@repo/internationalization/src/navigation";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -23,8 +22,6 @@ export function SchoolAuthBoundary({ children }: { children: ReactNode }) {
 
 /** Renders the shared Nakafa School sign-in screen for unauthenticated users. */
 export function SchoolAuthScreen() {
-  const pathname = usePathname();
-
   return (
     <div className="relative flex h-svh items-center justify-center">
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
@@ -32,7 +29,7 @@ export function SchoolAuthScreen() {
         <div className="relative flex h-full flex-col items-center gap-6">
           <SchoolAuthScreenTitle />
 
-          <AuthGoogle redirect={pathname} />
+          <AuthGoogle />
 
           <SchoolAuthScreenFooter />
         </div>
