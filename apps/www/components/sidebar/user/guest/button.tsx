@@ -1,9 +1,9 @@
 "use client";
 
 import { Login03Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "next-intl";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 
@@ -13,13 +13,12 @@ export function NavUserGuestButton() {
   const authNavigation = useCurrentAuthNavigation();
 
   return (
-    <Button
-      className="w-full"
-      nativeButton={false}
-      render={<NavigationLink {...authNavigation.linkProps} />}
+    <NavigationLink
+      {...authNavigation.linkProps}
+      className={buttonVariants({ className: "w-full" })}
     >
       <HugeIcons icon={Login03Icon} />
       {t("login-cta-action")}
-    </Button>
+    </NavigationLink>
   );
 }

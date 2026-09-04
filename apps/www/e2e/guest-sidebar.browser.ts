@@ -30,7 +30,7 @@ for (const viewport of targetViewports) {
           );
           yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
-          const loginButton = page.getByRole("button", {
+          const loginLink = page.getByRole("link", {
             exact: true,
             name: "Log in",
           });
@@ -44,7 +44,7 @@ for (const viewport of targetViewports) {
               .first();
             yield* activateUntilVisible(
               sidebarTrigger,
-              loginButton,
+              loginLink,
               readinessTimeoutMilliseconds
             );
           }
@@ -88,9 +88,9 @@ for (const viewport of targetViewports) {
               })
             ).toBeVisible()
           );
-          yield* Effect.promise(() => expect(loginButton).toBeVisible());
+          yield* Effect.promise(() => expect(loginLink).toBeVisible());
           yield* Effect.promise(() =>
-            expect(loginButton).toHaveAttribute(
+            expect(loginLink).toHaveAttribute(
               "href",
               "/en/auth?redirect=%2Fen%2Fsearch"
             )
@@ -172,7 +172,7 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
         );
         yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
-        const loginButton = page.getByRole("button", {
+        const loginLink = page.getByRole("link", {
           exact: true,
           name: "Log in",
         });
@@ -180,26 +180,30 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
           pathnameAndQuery
         )}`;
         const exactHref = `/en/auth?redirect=${encodeURIComponent(intent)}`;
-        yield* Effect.promise(() => expect(loginButton).toBeVisible());
+        yield* Effect.promise(() => expect(loginLink).toBeVisible());
         yield* Effect.promise(() =>
-          expect(loginButton).toHaveAttribute("href", fallbackHref)
+          expect(loginLink).toHaveAttribute("href", fallbackHref)
         );
 
-        const popupPromise = page.waitForEvent("popup");
-        yield* Effect.promise(() => loginButton.click({ button: "middle" }));
-        const popup = yield* Effect.promise(() => popupPromise);
+        const nativePagePromise = page
+          .context()
+          .waitForEvent("page", (candidate) => candidate !== page);
+        yield* Effect.promise(() => loginLink.click({ button: "middle" }));
+        const nativePage = yield* Effect.promise(() => nativePagePromise);
         yield* Effect.promise(() =>
-          expect(popup).toHaveURL(new URL(exactHref, page.url()).toString())
+          expect(nativePage).toHaveURL(
+            new URL(exactHref, page.url()).toString()
+          )
         );
-        yield* Effect.promise(() => popup.close());
+        yield* Effect.promise(() => nativePage.close());
 
         yield* Effect.promise(() =>
           page.reload({ waitUntil: "domcontentloaded" })
         );
-        yield* Effect.promise(() => expect(loginButton).toBeVisible());
-        yield* Effect.promise(() => loginButton.dispatchEvent("contextmenu"));
+        yield* Effect.promise(() => expect(loginLink).toBeVisible());
+        yield* Effect.promise(() => loginLink.dispatchEvent("contextmenu"));
         yield* Effect.promise(() =>
-          expect(loginButton).toHaveAttribute("href", exactHref)
+          expect(loginLink).toHaveAttribute("href", exactHref)
         );
       })
     )

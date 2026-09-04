@@ -34,6 +34,9 @@ describe("public route ownership", () => {
   it.each([
     ["de", "search"],
     ["de", "pricing"],
+    ["de", "auth"],
+    ["de", "auth/continue"],
+    ["de", "auth/error"],
     ["de", "onboarding"],
     ["de", "chat/new"],
     ["de", "user/settings/subscriptions"],
@@ -63,6 +66,7 @@ describe("public route ownership", () => {
     ["de", ""],
     ["de", "fabricated"],
     ["de", "auth/fabricated"],
+    ["de", "auth/error/fabricated"],
     ["de", "chat/id/fabricated"],
     ["de", "onboarding/focus"],
     ["de", "onboarding/role"],
