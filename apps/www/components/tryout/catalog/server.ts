@@ -9,7 +9,6 @@ import { fetchQuery } from "convex/nextjs";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { decodeFeaturedResponse } from "@/components/tryout/catalog/featured";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
@@ -42,14 +41,11 @@ export async function readFeaturedTryout(locale: Locale) {
 
   return await Effect.runPromise(
     Effect.gen(function* () {
-      const [question, response] = yield* Effect.all([
-        loadTryoutQuestion(featured.question),
-        decodeFeaturedResponse(featured),
-      ]);
+      const question = yield* loadTryoutQuestion(featured.question);
 
       return {
         question: question.content,
-        response,
+        response: featured.response,
       };
     })
   );
