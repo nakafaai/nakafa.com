@@ -56,9 +56,13 @@ describe("GitHub Action policy", () => {
               scope: expect.objectContaining({ name: "Scope" }),
             }),
             on: expect.objectContaining({
-              merge_group: expect.any(Object),
               pull_request: expect.any(Object),
             }),
+          })
+        );
+        expect(workflow).not.toEqual(
+          expect.objectContaining({
+            on: expect.objectContaining({ merge_group: expect.anything() }),
           })
         );
         expect(workflow).not.toEqual(
@@ -136,29 +140,25 @@ describe("GitHub Action policy", () => {
       }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.effect(
-    "runs changed React checks on pull requests and full checks in the queue",
-    () =>
-      readRepositoryFile("../../.github/workflows/ci.yml").pipe(
-        Effect.tap((source) =>
-          Effect.sync(() => {
-            expect(source).toContain(
-              'pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE"'
-            );
-            expect(source).toContain(
-              "pnpm run doctor --verbose --scope full --blocking warning"
-            );
-            expect(source).toContain("run: pnpm ci:queue");
-            expect(source).toContain("run: pnpm ci:review");
-            expect(source).toContain(
-              `required: \${{ github.event_name == 'merge_group' || steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}`
-            );
-            expect(source).toContain("if: needs.scope.outputs.reuse != 'true'");
-            expect(source).not.toContain("actions/github-script");
-          })
-        ),
-        Effect.provide(NodeServices.layer)
-      )
+  it.effect("runs every required check on the current pull-request head", () =>
+    readRepositoryFile("../../.github/workflows/ci.yml").pipe(
+      Effect.tap((source) =>
+        Effect.sync(() => {
+          expect(source).toContain(
+            'pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE"'
+          );
+          expect(source).toContain(
+            `required: \${{ steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}`
+          );
+          expect(source).not.toContain("actions/github-script");
+          expect(source).not.toContain("merge_group");
+          expect(source).not.toContain("pnpm ci:queue");
+          expect(source).not.toContain("pnpm ci:review");
+          expect(source).not.toContain("outputs.reuse");
+        })
+      ),
+      Effect.provide(NodeServices.layer)
+    )
   );
 
   it.effect("accepts every reviewed immutable GitHub Action", () =>

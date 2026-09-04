@@ -3,9 +3,6 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize]
-  merge_group:
-    branches: [main]
-    types: [checks_requested]
 
 permissions:
   actions: read
@@ -14,11 +11,8 @@ permissions:
   pull-requests: read
 
 concurrency:
-  # Pull request heads supersede their own predecessor runs. Merge-group runs
-  # use the immutable commit SHA so a later independent change cannot cancel
-  # an already-admitted production acceptance.
-  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   scope:
@@ -26,70 +20,53 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih' }}
+      DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih' }}
     outputs:
-      pull-head: ${{ steps.queue.outputs.pull-head }}
-      pull-number: ${{ steps.queue.outputs.pull-number }}
-      required: ${{ github.event_name == 'merge_group' || steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}
-      reuse: ${{ steps.queue.outputs.reuse || steps.default.outputs.reuse }}
+      required: ${{ steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}
       trusted: ${{ steps.trust.outputs.trusted }}
     steps:
       - name: Set fail-closed default
         id: default
         env:
-          REQUIRED: ${{ github.event_name == 'merge_group' || env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' }}
+          REQUIRED: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' }}
         run: |
           echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
-          echo "reuse=false" >> "$GITHUB_OUTPUT"
 
-      - if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' || github.event_name == 'merge_group'
+      - if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Setup toolchain
-        if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' || github.event_name == 'merge_group'
+        if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true'
         uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
           cache: true
           install: false
 
       - name: Install dependencies
-        if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' || github.event_name == 'merge_group'
+        if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm install --frozen-lockfile
-
-      - name: Admit exact merge queue tree
-        if: github.event_name == 'merge_group'
-        id: queue
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: pnpm ci:queue
 
       - name: Export trusted candidate decision
         id: trust
         env:
           DIRECT_TRUST: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT }}
-          QUEUE_TRUST: ${{ steps.queue.outputs.trusted }}
         run: |
-          trusted=false
-          if [ "$DIRECT_TRUST" = "true" ] || [ "$QUEUE_TRUST" = "true" ]; then
-            trusted=true
-          fi
-          echo "trusted=$trusted" >> "$GITHUB_OUTPUT"
+          echo "trusted=$DIRECT_TRUST" >> "$GITHUB_OUTPUT"
 
       - name: Classify production acceptance
         if: steps.trust.outputs.trusted == 'true'
         id: classify
         env:
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
-          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: pnpm ci:production-acceptance
 
   quality:
     name: Quality
     needs: scope
     # The advisory registry is live state, so every current tree runs the audit.
-    # Exact source proof may replace only deterministic tests in the queue.
     if: always() && needs.scope.result == 'success'
     runs-on: ubuntu-latest
     # Keep bounded fail-closed advisory retries inside the aggregate job budget.
@@ -118,16 +95,13 @@ jobs:
         run: bash scripts/osv
 
       - name: Run tests
-        if: needs.scope.outputs.reuse != 'true'
         run: pnpm test
 
   production:
     name: Production
-    # Signed acceptance runs only for trusted same-repository candidates and
-    # their merge-group trees when they contain production-relevant changes.
-    # It always reruns in the queue because live Convex state can change after
-    # exact-head source checks without changing the Git tree. Test-only
-    # candidates retain Quality while Production is skipped.
+    # Signed acceptance runs only for trusted same-repository candidates when
+    # they contain production-relevant changes. Test-only candidates retain
+    # Quality while Production is skipped.
     needs: scope
     if: always() && needs.scope.result == 'success' && needs.scope.outputs.required == 'true' && needs.scope.outputs.trusted == 'true'
     runs-on: ubuntu-latest
@@ -525,14 +499,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run changed React Doctor
-        if: needs.scope.result == 'success' && github.event_name == 'pull_request'
+        if: needs.scope.result == 'success'
         env:
           DOCTOR_BASE: origin/main
         run: pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE" --include-untracked --blocking warning
-
-      - name: Run full React Doctor
-        if: needs.scope.result == 'success' && github.event_name == 'merge_group'
-        run: pnpm run doctor --verbose --scope full --blocking warning
 
       - name: Mark current-tree Doctor complete
         if: needs.scope.result == 'success'
@@ -545,8 +515,6 @@ jobs:
           FULL_OUTCOME: ${{ steps.full.outcome }}
           PRODUCTION_OUTCOME: skipped
           PRODUCTION_REQUIRED: ${{ needs.scope.outputs.required }}
-          REVIEW_OUTCOME: skipped
-          REUSE_SOURCE_PROOF: ${{ needs.scope.outputs.reuse }}
           SCOPE_OUTCOME: ${{ needs.scope.result }}
           TRUSTED_CANDIDATE: ${{ needs.scope.outputs.trusted }}
         run: pnpm ci:gate doctor
@@ -571,23 +539,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify final queue review state
-        if: always() && github.event_name == 'merge_group' && needs.scope.result == 'success'
-        id: review
-        env:
-          EXPECTED_HEAD: ${{ needs.scope.outputs.pull-head }}
-          GITHUB_TOKEN: ${{ github.token }}
-          PULL_NUMBER: ${{ needs.scope.outputs.pull-number }}
-        run: pnpm ci:review
-
       - name: Verify required result
         if: always()
         env:
           FULL_OUTCOME: ${{ needs.quality.result }}
           PRODUCTION_OUTCOME: ${{ needs.production.result }}
           PRODUCTION_REQUIRED: ${{ needs.scope.outputs.required }}
-          REVIEW_OUTCOME: ${{ steps.review.outcome }}
-          REUSE_SOURCE_PROOF: ${{ needs.scope.outputs.reuse }}
           SCOPE_OUTCOME: ${{ needs.scope.result }}
           TRUSTED_CANDIDATE: ${{ needs.scope.outputs.trusted }}
         run: pnpm ci:gate required
