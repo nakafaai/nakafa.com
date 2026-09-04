@@ -1,4 +1,4 @@
-import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/scripts/content/runtime/ci/config";
+import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import {
   contentRuntimeCiError,
   sanitizeRuntimeCommandError,

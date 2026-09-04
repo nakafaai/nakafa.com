@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import {
-  CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   clearContentRuntimeSecrets,
   DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT,
   MAX_CONTENT_RUNTIME_EXPORT_LIMIT,

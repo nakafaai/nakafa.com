@@ -13,9 +13,10 @@ import {
 import { analyzeKeys } from "@repo/next-config/keys";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { createEnv } from "@t3-oss/env-nextjs";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { assertContentRuntimeBuildTarget } from "@/content-runtime-build-target";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
 import { createOgRouteAliasRewrites } from "@/lib/og/route";
@@ -31,13 +32,35 @@ const configEnv = createEnv({
       Schema.UndefinedOr(Schema.Literal("true"))
     ),
     VERCEL: Schema.toStandardSchemaV1(Schema.UndefinedOr(Schema.Literal("1"))),
+    VERCEL_ENV: Schema.toStandardSchemaV1(Schema.UndefinedOr(Schema.String)),
+    VERCEL_GIT_COMMIT_SHA: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
+  },
+  client: {
+    NEXT_PUBLIC_CONVEX_SITE_URL: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
   },
   runtimeEnv: {
     CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
     NEXT_EXPOSE_TESTING_API: process.env.NEXT_EXPOSE_TESTING_API,
+    NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
     VERCEL: process.env.VERCEL,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+    VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
   },
 });
+Effect.runSync(
+  assertContentRuntimeBuildTarget({
+    agentMode: configEnv.CONVEX_AGENT_MODE,
+    convexSiteUrl: configEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
+    convexUrl: configEnv.NEXT_PUBLIC_CONVEX_URL,
+    vercel: configEnv.VERCEL,
+    vercelEnvironment: configEnv.VERCEL_ENV,
+    vercelGitCommitSha: configEnv.VERCEL_GIT_COMMIT_SHA,
+  })
+);
 const localConvexConnectSources = createLoopbackConnectSources(
   new URL(configEnv.NEXT_PUBLIC_CONVEX_URL)
 );
