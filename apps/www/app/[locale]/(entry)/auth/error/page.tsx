@@ -1,5 +1,6 @@
 import { redirect } from "@repo/internationalization/src/navigation";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import {
   getPostAuthProviderRetryHref,
   resolvePostAuthIntent,
@@ -7,8 +8,10 @@ import {
 import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
+type AuthErrorPageProps = PageProps<"/[locale]/auth/error">;
+
 /** Discards raw provider diagnostics before showing one generic retry state. */
-export default async function Page(props: PageProps<"/[locale]/auth/error">) {
+async function RedirectFromAuthError(props: AuthErrorPageProps) {
   const [{ locale: rawLocale }, query] = await Promise.all([
     props.params,
     props.searchParams,
@@ -20,4 +23,13 @@ export default async function Page(props: PageProps<"/[locale]/auth/error">) {
 
   const intent = resolvePostAuthIntent(query.intent, locale);
   redirect({ href: getPostAuthProviderRetryHref(intent), locale });
+  return null;
+}
+
+export default function Page(props: AuthErrorPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <RedirectFromAuthError {...props} />
+    </Suspense>
+  );
 }
