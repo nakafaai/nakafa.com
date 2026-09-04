@@ -92,7 +92,8 @@ jobs:
     # Exact source proof may replace only deterministic tests in the queue.
     if: always() && needs.scope.result == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Keep both fail-closed npm advisory phases inside the aggregate job budget.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
