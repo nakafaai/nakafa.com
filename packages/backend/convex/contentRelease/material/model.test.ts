@@ -62,7 +62,33 @@ describe("contentRelease/material/model", () => {
     ]);
   });
 
+  it("saves five queries by reusing the requested material", async () => {
+    const target = convexTest(schema, convexModules);
+    const projections = (["en", "id", "de"] as const).map((appLocale) =>
+      makeMaterialProjection(appLocale, 1)
+    );
+    const requested = projections[0];
+    await activateMaterialCatalog(target, projections);
+
+    const { metrics, result } = await target.query(async (ctx) => {
+      const material = await runConvexProgram(
+        readMaterialModel(ctx, requested.appLocale, requested.publicPath)
+      );
+      return {
+        metrics: await ctx.meta.getTransactionMetrics(),
+        result: material,
+      };
+    });
+
+    expect(result.alternateJson).toHaveLength(3);
+    expect(result.siblingJson).toHaveLength(1);
+    const priorDatabaseQueries = 18;
+    expect(metrics.databaseQueries.used).toBe(13);
+    expect(priorDatabaseQueries - metrics.databaseQueries.used).toBe(5);
+  });
+
   it.each([
+    ["requested", makeMaterialProjection("en", 1)],
     ["locale counterpart", makeMaterialProjection("id", 1)],
     ["sibling", makeMaterialProjection("en", 2)],
   ])("rejects a stale %s row", async (_label, stale) => {
