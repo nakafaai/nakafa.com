@@ -11,6 +11,10 @@ const NINA_HEADING_PATTERN = /Nina already knows/;
 const NINA_REASONING_TEXT = "Compare the two known equations";
 const FEATURED_TRYOUT_HEADING =
   "After learning, see what you really understood";
+const NON_WHITESPACE_PATTERN = /\S/;
+const ANSWER_STATUS_PATTERN = /^(Correct|Incorrect)$/;
+const CORRECT_CHOICE_PATTERN = / Correct$/;
+const INCORRECT_CHOICE_PATTERN = / Incorrect$/;
 // Match local Next and Vercel-promoted production chunk paths.
 const NEXT_CHUNK_PATH =
   /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
@@ -127,7 +131,7 @@ const expectFeaturedTryoutResponse = Effect.fn(
 
   for (let index = 0; index < choiceCount; index += 1) {
     yield* Effect.promise(() =>
-      expect(choices.nth(index)).toHaveAccessibleName(/\S/)
+      expect(choices.nth(index)).toHaveAccessibleName(NON_WHITESPACE_PATTERN)
     );
   }
 
@@ -137,7 +141,7 @@ const expectFeaturedTryoutResponse = Effect.fn(
   yield* Effect.promise(() => expect(annotations).toHaveCount(mathCount));
   for (let index = 0; index < mathCount; index += 1) {
     yield* Effect.promise(() =>
-      expect(annotations.nth(index)).toHaveText(/\S/)
+      expect(annotations.nth(index)).toHaveText(NON_WHITESPACE_PATTERN)
     );
   }
 
@@ -147,13 +151,13 @@ const expectFeaturedTryoutResponse = Effect.fn(
   const seedChoice = choices.first();
   yield* Effect.promise(() => seedChoice.click());
   yield* Effect.promise(() => expect(seedChoice).toBeChecked());
-  yield* Effect.promise(() =>
-    expect(status).toHaveText(/^(Correct|Incorrect)$/)
-  );
+  yield* Effect.promise(() => expect(status).toHaveText(ANSWER_STATUS_PATTERN));
 
-  const correctChoice = response.getByRole("radio", { name: / Correct$/ });
+  const correctChoice = response.getByRole("radio", {
+    name: CORRECT_CHOICE_PATTERN,
+  });
   const incorrectChoices = response.getByRole("radio", {
-    name: / Incorrect$/,
+    name: INCORRECT_CHOICE_PATTERN,
   });
   yield* Effect.promise(() => expect(correctChoice).toHaveCount(1));
   yield* Effect.promise(() =>
@@ -164,7 +168,7 @@ const expectFeaturedTryoutResponse = Effect.fn(
   yield* Effect.promise(() => incorrectChoice.click());
   yield* Effect.promise(() => expect(incorrectChoice).toBeChecked());
   yield* Effect.promise(() =>
-    expect(incorrectChoice).toHaveAccessibleName(/ Incorrect$/)
+    expect(incorrectChoice).toHaveAccessibleName(INCORRECT_CHOICE_PATTERN)
   );
   yield* Effect.promise(() => expect(status).toHaveText("Incorrect"));
   yield* Effect.promise(() => expect(checkAnswer).toHaveCount(0));
@@ -174,7 +178,7 @@ const expectFeaturedTryoutResponse = Effect.fn(
   yield* Effect.promise(() => expect(correctChoice).toBeChecked());
   yield* Effect.promise(() => expect(incorrectChoice).not.toBeChecked());
   yield* Effect.promise(() =>
-    expect(correctChoice).toHaveAccessibleName(/ Correct$/)
+    expect(correctChoice).toHaveAccessibleName(CORRECT_CHOICE_PATTERN)
   );
   yield* Effect.promise(() => expect(status).toHaveText("Correct"));
 });

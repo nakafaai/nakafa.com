@@ -9,8 +9,6 @@ import { makeFunctionReference } from "convex/server";
 import { Effect, FileSystem, Stream } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 
-export { sanitizeRuntimeCommandError };
-
 const SHARED_OUTPUT_REDIRECT =
   'output_path=$1; shift; exec "$@" >| "$output_path" 2>&1';
 const SPLIT_OUTPUT_REDIRECT =
@@ -163,9 +161,13 @@ export const runConvexData = Effect.fn("contentRuntime.readProductionTable")(
       table: options.table,
     }).pipe(Effect.ensuring(Effect.sync(() => client.clearAuth())));
 
-    yield* fileSystem.writeFileString(options.outputPath, JSON.stringify(rows), {
-      mode: 0o600,
-    });
+    yield* fileSystem.writeFileString(
+      options.outputPath,
+      JSON.stringify(rows),
+      {
+        mode: 0o600,
+      }
+    );
     yield* fileSystem.chmod(options.outputPath, 0o600);
   }
 );
