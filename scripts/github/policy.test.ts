@@ -11,6 +11,10 @@ import {
 } from "#scripts/github/policy";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
+const CONTENT_RUNTIME_CACHE_KEY_PATTERN =
+  /^runtime-content-\$\{\{ env\.CONTENT_RUNTIME_STATE_HASH \}\}-\$\{\{ env\.CONTENT_RUNTIME_SCHEMA_HASH \}\}$/u;
+const CONTENT_RUNTIME_CACHE_PRIMARY_KEY_PATTERN =
+  /^\$\{\{ steps\.signed-content-cache\.outputs\.cache-primary-key \}\}$/u;
 
 const readRepositoryFile = Effect.fn("GithubPolicyTest.readRepositoryFile")(
   function* (relativeUrl: string) {
@@ -41,7 +45,7 @@ function validActionUses(): GithubActionUse[] {
 
 describe("GitHub Action policy", () => {
   it.effect(
-    "runs candidate validation before merge without repeating it on main",
+    "runs candidate validation before merge and isolates snapshot publishing",
     () =>
       Effect.gen(function* () {
         const source = yield* readRepositoryFile(
@@ -67,6 +71,7 @@ describe("GitHub Action policy", () => {
             on: expect.objectContaining({ push: expect.anything() }),
           })
         );
+        expect(source).not.toContain("actions/cache/save@");
 
         const cacheSource = yield* readRepositoryFile(
           "../../.github/workflows/cache.yml"
@@ -74,11 +79,39 @@ describe("GitHub Action policy", () => {
         const cacheWorkflow = yield* parseWorkflow(cacheSource);
         expect(cacheWorkflow).toEqual(
           expect.objectContaining({
+            concurrency: {
+              "cancel-in-progress": false,
+              group: "content-snapshot-cache-main",
+            },
             jobs: {
-              publish: expect.objectContaining({ name: "Publish" }),
+              publish: expect.objectContaining({
+                if: "github.ref == 'refs/heads/main' && github.repository == 'nakafaai/nakafa.com'",
+                name: "Publish",
+                steps: expect.arrayContaining([
+                  expect.objectContaining({
+                    id: "signed-content-cache",
+                    uses: "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+                    with: expect.objectContaining({
+                      key: expect.stringMatching(
+                        CONTENT_RUNTIME_CACHE_KEY_PATTERN
+                      ),
+                    }),
+                  }),
+                  expect.objectContaining({
+                    name: "Save encrypted signed content snapshot",
+                    uses: "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+                    with: expect.objectContaining({
+                      key: expect.stringMatching(
+                        CONTENT_RUNTIME_CACHE_PRIMARY_KEY_PATTERN
+                      ),
+                    }),
+                  }),
+                ]),
+              }),
             },
             on: {
               push: { branches: ["main"] },
+              workflow_dispatch: {},
             },
           })
         );
