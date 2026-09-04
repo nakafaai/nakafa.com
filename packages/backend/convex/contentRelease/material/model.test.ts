@@ -138,6 +138,37 @@ describe("contentRelease/material/model", () => {
     });
   });
 
+  it("rejects a published route whose catalog row was removed", async () => {
+    const target = convexTest(schema, convexModules);
+    const requested = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(target);
+    await target.mutation(async (ctx) => {
+      const row = await ctx.db
+        .query("materialCatalog")
+        .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
+          index
+            .eq("slot", "blue")
+            .eq("appLocale", requested.appLocale)
+            .eq("publicPath", requested.publicPath)
+        )
+        .unique();
+      if (!row) {
+        throw new Error("Expected one current material row.");
+      }
+      await ctx.db.delete("materialCatalog", row._id);
+    });
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
   it("returns a missing route inside the current signed family", async () => {
     const target = convexTest(schema, convexModules);
     await activateMaterialCatalog(target);
@@ -242,7 +273,7 @@ describe("contentRelease/material/model", () => {
       requested,
       conflicting,
       makeMaterialProjection("id", 1),
-      makeMaterialProjection("id", 2),
+      makeMaterialProjection("de", 1),
     ]);
 
     await expect(
