@@ -101,6 +101,7 @@ const finalizeProgram = Effect.fn("contentRuntimeArchive.finalize")(function* (
   args: ContentRuntimeArchiveClaim & {
     readonly archiveSha256: string;
     readonly byteLength: number;
+    readonly sourceStateHash: string;
     readonly storageId: string;
   }
 ) {
@@ -173,9 +174,10 @@ const finalizeProgram = Effect.fn("contentRuntimeArchive.finalize")(function* (
   const metadata = {
     archiveSha256: args.archiveSha256,
     byteLength: args.byteLength,
-    contentStateHash: args.contentStateHash,
     createdAt: now,
+    runtimeSelectionHash: args.runtimeSelectionHash,
     runtimeSchemaFingerprint: args.runtimeSchemaFingerprint,
+    sourceStateHash: args.sourceStateHash,
   };
   yield* Effect.promise(() =>
     ctx.db.insert("contentRuntimeArchives", { ...metadata, storageId })
@@ -266,6 +268,7 @@ export const finalize = internalMutation({
     ...claimArgs,
     archiveSha256: v.string(),
     byteLength: v.number(),
+    sourceStateHash: v.string(),
     storageId: v.string(),
   },
   returns: runtimeArchiveFinalizeResultValidator,

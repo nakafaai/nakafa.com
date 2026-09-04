@@ -8,7 +8,7 @@ import {
   readProducerConfig,
   readRuntimeArchiveAccessConfig,
 } from "@repo/backend/scripts/content/runtime/ci/access";
-import { ConfigProvider, Effect } from "effect";
+import { ConfigProvider, Effect, Redacted } from "effect";
 
 describe("content runtime archive access", () => {
   afterEach(() => {
@@ -17,14 +17,14 @@ describe("content runtime archive access", () => {
 
   it.live("grants archive downloads without the producer credential", () =>
     Effect.gen(function* () {
-      stubCacheIdentity("4".repeat(64));
+      stubArchiveIdentity("4".repeat(64));
       stubArchiveAccess("runtime-reader-token");
 
       expect(
         yield* withStubbedEnv(readRuntimeArchiveAccessConfig)
       ).toMatchObject({
-        contentStateHash: "4".repeat(64),
         runnerTemp: "/tmp",
+        runtimeSelectionHash: "4".repeat(64),
         siteUrl: CONTENT_RUNTIME_PRODUCTION_SITE_URL,
       });
       expect(process.env.CONTENT_ARCHIVE_TOKEN).toBeUndefined();
@@ -35,34 +35,46 @@ describe("content runtime archive access", () => {
     Effect.gen(function* () {
       stubProductionConfig();
       stubCacheIdentity("5".repeat(64));
-      stubArchiveAccess("runtime-reader-token");
+      stubArchiveIdentity("6".repeat(64));
       vi.stubEnv("CONTENT_ARCHIVE_TOKEN", "archive-producer-token");
 
       const config = yield* withStubbedEnv(readProducerConfig);
 
-      expect(config.archiveToken).not.toBe(config.runtimeToken);
+      expect(Redacted.value(config.archiveToken)).toBe(
+        "archive-producer-token"
+      );
+      expect("runtimeToken" in config).toBe(false);
+      expect(process.env.CONTENT_RUNTIME_TOKEN).toBeUndefined();
+      expect(config.runtimeSelectionHash).toBe("6".repeat(64));
       expect(config.siteUrl).toBe(CONTENT_RUNTIME_PRODUCTION_SITE_URL);
     })
   );
 
-  it.live.each([
-    { archiveToken: "archive-producer-token", runtimeToken: "invalid token" },
-    {
-      archiveToken: "archive-producer-token",
-      runtimeToken: "invalid\u0001token",
-    },
-    { archiveToken: "invalid token", runtimeToken: "runtime-reader-token" },
-    {
-      archiveToken: "invalid\u0080token",
-      runtimeToken: "runtime-reader-token",
-    },
-  ])(
-    "rejects unsafe archive credentials before network access: $archiveToken/$runtimeToken",
-    ({ archiveToken, runtimeToken }) =>
+  it.live.each(["invalid token", "invalid\u0001token"])(
+    "rejects unsafe download credentials before network access",
+    (token) =>
+      Effect.gen(function* () {
+        stubArchiveIdentity("6".repeat(64));
+        stubArchiveAccess(token);
+
+        const failure = yield* withStubbedEnv(
+          readRuntimeArchiveAccessConfig.pipe(Effect.flip)
+        );
+
+        expect(failure).toMatchObject({
+          _tag: "ContentRuntimeCiError",
+          message: "Content runtime artifact token is missing or invalid.",
+        });
+      })
+  );
+
+  it.live.each(["invalid token", "invalid\u0080token"])(
+    "rejects unsafe producer credentials before network access",
+    (archiveToken) =>
       Effect.gen(function* () {
         stubProductionConfig();
         stubCacheIdentity("6".repeat(64));
-        stubArchiveAccess(runtimeToken);
+        stubArchiveIdentity("7".repeat(64));
         vi.stubEnv("CONTENT_ARCHIVE_TOKEN", archiveToken);
 
         const failure = yield* withStubbedEnv(
@@ -71,37 +83,43 @@ describe("content runtime archive access", () => {
 
         expect(failure).toMatchObject({
           _tag: "ContentRuntimeCiError",
-          message:
-            runtimeToken === "runtime-reader-token"
-              ? "Content archive producer token is missing or invalid."
-              : "Content runtime artifact token is missing or invalid.",
+          message: "Content archive producer token is missing or invalid.",
         });
       })
   );
 
-  it.live.each([
-    { name: "CONTENT_RUNTIME_TOKEN", value: undefined },
-    { name: "CONTENT_RUNTIME_TOKEN", value: "" },
-    { name: "CONTENT_ARCHIVE_TOKEN", value: undefined },
-    { name: "CONTENT_ARCHIVE_TOKEN", value: "" },
-  ])("fails closed when $name is absent or empty", ({ name, value }) =>
-    Effect.gen(function* () {
-      stubProductionConfig();
-      stubCacheIdentity("7".repeat(64));
-      if (name !== "CONTENT_RUNTIME_TOKEN") {
-        stubArchiveAccess("runtime-reader-token");
-      }
-      if (name !== "CONTENT_ARCHIVE_TOKEN") {
-        vi.stubEnv("CONTENT_ARCHIVE_TOKEN", "archive-producer-token");
-      }
-      if (value !== undefined) {
-        vi.stubEnv(name, value);
-      }
+  it.live.each([undefined, ""])(
+    "fails closed when the download credential is absent or empty",
+    (value) =>
+      Effect.gen(function* () {
+        stubArchiveIdentity("7".repeat(64));
+        if (value !== undefined) {
+          vi.stubEnv("CONTENT_RUNTIME_TOKEN", value);
+        }
 
-      expect(
-        yield* withStubbedEnv(readProducerConfig.pipe(Effect.flip))
-      ).toMatchObject({ _tag: "ConfigError" });
-    })
+        expect(
+          yield* withStubbedEnv(
+            readRuntimeArchiveAccessConfig.pipe(Effect.flip)
+          )
+        ).toMatchObject({ _tag: "ConfigError" });
+      })
+  );
+
+  it.live.each([undefined, ""])(
+    "fails closed when the producer credential is absent or empty",
+    (value) =>
+      Effect.gen(function* () {
+        stubProductionConfig();
+        stubCacheIdentity("7".repeat(64));
+        stubArchiveIdentity("8".repeat(64));
+        if (value !== undefined) {
+          vi.stubEnv("CONTENT_ARCHIVE_TOKEN", value);
+        }
+
+        expect(
+          yield* withStubbedEnv(readProducerConfig.pipe(Effect.flip))
+        ).toMatchObject({ _tag: "ConfigError" });
+      })
   );
 
   it.live("clears archive credentials without widening its ownership", () =>
@@ -130,6 +148,10 @@ function stubProductionConfig() {
 function stubCacheIdentity(contentStateHash: string) {
   vi.stubEnv("CONTENT_RUNTIME_CACHE_KEY", "k".repeat(43));
   vi.stubEnv("CONTENT_RUNTIME_STATE_HASH", contentStateHash);
+}
+
+function stubArchiveIdentity(runtimeSelectionHash: string) {
+  vi.stubEnv("CONTENT_RUNTIME_SELECTION_HASH", runtimeSelectionHash);
   vi.stubEnv("CONTENT_RUNTIME_SCHEMA_HASH", "3".repeat(64));
 }
 

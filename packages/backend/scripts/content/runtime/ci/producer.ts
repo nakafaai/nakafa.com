@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { CONTENT_RUNTIME_ARCHIVE_EXPORT_TIMEOUT_MS } from "@repo/backend/content/archive";
 import type { ProducerConfig } from "@repo/backend/scripts/content/runtime/ci/access";
 import { publishRuntimeArchive } from "@repo/backend/scripts/content/runtime/ci/artifact";
 import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
@@ -32,7 +33,17 @@ export const produceRuntimeArchive = Effect.fn(
     Effect.succeed(claimId),
     (ownedClaimId) =>
       Effect.gen(function* () {
-        yield* exporter(config);
+        yield* exporter(config).pipe(
+          Effect.timeoutOrElse({
+            duration: CONTENT_RUNTIME_ARCHIVE_EXPORT_TIMEOUT_MS,
+            orElse: () =>
+              Effect.fail(
+                contentRuntimeCiError(
+                  "Signed runtime export exceeded its producer lease safety window."
+                )
+              ),
+          })
+        );
         const renewed = yield* claimRuntimeArchive(
           config,
           ownedClaimId,

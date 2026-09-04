@@ -6,13 +6,14 @@ const tables = {
   contentRuntimeArchives: defineTable({
     archiveSha256: v.string(),
     byteLength: v.number(),
-    contentStateHash: v.string(),
     createdAt: v.number(),
+    runtimeSelectionHash: v.string(),
     runtimeSchemaFingerprint: v.string(),
+    sourceStateHash: v.string(),
     storageId: v.id("_storage"),
   })
-    .index("by_contentStateHash_and_runtimeSchemaFingerprint", [
-      "contentStateHash",
+    .index("by_runtimeSelectionHash_and_runtimeSchemaFingerprint", [
+      "runtimeSelectionHash",
       "runtimeSchemaFingerprint",
     ])
     .index("by_createdAt", ["createdAt"])
@@ -21,12 +22,12 @@ const tables = {
   /** One renewable producer lease for an archive identity that is still absent. */
   contentRuntimeArchiveClaims: defineTable({
     claimId: v.string(),
-    contentStateHash: v.string(),
     expiresAt: v.number(),
+    runtimeSelectionHash: v.string(),
     runtimeSchemaFingerprint: v.string(),
   })
-    .index("by_contentStateHash_and_runtimeSchemaFingerprint", [
-      "contentStateHash",
+    .index("by_runtimeSelectionHash_and_runtimeSchemaFingerprint", [
+      "runtimeSelectionHash",
       "runtimeSchemaFingerprint",
     ])
     .index("by_expiresAt", ["expiresAt"]),

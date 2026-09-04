@@ -2,7 +2,10 @@ import { tmpdir } from "node:os";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import type { ProducerConfig } from "@repo/backend/scripts/content/runtime/ci/access";
+import type {
+  ProducerConfig,
+  RuntimeArchiveReadConfig,
+} from "@repo/backend/scripts/content/runtime/ci/access";
 import type {
   ExportConfig,
   ImportConfig,
@@ -28,9 +31,10 @@ const runtimeSelectionHash = "3".repeat(64);
 const metadata = {
   archiveSha256: "4".repeat(64),
   byteLength: 128,
-  contentStateHash,
   createdAt: 1_800_000_000_000,
+  runtimeSelectionHash,
   runtimeSchemaFingerprint,
+  sourceStateHash: contentStateHash,
 };
 
 function makeOperations(runnerTemp: string, events: string[]) {
@@ -58,6 +62,13 @@ function makeOperations(runnerTemp: string, events: string[]) {
   const producer: ProducerConfig = {
     ...exported,
     archiveToken: Redacted.make("archive-token"),
+    runtimeSelectionHash,
+    siteUrl: "https://production.example.test",
+  };
+  const reader: RuntimeArchiveReadConfig = {
+    runnerTemp,
+    runtimeSelectionHash,
+    runtimeSchemaFingerprint,
     runtimeToken: Redacted.make("runtime-token"),
     siteUrl: "https://production.example.test",
   };
@@ -103,7 +114,7 @@ function makeOperations(runnerTemp: string, events: string[]) {
     readImport: Effect.succeed(imported),
     readProducer: Effect.succeed(producer),
     readProduction: Effect.succeed(production),
-    readRuntimeArchive: Effect.succeed(producer),
+    readRuntimeArchive: Effect.succeed(reader),
     readSchemaFingerprint: vi.fn(() =>
       Effect.sync(() => {
         events.push("read-fingerprint");

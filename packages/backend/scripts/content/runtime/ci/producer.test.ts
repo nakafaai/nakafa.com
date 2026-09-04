@@ -1,5 +1,9 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
+import {
+  CONTENT_RUNTIME_ARCHIVE_EXPORT_TIMEOUT_MS,
+  CONTENT_RUNTIME_ARCHIVE_LEASE_MS,
+} from "@repo/backend/content/archive";
 import type { ProducerConfig } from "@repo/backend/scripts/content/runtime/ci/access";
 import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import { exportSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/export";
@@ -8,28 +12,34 @@ import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
   CONTENT_RUNTIME_CACHE_FILE,
 } from "@repo/backend/scripts/content/runtime/ci/snapshot";
-import { Effect, FileSystem, Redacted } from "effect";
+import { Effect, Fiber, FileSystem, Redacted } from "effect";
+import { TestClock } from "effect/testing";
 
+const MINIMUM_LEASE_SAFETY_MARGIN_MS = 5 * 60 * 1000;
 const bytes = new TextEncoder().encode("encrypted-runtime-archive");
 const metadata = {
   archiveSha256:
     "e3765fbb7ee79916de02fe557bafe7aa37641457f1c4e8db73e4768b49d61745",
   byteLength: bytes.byteLength,
-  contentStateHash: "1".repeat(64),
   createdAt: 1_800_000_000_000,
+  runtimeSelectionHash: "1".repeat(64),
   runtimeSchemaFingerprint: "2".repeat(64),
+  sourceStateHash: "3".repeat(64),
 };
 
-function config(runnerTemp: string): ProducerConfig {
+function config(
+  runnerTemp: string,
+  contentStateHash = metadata.sourceStateHash
+): ProducerConfig {
   return {
     archiveToken: Redacted.make("technical-archive-token"),
     cacheKey: Redacted.make("k".repeat(43)),
-    contentStateHash: metadata.contentStateHash,
+    contentStateHash,
     deployKey: Redacted.make("production-deploy-key"),
     exportLimit: 100_000,
     runnerTemp,
+    runtimeSelectionHash: metadata.runtimeSelectionHash,
     runtimeSchemaFingerprint: metadata.runtimeSchemaFingerprint,
-    runtimeToken: Redacted.make("technical-runtime-token"),
     siteUrl: "https://production.example.test",
   };
 }
@@ -42,28 +52,77 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 describe("content runtime archive producer", () => {
-  it.live(
-    "skips every export side effect when the immutable archive exists",
-    () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fileSystem = yield* FileSystem.FileSystem;
-          const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
-            directory: "/tmp",
-            prefix: "runtime-producer-existing-",
-          });
-          const fetcher = vi
-            .fn<typeof fetch>()
-            .mockResolvedValue(jsonResponse({ kind: "existing", metadata }));
-          const exporter = vi.fn(exportSignedRuntime);
+  it.live("reuses the selection archive after source state drift", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
+          directory: "/tmp",
+          prefix: "runtime-producer-existing-",
+        });
+        const fetcher = vi
+          .fn<typeof fetch>()
+          .mockResolvedValue(jsonResponse({ kind: "existing", metadata }));
+        const exporter = vi.fn(exportSignedRuntime);
 
-          expect(
-            yield* produceRuntimeArchive(config(runnerTemp), fetcher, exporter)
-          ).toEqual({ kind: "unchanged", metadata });
-          expect(exporter).not.toHaveBeenCalled();
-          expect(fetcher).toHaveBeenCalledTimes(1);
-        }).pipe(Effect.provide(NodeServices.layer))
-      )
+        expect(
+          yield* produceRuntimeArchive(
+            config(runnerTemp, "9".repeat(64)),
+            fetcher,
+            exporter
+          )
+        ).toEqual({ kind: "unchanged", metadata });
+        expect(exporter).not.toHaveBeenCalled();
+        expect(fetcher).toHaveBeenCalledTimes(1);
+        expect(
+          JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body))
+        ).toMatchObject({
+          runtimeSchemaFingerprint: metadata.runtimeSchemaFingerprint,
+          runtimeSelectionHash: metadata.runtimeSelectionHash,
+        });
+        expect(String(fetcher.mock.calls[0]?.[1]?.body)).not.toContain(
+          "contentStateHash"
+        );
+      }).pipe(Effect.provide(NodeServices.layer))
+    )
+  );
+
+  it.effect("interrupts export before the producer lease can expire", () =>
+    Effect.gen(function* () {
+      expect(
+        CONTENT_RUNTIME_ARCHIVE_LEASE_MS -
+          CONTENT_RUNTIME_ARCHIVE_EXPORT_TIMEOUT_MS
+      ).toBeGreaterThanOrEqual(MINIMUM_LEASE_SAFETY_MARGIN_MS);
+      const fetcher = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          jsonResponse({
+            expiresAt: Date.now() + CONTENT_RUNTIME_ARCHIVE_LEASE_MS,
+            kind: "claimed",
+          })
+        )
+        .mockResolvedValueOnce(jsonResponse({ released: true }));
+      const exporter = vi.fn<typeof exportSignedRuntime>(() => Effect.never);
+      const fiber = yield* produceRuntimeArchive(
+        config("/tmp"),
+        fetcher,
+        exporter
+      ).pipe(
+        Effect.flip,
+        Effect.provide(NodeServices.layer),
+        Effect.forkChild({ startImmediately: true })
+      );
+
+      yield* Effect.yieldNow;
+      yield* TestClock.adjust(CONTENT_RUNTIME_ARCHIVE_EXPORT_TIMEOUT_MS);
+
+      expect(yield* Fiber.join(fiber)).toMatchObject({
+        message:
+          "Signed runtime export exceeded its producer lease safety window.",
+      });
+      expect(fetcher).toHaveBeenCalledTimes(2);
+      expect(String(fetcher.mock.calls[1]?.[0])).toContain("/archive/release");
+    })
   );
 
   it.live("does not export while another producer owns the lease", () =>

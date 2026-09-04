@@ -24,10 +24,12 @@ export function loadArchive(
 ) {
   return ctx.db
     .query("contentRuntimeArchives")
-    .withIndex("by_contentStateHash_and_runtimeSchemaFingerprint", (query) =>
-      query
-        .eq("contentStateHash", identity.contentStateHash)
-        .eq("runtimeSchemaFingerprint", identity.runtimeSchemaFingerprint)
+    .withIndex(
+      "by_runtimeSelectionHash_and_runtimeSchemaFingerprint",
+      (query) =>
+        query
+          .eq("runtimeSelectionHash", identity.runtimeSelectionHash)
+          .eq("runtimeSchemaFingerprint", identity.runtimeSchemaFingerprint)
     )
     .unique();
 }
@@ -39,10 +41,12 @@ export function loadClaim(
 ) {
   return ctx.db
     .query("contentRuntimeArchiveClaims")
-    .withIndex("by_contentStateHash_and_runtimeSchemaFingerprint", (query) =>
-      query
-        .eq("contentStateHash", identity.contentStateHash)
-        .eq("runtimeSchemaFingerprint", identity.runtimeSchemaFingerprint)
+    .withIndex(
+      "by_runtimeSelectionHash_and_runtimeSchemaFingerprint",
+      (query) =>
+        query
+          .eq("runtimeSelectionHash", identity.runtimeSelectionHash)
+          .eq("runtimeSchemaFingerprint", identity.runtimeSchemaFingerprint)
     )
     .unique();
 }
@@ -52,9 +56,10 @@ export function archiveMetadata(archive: Doc<"contentRuntimeArchives">) {
   return {
     archiveSha256: archive.archiveSha256,
     byteLength: archive.byteLength,
-    contentStateHash: archive.contentStateHash,
     createdAt: archive.createdAt,
+    runtimeSelectionHash: archive.runtimeSelectionHash,
     runtimeSchemaFingerprint: archive.runtimeSchemaFingerprint,
+    sourceStateHash: archive.sourceStateHash,
   };
 }
 

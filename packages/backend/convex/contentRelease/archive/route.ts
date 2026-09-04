@@ -231,10 +231,11 @@ export function registerContentRuntimeArchiveRoutes<
           {
             archiveSha256: archive.archiveSha256,
             byteLength: archive.byteLength,
-            contentStateHash: archive.contentStateHash,
             createdAt: archive.createdAt,
             downloadUrl: archive.downloadUrl,
+            runtimeSelectionHash: archive.runtimeSelectionHash,
             runtimeSchemaFingerprint: archive.runtimeSchemaFingerprint,
+            sourceStateHash: archive.sourceStateHash,
           },
           200
         );

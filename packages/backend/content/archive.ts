@@ -6,6 +6,7 @@ export const MAX_CONTENT_RUNTIME_ARCHIVE_BYTES = 256 * 1024 * 1024;
 export const MAX_CONTENT_RUNTIME_ARCHIVE_CONTROL_BYTES = 2048;
 export const MAX_CONTENT_RUNTIME_ARCHIVE_CONTROL_RESPONSE_BYTES = 4096;
 export const CONTENT_RUNTIME_ARCHIVE_LEASE_MS = 15 * 60 * 1000;
+export const CONTENT_RUNTIME_ARCHIVE_EXPORT_TIMEOUT_MS = 10 * 60 * 1000;
 
 export const ContentRuntimeArchiveHashSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^[a-f0-9]{64}$/))
@@ -26,7 +27,7 @@ export const ContentRuntimeArchiveByteLengthSchema = Schema.Finite.pipe(
 );
 
 export const ContentRuntimeArchiveIdentitySchema = Schema.Struct({
-  contentStateHash: ContentRuntimeArchiveHashSchema,
+  runtimeSelectionHash: ContentRuntimeArchiveHashSchema,
   runtimeSchemaFingerprint: ContentRuntimeArchiveHashSchema,
 });
 
@@ -38,6 +39,7 @@ export const ContentRuntimeArchiveMetadataSchema = Schema.Struct({
     Schema.check(Schema.isInt()),
     Schema.check(Schema.isGreaterThan(0))
   ),
+  sourceStateHash: ContentRuntimeArchiveHashSchema,
 });
 
 export const ContentRuntimeArchiveClaimSchema = Schema.Struct({
@@ -70,6 +72,7 @@ export const ContentRuntimeArchiveFinalizeSchema = Schema.Struct({
   ...ContentRuntimeArchiveClaimSchema.fields,
   archiveSha256: ContentRuntimeArchiveHashSchema,
   byteLength: ContentRuntimeArchiveByteLengthSchema,
+  sourceStateHash: ContentRuntimeArchiveHashSchema,
   storageId: Schema.Trimmed.pipe(Schema.check(Schema.isNonEmpty())),
 });
 

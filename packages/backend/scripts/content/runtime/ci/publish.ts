@@ -3,6 +3,7 @@ import {
   CONTENT_RUNTIME_ARCHIVE_CONTENT_TYPE,
   ContentRuntimeArchiveAbortResultSchema,
   ContentRuntimeArchiveFinalizeResultSchema,
+  type ContentRuntimeArchiveIdentity,
   ContentRuntimeArchiveStorageResultSchema,
   ContentRuntimeArchiveUploadSchema,
   MAX_CONTENT_RUNTIME_ARCHIVE_BYTES,
@@ -24,9 +25,9 @@ import { Effect, Result } from "effect";
 
 const MAX_FINALIZE_ATTEMPTS = 3;
 
-function identity(config: RuntimeArchiveWriteConfig) {
+function identity(config: ContentRuntimeArchiveIdentity) {
   return {
-    contentStateHash: config.contentStateHash,
+    runtimeSelectionHash: config.runtimeSelectionHash,
     runtimeSchemaFingerprint: config.runtimeSchemaFingerprint,
   };
 }
@@ -45,8 +46,9 @@ const finalizeUpload = Effect.fn("contentRuntimePublish.finalize")(function* (
     readonly archiveSha256: string;
     readonly byteLength: number;
     readonly claimId: string;
-    readonly contentStateHash: string;
+    readonly runtimeSelectionHash: string;
     readonly runtimeSchemaFingerprint: string;
+    readonly sourceStateHash: string;
     readonly storageId: string;
   },
   fetcher: typeof fetch
@@ -113,7 +115,7 @@ const abortUpload = Effect.fn("contentRuntimePublish.abort")(function* (
 /** Uploads bytes and binds them exactly once to their runtime identity. */
 export const storeRuntimeArchive = Effect.fn("contentRuntimePublish.store")(
   function* (
-    config: RuntimeArchiveWriteConfig,
+    config: RuntimeArchiveWriteConfig & { readonly contentStateHash: string },
     claimId: string,
     bytes: Uint8Array,
     fetcher: typeof fetch
@@ -176,6 +178,7 @@ export const storeRuntimeArchive = Effect.fn("contentRuntimePublish.store")(
         archiveSha256,
         byteLength,
         claimId,
+        sourceStateHash: config.contentStateHash,
         storageId,
       },
       fetcher

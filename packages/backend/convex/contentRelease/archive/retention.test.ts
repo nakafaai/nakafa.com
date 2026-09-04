@@ -19,9 +19,13 @@ type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
 function identity(index: number) {
   return {
-    contentStateHash: index.toString(16).padStart(64, "0"),
+    runtimeSelectionHash: index.toString(16).padStart(64, "0"),
     runtimeSchemaFingerprint: "e".repeat(64),
   };
+}
+
+function sourceStateHash(index: number) {
+  return (index + 1000).toString(16).padStart(64, "0");
 }
 
 function claimId(index: number) {
@@ -57,6 +61,7 @@ async function insertArchive(
       archiveSha256,
       byteLength: Buffer.byteLength(value),
       createdAt,
+      sourceStateHash: sourceStateHash(index),
       storageId,
     })
   );
@@ -76,6 +81,7 @@ async function storeNewArchive(target: RuntimeTest, index: number) {
     ...input,
     archiveSha256: createHash("sha256").update(value).digest("hex"),
     byteLength: Buffer.byteLength(value),
+    sourceStateHash: sourceStateHash(index),
     storageId,
   });
   expect(response.status).toBe(200);

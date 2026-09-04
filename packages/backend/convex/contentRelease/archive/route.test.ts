@@ -22,8 +22,9 @@ const ARCHIVE_TOKEN = "technical-archive-token";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const archiveTokenName = "CONTENT_ARCHIVE_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
+const sourceStateHash = "3".repeat(64);
 const identity = {
-  contentStateHash: "1".repeat(64),
+  runtimeSelectionHash: "1".repeat(64),
   runtimeSchemaFingerprint: "2".repeat(64),
 };
 
@@ -86,6 +87,7 @@ function finalize(
     archiveSha256: sha256(value),
     byteLength: Buffer.byteLength(value),
     claimId: id,
+    sourceStateHash,
     storageId,
   });
 }
@@ -295,7 +297,7 @@ describe("content runtime archive HTTP routes", () => {
   it("preserves another identity's pending archive through finalize and abort", async () => {
     const target = createConvexTestWithBetterAuth();
     const pendingIdentity = {
-      contentStateHash: "7".repeat(64),
+      runtimeSelectionHash: "7".repeat(64),
       runtimeSchemaFingerprint: "6".repeat(64),
     };
     const pendingClaimId = claimId(70);
@@ -311,7 +313,7 @@ describe("content runtime archive HTTP routes", () => {
     ].entries()) {
       const index = offset + 71;
       const attackerIdentity = {
-        contentStateHash: index.toString(16).padStart(64, "0"),
+        runtimeSelectionHash: index.toString(16).padStart(64, "0"),
         runtimeSchemaFingerprint: "5".repeat(64),
       };
       const attackerClaimId = claimId(index);
@@ -387,6 +389,7 @@ describe("content runtime archive HTTP routes", () => {
       archiveSha256: sha256(value),
       byteLength: Buffer.byteLength(value),
       downloadUrl: expect.stringContaining("/api/storage/"),
+      sourceStateHash,
     });
     await expect(existingClaim.json()).resolves.toMatchObject({
       kind: "existing",
@@ -399,7 +402,7 @@ describe("content runtime archive HTTP routes", () => {
   it("turns every stale canonical storage invariant into a new export claim", async () => {
     const target = createConvexTestWithBetterAuth();
     const absentIdentity = {
-      contentStateHash: "9".repeat(64),
+      runtimeSelectionHash: "9".repeat(64),
       runtimeSchemaFingerprint: "8".repeat(64),
     };
     const absent = await post(
@@ -420,7 +423,7 @@ describe("content runtime archive HTTP routes", () => {
     for (const [offset, testCase] of cases.entries()) {
       const index = offset + 10;
       const archiveIdentity = {
-        contentStateHash: index.toString(16).padStart(64, "0"),
+        runtimeSelectionHash: index.toString(16).padStart(64, "0"),
         runtimeSchemaFingerprint: "c".repeat(64),
       };
       const value = `stale-runtime-archive-${index}`;
@@ -431,6 +434,7 @@ describe("content runtime archive HTTP routes", () => {
           archiveSha256: testCase.archiveSha256 ?? sha256(value),
           byteLength: testCase.byteLength ?? Buffer.byteLength(value),
           createdAt: Date.now(),
+          sourceStateHash,
           storageId,
         })
       );

@@ -23,9 +23,13 @@ type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
 function identity(index: number) {
   return {
-    contentStateHash: index.toString(16).padStart(64, "0"),
+    runtimeSelectionHash: index.toString(16).padStart(64, "0"),
     runtimeSchemaFingerprint: "f".repeat(64),
   };
+}
+
+function sourceStateHash(index: number) {
+  return (index + 1000).toString(16).padStart(64, "0");
 }
 
 function claimId(index: number) {
@@ -70,6 +74,7 @@ function finalize(
     archiveSha256: sha256(value),
     byteLength: Buffer.byteLength(value),
     claimId: claimId(index),
+    sourceStateHash: sourceStateHash(index),
     storageId,
     ...overrides,
   });
@@ -99,6 +104,7 @@ function insertCanonical(
       archiveSha256: overrides.archiveSha256 ?? sha256(value),
       byteLength: overrides.byteLength ?? Buffer.byteLength(value),
       createdAt: Date.now(),
+      sourceStateHash: sourceStateHash(index),
       storageId,
     })
   );
@@ -108,13 +114,15 @@ function readCanonical(target: RuntimeTest, index: number) {
   return target.run((ctx) =>
     ctx.db
       .query("contentRuntimeArchives")
-      .withIndex("by_contentStateHash_and_runtimeSchemaFingerprint", (query) =>
-        query
-          .eq("contentStateHash", identity(index).contentStateHash)
-          .eq(
-            "runtimeSchemaFingerprint",
-            identity(index).runtimeSchemaFingerprint
-          )
+      .withIndex(
+        "by_runtimeSelectionHash_and_runtimeSchemaFingerprint",
+        (query) =>
+          query
+            .eq("runtimeSelectionHash", identity(index).runtimeSelectionHash)
+            .eq(
+              "runtimeSchemaFingerprint",
+              identity(index).runtimeSchemaFingerprint
+            )
       )
       .unique()
   );

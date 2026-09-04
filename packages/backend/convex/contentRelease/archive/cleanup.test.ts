@@ -66,9 +66,10 @@ describe("content runtime archive orphan cleanup", () => {
           .update(canonicalValue)
           .digest("hex"),
         byteLength: Buffer.byteLength(canonicalValue),
-        contentStateHash: "1".repeat(64),
         createdAt: NOW,
+        runtimeSelectionHash: "1".repeat(64),
         runtimeSchemaFingerprint: "2".repeat(64),
+        sourceStateHash: "3".repeat(64),
         storageId: canonicalId,
       })
     );
@@ -161,9 +162,10 @@ describe("content runtime archive orphan cleanup", () => {
         ctx.db.insert("contentRuntimeArchives", {
           archiveSha256: createHash("sha256").update(value).digest("hex"),
           byteLength: Buffer.byteLength(value),
-          contentStateHash: index.toString(16).padStart(64, "0"),
           createdAt,
+          runtimeSelectionHash: index.toString(16).padStart(64, "0"),
           runtimeSchemaFingerprint: "3".repeat(64),
+          sourceStateHash: "6".repeat(64),
           storageId,
         });
       await insertArchive(
@@ -185,15 +187,15 @@ describe("content runtime archive orphan cleanup", () => {
       ) {
         await ctx.db.insert("contentRuntimeArchiveClaims", {
           claimId: `expired-${index}`,
-          contentStateHash: (index + 10).toString(16).padStart(64, "0"),
           expiresAt: NOW - 1,
+          runtimeSelectionHash: (index + 10).toString(16).padStart(64, "0"),
           runtimeSchemaFingerprint: "4".repeat(64),
         });
       }
       await ctx.db.insert("contentRuntimeArchiveClaims", {
         claimId: "live",
-        contentStateHash: "5".repeat(64),
         expiresAt: NOW + 1,
+        runtimeSelectionHash: "5".repeat(64),
         runtimeSchemaFingerprint: "4".repeat(64),
       });
     });

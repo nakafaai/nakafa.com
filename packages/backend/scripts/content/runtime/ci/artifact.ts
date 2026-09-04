@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/scripts/content/runtime/ci/snapshot";
 import { Effect, FileSystem, Option } from "effect";
 
-function encryptedArchivePath(config: RuntimeArchiveReadConfig) {
+function encryptedArchivePath(config: { readonly runnerTemp: string }) {
   return `${config.runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}/${CONTENT_RUNTIME_CACHE_FILE}`;
 }
 
@@ -21,7 +21,7 @@ function encryptedArchivePath(config: RuntimeArchiveReadConfig) {
 export const publishRuntimeArchive = Effect.fn(
   "contentRuntimeArtifact.publish"
 )(function* (
-  config: RuntimeArchiveWriteConfig,
+  config: RuntimeArchiveWriteConfig & { readonly contentStateHash: string },
   claimId: string,
   fetcher: typeof fetch
 ) {

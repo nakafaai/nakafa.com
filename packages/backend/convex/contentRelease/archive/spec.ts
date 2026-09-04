@@ -5,7 +5,7 @@ export const CONTENT_RUNTIME_ARCHIVE_ORPHAN_GRACE_MS = 60 * 60 * 1000;
 export const CONTENT_RUNTIME_ARCHIVE_SWEEP_BATCH_SIZE = 32;
 
 export const runtimeArchiveIdentityValidator = {
-  contentStateHash: v.string(),
+  runtimeSelectionHash: v.string(),
   runtimeSchemaFingerprint: v.string(),
 };
 
@@ -14,6 +14,7 @@ export const runtimeArchiveMetadataValidator = v.object({
   archiveSha256: v.string(),
   byteLength: v.number(),
   createdAt: v.number(),
+  sourceStateHash: v.string(),
 });
 
 export const runtimeArchiveStoredValidator = v.object({

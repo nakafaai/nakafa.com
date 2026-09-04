@@ -3,6 +3,7 @@ import {
   ContentRuntimeArchiveClaimResultSchema,
   ContentRuntimeArchiveDownloadSchema,
   ContentRuntimeArchiveErrorSchema,
+  type ContentRuntimeArchiveIdentity,
   ContentRuntimeArchiveReleaseResultSchema,
 } from "@repo/backend/content/archive";
 import {
@@ -23,9 +24,9 @@ import {
 } from "@repo/backend/scripts/content/runtime/ci/transport";
 import { Effect, Option, Result } from "effect";
 
-function identity(config: RuntimeArchiveReadConfig) {
+function identity(config: ContentRuntimeArchiveIdentity) {
   return {
-    contentStateHash: config.contentStateHash,
+    runtimeSelectionHash: config.runtimeSelectionHash,
     runtimeSchemaFingerprint: config.runtimeSchemaFingerprint,
   };
 }
@@ -205,9 +206,10 @@ export const fetchRuntimeArchive = Effect.fn("contentRuntimeRemote.download")(
     const metadata = {
       archiveSha256: capability.archiveSha256,
       byteLength: capability.byteLength,
-      contentStateHash: capability.contentStateHash,
       createdAt: capability.createdAt,
+      runtimeSelectionHash: capability.runtimeSelectionHash,
       runtimeSchemaFingerprint: capability.runtimeSchemaFingerprint,
+      sourceStateHash: capability.sourceStateHash,
     };
     return Option.some({ bytes, metadata });
   }

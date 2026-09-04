@@ -21,26 +21,33 @@ const metadata = {
   archiveSha256:
     "e3765fbb7ee79916de02fe557bafe7aa37641457f1c4e8db73e4768b49d61745",
   byteLength: archiveBytes.byteLength,
-  contentStateHash: "1".repeat(64),
   createdAt: 1_800_000_000_000,
+  runtimeSelectionHash: "1".repeat(64),
   runtimeSchemaFingerprint: "2".repeat(64),
+  sourceStateHash: "3".repeat(64),
 };
 const claimId = "00000000-0000-4000-8000-000000000001";
 
 function readConfig(runnerTemp: string): RuntimeArchiveReadConfig {
   return {
-    contentStateHash: metadata.contentStateHash,
     runnerTemp,
+    runtimeSelectionHash: metadata.runtimeSelectionHash,
     runtimeSchemaFingerprint: metadata.runtimeSchemaFingerprint,
     runtimeToken: Redacted.make("technical-runtime-token"),
     siteUrl: "https://production.example.test",
   };
 }
 
-function writeConfig(runnerTemp: string): RuntimeArchiveWriteConfig {
+function writeConfig(
+  runnerTemp: string
+): RuntimeArchiveWriteConfig & { readonly contentStateHash: string } {
   return {
-    ...readConfig(runnerTemp),
     archiveToken: Redacted.make("technical-archive-token"),
+    contentStateHash: metadata.sourceStateHash,
+    runnerTemp,
+    runtimeSelectionHash: metadata.runtimeSelectionHash,
+    runtimeSchemaFingerprint: metadata.runtimeSchemaFingerprint,
+    siteUrl: "https://production.example.test",
   };
 }
 
