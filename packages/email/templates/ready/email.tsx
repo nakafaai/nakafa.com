@@ -48,13 +48,21 @@ export class AccountReadyEmailRenderError extends Schema.TaggedError<AccountRead
 
 const EMAIL_LOGO_URL = getPublicEmailUrl("/logo.png");
 
+const accountReadyEmailPreviewInput = {
+  continueUrl: getPublicEmailUrl("/en/home"),
+  locale: "en",
+  privacyPolicyUrl: getPublicEmailUrl("/en/privacy-policy"),
+  termsOfServiceUrl: getPublicEmailUrl("/en/terms-of-service"),
+} satisfies AccountReadyEmailInput;
+
 /** Renders the privacy-safe account-ready message for one supported locale. */
-export function AccountReadyEmail({
-  continueUrl,
-  locale,
-  privacyPolicyUrl,
-  termsOfServiceUrl,
-}: AccountReadyEmailInput) {
+export function AccountReadyEmail(
+  input: AccountReadyEmailInput = accountReadyEmailPreviewInput
+) {
+  const { continueUrl, locale, privacyPolicyUrl, termsOfServiceUrl } = {
+    ...accountReadyEmailPreviewInput,
+    ...input,
+  };
   const copy = getAccountReadyEmailCopy(locale);
 
   return (
@@ -187,11 +195,6 @@ export const renderAccountReadyEmail = Effect.fn("email.accountReady.render")(
   }
 );
 
-AccountReadyEmail.PreviewProps = {
-  continueUrl: getPublicEmailUrl("/en/home"),
-  locale: "en",
-  privacyPolicyUrl: getPublicEmailUrl("/en/privacy-policy"),
-  termsOfServiceUrl: getPublicEmailUrl("/en/terms-of-service"),
-} satisfies AccountReadyEmailInput;
+AccountReadyEmail.PreviewProps = accountReadyEmailPreviewInput;
 
 export default AccountReadyEmail;
