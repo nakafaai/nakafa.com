@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   decodePublicContentRuntimeRequest,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
@@ -8,7 +8,10 @@ import {
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
+import {
+  decodePublicRuntimeFound,
+  dispatchProgram,
+} from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
@@ -24,6 +27,7 @@ import {
   TEST_PAGE_SOURCE,
 } from "@repo/backend/test/content/page";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import { TEST_QUESTION_PROJECTION_JSON } from "@repo/backend/test/content/question";
 import { testTextHash } from "@repo/backend/test/content/release";
 import {
   articleRuntimeRequest,
@@ -58,6 +62,9 @@ function seedSigned(
     await insertSignedHead(ctx, delivery, runtimeContentKey(delivery));
   });
 }
+
+afterEach(() => vi.restoreAllMocks());
+
 describe("contentRelease/runtime/public/dispatch", () => {
   it.live(
     "returns one fully authenticated public artifact and exact absence",
@@ -235,6 +242,7 @@ describe("contentRelease/runtime/public/dispatch", () => {
       runConvexProgram(dispatchProgram(ctx, source, 1))
     );
     await expect(runDispatch(t, "{")).resolves.toMatchObject({ status: 400 });
+    await expect(runDispatch(t, "{}")).resolves.toMatchObject({ status: 400 });
     expect(mismatch.status).toBe(400);
     await expect(
       runDispatch(t, "x".repeat(MAX_PUBLIC_RUNTIME_REQUEST_BYTES + 1))
@@ -257,4 +265,59 @@ describe("contentRelease/runtime/public/dispatch", () => {
       status: 500,
     });
   });
+
+  it.live(
+    "rejects malformed, unroutable, mismatched, and unhashable rows",
+    () =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        yield* Effect.promise(() => seedSigned(t, "public"));
+        const row = yield* Effect.promise(() =>
+          t.query(internal.contentRelease.runtime.public.internal.read, {
+            appLocale: "en",
+            publicPath: TEST_RUNTIME_PATH,
+          })
+        );
+        if (!row) {
+          return expect.fail("Expected one decodable public runtime row.");
+        }
+        const corruptions = [
+          ["private delivery", { ...row, delivery: "authenticated" }],
+          ["malformed artifact", { ...row, artifactJson: "{" }],
+          ["invalid projection hash", { ...row, projectionHash: "invalid" }],
+          [
+            "question body",
+            { ...row, projectionJson: TEST_QUESTION_PROJECTION_JSON },
+          ],
+          [
+            "manifest mismatch",
+            {
+              ...row,
+              activeManifestHash: `sha256:${"f".repeat(64)}`,
+            },
+          ],
+          ["release mismatch", { ...row, activeReleaseId: "release-mismatch" }],
+        ] as const;
+
+        for (const [reason, corruption] of corruptions) {
+          const result = yield* decodePublicRuntimeFound(corruption).pipe(
+            Effect.result
+          );
+          expect(result, reason).toMatchObject({
+            _tag: "Failure",
+            failure: { _tag: "PublicRuntimeReadError" },
+          });
+        }
+
+        vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(
+          new Error("Injected digest failure")
+        );
+        expect(
+          yield* decodePublicRuntimeFound(row).pipe(Effect.result)
+        ).toMatchObject({
+          _tag: "Failure",
+          failure: { _tag: "PublicRuntimeReadError" },
+        });
+      })
+  );
 });

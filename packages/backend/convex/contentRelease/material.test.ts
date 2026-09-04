@@ -21,6 +21,81 @@ const decodeProjection = Schema.decodeUnknownSync(
 );
 
 describe("contentRelease/material", () => {
+  it("keeps every public material reader on one active catalog", async () => {
+    const t = convexTest(schema, convexModules);
+    const requested = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(t);
+
+    await expect(
+      t.query(api.contentRelease.material.identity, {
+        appLocale: requested.appLocale,
+        contentKey: requested.contentKey,
+        expectedMaterialKey: requested.materialKey,
+        expectedSectionKey: requested.sectionKey,
+      })
+    ).resolves.toEqual({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      publicPath: requested.publicPath,
+    });
+    await expect(
+      t.query(api.contentRelease.material.latest, {
+        appLocale: requested.appLocale,
+        limit: 1,
+      })
+    ).resolves.toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      materials: [{ title: "EN Section 2" }],
+    });
+
+    const partition = await t.query(
+      api.contentRelease.material.sitemapBuckets,
+      { appLocale: requested.appLocale }
+    );
+    expect(partition).toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      materialCount: 2,
+    });
+    expect(partition.buckets.length).toBeGreaterThan(0);
+    const pages = await Promise.all(
+      partition.buckets.map((bucket) =>
+        t.query(api.contentRelease.material.sitemapPage, {
+          appLocale: requested.appLocale,
+          bucket,
+        })
+      )
+    );
+    const requestedBucketIndex = pages.findIndex((page) =>
+      page?.routes.some(({ publicPath }) => publicPath === requested.publicPath)
+    );
+    const bucket = partition.buckets[requestedBucketIndex];
+    if (bucket === undefined) {
+      throw new Error("Expected the requested public material partition.");
+    }
+    await expect(
+      t.query(api.contentRelease.material.bucket, {
+        appLocale: requested.appLocale,
+        bucket,
+      })
+    ).resolves.toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      materials: expect.arrayContaining([
+        expect.objectContaining({ publicPath: requested.publicPath }),
+      ]),
+    });
+    expect(pages[requestedBucketIndex]).toEqual({
+      routes: expect.arrayContaining([
+        {
+          lastModified: requested.metadata.datePublished,
+          publicPath: requested.publicPath,
+        },
+      ]),
+    });
+  });
+
   it("fails closed before current signed ownership is available", async () => {
     const t = convexTest(schema, convexModules);
 

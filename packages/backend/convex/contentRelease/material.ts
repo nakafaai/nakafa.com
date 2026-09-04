@@ -10,30 +10,18 @@ import {
   readMaterialBuckets,
   readMaterialSitemap,
 } from "@repo/backend/convex/contentRelease/material/sitemap";
-import { materialApiPageValidator } from "@repo/backend/convex/contentRelease/material/spec";
-import { readPartnerApiPage } from "@repo/backend/convex/contentRelease/partner/page";
 import {
-  appLocaleValidator,
-  rendererDomainValidator,
-} from "@repo/backend/convex/contentRelease/spec";
+  materialApiPageValidator,
+  materialModelValidator,
+} from "@repo/backend/convex/contentRelease/material/spec";
+import { readPartnerApiPage } from "@repo/backend/convex/contentRelease/partner/page";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   paginationOptsValidator,
   paginationResultValidator,
 } from "convex/server";
 import { v } from "convex/values";
-
-const materialModelValidator = v.object({
-  activeManifestHash: v.union(v.string(), v.null()),
-  activeAppLocales: v.array(appLocaleValidator),
-  activeReleaseId: v.union(v.string(), v.null()),
-  alternateJson: v.array(v.string()),
-  projectionJson: v.union(v.string(), v.null()),
-  rendererDomain: v.union(rendererDomainValidator, v.null()),
-  siblingJson: v.array(v.string()),
-  sourcePath: v.union(v.string(), v.null()),
-  sourceRevision: v.union(v.string(), v.null()),
-});
 
 const materialPageValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),

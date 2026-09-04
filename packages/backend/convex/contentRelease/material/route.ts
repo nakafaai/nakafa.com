@@ -23,6 +23,7 @@ export const resolveMaterialRoute = Effect.fn(
   if (!(route.managed && route.active)) {
     return {
       active: route.active,
+      head: null,
       managed: false,
       material: null,
     };
@@ -31,6 +32,7 @@ export const resolveMaterialRoute = Effect.fn(
   if (!route.projection) {
     return {
       active: route.active,
+      head: null,
       managed: true,
       material: null,
     };
@@ -69,6 +71,7 @@ export const resolveMaterialRoute = Effect.fn(
   }
   return {
     active: route.active,
+    head: route.head,
     managed: true,
     material: { ...verified, row },
   };

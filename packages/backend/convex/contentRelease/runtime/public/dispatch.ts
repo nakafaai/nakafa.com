@@ -43,31 +43,25 @@ class PublicRuntimeReadError extends Schema.TaggedError<PublicRuntimeReadError>(
   {}
 ) {}
 /** Strictly parses one bounded UTF-8 public request. */
-const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
-  function* (source: string, byteLength: number) {
-    const measured = new TextEncoder().encode(source).byteLength;
-    if (
-      byteLength !== measured ||
-      measured > MAX_PUBLIC_RUNTIME_REQUEST_BYTES
-    ) {
-      return yield* new PublicRuntimeRequestError();
-    }
-    const input = yield* Effect.try({
-      catch: () => new PublicRuntimeRequestError(),
-      try: (): unknown => JSON.parse(source),
-    });
-    return yield* decodePublicContentRuntimeRequest(input).pipe(
-      Effect.mapError(() => new PublicRuntimeRequestError())
-    );
+export const decodePublicRequest = Effect.fn(
+  "contentRelease.decodePublicRequest"
+)(function* (source: string, byteLength: number) {
+  const measured = new TextEncoder().encode(source).byteLength;
+  if (byteLength !== measured || measured > MAX_PUBLIC_RUNTIME_REQUEST_BYTES) {
+    return yield* new PublicRuntimeRequestError();
   }
-);
-/** Decodes one stored row into the exact Aksara public response. */
-export const decodePublicRuntimeRow = Effect.fn(
-  "contentRelease.decodePublicRuntimeRow"
-)(function* (row: PublicRuntimeRow) {
-  if (row === null) {
-    return null;
-  }
+  const input = yield* Effect.try({
+    catch: () => new PublicRuntimeRequestError(),
+    try: (): unknown => JSON.parse(source),
+  });
+  return yield* decodePublicContentRuntimeRequest(input).pipe(
+    Effect.mapError(() => new PublicRuntimeRequestError())
+  );
+});
+/** Decodes one present stored row into the exact Aksara public response. */
+export const decodePublicRuntimeFound = Effect.fn(
+  "contentRelease.decodePublicRuntimeFound"
+)(function* (row: NonNullable<PublicRuntimeRow>) {
   if (row.delivery !== "public") {
     return yield* new PublicRuntimeReadError();
   }
@@ -109,6 +103,15 @@ export const decodePublicRuntimeRow = Effect.fn(
     sourcePath,
   };
   return response;
+});
+/** Preserves exact route absence while decoding every present public row. */
+export const decodePublicRuntimeRow = Effect.fn(
+  "contentRelease.decodePublicRuntimeRow"
+)(function* (row: PublicRuntimeRow) {
+  if (row === null) {
+    return null;
+  }
+  return yield* decodePublicRuntimeFound(row);
 });
 /** Reads one active public artifact for Nakafa verification. */
 const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(

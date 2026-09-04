@@ -177,6 +177,25 @@ describe("public content runtime client", () => {
     })
   );
 
+  it.live(
+    "rejects malformed singular and batch identities before network IO",
+    () =>
+      Effect.gen(function* () {
+        const malformed = { ...input, publicPath: "" };
+
+        expect(
+          yield* readPublicContentEvidence(target, malformed).pipe(Effect.flip)
+        ).toEqual(new ContentTransportError({ reason: "request" }));
+        expect(
+          yield* readPublicContentEvidenceBatch(target, [malformed]).pipe(
+            Effect.flip
+          )
+        ).toEqual(new ContentTransportError({ reason: "request" }));
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(verifyMock).not.toHaveBeenCalled();
+      })
+  );
+
   it.live("preserves exact item absence and batch-level runtime failure", () =>
     Effect.gen(function* () {
       fetchMock
@@ -229,6 +248,32 @@ describe("public content runtime client", () => {
 
       expect(
         yield* readPublicContentEvidenceBatch(target, inputs).pipe(Effect.flip)
+      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+      expect(verifyMock).not.toHaveBeenCalled();
+    })
+  );
+
+  it.live("preserves batch failure-envelope and HTTP status taxonomy", () =>
+    Effect.gen(function* () {
+      fetchMock
+        .mockResolvedValueOnce(
+          createResponse({ unexpected: true }, 500, true, batchEndpoint)
+        )
+        .mockResolvedValueOnce(
+          createResponse(foundResponse(), 500, true, batchEndpoint)
+        )
+        .mockResolvedValueOnce(
+          createResponse({ kind: "missing" }, 404, true, batchEndpoint)
+        );
+
+      expect(
+        yield* readPublicContentEvidenceBatch(target, [input]).pipe(Effect.flip)
+      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+      expect(
+        yield* readPublicContentEvidenceBatch(target, [input]).pipe(Effect.flip)
+      ).toEqual(new ContentTransportError({ reason: "status" }));
+      expect(
+        yield* readPublicContentEvidenceBatch(target, [input]).pipe(Effect.flip)
       ).toEqual(new ContentTransportError({ reason: "response-contract" }));
       expect(verifyMock).not.toHaveBeenCalled();
     })

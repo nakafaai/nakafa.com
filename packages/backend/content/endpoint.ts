@@ -6,6 +6,9 @@ export const PUBLIC_CONTENT_RUNTIME_PATH = CONTENT_RUNTIME_PATH;
 /** Canonical endpoint for current public content batches. */
 export const PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}/batch`;
 
+/** Cohesive current material shell and body endpoint. */
+export const MATERIAL_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/material`;
+
 /** Canonical unversioned endpoint for protected content reads. */
 export const PROTECTED_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/protected`;
 

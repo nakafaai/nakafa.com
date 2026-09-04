@@ -64,7 +64,7 @@ export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
     )
   );
 });
-/** Resolves and validates one content head's canonical published route. */
+/** Resolves and validates one content head's canonical route disposition. */
 const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
   function* (ctx: ReadCtx, head: Doc<"contentHeads">, activeSequence: number) {
     if (!head.projectionJson) {
@@ -81,7 +81,7 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
       );
     }
     if (projection.kind === "question-body") {
-      return;
+      return { kind: "unrouted" as const, projection };
     }
     if (projection.artifactLocale !== head.artifactLocale) {
       return yield* releaseFail(
@@ -113,12 +113,16 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
         `Route for ${head.contentKey}/${head.artifactLocale} disagrees at one sequence.`
       );
     }
-    return projection.publicPath;
+    return {
+      kind: "routed" as const,
+      projection,
+      publicPath: projection.publicPath,
+    };
   }
 );
-/** Resolves one exact public projection selected by a frozen sequence. */
-export const resolvePublicProjection = Effect.fn(
-  "contentRelease.resolvePublicProjection"
+/** Resolves one exact public projection with its authenticated stored head. */
+export const resolvePublicProjectionProof = Effect.fn(
+  "contentRelease.resolvePublicProjectionProof"
 )(function* (
   ctx: ReadCtx,
   contentKey: string,
@@ -135,17 +139,11 @@ export const resolvePublicProjection = Effect.fn(
       `Public content ${contentKey}/${artifactLocale} lost its projection.`
     );
   }
-  const projection = yield* decodeProjectionJson(head.projectionJson);
-  if (projection.kind === "question-body") {
+  const route = yield* resolvePublicPath(ctx, head, sequence);
+  if (route.kind === "unrouted") {
     return null;
   }
-  const publicPath = yield* resolvePublicPath(ctx, head, sequence);
-  if (publicPath === undefined) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Public content ${contentKey}/${artifactLocale} lost its routed projection.`
-    );
-  }
+  const { projection, publicPath } = route;
   const projectionHash = yield* hashText(
     "the public content projection",
     canonicalizeContentProjection(projection)
@@ -169,18 +167,39 @@ export const resolvePublicProjection = Effect.fn(
     );
   }
   return {
-    appLocale: projection.appLocale,
-    artifactLocale: head.artifactLocale,
-    contentKey: head.contentKey,
-    family: head.family,
-    projectionHash,
-    projectionJson: head.projectionJson,
-    publicPath,
-    releaseId: head.releaseId,
-    rendererDomain: head.rendererDomain,
-    sequence: head.sequence,
-    sourcePath: head.sourcePath,
+    head,
+    projection: {
+      appLocale: projection.appLocale,
+      artifactLocale: head.artifactLocale,
+      contentKey: head.contentKey,
+      family: head.family,
+      projectionHash,
+      projectionJson: head.projectionJson,
+      publicPath,
+      releaseId: head.releaseId,
+      rendererDomain: head.rendererDomain,
+      sequence: head.sequence,
+      sourcePath: head.sourcePath,
+    },
   };
+});
+
+/** Resolves one exact public projection selected by a frozen sequence. */
+export const resolvePublicProjection = Effect.fn(
+  "contentRelease.resolvePublicProjection"
+)(function* (
+  ctx: ReadCtx,
+  contentKey: string,
+  artifactLocale: Doc<"contentKeys">["artifactLocale"],
+  sequence: number
+) {
+  const proof = yield* resolvePublicProjectionProof(
+    ctx,
+    contentKey,
+    artifactLocale,
+    sequence
+  );
+  return proof?.projection ?? null;
 });
 /** Resolves one effective immutable head from a frozen sequence snapshot. */
 export const resolveContentHead = Effect.fn(
@@ -195,6 +214,9 @@ export const resolveContentHead = Effect.fn(
   if (!head || head.operation === "delete") {
     return null;
   }
-  const publicPath = yield* resolvePublicPath(ctx, head, sequence);
-  return yield* contentHead(head, publicPath);
+  const route = yield* resolvePublicPath(ctx, head, sequence);
+  return yield* contentHead(
+    head,
+    route.kind === "routed" ? route.publicPath : undefined
+  );
 });

@@ -20,6 +20,7 @@ import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
+  testTextHash,
 } from "@repo/backend/test/content/release";
 import {
   insertTestState,
@@ -60,6 +61,7 @@ export async function insertMaterialProjection(
   const projectionJson = canonicalizeMaterialProjection(projection);
   const sourcePath = `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`;
   await insertRuntimeVersion(ctx, "public", projection.contentKey, {
+    artifactHash: testTextHash(`artifact:${projectionJson}`),
     artifactLocale: projection.artifactLocale,
     headReleaseId: identity.releaseId,
     headSequence: identity.sequence,

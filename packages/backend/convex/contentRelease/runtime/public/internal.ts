@@ -4,6 +4,7 @@ import {
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import { PUBLIC_CONTENT_RUNTIME_BATCH_SIZE } from "@repo/backend/content/batch";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
@@ -26,7 +27,7 @@ import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const publicResultValidator = v.union(
+export const publicResultValidator = v.union(
   v.null(),
   v.object({
     activeManifestHash: v.string(),
@@ -51,6 +52,91 @@ type ActiveIdentity = NonNullable<
 >;
 /** Stored active public row returned only to the authenticated HTTP adapter. */
 export type PublicRuntimeRow = Infer<typeof publicResultValidator>;
+/** Authenticates one already selected public head and reads its signed artifact. */
+export const readPublicRuntime = Effect.fn("contentRelease.readPublicRuntime")(
+  function* (
+    ctx: QueryCtx,
+    active: ActiveIdentity,
+    head: Doc<"contentHeads">,
+    appLocale: AppLocale,
+    publicPath: string
+  ) {
+    if (head?.operation !== "upsert") {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Published route ${appLocale}/${publicPath} lost its active head.`
+      );
+    }
+    if (
+      !(
+        head.artifactHash &&
+        head.compilerConfigHash &&
+        head.delivery &&
+        head.projectionHash &&
+        head.projectionJson &&
+        head.rendererDomain &&
+        head.sourceHash &&
+        head.sourcePath
+      )
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Published route ${appLocale}/${publicPath} lost runtime fields.`
+      );
+    }
+    const artifactHash = head.artifactHash;
+    const artifact = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentArtifacts")
+        .withIndex("by_artifactHash", (query) =>
+          query.eq("artifactHash", artifactHash)
+        )
+        .unique()
+    );
+    if (!artifact) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_MISSING",
+        `Published route ${appLocale}/${publicPath} lost its artifact.`
+      );
+    }
+    const decodedArtifact = yield* decodeArtifactJson(artifact.artifactJson);
+    const projection = yield* decodeProjectionJson(head.projectionJson);
+    const projectionHash = yield* hashText(
+      "the published content projection",
+      canonicalizeContentProjection(projection)
+    );
+    if (
+      decodedArtifact.artifactHash !== head.artifactHash ||
+      decodedArtifact.payload.contentKey !== head.contentKey ||
+      decodedArtifact.payload.compilerConfigHash !== head.compilerConfigHash ||
+      decodedArtifact.payload.artifactLocale !== head.artifactLocale ||
+      decodedArtifact.payload.rendererDomain !== head.rendererDomain ||
+      decodedArtifact.payload.sourceHash !== head.sourceHash ||
+      familyForProjection(projection) !== head.family ||
+      projection.kind === "question-body" ||
+      projectionHash !== head.projectionHash ||
+      projection.contentKey !== head.contentKey ||
+      projection.appLocale !== appLocale ||
+      projection.publicPath !== publicPath
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Published route ${appLocale}/${publicPath} has mismatched content.`
+      );
+    }
+    return {
+      activeManifestHash: active.manifestHash,
+      activeReleaseId: active.releaseId,
+      artifactJson: artifact.artifactJson,
+      delivery: head.delivery,
+      projectionHash,
+      projectionJson: head.projectionJson,
+      releaseJson: active.release.releaseJson,
+      rendererJson: active.release.rendererJson,
+      sourcePath: head.sourcePath,
+    };
+  }
+);
 /** Resolves an active route and enforces its public delivery class. */
 const resolvePublicRouteForActive = Effect.fn(
   "contentRelease.resolvePublicRouteForActive"
@@ -81,7 +167,7 @@ const resolvePublicRouteForActive = Effect.fn(
     ArtifactLocaleSchema.make(appLocale),
     active.sequence
   );
-  if (head?.operation !== "upsert") {
+  if (!head) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Published route ${appLocale}/${publicPath} lost its active head.`
@@ -96,92 +182,27 @@ const resolvePublicRouteForActive = Effect.fn(
       `Published route ${appLocale}/${publicPath} disagrees at one sequence.`
     );
   }
+  if (head.operation !== "upsert") {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Published route ${appLocale}/${publicPath} lost its active head.`
+    );
+  }
   if (head.delivery !== "public") {
     return null;
   }
-  if (
-    !(
-      head.artifactHash &&
-      head.compilerConfigHash &&
-      head.projectionHash &&
-      head.projectionJson &&
-      head.rendererDomain &&
-      head.sourceHash &&
-      head.sourcePath
-    )
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Published route ${appLocale}/${publicPath} lost runtime fields.`
-    );
-  }
-  const artifactHash = head.artifactHash;
-  const artifact = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentArtifacts")
-      .withIndex("by_artifactHash", (query) =>
-        query.eq("artifactHash", artifactHash)
-      )
-      .unique()
-  );
-  if (!artifact) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_MISSING",
-      `Published route ${appLocale}/${publicPath} lost its artifact.`
-    );
-  }
-  const decodedArtifact = yield* decodeArtifactJson(artifact.artifactJson);
-  const projection = yield* decodeProjectionJson(head.projectionJson);
-  const projectionHash = yield* hashText(
-    "the published content projection",
-    canonicalizeContentProjection(projection)
-  );
-  if (
-    decodedArtifact.artifactHash !== head.artifactHash ||
-    decodedArtifact.payload.contentKey !== head.contentKey ||
-    decodedArtifact.payload.compilerConfigHash !== head.compilerConfigHash ||
-    decodedArtifact.payload.artifactLocale !== head.artifactLocale ||
-    decodedArtifact.payload.rendererDomain !== head.rendererDomain ||
-    decodedArtifact.payload.sourceHash !== head.sourceHash ||
-    familyForProjection(projection) !== head.family ||
-    projection.kind === "question-body" ||
-    projectionHash !== head.projectionHash ||
-    projection.contentKey !== head.contentKey ||
-    projection.appLocale !== appLocale ||
-    projection.publicPath !== publicPath
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Published route ${appLocale}/${publicPath} has mismatched content.`
-    );
-  }
-  return {
-    activeManifestHash: active.manifestHash,
-    activeReleaseId: active.releaseId,
-    artifactJson: artifact.artifactJson,
-    delivery: head.delivery,
-    projectionHash,
-    projectionJson: head.projectionJson,
-    releaseJson: active.release.releaseJson,
-    rendererJson: active.release.rendererJson,
-    sourcePath: head.sourcePath,
-  };
+  return yield* readPublicRuntime(ctx, active, head, appLocale, publicPath);
 });
 /** Resolves one active public route for the singular runtime endpoint. */
-const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
-  function* (ctx: QueryCtx, appLocale: AppLocale, publicPath: string) {
-    const active = yield* loadActiveIdentity(ctx);
-    if (!active) {
-      return null;
-    }
-    return yield* resolvePublicRouteForActive(
-      ctx,
-      active,
-      appLocale,
-      publicPath
-    );
+export const resolvePublicRoute = Effect.fn(
+  "contentRelease.resolvePublicRoute"
+)(function* (ctx: QueryCtx, appLocale: AppLocale, publicPath: string) {
+  const active = yield* loadActiveIdentity(ctx);
+  if (!active) {
+    return null;
   }
-);
+  return yield* resolvePublicRouteForActive(ctx, active, appLocale, publicPath);
+});
 /** Resolves one bounded public batch inside one consistent transaction. */
 const resolvePublicRoutes = Effect.fn("contentRelease.resolvePublicRoutes")(
   function* (

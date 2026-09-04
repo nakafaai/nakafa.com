@@ -4,6 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/batch";
 import { dispatchBatchProgram } from "@repo/backend/convex/contentRelease/runtime/public/batch";
+import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { testProjectionJson } from "@repo/backend/test/content/material";
@@ -31,6 +32,30 @@ function runDispatch(t: RuntimeAction, input: unknown) {
   const byteLength = new TextEncoder().encode(source).byteLength;
   return t.action((ctx) =>
     runConvexProgram(dispatchBatchProgram(ctx, source, byteLength))
+  );
+}
+
+/** Executes the transport against an explicit internal query result. */
+function runDispatchWithRows(
+  t: RuntimeAction,
+  input: unknown,
+  rows: readonly PublicRuntimeRow[]
+) {
+  const source = JSON.stringify(input);
+  const byteLength = new TextEncoder().encode(source).byteLength;
+  return t.action((ctx) =>
+    runConvexProgram(
+      dispatchBatchProgram(
+        new Proxy(ctx, {
+          get: (target, property, receiver) =>
+            property === "runQuery"
+              ? () => Promise.resolve(rows)
+              : Reflect.get(target, property, receiver),
+        }),
+        source,
+        byteLength
+      )
+    )
   );
 }
 
@@ -115,6 +140,34 @@ describe("contentRelease/runtime/public/batch", () => {
         status: 500,
       }
     );
+  });
+
+  it("rejects incomplete and undecodable internal query results", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const corruptRow = {
+      activeManifestHash: "sha256:test",
+      activeReleaseId: "test-release",
+      artifactJson: "{",
+      delivery: "public",
+      projectionHash: "sha256:test",
+      projectionJson: "{}",
+      releaseJson: "{}",
+      rendererJson: "{}",
+      sourcePath: "packages/corpus/material/lesson/test",
+    } satisfies NonNullable<PublicRuntimeRow>;
+
+    await expect(
+      runDispatchWithRows(t, { requests: [foundRequest] }, [])
+    ).resolves.toEqual({
+      body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+      status: 500,
+    });
+    await expect(
+      runDispatchWithRows(t, { requests: [foundRequest] }, [corruptRow])
+    ).resolves.toEqual({
+      body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+      status: 500,
+    });
   });
 
   it("fails the complete batch when one stored row is corrupt", async () => {

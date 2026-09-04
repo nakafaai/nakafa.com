@@ -3,8 +3,8 @@ import {
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
   PublicContentRuntimeRequestSchema,
   type PublicContentRuntimeResponse,
-  PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
+import { BoundedPublicRuntimeResponseSchema } from "@repo/backend/content/runtime";
 import { Schema } from "effect";
 /** Maximum exact Aksara public exchanges resolved by one batch transaction. */
 export const PUBLIC_CONTENT_RUNTIME_BATCH_SIZE = 8;
@@ -17,10 +17,6 @@ export const MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES =
 export const MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES =
   PUBLIC_CONTENT_RUNTIME_BATCH_SIZE * MAX_PUBLIC_RUNTIME_RESPONSE_BYTES +
   BATCH_JSON_OVERHEAD_BYTES;
-/** Measures the exact JSON wire bytes of one decoded Aksara response. */
-export function publicRuntimeResponseBytes<Response>(response: Response) {
-  return new TextEncoder().encode(JSON.stringify(response)).byteLength;
-}
 /** Nakafa batch of exact Aksara public runtime requests. */
 export const PublicContentRuntimeBatchRequestSchema = Schema.Struct({
   requests: Schema.Array(PublicContentRuntimeRequestSchema).pipe(
@@ -29,7 +25,7 @@ export const PublicContentRuntimeBatchRequestSchema = Schema.Struct({
   ),
 });
 const PublicContentRuntimeBatchItemSchema =
-  PublicContentRuntimeResponseSchema.pipe(
+  BoundedPublicRuntimeResponseSchema.pipe(
     Schema.check(
       Schema.makeFilter(
         (
@@ -41,14 +37,6 @@ const PublicContentRuntimeBatchItemSchema =
           }
         > => response.kind !== "failure",
         { message: "Batch items contain only found or missing responses." }
-      )
-    ),
-    Schema.check(
-      Schema.makeFilter(
-        (response) =>
-          publicRuntimeResponseBytes(response) <=
-          MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
-        { message: "Batch item exceeded the Aksara response ceiling." }
       )
     )
   );

@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
-  PublicContentRuntimeResponseSchema,
+  PublicContentRuntimeFoundSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import {
   MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES,
@@ -10,8 +10,11 @@ import {
   PUBLIC_CONTENT_RUNTIME_BATCH_SIZE,
   PublicContentRuntimeBatchRequestSchema,
   PublicContentRuntimeBatchResponseSchema,
-  publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
+import {
+  BoundedPublicRuntimeFoundSchema,
+  publicRuntimeBytes,
+} from "@repo/backend/content/runtime";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
@@ -25,7 +28,7 @@ import { Result, Schema } from "effect";
 
 /** Creates one structurally exact Aksara public found response. */
 function foundResponse(title = "Technical title") {
-  return Schema.decodeSync(PublicContentRuntimeResponseSchema)({
+  return Schema.decodeSync(PublicContentRuntimeFoundSchema)({
     activeManifestHash: TEST_MANIFEST_HASH,
     activeReleaseId: TEST_RELEASE_ID,
     artifact: JSON.parse(testArtifactJson()),
@@ -102,7 +105,7 @@ describe("public content runtime batch contract", () => {
     const oversized = foundResponse(
       "x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES)
     );
-    expect(publicRuntimeResponseBytes(oversized)).toBeGreaterThan(
+    expect(publicRuntimeBytes(oversized)).toBeGreaterThan(
       MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
     );
     expect(
@@ -110,6 +113,21 @@ describe("public content runtime batch contract", () => {
         Schema.decodeResult(PublicContentRuntimeBatchResponseSchema)({
           responses: [oversized],
         })
+      )
+    ).toBe(true);
+  });
+  it("accepts the exact Aksara singular response byte boundary", () => {
+    const empty = foundResponse("");
+    const boundary = foundResponse(
+      "x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES - publicRuntimeBytes(empty))
+    );
+
+    expect(publicRuntimeBytes(boundary)).toBe(
+      MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
+    );
+    expect(
+      Result.isSuccess(
+        Schema.decodeResult(BoundedPublicRuntimeFoundSchema)(boundary)
       )
     ).toBe(true);
   });

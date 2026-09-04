@@ -8,8 +8,8 @@ import {
   MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES,
   PublicContentRuntimeBatchRequestSchema,
   PublicContentRuntimeBatchResponseSchema,
-  publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
+import { publicRuntimeBytes } from "@repo/backend/content/runtime";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { decodePublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
 import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
@@ -110,7 +110,7 @@ const dispatchRuntimeBatchProgram = Effect.fn(
   if (
     responses.success.some(
       (response) =>
-        publicRuntimeResponseBytes(response) > MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
+        publicRuntimeBytes(response) > MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
     )
   ) {
     return failureResult("CONTENT_RUNTIME_RESPONSE_TOO_LARGE", 500);

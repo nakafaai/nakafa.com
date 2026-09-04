@@ -1,7 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
+import {
+  readPublicRuntime,
+  resolvePublicRoute,
+} from "@repo/backend/convex/contentRelease/runtime/public/internal";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -51,6 +57,27 @@ const readPublicBatch = makeFunctionReference<
 >("contentRelease/runtime/public/internal:readBatch");
 
 describe("contentRelease/runtime/public/internal", () => {
+  it("uses five indexed operations for one current public body", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx);
+      await insertRuntimeHead(ctx, "public", "test:public");
+    });
+
+    const { metrics, result } = await t.query(async (ctx) => {
+      const result = await runConvexProgram(
+        resolvePublicRoute(ctx, "en", TEST_RUNTIME_PATH)
+      );
+      return {
+        metrics: await ctx.meta.getTransactionMetrics(),
+        result,
+      };
+    });
+
+    expect(result).toMatchObject({ delivery: "public" });
+    expect(metrics.databaseQueries.used).toBe(5);
+  });
+
   it("returns at most eight routes in exact request order", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -272,6 +299,9 @@ describe("contentRelease/runtime/public/internal", () => {
   it("returns absence without active state and fails for a missing artifact", async () => {
     const empty = convexTest(schema, convexModules);
     await expect(empty.query(readPublic, routeArgs)).resolves.toBeNull();
+    await expect(
+      empty.query(readPublicBatch, { requests: [routeArgs, routeArgs] })
+    ).resolves.toEqual([null, null]);
 
     const missing = convexTest(schema, convexModules);
     await missing.mutation(async (ctx) => {
@@ -299,6 +329,94 @@ describe("contentRelease/runtime/public/internal", () => {
     });
 
     await expect(t.query(readPublic, routeArgs)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("fails closed for deleted, incomplete, orphaned, and anonymous routes", async () => {
+    const deleted = convexTest(schema, convexModules);
+    await deleted.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx);
+      await insertRuntimeHead(ctx, "public", "test:deleted-head");
+      const head = await ctx.db.query("contentHeads").unique();
+      if (!head) {
+        return expect.fail("Expected one deletable runtime head.");
+      }
+      await ctx.db.delete("contentHeads", head._id);
+      await ctx.db.insert("contentHeads", {
+        artifactLocale: head.artifactLocale,
+        contentKey: head.contentKey,
+        family: head.family,
+        index: head.index,
+        operation: "delete",
+        releaseId: head.releaseId,
+        sequence: head.sequence,
+      });
+    });
+    await expect(deleted.query(readPublic, routeArgs)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+    await expect(
+      deleted.query(async (ctx) => {
+        const active = await runConvexProgram(loadActiveIdentity(ctx));
+        const head = await ctx.db.query("contentHeads").unique();
+        if (!(active && head)) {
+          throw new Error("Expected one active delete-head fixture.");
+        }
+        return await runConvexProgram(
+          readPublicRuntime(
+            ctx,
+            active,
+            head,
+            routeArgs.appLocale,
+            routeArgs.publicPath
+          )
+        );
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+
+    const incomplete = convexTest(schema, convexModules);
+    await incomplete.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx);
+      await insertRuntimeHead(ctx, "public", "test:incomplete");
+      const head = await ctx.db.query("contentHeads").unique();
+      if (!head) {
+        return expect.fail("Expected one incomplete runtime head.");
+      }
+      await ctx.db.patch("contentHeads", head._id, {
+        compilerConfigHash: undefined,
+      });
+    });
+    await expect(incomplete.query(readPublic, routeArgs)).rejects.toMatchObject(
+      {
+        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      }
+    );
+
+    const orphaned = convexTest(schema, convexModules);
+    await orphaned.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx);
+      await insertRuntimeBinding(ctx, "test:orphaned");
+    });
+    await expect(orphaned.query(readPublic, routeArgs)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+
+    const anonymous = convexTest(schema, convexModules);
+    await anonymous.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx);
+      await insertRuntimeHead(ctx, "public", "test:anonymous");
+      const binding = await ctx.db.query("contentBindings").unique();
+      if (!binding) {
+        return expect.fail("Expected one anonymizable route binding.");
+      }
+      await ctx.db.patch("contentBindings", binding._id, {
+        contentKey: undefined,
+      });
+    });
+    await expect(anonymous.query(readPublic, routeArgs)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });

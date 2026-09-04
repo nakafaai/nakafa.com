@@ -116,28 +116,30 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
   }
 );
 
-/** Resolves the complete active shell model for one localized material lesson. */
-export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
-  function* (
-    ctx: QueryCtx,
-    appLocale: Doc<"materialCatalog">["appLocale"],
-    publicPath: string,
-    expectedActiveReleaseId?: string | null
-  ) {
-    const route = yield* resolveMaterialRoute(ctx, appLocale, publicPath);
-    yield* requireExpectedActiveRelease(
-      route.active,
-      expectedActiveReleaseId,
-      "Material route"
+/** Resolves one material shell together with its authenticated serving proof. */
+export const resolveMaterialModel = Effect.fn(
+  "contentRelease.resolveMaterialModel"
+)(function* (
+  ctx: QueryCtx,
+  appLocale: Doc<"materialCatalog">["appLocale"],
+  publicPath: string,
+  expectedActiveReleaseId?: string | null
+) {
+  const route = yield* resolveMaterialRoute(ctx, appLocale, publicPath);
+  yield* requireExpectedActiveRelease(
+    route.active,
+    expectedActiveReleaseId,
+    "Material route"
+  );
+  if (!(route.managed && route.active)) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_MISSING",
+      `Signed material ownership is unavailable for ${appLocale}.`
     );
-    if (!(route.managed && route.active)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_MISSING",
-        `Signed material ownership is unavailable for ${appLocale}.`
-      );
-    }
-    if (!route.material) {
-      return {
+  }
+  if (!route.material) {
+    return {
+      model: {
         activeManifestHash: route.active.manifestHash,
         activeAppLocales: Array.from(
           route.active.signed.manifest.activeAppLocales
@@ -149,22 +151,25 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
         siblingJson: [],
         sourcePath: null,
         sourceRevision: readSourceRevision(route.active),
-      };
-    }
-    const requested = route.material;
-    const { projectionJson, row } = requested;
-    const [alternates, siblings] = yield* Effect.all([
-      readAlternates(
-        ctx,
-        requested,
-        route.active.signed.manifest.activeAppLocales,
-        route.active.sequence
-      ),
-      readSiblings(ctx, requested, route.active.sequence),
-    ]);
-    const alternateJson = alternates.map((material) => material.projectionJson);
-    const siblingJson = siblings.map((material) => material.projectionJson);
-    return {
+      },
+      route,
+    };
+  }
+  const requested = route.material;
+  const { projectionJson, row } = requested;
+  const [alternates, siblings] = yield* Effect.all([
+    readAlternates(
+      ctx,
+      requested,
+      route.active.signed.manifest.activeAppLocales,
+      route.active.sequence
+    ),
+    readSiblings(ctx, requested, route.active.sequence),
+  ]);
+  const alternateJson = alternates.map((material) => material.projectionJson);
+  const siblingJson = siblings.map((material) => material.projectionJson);
+  return {
+    model: {
       activeManifestHash: route.active.manifestHash,
       activeAppLocales: Array.from(
         route.active.signed.manifest.activeAppLocales
@@ -176,6 +181,25 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
       siblingJson,
       sourcePath: row.sourcePath,
       sourceRevision: readSourceRevision(route.active),
-    };
+    },
+    route,
+  };
+});
+
+/** Resolves the complete active shell model for one localized material lesson. */
+export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
+  function* (
+    ctx: QueryCtx,
+    appLocale: Doc<"materialCatalog">["appLocale"],
+    publicPath: string,
+    expectedActiveReleaseId?: string | null
+  ) {
+    const resolved = yield* resolveMaterialModel(
+      ctx,
+      appLocale,
+      publicPath,
+      expectedActiveReleaseId
+    );
+    return resolved.model;
   }
 );

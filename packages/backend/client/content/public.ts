@@ -35,7 +35,7 @@ import {
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
-import { Effect, Schema } from "effect";
+import { Effect, Array as EffectArray, Schema } from "effect";
 /** Server-owned connection values for the private content runtime endpoint. */
 export type ContentRuntimeTarget = ContentHttpTarget;
 /** Public route identity without its module-owned delivery discriminator. */
@@ -43,7 +43,7 @@ export interface PublicContentRuntimeInput {
   readonly appLocale: PublicContentRuntimeRequest["appLocale"];
   readonly publicPath: string;
 }
-type PublicContentVerification =
+export type PublicContentVerification =
   | {
       readonly kind: "frozen";
     }
@@ -80,7 +80,7 @@ const readPublicRuntimeResponse = Effect.fn(
   return decoded;
 });
 /** Verifies one exact Aksara response under the selected renderer policy. */
-const verifyPublicContentResponse = Effect.fn(
+export const verifyPublicContentResponse = Effect.fn(
   "NakafaContent.verifyPublicContentResponse"
 )(function* (
   request: PublicContentRuntimeRequest,
@@ -108,6 +108,7 @@ const verifyPublicContentResponse = Effect.fn(
   }
   return verified;
 });
+
 /** Reads and authenticates one public artifact under an explicit renderer policy. */
 const readPublicContentProgram = Effect.fn(
   "NakafaContent.readPublicContentProgram"
@@ -207,19 +208,15 @@ export const readPublicContentEvidenceBatch = Effect.fn(
   if (decoded.responses.length !== requests.length) {
     return yield* createContentContractError(response);
   }
-  return yield* Effect.forEach(requests, (request, index) =>
-    Effect.gen(function* () {
-      const batchResponse = decoded.responses[index];
-      if (batchResponse === undefined) {
-        return yield* createContentContractError(response);
-      }
-      return yield* verifyPublicContentResponse(
+  return yield* Effect.forEach(
+    EffectArray.zip(requests, decoded.responses),
+    ([request, batchResponse]) =>
+      verifyPublicContentResponse(
         request,
         batchResponse,
         { kind: "frozen" },
         response.status
-      );
-    })
+      )
   );
 });
 /** Reads one public artifact verified against the caller's live renderer. */
