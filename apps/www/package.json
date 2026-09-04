@@ -74,6 +74,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@next/playwright": "16.3.2",
     "@playwright/test": "^1.62.1",
