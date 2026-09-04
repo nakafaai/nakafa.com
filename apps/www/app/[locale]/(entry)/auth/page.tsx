@@ -1,6 +1,7 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
+import { Suspense } from "react";
 import { Auth } from "@/components/auth";
 import { Theme } from "@/components/marketing/shared/footer-action";
 import { BackButton } from "@/components/shared/back-button";
@@ -32,7 +33,9 @@ export default async function Page(props: PageProps<"/[locale]/auth">) {
         <EntryShellBody>
           <PageTitle />
 
-          <Auth />
+          <Suspense fallback={null}>
+            <Auth />
+          </Suspense>
 
           <PageFooter locale={locale} pageNavigation={pageNavigation} />
         </EntryShellBody>
