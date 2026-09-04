@@ -92,7 +92,7 @@ export const validateProductionDeployKey = (deployKey: string) => {
   return Effect.succeed(deployKey);
 };
 
-const readCacheIdentity = Effect.gen(function* () {
+export const readCacheIdentity = Effect.gen(function* () {
   const values = yield* Config.all({
     contentStateHash: Config.nonEmptyString("CONTENT_RUNTIME_STATE_HASH"),
     runtimeSchemaFingerprint: Config.nonEmptyString(

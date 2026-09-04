@@ -116,6 +116,13 @@ import type * as contentRelease_activation_model from "../contentRelease/activat
 import type * as contentRelease_activation_recovery from "../contentRelease/activation/recovery.js";
 import type * as contentRelease_activation_spec from "../contentRelease/activation/spec.js";
 import type * as contentRelease_activation_validate from "../contentRelease/activation/validate.js";
+import type * as contentRelease_archive_cleanup from "../contentRelease/archive/cleanup.js";
+import type * as contentRelease_archive_internal from "../contentRelease/archive/internal.js";
+import type * as contentRelease_archive_model from "../contentRelease/archive/model.js";
+import type * as contentRelease_archive_request from "../contentRelease/archive/request.js";
+import type * as contentRelease_archive_retention from "../contentRelease/archive/retention.js";
+import type * as contentRelease_archive_route from "../contentRelease/archive/route.js";
+import type * as contentRelease_archive_spec from "../contentRelease/archive/spec.js";
 import type * as contentRelease_article from "../contentRelease/article.js";
 import type * as contentRelease_article_agent from "../contentRelease/article/agent.js";
 import type * as contentRelease_article_bucket from "../contentRelease/article/bucket.js";
@@ -710,6 +717,13 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/activation/recovery": typeof contentRelease_activation_recovery;
   "contentRelease/activation/spec": typeof contentRelease_activation_spec;
   "contentRelease/activation/validate": typeof contentRelease_activation_validate;
+  "contentRelease/archive/cleanup": typeof contentRelease_archive_cleanup;
+  "contentRelease/archive/internal": typeof contentRelease_archive_internal;
+  "contentRelease/archive/model": typeof contentRelease_archive_model;
+  "contentRelease/archive/request": typeof contentRelease_archive_request;
+  "contentRelease/archive/retention": typeof contentRelease_archive_retention;
+  "contentRelease/archive/route": typeof contentRelease_archive_route;
+  "contentRelease/archive/spec": typeof contentRelease_archive_spec;
   "contentRelease/article": typeof contentRelease_article;
   "contentRelease/article/agent": typeof contentRelease_article_agent;
   "contentRelease/article/bucket": typeof contentRelease_article_bucket;

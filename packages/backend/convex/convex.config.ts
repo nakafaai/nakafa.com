@@ -21,6 +21,7 @@ const app = defineApp({
     AKSARA_AGENT_SIGNING_KEY_ID: v.optional(v.string()),
     AKSARA_AGENT_SIGNING_PUBLIC_KEY: v.optional(v.string()),
     AKSARA_PUBLICATION_TOKEN: v.string(),
+    CONTENT_ARCHIVE_TOKEN: v.string(),
     CONTENT_RUNTIME_TOKEN: v.string(),
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: v.string(),
     [NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT]: v.optional(v.string()),

@@ -39,6 +39,7 @@ describe("content runtime CI config", () => {
     "prod:dapper-antelope-269| test-secret",
     "prod:dapper-antelope-269|test-secret ",
     "prod:dapper-antelope-269|test\nsecret",
+    "prod:dapper-antelope-269|test\u0001secret",
     "prod:dapper-antelope-269|test\u0080secret",
   ])("rejects an unsafe deploy key without exposing it", (deployKey) =>
     Effect.gen(function* () {
@@ -94,6 +95,21 @@ describe("content runtime CI config", () => {
         "CONTENT_RUNTIME_EXPORT_LIMIT",
         String(MAX_CONTENT_RUNTIME_EXPORT_LIMIT + 1)
       );
+
+      expect(
+        yield* withStubbedEnv(readExportConfig.pipe(Effect.flip))
+      ).toMatchObject({
+        _tag: "ContentRuntimeCiError",
+        message: `CONTENT_RUNTIME_EXPORT_LIMIT must be between 1 and ${MAX_CONTENT_RUNTIME_EXPORT_LIMIT}.`,
+      });
+    })
+  );
+
+  it.live("rejects a non-positive producer export limit", () =>
+    Effect.gen(function* () {
+      stubProductionConfig();
+      stubCacheIdentity("1".repeat(64));
+      vi.stubEnv("CONTENT_RUNTIME_EXPORT_LIMIT", "0");
 
       expect(
         yield* withStubbedEnv(readExportConfig.pipe(Effect.flip))

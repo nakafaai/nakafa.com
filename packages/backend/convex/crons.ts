@@ -8,6 +8,7 @@ import { cronJobs } from "convex/server";
 const crons = cronJobs();
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
+const CONTENT_RUNTIME_ARCHIVE_SWEEP_INTERVAL_HOURS = 1;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS = 24;
@@ -77,6 +78,14 @@ crons.interval(
   "compact content release history",
   { minutes: CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES },
   internal.contentRelease.compact.run,
+  {}
+);
+
+/** Advances one bounded page of old unreferenced runtime archive storage. */
+crons.interval(
+  "sweep runtime archive storage",
+  { hours: CONTENT_RUNTIME_ARCHIVE_SWEEP_INTERVAL_HOURS },
+  internal.contentRelease.archive.cleanup.sweep,
   {}
 );
 
