@@ -128,6 +128,15 @@ const tables = {
       "lastViewedAt",
     ]),
 
+  /** Temporary production latch for the destructive popularity reset. */
+  learningPopularityControl: defineTable({
+    cleared: v.array(v.string()),
+    completedAt: v.optional(v.number()),
+    key: v.literal("popularity"),
+    mode: v.literal("reset"),
+    startedAt: v.number(),
+  }).index("by_key", ["key"]),
+
   /**
    * Lease rows for partitioned analytics queue processing.
    * One row per partition.

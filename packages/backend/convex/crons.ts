@@ -6,7 +6,6 @@ import {
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
-const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
@@ -62,16 +61,6 @@ crons.interval(
   {}
 );
 
-/**
- * Backstops content analytics scheduling in case a per-view trigger is missed.
- */
-crons.interval(
-  "schedule content analytics partitions",
-  { minutes: CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES },
-  internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
-  {}
-);
-
 /** Compacts unreachable content release history in persisted bounded pages. */
 crons.interval(
   "compact content release history",
@@ -88,16 +77,6 @@ crons.interval(
   "sweep retained email delivery data",
   { hours: EMAIL_RETENTION_SWEEP_INTERVAL_HOURS },
   internal.emails.retention.cleanupRetainedEmailData,
-  {}
-);
-
-/**
- * Rebuilds finite popularity windows from audited daily signals.
- */
-crons.cron(
-  "refresh learning popularity windows",
-  "15 0 * * *",
-  internal.contents.mutations.popularity.scheduleLearningPopularityRefreshes,
   {}
 );
 

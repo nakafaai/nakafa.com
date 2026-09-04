@@ -10,6 +10,7 @@ import {
   refreshLearningPopularityWindowPage as refreshLearningPopularityWindowPageProgram,
   scheduleLearningPopularityRefreshes as scheduleLearningPopularityRefreshesProgram,
 } from "@repo/backend/convex/contents/metrics/refresh";
+import { isPopularityResetting } from "@repo/backend/convex/contents/reset/state";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
@@ -17,14 +18,21 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 export const scheduleLearningPopularityRefreshes = internalMutation({
   args: {},
   returns: scheduleLearningPopularityRefreshesResultValidator,
-  handler: async (ctx): Promise<ScheduleLearningPopularityRefreshesResult> =>
-    await runConvexProgram(
+  handler: async (ctx): Promise<ScheduleLearningPopularityRefreshesResult> => {
+    const resetting = await runConvexProgram(isPopularityResetting(ctx.db));
+
+    if (resetting) {
+      return { scheduledWindows: 0 };
+    }
+
+    return await runConvexProgram(
       scheduleLearningPopularityRefreshesProgram(
         ctx,
         internal.contents.mutations.popularity
           .refreshLearningPopularityWindowPage
       )
-    ),
+    );
+  },
 });
 
 /** Refreshes one bounded page of popularity counters from daily signals. */
@@ -34,13 +42,26 @@ export const refreshLearningPopularityWindowPage = internalMutation({
   handler: async (
     ctx,
     args
-  ): Promise<RefreshLearningPopularityWindowPageResult> =>
-    await runConvexProgram(
+  ): Promise<RefreshLearningPopularityWindowPageResult> => {
+    const resetting = await runConvexProgram(isPopularityResetting(ctx.db));
+
+    if (resetting) {
+      return {
+        continueCursor: args.cursor ?? "",
+        isDone: true,
+        refreshedCounters: 0,
+        removedCounters: 0,
+        skipped: true,
+      };
+    }
+
+    return await runConvexProgram(
       refreshLearningPopularityWindowPageProgram(
         ctx,
         args,
         internal.contents.mutations.popularity
           .refreshLearningPopularityWindowPage
       )
-    ),
+    );
+  },
 });

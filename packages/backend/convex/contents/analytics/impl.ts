@@ -15,6 +15,7 @@ import {
 } from "@repo/backend/convex/contents/constants";
 import { isContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/metrics/apply";
+import { isPopularityResetting } from "@repo/backend/convex/contents/reset/state";
 import { logger } from "@repo/backend/convex/utils/logger";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
@@ -42,6 +43,10 @@ export const scheduleAllContentAnalyticsPartitions = Effect.fn(
   ctx: MutationCtx,
   schedulePartition: ScheduleContentAnalyticsPartitionReference
 ) {
+  if (yield* isPopularityResetting(ctx.db)) {
+    return { enqueuedPartitions: 0 };
+  }
+
   let enqueuedPartitions = 0;
 
   for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
@@ -92,6 +97,13 @@ export const claimContentAnalyticsPartition = Effect.fn(
       code: invalidContentAnalyticsPartitionCode,
       message: "Content analytics partition is out of range.",
     });
+  }
+
+  if (yield* isPopularityResetting(ctx.db)) {
+    return {
+      createdPartition: false,
+      scheduled: false,
+    };
   }
 
   const queuedItem = yield* Effect.tryPromise({
@@ -186,6 +198,15 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
       code: invalidContentAnalyticsPartitionCode,
       message: "Content analytics partition is out of range.",
     });
+  }
+
+  if (yield* isPopularityResetting(ctx.db)) {
+    return {
+      hasMore: false,
+      partition: args.partition,
+      processed: 0,
+      skipped: true,
+    };
   }
 
   const now = yield* Clock.currentTimeMillis;
