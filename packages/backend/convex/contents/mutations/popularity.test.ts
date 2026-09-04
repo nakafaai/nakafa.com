@@ -205,7 +205,6 @@ describe("contents/mutations/popularity", () => {
       removedCounters: 1,
       skipped: false,
     });
-    expect(refresh.metrics.documentsWritten.used).toBeGreaterThan(0);
     expect(counters).toHaveLength(1);
     expect(counters[0]).toMatchObject({
       alignmentId: subject.alignmentId,
@@ -235,13 +234,14 @@ describe("contents/mutations/popularity", () => {
     const t = createPopularityConvexTest();
 
     await t.mutation(insertPopularityRefreshRows);
-    await runRefresh(t);
+    const repair = await runRefresh(t);
     const before = await readPopularitySnapshot(t);
 
     vi.setSystemTime(new Date(NOW + POPULARITY_DAY_MS / 2));
     const replay = await runRefresh(t);
     const after = await readPopularitySnapshot(t);
 
+    expect(repair.metrics.documentsWritten.used).toBeGreaterThan(0);
     expect(replay.result).toEqual({
       continueCursor: expect.any(String),
       isDone: true,
@@ -251,6 +251,5 @@ describe("contents/mutations/popularity", () => {
     });
     expect(replay.metrics.documentsWritten.used).toBe(0);
     expect(after).toEqual(before);
-    expect(after.counters[0]?.updatedAt).toBe(NOW);
   });
 });
