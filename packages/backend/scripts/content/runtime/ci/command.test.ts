@@ -2,18 +2,23 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { ConvexHttpClient } from "convex/browser";
-import { makeFunctionReference } from "convex/server";
+import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import {
+  runConvexData,
+  runConvexImport,
   runRuntimeCommand,
-  sanitizeRuntimeCommandError,
   setConvexAdminAuth,
 } from "@repo/backend/scripts/content/runtime/ci/command";
+import { sanitizeRuntimeCommandError } from "@repo/backend/scripts/content/runtime/ci/error";
+import { ConvexHttpClient } from "convex/browser";
+import { makeFunctionReference } from "convex/server";
 import { Effect, FileSystem } from "effect";
 
 describe("content runtime command diagnostics", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
   it.effect("authenticates and clears Convex system-query requests", () =>
@@ -22,26 +27,23 @@ describe("content runtime command diagnostics", () => {
       const client = new ConvexHttpClient(
         "https://happy-animal-123.convex.cloud",
         {
-          fetch: async (_input, init) => {
+          fetch: (_input, init) => {
             authorizations.push(
               new Headers(init?.headers).get("Authorization")
             );
-            return new Response(
-              JSON.stringify({ status: "success", value: null }),
-              {
+            return Promise.resolve(
+              new Response(JSON.stringify({ status: "success", value: null }), {
                 headers: { "Content-Type": "application/json" },
                 status: 200,
-              }
+              })
             );
           },
           logger: false,
         }
       );
-      const query = makeFunctionReference<
-        "query",
-        Record<string, never>,
-        null
-      >("test:query");
+      const query = makeFunctionReference<"query", Record<string, never>, null>(
+        "test:query"
+      );
 
       yield* setConvexAdminAuth(client, "test-admin-key");
       yield* Effect.promise(() => client.query(query, {}));
@@ -216,6 +218,206 @@ describe("content runtime command diagnostics", () => {
           stderr: stderrValue,
           stdout: stdoutValue,
         }))
+      );
+    })
+  );
+
+  it.live("forwards stdin into one protected output stream", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const fileSystem = yield* FileSystem.FileSystem;
+          const root = yield* fileSystem.makeTempDirectoryScoped({
+            directory: tmpdir(),
+            prefix: "content-runtime-stdin-test-",
+          });
+          const outputPath = `${root}/combined.log`;
+
+          yield* runRuntimeCommand({
+            args: [
+              "-e",
+              'let input = ""; process.stdin.setEncoding("utf8"); process.stdin.on("data", (chunk) => { input += chunk; }); process.stdin.on("end", () => { process.stdout.write(input); process.stderr.write("stderr"); });',
+            ],
+            command: process.execPath,
+            operation: "Stdin probe",
+            stderrPath: outputPath,
+            stdin: "private input\n",
+            stdoutPath: outputPath,
+          });
+
+          return yield* fileSystem.readFileString(outputPath);
+        })
+      ).pipe(Effect.provide(NodeServices.layer));
+
+      expect(result).toBe("private input\nstderr");
+    })
+  );
+
+  it.live(
+    "returns generic failures when diagnostics are disabled or empty",
+    () =>
+      Effect.gen(function* () {
+        const failures = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const fileSystem = yield* FileSystem.FileSystem;
+            const root = yield* fileSystem.makeTempDirectoryScoped({
+              directory: tmpdir(),
+              prefix: "content-runtime-generic-error-test-",
+            });
+
+            return yield* Effect.forEach(
+              [
+                { reportStderr: false, stderr: "private detail" },
+                { reportStderr: true, stderr: "\u001B[31m\u001B[0m\n" },
+              ],
+              ({ reportStderr, stderr }, index) =>
+                runRuntimeCommand({
+                  args: [
+                    "-e",
+                    `process.stderr.write(${JSON.stringify(stderr)}); process.exit(7);`,
+                  ],
+                  command: process.execPath,
+                  operation: "Generic failure probe",
+                  reportStderr,
+                  stderrPath: `${root}/stderr-${index}.log`,
+                  stdoutPath: `${root}/stdout-${index}.log`,
+                }).pipe(Effect.flip)
+            );
+          })
+        ).pipe(Effect.provide(NodeServices.layer));
+
+        expect(failures).toHaveLength(2);
+        for (const failure of failures) {
+          expect(failure).toMatchObject({
+            _tag: "ContentRuntimeCiError",
+            message: "Generic failure probe failed.",
+          });
+        }
+      })
+  );
+
+  it.live(
+    "reads a bounded authenticated production table into a private file",
+    () =>
+      Effect.gen(function* () {
+        const deployKey = "prod:deployment:data:view|private-key";
+        const requests: Array<{ input: string; init?: RequestInit }> = [];
+        const clearAuth = vi.spyOn(ConvexHttpClient.prototype, "clearAuth");
+        vi.stubGlobal(
+          "fetch",
+          vi.fn<typeof fetch>((input, init) => {
+            requests.push({ input: String(input), init });
+            return Promise.resolve(
+              new Response(
+                JSON.stringify({
+                  status: "success",
+                  value: {
+                    continueCursor: "done",
+                    isDone: true,
+                    page: [{ slug: "safe" }],
+                  },
+                }),
+                {
+                  headers: { "Content-Type": "application/json" },
+                  status: 200,
+                }
+              )
+            );
+          })
+        );
+
+        const result = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const fileSystem = yield* FileSystem.FileSystem;
+            const root = yield* fileSystem.makeTempDirectoryScoped({
+              directory: tmpdir(),
+              prefix: "content-runtime-data-test-",
+            });
+            const logPath = `${root}/runtime.log`;
+            const outputPath = `${root}/contentKeys.json`;
+
+            yield* runConvexData({
+              deployKey,
+              limit: 2,
+              logPath,
+              outputPath,
+              table: "contentKeys",
+            });
+
+            return {
+              log: yield* fileSystem.readFileString(logPath),
+              output: yield* fileSystem.readFileString(outputPath),
+            };
+          })
+        ).pipe(Effect.provide(NodeServices.layer));
+
+        expect(result).toEqual({ log: "", output: '[{"slug":"safe"}]' });
+        expect(requests).toHaveLength(1);
+        expect(requests[0]?.input).toBe(
+          `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud/api/query`
+        );
+        expect(
+          new Headers(requests[0]?.init?.headers).get("Authorization")
+        ).toBe(`Convex ${deployKey}`);
+        expect(String(requests[0]?.init?.body)).toContain(
+          '"path":"_system/cli/tableData"'
+        );
+        expect(String(requests[0]?.init?.body)).toContain(
+          '"paginationOpts":{"cursor":null,"numItems":3}'
+        );
+        expect(clearAuth).toHaveBeenCalledTimes(2);
+      })
+  );
+
+  it.live("invokes local imports with the exact replacement contract", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const fileSystem = yield* FileSystem.FileSystem;
+          const root = yield* fileSystem.makeTempDirectoryScoped({
+            directory: tmpdir(),
+            prefix: "content-runtime-import-command-test-",
+          });
+          const binPath = `${root}/bin`;
+          const pnpmPath = `${binPath}/pnpm`;
+          const inputPath = `${root}/content keys.jsonl`;
+          const logPath = `${root}/runtime.log`;
+          yield* fileSystem.makeDirectory(binPath);
+          yield* fileSystem.writeFileString(
+            pnpmPath,
+            '#!/bin/sh\nprintf "%s\\n" "$@"\n',
+            { mode: 0o700 }
+          );
+          yield* fileSystem.chmod(pnpmPath, 0o700);
+          vi.stubEnv("PATH", `${binPath}:${process.env.PATH ?? ""}`);
+
+          yield* runConvexImport({
+            inputPath,
+            logPath,
+            table: "contentKeys",
+          });
+
+          return {
+            inputPath,
+            log: yield* fileSystem.readFileString(logPath),
+          };
+        })
+      ).pipe(Effect.provide(NodeServices.layer));
+
+      expect(result.log).toBe(
+        [
+          "exec",
+          "convex",
+          "import",
+          "--format",
+          "jsonLines",
+          "--table",
+          "contentKeys",
+          "--replace",
+          "--yes",
+          result.inputPath,
+          "",
+        ].join("\n")
       );
     })
   );

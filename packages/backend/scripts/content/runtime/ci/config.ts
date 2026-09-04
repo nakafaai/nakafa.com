@@ -1,7 +1,6 @@
+import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import { Config, Effect, Redacted } from "effect";
-
-export const CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT = "dapper-antelope-269";
 
 /**
  * Bounded trusted-snapshot capacity for active and retained content history.
@@ -65,7 +64,7 @@ const validateHex = (name: string, value: string) => {
 
 export const validateProductionDeployKey = (deployKey: string) => {
   const parts = deployKey.split("|");
-  const identity = parts[0] ?? "";
+  const identity = parts[0];
   const secret = parts[1] ?? "";
   const identitySegments = identity.split(":");
   const deploymentType = identitySegments[0];

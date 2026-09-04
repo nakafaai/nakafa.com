@@ -1,7 +1,6 @@
 import path from "node:path";
 import { postHogProxyKeys } from "@repo/analytics/keys";
 import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
-import { convexKeys } from "@repo/backend/keys";
 import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
 import {
   config,
@@ -19,27 +18,23 @@ import createNextIntlPlugin from "next-intl/plugin";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
 import { createOgRouteAliasRewrites } from "@/lib/og/route";
-import { hasIsolatedTypecheck } from "@/vercel";
+import { readRuntimeConfig } from "@/runtime";
 
+const runtime = readRuntimeConfig();
 const configEnv = createEnv({
-  extends: [analyzeKeys(), convexKeys()],
+  extends: [analyzeKeys()],
   server: {
-    CONVEX_AGENT_MODE: Schema.toStandardSchemaV1(
-      Schema.UndefinedOr(Schema.Literal("anonymous"))
-    ),
     NEXT_EXPOSE_TESTING_API: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.Literal("true"))
     ),
-    VERCEL: Schema.toStandardSchemaV1(Schema.UndefinedOr(Schema.Literal("1"))),
   },
+  client: {},
   runtimeEnv: {
-    CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
     NEXT_EXPOSE_TESTING_API: process.env.NEXT_EXPOSE_TESTING_API,
-    VERCEL: process.env.VERCEL,
   },
 });
 const localConvexConnectSources = createLoopbackConnectSources(
-  new URL(configEnv.NEXT_PUBLIC_CONVEX_URL)
+  new URL(runtime.query)
 );
 const isAksaraPreviewChild =
   hasCandidateLocalePreview() || hasPreviewRendererEnvironment();
@@ -181,14 +176,14 @@ const nextConfig = {
   // Local and CI builds keep Next's built-in typecheck as an independent gate.
   // https://nextjs.org/docs/app/guides/memory-usage#disable-static-analysis
   typescript: {
-    ignoreBuildErrors: hasIsolatedTypecheck(configEnv.VERCEL),
+    ignoreBuildErrors: runtime.vercel === "1",
   },
   // Cache Components enables prerender source maps by default. The anonymous
   // CI build does not publish those artifacts, and retaining them exhausted
   // the static worker's isolated 4 GiB heap with two pages in flight.
   // Production keeps source maps enabled. Docs:
   // https://nextjs.org/docs/app/guides/memory-usage#disable-source-maps
-  ...(configEnv.CONVEX_AGENT_MODE === "anonymous"
+  ...(runtime.agent === "anonymous"
     ? { enablePrerenderSourceMaps: false }
     : {}),
   env: {
@@ -235,16 +230,18 @@ const nextConfig = {
     instantInsights: {
       validationLevel: "warning",
     },
-    // Anonymous Convex shares this runner. Split the export across two isolated
-    // worker heaps, but let each worker process only one page at a time so the
-    // backend sees at most two concurrent static-generation requests. Retry one
-    // complete page after an intermittent local-backend response; repeated or
-    // deterministic page failures still fail the build.
-    // Production keeps Next.js' default static-generation concurrency.
+    // Anonymous Convex and Vercel builds run with bounded memory. Limit page
+    // analysis and generation to two isolated worker heaps instead of deriving
+    // the worker count from the build host.
     // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
-    ...(configEnv.CONVEX_AGENT_MODE === "anonymous"
+    ...(runtime.agent === "anonymous" || runtime.vercel === "1"
+      ? { cpus: 2 }
+      : {}),
+    // The anonymous runner also shares one local backend. Let each worker
+    // process one page at a time and retry one complete page after an
+    // intermittent response. Repeated or deterministic failures still fail.
+    ...(runtime.agent === "anonymous"
       ? {
-          cpus: 2,
           staticGenerationMaxConcurrency: 1,
           staticGenerationRetryCount: 2,
         }

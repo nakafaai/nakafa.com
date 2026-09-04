@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  collectConvexTableRows,
   CONTENT_RUNTIME_TABLE_PAGE_SIZE,
+  collectConvexTableRows,
 } from "@repo/backend/scripts/content/runtime/ci/pagination";
 import { Effect } from "effect";
 
@@ -29,13 +29,13 @@ describe("content runtime production pagination", () => {
 
       const rows = yield* collectConvexTableRows({
         limit: 5000,
-        readPage: async (request) => {
+        readPage: (request) => {
           requests.push(request);
           const page = pages.shift();
           if (page === undefined) {
             throw new Error("Unexpected pagination request.");
           }
-          return page;
+          return Promise.resolve(page);
         },
         table: "contentKeys",
       });
@@ -57,13 +57,13 @@ describe("content runtime production pagination", () => {
       }> = [];
       const rows = yield* collectConvexTableRows({
         limit: 2,
-        readPage: async (request) => {
+        readPage: (request) => {
           requests.push(request);
-          return {
+          return Promise.resolve({
             continueCursor: "done",
             isDone: true,
             page: [row("first"), row("second")],
-          };
+          });
         },
         table: "contentKeys",
       });
@@ -94,13 +94,13 @@ describe("content runtime production pagination", () => {
 
       const failure = yield* collectConvexTableRows({
         limit: 2,
-        readPage: async (request) => {
+        readPage: (request) => {
           requests.push(request);
           const page = pages.shift();
           if (page === undefined) {
             throw new Error("Unexpected pagination request.");
           }
-          return page;
+          return Promise.resolve(page);
         },
         table: "contentKeys",
       }).pipe(Effect.flip);
@@ -162,9 +162,8 @@ describe("content runtime production pagination", () => {
       const deployKey = "prod:project|sensitive-secret";
       const failure = yield* collectConvexTableRows({
         limit: 10,
-        readPage: async () => {
-          throw new Error(`Permission denied for ${deployKey}`);
-        },
+        readPage: () =>
+          Promise.reject(new Error(`Permission denied for ${deployKey}`)),
         sensitiveValues: [deployKey],
         table: "contentKeys",
       }).pipe(Effect.flip);

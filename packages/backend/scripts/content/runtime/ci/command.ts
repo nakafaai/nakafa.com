@@ -1,4 +1,4 @@
-import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/scripts/content/runtime/ci/config";
+import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import {
   contentRuntimeCiError,
   sanitizeRuntimeCommandError,
@@ -8,8 +8,6 @@ import { ConvexHttpClient } from "convex/browser";
 import { makeFunctionReference } from "convex/server";
 import { Effect, FileSystem, Stream } from "effect";
 import { ChildProcess } from "effect/unstable/process";
-
-export { sanitizeRuntimeCommandError };
 
 const SHARED_OUTPUT_REDIRECT =
   'output_path=$1; shift; exec "$@" >| "$output_path" 2>&1';
@@ -163,9 +161,13 @@ export const runConvexData = Effect.fn("contentRuntime.readProductionTable")(
       table: options.table,
     }).pipe(Effect.ensuring(Effect.sync(() => client.clearAuth())));
 
-    yield* fileSystem.writeFileString(options.outputPath, JSON.stringify(rows), {
-      mode: 0o600,
-    });
+    yield* fileSystem.writeFileString(
+      options.outputPath,
+      JSON.stringify(rows),
+      {
+        mode: 0o600,
+      }
+    );
     yield* fileSystem.chmod(options.outputPath, 0o600);
   }
 );

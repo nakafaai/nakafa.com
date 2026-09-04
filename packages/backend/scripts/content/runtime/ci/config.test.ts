@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import {
-  CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   clearContentRuntimeSecrets,
   DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT,
   MAX_CONTENT_RUNTIME_EXPORT_LIMIT,
   readExportConfig,
+  readImportConfig,
   readProductionSelectionConfig,
   validateProductionDeployKey,
 } from "@repo/backend/scripts/content/runtime/ci/config";
@@ -38,6 +39,7 @@ describe("content runtime CI config", () => {
     "prod:dapper-antelope-269| test-secret",
     "prod:dapper-antelope-269|test-secret ",
     "prod:dapper-antelope-269|test\nsecret",
+    "prod:dapper-antelope-269|test\u0080secret",
   ])("rejects an unsafe deploy key without exposing it", (deployKey) =>
     Effect.gen(function* () {
       const failure = yield* validateProductionDeployKey(deployKey).pipe(
@@ -98,6 +100,36 @@ describe("content runtime CI config", () => {
       ).toMatchObject({
         _tag: "ContentRuntimeCiError",
         message: `CONTENT_RUNTIME_EXPORT_LIMIT must be between 1 and ${MAX_CONTENT_RUNTIME_EXPORT_LIMIT}.`,
+      });
+    })
+  );
+
+  it.live.each([
+    { name: "export", program: readExportConfig },
+    { name: "import", program: readImportConfig },
+  ])("rejects a missing signed cache key for $name", ({ program }) =>
+    Effect.gen(function* () {
+      stubProductionConfig();
+      stubCacheIdentity("1".repeat(64));
+      vi.stubEnv("CONTENT_RUNTIME_CACHE_KEY", "short");
+
+      expect(yield* withStubbedEnv(program.pipe(Effect.flip))).toMatchObject({
+        _tag: "ContentRuntimeCiError",
+        message: "Signed content cache key is missing or too short.",
+      });
+    })
+  );
+
+  it.live("reads the exact signed runtime import identity", () =>
+    Effect.gen(function* () {
+      const contentStateHash = "1".repeat(64);
+      stubProductionConfig();
+      stubCacheIdentity(contentStateHash);
+
+      expect(yield* withStubbedEnv(readImportConfig)).toMatchObject({
+        contentStateHash,
+        runnerTemp: "/tmp",
+        runtimeSchemaFingerprint: "3".repeat(64),
       });
     })
   );
