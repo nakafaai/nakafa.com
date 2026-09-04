@@ -1,14 +1,24 @@
 // @vitest-environment node
 
+import { fileURLToPath } from "node:url";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import { Effect } from "effect";
+import { Effect, Stream } from "effect";
+import { ChildProcess } from "effect/unstable/process";
 import {
   assertRuntimeTarget,
   type RuntimeTarget,
   readRuntimeConfig,
   UnsafeRuntimeError,
 } from "@/runtime";
+
+const NEXT_CLI = fileURLToPath(
+  new URL("./node_modules/next/dist/bin/next", import.meta.url)
+);
+const TASK_QUERY = "https://helpful-capybara-123.convex.cloud";
+const TASK_SITE = "https://helpful-capybara-123.convex.site";
+const OTHER_SITE = "https://different-capybara-456.convex.site";
 
 const emptyIdentity = {
   deployment: undefined,
@@ -47,9 +57,7 @@ const productionTarget = {
   vercel: emptyIdentity,
 } satisfies RuntimeTarget;
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
+afterEach(() => vi.unstubAllEnvs());
 
 function identity(
   value: Partial<Omit<RuntimeTarget["vercel"], "git">> = {},
@@ -60,6 +68,10 @@ function identity(
     ...value,
     git: { ...productionIdentity.git, ...git },
   } satisfies RuntimeTarget["vercel"];
+}
+
+function target(value: Partial<RuntimeTarget>) {
+  return { ...productionTarget, ...value } satisfies RuntimeTarget;
 }
 
 function expectFailure(
@@ -88,14 +100,33 @@ describe("content runtime target", () => {
     expect(readRuntimeConfig).not.toThrow();
   });
 
-  it("blocks unsafe production at the Next configuration boundary", () => {
-    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", productionTarget.query);
-    vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", productionTarget.site);
+  it.effect("blocks Preview production while loading Next configuration", () =>
+    Effect.gen(function* () {
+      const command = yield* ChildProcess.make(
+        process.execPath,
+        [NEXT_CLI, "typegen"],
+        {
+          cwd: import.meta.dirname,
+          env: {
+            ...process.env,
+            NEXT_PUBLIC_CONVEX_SITE_URL: productionTarget.site,
+            NEXT_PUBLIC_CONVEX_URL: productionTarget.query,
+            VERCEL: "1",
+            VERCEL_ENV: "preview",
+          },
+          stdout: "ignore",
+        }
+      );
+      const [exitCode, stderr] = yield* Effect.all(
+        [command.exitCode, Stream.mkString(Stream.decodeText(command.stderr))],
+        { concurrency: 2 }
+      );
 
-    expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "untrusted-production" })
-    );
-  });
+      expect(exitCode).toBe(1);
+      expect(stderr).toContain("UnsafeRuntimeError");
+      expect(stderr).toContain("untrusted-production");
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
 
   it.effect.each([
     {
@@ -114,64 +145,53 @@ describe("content runtime target", () => {
       site: "http://localhost:3211",
     },
   ])("accepts isolated anonymous $name", ({ query, site }) =>
-    expectSuccess({ ...productionTarget, agent: "anonymous", query, site })
+    expectSuccess(target({ agent: "anonymous", query, site }))
   );
 
   it.effect("accepts a non-agent loopback target", () =>
-    expectSuccess({
-      ...productionTarget,
-      query: "http://127.0.0.1:3210",
-      site: "http://127.0.0.1:3211",
-    })
+    expectSuccess(
+      target({
+        query: "http://127.0.0.1:3210",
+        site: "http://127.0.0.1:3211",
+      })
+    )
   );
 
-  it.effect.each([
-    { site: "https://helpful-capybara-123.convex.site" },
-    { site: undefined },
-  ])("accepts a task-owned Convex deployment", ({ site }) =>
-    expectSuccess({
-      ...productionTarget,
-      query: "https://helpful-capybara-123.convex.cloud",
-      site,
-    })
+  it.effect.each([{ site: TASK_SITE }, { site: undefined }])(
+    "accepts a task-owned Convex deployment",
+    ({ site }) => expectSuccess(target({ query: TASK_QUERY, site }))
   );
 
   it.effect.each([
     { name: "query and HTTP", site: productionTarget.site },
     { name: "query only", site: undefined },
   ])("accepts protected production with $name", ({ site }) =>
-    expectSuccess({
-      ...productionTarget,
-      site,
-      vercel: productionIdentity,
-    })
+    expectSuccess(target({ site, vercel: productionIdentity }))
   );
 
   it.effect.each([
     { name: "both default domains", target: productionTarget },
     {
       name: "only the query domain",
-      target: { ...productionTarget, site: undefined },
+      target: target({ site: undefined }),
     },
     {
       name: "a nested Convex-like hostname",
-      target: {
-        ...productionTarget,
+      target: target({
         query: "https://nested.helpful-capybara-123.convex.cloud",
         site: undefined,
-      },
+      }),
     },
     {
       name: "an empty Convex deployment hostname",
-      target: {
-        ...productionTarget,
+      target: target({
         query: "https://.convex.cloud",
         site: undefined,
-      },
+      }),
     },
     {
       name: "a DNS-equivalent production hostname",
-      target: { ...productionTarget, query: `${productionTarget.query}.` },
+      target: target({ query: `${productionTarget.query}.` }),
     },
   ])("rejects untrusted $name", ({ target }) =>
     expectFailure(target, "untrusted-production")
@@ -179,75 +199,61 @@ describe("content runtime target", () => {
 
   it.effect("rejects anonymous production", () =>
     expectFailure(
-      {
-        ...productionTarget,
-        agent: "anonymous",
-        vercel: productionIdentity,
-      },
+      target({ agent: "anonymous", vercel: productionIdentity }),
       "anonymous-production"
     )
   );
 
   it.effect.each([
-    { name: "marker", vercel: identity({ marker: undefined }) },
-    { name: "deployment", vercel: identity({ deployment: undefined }) },
-    {
-      name: "deployment format",
-      vercel: identity({ deployment: "not-a-deployment" }),
-    },
-    { name: "environment", vercel: identity({ environment: "preview" }) },
-    { name: "target", vercel: identity({ target: "preview" }) },
-    { name: "project", vercel: identity({ project: "prj_other" }) },
-    { name: "Git provider", vercel: identity({}, { provider: "gitlab" }) },
-    { name: "Git owner", vercel: identity({}, { owner: "other" }) },
-    {
-      name: "Git repository",
-      vercel: identity({}, { repository: "other" }),
-    },
-    { name: "Git branch", vercel: identity({}, { branch: "feature/cost" }) },
-    { name: "commit", vercel: identity({}, { commit: undefined }) },
-    {
-      name: "commit format",
-      vercel: identity({}, { commit: "not-a-commit" }),
-    },
-  ])("rejects production when the $name credential is wrong", ({ vercel }) =>
-    expectFailure({ ...productionTarget, vercel }, "untrusted-production")
+    ["marker", identity({ marker: undefined })] as const,
+    ["deployment", identity({ deployment: undefined })] as const,
+    [
+      "deployment format",
+      identity({ deployment: "not-a-deployment" }),
+    ] as const,
+    ["environment", identity({ environment: "preview" })] as const,
+    ["target", identity({ target: "preview" })] as const,
+    ["project", identity({ project: "prj_other" })] as const,
+    ["Git provider", identity({}, { provider: "gitlab" })] as const,
+    ["Git owner", identity({}, { owner: "other" })] as const,
+    ["Git repository", identity({}, { repository: "other" })] as const,
+    ["Git branch", identity({}, { branch: "feature/cost" })] as const,
+    ["commit", identity({}, { commit: undefined })] as const,
+    ["commit format", identity({}, { commit: "not-a-commit" })] as const,
+  ])("rejects production when the %s credential is wrong", ([, vercel]) =>
+    expectFailure(target({ vercel }), "untrusted-production")
   );
 
   it.effect.each([
     {
       name: "a task-owned default deployment",
-      query: "https://helpful-capybara-123.convex.cloud",
-      site: "https://helpful-capybara-123.convex.site",
-      vercel: productionIdentity,
+      query: TASK_QUERY,
+      site: TASK_SITE,
     },
     {
       name: "a task-owned HTTP deployment",
       query: productionTarget.query,
-      site: "https://helpful-capybara-123.convex.site",
-      vercel: productionIdentity,
+      site: TASK_SITE,
     },
     {
       name: "loopback",
       query: "http://127.0.0.1:3210",
       site: "http://127.0.0.1:3211",
-      vercel: productionIdentity,
     },
-  ])("rejects protected production with $name", ({ query, site, vercel }) =>
+  ])("rejects protected production with $name", ({ query, site }) =>
     expectFailure(
-      { ...productionTarget, query, site, vercel },
+      target({ query, site, vercel: productionIdentity }),
       "untrusted-production"
     )
   );
 
   it.effect("rejects anonymous cloud targets", () =>
     expectFailure(
-      {
-        ...productionTarget,
+      target({
         agent: "anonymous",
-        query: "https://helpful-capybara-123.convex.cloud",
-        site: "https://helpful-capybara-123.convex.site",
-      },
+        query: TASK_QUERY,
+        site: TASK_SITE,
+      }),
       "anonymous-production"
     )
   );
@@ -256,20 +262,20 @@ describe("content runtime target", () => {
     {
       name: "a production query and development HTTP target",
       query: productionTarget.query,
-      site: "https://helpful-capybara-123.convex.site",
+      site: TASK_SITE,
     },
     {
       name: "a development query and production HTTP target",
-      query: "https://helpful-capybara-123.convex.cloud",
+      query: TASK_QUERY,
       site: productionTarget.site,
     },
     {
       name: "different development deployments",
-      query: "https://helpful-capybara-123.convex.cloud",
-      site: "https://different-capybara-456.convex.site",
+      query: TASK_QUERY,
+      site: OTHER_SITE,
     },
   ])("rejects mixed targets with $name", ({ query, site }) =>
-    expectFailure({ ...productionTarget, query, site }, "mixed-production")
+    expectFailure(target({ query, site }), "mixed-production")
   );
 
   it.effect.each([
@@ -291,6 +297,6 @@ describe("content runtime target", () => {
       site: undefined,
     },
   ])("rejects $name", ({ query, site }) =>
-    expectFailure({ ...productionTarget, query, site }, "invalid-target")
+    expectFailure(target({ query, site }), "invalid-target")
   );
 });
