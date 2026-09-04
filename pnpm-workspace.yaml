@@ -18,7 +18,6 @@ update:
     - '@effect/tsgo'
     - '@effect/vitest'
     - '@nakafa/aksara-contracts'
-    - '@nakafa/aksara-predecessor'
     - '@next/bundle-analyzer'
     - '@next/mdx'
     - '@next/third-parties'

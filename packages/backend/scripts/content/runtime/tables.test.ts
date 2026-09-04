@@ -1,4 +1,3 @@
-import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
 import { tryoutRuntimeBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
@@ -16,24 +15,16 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "33def10905a084c8334a093fff93b385ed82af5d7d02c8478d0db2745620ac20";
+  "639f152e40da064a82d83a5e8928cbaa9674b33d7bf856bf95e215a0bad63952";
 const CURRENT_DECODER_CONTRACT_IDENTITY = Object.freeze({
   name: "@nakafa/aksara-contracts",
   specifier: "@nakafa/aksara-contracts",
   version: "0.33.0",
 });
-const PREDECESSOR_DECODER_CONTRACT_IDENTITY = Object.freeze({
-  name: "@nakafa/aksara-contracts",
-  specifier: "@nakafa/aksara-predecessor",
-  version: "0.26.0",
-});
-const DECODER_CONTRACT_IDENTITIES = [
-  CURRENT_DECODER_CONTRACT_IDENTITY,
-  PREDECESSOR_DECODER_CONTRACT_IDENTITY,
-];
+const DECODER_CONTRACT_IDENTITIES = [CURRENT_DECODER_CONTRACT_IDENTITY];
 
 describe("content runtime tables", () => {
-  it.live(
+  it.effect(
     "derives the complete copy set and applies the active pointer last",
     () =>
       Effect.gen(function* () {
@@ -54,7 +45,7 @@ describe("content runtime tables", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "rejects duplicate table registrations before CI uses the fingerprint",
     () =>
       Effect.gen(function* () {
@@ -71,7 +62,7 @@ describe("content runtime tables", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "fingerprints the exact cache format, decoder, and runtime tables",
     () =>
       Effect.gen(function* () {
@@ -105,7 +96,7 @@ describe("content runtime tables", () => {
         expect(yield* readContentRuntimeSchemaFingerprint()).toBe(
           EXPECTED_RUNTIME_SCHEMA_FINGERPRINT
         );
-      }).pipe(Effect.provide(NodeServices.layer))
+      })
   );
 
   it("changes when a Convex validator or index changes", () => {
@@ -130,12 +121,11 @@ describe("content runtime tables", () => {
 
   it("changes when the external decoder package changes", () => {
     const tables = [["example", defineTable({ value: v.string() })]] as const;
-    const changedPredecessor = [
-      CURRENT_DECODER_CONTRACT_IDENTITY,
-      { ...PREDECESSOR_DECODER_CONTRACT_IDENTITY, version: "0.25.0" },
+    const changedDecoder = [
+      { ...CURRENT_DECODER_CONTRACT_IDENTITY, version: "0.32.0" },
     ];
 
-    expect(fingerprintRuntimeSchema(tables, changedPredecessor)).not.toBe(
+    expect(fingerprintRuntimeSchema(tables, changedDecoder)).not.toBe(
       fingerprintRuntimeSchema(tables, DECODER_CONTRACT_IDENTITIES)
     );
   });
