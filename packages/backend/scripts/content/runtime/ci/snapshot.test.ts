@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "@effect/vitest";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
@@ -15,7 +16,7 @@ import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/ta
 import { Effect } from "effect";
 
 const identity = {
-  contentStateHash: "1".repeat(64),
+  runtimeSelectionHash: "2".repeat(64),
   runtimeSchemaFingerprint: "3".repeat(64),
 };
 
@@ -51,6 +52,41 @@ describe("content runtime snapshot", () => {
 
       yield* validateMetadata(formatMetadata(identity), identity);
       expect(manifest).toEqual(entries);
+      expect(formatManifest([])).toBe("");
+    })
+  );
+
+  it.live("rejects malformed, incomplete, and reordered manifests", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* decodeAndValidateManifest("not-json\n").pipe(Effect.flip)
+      ).toMatchObject({
+        message: "Signed runtime manifest is invalid.",
+      });
+      expect(
+        yield* decodeAndValidateManifest("").pipe(Effect.flip)
+      ).toMatchObject({
+        message: "Signed runtime manifest has an invalid table count.",
+      });
+
+      const entries = CONTENT_RUNTIME_TABLES.map(
+        (table) => createPortableTable(table, []).entry
+      );
+      const reordered = [...entries];
+      const first = reordered[0];
+      const second = reordered[1];
+      if (!(first && second)) {
+        throw new Error("The signed runtime must contain at least two tables.");
+      }
+      reordered[0] = second;
+      reordered[1] = first;
+      expect(
+        yield* decodeAndValidateManifest(formatManifest(reordered)).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({
+        message: "Signed runtime manifest table order is invalid.",
+      });
     })
   );
 
@@ -64,6 +100,19 @@ describe("content runtime snapshot", () => {
       expect(failure).toMatchObject({
         _tag: "ContentRuntimeCiError",
         message: "Signed runtime metadata is invalid.",
+      });
+    })
+  );
+
+  it.live("rejects a different snapshot identity", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* validateMetadata(formatMetadata(identity), {
+          ...identity,
+          runtimeSelectionHash: "4".repeat(64),
+        }).pipe(Effect.flip)
+      ).toMatchObject({
+        message: "Signed runtime metadata does not match the cache identity.",
       });
     })
   );
@@ -86,6 +135,32 @@ describe("content runtime snapshot", () => {
 
       expect(integrityFailure).toMatchObject({ _tag: "ContentRuntimeCiError" });
       expect(unsafeArchive).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      yield* validateArchiveListing(`${expectedArchive.join("\n")}\n`, verbose);
+    })
+  );
+
+  it.live("rejects invalid or non-portable snapshot rows", () =>
+    Effect.gen(function* () {
+      const invalid = createPortableTable("example", []).entry;
+      const invalidJson = "not-json\n";
+      expect(
+        yield* validatePortableTable(
+          { ...invalid, rowCount: 1, sha256: hash(invalidJson) },
+          invalidJson
+        ).pipe(Effect.flip)
+      ).toMatchObject({
+        message: "Signed runtime table example contains invalid JSON rows.",
+      });
+
+      const forbidden = '{"_id":"source"}\n';
+      expect(
+        yield* validatePortableTable(
+          { ...invalid, rowCount: 1, sha256: hash(forbidden) },
+          forbidden
+        ).pipe(Effect.flip)
+      ).toMatchObject({
+        message: "Signed runtime table example contains non-portable fields.",
+      });
     })
   );
 
@@ -95,3 +170,7 @@ describe("content runtime snapshot", () => {
     ).toBe("runtime-cache/runtime.tar.gpg");
   });
 });
+
+function hash(text: string) {
+  return createHash("sha256").update(text).digest("hex");
+}

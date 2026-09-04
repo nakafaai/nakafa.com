@@ -1,3 +1,5 @@
+import "server-only";
+
 import { readConvexRuntimeQuery } from "@repo/backend/client/runtime";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import type { FunctionArgs, FunctionReference } from "convex/server";
@@ -11,7 +13,7 @@ export const readRuntimeQuery = Effect.fn("www.contentRuntime.query")(
     args: FunctionArgs<Query>
   ) {
     return yield* readConvexRuntimeQuery(
-      env.NEXT_PUBLIC_CONVEX_URL,
+      env.CONTENT_BUILD_URL ?? env.NEXT_PUBLIC_CONVEX_URL,
       query,
       args
     ).pipe(

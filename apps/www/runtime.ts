@@ -25,6 +25,11 @@ interface VercelIdentity {
   readonly target: string | undefined;
 }
 
+interface BuildIdentity {
+  readonly query: string | undefined;
+  readonly site: string | undefined;
+}
+
 function isProtectedProduction(identity: VercelIdentity) {
   return [
     identity.marker === "1",
@@ -44,6 +49,7 @@ const FailureSchema = Schema.Literals([
   "anonymous-production",
   "invalid-target",
   "mixed-production",
+  "unisolated-production",
   "untrusted-production",
 ]);
 type Failure = Schema.Schema.Type<typeof FailureSchema>;
@@ -54,6 +60,8 @@ const messages = {
   "invalid-target": "The content runtime build target must use valid URLs.",
   "mixed-production":
     "The content runtime query and HTTP targets cannot mix deployments.",
+  "unisolated-production":
+    "The protected Vercel build must read content from an isolated local Convex snapshot.",
   "untrusted-production":
     "Production content is restricted to the protected Vercel production build. Import the verified snapshot into isolated Convex Agent Mode for local or CI builds.",
 } satisfies Record<Failure, string>;
@@ -70,6 +78,7 @@ export class UnsafeRuntimeError extends Schema.TaggedError<UnsafeRuntimeError>()
 
 export interface RuntimeTarget {
   readonly agent: "anonymous" | undefined;
+  readonly build: BuildIdentity;
   readonly query: string;
   readonly site: string | undefined;
   readonly vercel: VercelIdentity;
@@ -118,6 +127,24 @@ function isLoopbackPair(query: string, site: string | undefined) {
   return isLoopback(query) && (site === undefined || isLoopback(site));
 }
 
+const validateBuildIdentity = Effect.fn("www.runtime.validateBuild")(function* (
+  build: BuildIdentity
+) {
+  if (build.query === undefined && build.site === undefined) {
+    return;
+  }
+  if (build.query === undefined || build.site === undefined) {
+    return yield* failure("unisolated-production");
+  }
+  const queryUrl = yield* decode(build.query);
+  const siteUrl = yield* decode(build.site);
+  if (
+    !isLoopbackPair(normalize(queryUrl.hostname), normalize(siteUrl.hostname))
+  ) {
+    return yield* failure("unisolated-production");
+  }
+});
+
 /** Blocks production-backed Next commands before route discovery begins. */
 export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
   function* (target: RuntimeTarget) {
@@ -130,6 +157,7 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
     const queryDeployment = deployment(queryHost, ".convex.cloud");
     const siteDeployment =
       siteHost === undefined ? undefined : deployment(siteHost, ".convex.site");
+    yield* validateBuildIdentity(target.build);
 
     if (isProtectedProduction(target.vercel)) {
       if (target.agent === "anonymous") {
@@ -141,6 +169,9 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
           siteDeployment !== CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT)
       ) {
         return yield* failure("untrusted-production");
+      }
+      if (target.build.query === undefined) {
+        return yield* failure("unisolated-production");
       }
       return;
     }
@@ -180,6 +211,12 @@ export function readRuntimeConfig() {
   const env = createEnv({
     extends: [convexKeys()],
     server: {
+      CONTENT_BUILD_SITE_URL: Schema.toStandardSchemaV1(
+        Schema.UndefinedOr(Schema.String)
+      ),
+      CONTENT_BUILD_URL: Schema.toStandardSchemaV1(
+        Schema.UndefinedOr(Schema.String)
+      ),
       CONVEX_AGENT_MODE: Schema.toStandardSchemaV1(
         Schema.UndefinedOr(Schema.Literal("anonymous"))
       ),
@@ -218,6 +255,8 @@ export function readRuntimeConfig() {
       ),
     },
     runtimeEnv: {
+      CONTENT_BUILD_SITE_URL: process.env.CONTENT_BUILD_SITE_URL,
+      CONTENT_BUILD_URL: process.env.CONTENT_BUILD_URL,
       CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
       VERCEL: process.env.VERCEL,
@@ -234,6 +273,10 @@ export function readRuntimeConfig() {
   });
   const target = {
     agent: env.CONVEX_AGENT_MODE,
+    build: {
+      query: env.CONTENT_BUILD_URL,
+      site: env.CONTENT_BUILD_SITE_URL,
+    },
     query: env.NEXT_PUBLIC_CONVEX_URL,
     site: env.NEXT_PUBLIC_CONVEX_SITE_URL,
     vercel: {
@@ -254,6 +297,7 @@ export function readRuntimeConfig() {
   Effect.runSync(assertRuntimeTarget(target));
   return {
     agent: target.agent,
+    build: target.build,
     query: target.query,
     site: target.site,
     vercel: target.vercel.marker,

@@ -51,7 +51,7 @@ export const importSignedRuntime = Effect.fn(
   yield* validateMetadata(
     yield* fileSystem.readFileString(`${snapshotRoot}/metadata.json`),
     {
-      contentStateHash: config.contentStateHash,
+      runtimeSelectionHash: config.runtimeSelectionHash,
       runtimeSchemaFingerprint: config.runtimeSchemaFingerprint,
     }
   );

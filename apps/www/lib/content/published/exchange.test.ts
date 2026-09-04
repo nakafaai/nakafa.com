@@ -22,6 +22,10 @@ import {
 
 const readPublicContentMock = vi.hoisted(() => vi.fn());
 const runtimeKeysMock = vi.hoisted(() => vi.fn());
+const runtimeEnv = vi.hoisted(() => ({
+  CONTENT_BUILD_SITE_URL: "http://127.0.0.1:3211" as string | undefined,
+  NEXT_PUBLIC_CONVEX_SITE_URL: "https://production.convex.site",
+}));
 const liveRenderer = vi.hoisted(() => ({
   hash: `sha256:${"e".repeat(64)}`,
   rendererContractVersion: "1.0.0",
@@ -79,9 +83,7 @@ vi.mock("@repo/next-config/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
 }));
 vi.mock("@/env", () => ({
-  env: {
-    NEXT_PUBLIC_CONVEX_SITE_URL: "https://example.convex.site",
-  },
+  env: runtimeEnv,
 }));
 vi.mock("@/lib/content/renderer/manifest", () => ({
   rendererManifest: Effect.succeed(liveRenderer),
@@ -93,6 +95,7 @@ beforeEach(() => {
   runtimeKeysMock.mockReturnValue({
     CONTENT_RUNTIME_TOKEN: "runtime-token",
   });
+  runtimeEnv.CONTENT_BUILD_SITE_URL = "http://127.0.0.1:3211";
 });
 
 describe("published content exchange", () => {
@@ -110,7 +113,7 @@ describe("published content exchange", () => {
       });
       expect(readPublicContent).toHaveBeenCalledWith(
         {
-          siteUrl: "https://example.convex.site",
+          siteUrl: "http://127.0.0.1:3211",
           token: "runtime-token",
         },
         {
@@ -159,6 +162,24 @@ describe("published content exchange", () => {
           activeReleaseId: next.activeReleaseId,
         });
       })
+  );
+
+  it.effect("keeps normal server reads on the public runtime", () =>
+    Effect.gen(function* () {
+      runtimeEnv.CONTENT_BUILD_SITE_URL = undefined;
+      readPublicContentMock.mockReturnValue(Effect.succeed(found));
+
+      yield* readCurrentPublishedContent(routeInput);
+
+      expect(readPublicContent).toHaveBeenCalledWith(
+        {
+          siteUrl: runtimeEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
+          token: "runtime-token",
+        },
+        routeInput,
+        liveRenderer
+      );
+    })
   );
 
   it.effect("preserves signed-read and live-renderer failures", () =>

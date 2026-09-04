@@ -5,7 +5,6 @@ import {
 import { COMPACTION_PHASES } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexData } from "@repo/backend/scripts/content/runtime/ci/command";
 import type {
-  CacheIdentity,
   ProductionConfig,
   RuntimeSelectionIdentity,
 } from "@repo/backend/scripts/content/runtime/ci/config";
@@ -75,7 +74,6 @@ type PublishedContentState = Schema.Schema.Type<
   typeof PublishedContentStateSchema
 >;
 export interface RuntimeGenerations {
-  readonly contentStateHash: string;
   readonly runtimeSelectionHash: string;
 }
 /** Proves the public signed selection did not change during the CI run. */
@@ -92,20 +90,6 @@ export const verifyRuntimeSelection = (
     )
   );
 };
-/** Proves no publication or compaction state changed during one export. */
-export const verifyStableRuntimeExport = (
-  expected: CacheIdentity,
-  actual: RuntimeGenerations
-) => {
-  if (expected.contentStateHash === actual.contentStateHash) {
-    return Effect.void;
-  }
-  return Effect.fail(
-    contentRuntimeCiError(
-      "Production content state changed during signed runtime export."
-    )
-  );
-};
 /** Returns whether one optional release slot is either absent or complete. */
 function hasCompleteOptionalIdentity(
   manifestHash: string | undefined,
@@ -119,10 +103,7 @@ function hasCompleteOptionalIdentity(
 /** Mirrors the backend invariant for one resumable compaction cycle. */
 function hasValidCompactionIdentity(state: PublishedContentState) {
   const compactedFloor = state.compactedFloor ?? 0;
-  if (
-    !Number.isSafeInteger(compactedFloor) ||
-    compactedFloor > state.nextSequence
-  ) {
+  if (compactedFloor > state.nextSequence) {
     return false;
   }
   const required = [
@@ -141,8 +122,6 @@ function hasValidCompactionIdentity(state: PublishedContentState) {
     state.compactFrom !== undefined &&
     state.compactPhase !== undefined &&
     state.compactStartedAt !== undefined &&
-    Number.isSafeInteger(state.compactFloor) &&
-    Number.isSafeInteger(state.compactFrom) &&
     state.compactFrom === compactedFloor &&
     state.compactFloor > state.compactFrom &&
     state.compactFloor <= state.nextSequence &&
@@ -214,8 +193,9 @@ export const buildRuntimeGenerations = Effect.fn(
       "Production contentState must contain exactly one row."
     );
   }
-  const storedState = stripConvexSystemFields(activePointer);
-  const state = yield* decodePublishedContentState(storedState);
+  const state = yield* decodePublishedContentState(
+    stripConvexSystemFields(activePointer)
+  );
   if (!hasValidCompactionIdentity(state)) {
     return yield* contentRuntimeCiError(
       "Production contentState has an invalid compaction identity."
@@ -257,7 +237,6 @@ export const buildRuntimeGenerations = Effect.fn(
     );
   }
   return {
-    contentStateHash: yield* hashCanonicalJson(storedState),
     runtimeSelectionHash: yield* hashCanonicalJson(runtimePointer(state)),
   } satisfies RuntimeGenerations;
 });
@@ -286,7 +265,4 @@ export const readProductionGenerations = Effect.fn(
   return yield* buildRuntimeGenerations(contentState);
 });
 export const formatGenerationEnvironment = (generations: RuntimeGenerations) =>
-  [
-    `CONTENT_RUNTIME_STATE_HASH=${generations.contentStateHash}`,
-    `CONTENT_RUNTIME_SELECTION_HASH=${generations.runtimeSelectionHash}`,
-  ].join("\n");
+  `CONTENT_RUNTIME_SELECTION_HASH=${generations.runtimeSelectionHash}`;

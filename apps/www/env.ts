@@ -12,12 +12,22 @@ import { Schema } from "effect";
  */
 export const env = createEnv({
   extends: [publicationKeys(), siteUrlKeys(), convexKeys(), convexSiteKeys()],
+  server: {
+    CONTENT_BUILD_SITE_URL: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
+    CONTENT_BUILD_URL: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.String)
+    ),
+  },
   client: {
     NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.Literals(["true", "false"]))
     ),
   },
   runtimeEnv: {
+    CONTENT_BUILD_SITE_URL: process.env.CONTENT_BUILD_SITE_URL,
+    CONTENT_BUILD_URL: process.env.CONTENT_BUILD_URL,
     NEXT_PUBLIC_AKSARA_PREVIEW_CHILD:
       process.env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD,
   },

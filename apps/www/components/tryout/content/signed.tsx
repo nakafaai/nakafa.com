@@ -128,7 +128,7 @@ const readRuntimeTarget = Effect.try({
   catch: () =>
     new ContentRuntimeConfigurationError({ key: "CONTENT_RUNTIME_TOKEN" }),
   try: () => ({
-    siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+    siteUrl: env.CONTENT_BUILD_SITE_URL ?? env.NEXT_PUBLIC_CONVEX_SITE_URL,
     token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
   }),
 });

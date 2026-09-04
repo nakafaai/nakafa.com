@@ -76,12 +76,12 @@ describe("content runtime CI config", () => {
 
   it.live("reads the exact signed runtime export identity", () =>
     Effect.gen(function* () {
-      const contentStateHash = "1".repeat(64);
+      const runtimeSelectionHash = "2".repeat(64);
       stubProductionConfig();
-      stubCacheIdentity(contentStateHash);
+      stubSnapshotIdentity(runtimeSelectionHash);
       expect(yield* withStubbedEnv(readExportConfig)).toMatchObject({
-        contentStateHash,
         exportLimit: DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT,
+        runtimeSelectionHash,
       });
     })
   );
@@ -89,7 +89,7 @@ describe("content runtime CI config", () => {
   it.live("rejects limits above the bounded snapshot capacity", () =>
     Effect.gen(function* () {
       stubProductionConfig();
-      stubCacheIdentity("1".repeat(64));
+      stubSnapshotIdentity("2".repeat(64));
       vi.stubEnv(
         "CONTENT_RUNTIME_EXPORT_LIMIT",
         String(MAX_CONTENT_RUNTIME_EXPORT_LIMIT + 1)
@@ -110,7 +110,7 @@ describe("content runtime CI config", () => {
   ])("rejects a missing signed cache key for $name", ({ program }) =>
     Effect.gen(function* () {
       stubProductionConfig();
-      stubCacheIdentity("1".repeat(64));
+      stubSnapshotIdentity("2".repeat(64));
       vi.stubEnv("CONTENT_RUNTIME_CACHE_KEY", "short");
 
       expect(yield* withStubbedEnv(program.pipe(Effect.flip))).toMatchObject({
@@ -122,13 +122,13 @@ describe("content runtime CI config", () => {
 
   it.live("reads the exact signed runtime import identity", () =>
     Effect.gen(function* () {
-      const contentStateHash = "1".repeat(64);
+      const runtimeSelectionHash = "2".repeat(64);
       stubProductionConfig();
-      stubCacheIdentity(contentStateHash);
+      stubSnapshotIdentity(runtimeSelectionHash);
 
       expect(yield* withStubbedEnv(readImportConfig)).toMatchObject({
-        contentStateHash,
         runnerTemp: "/tmp",
+        runtimeSelectionHash,
         runtimeSchemaFingerprint: "3".repeat(64),
       });
     })
@@ -171,9 +171,9 @@ function stubProductionConfig() {
   vi.stubEnv("RUNNER_TEMP", "/tmp");
 }
 
-function stubCacheIdentity(contentStateHash: string) {
+function stubSnapshotIdentity(runtimeSelectionHash: string) {
   vi.stubEnv("CONTENT_RUNTIME_CACHE_KEY", "k".repeat(43));
-  vi.stubEnv("CONTENT_RUNTIME_STATE_HASH", contentStateHash);
+  vi.stubEnv("CONTENT_RUNTIME_SELECTION_HASH", runtimeSelectionHash);
   vi.stubEnv("CONTENT_RUNTIME_SCHEMA_HASH", "3".repeat(64));
 }
 

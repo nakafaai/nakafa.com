@@ -19,6 +19,14 @@ const NEXT_CLI = fileURLToPath(
 const TASK_QUERY = "https://helpful-capybara-123.convex.cloud";
 const TASK_SITE = "https://helpful-capybara-123.convex.site";
 const OTHER_SITE = "https://different-capybara-456.convex.site";
+const emptyBuild = {
+  query: undefined,
+  site: undefined,
+} satisfies RuntimeTarget["build"];
+const localBuild = {
+  query: "http://127.0.0.1:3210",
+  site: "http://127.0.0.1:3211",
+} satisfies RuntimeTarget["build"];
 
 const emptyIdentity = {
   deployment: undefined,
@@ -52,6 +60,7 @@ const productionIdentity = {
 
 const productionTarget = {
   agent: undefined,
+  build: emptyBuild,
   query: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`,
   site: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.site`,
   vercel: emptyIdentity,
@@ -166,7 +175,46 @@ describe("content runtime target", () => {
     { name: "query and HTTP", site: productionTarget.site },
     { name: "query only", site: undefined },
   ])("accepts protected production with $name", ({ site }) =>
-    expectSuccess(target({ site, vercel: productionIdentity }))
+    expectSuccess(
+      target({ build: localBuild, site, vercel: productionIdentity })
+    )
+  );
+
+  it.effect("rejects a production build without an isolated snapshot", () =>
+    expectFailure(
+      target({ vercel: productionIdentity }),
+      "unisolated-production"
+    )
+  );
+
+  it.effect.each([
+    {
+      build: { query: localBuild.query, site: undefined },
+      name: "a missing HTTP target",
+      reason: "unisolated-production" as const,
+    },
+    {
+      build: { query: undefined, site: localBuild.site },
+      name: "a missing query target",
+      reason: "unisolated-production" as const,
+    },
+    {
+      build: { query: TASK_QUERY, site: TASK_SITE },
+      name: "a remote deployment",
+      reason: "unisolated-production" as const,
+    },
+    {
+      build: { query: "not a URL", site: localBuild.site },
+      name: "an invalid query target",
+      reason: "invalid-target" as const,
+    },
+    {
+      build: { query: localBuild.query, site: "not a URL" },
+      name: "an invalid HTTP target",
+      reason: "invalid-target" as const,
+    },
+  ])("rejects protected production with $name", ({ build, reason }) =>
+    expectFailure(target({ build, vercel: productionIdentity }), reason)
   );
 
   it.effect.each([

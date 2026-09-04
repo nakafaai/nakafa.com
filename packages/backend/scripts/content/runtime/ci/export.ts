@@ -4,7 +4,7 @@ import type { ExportConfig } from "@repo/backend/scripts/content/runtime/ci/conf
 import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import {
   readProductionGenerations,
-  verifyStableRuntimeExport,
+  verifyRuntimeSelection,
 } from "@repo/backend/scripts/content/runtime/ci/generation";
 import { decodeJsonRows } from "@repo/backend/scripts/content/runtime/ci/json";
 import {
@@ -38,6 +38,11 @@ export const exportSignedRuntime = Effect.fn(
         "Signed runtime cache directory must be empty before export."
       );
     }
+
+    yield* verifyRuntimeSelection(
+      config,
+      yield* readProductionGenerations(config)
+    );
 
     yield* fileSystem.makeDirectory(cacheRoot, { recursive: true });
     yield* fileSystem.chmod(cacheRoot, 0o700);
@@ -88,7 +93,7 @@ export const exportSignedRuntime = Effect.fn(
     }
 
     const identity = {
-      contentStateHash: config.contentStateHash,
+      runtimeSelectionHash: config.runtimeSelectionHash,
       runtimeSchemaFingerprint: config.runtimeSchemaFingerprint,
     };
     yield* fileSystem.writeFileString(
@@ -107,7 +112,7 @@ export const exportSignedRuntime = Effect.fn(
       { mode: 0o600 }
     );
 
-    yield* verifyStableRuntimeExport(
+    yield* verifyRuntimeSelection(
       config,
       yield* readProductionGenerations(config)
     );
@@ -131,7 +136,7 @@ export const exportSignedRuntime = Effect.fn(
       );
     }
 
-    yield* Console.log("Verified stable production runtime generations.");
+    yield* Console.log("Verified stable production runtime selection.");
     const currentSchemaFingerprint =
       yield* readContentRuntimeSchemaFingerprint();
     if (config.runtimeSchemaFingerprint !== currentSchemaFingerprint) {
