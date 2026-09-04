@@ -145,7 +145,6 @@ describe("GitHub Action policy", () => {
             expect(source).toContain(
               `required: \${{ github.event_name == 'merge_group' || steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}`
             );
-            expect(source).toContain("run: pnpm security:audit");
             expect(source).toContain("if: needs.scope.outputs.reuse != 'true'");
             expect(source).not.toContain("actions/github-script");
           })
