@@ -55,6 +55,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       contentKey: placement.questionContentKey,
       delivery: "authenticated",
       questionOrder: placement.questionOrder,
+      sectionKey: placement.sectionKey,
       snapshotReleaseId: catalog.activeReleaseId,
       snapshotId: catalog.snapshotId,
       sourcePath: placement.questionSourcePath,

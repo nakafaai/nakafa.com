@@ -225,6 +225,41 @@ function makeCategoryPlacement(locale: ActiveAppLocaleCode) {
 }
 
 describe("tryouts/catalog/featured", () => {
+  for (const kind of ["country", "exam", "track", "set", "question"]) {
+    it.effect(`rejects an active hierarchy without its featured ${kind}`, () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            activateTryoutSnapshot(ctx, {
+              catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+                makeTryoutStartHierarchy(locale, "visible").filter(
+                  (row) => row.kind !== kind
+                )
+              ),
+              placements: ACTIVE_APP_LOCALE_CODES.map(makeTryoutStartPlacement),
+            })
+          )
+        );
+        const failure = yield* Effect.tryPromise(() =>
+          t.query((ctx) =>
+            runConvexProgram(
+              readFeaturedTryout("id").pipe(
+                Effect.provide(convexTryoutLayer(ctx))
+              )
+            )
+          )
+        ).pipe(Effect.flip);
+        expect(failure.cause).toMatchObject({
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: `The active try-out publication has no featured ${kind}.`,
+          },
+        });
+      })
+    );
+  }
+
   it.effect(
     "returns the first visible signed question for the public landing demo",
     () =>
@@ -254,28 +289,13 @@ describe("tryouts/catalog/featured", () => {
             delivery: "authenticated",
             appLocale: "id",
             questionOrder: 1,
+            sectionKey: source.sectionKey,
             snapshotReleaseId: TEST_RELEASE_ID,
             snapshotId: expect.any(String),
             sourcePath: source.questionSourcePath,
             sourceRevision: source.sourceRevision,
           },
-          response: {
-            kind: "single-choice",
-            options: [
-              {
-                isCorrect: true,
-                label: "A",
-                optionKey: "option-1",
-                order: 1,
-              },
-              {
-                isCorrect: false,
-                label: "B",
-                optionKey: "option-2",
-                order: 2,
-              },
-            ],
-          },
+          response: source.response,
         });
         expect(featured.question).not.toHaveProperty("answerArtifactHash");
         expect(featured.question).not.toHaveProperty("artifactLocale");

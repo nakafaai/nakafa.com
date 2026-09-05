@@ -20,6 +20,7 @@ import {
   decodeTryoutRuntimeBundleJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
+import { tryoutBodyBatchValidator } from "@repo/backend/convex/tryouts/runtime/body";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect, Option, Schema } from "effect";
@@ -38,18 +39,9 @@ export const protectedArgsValidator = {
   selectors: v.array(protectedSelectorValidator),
   snapshotId: v.string(),
 };
-const protectedItemValidator = v.object({
-  artifactJson: v.string(),
-  delivery: protectedDeliveryValidator,
-  sourcePath: v.string(),
-});
 export const protectedResultValidator = v.union(
   v.null(),
-  v.object({
-    bundleJson: v.string(),
-    items: v.array(protectedItemValidator),
-    rendererJson: v.string(),
-  })
+  tryoutBodyBatchValidator
 );
 
 /** Stored protected batch returned only through one internal query. */

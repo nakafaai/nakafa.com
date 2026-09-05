@@ -25,6 +25,92 @@ beforeEach(() => {
 });
 
 describe("tryouts/runtime/selectors", () => {
+  it.effect("rejects selectors requested from another frozen publication", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const seeded = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          seedTryoutContentAccessState(ctx, {
+            attemptStatus: "completed",
+            sectionStatus: "completed",
+            suffix: "content-selector-foreign-publication",
+          })
+        )
+      );
+      for (const field of ["snapshotId", "snapshotReleaseId"]) {
+        const failure = yield* Effect.tryPromise({
+          catch: queryFailure,
+          try: () =>
+            t.query(async (ctx) => {
+              const attempt = await ctx.db.get(seeded.attemptId);
+              assert.isNotNull(attempt);
+              return runConvexProgram(
+                loadTryoutSignedContent({
+                  answers: true,
+                  appLocale: "id",
+                  attempt,
+                  ctx,
+                  sectionKey: TRYOUT_SECTION_KEY,
+                  snapshotId: attempt.tryoutSnapshotId,
+                  snapshotReleaseId: attempt.snapshotReleaseId,
+                  totalQuestions: 1,
+                  [field]: "foreign-publication",
+                })
+              );
+            }),
+        }).pipe(Effect.flip);
+        assert.include(failure.message, "lost its locale or snapshot identity");
+      }
+    })
+  );
+
+  it.effect("rejects incomplete frozen question and answer identities", () =>
+    Effect.gen(function* () {
+      for (const field of [
+        "answerArtifactHash",
+        "answerContentKey",
+        "questionArtifactHash",
+        "questionContentKey",
+        "sectionKey",
+      ]) {
+        const t = createConvexTestWithBetterAuth();
+        const seeded = yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const fixture = await seedTryoutContentAccessState(ctx, {
+              attemptStatus: "completed",
+              sectionStatus: "completed",
+              suffix: `content-selector-missing-${field}`,
+            });
+            assert.isDefined(fixture.placementId);
+            await ctx.db.patch(fixture.placementId, { [field]: "" });
+            return fixture;
+          })
+        );
+        const failure = yield* Effect.tryPromise({
+          catch: queryFailure,
+          try: () =>
+            t.query(async (ctx) => {
+              const attempt = await ctx.db.get(seeded.attemptId);
+              assert.isNotNull(attempt);
+              return runConvexProgram(
+                loadTryoutSignedContent({
+                  answers: true,
+                  appLocale: "id",
+                  attempt,
+                  ctx,
+                  sectionKey: field === "sectionKey" ? "" : TRYOUT_SECTION_KEY,
+                  snapshotId: attempt.tryoutSnapshotId,
+                  snapshotReleaseId: attempt.snapshotReleaseId,
+                  totalQuestions: 1,
+                })
+              );
+            }),
+        }).pipe(Effect.flip);
+        assert.include(failure.message, "selector is incomplete");
+      }
+    })
+  );
+
   it.effect(
     "returns entitled answer selectors only after terminal review",
     () =>
