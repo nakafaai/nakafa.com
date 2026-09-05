@@ -2,9 +2,8 @@ import { createHash } from "node:crypto";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
 import { tryoutRuntimeBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
 import backendPackage from "@repo/backend/package.json" with { type: "json" };
-import { Effect, Schema } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
-const ACTIVE_POINTER_TABLE = "contentState";
 const CURRENT_CONTRACT_SPECIFIER = "@nakafa/aksara-contracts";
 const CONTRACT_PACKAGE_NAME = "@nakafa/aksara-contracts";
 const CurrentContractIdentitySchema = Schema.Struct({
@@ -40,6 +39,7 @@ export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
   manifest: "ordered-json-lines-row-count-sha256",
   portableRows: Object.freeze({
     encoding: "json-lines",
+    selection: "active-static-public",
     strippedFields: Object.freeze([
       "_id",
       "_creationTime",
@@ -50,22 +50,43 @@ export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
 });
 const { contentState } = contentReleaseSchema;
 
-type RuntimeTableDefinition = readonly [string, object];
-type RuntimeTableDefinitionFragment = readonly RuntimeTableDefinition[];
-
-const activePointerDefinition: RuntimeTableDefinition = [
-  ACTIVE_POINTER_TABLE,
+/** Exact read-only serving contract; publication and attempt history stay upstream. */
+export const CONTENT_RUNTIME_TABLE_DEFINITIONS = {
+  ...Struct.pick(contentReleaseSchema, [
+    "contentArtifacts",
+    "contentKeys",
+    "contentHeads",
+    "contentIndex",
+    "articleCatalog",
+    "articleCategories",
+    "articleBuckets",
+    "materialCatalog",
+    "materialBuckets",
+    "contentBindings",
+    "contentReleases",
+    "contentSnapshots",
+    "programCatalog",
+    "curriculumRoutes",
+    "programBuckets",
+    "quranRows",
+    "quranSearch",
+    "tryoutCatalog",
+    "tryoutPlacements",
+  ]),
+  tryoutRuntimeBundles: tryoutRuntimeBundleSchema.tryoutRuntimeBundles,
   contentState,
-];
-const runtimeTableDefinitionFragments: readonly RuntimeTableDefinitionFragment[] =
-  [
-    Object.entries(contentReleaseSchema).filter(
-      ([table]) => table !== ACTIVE_POINTER_TABLE
-    ),
-    Object.entries(tryoutRuntimeBundleSchema),
-    [activePointerDefinition],
-  ];
-const runtimeTableDefinitions = runtimeTableDefinitionFragments.flat();
+};
+export type RuntimeTable = keyof typeof CONTENT_RUNTIME_TABLE_DEFINITIONS;
+export type RuntimeRow<Table extends RuntimeTable> =
+  (typeof CONTENT_RUNTIME_TABLE_DEFINITIONS)[Table]["validator"]["type"];
+export type RuntimeTables = {
+  readonly [Table in RuntimeTable]: readonly RuntimeRow<Table>[];
+};
+
+type RuntimeTableDefinition = readonly [string, object];
+const runtimeTableDefinitions = Object.entries(
+  CONTENT_RUNTIME_TABLE_DEFINITIONS
+);
 
 export class DuplicateContentRuntimeTableError extends Schema.TaggedError<DuplicateContentRuntimeTableError>()(
   "DuplicateContentRuntimeTableError",
@@ -95,7 +116,7 @@ export const validateContentRuntimeTableDefinitions =
 
 /** Signed-runtime tables copied into one isolated local deployment. */
 export const CONTENT_RUNTIME_TABLES = Object.freeze(
-  runtimeTableDefinitions.map(([table]) => table)
+  Struct.keys(CONTENT_RUNTIME_TABLE_DEFINITIONS)
 );
 
 export const fingerprintRuntimeSchema = (

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { CacheIdentity } from "@repo/backend/scripts/content/runtime/ci/config";
+import type { SnapshotIdentity } from "@repo/backend/scripts/content/runtime/ci/config";
 import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import {
   type JsonObject,
@@ -20,10 +20,10 @@ const ManifestEntrySchema = Schema.Struct({
     Schema.isGreaterThanOrEqualTo(0)
   ),
   sha256: HashSchema,
-  table: Schema.String,
+  table: Schema.Literals(CONTENT_RUNTIME_TABLES),
 });
 const MetadataSchema = Schema.Struct({
-  contentStateHash: HashSchema,
+  runtimeSelectionHash: HashSchema,
   runtimeSchemaFingerprint: HashSchema,
 });
 const JsonObjectTextSchema = Schema.fromJsonString(JsonObjectSchema);
@@ -40,7 +40,7 @@ const stripPortableFields = (row: JsonObject) =>
     )
   );
 export const createPortableTable = (
-  table: string,
+  table: ManifestEntry["table"],
   rows: readonly JsonObject[]
 ) => {
   const body = rows
@@ -61,7 +61,7 @@ export const formatManifest = (entries: readonly ManifestEntry[]) => {
   const body = entries.map((entry) => JSON.stringify(entry)).join("\n");
   return body.length === 0 ? "" : `${body}\n`;
 };
-export const formatMetadata = (identity: CacheIdentity) =>
+export const formatMetadata = (identity: SnapshotIdentity) =>
   `${JSON.stringify(identity)}\n`;
 const decodeManifestEntry = (line: string) =>
   Schema.decodeEffect(Schema.fromJsonString(ManifestEntrySchema))(line, {
@@ -91,7 +91,7 @@ export const decodeAndValidateManifest = Effect.fn(
   return entries;
 });
 export const validateMetadata = Effect.fn("contentRuntime.validateMetadata")(
-  function* (text: string, expected: CacheIdentity) {
+  function* (text: string, expected: SnapshotIdentity) {
     const metadata = yield* Schema.decodeEffect(
       Schema.fromJsonString(MetadataSchema)
     )(text, { onExcessProperty: "error" }).pipe(
@@ -100,7 +100,7 @@ export const validateMetadata = Effect.fn("contentRuntime.validateMetadata")(
       )
     );
     if (
-      metadata.contentStateHash !== expected.contentStateHash ||
+      metadata.runtimeSelectionHash !== expected.runtimeSelectionHash ||
       metadata.runtimeSchemaFingerprint !== expected.runtimeSchemaFingerprint
     ) {
       return yield* contentRuntimeCiError(
@@ -138,6 +138,7 @@ export const validatePortableTable = Effect.fn(
       `Signed runtime table ${entry.table} contains non-portable fields.`
     );
   }
+  return rows;
 });
 export const getExpectedArchiveEntries = () =>
   [

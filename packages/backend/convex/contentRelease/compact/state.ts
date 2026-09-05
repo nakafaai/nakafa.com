@@ -88,12 +88,6 @@ const protectedSlot = Effect.fn("contentRelease.protectedSlot")(function* (
   const baseId = signed.manifest.baseReleaseId;
   const baseHash = signed.manifest.baseManifestHash;
   if (baseId === null || baseHash === null) {
-    if (baseId !== null || baseHash !== null) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Content slot ${slot.releaseId} has an incomplete base identity.`
-      );
-    }
     return [slot.sequence];
   }
   const base = yield* loadRelease(ctx, baseId);
@@ -269,12 +263,12 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
     }
     const existing = yield* activeCycle(state, compactedFloor);
     if (existing) {
-      return existing;
+      return { complete: false, cycle: existing } as const;
     }
     const ceiling = yield* protectedFloor(ctx, state);
     const floor = yield* retainedFloor(ctx, compactedFloor, ceiling);
     if (floor <= compactedFloor) {
-      return null;
+      return { complete: true, floor: compactedFloor } as const;
     }
     const now = Date.now();
     yield* Effect.promise(() =>
@@ -288,12 +282,15 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
       })
     );
     return {
-      cursor: null,
-      floor,
-      from: compactedFloor,
-      phase: "heads",
-      startedAt: now,
-      state: { ...state, compactFloor: floor },
-    } satisfies CompactionCycle;
+      complete: false,
+      cycle: {
+        cursor: null,
+        floor,
+        from: compactedFloor,
+        phase: "heads",
+        startedAt: now,
+        state: { ...state, compactFloor: floor },
+      } satisfies CompactionCycle,
+    } as const;
   }
 );

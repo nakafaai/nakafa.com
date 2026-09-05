@@ -3,6 +3,7 @@ import type {
   MutationCtx,
 } from "@repo/backend/convex/_generated/server";
 import {
+  env,
   internalAction,
   internalMutation,
 } from "@repo/backend/convex/_generated/server";
@@ -11,16 +12,65 @@ import {
   type CompactionCycle,
   ensureCompaction,
 } from "@repo/backend/convex/contentRelease/compact/state";
+import {
+  ReleaseError,
+  releaseFail,
+} from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
-import { ensureState } from "@repo/backend/convex/contentRelease/model";
 import { compactionReceiptValidator } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
-import { Effect } from "effect";
+import { Config, ConfigProvider, Effect, Option, Schema } from "effect";
 
 const RUN_PAGE_LIMIT = 64;
 type CompactionReceipt = Infer<typeof compactionReceiptValidator>;
+
+/** Only the explicitly configured loopback build runtime may omit lifecycle data. */
+const isStaticBuild = Effect.fn("contentRelease.readStaticBuildConfiguration")(
+  function* () {
+    const provider = ConfigProvider.fromEnvRecord(env);
+    const mode = yield* Config.option(
+      Config.schema(Schema.Literal("local-static"), "CONTENT_RUNTIME_BUILD")
+    ).parse(provider);
+    if (Option.isNone(mode)) {
+      return false;
+    }
+    const urls = yield* Config.all({
+      cloud: Config.schema(Schema.URL, "CONVEX_CLOUD_URL"),
+      site: Config.schema(Schema.URL, "CONVEX_SITE_URL"),
+    }).parse(provider);
+    if (
+      urls.cloud.hostname !== urls.site.hostname ||
+      urls.cloud.port === urls.site.port ||
+      Object.values(urls).some(
+        (url) =>
+          url.protocol !== "http:" ||
+          !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) ||
+          !url.port ||
+          url.username !== "" ||
+          url.password !== "" ||
+          url.pathname !== "/" ||
+          url.search !== "" ||
+          url.hash !== ""
+      )
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_STATE",
+        "Static content builds require paired loopback Convex URLs."
+      );
+    }
+    return true;
+  },
+  Effect.catchTag("ConfigError", () =>
+    Effect.fail(
+      new ReleaseError({
+        code: "CONTENT_RELEASE_STATE",
+        message: "Static content build configuration is invalid.",
+      })
+    )
+  )
+);
 
 const compactPageReference = makeFunctionReference<
   "mutation",
@@ -87,18 +137,26 @@ const advancePhase = Effect.fn("contentRelease.advanceCompaction")(function* (
 /** Runs one transactional, resumable history-compaction page. */
 export const compactProgram = Effect.fn("contentRelease.compactPage")(
   function* (ctx: MutationCtx) {
-    const state = yield* ensureState(ctx);
-    const cycle = yield* ensureCompaction(ctx);
-    if (!cycle) {
+    if (yield* isStaticBuild()) {
+      return {
+        complete: true,
+        deleted: 0,
+        floor: 0,
+        phase: "releases",
+      } satisfies CompactionReceipt;
+    }
+    const work = yield* ensureCompaction(ctx);
+    if (work.complete) {
       const phase: CompactionCycle["phase"] = "releases";
       return {
         complete: true,
         deleted: 0,
-        floor: state.compactedFloor ?? 0,
+        floor: work.floor,
         phase,
       };
     }
-    if (state.compactPhase === undefined) {
+    const { cycle } = work;
+    if (cycle.state.compactPhase === undefined) {
       return {
         complete: false,
         deleted: 0,
@@ -142,6 +200,14 @@ export const compactProgram = Effect.fn("contentRelease.compactPage")(
 export const runProgram = Effect.fn("contentRelease.runCompaction")(function* (
   ctx: ActionCtx
 ) {
+  if (yield* isStaticBuild()) {
+    return {
+      complete: true,
+      deleted: 0,
+      floor: 0,
+      phase: "releases",
+    } satisfies CompactionReceipt;
+  }
   let deleted = 0;
   let latest: {
     readonly complete: boolean;

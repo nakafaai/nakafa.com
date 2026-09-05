@@ -1,12 +1,19 @@
-import { describe, expect, it } from "@effect/vitest";
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   buildRuntimeGenerations,
   formatGenerationEnvironment,
+  readProductionGenerations,
   verifyRuntimeSelection,
-  verifyStableRuntimeExport,
 } from "@repo/backend/scripts/content/runtime/ci/generation";
 import { decodeJsonRows } from "@repo/backend/scripts/content/runtime/ci/json";
-import { Effect } from "effect";
+import { Effect, FileSystem, Redacted } from "effect";
+
+const runDataMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@repo/backend/scripts/content/runtime/ci/command", () => ({
+  runConvexData: runDataMock,
+}));
 
 const ACTIVE_HASH = `sha256:${"a".repeat(64)}`;
 const NEXT_HASH = `sha256:${"b".repeat(64)}`;
@@ -35,6 +42,10 @@ const contentStateRow = {
 const contentState = [contentStateRow];
 
 describe("content runtime generations", () => {
+  beforeEach(() => {
+    runDataMock.mockReset();
+  });
+
   it.live(
     "separates portable cache state from the public signed selection",
     () =>
@@ -44,17 +55,11 @@ describe("content runtime generations", () => {
           { ...contentStateRow, _creationTime: 999, _id: "different" },
         ]);
         expect(systemFieldsChanged).toEqual(baseline);
-        expect(baseline.contentStateHash).toBe(
-          "bf61b36a7687071f7def1f938d55b804a7a3300e4bdaf1feac9bd95808cb024e"
-        );
         expect(baseline.runtimeSelectionHash).toBe(
           "090771304ab66d29dfd1d9660608ca50541419a77873def422d9a6696c7d8433"
         );
         expect(formatGenerationEnvironment(baseline)).toBe(
-          [
-            `CONTENT_RUNTIME_STATE_HASH=${baseline.contentStateHash}`,
-            `CONTENT_RUNTIME_SELECTION_HASH=${baseline.runtimeSelectionHash}`,
-          ].join("\n")
+          `CONTENT_RUNTIME_SELECTION_HASH=${baseline.runtimeSelectionHash}`
         );
       })
   );
@@ -84,9 +89,6 @@ describe("content runtime generations", () => {
           },
         ]);
 
-        expect(operationalDrift.contentStateHash).not.toBe(
-          baseline.contentStateHash
-        );
         expect(operationalDrift.runtimeSelectionHash).toBe(
           baseline.runtimeSelectionHash
         );
@@ -96,16 +98,6 @@ describe("content runtime generations", () => {
             operationalDrift
           )
         ).toBeUndefined();
-        expect(
-          yield* verifyStableRuntimeExport(
-            cacheIdentity(baseline.contentStateHash),
-            operationalDrift
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "ContentRuntimeCiError",
-          message:
-            "Production content state changed during signed runtime export.",
-        });
       })
   );
 
@@ -135,7 +127,6 @@ describe("content runtime generations", () => {
         },
       ]);
 
-      expect(changed.contentStateHash).not.toBe(baseline.contentStateHash);
       expect(changed.runtimeSelectionHash).not.toBe(
         baseline.runtimeSelectionHash
       );
@@ -174,6 +165,7 @@ describe("content runtime generations", () => {
       const invalidRows = [
         { ...contentStateRow, compactFloor: 9 },
         { ...contentStateRow, compactCursor: "orphaned-cursor" },
+        { ...contentStateRow, compactedFloor: 11 },
         {
           ...contentStateRow,
           compactCursor: "",
@@ -215,6 +207,11 @@ describe("content runtime generations", () => {
           Effect.flip
         )
       ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      const sparse: (typeof contentStateRow)[] = [];
+      sparse.length = 1;
+      expect(
+        yield* buildRuntimeGenerations(sparse).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
       expect(
         yield* buildRuntimeGenerations([
           { ...contentStateRow, unexpectedField: true },
@@ -229,11 +226,37 @@ describe("content runtime generations", () => {
       );
     })
   );
-});
 
-function cacheIdentity(contentStateHash: string) {
-  return {
-    contentStateHash,
-    runtimeSchemaFingerprint: "3".repeat(64),
-  };
-}
+  it.live("reads only the production content pointer", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
+          directory: "/tmp",
+          prefix: "runtime-selection-test-",
+        });
+        runDataMock.mockImplementationOnce(
+          ({ outputPath }: { readonly outputPath: string }) =>
+            fileSystem.writeFileString(outputPath, JSON.stringify(contentState))
+        );
+
+        expect(
+          yield* readProductionGenerations({
+            deployKey: Redacted.make("production-key"),
+            runnerTemp,
+          })
+        ).toEqual({
+          runtimeSelectionHash:
+            "090771304ab66d29dfd1d9660608ca50541419a77873def422d9a6696c7d8433",
+        });
+        expect(runDataMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            deployKey: "production-key",
+            limit: 2,
+            table: "contentState",
+          })
+        );
+      }).pipe(Effect.provide(NodeServices.layer))
+    )
+  );
+});

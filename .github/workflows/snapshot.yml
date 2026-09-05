@@ -1,0 +1,180 @@
+name: Snapshot
+
+on:
+  deployment_status: {}
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  deployments: read
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish
+    if: >-
+      github.repository == 'nakafaai/nakafa.com'
+      && (github.event_name == 'workflow_dispatch'
+      || (github.event.deployment_status.state == 'success'
+      && github.event.deployment.environment == 'Production – www'
+      && github.event.deployment.creator.login == 'vercel[bot]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify current main deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          main_sha="$(
+            gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" \
+              --jq '.object.sha'
+          )"
+          if [ "$GITHUB_SHA" != "$main_sha" ]; then
+            echo "The production deployment was superseded by main." >&2
+            exit 1
+          fi
+
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            deployment="$(
+              gh api --method GET "repos/$GITHUB_REPOSITORY/deployments" \
+                -f environment='Production – www' \
+                -F per_page=1 \
+                --jq '.[0] | [.id, .sha] | @tsv'
+            )"
+            IFS=$'\t' read -r deployment_id deployment_sha <<< "$deployment"
+            deployment_state="$(
+              gh api \
+                "repos/$GITHUB_REPOSITORY/deployments/$deployment_id/statuses" \
+                --jq '.[0].state'
+            )"
+            if [ "$deployment_sha" != "$main_sha" ] || \
+              [ "$deployment_state" != "success" ]; then
+              echo "Main is not the successful www production deployment." >&2
+              exit 1
+            fi
+          fi
+
+      - name: Setup toolchain
+        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+        with:
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Read schema
+        run: |
+          output="$RUNNER_TEMP/runtime-schema.env"
+          rm -f -- "$output"
+          pnpm --silent --dir packages/backend runtime:ci fingerprint
+
+          if [ ! -f "$output" ] || [ -L "$output" ] || \
+            [ "$(stat -c '%a' "$output")" != "600" ] || \
+            [ "$(wc -l < "$output")" -ne 1 ] || \
+            ! grep -Exq 'CONTENT_RUNTIME_SCHEMA_HASH=[a-f0-9]{64}' "$output"; then
+            echo "Invalid runtime schema output." >&2
+            exit 1
+          fi
+
+          cat "$output" >> "$GITHUB_ENV"
+          rm -f -- "$output"
+
+      - name: Read selection
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: |
+          output="$RUNNER_TEMP/runtime-state.env"
+          rm -f -- "$output"
+          pnpm --silent --dir packages/backend runtime:ci generations
+
+          if [ ! -f "$output" ] || [ -L "$output" ] || \
+            [ "$(stat -c '%a' "$output")" != "600" ] || \
+            [ "$(wc -l < "$output")" -ne 1 ] || \
+            ! grep -Exq 'CONTENT_RUNTIME_SELECTION_HASH=[a-f0-9]{64}' "$output"; then
+            echo "Invalid runtime selection output." >&2
+            exit 1
+          fi
+
+          cat "$output" >> "$GITHUB_ENV"
+          rm -f -- "$output"
+
+      - name: Inspect snapshot
+        id: snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          asset="snapshot.${CONTENT_RUNTIME_SELECTION_HASH}.${CONTENT_RUNTIME_SCHEMA_HASH}.gpg"
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/runtime" \
+            --jq '.assets[].name' 2>/dev/null | grep -Fxq "$asset"; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Export snapshot
+        if: steps.snapshot.outputs.exists != 'true'
+        env:
+          CONTENT_RUNTIME_CACHE_KEY: ${{ secrets.CONTENT_RUNTIME_CACHE_KEY }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: pnpm --silent --dir packages/backend runtime:ci export
+
+      - name: Verify selection
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
+
+      - name: Publish snapshot
+        if: steps.snapshot.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SNAPSHOT_ASSET: ${{ steps.snapshot.outputs.asset }}
+        run: |
+          if ! gh release view runtime >/dev/null 2>&1; then
+            gh release create runtime \
+              --prerelease \
+              --target main \
+              --title Runtime \
+              --notes "This release contains exactly one current encrypted signed snapshot."
+          fi
+
+          install -m 600 \
+            "$RUNNER_TEMP/runtime-cache/runtime.tar.gpg" \
+            "$RUNNER_TEMP/$SNAPSHOT_ASSET"
+          gh release upload runtime "$RUNNER_TEMP/$SNAPSHOT_ASSET" --clobber
+
+      - name: Delete obsolete snapshots
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SNAPSHOT_ASSET: ${{ steps.snapshot.outputs.asset }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/runtime" \
+            --jq '.assets[] | [.id, .name] | @tsv' |
+          while IFS=$'\t' read -r asset_id asset_name; do
+            if [ "$asset_name" != "$SNAPSHOT_ASSET" ]; then
+              gh api --method DELETE \
+                "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id"
+            fi
+          done
+
+      - name: Erase temporary state
+        if: always()
+        run: |
+          rm -rf -- "$RUNNER_TEMP/runtime-cache"
+          rm -f -- \
+            "$RUNNER_TEMP/runtime-schema.env" \
+            "$RUNNER_TEMP/runtime-state.env"
+          find "$RUNNER_TEMP" -maxdepth 1 -type f \
+            -name 'snapshot.*.gpg' -delete
+
+          find "$RUNNER_TEMP" -mindepth 1 -maxdepth 1 -type d \
+            \( -name 'runtime-export-*' \
+            -o -name 'runtime-state-*' \) \
+            -exec rm -rf -- {} +

@@ -61,20 +61,6 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     reason: "Python quality and production jobs share the reviewed release.",
   },
   {
-    action: "actions/cache/restore",
-    approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
-    expectedTag: "v6.1.0",
-    expectedUsages: 2,
-    reason: "The cache restore and save actions move as one cohort.",
-  },
-  {
-    action: "actions/cache/save",
-    approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
-    expectedTag: "v6.1.0",
-    expectedUsages: 1,
-    reason: "The cache restore and save actions move as one cohort.",
-  },
-  {
     action: "actions/upload-artifact",
     approvedSha: "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
     expectedTag: "v7.0.1",

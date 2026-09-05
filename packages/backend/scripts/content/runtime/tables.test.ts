@@ -15,7 +15,7 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "639f152e40da064a82d83a5e8928cbaa9674b33d7bf856bf95e215a0bad63952";
+  "88cdbd1d5c853b348fdd6a15aa874a2a26e69747e9f3e9dd5ee3d38d2e58d924";
 const CURRENT_DECODER_CONTRACT_IDENTITY = Object.freeze({
   name: "@nakafa/aksara-contracts",
   specifier: "@nakafa/aksara-contracts",
@@ -25,11 +25,18 @@ const DECODER_CONTRACT_IDENTITIES = [CURRENT_DECODER_CONTRACT_IDENTITY];
 
 describe("content runtime tables", () => {
   it.effect(
-    "derives the complete copy set and applies the active pointer last",
+    "selects serving tables explicitly and applies the active pointer last",
     () =>
       Effect.gen(function* () {
         const releaseTables = Object.keys(contentReleaseSchema).filter(
-          (table) => table !== "contentState"
+          (table) =>
+            ![
+              "contentState",
+              "contentPaths",
+              "contentItems",
+              "snapshotBatches",
+              "contentModelBuilds",
+            ].includes(table)
         );
         const expected = [
           ...releaseTables,
@@ -82,6 +89,7 @@ describe("content runtime tables", () => {
           manifest: "ordered-json-lines-row-count-sha256",
           portableRows: {
             encoding: "json-lines",
+            selection: "active-static-public",
             strippedFields: [
               "_id",
               "_creationTime",

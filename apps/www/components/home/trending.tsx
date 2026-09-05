@@ -12,14 +12,17 @@ import { fetchQuery } from "convex/nextjs";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { env } from "@/env";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /**
  * Reads one point-in-time homepage popularity snapshot.
  *
  * Trending is a low-freshness aggregate, so keeping one live subscription per
- * homepage visitor would amplify every popularity-counter update. The cached
- * Convex Promise stays direct because starting an Effect runtime during static
+ * homepage visitor would amplify every popularity-counter update. Popularity
+ * is live analytics rather than signed content, so it stays on the production
+ * deployment while authored content builds from the isolated snapshot. The
+ * cached Promise stays direct because starting an Effect runtime during static
  * prerender reads current time, which Cache Components reject.
  *
  * @see https://nextjs.org/docs/messages/next-prerender-current-time
@@ -30,10 +33,14 @@ async function getHomeTrendingSubjects(locale: PublicAppLocale) {
 
   cacheLife("minutes");
 
-  return await fetchQuery(api.contents.queries.trending.getTrendingSubjects, {
-    locale,
-    windowKey: "7d",
-  });
+  return await fetchQuery(
+    api.contents.queries.trending.getTrendingSubjects,
+    {
+      locale,
+      windowKey: "7d",
+    },
+    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  );
 }
 
 /** Renders the home-screen trending learning objects for the current locale. */

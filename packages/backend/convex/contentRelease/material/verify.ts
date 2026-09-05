@@ -9,9 +9,10 @@ import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/cat
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
+import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
-type MaterialRow = Doc<"materialCatalog">;
+type MaterialRow = WithoutSystemFields<Doc<"materialCatalog">>;
 type ReadCtx = MutationCtx | QueryCtx;
 
 /** Authenticates one self-contained active material read-model row. */

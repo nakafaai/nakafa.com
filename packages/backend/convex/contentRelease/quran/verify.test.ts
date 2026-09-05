@@ -21,6 +21,24 @@ async function loadRow(ctx: Pick<QueryCtx, "db">) {
 }
 
 describe("contentRelease/quran/verify", () => {
+  it("rejects malformed stored signed row envelopes", async () => {
+    const t = convexTest(schema, convexModules);
+    const snapshotId = await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [makeQuranSearch("en", 1)])
+    );
+    await t.mutation(async (ctx) => {
+      const row = await loadRow(ctx);
+      await ctx.db.patch("quranRows", row._id, { rowJson: "{}" });
+    });
+    await expect(
+      t.query(async (ctx) =>
+        runConvexProgram(
+          verifyQuranRow(await loadRow(ctx), snapshotId, QuranSearchRowSchema)
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
   it("rejects a changed signed identity", async () => {
     const signed = convexTest(schema, convexModules);
     const signedId = await signed.mutation((ctx) =>

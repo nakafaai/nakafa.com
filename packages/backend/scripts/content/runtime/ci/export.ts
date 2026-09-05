@@ -3,10 +3,15 @@ import { runConvexData } from "@repo/backend/scripts/content/runtime/ci/command"
 import type { ExportConfig } from "@repo/backend/scripts/content/runtime/ci/config";
 import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import {
+  buildRuntimeGenerations,
   readProductionGenerations,
-  verifyStableRuntimeExport,
+  verifyRuntimeSelection,
 } from "@repo/backend/scripts/content/runtime/ci/generation";
-import { decodeJsonRows } from "@repo/backend/scripts/content/runtime/ci/json";
+import {
+  decodeJsonRows,
+  type JsonObject,
+} from "@repo/backend/scripts/content/runtime/ci/json";
+import { projectActiveRuntime } from "@repo/backend/scripts/content/runtime/ci/projection";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
   CONTENT_RUNTIME_CACHE_FILE,
@@ -17,6 +22,7 @@ import {
 } from "@repo/backend/scripts/content/runtime/ci/snapshot";
 import {
   CONTENT_RUNTIME_TABLES,
+  type RuntimeTable,
   readContentRuntimeSchemaFingerprint,
 } from "@repo/backend/scripts/content/runtime/tables";
 import { Console, Effect, FileSystem, Redacted } from "effect";
@@ -39,6 +45,11 @@ export const exportSignedRuntime = Effect.fn(
       );
     }
 
+    yield* verifyRuntimeSelection(
+      config,
+      yield* readProductionGenerations(config)
+    );
+
     yield* fileSystem.makeDirectory(cacheRoot, { recursive: true });
     yield* fileSystem.chmod(cacheRoot, 0o700);
 
@@ -57,6 +68,7 @@ export const exportSignedRuntime = Effect.fn(
     const deployKey = Redacted.value(config.deployKey);
     const logPath = `${tempRoot}/runtime.log`;
     const entries: ManifestEntry[] = [];
+    const source = new Map<RuntimeTable, readonly JsonObject[]>();
 
     for (const table of CONTENT_RUNTIME_TABLES) {
       const sourcePath = `${tempRoot}/${table}.json`;
@@ -77,7 +89,16 @@ export const exportSignedRuntime = Effect.fn(
         );
       }
 
-      const portable = createPortableTable(table, rows);
+      source.set(table, rows);
+    }
+
+    const projected = yield* projectActiveRuntime(source);
+    yield* verifyRuntimeSelection(
+      config,
+      yield* buildRuntimeGenerations(projected.contentState)
+    );
+    for (const table of CONTENT_RUNTIME_TABLES) {
+      const portable = createPortableTable(table, projected[table]);
       entries.push(portable.entry);
       yield* fileSystem.writeFileString(
         `${snapshotRoot}/${table}.jsonl`,
@@ -88,7 +109,7 @@ export const exportSignedRuntime = Effect.fn(
     }
 
     const identity = {
-      contentStateHash: config.contentStateHash,
+      runtimeSelectionHash: config.runtimeSelectionHash,
       runtimeSchemaFingerprint: config.runtimeSchemaFingerprint,
     };
     yield* fileSystem.writeFileString(
@@ -107,7 +128,7 @@ export const exportSignedRuntime = Effect.fn(
       { mode: 0o600 }
     );
 
-    yield* verifyStableRuntimeExport(
+    yield* verifyRuntimeSelection(
       config,
       yield* readProductionGenerations(config)
     );
@@ -131,7 +152,7 @@ export const exportSignedRuntime = Effect.fn(
       );
     }
 
-    yield* Console.log("Verified stable production runtime generations.");
+    yield* Console.log("Verified stable production runtime selection.");
     const currentSchemaFingerprint =
       yield* readContentRuntimeSchemaFingerprint();
     if (config.runtimeSchemaFingerprint !== currentSchemaFingerprint) {

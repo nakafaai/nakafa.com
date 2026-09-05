@@ -2,11 +2,15 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
+import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
 /** Authenticates one immutable catalog row and its indexed identity. */
 export const verifyProgram = Effect.fn("contentRelease.verifyProgram")(
-  function* (row: Doc<"programCatalog">, snapshotId: string) {
+  function* (
+    row: WithoutSystemFields<Doc<"programCatalog">>,
+    snapshotId: string
+  ) {
     const decoded = yield* decodeSnapshotRowJson(row.rowJson);
     if (
       decoded.family !== "program" ||
@@ -27,7 +31,10 @@ export const verifyProgram = Effect.fn("contentRelease.verifyProgram")(
 
 /** Authenticates one immutable curriculum row and every indexed fact. */
 export const verifyCurriculum = Effect.fn("contentRelease.verifyCurriculum")(
-  function* (row: Doc<"curriculumRoutes">, snapshotId: string) {
+  function* (
+    row: WithoutSystemFields<Doc<"curriculumRoutes">>,
+    snapshotId: string
+  ) {
     const decoded = yield* decodeSnapshotRowJson(row.rowJson);
     if (
       decoded.family !== "program" ||

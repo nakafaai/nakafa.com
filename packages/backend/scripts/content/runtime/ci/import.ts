@@ -3,13 +3,23 @@ import { runConvexImport } from "@repo/backend/scripts/content/runtime/ci/comman
 import type { ImportConfig } from "@repo/backend/scripts/content/runtime/ci/config";
 import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import {
+  buildRuntimeGenerations,
+  verifyRuntimeSelection,
+} from "@repo/backend/scripts/content/runtime/ci/generation";
+import type { JsonObject } from "@repo/backend/scripts/content/runtime/ci/json";
+import { projectActiveRuntime } from "@repo/backend/scripts/content/runtime/ci/projection";
+import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
   CONTENT_RUNTIME_CACHE_FILE,
+  createPortableTable,
   decodeAndValidateManifest,
   validateMetadata,
   validatePortableTable,
 } from "@repo/backend/scripts/content/runtime/ci/snapshot";
-import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
+import {
+  CONTENT_RUNTIME_TABLES,
+  type RuntimeTable,
+} from "@repo/backend/scripts/content/runtime/tables";
 import { Console, Effect, FileSystem, Redacted } from "effect";
 
 export const importSignedRuntime = Effect.fn(
@@ -51,7 +61,7 @@ export const importSignedRuntime = Effect.fn(
   yield* validateMetadata(
     yield* fileSystem.readFileString(`${snapshotRoot}/metadata.json`),
     {
-      contentStateHash: config.contentStateHash,
+      runtimeSelectionHash: config.runtimeSelectionHash,
       runtimeSchemaFingerprint: config.runtimeSchemaFingerprint,
     }
   );
@@ -69,11 +79,31 @@ export const importSignedRuntime = Effect.fn(
   const manifest = yield* decodeAndValidateManifest(
     yield* fileSystem.readFileString(`${snapshotRoot}/manifest.jsonl`)
   );
+  const source = new Map<RuntimeTable, readonly JsonObject[]>();
   for (const entry of manifest) {
-    yield* validatePortableTable(
-      entry,
-      yield* fileSystem.readFileString(`${snapshotRoot}/${entry.table}.jsonl`)
+    source.set(
+      entry.table,
+      yield* validatePortableTable(
+        entry,
+        yield* fileSystem.readFileString(`${snapshotRoot}/${entry.table}.jsonl`)
+      )
     );
+  }
+  const projected = yield* projectActiveRuntime(source);
+  yield* verifyRuntimeSelection(
+    config,
+    yield* buildRuntimeGenerations(projected.contentState)
+  );
+  for (const entry of manifest) {
+    const actual = createPortableTable(
+      entry.table,
+      projected[entry.table]
+    ).entry;
+    if (actual.sha256 !== entry.sha256 || actual.rowCount !== entry.rowCount) {
+      return yield* contentRuntimeCiError(
+        "Signed runtime archive contains rows outside the active serving projection."
+      );
+    }
   }
 
   for (const entry of manifest) {

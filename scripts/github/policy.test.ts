@@ -11,11 +11,6 @@ import {
 } from "#scripts/github/policy";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
-const CONTENT_RUNTIME_CACHE_KEY_PATTERN =
-  /^runtime-content-\$\{\{ env\.CONTENT_RUNTIME_STATE_HASH \}\}-\$\{\{ env\.CONTENT_RUNTIME_SCHEMA_HASH \}\}$/u;
-const CONTENT_RUNTIME_CACHE_PRIMARY_KEY_PATTERN =
-  /^\$\{\{ steps\.signed-content-cache\.outputs\.cache-primary-key \}\}$/u;
-
 const readRepositoryFile = Effect.fn("GithubPolicyTest.readRepositoryFile")(
   function* (relativeUrl: string) {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -73,58 +68,71 @@ describe("GitHub Action policy", () => {
         );
         expect(source).not.toContain("actions/cache/save@");
 
-        const cacheSource = yield* readRepositoryFile(
-          "../../.github/workflows/cache.yml"
+        const snapshotSource = yield* readRepositoryFile(
+          "../../.github/workflows/snapshot.yml"
         );
-        const cacheWorkflow = yield* parseWorkflow(cacheSource);
-        expect(cacheWorkflow).toEqual(
+        const snapshotWorkflow = yield* parseWorkflow(snapshotSource);
+        expect(snapshotWorkflow).toEqual(
           expect.objectContaining({
             concurrency: {
               "cancel-in-progress": false,
-              group: "content-snapshot-cache-main",
+              group: "snapshot",
             },
             jobs: {
               publish: expect.objectContaining({
-                if: "github.ref == 'refs/heads/main' && github.repository == 'nakafaai/nakafa.com'",
+                if: expect.stringContaining(
+                  "github.event.deployment_status.state == 'success'"
+                ),
                 name: "Publish",
                 steps: expect.arrayContaining([
                   expect.objectContaining({
-                    id: "signed-content-cache",
-                    uses: "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
-                    with: expect.objectContaining({
-                      key: expect.stringMatching(
-                        CONTENT_RUNTIME_CACHE_KEY_PATTERN
-                      ),
-                    }),
+                    name: "Verify current main deployment",
                   }),
                   expect.objectContaining({
-                    name: "Save encrypted signed content snapshot",
-                    uses: "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
-                    with: expect.objectContaining({
-                      key: expect.stringMatching(
-                        CONTENT_RUNTIME_CACHE_PRIMARY_KEY_PATTERN
-                      ),
-                    }),
+                    name: "Export snapshot",
+                    run: "pnpm --silent --dir packages/backend runtime:ci export",
                   }),
+                  {
+                    env: expect.objectContaining({
+                      CONVEX_DEPLOY_KEY: expect.any(String),
+                    }),
+                    name: "Verify selection",
+                    run: "pnpm --silent --dir packages/backend runtime:ci verify-generations",
+                  },
                 ]),
               }),
             },
             on: {
-              push: { branches: ["main"] },
+              deployment_status: {},
               workflow_dispatch: {},
             },
           })
         );
-        expect(cacheWorkflow).not.toEqual(
+        expect(snapshotWorkflow).not.toEqual(
           expect.objectContaining({
             on: expect.objectContaining({ merge_group: expect.anything() }),
           })
         );
-        expect(cacheWorkflow).not.toEqual(
+        expect(snapshotWorkflow).not.toEqual(
           expect.objectContaining({
             on: expect.objectContaining({ pull_request: expect.anything() }),
           })
         );
+        expect(snapshotWorkflow).not.toEqual(
+          expect.objectContaining({
+            on: expect.objectContaining({ push: expect.anything() }),
+          })
+        );
+        expect(snapshotSource).toContain("Production – www");
+        expect(snapshotSource).not.toContain("actions/cache/");
+        expect(snapshotSource).toContain(
+          "This release contains exactly one current encrypted signed snapshot."
+        );
+        expect(source).toContain(
+          "schema-changing candidate needs one production export"
+        );
+        expect(source).not.toContain("codex/snapshot");
+        expect(source.match(/runtime:ci export/gu)).toHaveLength(1);
       }).pipe(Effect.provide(NodeServices.layer))
   );
 

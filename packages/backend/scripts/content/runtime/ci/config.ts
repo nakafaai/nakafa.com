@@ -2,10 +2,7 @@ import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/dep
 import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import { Config, Effect, Redacted } from "effect";
 
-/**
- * Bounded trusted-snapshot capacity for active and retained content history.
- * Production table reads use smaller pages and fail closed at this total cap.
- */
+/** Maximum row count for one encrypted snapshot table. */
 export const MAX_CONTENT_RUNTIME_EXPORT_LIMIT = 100_000;
 
 export const DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT =
@@ -26,9 +23,9 @@ const hasDisallowedDeployKeyCharacter = (value: string) =>
     );
   });
 
-export interface CacheIdentity {
-  readonly contentStateHash: string;
+export interface SnapshotIdentity {
   readonly runtimeSchemaFingerprint: string;
+  readonly runtimeSelectionHash: string;
 }
 
 export interface RuntimeSelectionIdentity {
@@ -44,12 +41,12 @@ export interface ProductionSelectionConfig
   extends ProductionConfig,
     RuntimeSelectionIdentity {}
 
-export interface ExportConfig extends ProductionConfig, CacheIdentity {
+export interface ExportConfig extends ProductionConfig, SnapshotIdentity {
   readonly cacheKey: Redacted.Redacted;
   readonly exportLimit: number;
 }
 
-export interface ImportConfig extends CacheIdentity {
+export interface ImportConfig extends SnapshotIdentity {
   readonly cacheKey: Redacted.Redacted;
   readonly runnerTemp: string;
 }
@@ -92,26 +89,28 @@ export const validateProductionDeployKey = (deployKey: string) => {
   return Effect.succeed(deployKey);
 };
 
-const readCacheIdentity = Effect.gen(function* () {
+const readSnapshotIdentity = Effect.gen(function* () {
   const values = yield* Config.all({
-    contentStateHash: Config.nonEmptyString("CONTENT_RUNTIME_STATE_HASH"),
+    runtimeSelectionHash: Config.nonEmptyString(
+      "CONTENT_RUNTIME_SELECTION_HASH"
+    ),
     runtimeSchemaFingerprint: Config.nonEmptyString(
       "CONTENT_RUNTIME_SCHEMA_HASH"
     ),
   });
 
-  const contentStateHash = yield* validateHex(
-    "CONTENT_RUNTIME_STATE_HASH",
-    values.contentStateHash
+  const runtimeSelectionHash = yield* validateHex(
+    "CONTENT_RUNTIME_SELECTION_HASH",
+    values.runtimeSelectionHash
   );
   const runtimeSchemaFingerprint = yield* validateHex(
     "CONTENT_RUNTIME_SCHEMA_HASH",
     values.runtimeSchemaFingerprint
   );
   return {
-    contentStateHash,
+    runtimeSelectionHash,
     runtimeSchemaFingerprint,
-  } satisfies CacheIdentity;
+  } satisfies SnapshotIdentity;
 });
 
 const readRuntimeSelectionIdentity = Effect.gen(function* () {
@@ -146,7 +145,7 @@ export const readProductionSelectionConfig = Effect.gen(function* () {
 
 export const readExportConfig = Effect.gen(function* () {
   const production = yield* readProductionConfig;
-  const cacheIdentity = yield* readCacheIdentity;
+  const snapshotIdentity = yield* readSnapshotIdentity;
   const cacheKey = yield* Config.redacted("CONTENT_RUNTIME_CACHE_KEY");
   const exportLimit = yield* Config.int("CONTENT_RUNTIME_EXPORT_LIMIT").pipe(
     Config.withDefault(DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT)
@@ -166,11 +165,11 @@ export const readExportConfig = Effect.gen(function* () {
       `CONTENT_RUNTIME_EXPORT_LIMIT must be between 1 and ${MAX_CONTENT_RUNTIME_EXPORT_LIMIT}.`
     );
   }
-  return { ...production, ...cacheIdentity, cacheKey, exportLimit };
+  return { ...production, ...snapshotIdentity, cacheKey, exportLimit };
 });
 
 export const readImportConfig = Effect.gen(function* () {
-  const identity = yield* readCacheIdentity;
+  const identity = yield* readSnapshotIdentity;
   const cacheKey = yield* Config.redacted("CONTENT_RUNTIME_CACHE_KEY");
   const runnerTemp = yield* Config.nonEmptyString("RUNNER_TEMP");
 

@@ -60,7 +60,7 @@ export const readCurrentPublishedContent = Effect.fn(
   const liveRenderer = yield* rendererManifest;
   const found = yield* readPublicContent(
     {
-      siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+      siteUrl: env.CONTENT_BUILD_SITE_URL ?? env.NEXT_PUBLIC_CONVEX_SITE_URL,
       token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
     },
     request,

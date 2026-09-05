@@ -185,7 +185,7 @@ jobs:
           cat "$output" >> "$GITHUB_ENV"
           rm -f -- "$output"
 
-      - name: Fingerprint production runtime generations
+      - name: Read production runtime selection
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
@@ -195,10 +195,9 @@ jobs:
 
           if [ ! -f "$output" ] || [ -L "$output" ] || \
             [ "$(stat -c '%a' "$output")" != "600" ] || \
-            [ "$(wc -l < "$output")" -ne 2 ] || \
-            ! grep -Exq 'CONTENT_RUNTIME_STATE_HASH=[a-f0-9]{64}' "$output" || \
+            [ "$(wc -l < "$output")" -ne 1 ] || \
             ! grep -Exq 'CONTENT_RUNTIME_SELECTION_HASH=[a-f0-9]{64}' "$output"; then
-            echo "Invalid production runtime generation output." >&2
+            echo "Invalid production runtime selection output." >&2
             exit 1
           fi
 
@@ -210,16 +209,31 @@ jobs:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: pnpm --silent --dir packages/backend runtime:ci verify-generations
 
-      # Protected signed runtime, including tryout content, is never cached raw.
-      - name: Restore encrypted signed content snapshot
-        id: signed-content-cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/runtime-cache
-          key: runtime-content-${{ env.CONTENT_RUNTIME_STATE_HASH }}-${{ env.CONTENT_RUNTIME_SCHEMA_HASH }}
+      - name: Download snapshot
+        id: snapshot
+        run: |
+          umask 077
+          asset="snapshot.${CONTENT_RUNTIME_SELECTION_HASH}.${CONTENT_RUNTIME_SCHEMA_HASH}.gpg"
+          directory="$RUNNER_TEMP/runtime-cache"
+          target="$directory/runtime.tar.gpg"
+          mkdir -m 700 "$directory"
 
-      - name: Export encrypted signed content snapshot
-        if: steps.signed-content-cache.outputs.cache-hit != 'true'
+          if curl --fail --location --silent --show-error \
+            --retry 5 --retry-all-errors --retry-delay 2 \
+            "https://github.com/nakafaai/nakafa.com/releases/download/runtime/$asset" \
+            --output "$target"; then
+            chmod 600 "$target"
+            exit 0
+          fi
+
+          rm -f -- "$target"
+          # This job is already restricted to an exact trusted candidate. A
+          # schema-changing candidate needs one production export before its
+          # main-branch release asset can exist.
+          echo "bootstrap=true" >> "$GITHUB_OUTPUT"
+
+      - name: Bootstrap snapshot
+        if: steps.snapshot.outputs.bootstrap == 'true'
         env:
           CONTENT_RUNTIME_CACHE_KEY: ${{ secrets.CONTENT_RUNTIME_CACHE_KEY }}
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
@@ -269,6 +283,7 @@ jobs:
           AUTH_GOOGLE_ID=ci-disabled
           AUTH_GOOGLE_SECRET=ci-disabled
           BETTER_AUTH_SECRET=ci-inert-secret-00000000
+          CONTENT_RUNTIME_BUILD=local-static
           CONTENT_RUNTIME_TOKEN=$CONTENT_RUNTIME_TOKEN
           FIRECRAWL_API_KEY=ci-disabled
           JWKS=[]
@@ -343,7 +358,6 @@ jobs:
       - name: Classify local backend build failure
         if: failure() && steps.production_build.outcome == 'failure'
         env:
-          CONTENT_RUNTIME_STATE_HASH: ""
           CONTENT_RUNTIME_SELECTION_HASH: ""
           CONTENT_RUNTIME_SCHEMA_HASH: ""
           CONTENT_RUNTIME_TOKEN: ""
