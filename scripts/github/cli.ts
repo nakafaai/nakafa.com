@@ -204,6 +204,67 @@ function trustedVerifyProblems(verify: WorkflowJob) {
     : ["CLI verification must match the exact trusted job."];
 }
 
+/** Keeps OIDC publication isolated from build and transported verification. */
+function executionBoundaryProblems(
+  jobs: (typeof CliWorkflowSchema.Type)["jobs"],
+  publish: WorkflowJob,
+  verify: WorkflowJob
+) {
+  const problems: string[] = [];
+  if (publish.permissions?.["id-token"] !== "write") {
+    problems.push("Only the publish job must receive npm OIDC identity.");
+  }
+  if (publish.environment !== "npm-production") {
+    problems.push(
+      "CLI publication must use the protected npm-production environment."
+    );
+  }
+  if (verify.environment !== undefined) {
+    problems.push("CLI verification must not use a protected environment.");
+  }
+  if (Object.keys(verify.permissions ?? {}).length > 0) {
+    problems.push("CLI verification permissions must remain empty.");
+  }
+  for (const [name, job] of Object.entries(jobs)) {
+    if (name !== "publish" && job.permissions?.["id-token"] !== undefined) {
+      problems.push(`${name} must not receive npm OIDC identity.`);
+    }
+  }
+
+  const publishNeeds = publish.needs;
+  const consumesBuild =
+    publishNeeds === "build" ||
+    (Array.isArray(publishNeeds) && publishNeeds.includes("build"));
+  if (!consumesBuild) {
+    problems.push("CLI publication must consume the verified build job.");
+  }
+
+  const verifyNeeds = Array.isArray(verify.needs)
+    ? verify.needs
+    : [verify.needs].filter((need) => need !== undefined);
+  if (
+    verifyNeeds.length !== 2 ||
+    !verifyNeeds.includes("build") ||
+    !verifyNeeds.includes("publish")
+  ) {
+    problems.push("CLI verification must consume build and publication.");
+  }
+
+  for (const [owner, job] of [
+    ["publication", publish],
+    ["verification", verify],
+  ] as const) {
+    const setup = job.steps.find(({ uses }) => uses === SETUP_NODE_ACTION);
+    if (setup?.with?.["node-version"] !== "24.19.0") {
+      problems.push(`CLI ${owner} must use the repository Node runtime.`);
+    }
+    if (setup?.with?.["package-manager-cache"] !== false) {
+      problems.push(`CLI ${owner} must disable package-manager caching.`);
+    }
+  }
+  return problems;
+}
+
 export function validateCliWorkflow(source: string): string[] {
   const problems: string[] = [];
   for (const snippet of FORBIDDEN_CREDENTIALS) {
@@ -273,57 +334,7 @@ export function validateCliWorkflow(source: string): string[] {
     problems.push("CLI build artifacts must be replaceable on rerun.");
   }
 
-  if (publish.permissions?.["id-token"] !== "write") {
-    problems.push("Only the publish job must receive npm OIDC identity.");
-  }
-  if (publish.environment !== "npm-production") {
-    problems.push(
-      "CLI publication must use the protected npm-production environment."
-    );
-  }
-  if (verify.environment !== undefined) {
-    problems.push("CLI verification must not use a protected environment.");
-  }
-  if (Object.keys(verify.permissions ?? {}).length > 0) {
-    problems.push("CLI verification permissions must remain empty.");
-  }
-  for (const [name, job] of Object.entries(jobs)) {
-    if (name !== "publish" && job.permissions?.["id-token"] !== undefined) {
-      problems.push(`${name} must not receive npm OIDC identity.`);
-    }
-  }
-
-  const publishNeeds = publish.needs;
-  const consumesBuild =
-    publishNeeds === "build" ||
-    (Array.isArray(publishNeeds) && publishNeeds.includes("build"));
-  if (!consumesBuild) {
-    problems.push("CLI publication must consume the verified build job.");
-  }
-
-  const verifyNeeds = Array.isArray(verify.needs)
-    ? verify.needs
-    : [verify.needs].filter((need) => need !== undefined);
-  if (
-    verifyNeeds.length !== 2 ||
-    !verifyNeeds.includes("build") ||
-    !verifyNeeds.includes("publish")
-  ) {
-    problems.push("CLI verification must consume build and publication.");
-  }
-
-  for (const [owner, job] of [
-    ["publication", publish],
-    ["verification", verify],
-  ] as const) {
-    const setup = job.steps.find(({ uses }) => uses === SETUP_NODE_ACTION);
-    if (setup?.with?.["node-version"] !== "24.19.0") {
-      problems.push(`CLI ${owner} must use the repository Node runtime.`);
-    }
-    if (setup?.with?.["package-manager-cache"] !== false) {
-      problems.push(`CLI ${owner} must disable package-manager caching.`);
-    }
-  }
+  problems.push(...executionBoundaryProblems(jobs, publish, verify));
 
   problems.push(...trustedPublishProblems(publish, publishSource));
 

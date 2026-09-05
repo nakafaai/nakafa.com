@@ -45,14 +45,9 @@ export function dependencyDeclarations(
   return declarations;
 }
 
-/** Validates exact cohort declarations and the absence of v3 packages. */
-export function validateDependencyPolicy({
-  manifests,
-  rootManifest,
-  workspace,
-}: DependencyPolicyInput) {
+/** Enforces the approved versions and exact workspace ownership of each hold. */
+function declarationProblems(manifests: readonly FirstPartyManifest[]) {
   const problems: string[] = [];
-
   for (const hold of DEPENDENCY_HOLDS) {
     const declarations = dependencyDeclarations(manifests, hold.dependency);
     if (hold.declarationPaths) {
@@ -85,6 +80,16 @@ export function validateDependencyPolicy({
       }
     }
   }
+  return problems;
+}
+
+/** Validates exact cohort declarations and the absence of v3 packages. */
+export function validateDependencyPolicy({
+  manifests,
+  rootManifest,
+  workspace,
+}: DependencyPolicyInput) {
+  const problems = declarationProblems(manifests);
 
   for (const dependency of FORBIDDEN_EFFECT_DEPENDENCIES) {
     for (const declaration of dependencyDeclarations(manifests, dependency)) {
