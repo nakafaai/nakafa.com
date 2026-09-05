@@ -13,7 +13,6 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Label as LabelUi } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   getCos,
@@ -21,11 +20,12 @@ import {
   getSin,
   getTan,
 } from "@repo/design-system/lib/geometry/angles";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {
   Button,
   Group,
+  I18nProvider,
   Input,
   Label,
   NumberField,
@@ -51,13 +51,17 @@ export function UnitCircle({
   angle = 45,
   trigValues,
 }: Props) {
+  const locale = useLocale();
+
   return (
     <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <Content angle={angle} trigValues={trigValues} />
+      <I18nProvider locale={locale}>
+        <Content angle={angle} trigValues={trigValues} />
+      </I18nProvider>
     </Card>
   );
 }
@@ -76,6 +80,7 @@ function Content({
   const t = useTranslations("Common");
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
   const angleValue = angleOverride ?? angle;
+  const exactValues = angleValue === angle ? trigValues : undefined;
 
   return (
     <>
@@ -85,7 +90,7 @@ function Content({
           showOrigin={false}
           showZAxis={false}
         >
-          <UnitCircle3D angle={angleValue} trigValues={trigValues} />
+          <UnitCircle3D angle={angleValue} trigValues={exactValues} />
         </CoordinateSystem>
       </CardContent>
       <CardFooter className="border-t px-0">
@@ -93,15 +98,15 @@ function Content({
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge className="font-mono" variant="outline">
               Sin ({angleValue}°) ={" "}
-              {trigValues?.sin ?? getSin(angleValue).toFixed(2)}
+              {exactValues?.sin ?? getSin(angleValue).toFixed(2)}
             </Badge>
             <Badge className="font-mono" variant="outline">
               Cos ({angleValue}°) ={" "}
-              {trigValues?.cos ?? getCos(angleValue).toFixed(2)}
+              {exactValues?.cos ?? getCos(angleValue).toFixed(2)}
             </Badge>
             <Badge className="font-mono" variant="outline">
               Tan ({angleValue}°) ={" "}
-              {trigValues?.tan ??
+              {exactValues?.tan ??
                 (Number.isFinite(getTan(angleValue))
                   ? getTan(angleValue).toFixed(2)
                   : t("undefined"))}
@@ -112,24 +117,25 @@ function Content({
 
           <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
             <div className="flex items-center gap-2">
-              <LabelUi htmlFor="angle">
-                <Badge className="font-mono" variant="outline">
-                  {angleValue}°
-                </Badge>
-              </LabelUi>
+              <Badge className="font-mono" variant="outline">
+                {angleValue}°
+              </Badge>
               <Badge className="font-mono" variant="outline">
                 {getRadians(angleValue).toFixed(2)} {t("radian")}
               </Badge>
             </div>
 
             <NumberField
-              formatOptions={{
-                localeMatcher: "best fit",
+              decrementAriaLabel={t("decrease-angle")}
+              incrementAriaLabel={t("increase-angle")}
+              onChange={(value) => {
+                if (Number.isFinite(value)) {
+                  setAngleOverride(value);
+                }
               }}
-              onChange={setAngleOverride}
               value={angleValue}
             >
-              <Label className="sr-only">Angle</Label>
+              <Label className="sr-only">{t("angle")}</Label>
               <Group className="relative inline-flex h-9 w-full items-center overflow-hidden whitespace-nowrap rounded-md border border-input text-sm shadow-xs outline-none transition-[color,box-shadow] data-focus-within:border-ring data-disabled:opacity-50 data-focus-within:ring-[3px] data-focus-within:ring-ring/50 data-focus-within:has-aria-invalid:border-destructive data-focus-within:has-aria-invalid:ring-destructive/20 dark:data-focus-within:has-aria-invalid:ring-destructive/40">
                 <Button
                   className="-ms-px flex aspect-square h-full cursor-pointer items-center justify-center rounded-s-md border border-input bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
@@ -141,7 +147,10 @@ function Content({
                     icon={MinusSignIcon}
                   />
                 </Button>
-                <Input className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums" />
+                <Input
+                  aria-roledescription={t("number-field")}
+                  className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums"
+                />
                 <Button
                   className="-me-px flex aspect-square h-full cursor-pointer items-center justify-center rounded-e-md border border-input bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                   slot="increment"
