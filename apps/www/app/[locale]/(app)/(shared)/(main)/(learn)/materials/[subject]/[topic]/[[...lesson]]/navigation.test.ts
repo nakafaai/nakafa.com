@@ -76,6 +76,7 @@ function publishedContext(
     label: "Functions",
     mapping: { ...mapping, canonicalPath },
     parent: testProgramSubject,
+    resolvedCanonicalPath: canonicalPath,
   };
 }
 
@@ -205,4 +206,49 @@ describe("material lesson navigation", () => {
       },
     });
   });
+
+  it.each(["parent", "lesson"] as const)(
+    "keeps verified %s context when published material routes are renamed",
+    (scope) => {
+      const parentPath = PublicPathSchema.make(
+        "subjects/mathematics/current-functions"
+      );
+      const route = {
+        ...previewProjection,
+        parentPath,
+        publicPath: PublicPathSchema.make(`${parentPath}/function-concept`),
+      };
+      const next = {
+        ...previewNextProjection,
+        parentPath,
+        publicPath: PublicPathSchema.make(`${parentPath}/function-properties`),
+      };
+      const signed = publishedContext(
+        scope === "parent"
+          ? previewProjection.parentPath
+          : previewProjection.publicPath
+      );
+      const verified = {
+        ...signed,
+        resolvedCanonicalPath:
+          scope === "parent" ? parentPath : route.publicPath,
+      };
+      const suffix = `?ctx=merdeka~${context.nodeKey}`;
+
+      expect(
+        readMaterialNavigation(
+          { ...publishedPage, route, siblings: [route, next] },
+          verified
+        )
+      ).toMatchObject({
+        context,
+        currentHref: `${toMaterialHref(route)}${suffix}`,
+        pagination: {
+          next: {
+            href: `${toMaterialHref(next)}${scope === "parent" ? suffix : ""}`,
+          },
+        },
+      });
+    }
+  );
 });

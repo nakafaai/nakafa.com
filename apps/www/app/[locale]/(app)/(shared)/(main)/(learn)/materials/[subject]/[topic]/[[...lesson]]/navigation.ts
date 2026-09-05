@@ -74,8 +74,8 @@ export function readMaterialNavigation(
     const href = toMaterialHref(target);
     if (
       !(
-        published.mapping.canonicalPath === target.publicPath ||
-        published.mapping.canonicalPath === target.parentPath
+        published.resolvedCanonicalPath === target.publicPath ||
+        published.resolvedCanonicalPath === target.parentPath
       )
     ) {
       return href;
