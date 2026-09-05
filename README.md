@@ -37,7 +37,6 @@ cannot express.
 git clone https://github.com/nakafaai/nakafa.com.git
 cd nakafa.com
 pnpm install --frozen-lockfile
-npm install --global portless
 cp apps/www/.env.example apps/www/.env.local
 ```
 
@@ -49,10 +48,10 @@ complete content fixture.
 Run `pnpm dev` for hot reload. Portless starts its HTTPS proxy on port 443
 and prints the branch-specific Nakafa URL, such as `https://ci.nakafa.localhost`.
 The web, CAS, and email preview servers use the same proxy and receive separate
-names. Run `portless list` to inspect active routes or `portless get nakafa` from
-the checkout to obtain its web URL.
+names. Run `pnpm exec portless list` to inspect active routes or
+`pnpm exec portless get nakafa` from the checkout to obtain its web URL.
 It creates and trusts a local certificate authority on first use. Run
-`portless doctor` to check the proxy, DNS, and certificate trust. Configure
+`pnpm exec portless doctor` to check the proxy, DNS, and certificate trust. Configure
 authentication for that exact local origin in your own development deployment
 when testing sign-in. Google rejects `.localhost` subdomains as OAuth redirect
 URIs. For Google sign-in, configure Portless with a domain you own, then register
@@ -93,7 +92,8 @@ the proxy explicitly.
 Stop it before `pnpm runtime:clean` removes the prepared runtime. To refresh
 the snapshot, clean it and repeat preparation.
 
-CI uses the same build lifecycle with the current production selection. The
+CI uses the same build lifecycle with the current production selection and
+`PORTLESS=0` for its fixed-port browser checks. The
 protected Vercel integration invokes it through `convex deploy --cmd`; Vercel
 keeps public production client URLs, reads build content from the isolated
 snapshot, and removes all temporary state when the build ends.

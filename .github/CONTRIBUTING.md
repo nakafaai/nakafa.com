@@ -39,7 +39,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Use the HTTPS Portless URL printed by `pnpm dev`. Run `portless get nakafa`
+Use the HTTPS Portless URL printed by `pnpm dev`. Run `pnpm exec portless get nakafa`
 from the checkout to obtain its branch-specific web URL.
 
 ## Before editing
