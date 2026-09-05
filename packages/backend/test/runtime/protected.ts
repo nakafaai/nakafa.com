@@ -63,12 +63,13 @@ function insertArtifact(
 
 /** Activates signed protected question and answer artifacts for runtime tests. */
 export async function insertProtectedRuntime(
-  ctx: MutationCtx
+  ctx: MutationCtx,
+  options?: { readonly rawMdx?: string }
 ): Promise<ProtectedRuntimeFixture> {
   const enQuestion = testSignedArtifact("snbt-quant", {
     contentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question",
-    rawMdx: "## Technical question",
+    rawMdx: options?.rawMdx ?? "## Technical question",
   });
   const enAnswer = testSignedArtifact("snbt-quant", {
     contentKey:

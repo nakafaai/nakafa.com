@@ -16,6 +16,7 @@ const question: TryoutQuestionSelector = {
   contentKey,
   delivery: "authenticated",
   questionOrder: 1,
+  sectionKey: "general-reasoning",
   snapshotId: digest,
   snapshotReleaseId: "current-release",
   sourcePath: `packages/corpus/${contentKey.slice(0, -9)}`,

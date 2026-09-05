@@ -27,6 +27,7 @@ const selectorFields = {
   contentHash: v.string(),
   contentKey: v.string(),
   questionOrder: v.number(),
+  sectionKey: tryoutRouteKeyValidator,
   snapshotReleaseId: v.string(),
   snapshotId: v.string(),
   sourcePath: v.string(),
