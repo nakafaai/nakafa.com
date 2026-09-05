@@ -19,8 +19,11 @@ import {
 import { ContentSnapshotError } from "@repo/backend/content/snapshot/error";
 import { readFeaturedTryout } from "@repo/backend/content/tryout/featured";
 import { readTryoutSection } from "@repo/backend/content/tryout/section";
+import {
+  makeLandingPlacement,
+  makeLandingSource,
+} from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
-import { makeTryoutStartPlacement } from "@repo/backend/test/tryout/source";
 import { Effect } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { TryoutAnswerSelector } from "@/components/tryout/content/model";
@@ -68,12 +71,15 @@ vi.mock("@repo/backend/content/trust", async () => {
 const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
   compiledCode?: string
 ) {
-  const source = yield* makeTryoutRuntimeSource(compiledCode);
+  const source = yield* makeTryoutRuntimeSource(
+    compiledCode,
+    makeLandingSource()
+  );
   const context = yield* createTestSnapshotContext(source.source);
   const featured = yield* readFeaturedTryout("en").pipe(
     Effect.provideContext(context)
   );
-  const route = makeTryoutStartPlacement("en");
+  const route = makeLandingPlacement("en");
   const section = yield* readTryoutSection({ ...route, locale: "en" }).pipe(
     Effect.provideContext(context)
   );

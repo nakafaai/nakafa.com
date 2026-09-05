@@ -23,9 +23,9 @@ import {
   readPublishedTrustLesson,
 } from "@/lib/content/material/trust";
 import { ContentExecutionError } from "@/lib/content/published/errors";
-import { previewArtifactHash } from "@/test/content-preview";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
 import { createTestSnapshotContext } from "@/test/content/snapshot";
+import { previewArtifactHash } from "@/test/content-preview";
 import {
   createTestRuntimeQuery,
   createTestSnapshotQuery,
@@ -87,7 +87,10 @@ describe("published marketing trust lesson", () => {
         const context = yield* createTestSnapshotContext(fixture.source);
         runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
         renderMock.mockReturnValueOnce(
-          Effect.succeed({ ...published, activeReleaseId: fixture.state.activeReleaseId })
+          Effect.succeed({
+            ...published,
+            activeReleaseId: fixture.state.activeReleaseId,
+          })
         );
 
         expect(yield* readPublishedTrustLesson("en")).toEqual({

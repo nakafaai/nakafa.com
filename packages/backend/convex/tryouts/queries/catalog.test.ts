@@ -4,6 +4,11 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  activateLandingSource,
+  makeLandingHierarchy,
+  makeLandingPlacement,
+} from "@repo/backend/test/tryout/landing";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   activateTryoutStartSource,
@@ -19,6 +24,9 @@ import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
+const landingExamPath = "try-out/indonesia/snbt";
+const landingTrackPath = `${landingExamPath}/2027`;
+const landingSetPath = `${landingTrackPath}/set-1`;
 
 describe("public try-out catalog queries", () => {
   it.effect(
@@ -156,8 +164,8 @@ describe("public try-out catalog queries", () => {
     () =>
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
-        const { snapshotId } = yield* Effect.promise(() =>
-          t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"))
+        const snapshotId = yield* Effect.promise(() =>
+          t.mutation((ctx) => activateLandingSource(ctx, "visible"))
         );
         const featured = yield* Effect.promise(() =>
           t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
@@ -167,17 +175,17 @@ describe("public try-out catalog queries", () => {
         expect(featured.question).toMatchObject({
           snapshotId,
           delivery: "authenticated",
-          contentKey: makeTryoutStartPlacement("id").questionContentKey,
+          contentKey: makeLandingPlacement("id").questionContentKey,
         });
         const metadata = yield* Effect.promise(() =>
           t.query(api.tryouts.queries.catalog.getMetadata, {
             appLocale: "id",
             kind: "set",
-            publicPath: setPath,
+            publicPath: landingSetPath,
           })
         );
         expect(metadata.route).toMatchObject({
-          publicPath: setPath,
+          publicPath: landingSetPath,
           title: "Set 1",
         });
         expect(
@@ -203,10 +211,10 @@ describe("public try-out catalog queries", () => {
           yield* Effect.promise(() =>
             t.mutation((ctx) =>
               activateTryoutSnapshot(ctx, {
-                catalog: makeTryoutStartHierarchy("id", "visible").filter(
+                catalog: makeLandingHierarchy("id", "visible").filter(
                   (row) => row.kind !== kind
                 ),
-                placements: [makeTryoutStartPlacement("id")],
+                placements: [makeLandingPlacement("id")],
               })
             )
           );
@@ -228,9 +236,7 @@ describe("public try-out catalog queries", () => {
                 ? api.tryouts.queries.catalog.getExamPage
                 : api.tryouts.queries.catalog.getTrackPage;
             const publicPath =
-              kind === "country"
-                ? `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}`
-                : `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}`;
+              kind === "country" ? landingExamPath : landingTrackPath;
             yield* Effect.promise(() =>
               expect(
                 t.query(endpoint, { appLocale: "id", publicPath })
@@ -244,8 +250,8 @@ describe("public try-out catalog queries", () => {
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
             activateTryoutSnapshot(ctx, {
-              catalog: makeTryoutStartHierarchy("id", "visible"),
-              placements: [makeTryoutStartPlacement("id")],
+              catalog: makeLandingHierarchy("id", "visible"),
+              placements: [makeLandingPlacement("id")],
             })
           )
         );

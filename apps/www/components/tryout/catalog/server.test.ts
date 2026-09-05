@@ -6,6 +6,7 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
+import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { Effect } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -148,7 +149,10 @@ describe("immutable try-out application catalog", () => {
     "authenticates and renders the real featured question artifact",
     () =>
       Effect.gen(function* () {
-        const fixture = yield* makeTryoutRuntimeSource();
+        const fixture = yield* makeTryoutRuntimeSource(
+          undefined,
+          makeLandingSource()
+        );
         const context = yield* createTestSnapshotContext(fixture.source);
         fetchRuntimeQueryMock.mockImplementation(
           createTestSnapshotFetch(context)
