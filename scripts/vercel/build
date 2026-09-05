@@ -135,6 +135,10 @@ download_snapshot() {
   fi
 }
 
+# Vercel's Amazon Linux 2023 image includes signature-only GnuPG.
+# https://docs.aws.amazon.com/linux/al2023/ug/gnupg-minimal.html
+dnf swap --assumeyes gnupg2-minimal gnupg2-full
+
 load_fingerprint
 load_selection
 pnpm --silent --dir "$backend_root" runtime:ci verify-generations

@@ -29,7 +29,12 @@ type CompactionReceipt = Infer<typeof compactionReceiptValidator>;
 /** Only the explicitly configured loopback build runtime may omit lifecycle data. */
 const isStaticBuild = Effect.fn("contentRelease.readStaticBuildConfiguration")(
   function* () {
-    const provider = ConfigProvider.fromEnvRecord(env);
+    // Convex exposes a get-only Proxy; the provider requires own properties.
+    const provider = ConfigProvider.fromEnvRecord({
+      CONTENT_RUNTIME_BUILD: env.CONTENT_RUNTIME_BUILD,
+      CONVEX_CLOUD_URL: env.CONVEX_CLOUD_URL,
+      CONVEX_SITE_URL: env.CONVEX_SITE_URL,
+    });
     const mode = yield* Config.option(
       Config.schema(Schema.Literal("local-static"), "CONTENT_RUNTIME_BUILD")
     ).parse(provider);
