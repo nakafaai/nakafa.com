@@ -76,7 +76,7 @@ export const scheduleLearningPopularityRefreshes = Effect.fn(
   };
 });
 
-/** Repairs one bounded page of finite-window popularity counters. */
+/** Repairs finite counters from their durable lifetime identity registry. */
 export const refreshLearningPopularityWindowPage = Effect.fn(
   "contents.metrics.refreshLearningPopularityWindowPage"
 )(function* (
@@ -110,8 +110,7 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
         .query("learningPopularityCounters")
         .withIndex(
           "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
-          (q) =>
-            q.eq("windowKey", args.windowKey).eq("scopeMode", args.scopeMode)
+          (q) => q.eq("windowKey", "lifetime").eq("scopeMode", args.scopeMode)
         )
         .paginate({
           cursor: args.cursor ?? null,

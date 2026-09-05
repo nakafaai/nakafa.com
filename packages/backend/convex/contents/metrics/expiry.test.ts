@@ -276,6 +276,20 @@ describe("contents/metrics/expiry", () => {
     await target.mutation(async (ctx) => {
       await insertCycle(ctx);
       await insertCounter(ctx, { contextKey: "repair-override", score: 5 });
+      const counter = await ctx.db.query("learningPopularityCounters").unique();
+      if (!counter) {
+        throw new Error("Expected the popularity repair fixture.");
+      }
+      const { _id, _creationTime, ...value } = counter;
+      const lifetimeId = await ctx.db.insert("learningPopularityCounters", {
+        ...value,
+        windowKey: "lifetime",
+      });
+      const lifetime = await ctx.db.get(lifetimeId);
+      if (!lifetime) {
+        throw new Error("Expected the durable popularity identity fixture.");
+      }
+      await learningPopularityRankings.insert(ctx, lifetime);
       await insertSignal(ctx, {
         applied: 2,
         contextKey: "repair-override",

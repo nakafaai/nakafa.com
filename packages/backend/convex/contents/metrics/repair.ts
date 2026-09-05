@@ -12,6 +12,32 @@ import { Effect } from "effect";
 type PopularityCounter = Doc<"learningPopularityCounters">;
 type PopularitySignal = Doc<"learningPopularitySignals">;
 
+/** Finds the finite counter owned by one durable popularity identity. */
+const loadPopularityCounter = Effect.fn(
+  "contents.metrics.loadPopularityCounter"
+)(function* (
+  ctx: MutationCtx,
+  identity: PopularityCounter,
+  windowKey: LearningPopularityFiniteWindow
+) {
+  return yield* Effect.tryPromise({
+    try: () =>
+      ctx.db
+        .query("learningPopularityCounters")
+        .withIndex(
+          "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
+          (q) =>
+            q
+              .eq("windowKey", windowKey)
+              .eq("scopeMode", identity.scopeMode)
+              .eq("content_id", identity.content_id)
+              .eq("contextKey", identity.contextKey)
+        )
+        .unique(),
+    catch: toContentAnalyticsIoError,
+  });
+});
+
 /** Rebuilt semantics; `updatedAt` advances only when one of these changes. */
 const refreshFields = [
   "alignmentId",
@@ -132,40 +158,64 @@ function projectPopularityRefresh(
   };
 }
 
-/** Rebuilds one finite counter from its bounded authoritative signal rows. */
+/** Rebuilds or recreates one finite counter from authoritative daily signals. */
 export const repairPopularityCounter = Effect.fn(
   "contents.metrics.repairPopularityCounter"
 )(function* (
   ctx: MutationCtx,
-  counter: PopularityCounter,
+  identity: PopularityCounter,
   windowKey: LearningPopularityFiniteWindow,
   day: number,
   updatedAt: number
 ) {
-  const refresh = yield* recomputePopularityCounter(
+  const counter =
+    identity.windowKey === windowKey
+      ? identity
+      : yield* loadPopularityCounter(ctx, identity, windowKey);
+  const { latestSignal, score } = yield* recomputePopularityCounter(
     ctx,
-    counter,
+    identity,
     windowKey,
     day
   );
 
-  if (refresh.latestSignal === null || refresh.score <= 0) {
-    yield* Effect.tryPromise({
-      try: () => ctx.db.delete(counter._id),
-      catch: toContentAnalyticsIoError,
-    });
+  if (latestSignal === null || score <= 0) {
+    if (counter) {
+      yield* Effect.tryPromise({
+        try: () => ctx.db.delete(counter._id),
+        catch: toContentAnalyticsIoError,
+      });
+    }
 
     return {
-      removed: true,
+      removed: counter !== null,
       refreshed: false,
     };
   }
 
   const update = projectPopularityRefresh(
-    counter,
-    refresh.latestSignal,
-    refresh.score
+    counter ?? identity,
+    latestSignal,
+    score
   );
+  if (!counter) {
+    yield* Effect.tryPromise({
+      try: () =>
+        ctx.db.insert("learningPopularityCounters", {
+          ...update,
+          content_id: identity.content_id,
+          contextKey: identity.contextKey,
+          locale: latestSignal.locale,
+          scopeMode: identity.scopeMode,
+          section: latestSignal.section,
+          updatedAt,
+          windowKey,
+        }),
+      catch: toContentAnalyticsIoError,
+    });
+    return { removed: false, refreshed: true };
+  }
+
   const changed = refreshFields.some(
     (field) => counter[field] !== update[field]
   );

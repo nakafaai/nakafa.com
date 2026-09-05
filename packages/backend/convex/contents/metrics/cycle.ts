@@ -1,14 +1,15 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analytics/spec";
 import {
+  getPopularitySignalDay,
   type LearningPopularityFiniteWindow,
   type LearningPopularityScope,
   POPULARITY_DAY_MS,
 } from "@repo/backend/convex/contents/popularity";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 
-type PopularityCycleMode = "expiry" | "repair";
+type PopularityCycleMode = Doc<"learningPopularityCycles">["mode"];
 
 interface CycleKey {
   readonly day: number;
@@ -96,14 +97,19 @@ export const beginPopularityCycle = Effect.fn(
   return { cursor: undefined, mode };
 });
 
-/** Validates one exact active page and returns its durable recovery cursor. */
+/**
+ * Validates one active page in the current UTC day. A previous-day page leaves
+ * its cycle incomplete so the next daily schedule repairs every identity.
+ */
 export const getPopularityCyclePage = Effect.fn(
   "contents.metrics.getPopularityCyclePage"
 )(function* (ctx: MutationCtx, key: CyclePageKey) {
   const cycle = yield* loadCycle(ctx, key);
   const continueCursor = cycle?.cursor ?? "";
+  const timestamp = yield* Clock.currentTimeMillis;
 
   if (
+    key.day === getPopularitySignalDay(timestamp) &&
     cycle?.startedDay === key.day &&
     cycle.completedDay !== key.day &&
     cycle.mode === key.mode &&

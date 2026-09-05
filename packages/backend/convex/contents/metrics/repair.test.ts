@@ -49,6 +49,16 @@ async function insertCounter(ctx: MutationCtx, contextKey: string) {
     throw new Error("Expected the popularity counter fixture.");
   }
   await learningPopularityRankings.insert(ctx, counter);
+  const { _id, _creationTime, ...value } = counter;
+  const lifetimeId = await ctx.db.insert("learningPopularityCounters", {
+    ...value,
+    windowKey: "lifetime",
+  });
+  const lifetime = await ctx.db.get(lifetimeId);
+  if (!lifetime) {
+    throw new Error("Expected the durable popularity identity fixture.");
+  }
+  await learningPopularityRankings.insert(ctx, lifetime);
   return counter;
 }
 
@@ -127,7 +137,13 @@ describe("contents/metrics/repair", () => {
       { day: DAY, scopeMode: "global", windowKey: "7d" }
     );
     const pending = await target.query(async (ctx) => ({
-      counters: await ctx.db.query("learningPopularityCounters").collect(),
+      counters: await ctx.db
+        .query("learningPopularityCounters")
+        .withIndex(
+          "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
+          (q) => q.eq("windowKey", "7d")
+        )
+        .collect(),
       cycle: await ctx.db.query("learningPopularityCycles").unique(),
     }));
 
@@ -160,7 +176,13 @@ describe("contents/metrics/repair", () => {
     await target.finishAllScheduledFunctions(vi.runAllTimers);
 
     const completed = await target.query(async (ctx) => ({
-      counters: await ctx.db.query("learningPopularityCounters").collect(),
+      counters: await ctx.db
+        .query("learningPopularityCounters")
+        .withIndex(
+          "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
+          (q) => q.eq("windowKey", "7d")
+        )
+        .collect(),
       cycle: await ctx.db
         .query("learningPopularityCycles")
         .withIndex("by_scopeMode_and_windowKey", (q) =>
@@ -208,7 +230,14 @@ describe("contents/metrics/repair", () => {
       { day: DAY, scopeMode: "global", windowKey: "7d" }
     );
     const counters = await target.query(
-      async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
+      async (ctx) =>
+        await ctx.db
+          .query("learningPopularityCounters")
+          .withIndex(
+            "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
+            (q) => q.eq("windowKey", "7d")
+          )
+          .collect()
     );
 
     expect(result).toMatchObject({
@@ -230,5 +259,64 @@ describe("contents/metrics/repair", () => {
       score: 3,
       title: "New required payload",
     });
+  });
+
+  it("recreates a missing finite counter and ranking from its lifetime identity", async () => {
+    const target = createTarget();
+    await target.mutation(async (ctx) => {
+      await insertCycle(ctx);
+      const counter = await insertCounter(ctx, "missing-finite");
+      await learningPopularityRankings.delete(ctx, counter);
+      await ctx.db.delete(counter._id);
+      await insertSignal(ctx, { contextKey: "missing-finite", viewCount: 3 });
+    });
+    const lifetimeBefore = await target.query(
+      async (ctx) => await ctx.db.query("learningPopularityCounters").unique()
+    );
+
+    const result = await target.mutation(
+      internal.contents.mutations.popularity
+        .refreshLearningPopularityWindowPage,
+      { day: DAY, scopeMode: "global", windowKey: "7d" }
+    );
+    const state = await target.query(async (ctx) => ({
+      counters: await ctx.db.query("learningPopularityCounters").collect(),
+      ranking: await learningPopularityRankings.paginate(ctx, {
+        namespace: ["material", "en", "global", "7d"],
+        order: "asc",
+        pageSize: 10,
+      }),
+    }));
+    expect(result).toMatchObject({ refreshedCounters: 1, removedCounters: 0 });
+    expect(
+      state.counters.find(({ windowKey }) => windowKey === "lifetime")
+    ).toEqual(lifetimeBefore);
+    expect(
+      state.counters.find(({ windowKey }) => windowKey === "7d")
+    ).toMatchObject({
+      latestDay: DAY,
+      score: 3,
+      title: "Signal title",
+    });
+    expect(state.ranking.page.map(({ key }) => key)).toEqual([
+      [-3, graph().content_id],
+    ]);
+  });
+
+  it("reports a duplicate finite identity as a typed IO failure", async () => {
+    const target = createTarget();
+    await target.mutation(async (ctx) => {
+      await insertCycle(ctx);
+      const counter = await insertCounter(ctx, "duplicate-finite");
+      const { _id, _creationTime, ...value } = counter;
+      await ctx.db.insert("learningPopularityCounters", value);
+    });
+    await expect(
+      target.mutation(
+        internal.contents.mutations.popularity
+          .refreshLearningPopularityWindowPage,
+        { day: DAY, scopeMode: "global", windowKey: "7d" }
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_ANALYTICS_IO_FAILED" } });
   });
 });
