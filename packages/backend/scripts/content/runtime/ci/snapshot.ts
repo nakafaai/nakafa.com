@@ -20,7 +20,7 @@ const ManifestEntrySchema = Schema.Struct({
     Schema.isGreaterThanOrEqualTo(0)
   ),
   sha256: HashSchema,
-  table: Schema.String,
+  table: Schema.Literals(CONTENT_RUNTIME_TABLES),
 });
 const MetadataSchema = Schema.Struct({
   runtimeSelectionHash: HashSchema,
@@ -40,7 +40,7 @@ const stripPortableFields = (row: JsonObject) =>
     )
   );
 export const createPortableTable = (
-  table: string,
+  table: ManifestEntry["table"],
   rows: readonly JsonObject[]
 ) => {
   const body = rows
@@ -138,6 +138,7 @@ export const validatePortableTable = Effect.fn(
       `Signed runtime table ${entry.table} contains non-portable fields.`
     );
   }
+  return rows;
 });
 export const getExpectedArchiveEntries = () =>
   [

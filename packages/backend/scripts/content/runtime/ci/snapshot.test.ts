@@ -25,7 +25,7 @@ describe("content runtime snapshot", () => {
     "keeps only portable fields and records exact integrity metadata",
     () =>
       Effect.gen(function* () {
-        const portable = createPortableTable("example", [
+        const portable = createPortableTable("contentState", [
           {
             _creationTime: 1,
             _id: "row-1",
@@ -36,7 +36,10 @@ describe("content runtime snapshot", () => {
         ]);
 
         expect(portable.jsonLines).toBe('{"value":"safe"}\n');
-        expect(portable.entry).toMatchObject({ rowCount: 1, table: "example" });
+        expect(portable.entry).toMatchObject({
+          rowCount: 1,
+          table: "contentState",
+        });
         yield* validatePortableTable(portable.entry, portable.jsonLines);
       })
   );
@@ -119,7 +122,7 @@ describe("content runtime snapshot", () => {
 
   it.live("rejects tampering and unsafe archive members", () =>
     Effect.gen(function* () {
-      const portable = createPortableTable("example", [{ value: "safe" }]);
+      const portable = createPortableTable("contentState", [{ value: "safe" }]);
       const integrityFailure = yield* validatePortableTable(
         portable.entry,
         '{"value":"changed"}\n'
@@ -141,7 +144,7 @@ describe("content runtime snapshot", () => {
 
   it.live("rejects invalid or non-portable snapshot rows", () =>
     Effect.gen(function* () {
-      const invalid = createPortableTable("example", []).entry;
+      const invalid = createPortableTable("contentState", []).entry;
       const invalidJson = "not-json\n";
       expect(
         yield* validatePortableTable(
@@ -149,7 +152,8 @@ describe("content runtime snapshot", () => {
           invalidJson
         ).pipe(Effect.flip)
       ).toMatchObject({
-        message: "Signed runtime table example contains invalid JSON rows.",
+        message:
+          "Signed runtime table contentState contains invalid JSON rows.",
       });
 
       const forbidden = '{"_id":"source"}\n';
@@ -159,7 +163,8 @@ describe("content runtime snapshot", () => {
           forbidden
         ).pipe(Effect.flip)
       ).toMatchObject({
-        message: "Signed runtime table example contains non-portable fields.",
+        message:
+          "Signed runtime table contentState contains non-portable fields.",
       });
     })
   );

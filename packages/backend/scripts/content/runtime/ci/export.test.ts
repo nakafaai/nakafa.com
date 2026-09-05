@@ -9,6 +9,10 @@ import {
   CONTENT_RUNTIME_CACHE_FILE,
 } from "@repo/backend/scripts/content/runtime/ci/snapshot";
 import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
+import {
+  makeRuntimeSource,
+  TEST_SNAPSHOT_SELECTION_HASH,
+} from "@repo/backend/test/content/snapshot";
 import { Effect, FileSystem, Redacted } from "effect";
 
 const mocks = vi.hoisted(() => ({
@@ -27,10 +31,14 @@ vi.mock("@repo/backend/scripts/content/runtime/ci/command", () => ({
   runConvexData: mocks.runData,
 }));
 
-vi.mock("@repo/backend/scripts/content/runtime/ci/generation", () => ({
-  readProductionGenerations: mocks.readGenerations,
-  verifyRuntimeSelection: mocks.verifySelection,
-}));
+vi.mock(
+  "@repo/backend/scripts/content/runtime/ci/generation",
+  async (importOriginal) => ({
+    ...(await importOriginal()),
+    readProductionGenerations: mocks.readGenerations,
+    verifyRuntimeSelection: mocks.verifySelection,
+  })
+);
 
 vi.mock(
   "@repo/backend/scripts/content/runtime/tables",
@@ -40,7 +48,7 @@ vi.mock(
   })
 );
 
-const runtimeSelectionHash = "1".repeat(64);
+const runtimeSelectionHash = TEST_SNAPSHOT_SELECTION_HASH;
 const runtimeSchemaFingerprint = "2".repeat(64);
 const events: string[] = [];
 const rowsByTable = new Map<string, readonly Record<string, unknown>[]>();
@@ -68,6 +76,9 @@ function config(runnerTemp: string, exportLimit = 2): ExportConfig {
 beforeEach(() => {
   events.length = 0;
   rowsByTable.clear();
+  for (const [table, rows] of makeRuntimeSource().source) {
+    rowsByTable.set(table, rows);
+  }
   mocks.createArchive.mockReset();
   mocks.readGenerations.mockReset();
   mocks.readSchemaFingerprint.mockReset();
@@ -111,6 +122,33 @@ beforeEach(() => {
 });
 
 describe("signed runtime export", () => {
+  it.live("discards the export when the final generation fence changes", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
+          directory: "/tmp",
+          prefix: "runtime-export-race-",
+        });
+        mocks.verifySelection
+          .mockReturnValueOnce(Effect.void)
+          .mockReturnValueOnce(Effect.void)
+          .mockReturnValueOnce(
+            Effect.fail(contentRuntimeCiError("selection changed after export"))
+          );
+        expect(
+          yield* exportSignedRuntime(config(runnerTemp)).pipe(Effect.flip)
+        ).toMatchObject({ message: "selection changed after export" });
+        expect(mocks.createArchive).not.toHaveBeenCalled();
+        expect(
+          yield* fileSystem.exists(
+            `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`
+          )
+        ).toBe(false);
+      }).pipe(Effect.provide(NodeServices.layer))
+    )
+  );
+
   it.live("exports one stable signed selection", () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -121,13 +159,10 @@ describe("signed runtime export", () => {
         });
         const cacheRoot = `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`;
         yield* fileSystem.makeDirectory(cacheRoot);
-        rowsByTable.set("contentState", [
-          { _creationTime: 1, _id: "source", value: "portable" },
-        ]);
 
         yield* exportSignedRuntime(config(runnerTemp));
 
-        expect(mocks.verifySelection).toHaveBeenCalledTimes(2);
+        expect(mocks.verifySelection).toHaveBeenCalledTimes(3);
         expect(mocks.runData).toHaveBeenCalledTimes(
           CONTENT_RUNTIME_TABLES.length
         );

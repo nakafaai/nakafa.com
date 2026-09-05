@@ -2,6 +2,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { modelSlotValidator } from "@repo/backend/convex/contentRelease/models/slot";
 import { COMPACTION_PHASES } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexData } from "@repo/backend/scripts/content/runtime/ci/command";
 import type {
@@ -29,7 +30,9 @@ const OptionalManifestHashSchema = Schema.optional(Sha256HashSchema);
 const OptionalReleaseIdSchema = Schema.optional(ReleaseIdSchema);
 const OptionalSequenceSchema = Schema.optional(SequenceSchema);
 const CompactionPhaseSchema = Schema.Literals(COMPACTION_PHASES);
-const ModelSlotSchema = Schema.Literals(["blue", "green"]);
+const ModelSlotSchema = Schema.Literals(
+  modelSlotValidator.members.map((member) => member.value)
+);
 const PublishedContentStateSchema = Schema.Struct({
   activeManifestHash: Sha256HashSchema,
   activeReleaseId: ReleaseIdSchema,
@@ -179,8 +182,8 @@ const runtimePointer = (state: PublishedContentState) => ({
   },
 });
 /** Builds the stable signed generation identity from one complete pointer. */
-export const buildRuntimeGenerations = Effect.fn(
-  "contentRuntime.buildGenerations"
+export const readPublishedContentState = Effect.fn(
+  "contentRuntime.readPublishedContentState"
 )(function* (contentState: readonly JsonObject[]) {
   if (contentState.length !== 1) {
     return yield* contentRuntimeCiError(
@@ -236,6 +239,13 @@ export const buildRuntimeGenerations = Effect.fn(
       "Production contentState is not synchronized to one signed generation."
     );
   }
+  return state;
+});
+/** Builds the stable signed generation identity from one complete pointer. */
+export const buildRuntimeGenerations = Effect.fn(
+  "contentRuntime.buildGenerations"
+)(function* (contentState: readonly JsonObject[]) {
+  const state = yield* readPublishedContentState(contentState);
   return {
     runtimeSelectionHash: yield* hashCanonicalJson(runtimePointer(state)),
   } satisfies RuntimeGenerations;

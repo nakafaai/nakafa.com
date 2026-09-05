@@ -8,11 +8,12 @@ import {
 import { parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
 import { quranRowFacts } from "@repo/backend/convex/contentRelease/quran/facts";
 import { quranRowDocumentLimit } from "@repo/backend/convex/contentRelease/quran/limits";
+import type { WithoutSystemFields } from "convex/server";
 import { Effect, Schema } from "effect";
 /** Authenticates one immutable Quran row and every indexed fact. */
 export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
   function* <A, I>(
-    row: Doc<"quranRows">,
+    row: WithoutSystemFields<Doc<"quranRows">>,
     snapshotId: string,
     payloadSchema: Schema.Codec<A, I, never, never>
   ) {

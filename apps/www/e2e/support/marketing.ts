@@ -207,6 +207,11 @@ export const verifyDesktopSplitter = Effect.fn(
   );
   yield* Effect.promise(() => page.keyboard.press("Home"));
 
+  yield* Effect.promise(() =>
+    expect(splitter).toHaveAttribute("aria-valuenow", "36")
+  );
+  // Focus can scroll asynchronously; settle the pointer target before measuring.
+  yield* Effect.promise(() => splitter.hover());
   const splitterBounds = yield* readBounds(splitter, "splitter");
   const usesCoarsePointer = yield* Effect.promise(() =>
     page.evaluate(() => window.matchMedia("(pointer: coarse)").matches)
@@ -232,6 +237,9 @@ export const verifyDesktopSplitter = Effect.fn(
   );
 
   yield* Effect.promise(() => page.keyboard.press("Home"));
+  yield* Effect.promise(() =>
+    expect(splitter).toHaveAttribute("aria-valuenow", "36")
+  );
   yield* dragTouch(
     page,
     { x: centerX, y: centerY },

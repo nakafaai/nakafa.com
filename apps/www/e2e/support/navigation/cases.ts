@@ -30,8 +30,8 @@ type InstantMarker =
 type InstantShell = "app" | "marketing";
 
 const instantShellSelector = {
-  app: 'main[data-slot="sidebar-inset"]',
-  marketing: 'main[data-marketing-page="true"]',
+  app: 'main[data-slot="sidebar-inset"]:visible',
+  marketing: 'main[data-marketing-page="true"]:visible',
 } as const;
 
 /** A rendered source route has no visible link matching its signed catalog. */

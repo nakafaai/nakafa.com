@@ -10,6 +10,10 @@ import {
   formatMetadata,
 } from "@repo/backend/scripts/content/runtime/ci/snapshot";
 import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
+import {
+  makeRuntimeSource,
+  TEST_SNAPSHOT_SELECTION_HASH,
+} from "@repo/backend/test/content/snapshot";
 import { Effect, FileSystem, Redacted } from "effect";
 
 const mocks = vi.hoisted(() => ({
@@ -27,7 +31,7 @@ vi.mock("@repo/backend/scripts/content/runtime/ci/command", () => ({
 
 const identity = {
   runtimeSchemaFingerprint: "2".repeat(64),
-  runtimeSelectionHash: "1".repeat(64),
+  runtimeSelectionHash: TEST_SNAPSHOT_SELECTION_HASH,
 };
 
 interface DecryptOptions {
@@ -44,11 +48,12 @@ function config(runnerTemp: string): ImportConfig {
 
 const writeSnapshot = Effect.fn("RuntimeImportTest.writeSnapshot")(function* (
   snapshotRoot: string,
-  tables = CONTENT_RUNTIME_TABLES
+  tables = CONTENT_RUNTIME_TABLES,
+  source = makeRuntimeSource().source
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const entries = CONTENT_RUNTIME_TABLES.map(
-    (table) => createPortableTable(table, []).entry
+    (table) => createPortableTable(table, source.get(table) ?? []).entry
   );
   yield* fileSystem.writeFileString(
     `${snapshotRoot}/metadata.json`,
@@ -63,7 +68,10 @@ const writeSnapshot = Effect.fn("RuntimeImportTest.writeSnapshot")(function* (
     formatManifest(entries)
   );
   for (const table of CONTENT_RUNTIME_TABLES) {
-    yield* fileSystem.writeFileString(`${snapshotRoot}/${table}.jsonl`, "");
+    yield* fileSystem.writeFileString(
+      `${snapshotRoot}/${table}.jsonl`,
+      createPortableTable(table, source.get(table) ?? []).jsonLines
+    );
   }
 });
 
@@ -77,6 +85,51 @@ beforeEach(() => {
 });
 
 describe("signed runtime import", () => {
+  it.live(
+    "rejects operational state in an otherwise authenticated archive before importing any table",
+    () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fileSystem = yield* FileSystem.FileSystem;
+          const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
+            directory: "/tmp",
+            prefix: "runtime-import-operational-",
+          });
+          const cacheRoot = `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`;
+          yield* fileSystem.makeDirectory(cacheRoot);
+          yield* fileSystem.writeFileString(
+            `${cacheRoot}/${CONTENT_RUNTIME_CACHE_FILE}`,
+            "encrypted"
+          );
+          mocks.decrypt.mockImplementation(
+            ({ snapshotRoot }: DecryptOptions) => {
+              const { source, state } = makeRuntimeSource();
+              source.set("contentState", [
+                {
+                  ...state,
+                  candidateManifestHash: state.activeManifestHash,
+                  candidateReleaseId: "candidate",
+                  candidateSequence: 10,
+                },
+              ]);
+              return writeSnapshot(
+                snapshotRoot,
+                CONTENT_RUNTIME_TABLES,
+                source
+              );
+            }
+          );
+          expect(
+            yield* importSignedRuntime(config(runnerTemp)).pipe(Effect.flip)
+          ).toMatchObject({
+            message:
+              "Signed runtime archive contains rows outside the active serving projection.",
+          });
+          expect(mocks.runImport).not.toHaveBeenCalled();
+        }).pipe(Effect.provide(NodeServices.layer))
+      )
+  );
+
   it.live("validates and imports every signed table", () =>
     Effect.scoped(
       Effect.gen(function* () {

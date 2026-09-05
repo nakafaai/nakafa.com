@@ -5,12 +5,16 @@ import {
   tryoutCatalogFacts,
   tryoutPlacementFacts,
 } from "@repo/backend/convex/contentRelease/tryout/facts";
+import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
 /** Authenticates one immutable catalog row and every indexed fact. */
 export const verifyTryoutCatalog = Effect.fn(
   "contentRelease.verifyTryoutCatalog"
-)(function* (row: Doc<"tryoutCatalog">, snapshotId: string) {
+)(function* (
+  row: WithoutSystemFields<Doc<"tryoutCatalog">>,
+  snapshotId: string
+) {
   const decoded = yield* decodeSnapshotRowJson(row.rowJson);
   if (
     decoded.family !== "tryout" ||
@@ -44,7 +48,10 @@ export const verifyTryoutCatalog = Effect.fn(
 /** Authenticates one server-only placement and every indexed fact. */
 export const verifyTryoutPlacement = Effect.fn(
   "contentRelease.verifyTryoutPlacement"
-)(function* (row: Doc<"tryoutPlacements">, snapshotId: string) {
+)(function* (
+  row: WithoutSystemFields<Doc<"tryoutPlacements">>,
+  snapshotId: string
+) {
   const decoded = yield* decodeSnapshotRowJson(row.rowJson);
   if (
     decoded.family !== "tryout" ||
