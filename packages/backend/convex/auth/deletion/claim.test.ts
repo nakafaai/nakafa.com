@@ -108,20 +108,6 @@ describe("auth/deletion/claim", () => {
             )
           )
         );
-        const emailId = yield* Effect.promise(() =>
-          test.mutation((ctx) =>
-            runConvexProgram(
-              Effect.promise(() =>
-                testResend.sendEmail(ctx, {
-                  from: "Nakafa <nakafa@notifications.nakafa.com>",
-                  subject: "Welcome",
-                  text: "Welcome",
-                  to: "delivered@resend.dev",
-                })
-              )
-            )
-          )
-        );
         const intentEmailId = yield* Effect.promise(() =>
           test.mutation((ctx) =>
             runConvexProgram(
@@ -139,16 +125,13 @@ describe("auth/deletion/claim", () => {
         yield* Effect.promise(() =>
           test.mutation((ctx) =>
             runConvexProgram(
-              Effect.promise(async () => {
-                await ctx.db.patch("users", userId, {
-                  welcomeEmailId: emailId,
-                });
-                await ctx.db.insert("welcomeEmailIntents", {
+              Effect.promise(() =>
+                ctx.db.insert("welcomeEmailIntents", {
                   componentEmailId: intentEmailId,
                   phase: "enqueued",
                   userId,
-                });
-              })
+                })
+              )
             )
           )
         );
@@ -168,14 +151,6 @@ describe("auth/deletion/claim", () => {
               )
             )
           )
-        );
-        const cancelableUser = yield* Effect.promise(() =>
-          test.query((ctx) =>
-            runConvexProgram(Effect.promise(() => ctx.db.get("users", userId)))
-          )
-        );
-        const cancelableEmail = yield* Effect.promise(() =>
-          test.query(components.resend.lib.getStatus, { emailId })
         );
         const cancelableIntentEmail = yield* Effect.promise(() =>
           test.query(components.resend.lib.getStatus, {
@@ -200,14 +175,6 @@ describe("auth/deletion/claim", () => {
             )
           )
         );
-        const committedUser = yield* Effect.promise(() =>
-          test.query((ctx) =>
-            runConvexProgram(Effect.promise(() => ctx.db.get("users", userId)))
-          )
-        );
-        const committedEmail = yield* Effect.promise(() =>
-          test.query(components.resend.lib.getStatus, { emailId })
-        );
         const committedIntentEmail = yield* Effect.promise(() =>
           test.query(components.resend.lib.getStatus, {
             emailId: intentEmailId,
@@ -219,8 +186,6 @@ describe("auth/deletion/claim", () => {
 
         expect(prepared).toBe(accountDeletionPreparationOutcome.ready);
         expect(cancelablePreparation).not.toHaveProperty("deletionStartedAt");
-        expect(cancelableUser?.welcomeEmailId).toBe(emailId);
-        expect(cancelableEmail).toMatchObject({ status: "waiting" });
         expect(cancelableIntentEmail).toMatchObject({ status: "waiting" });
         expect(claimed).toBe(accountDeletionPreparationOutcome.ready);
         expect(committedPreparation).toMatchObject({
@@ -229,8 +194,6 @@ describe("auth/deletion/claim", () => {
           recoveryAt: NOW + 1000 + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
           recoveryGeneration: 3,
         });
-        expect(committedUser).not.toHaveProperty("welcomeEmailId");
-        expect(committedEmail).toMatchObject({ status: "cancelled" });
         expect(committedIntentEmail).toMatchObject({ status: "cancelled" });
         expect(committedIntent).toBeNull();
       }).pipe(Effect.ensuring(Effect.sync(() => vi.useRealTimers())))

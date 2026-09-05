@@ -140,14 +140,10 @@ describe("auth/client", () => {
       image: "https://example.com/learner.png",
       name: "Synthetic learner",
     });
-    expect(stored.users[0]?.welcomeEmailId).toBeUndefined();
     const jobNames = stored.jobs.map(({ name }) => name);
     expect(jobNames).toEqual([
       getFunctionName(internal.customers.actions.internal.syncCustomer),
     ]);
-    expect(jobNames).not.toContain(
-      getFunctionName(internal.emails.delivery.sendWelcomeEmail)
-    );
   });
 
   it("projects each Better Auth profile field without scheduling unchanged writes", async () => {
