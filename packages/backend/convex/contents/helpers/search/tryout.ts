@@ -1,5 +1,6 @@
+import { findTryoutCatalog } from "@repo/backend/content/tryout/catalog";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { findTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import {
   type ContentSearchDocument,
@@ -39,7 +40,9 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
   if (scanLimit === 0) {
     return [];
   }
-  const catalog = yield* findTryoutCatalog(ctx, args.locale);
+  const catalog = yield* findTryoutCatalog(args.locale).pipe(
+    Effect.provide(convexTryoutLayer(ctx))
+  );
   if (Option.isNone(catalog)) {
     return [];
   }

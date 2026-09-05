@@ -4,6 +4,11 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  TEST_QUESTION_CONTENT_KEY,
+  TEST_QUESTION_PROJECTION_JSON,
+  TEST_QUESTION_SOURCE,
+} from "@repo/backend/test/content/question";
+import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testDeleteJson,
@@ -261,5 +266,73 @@ describe("contentRelease/items", () => {
     await expect(stage(t, [testUpsertJson()])).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_STATE" },
     });
+  });
+
+  it("retains an unrouted question head as exact rollback evidence", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertTestRelease(ctx, { sequence: 2 });
+      await insertRuntimeVersion(
+        ctx,
+        "authenticated",
+        TEST_QUESTION_CONTENT_KEY,
+        {
+          headReleaseId: "release-base",
+          headSequence: 1,
+          projectionJson: TEST_QUESTION_PROJECTION_JSON,
+          rendererDomain: "snbt-quant",
+          sourcePath: TEST_QUESTION_SOURCE,
+        }
+      );
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        return expect.fail("Expected one staged publication state.");
+      }
+      await ctx.db.patch(state._id, { activeSequence: 1 });
+    });
+    await stage(t, [
+      testUpsertJson({
+        contentKey: TEST_QUESTION_CONTENT_KEY,
+        delivery: "authenticated",
+        family: "question",
+        rendererDomain: "snbt-quant",
+        sourcePath: TEST_QUESTION_SOURCE,
+      }),
+    ]);
+    const item = await t.query((ctx) => ctx.db.query("contentItems").unique());
+    expect(item?.priorSequence).toBe(1);
+    expect(JSON.parse(item?.rollbackJson ?? "{}")).toMatchObject({
+      snapshot: {
+        state: "question",
+        head: {
+          contentKey: TEST_QUESTION_CONTENT_KEY,
+          delivery: "authenticated",
+          family: "question",
+          sourcePath: TEST_QUESTION_SOURCE,
+        },
+      },
+    });
+  });
+
+  it("rejects a permanent directory identity whose family changed", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertTestRelease(ctx);
+      await ctx.db.insert("contentKeys", {
+        artifactLocale: "en",
+        contentKey: "test:head-0",
+        createdSequence: 1,
+        family: "article",
+      });
+    });
+    await expect(stage(t, [testUpsertJson()])).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Content key test:head-0/en changed family.",
+      },
+    });
+    expect(
+      await t.query((ctx) => ctx.db.query("contentItems").collect())
+    ).toEqual([]);
   });
 });

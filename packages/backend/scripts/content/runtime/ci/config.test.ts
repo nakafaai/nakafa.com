@@ -47,7 +47,7 @@ describe("content runtime CI config", () => {
       );
 
       expect(failure).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message:
           "Content runtime requires the exact production-scoped Convex deploy key.",
       });
@@ -98,7 +98,7 @@ describe("content runtime CI config", () => {
       expect(
         yield* withStubbedEnv(readExportConfig.pipe(Effect.flip))
       ).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message: `CONTENT_RUNTIME_EXPORT_LIMIT must be between 1 and ${MAX_CONTENT_RUNTIME_EXPORT_LIMIT}.`,
       });
     })
@@ -114,7 +114,7 @@ describe("content runtime CI config", () => {
       vi.stubEnv("CONTENT_RUNTIME_CACHE_KEY", "short");
 
       expect(yield* withStubbedEnv(program.pipe(Effect.flip))).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message: "Signed content cache key is missing or too short.",
       });
     })
@@ -156,7 +156,7 @@ describe("content runtime CI config", () => {
       expect(
         yield* withStubbedEnv(readProductionSelectionConfig.pipe(Effect.flip))
       ).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message: "CONTENT_RUNTIME_SELECTION_HASH must be a SHA-256 hash.",
       });
     })

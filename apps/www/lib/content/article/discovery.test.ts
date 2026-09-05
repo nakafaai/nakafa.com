@@ -2,14 +2,24 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
+import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
+import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
 import { Effect } from "effect";
 import {
   readPublishedArticleBucket,
   readPublishedCategoryArticles,
   readPublishedLatestArticles,
 } from "@/lib/content/article/discovery";
+import { makeArticleRuntimeSource } from "@/test/content/article";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const runtimeReadMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
 const localeCases = [
   {
@@ -32,12 +42,9 @@ const localeCases = [
   },
 ] as const;
 
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeReadMock,
+}));
 
 /** Builds one source-owned locale summary returned by Convex discovery. */
 function articleSummary(selected: (typeof localeCases)[number]) {
@@ -62,8 +69,41 @@ function articleSummary(selected: (typeof localeCases)[number]) {
 }
 
 describe("published article discovery", () => {
+  it.effect(
+    "discovers localized metadata through authenticated category and bucket reads",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeArticleRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const projection = testLocalizedArticleProjection(1, "de");
+        const bucket = getHashBucket(hashContentProjection(projection));
+
+        expect(yield* readPublishedArticleBucket("de", bucket)).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          articles: expect.arrayContaining([
+            expect.objectContaining({ publicPath: projection.publicPath }),
+          ]),
+        });
+        for (const result of [
+          yield* readPublishedLatestArticles("de", 1),
+          yield* readPublishedCategoryArticles("de", "politics", 1),
+        ]) {
+          expect(result).toMatchObject({
+            activeReleaseId: fixture.state.activeReleaseId,
+            articles: [
+              { publicPath: "articles/politik/artikel-2", title: "Article 2" },
+            ],
+          });
+        }
+      })
+  );
+
   beforeEach(() => {
     runtimeQueryMock.mockReset();
+    runtimeReadMock.mockImplementation(
+      createTestRuntimeQuery(runtimeQueryMock)
+    );
   });
 
   it.effect.each(localeCases)(

@@ -1,6 +1,8 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
@@ -27,6 +29,89 @@ import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 setupApiTest();
 
 describe("public agent content", () => {
+  it("rejects a signed Quran reference with a noncanonical surah route", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const search = makeQuranSearch("en", 1);
+    await test.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        { ...search, route: PublicPathSchema.make("quran/01") },
+      ])
+    );
+    const response = await fetchApi(
+      test,
+      `/content?ref=${encodeURIComponent(search.graph.assetId)}`
+    );
+    await expectProblem(response, { code: "SERVICE_UNAVAILABLE", status: 503 });
+  });
+
+  it.each([
+    {
+      metadata: {
+        description: "Exact authored description.",
+        subject: "Broader subject",
+      },
+      expected: "Exact authored description.",
+    },
+    {
+      metadata: { subject: "Exact authored subject" },
+      expected: "Exact authored subject",
+    },
+  ])(
+    "preserves optional authored description semantics: %j",
+    async ({ metadata, expected }) => {
+      const test = createConvexTestWithBetterAuth();
+      const source = makeMaterialProjection("en", 1);
+      const material = MaterialLessonProjectionSchema.make({
+        ...source,
+        metadata: { ...source.metadata, ...metadata },
+      });
+      await activateMaterialCatalog(test, [material], ["en"]);
+      const response = await fetchApi(
+        test,
+        `/content?ref=${encodeURIComponent(material.graph.assetId)}`
+      );
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({ description: expected });
+    }
+  );
+
+  it("renders a signed opening Bismillah once before the first verse", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const bismillah = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
+    await test.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
+        makeQuranSurah(1),
+        makeQuranSurah(2),
+        makeQuranChunk({
+          arabicText: bismillah,
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 1,
+        }),
+        makeQuranChunk({
+          arabicText: `${bismillah} آية 1`,
+          firstQuranNumber: 2,
+          firstVerse: 1,
+          surahNumber: 2,
+          verseCount: 1,
+        }),
+        makeQuranSearch("en", 2),
+      ])
+    );
+    const response = await fetchApi(
+      test,
+      "/content?ref=https%3A%2F%2Fnakafa.com%2Fen%2Fquran%2F2"
+    );
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.text).toContain(
+      `## Verses\n\n${bismillah}\n\nTranslation: Technical translation 1\n\n### Verse 1\n\nآية 1`
+    );
+    expect(body.text.split(bismillah)).toHaveLength(2);
+  });
+
   it("reads authenticated article markdown through its canonical URL", async () => {
     const test = createConvexTestWithBetterAuth();
     const article = testArticleProjection(0);

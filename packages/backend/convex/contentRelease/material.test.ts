@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
@@ -12,7 +12,7 @@ import {
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const publication = api.contentRelease.material.publication;
 const publications = api.contentRelease.material.publications;
@@ -21,6 +21,157 @@ const decodeProjection = Schema.decodeUnknownSync(
 );
 
 describe("contentRelease/material", () => {
+  it.effect(
+    "returns the exact material identity and date through discovery and sitemap queries",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const source = makeMaterialProjection("en", 1);
+        const dateModified = "2026-08-01";
+        yield* Effect.promise(() =>
+          activateMaterialCatalog(t, [
+            {
+              ...source,
+              metadata: { ...source.metadata, dateModified },
+            },
+          ])
+        );
+        const material = api.contentRelease.material;
+        const identity = yield* Effect.promise(() =>
+          t.query(material.identity, {
+            appLocale: "en",
+            contentKey: source.contentKey,
+            expectedMaterialKey: source.materialKey,
+            expectedSectionKey: source.sectionKey,
+          })
+        );
+        expect(identity).toMatchObject({
+          managed: true,
+          publicPath: source.publicPath,
+        });
+        const latest = yield* Effect.promise(() =>
+          t.query(material.latest, { appLocale: "en", limit: 1 })
+        );
+        expect(latest.materials).toMatchObject([
+          { dateModified, publicPath: source.publicPath },
+        ]);
+        const buckets = yield* Effect.promise(() =>
+          t.query(material.sitemapBuckets, { appLocale: "en" })
+        );
+        const results = yield* Effect.promise(() =>
+          Promise.all(
+            buckets.buckets.map(async (bucket) => ({
+              bucket: await t.query(material.bucket, {
+                appLocale: "en",
+                bucket,
+              }),
+              sitemap: await t.query(material.sitemapPage, {
+                appLocale: "en",
+                bucket,
+              }),
+            }))
+          )
+        );
+        expect(
+          results.flatMap(({ bucket }) => bucket.materials ?? [])
+        ).toMatchObject([{ dateModified, publicPath: source.publicPath }]);
+        expect(results.flatMap(({ sitemap }) => sitemap?.routes ?? [])).toEqual(
+          [{ lastModified: dateModified, publicPath: source.publicPath }]
+        );
+      })
+  );
+
+  it.effect(
+    "preserves bounded split positions and empty material continuations",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateMaterialCatalog(t));
+        const first = yield* Effect.promise(() =>
+          t.query(publications, {
+            appLocale: "en",
+            expectedManifestHash: null,
+            expectedReleaseId: null,
+            paginationOpts: { cursor: null, numItems: 2, maximumRowsRead: 2 },
+          })
+        );
+        expect(first.result).toMatchObject({
+          pageStatus: "SplitRequired",
+          splitCursor: expect.any(String),
+        });
+        assert("splitCursor" in first.result && first.result.splitCursor);
+        const splitCursor = first.result.splitCursor;
+        const identity = {
+          appLocale: "en" as const,
+          expectedManifestHash: first.activeManifestHash,
+          expectedReleaseId: first.activeReleaseId,
+        };
+        const complete = yield* Effect.promise(() =>
+          t.query(publications, {
+            ...identity,
+            paginationOpts: {
+              cursor: first.result.continueCursor,
+              numItems: 2,
+            },
+          })
+        );
+        expect(complete.result).toMatchObject({
+          continueCursor: first.result.continueCursor,
+          page: [],
+          isDone: true,
+        });
+        const split = yield* Effect.promise(() =>
+          t.query(publications, {
+            ...identity,
+            paginationOpts: {
+              cursor: splitCursor,
+              numItems: 2,
+            },
+          })
+        );
+        expect(split.result.page).toEqual(first.result.page.slice(1));
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            for (const row of await ctx.db.query("materialCatalog").collect()) {
+              await ctx.db.delete("materialCatalog", row._id);
+            }
+          })
+        );
+        const empty = yield* Effect.promise(() =>
+          t.query(publications, {
+            appLocale: "en",
+            expectedManifestHash: null,
+            expectedReleaseId: null,
+            paginationOpts: { cursor: null, numItems: 2 },
+          })
+        );
+        expect(empty.result).toMatchObject({ page: [], isDone: true });
+      })
+  );
+
+  it.effect(
+    "restarts an obsolete material cursor before the first publication",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const result = yield* Effect.promise(() =>
+          t.query(publications, {
+            appLocale: "en",
+            expectedManifestHash: "old",
+            expectedReleaseId: "old",
+            paginationOpts: { cursor: "old-page", numItems: 2 },
+          })
+        );
+        expect(result).toMatchObject({
+          activeManifestHash: null,
+          activeReleaseId: null,
+          managed: false,
+          sourceRevision: null,
+          stale: true,
+        });
+      })
+  );
+
   it("fails closed before current signed ownership is available", async () => {
     const t = convexTest(schema, convexModules);
 

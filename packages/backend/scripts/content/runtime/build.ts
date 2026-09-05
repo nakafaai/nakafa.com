@@ -2,23 +2,28 @@ import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   isProtectedProduction,
 } from "@repo/backend/content/deployment";
+import {
+  CONTENT_RUNTIME_CACHE_DIRECTORY,
+  CONTENT_RUNTIME_CACHE_FILE,
+} from "@repo/backend/content/snapshot/codec";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
+import { encodeServingSnapshot } from "@repo/backend/content/snapshot/file";
+import { verifyRuntimeSelection } from "@repo/backend/content/snapshot/selection";
+import {
+  CONTENT_SERVING_DATA_FILE,
+  CONTENT_SERVING_DESCRIPTOR_FILE,
+} from "@repo/backend/content/snapshot/spec";
+import { readContentRuntimeSchemaFingerprint } from "@repo/backend/content/snapshot/tables";
 import { runRuntimeCommand } from "@repo/backend/scripts/content/runtime/ci/command";
 import {
   readExportConfig,
   readImportConfig,
   readProductionConfig,
 } from "@repo/backend/scripts/content/runtime/ci/config";
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import { exportSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/export";
-import {
-  readProductionGenerations,
-  verifyRuntimeSelection,
-} from "@repo/backend/scripts/content/runtime/ci/generation";
-import { importSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/import";
-import {
-  CONTENT_RUNTIME_CACHE_DIRECTORY,
-  CONTENT_RUNTIME_CACHE_FILE,
-} from "@repo/backend/scripts/content/runtime/ci/snapshot";
+import { readProductionGenerations } from "@repo/backend/scripts/content/runtime/ci/generation";
+import { importRuntimeTables } from "@repo/backend/scripts/content/runtime/ci/import";
+import { readSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/read";
 import {
   initializeLocalRuntime,
   LOCAL_RUNTIME_TOKEN,
@@ -32,7 +37,6 @@ import {
   runBuildCommand,
   withLocalBackend,
 } from "@repo/backend/scripts/content/runtime/process";
-import { readContentRuntimeSchemaFingerprint } from "@repo/backend/scripts/content/runtime/tables";
 import {
   ConfigProvider,
   Effect,
@@ -54,13 +58,19 @@ const compileApplication = Effect.fn("contentRuntime.compileApplication")(
   ) {
     yield* runBuildCommand(
       root,
-      ["--filter", "www", "verify:featured-renderer"],
+      ["pnpm", "--filter", "www", "verify:featured-renderer"],
       local
     );
-    yield* runBuildCommand(root, ["--filter", "www", "typecheck"], app);
+    yield* runBuildCommand(root, ["pnpm", "--filter", "www", "typecheck"], app);
     yield* runBuildCommand(
       root,
-      ["exec", "turbo", "run", "build", ...args],
+      [
+        process.execPath,
+        `${root}/node_modules/turbo/bin/turbo`,
+        "run",
+        "build",
+        ...args,
+      ],
       app
     );
   }
@@ -92,7 +102,7 @@ export const assertBuildHost = Effect.fn("contentRuntime.assertBuildHost")(
       env.VITE_CONVEX_SITE_URL !==
         `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.site`
     ) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         "Snapshot builds require the protected Vercel identity and Convex deploy --cmd production URLs."
       );
     }
@@ -161,8 +171,8 @@ export const buildApplication = Effect.fn("contentRuntime.buildApplication")(
       }
       if (env.CONTENT_RUNTIME_BUILD !== "local-static") {
         return yield* runBuildCommand(root, [
-          "exec",
-          "turbo",
+          process.execPath,
+          `${root}/node_modules/turbo/bin/turbo`,
           "run",
           "build",
           ...args,
@@ -170,7 +180,7 @@ export const buildApplication = Effect.fn("contentRuntime.buildApplication")(
       }
     }
     if (vercel && env.CONTENT_RUNTIME_SNAPSHOT) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         "Protected Vercel builds must select the current production snapshot."
       );
     }
@@ -237,38 +247,59 @@ export const buildApplication = Effect.fn("contentRuntime.buildApplication")(
         yield* acquireSnapshot(config);
         return { config, verify };
       });
+      const tables = yield* readSignedRuntime(source.config);
+      const serving = `${directory}/serving`;
+      yield* fs.makeDirectory(serving, { mode: 0o700 });
+      const encoded = yield* encodeServingSnapshot(tables, source.config);
+      yield* fs.writeFileString(
+        `${serving}/${CONTENT_SERVING_DATA_FILE}`,
+        encoded.data,
+        { mode: 0o600 }
+      );
+      const descriptor = `${serving}/${CONTENT_SERVING_DESCRIPTOR_FILE}`;
+      yield* fs.writeFileString(descriptor, encoded.descriptor, {
+        mode: 0o600,
+      });
+      const build = Effect.fn("contentRuntime.buildSnapshot")(function* (
+        target: BuildEnvironment
+      ) {
+        const app = {
+          ...target,
+          CONTENT_BUILD_SNAPSHOT: descriptor,
+          CONTENT_RUNTIME_SELECTION_HASH: source.config.runtimeSelectionHash,
+          CONTENT_RUNTIME_SCHEMA_HASH: source.config.runtimeSchemaFingerprint,
+        };
+        if (operation === "build") {
+          yield* compileApplication(root, args, app, app);
+        }
+        yield* source.verify;
+        if (env.GITHUB_OUTPUT) {
+          yield* fs.writeFileString(
+            env.GITHUB_OUTPUT,
+            `CONTENT_RUNTIME_SELECTION_HASH=${source.config.runtimeSelectionHash}\n`,
+            { flag: "a" }
+          );
+        }
+        yield* fs.remove(serving, { recursive: true });
+        yield* fs.remove(`${directory}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`, {
+          recursive: true,
+        });
+      });
+      if (vercel) {
+        return yield* build({
+          CONVEX_AGENT_MODE: undefined,
+          CONTENT_RUNTIME_TOKEN: LOCAL_RUNTIME_TOKEN,
+          NEXT_PUBLIC_CONVEX_URL: env.NEXT_PUBLIC_CONVEX_URL,
+          NEXT_PUBLIC_CONVEX_SITE_URL: env.VITE_CONVEX_SITE_URL,
+          TURBO_CONCURRENCY: env.TURBO_CONCURRENCY ?? "2",
+        });
+      }
       const runtime = yield* initializeLocalRuntime(root, source.config);
       return yield* withLocalBackend(
         runtime,
         Effect.gen(function* () {
-          yield* importSignedRuntime(source.config, runtime.backend);
-          const local = localApplicationEnvironment(runtime);
-          const appEnvironment = vercel
-            ? {
-                CONTENT_BUILD_SITE_URL: runtime.site,
-                CONTENT_BUILD_URL: runtime.query,
-                CONVEX_AGENT_MODE: undefined,
-                CONTENT_RUNTIME_TOKEN: LOCAL_RUNTIME_TOKEN,
-                NEXT_PUBLIC_CONVEX_URL: env.NEXT_PUBLIC_CONVEX_URL,
-                NEXT_PUBLIC_CONVEX_SITE_URL: env.VITE_CONVEX_SITE_URL,
-                TURBO_CONCURRENCY: env.TURBO_CONCURRENCY ?? "2",
-              }
-            : local;
-          if (operation === "build") {
-            yield* compileApplication(root, args, appEnvironment, local);
-          }
-          yield* source.verify;
-          if (env.GITHUB_OUTPUT) {
-            yield* fs.writeFileString(
-              env.GITHUB_OUTPUT,
-              `CONTENT_RUNTIME_SELECTION_HASH=${source.config.runtimeSelectionHash}\n`,
-              { flag: "a" }
-            );
-          }
-          // The database remains for root start; the acquired ciphertext does not.
-          yield* fs.remove(`${directory}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`, {
-            recursive: true,
-          });
+          yield* importRuntimeTables(source.config, tables, runtime.backend);
+          yield* build(localApplicationEnvironment(runtime));
         })
       );
     }).pipe(
@@ -288,8 +319,8 @@ export const startApplication = Effect.fn("contentRuntime.startApplication")(
     const runtime = yield* readLocalRuntime(root);
     if (!runtime) {
       return yield* runBuildCommand(root, [
-        "exec",
-        "turbo",
+        process.execPath,
+        `${root}/node_modules/turbo/bin/turbo`,
         "run",
         "start",
         ...args,
@@ -300,7 +331,13 @@ export const startApplication = Effect.fn("contentRuntime.startApplication")(
       runtime,
       runBuildCommand(
         root,
-        ["exec", "turbo", "run", "start", ...args],
+        [
+          process.execPath,
+          `${root}/node_modules/turbo/bin/turbo`,
+          "run",
+          "start",
+          ...args,
+        ],
         localApplicationEnvironment(runtime)
       )
     );

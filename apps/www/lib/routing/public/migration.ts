@@ -1,4 +1,5 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
+import { readMaterialIdentity } from "@repo/backend/content/material/identity";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Option, Schema } from "effect";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
@@ -175,7 +176,8 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
 
   const redirect = yield* readRuntimeQuery(
     api.contentRelease.material.identity,
-    identity.value
+    identity.value,
+    (queryArgs) => readMaterialIdentity(queryArgs)
   );
   if (!(redirect.activeReleaseId && redirect.managed && redirect.publicPath)) {
     return null;

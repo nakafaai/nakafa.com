@@ -23,15 +23,23 @@ import type { ProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/ru
 import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/protected/verify";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import {
+  ContentRuntimeFailureError,
   ContentRuntimeMissingError,
+  ContentRuntimeVerificationError,
   ContentTransportError,
 } from "@repo/backend/client/content/errors";
-import { readProtectedContent } from "@repo/backend/client/content/protected";
+import {
+  readProtectedContent,
+  readSnapshotProtectedContent,
+} from "@repo/backend/client/content/protected";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PROTECTED_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
@@ -40,6 +48,7 @@ import {
   testSignedTryoutRuntimeBundle,
 } from "@repo/backend/test/content/proof";
 import { testPublicationScope } from "@repo/backend/test/content/release";
+import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { Effect } from "effect";
 
 const endpoint = `https://example.convex.site${PROTECTED_CONTENT_RUNTIME_PATH}`;
@@ -110,6 +119,12 @@ const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const verifyMock = vi.hoisted(() => vi.fn());
 
 vi.mock("server-only", () => ({}));
+vi.mock("@repo/backend/content/trust", async () => {
+  const { TEST_KEY_RESOLVER } = await import(
+    "@repo/backend/test/content/proof"
+  );
+  return { contentKeyResolver: TEST_KEY_RESOLVER };
+});
 vi.mock("@nakafa/aksara-contracts/runtime/protected/verify", () => ({
   verifyProtectedContentRuntimeExchange: verifyMock,
 }));
@@ -143,6 +158,107 @@ afterEach(() => {
 });
 
 describe("protected content runtime client", () => {
+  it("authenticates retained question and answer bytes without an HTTP request", async () => {
+    const verifier = await vi.importActual<
+      typeof import("@nakafa/aksara-contracts/runtime/protected/verify")
+    >("@nakafa/aksara-contracts/runtime/protected/verify");
+    verifyMock.mockImplementation(
+      verifier.verifyProtectedContentRuntimeExchange
+    );
+    const t = createConvexTestWithBetterAuth();
+    const fixture = await t.mutation(insertProtectedRuntime);
+    const result = await t.query((ctx) =>
+      runConvexProgram(
+        readSnapshotProtectedContent(fixture.request, TEST_PROOF_RENDERER).pipe(
+          Effect.provide(convexTryoutLayer(ctx)),
+          Effect.orDie
+        )
+      )
+    );
+    expect(result.items.map((item) => item.artifact.payload.rawMdx)).toEqual([
+      "## Technical question",
+      "#### Technical answer",
+    ]);
+    expect(result.bundle.bundleHash).toBe(fixture.request.bundleHash);
+    const missingRequest = {
+      ...fixture.request,
+      bundleHash: Sha256HashSchema.make(`sha256:${"f".repeat(64)}`),
+    };
+    await t.query((ctx) =>
+      runConvexProgram(
+        readSnapshotProtectedContent(missingRequest, TEST_PROOF_RENDERER).pipe(
+          Effect.provide(convexTryoutLayer(ctx)),
+          Effect.flip,
+          Effect.map((missing) => {
+            expect(missing).toEqual(
+              new ContentRuntimeMissingError({ request: missingRequest })
+            );
+            return null;
+          }),
+          Effect.orDie
+        )
+      )
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid requests before either transport reads content", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.query((ctx) =>
+      runConvexProgram(
+        Effect.gen(function* () {
+          const native = yield* readProtectedContent(
+            target,
+            {},
+            TEST_PROOF_RENDERER
+          ).pipe(Effect.flip);
+          const snapshot = yield* readSnapshotProtectedContent(
+            {},
+            TEST_PROOF_RENDERER
+          ).pipe(Effect.flip);
+          expect(native).toEqual(
+            new ContentTransportError({ reason: "request" })
+          );
+          expect(snapshot).toEqual(native);
+          expect(fetchMock).not.toHaveBeenCalled();
+        }).pipe(Effect.provide(convexTryoutLayer(ctx)), Effect.orDie)
+      )
+    );
+  });
+
+  it.effect(
+    "preserves runtime failures and cryptographic verification failures",
+    () =>
+      Effect.gen(function* () {
+        const failure = { kind: "failure", code: "CONTENT_RUNTIME_INTERNAL" };
+        fetchMock.mockResolvedValueOnce(createResponse(failure, 500));
+        expect(
+          yield* readProtectedContent(
+            target,
+            request,
+            TEST_PROOF_RENDERER
+          ).pipe(Effect.flip)
+        ).toEqual(
+          new ContentRuntimeFailureError({
+            code: "CONTENT_RUNTIME_INTERNAL",
+            status: 500,
+          })
+        );
+        const cause = new ContentTransportError({
+          reason: "response-contract",
+        });
+        verifyMock.mockImplementationOnce(() => Effect.fail(cause));
+        fetchMock.mockResolvedValueOnce(createResponse(found, 200));
+        expect(
+          yield* readProtectedContent(
+            target,
+            request,
+            TEST_PROOF_RENDERER
+          ).pipe(Effect.flip)
+        ).toEqual(new ContentRuntimeVerificationError({ cause }));
+      })
+  );
+
   it.effect("posts and verifies one retained-snapshot batch", () =>
     Effect.gen(function* () {
       fetchMock.mockResolvedValue(createResponse(found, 200, false));

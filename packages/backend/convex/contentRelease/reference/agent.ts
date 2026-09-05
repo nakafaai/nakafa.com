@@ -1,15 +1,19 @@
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { convexArticleLayer } from "@repo/backend/content/article/convex";
+import { convexMaterialLayer } from "@repo/backend/content/material/convex";
+import { convexQuranLayer } from "@repo/backend/content/quran/convex";
 import {
   quranMarkdownValidator,
   readQuranMarkdown,
-} from "@repo/backend/convex/contentRelease/quran/markdown";
-import { readContentReference } from "@repo/backend/convex/contentRelease/reference/read";
+} from "@repo/backend/content/quran/markdown";
+import { readContentReference } from "@repo/backend/content/reference/read";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
 import { contentSearchSummaryValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { v } from "convex/values";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Layer, Option, Schema } from "effect";
 
 /** One transactionally consistent source for an agent focused read. */
 export const agentContentSourceValidator = v.union(
@@ -30,7 +34,16 @@ export const agentContentSourceValidator = v.union(
 export const readAgentContentSource = Effect.fn(
   "contentRelease.readAgentContentSource"
 )(function* (ctx: QueryCtx, input: ContentReferenceInput) {
-  const reference = yield* readContentReference(ctx, input);
+  const reference = yield* readContentReference(input).pipe(
+    Effect.provide(
+      Layer.mergeAll(
+        convexArticleLayer(ctx),
+        convexMaterialLayer(ctx),
+        convexQuranLayer(ctx),
+        convexTryoutLayer(ctx)
+      )
+    )
+  );
   if (reference === null) {
     return null;
   }
@@ -38,7 +51,9 @@ export const readAgentContentSource = Effect.fn(
     return { kind: "reference" as const, reference };
   }
   const surahNumber = yield* parseQuranRoute(reference.route);
-  const markdown = yield* readQuranMarkdown(ctx, reference.locale, surahNumber);
+  const markdown = yield* readQuranMarkdown(reference.locale, surahNumber).pipe(
+    Effect.provide(convexQuranLayer(ctx))
+  );
   return { kind: "quran" as const, markdown, reference, surahNumber };
 });
 

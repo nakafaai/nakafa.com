@@ -1,11 +1,12 @@
 import type { LearningProgram } from "@nakafa/aksara-contracts/program/spec";
+import { readVerifiedProgramCatalog } from "@repo/backend/content/program/catalog";
+import { convexProgramLayer } from "@repo/backend/content/program/convex";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readVerifiedProgramCatalog } from "@repo/backend/convex/contentRelease/program/catalog";
 import {
   readLearningPreferenceByUserId,
   setPreferredCurriculumProgram,
@@ -47,7 +48,9 @@ function toPreferenceIoError() {
 /** Reads the complete program catalog from the signed active snapshot. */
 const listSignedPrograms = Effect.fn("learningPreferences.listSignedPrograms")(
   function* (ctx: ProgramCtx, locale: Locale) {
-    const catalog = yield* readVerifiedProgramCatalog(ctx, locale);
+    const catalog = yield* readVerifiedProgramCatalog(locale).pipe(
+      Effect.provide(convexProgramLayer(ctx))
+    );
     if (!catalog.managed) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",

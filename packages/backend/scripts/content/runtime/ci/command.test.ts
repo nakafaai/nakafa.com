@@ -9,10 +9,15 @@ import {
   runRuntimeCommand,
   setConvexAdminAuth,
 } from "@repo/backend/scripts/content/runtime/ci/command";
-import { sanitizeRuntimeCommandError } from "@repo/backend/scripts/content/runtime/ci/error";
+import {
+  productionRuntimeReadError,
+  sanitizeRuntimeCommandError,
+} from "@repo/backend/scripts/content/runtime/ci/error";
 import { ConvexHttpClient } from "convex/browser";
 import { makeFunctionReference } from "convex/server";
 import { Effect, FileSystem } from "effect";
+
+const REDACTED_PERMISSION_FAILURE = /Permission denied \[redacted\]$/u;
 
 describe("content runtime command diagnostics", () => {
   afterEach(() => {
@@ -61,23 +66,36 @@ describe("content runtime command diagnostics", () => {
       );
 
       expect(failure).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message: "Convex HTTP client does not expose admin authentication.",
       });
     })
   );
 
-  it("keeps a bounded single-line diagnostic and redacts secrets", () => {
+  it("preserves the final failure after download progress and redacts secrets", () => {
     const deployKey = "sensitive-deploy-key";
     const result = sanitizeRuntimeCommandError(
-      `\u001B[31mPermission denied\u001B[0m\n${deployKey}\n${"x".repeat(600)}`,
-      [deployKey]
+      `${"Downloading backend binary\n".repeat(100)}\u001B[31mPermission denied\u001B[0m\n${deployKey}`,
+      ["", deployKey]
     );
 
-    expect(result).toContain("Permission denied [redacted]");
+    expect(result).toMatch(REDACTED_PERMISSION_FAILURE);
     expect(result).not.toContain(deployKey);
     expect(result).not.toContain("\n");
-    expect(result.length).toBe(500);
+    expect(result.length).toBe(2000);
+  });
+
+  it("preserves useful diagnostics when a query rejects a non-Error value", () => {
+    expect(productionRuntimeReadError("contentKeys", "", [])).toMatchObject({
+      _tag: "ContentSnapshotError",
+      message: "Production read for contentKeys failed.",
+    });
+    expect(
+      productionRuntimeReadError("contentKeys", "denied secret", ["secret"])
+    ).toMatchObject({
+      _tag: "ContentSnapshotError",
+      message: "Production read for contentKeys failed: denied [redacted]",
+    });
   });
 
   it("preserves the Convex role action required by the CLI", () => {
@@ -123,7 +141,7 @@ describe("content runtime command diagnostics", () => {
       ).pipe(Effect.provide(NodeServices.layer));
 
       expect(result.failure).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message: "Production probe failed: Permission denied for [redacted]",
       });
       expect(result.failure.message).not.toContain(sensitiveValue);
@@ -289,7 +307,7 @@ describe("content runtime command diagnostics", () => {
         expect(failures).toHaveLength(2);
         for (const failure of failures) {
           expect(failure).toMatchObject({
-            _tag: "ContentRuntimeCiError",
+            _tag: "ContentSnapshotError",
             message: "Generic failure probe failed.",
           });
         }

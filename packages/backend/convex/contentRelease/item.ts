@@ -5,8 +5,10 @@ import {
   RollbackSnapshotEntrySchema,
   type RollbackSnapshotState,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { contentHead } from "@repo/backend/content/publication/projection";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { resolveContentHead } from "@repo/backend/convex/contentRelease/catalog";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
@@ -61,32 +63,18 @@ const rollbackEvidence = Effect.fn("contentRelease.rollbackEvidence")(
   function* (
     ctx: MutationCtx,
     item: ContentReleaseItem,
+    prior: Doc<"contentHeads"> | null,
     sequence: number | undefined
   ) {
     if (sequence === undefined) {
       return absentRollback(item, undefined);
     }
-    const prior = yield* loadVersion(
-      ctx,
-      item.change.contentKey,
-      item.change.artifactLocale,
-      sequence
-    );
     if (!prior || prior.operation === "delete") {
       return absentRollback(item, prior?.sequence);
     }
-    const head = yield* resolveContentHead(
-      ctx,
-      item.change.contentKey,
-      item.change.artifactLocale,
-      sequence
+    const head = yield* contentHead(prior, sequence).pipe(
+      Effect.provide(convexPublicationLayer(ctx))
     );
-    if (!head) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Prior content ${item.change.contentKey}/${item.change.artifactLocale} is not recoverable.`
-      );
-    }
     const entry = RollbackSnapshotEntrySchema.make({
       index: item.index,
       releaseId: item.releaseId,
@@ -187,7 +175,7 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
       );
     }
     yield* ensureContentKey(ctx, item, sequence);
-    const rollback = yield* rollbackEvidence(ctx, item, priorSequence);
+    const rollback = yield* rollbackEvidence(ctx, item, prior, priorSequence);
     const row = {
       artifactHash:
         item.change.operation === "upsert"

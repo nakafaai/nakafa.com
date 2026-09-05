@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import en from "@repo/internationalization/dictionaries/en.json";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";

@@ -5,11 +5,11 @@ import {
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
+import type { readArticleBuckets } from "@repo/backend/content/article/sitemap";
+import type { readMaterialBuckets } from "@repo/backend/content/material/sitemap";
+import type { readQuranSurahs } from "@repo/backend/content/quran/catalog";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { readAgentArticleTaxonomy } from "@repo/backend/convex/contentRelease/article/agent";
-import type { readArticleBuckets } from "@repo/backend/convex/contentRelease/article/sitemap";
-import type { readMaterialBuckets } from "@repo/backend/convex/contentRelease/material/sitemap";
-import type { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
 import type { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
 import {
   NAKAFA_AGENT_SECTIONS,
@@ -129,15 +129,19 @@ const readInventories = Effect.fn("agent.readInventories")(function* (
   ctx: ActionCtx,
   selectedLocale: Locale
 ) {
-  const inventories = yield* Effect.forEach(
-    ACTIVE_APP_LOCALE_CODES,
-    (locale) => readLocaleInventory(ctx, locale),
-    { concurrency: ACTIVE_APP_LOCALE_CODES.length }
+  const [selected, remaining] = yield* Effect.all([
+    readLocaleInventory(ctx, selectedLocale),
+    Effect.forEach(
+      ACTIVE_APP_LOCALE_CODES.filter((locale) => locale !== selectedLocale),
+      (locale) => readLocaleInventory(ctx, locale),
+      { concurrency: ACTIVE_APP_LOCALE_CODES.length }
+    ),
+  ]);
+  const inventories = [selected, ...remaining].sort(
+    (left, right) =>
+      ACTIVE_APP_LOCALE_CODES.indexOf(left.locale) -
+      ACTIVE_APP_LOCALE_CODES.indexOf(right.locale)
   );
-  const selected = inventories.find(({ locale }) => locale === selectedLocale);
-  if (!selected) {
-    return yield* missingInventory("selected locale", selectedLocale);
-  }
   return {
     contentCounts: inventories.map(({ count, locale }) => ({ count, locale })),
     tryout: selected.tryout,

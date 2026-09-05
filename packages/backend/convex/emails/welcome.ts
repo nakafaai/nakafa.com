@@ -6,6 +6,8 @@ import {
   type PublicPageProjection,
 } from "@nakafa/aksara-contracts/projection/page";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { readPageCatalog } from "@repo/backend/content/publication/page";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   internalQuery,
@@ -14,7 +16,6 @@ import {
 } from "@repo/backend/convex/_generated/server";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readPageCatalog } from "@repo/backend/convex/contentRelease/page/catalog";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import { resend } from "@repo/backend/convex/emails/client";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -111,7 +112,9 @@ const readWelcomeEmailInputProgram = Effect.fn("emails.welcome.readInput")(
       return null;
     }
 
-    const catalog = yield* readPageCatalog(ctx);
+    const catalog = yield* readPageCatalog().pipe(
+      Effect.provide(convexPublicationLayer(ctx))
+    );
     const links = yield* resolveWelcomeEmailLinks(catalog, canonicalSiteUrl);
     return {
       email: user.email,

@@ -14,6 +14,8 @@ import {
   getPublishedMaterialContext,
   readPublishedMaterialContext,
 } from "@/lib/content/material/context";
+import { makeProgramContextRuntimeSource } from "@/test/content/program-context";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { previewProjection } from "@/test/content-preview";
 import {
   testCurriculumRowJson,
@@ -21,6 +23,7 @@ import {
   testProgramGroups,
   testProgramSubject,
 } from "@/test/content-program";
+import { createTestSnapshotQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -55,6 +58,32 @@ beforeEach(() => {
 });
 
 describe("published material context", () => {
+  it.effect(
+    "resolves signed curriculum context and preserves a missing optional hint",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeProgramContextRuntimeSource();
+        const snapshot = yield* createTestSnapshotContext(fixture.source);
+        runtimeQueryMock.mockImplementation(createTestSnapshotQuery(snapshot));
+
+        expect(
+          yield* readPublishedMaterialContext("en", previewProjection, context)
+        ).toMatchObject({
+          context,
+          group,
+          label: "Function Composition and Inverses",
+          mapping,
+          parent: testProgramSubject,
+        });
+        expect(
+          yield* readPublishedMaterialContext("en", previewProjection, {
+            ...context,
+            nodeKey: `${context.nodeKey}-missing`,
+          })
+        ).toBeNull();
+      })
+  );
+
   it.effect("builds a return link from verified curriculum rows", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
@@ -148,7 +177,8 @@ describe("published material context", () => {
         expect.objectContaining({
           contentKey: previewProjection.contentKey,
           expectedActiveReleaseId: activeReleaseId,
-        })
+        }),
+        expect.any(Function)
       );
     })
   );
@@ -216,6 +246,10 @@ describe("published material context", () => {
   );
 
   it.effect.each([
+    [
+      "missing resolved canonical path",
+      { ...publishedContext, resolvedCanonicalPath: null },
+    ],
     [
       "partial rows",
       {

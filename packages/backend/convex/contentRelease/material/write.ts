@@ -2,10 +2,10 @@ import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
+import type { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
-import type { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import {
   ensureDocumentSize,
@@ -17,8 +17,19 @@ import { deriveMaterialTopicReference } from "@repo/backend/convex/contentReleas
 import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import { Effect } from "effect";
 
-type PublicProjection = NonNullable<
-  Effect.Success<ReturnType<typeof resolvePublicProjection>>
+type PublicProjection = Pick<
+  NonNullable<Effect.Success<ReturnType<typeof resolvePublicProjection>>>,
+  | "appLocale"
+  | "artifactLocale"
+  | "contentKey"
+  | "family"
+  | "projectionHash"
+  | "projectionJson"
+  | "publicPath"
+  | "releaseId"
+  | "rendererDomain"
+  | "sequence"
+  | "sourcePath"
 >;
 type AppLocale = Doc<"materialCatalog">["appLocale"];
 /** Loads the sole active material row for one localized content identity. */
@@ -78,12 +89,6 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
       );
     }
     const bucket = getHashBucket(projectionHash);
-    if (!bucket) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Material entry ${head.contentKey}/${head.appLocale} has an invalid projection hash.`
-      );
-    }
     const topic = yield* deriveMaterialTopicReference(projection);
     const row = {
       appLocale: head.appLocale,

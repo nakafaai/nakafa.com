@@ -1,14 +1,14 @@
 import { dirname } from "node:path";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { ExportConfig } from "@repo/backend/scripts/content/runtime/ci/config";
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
-import { exportSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/export";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
   CONTENT_RUNTIME_CACHE_FILE,
-} from "@repo/backend/scripts/content/runtime/ci/snapshot";
-import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
+} from "@repo/backend/content/snapshot/codec";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
+import { CONTENT_RUNTIME_TABLES } from "@repo/backend/content/snapshot/tables";
+import type { ExportConfig } from "@repo/backend/scripts/content/runtime/ci/config";
+import { exportSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/export";
 import {
   makeRuntimeSource,
   TEST_SNAPSHOT_SELECTION_HASH,
@@ -36,17 +36,18 @@ vi.mock(
   async (importOriginal) => ({
     ...(await importOriginal()),
     readProductionGenerations: mocks.readGenerations,
-    verifyRuntimeSelection: mocks.verifySelection,
   })
 );
 
-vi.mock(
-  "@repo/backend/scripts/content/runtime/tables",
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    readContentRuntimeSchemaFingerprint: mocks.readSchemaFingerprint,
-  })
-);
+vi.mock("@repo/backend/content/snapshot/selection", async (importOriginal) => ({
+  ...(await importOriginal()),
+  verifyRuntimeSelection: mocks.verifySelection,
+}));
+
+vi.mock("@repo/backend/content/snapshot/tables", async (importOriginal) => ({
+  ...(await importOriginal()),
+  readContentRuntimeSchemaFingerprint: mocks.readSchemaFingerprint,
+}));
 
 const runtimeSelectionHash = TEST_SNAPSHOT_SELECTION_HASH;
 const runtimeSchemaFingerprint = "2".repeat(64);
@@ -134,7 +135,7 @@ describe("signed runtime export", () => {
           .mockReturnValueOnce(Effect.void)
           .mockReturnValueOnce(Effect.void)
           .mockReturnValueOnce(
-            Effect.fail(contentRuntimeCiError("selection changed after export"))
+            Effect.fail(contentSnapshotError("selection changed after export"))
           );
         expect(
           yield* exportSignedRuntime(config(runnerTemp)).pipe(Effect.flip)
@@ -190,7 +191,7 @@ describe("signed runtime export", () => {
           prefix: "runtime-export-selection-",
         });
         mocks.verifySelection.mockReturnValueOnce(
-          Effect.fail(contentRuntimeCiError("selection changed"))
+          Effect.fail(contentSnapshotError("selection changed"))
         );
 
         expect(

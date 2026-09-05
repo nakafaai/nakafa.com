@@ -1,3 +1,5 @@
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
@@ -16,7 +18,6 @@ import {
   completedReceipt,
   stagedEvidence,
 } from "@repo/backend/convex/contentRelease/receipt";
-import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import {
   currentValidator,
   statusValidator,
@@ -93,7 +94,9 @@ const stagedBundle = Effect.fn("contentRelease.stagedBundle")(function* (
 /** Loads the completed active release and its optional permanent runtime pair. */
 const activePublication = Effect.fn("contentRelease.activePublication")(
   function* (ctx: QueryCtx) {
-    const active = yield* loadActiveIdentity(ctx);
+    const active = yield* loadActiveIdentity().pipe(
+      Effect.provide(convexPublicationLayer(ctx))
+    );
     if (!active) {
       return null;
     }

@@ -1,8 +1,8 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
 import {
   TryoutRuntimeError,
   tryRuntimePromise,

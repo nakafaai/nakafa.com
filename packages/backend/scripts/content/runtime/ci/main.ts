@@ -2,6 +2,16 @@ import { fileURLToPath } from "node:url";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
+  ContentSnapshotError,
+  contentSnapshotError,
+} from "@repo/backend/content/snapshot/error";
+import { verifyRuntimeSelection } from "@repo/backend/content/snapshot/selection";
+import {
+  CONTENT_RUNTIME_TABLES,
+  readContentRuntimeSchemaFingerprint,
+  validateContentRuntimeTableDefinitions,
+} from "@repo/backend/content/snapshot/tables";
+import {
   buildApplication,
   startApplication,
 } from "@repo/backend/scripts/content/runtime/build";
@@ -12,23 +22,14 @@ import {
   readProductionConfig,
   readProductionSelectionConfig,
 } from "@repo/backend/scripts/content/runtime/ci/config";
-import {
-  ContentRuntimeCiError,
-  contentRuntimeCiError,
-} from "@repo/backend/scripts/content/runtime/ci/error";
 import { exportSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/export";
 import {
   formatGenerationEnvironment,
   readProductionGenerations,
-  verifyRuntimeSelection,
 } from "@repo/backend/scripts/content/runtime/ci/generation";
-import { importSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/import";
+import { importRuntimeTables } from "@repo/backend/scripts/content/runtime/ci/import";
+import { readSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/read";
 import { cleanLocalRuntime } from "@repo/backend/scripts/content/runtime/local";
-import {
-  CONTENT_RUNTIME_TABLES,
-  readContentRuntimeSchemaFingerprint,
-  validateContentRuntimeTableDefinitions,
-} from "@repo/backend/scripts/content/runtime/tables";
 import { Config, ConfigProvider, Effect, FileSystem } from "effect";
 
 const INVALID_TABLE_NAME = /[^A-Za-z0-9_]/;
@@ -53,7 +54,7 @@ const writeFingerprintEnvironment = Effect.gen(function* () {
       (table) => table.length === 0 || INVALID_TABLE_NAME.test(table)
     )
   ) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "Signed runtime must contain safe table names."
     );
   }
@@ -122,11 +123,11 @@ const runMode = (mode: string | undefined) => {
       return Effect.gen(function* () {
         const config = yield* readImportConfig;
         yield* clearContentRuntimeSecrets;
-        yield* importSignedRuntime(config);
+        yield* importRuntimeTables(config, yield* readSignedRuntime(config));
       });
     default:
       return Effect.fail(
-        contentRuntimeCiError(
+        contentSnapshotError(
           "Usage: runtime:ci <build|prepare|start|clean|fingerprint|generations|verify-generations|export|import>"
         )
       );
@@ -136,7 +137,7 @@ const runMode = (mode: string | undefined) => {
 const reportFailure = (error: unknown) =>
   Effect.sync(() => {
     const message =
-      error instanceof ContentRuntimeCiError
+      error instanceof ContentSnapshotError
         ? error.message
         : "Content runtime CI failed.";
     process.stderr.write(`ERROR: ${message}\n`);
@@ -144,7 +145,7 @@ const reportFailure = (error: unknown) =>
 
 const validateTableRegistry = validateContentRuntimeTableDefinitions.pipe(
   Effect.mapError(() =>
-    contentRuntimeCiError(
+    contentSnapshotError(
       "Signed runtime table registry contains a duplicate name."
     )
   )

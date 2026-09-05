@@ -1,4 +1,6 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { validateArticleModel } from "@repo/backend/convex/contentRelease/article/validation";
@@ -6,12 +8,8 @@ import {
   deleteArticle,
   writeArticle,
 } from "@repo/backend/convex/contentRelease/article/write";
-import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadVersion } from "@repo/backend/convex/contentRelease/model";
 import { loadModelItems } from "@repo/backend/convex/contentRelease/models/items";
 import type { ModelBuildPage } from "@repo/backend/convex/contentRelease/models/spec";
-import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
 
 type ModelBuild = Doc<"contentModelBuilds">;
@@ -25,22 +23,14 @@ const resolveArticleChange = Effect.fn("contentRelease.resolveArticleChange")(
     activeSequence: number
   ) {
     const resolved = yield* resolvePublicProjection(
-      ctx,
       row.contentKey,
       row.artifactLocale,
       activeSequence
-    );
-    if (resolved?.family !== "article") {
+    ).pipe(Effect.provide(convexPublicationLayer(ctx)));
+    if (resolved?.projection.kind !== "article") {
       return null;
     }
-    const projection = yield* decodeProjectionJson(resolved.projectionJson);
-    if (projection.kind !== "article") {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Active article ${row.contentKey}/${row.artifactLocale} has a non-article projection.`
-      );
-    }
-    return { projection, resolved };
+    return { projection: resolved.projection, resolved };
   }
 );
 
@@ -60,25 +50,10 @@ const syncArticleItem = Effect.fn("contentRelease.syncArticleItem")(function* (
       row.artifactLocale
     );
   }
-  const head = yield* loadVersion(
-    ctx,
-    row.contentKey,
-    row.artifactLocale,
-    activeSequence
-  );
-  if (
-    head?.operation !== "upsert" ||
-    head.projectionJson !== change.resolved.projectionJson
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Active article head ${row.contentKey}/${row.artifactLocale} is incomplete.`
-    );
-  }
   yield* writeArticle(
     ctx,
     build.slots.articleTargetSlot,
-    head,
+    { ...change.resolved, delivery: "public", operation: "upsert" },
     change.projection
   );
 });

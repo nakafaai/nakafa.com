@@ -10,9 +10,9 @@ import {
   PublicContentRuntimeBatchResponseSchema,
   publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
+import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
+import type { PublicRuntimeRow } from "@repo/backend/content/publication/public";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { decodePublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
-import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
 import {
   encodeRuntimeResult,
   failureResult,

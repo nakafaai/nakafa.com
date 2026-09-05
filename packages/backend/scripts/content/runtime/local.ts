@@ -5,9 +5,9 @@ import {
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_MCP_EDGE_CONTRACT,
 } from "@repo/backend/agent/edge";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
+import type { SnapshotIdentity } from "@repo/backend/content/snapshot/spec";
 import { runRuntimeCommand } from "@repo/backend/scripts/content/runtime/ci/command";
-import type { SnapshotIdentity } from "@repo/backend/scripts/content/runtime/ci/config";
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import {
   assertLocalPortsFree,
   localConvexEnvironment,
@@ -66,8 +66,7 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
   return {
     ...localConvexEnvironment,
     AKSARA_PUBLICATION_TOKEN: localEnvironment.AKSARA_PUBLICATION_TOKEN,
-    CONTENT_BUILD_SITE_URL: undefined,
-    CONTENT_BUILD_URL: undefined,
+    CONTENT_BUILD_SNAPSHOT: undefined,
     CONTENT_RUNTIME_TOKEN: LOCAL_RUNTIME_TOKEN,
     CONVEX_AGENT_MODE: "anonymous",
     CONVEX_SITE_URL: runtime.site,
@@ -91,7 +90,7 @@ const directoryIdentity = Effect.fn("contentRuntime.directoryIdentity")(
       Option.isNone(info.ino) ||
       (yield* fs.realPath(directory)) !== directory
     ) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         "The local runtime directory changed ownership."
       );
     }
@@ -106,7 +105,7 @@ export const reserveLocalRuntime = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   yield* fs.makeDirectory(`${root}/.cache`, { recursive: true });
   if ((yield* fs.realPath(`${root}/.cache`)) !== `${root}/.cache`) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "The build cache must belong to this checkout."
     );
   }
@@ -115,7 +114,7 @@ export const reserveLocalRuntime = Effect.fn(
     .makeDirectory(directory, { mode: 0o700 })
     .pipe(
       Effect.mapError(() =>
-        contentRuntimeCiError(
+        contentSnapshotError(
           "The build runtime already exists or is not writable. Stop it and run pnpm runtime:clean before preparing another snapshot."
         )
       )
@@ -130,7 +129,7 @@ export const releaseLocalRuntime = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   const actual = yield* directoryIdentity(runtime.directory);
   if (actual.directoryInode !== runtime.directoryInode) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "The local runtime directory changed ownership; it is preserved."
     );
   }
@@ -194,11 +193,11 @@ export const initializeLocalRuntime = Effect.fn(
     site: environment.VITE_CONVEX_SITE_URL,
   }).pipe(
     Effect.mapError(() =>
-      contentRuntimeCiError("Anonymous Convex must provide loopback URLs.")
+      contentSnapshotError("Anonymous Convex must provide loopback URLs.")
     )
   );
   if (urls.query === urls.site) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "Anonymous Convex query and HTTP ports must differ."
     );
   }
@@ -210,7 +209,7 @@ export const initializeLocalRuntime = Effect.fn(
   );
   const database = yield* fs.stat(`${backend}/.convex`);
   if (Option.isNone(database.ino)) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "The local database has no filesystem identity."
     );
   }
@@ -248,7 +247,7 @@ export const readLocalRuntime = Effect.fn("contentRuntime.readLocalRuntime")(
         Schema.decodeEffect(Schema.fromJsonString(RuntimeManifest))
       ),
       Effect.mapError(() =>
-        contentRuntimeCiError(
+        contentSnapshotError(
           "The build runtime manifest is missing or invalid; existing state is preserved."
         )
       )
@@ -277,7 +276,7 @@ export const readLocalRuntime = Effect.fn("contentRuntime.readLocalRuntime")(
       runtime.environmentHash !==
         createHash("sha256").update(source).digest("hex")
     ) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         "The local build runtime changed ownership; existing state is preserved."
       );
     }
@@ -295,7 +294,7 @@ export const leaseLocalRuntime = Effect.fn("contentRuntime.leaseLocalRuntime")(
         .writeFileString(lock, String(process.pid), { mode: 0o600, flag: "wx" })
         .pipe(
           Effect.mapError(() =>
-            contentRuntimeCiError(
+            contentSnapshotError(
               "The local build runtime is in use; existing state is preserved."
             )
           )

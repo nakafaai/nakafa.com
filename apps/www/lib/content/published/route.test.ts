@@ -4,9 +4,14 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { readActiveContentRoute } from "@/lib/content/published/route";
+import { makeMaterialRuntimeSource } from "@/test/content/material";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { testArticleProjection } from "@/test/content-article";
 import { previewProjection } from "@/test/content-preview";
-import { createTestRuntimeQuery } from "@/test/runtime-query";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const readQueryMock = vi.hoisted(() => vi.fn());
@@ -29,6 +34,34 @@ beforeEach(() => {
 });
 
 describe("published content route", () => {
+  it.effect(
+    "resolves owned material and absence from authenticated snapshot rows",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeMaterialRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        readQueryMock.mockImplementation(createTestSnapshotQuery(context));
+        const projection = fixture.projections[0];
+        const activeReleaseId = fixture.state.activeReleaseId;
+
+        expect(
+          yield* readActiveContentRoute({
+            activeReleaseId,
+            appLocale: projection.appLocale,
+            family: "material",
+            publicPath: projection.publicPath,
+          })
+        ).toEqual({ activeReleaseId, kind: "found", projection });
+        expect(
+          yield* readActiveContentRoute({
+            activeReleaseId,
+            appLocale: projection.appLocale,
+            family: "material",
+            publicPath: "subjects/mathematics/technical-topic/missing-section",
+          })
+        ).toEqual({ activeReleaseId, kind: "missing" });
+      })
+  );
   it.effect("skips route lookup when no content release is active", () =>
     Effect.gen(function* () {
       expect(
@@ -124,11 +157,15 @@ describe("published content route", () => {
           family: input.family,
           publicPath: input.publicPath,
         });
-        expect(readQueryMock).toHaveBeenCalledWith(expect.anything(), {
-          appLocale: input.appLocale,
-          family: input.family,
-          publicPath: input.publicPath,
-        });
+        expect(readQueryMock).toHaveBeenCalledWith(
+          expect.anything(),
+          {
+            appLocale: input.appLocale,
+            family: input.family,
+            publicPath: input.publicPath,
+          },
+          expect.any(Function)
+        );
       })
   );
 

@@ -1,124 +1,95 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Effect } from "effect";
+import { Context, Effect } from "effect";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
 
-const { fetchMock, productionUrl, readMock, runtimeEnv, runtimeUrl } =
-  vi.hoisted(() => {
-    const isolatedUrl = "http://127.0.0.1:3210";
-    const publicUrl = "https://production.example";
-    return {
-      fetchMock: vi.fn(),
-      productionUrl: publicUrl,
-      readMock: vi.fn(),
-      runtimeEnv: {
-        CONTENT_BUILD_URL: isolatedUrl as string | undefined,
-        NEXT_PUBLIC_CONVEX_URL: publicUrl,
-      },
-      runtimeUrl: isolatedUrl,
-    };
-  });
-
-vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
-  ...(await importOriginal()),
-  readConvexRuntimeQuery: readMock,
+const { fetchMock, snapshotMock } = vi.hoisted(() => ({
+  fetchMock: vi.fn(),
+  snapshotMock: vi.fn(),
 }));
-
 vi.mock("convex/nextjs", () => ({ fetchQuery: fetchMock }));
-
+vi.mock("@/lib/content/runtime/snapshot", () => ({
+  loadContentSnapshot: snapshotMock,
+}));
 vi.mock("@/env", () => ({
-  env: runtimeEnv,
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://selected.example" },
 }));
 
-const input = {
-  input: {
-    appLocale: "en",
-    kind: "route",
-    publicPath: "articles/politics/test",
-  },
-} as const;
+const query = api.contentRelease.runtime.active.read;
+const identity = {
+  manifestHash: "manifest",
+  releaseId: "release",
+  sequence: 4,
+};
 
 beforeEach(() => {
   fetchMock.mockReset();
-  readMock.mockReset();
-  runtimeEnv.CONTENT_BUILD_URL = runtimeUrl;
+  snapshotMock.mockReset().mockResolvedValue(undefined);
 });
 
 describe("content runtime query", () => {
-  it("keeps direct prerender reads inside the isolated build", async () => {
-    fetchMock.mockResolvedValueOnce(42);
-    await expect(
-      fetchRuntimeQuery(api.contentRelease.reference.read, input)
-    ).resolves.toBe(42);
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      api.contentRelease.reference.read,
-      input,
-      { url: runtimeUrl }
+  it("uses native Convex reads when no build snapshot is selected", async () => {
+    const read = vi.fn(() => Effect.succeed(null));
+    fetchMock.mockResolvedValue(identity);
+    await expect(fetchRuntimeQuery(query, {}, read)).resolves.toEqual(identity);
+    expect(fetchMock).toHaveBeenCalledWith(
+      query,
+      {},
+      { url: "https://selected.example" }
     );
-
-    runtimeEnv.CONTENT_BUILD_URL = undefined;
-    fetchMock.mockResolvedValueOnce(43);
-    await expect(
-      fetchRuntimeQuery(api.contentRelease.reference.read, input)
-    ).resolves.toBe(43);
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      api.contentRelease.reference.read,
-      input,
-      { url: productionUrl }
-    );
+    expect(read).not.toHaveBeenCalled();
   });
 
-  it.effect("maps isolated build reads into the typed data-read channel", () =>
+  it("executes the canonical program against the selected build context", async () => {
+    snapshotMock.mockResolvedValue(Context.empty());
+    const read = vi.fn(() => Effect.succeed(identity));
+    await expect(fetchRuntimeQuery(query, {}, read)).resolves.toEqual(identity);
+    expect(read).toHaveBeenCalledWith({});
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.effect("keeps successful reads inside the domain error channel", () =>
     Effect.gen(function* () {
-      readMock.mockReturnValueOnce(Effect.succeed(42));
+      fetchMock.mockResolvedValue(identity);
       expect(
-        yield* readRuntimeQuery(api.contentRelease.reference.read, input)
-      ).toBe(42);
-
-      const runtimeError = new ConvexRuntimeQueryError({
-        httpStatuses: [],
-        networkCodes: ["EPIPE"],
-        query: "contentRelease.material.route",
-        reason: "transport",
-      });
-      readMock.mockReturnValueOnce(Effect.fail(runtimeError));
-      const failure = yield* readRuntimeQuery(
-        api.contentRelease.reference.read,
-        input
-      ).pipe(Effect.flip);
-
-      expect(failure).toMatchObject({
-        cause: runtimeError.message,
-        message:
-          "Unable to read Nakafa runtime content query: contentRelease.material.route.",
-      });
-      expect(readMock).toHaveBeenCalledWith(
-        runtimeUrl,
-        api.contentRelease.reference.read,
-        input
-      );
+        yield* readRuntimeQuery(query, {}, () => Effect.succeed(null))
+      ).toEqual(identity);
     })
   );
 
-  it.effect("keeps normal server reads on the public runtime", () =>
-    Effect.gen(function* () {
-      runtimeEnv.CONTENT_BUILD_URL = undefined;
-      readMock.mockReturnValueOnce(Effect.succeed(42));
+  it.effect(
+    "does not fall back to live data after snapshot authentication fails",
+    () =>
+      Effect.gen(function* () {
+        snapshotMock.mockRejectedValue(new Error("Snapshot hash mismatch"));
+        const failure = yield* readRuntimeQuery(query, {}, () =>
+          Effect.succeed(null)
+        ).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "NakafaAgentDataReadError",
+          cause: "Snapshot hash mismatch",
+        });
+        expect(fetchMock).not.toHaveBeenCalled();
+      })
+  );
 
-      expect(
-        yield* readRuntimeQuery(api.contentRelease.reference.read, input)
-      ).toBe(42);
-      expect(readMock).toHaveBeenCalledWith(
-        productionUrl,
-        api.contentRelease.reference.read,
-        input
-      );
-    })
+  it.effect(
+    "preserves a native transport failure as a typed read failure",
+    () =>
+      Effect.gen(function* () {
+        fetchMock.mockRejectedValue(new Error("Connection closed"));
+        const failure = yield* readRuntimeQuery(query, {}, () =>
+          Effect.succeed(null)
+        ).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "NakafaAgentDataReadError",
+          cause: "Connection closed",
+        });
+      })
   );
 });

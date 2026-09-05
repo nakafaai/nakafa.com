@@ -76,6 +76,27 @@ function headKeys(page: HeadPage) {
   return page.heads.map(({ contentKey }) => contentKey);
 }
 describe("contentRelease/heads", () => {
+  it("rejects duplicate permanent identities instead of returning an ambiguous inventory", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 0, 0);
+      await insertTestHead(ctx, { contentKey: "test:duplicate" });
+      const key = await ctx.db.query("contentKeys").unique();
+      if (!key) {
+        return expect.fail("Expected one permanent material identity.");
+      }
+      await ctx.db.insert("contentKeys", {
+        contentKey: key.contentKey,
+        artifactLocale: key.artifactLocale,
+        family: key.family,
+        createdSequence: key.createdSequence,
+      });
+    });
+    await expect(readPage(t, null)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
   it("pages structurally shared material heads in canonical order", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {

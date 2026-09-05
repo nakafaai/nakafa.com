@@ -1,6 +1,5 @@
 "use node";
 
-import { CorpusSourcePathSchema } from "@nakafa/aksara-contracts/ids";
 import {
   MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
   MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
@@ -8,23 +7,20 @@ import {
 } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import {
   decodeProtectedContentRuntimeRequest,
-  type ProtectedContentRuntimeFound,
   type ProtectedContentRuntimeRequest,
   ProtectedContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
 import { contentKeyResolver } from "@repo/backend/content/trust";
+import {
+  decodeProtectedRuntimeRow,
+  ProtectedRuntimeReadError,
+} from "@repo/backend/content/tryout/exchange";
+import type { ProtectedRuntimeBatchRow } from "@repo/backend/content/tryout/protected";
 import {
   type ActionCtx,
   internalAction,
 } from "@repo/backend/convex/_generated/server";
-import {
-  decodeArtifactJson,
-  decodeRendererJson,
-  decodeTryoutRuntimeBundleJson,
-} from "@repo/backend/convex/contentRelease/parse";
-import type { ProtectedRuntimeBatchRow } from "@repo/backend/convex/contentRelease/runtime/protected/internal";
 import {
   encodeRuntimeResult,
   failureResult,
@@ -43,12 +39,6 @@ const protectedReadReference = makeFunctionReference<
 /** Request JSON could not satisfy the exact protected runtime contract. */
 class ProtectedRuntimeRequestError extends Schema.TaggedError<ProtectedRuntimeRequestError>()(
   "ProtectedRuntimeRequestError",
-  {}
-) {}
-
-/** Convex or stored protected runtime data failed before a safe response. */
-class ProtectedRuntimeReadError extends Schema.TaggedError<ProtectedRuntimeReadError>()(
-  "ProtectedRuntimeReadError",
   {}
 ) {}
 
@@ -81,41 +71,7 @@ const resolveProtectedRuntime = Effect.fn(
     try: (): Promise<ProtectedRuntimeBatchRow> =>
       ctx.runQuery(protectedReadReference, request),
   });
-  if (row === null) {
-    return null;
-  }
-  const [items, decodedBundle, rendererManifest] = yield* Effect.all([
-    Effect.forEach(
-      row.items,
-      (item) =>
-        Effect.all({
-          artifact: decodeArtifactJson(item.artifactJson),
-          delivery: Effect.succeed(item.delivery),
-          sourcePath: Schema.decodeEffect(CorpusSourcePathSchema)(
-            item.sourcePath
-          ),
-        }),
-      { concurrency: "unbounded" }
-    ),
-    decodeTryoutRuntimeBundleJson(row.bundleJson),
-    decodeRendererJson(row.rendererJson),
-  ]).pipe(Effect.mapError(() => new ProtectedRuntimeReadError()));
-  const bundle = yield* verifySignedTryoutRuntimeBundle({
-    bundle: decodedBundle,
-    rendererManifest,
-  }).pipe(Effect.mapError(() => new ProtectedRuntimeReadError()));
-  if (
-    bundle.bundleHash !== request.bundleHash ||
-    bundle.payload.snapshot.snapshotId !== request.snapshotId
-  ) {
-    return yield* new ProtectedRuntimeReadError();
-  }
-  return {
-    bundle,
-    items,
-    kind: "found",
-    rendererManifest,
-  } satisfies ProtectedContentRuntimeFound;
+  return yield* decodeProtectedRuntimeRow(row, request);
 });
 
 /** Decodes, resolves, and safely encodes one protected runtime request. */

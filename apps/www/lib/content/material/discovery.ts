@@ -5,6 +5,10 @@ import {
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  readLatestMaterials,
+  readMaterialBucket,
+} from "@repo/backend/content/material/discovery";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -77,10 +81,14 @@ export const readPublishedMaterialBucket = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(api.contentRelease.material.bucket, {
-    appLocale,
-    bucket,
-  });
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.material.bucket,
+    {
+      appLocale,
+      bucket,
+    },
+    (queryArgs) => readMaterialBucket(queryArgs.appLocale, queryArgs.bucket)
+  );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,
@@ -109,10 +117,14 @@ export const readPublishedLatestMaterials = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(api.contentRelease.material.latest, {
-    appLocale,
-    limit,
-  });
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.material.latest,
+    {
+      appLocale,
+      limit,
+    },
+    (queryArgs) => readLatestMaterials(queryArgs.appLocale, queryArgs.limit)
+  );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,

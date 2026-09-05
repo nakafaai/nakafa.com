@@ -1,8 +1,6 @@
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import {
-  contentRuntimeCiError,
-  sanitizeRuntimeCommandError,
-} from "@repo/backend/scripts/content/runtime/ci/error";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
+import { sanitizeRuntimeCommandError } from "@repo/backend/scripts/content/runtime/ci/error";
 import { collectConvexTableRows } from "@repo/backend/scripts/content/runtime/ci/pagination";
 import { localConvexEnvironment } from "@repo/backend/scripts/content/runtime/process";
 import { ConvexHttpClient } from "convex/browser";
@@ -51,7 +49,7 @@ export const setConvexAdminAuth = Effect.fn(
 )(function* (client: object, deployKey: string) {
   const authenticate: unknown = Reflect.get(client, "setAdminAuth");
   if (typeof authenticate !== "function") {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "Convex HTTP client does not expose admin authentication."
     );
   }
@@ -121,13 +119,13 @@ export const runRuntimeCommand = Effect.fn("contentRuntime.runCommand")(
         );
 
         if (detail.length > 0) {
-          return yield* contentRuntimeCiError(
+          return yield* contentSnapshotError(
             `${spec.operation} failed: ${detail}`
           );
         }
       }
 
-      return yield* contentRuntimeCiError(`${spec.operation} failed.`);
+      return yield* contentSnapshotError(`${spec.operation} failed.`);
     }
   }
 );

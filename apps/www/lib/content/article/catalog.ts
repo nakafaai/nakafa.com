@@ -14,6 +14,10 @@ import {
   type ArticleRouteSlug,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
+import {
+  readArticlePage,
+  readCategoryPage,
+} from "@repo/backend/content/article/read";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
@@ -196,7 +200,15 @@ export const readPublishedArticlePage = Effect.fn(
   } satisfies ArticlePageArgs;
   const result = yield* readRuntimeQuery(
     api.contentRelease.article.publications,
-    args
+    args,
+    (queryArgs) =>
+      readArticlePage(
+        queryArgs.category,
+        queryArgs.appLocale,
+        queryArgs.expectedManifestHash,
+        queryArgs.expectedReleaseId,
+        queryArgs.paginationOpts
+      )
   );
   const {
     activeManifestHash: rawManifestHash,
@@ -252,7 +264,14 @@ export const readPublishedCategories = Effect.fn(
   } satisfies CategoryPageArgs;
   const result = yield* readRuntimeQuery(
     api.contentRelease.article.categories,
-    args
+    args,
+    (queryArgs) =>
+      readCategoryPage(
+        queryArgs.appLocale,
+        queryArgs.expectedManifestHash,
+        queryArgs.expectedReleaseId,
+        queryArgs.paginationOpts
+      )
   );
   const {
     activeManifestHash: rawManifestHash,

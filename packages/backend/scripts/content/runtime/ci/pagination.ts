@@ -1,11 +1,9 @@
-import {
-  contentRuntimeCiError,
-  productionRuntimeReadError,
-} from "@repo/backend/scripts/content/runtime/ci/error";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
 import {
   type JsonObject,
   JsonObjectSchema,
-} from "@repo/backend/scripts/content/runtime/ci/json";
+} from "@repo/backend/content/snapshot/json";
+import { productionRuntimeReadError } from "@repo/backend/scripts/content/runtime/ci/error";
 import { Effect, Schema } from "effect";
 
 export const CONTENT_RUNTIME_TABLE_PAGE_SIZE = 4096;
@@ -56,7 +54,7 @@ export const collectConvexTableRows = Effect.fn(
       rawPage
     ).pipe(
       Effect.mapError(() =>
-        contentRuntimeCiError(
+        contentSnapshotError(
           `Production read for ${options.table} returned invalid pagination data.`
         )
       )
@@ -65,7 +63,7 @@ export const collectConvexTableRows = Effect.fn(
     const remaining = maximumRowsToRead - rows.length;
     rows.push(...page.page.slice(0, remaining));
     if (rows.length > options.limit) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         `Production read for ${options.table} exceeded the bounded snapshot capacity of ${options.limit} rows.`
       );
     }
@@ -78,7 +76,7 @@ export const collectConvexTableRows = Effect.fn(
       page.continueCursor === cursor ||
       cursors.has(page.continueCursor)
     ) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         `Production read for ${options.table} returned an invalid pagination cursor.`
       );
     }
@@ -87,7 +85,7 @@ export const collectConvexTableRows = Effect.fn(
     cursor = page.continueCursor;
   }
 
-  return yield* contentRuntimeCiError(
+  return yield* contentSnapshotError(
     `Production read for ${options.table} exceeded the bounded snapshot capacity of ${options.limit} rows.`
   );
 });

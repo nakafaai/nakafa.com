@@ -4,31 +4,36 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
+import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
 import { Effect } from "effect";
 import {
   getPublishedArticleRoute,
   readPublishedArticleRoute,
 } from "@/lib/content/article/route";
+import { makeArticleRuntimeSource } from "@/test/content/article";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
   makeTestArticleProjection,
   testArticleDeProjection,
   testArticleIdProjection,
   testArticleProjection,
 } from "@/test/content-article";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const runtimeReadMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
 
 vi.mock("@/lib/content/cache", () => ({
   applyPublishedCatalogCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeReadMock,
+}));
 
 /** Builds one complete backend-verified article model response. */
 function foundModel(overrides?: {
@@ -59,10 +64,39 @@ function foundModel(overrides?: {
 
 beforeEach(() => {
   runtimeQueryMock.mockReset();
+  runtimeReadMock.mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
   cacheMock.mockReset();
 });
 
 describe("published article route", () => {
+  it.effect(
+    "resolves reciprocal locales and missing routes from authenticated serving rows",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeArticleRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const projection = testLocalizedArticleProjection(1, "de");
+
+        const route = yield* readPublishedArticleRoute(
+          "de",
+          projection.publicPath
+        );
+        expect(route).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          projection,
+        });
+        expect(route.alternates).toHaveLength(3);
+        expect(
+          yield* readPublishedArticleRoute("de", "articles/politik/missing")
+        ).toEqual({
+          activeReleaseId: fixture.state.activeReleaseId,
+          projection: null,
+          alternates: [],
+        });
+      })
+  );
+
   it.effect.each([
     testArticleProjection,
     testArticleIdProjection,

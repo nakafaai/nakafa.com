@@ -1,17 +1,14 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { findReleaseTryoutRuntime } from "@repo/backend/convex/contentRelease/tryout/binding";
-import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import {
   readTryoutSet,
   type VerifiedTryoutSet,
-} from "@repo/backend/convex/contentRelease/tryout/set";
+} from "@repo/backend/content/tryout/set";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { findReleaseTryoutRuntime } from "@repo/backend/convex/contentRelease/tryout/binding";
 import type { StartAttemptArgs } from "@repo/backend/convex/tryouts/start/spec";
-import {
-  TryoutStartError,
-  toTryoutStartError,
-  tryoutStartErrorCode,
-} from "@repo/backend/convex/tryouts/start/spec";
+import { toTryoutStartError } from "@repo/backend/convex/tryouts/start/spec";
 import { Effect } from "effect";
 
 /** Authenticated immutable snapshot rows used by attempt-owned projections. */
@@ -28,21 +25,22 @@ export interface TryoutStartSource extends TryoutSnapshotSource {
 export const loadTryoutStartSource = Effect.fn(
   "tryouts.start.loadTryoutStartSource"
 )(function* (ctx: QueryCtx, args: StartAttemptArgs) {
-  const owner = yield* loadTryoutOwner(ctx);
-  const snapshot = yield* readTryoutSet(ctx, args);
+  const owner = yield* loadTryoutOwner().pipe(
+    Effect.provide(convexTryoutLayer(ctx))
+  );
+  const snapshot = yield* readTryoutSet(args).pipe(
+    Effect.provide(convexTryoutLayer(ctx))
+  );
   const { active } = owner;
   const runtime = yield* findReleaseTryoutRuntime(
     ctx,
     active.signed,
     active.release.tryoutRuntimeBundleHash
   );
-  const selected = runtime.result;
-  if (!selected) {
-    return yield* new TryoutStartError({
-      code: tryoutStartErrorCode.failed,
-      message: "Active try-out content has no permanent runtime bundle.",
-    });
-  }
+  // The active non-null snapshot and exact runtime binding guarantee this result.
+  const selected = yield* Effect.fromNullishOr(runtime.result).pipe(
+    Effect.orDie
+  );
   return {
     bundle: selected.stored,
     releaseId: active.releaseId,

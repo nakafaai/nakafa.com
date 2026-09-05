@@ -159,6 +159,8 @@ jobs:
           TURBO_CONCURRENCY: "2"
 
       - name: Start web app
+        env:
+          PORTLESS: "0"
         run: |
           umask 077
           web_log="$RUNNER_TEMP/runtime-www.log"

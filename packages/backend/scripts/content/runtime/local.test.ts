@@ -81,7 +81,7 @@ describe("owned signed runtime", () => {
         expect(localApplicationEnvironment(runtime)).toMatchObject({
           CONVEX_AGENT_MODE: "anonymous",
           NEXT_PUBLIC_CONVEX_URL: runtime.query,
-          CONTENT_BUILD_URL: undefined,
+          CONTENT_BUILD_SNAPSHOT: undefined,
           VERCEL: undefined,
         });
         expect(mocks.command).toHaveBeenCalledTimes(2);
@@ -112,13 +112,13 @@ describe("owned signed runtime", () => {
         yield* initializeLocalRuntime(root, identity);
         expect(
           yield* reserveLocalRuntime(root).pipe(Effect.flip)
-        ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+        ).toMatchObject({ _tag: "ContentSnapshotError" });
         yield* Effect.gen(function* () {
           yield* leaseLocalRuntime(root);
           expect(
             yield* cleanLocalRuntime(root).pipe(Effect.flip)
           ).toMatchObject({
-            _tag: "ContentRuntimeCiError",
+            _tag: "ContentSnapshotError",
             message: expect.stringContaining("in use"),
           });
         }).pipe(Effect.scoped);
@@ -158,7 +158,7 @@ describe("owned signed runtime", () => {
           expect(
             yield* cleanLocalRuntime(root).pipe(Effect.scoped, Effect.flip)
           ).toMatchObject({
-            _tag: "ContentRuntimeCiError",
+            _tag: "ContentSnapshotError",
             message: expect.stringContaining("occupied"),
           });
           expect(listener.listening).toBe(true);
@@ -174,7 +174,7 @@ describe("owned signed runtime", () => {
       yield* fs.makeDirectory(`${root}/shared`);
       yield* fs.symlink(`${root}/shared`, `${root}/.cache`);
       expect(yield* reserveLocalRuntime(root).pipe(Effect.flip)).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
       });
       expect(yield* fs.exists(`${root}/shared/runtime`)).toBe(false);
     }).pipe(Effect.provide(NodeServices.layer))
@@ -188,7 +188,7 @@ describe("owned signed runtime", () => {
       yield* fs.makeDirectory(reserved.directory);
       expect(
         yield* releaseLocalRuntime(reserved).pipe(Effect.flip)
-      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      ).toMatchObject({ _tag: "ContentSnapshotError" });
       expect(yield* fs.exists(reserved.directory)).toBe(true);
     }).pipe(Effect.provide(NodeServices.layer))
   );
@@ -226,7 +226,7 @@ describe("owned signed runtime", () => {
             Effect.provideService(FileSystem.FileSystem, reader),
             Effect.flip
           )
-        ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+        ).toMatchObject({ _tag: "ContentSnapshotError" });
         expect(yield* fs.exists(reserved.directory)).toBe(true);
         expect(yield* fs.exists(`${root}/original`)).toBe(true);
       }).pipe(Effect.provide(NodeServices.layer))
@@ -266,7 +266,7 @@ describe("owned signed runtime", () => {
               Effect.provideService(FileSystem.FileSystem, reader),
               Effect.flip
             )
-          ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+          ).toMatchObject({ _tag: "ContentSnapshotError" });
           yield* releaseLocalRuntime(reserved);
         }).pipe(Effect.provide(NodeServices.layer))
     );
@@ -338,7 +338,7 @@ describe("owned signed runtime", () => {
           yield* fs.symlink(`${root}/foreign`, target);
         }
         expect(yield* cleanLocalRuntime(root).pipe(Effect.flip)).toMatchObject({
-          _tag: "ContentRuntimeCiError",
+          _tag: "ContentSnapshotError",
         });
         expect(yield* fs.exists(runtime.directory)).toBe(true);
       }).pipe(Effect.provide(NodeServices.layer))
@@ -363,7 +363,7 @@ describe("owned signed runtime", () => {
           const reserved = yield* reserveLocalRuntime(root);
           expect(
             yield* initializeLocalRuntime(root, identity).pipe(Effect.flip)
-          ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+          ).toMatchObject({ _tag: "ContentSnapshotError" });
           yield* releaseLocalRuntime(reserved);
         }).pipe(Effect.provide(NodeServices.layer))
     );

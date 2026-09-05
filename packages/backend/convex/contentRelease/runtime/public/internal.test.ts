@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { PublicRuntimeRow } from "@repo/backend/content/publication/public";
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {

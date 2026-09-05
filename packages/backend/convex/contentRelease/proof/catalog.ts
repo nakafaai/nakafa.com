@@ -1,8 +1,9 @@
 import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { resolveContentHead } from "@repo/backend/content/publication/projection";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { resolveContentHead } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   loadRelease,
@@ -17,11 +18,10 @@ import {
 import {
   artifactLocaleValidator,
   contentHeadValidator,
-  PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { getConvexSize, type Infer, v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
 const catalogCursorValidator = v.object({
@@ -109,12 +109,6 @@ const validateBase = Effect.fn("contentRelease.validateCatalogBase")(function* (
 export const catalogRelease = Effect.fn("contentRelease.catalogRelease")(
   function* (ctx: QueryCtx, releaseId: string) {
     const { release, state } = yield* loadStaged(ctx, releaseId);
-    if (!state) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_STATE",
-        `Content release ${releaseId} lost publication state.`
-      );
-    }
     if (release.status !== "verifying" && release.status !== "verified") {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
@@ -148,9 +142,6 @@ const loadCatalogKeys = Effect.fn("contentRelease.loadCatalogKeys")(function* (
             .order("asc")
             .take(limit)
         );
-  if (sameKey.length === limit) {
-    return sameKey;
-  }
   const remaining = limit - sameKey.length;
   const laterKeys = yield* Effect.promise(() => {
     if (cursor === null) {
@@ -185,29 +176,12 @@ const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(function* (
   let processed = 0;
   for (const key of keys) {
     const head = yield* resolveContentHead(
-      ctx,
       key.contentKey,
       key.artifactLocale,
       release.sequence
-    );
+    ).pipe(Effect.provide(convexPublicationLayer(ctx)));
     if (head) {
-      const candidate = {
-        done: false,
-        heads: [...heads, head],
-        nextCursor: {
-          contentKey: key.contentKey,
-          artifactLocale: key.artifactLocale,
-        },
-      };
-      if (getConvexSize(candidate) > PROOF_PAGE_BYTES) {
-        if (heads.length === 0) {
-          return yield* releaseFail(
-            "CONTENT_RELEASE_LIMIT",
-            `Content head ${key.contentKey}/${key.artifactLocale} exceeds the proof page ceiling.`
-          );
-        }
-        break;
-      }
+      // 128 schema-bounded heads fit below 652 KiB, within the proof ceiling.
       heads.push(head);
     }
     nextCursor = {

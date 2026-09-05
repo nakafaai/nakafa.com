@@ -33,7 +33,7 @@ export const makeProgramRuntimeSource = Effect.fn(
     scope: testPublicationScope({ snapshots: data.snapshots }),
     snapshots: data.snapshots,
   });
-  const fixture = makeRuntimeSource(signed);
+  const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
   fixture.source.set("contentSnapshots", [
     {
       createdAt: 1,

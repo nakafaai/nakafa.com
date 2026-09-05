@@ -7,9 +7,9 @@ import {
   decodePublishedQuranReference,
   type PublishedQuranReference,
 } from "@repo/backend/client/quran/reference";
+import type { readQuranSurahs } from "@repo/backend/content/quran/catalog";
+import type { readQuranPassage } from "@repo/backend/content/quran/reference";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
-import type { readQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
 import type { QuranReferenceArgs } from "@repo/backend/convex/contentRelease/quran/spec";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
 import {
@@ -50,23 +50,17 @@ export const getNakafaQuranReference = Effect.fn(
     input,
     quranCatalogReference
   );
-  if (Option.isNone(request)) {
-    return Option.none();
-  }
   const result = yield* readAgentQuery(
     ctx,
     quranPassage,
-    referenceArgs(request.value),
+    referenceArgs(request),
     "Unable to read the signed Nakafa Quran reference."
   );
   const reference = yield* decodePublishedQuranReference(result, {
-    appLocale: request.value.locale,
-    surahNumber: request.value.surah,
+    appLocale: request.locale,
+    surahNumber: request.surah,
   }).pipe(Effect.mapError(quranReadError));
-  const identity = yield* projectReferenceIdentity(
-    reference.search,
-    request.value
-  );
+  const identity = yield* projectReferenceIdentity(reference.search, request);
   return Option.some(
     yield* projectNakafaQuranReference({ ...identity, reference })
   );
@@ -95,18 +89,17 @@ const readNakafaQuranRequest = Effect.fn("agent.readNakafaQuranRequest")(
     const catalog = yield* decodePublishedQuranCatalog(catalogResult).pipe(
       Effect.mapError(quranReadError)
     );
-    const surah = catalog.surahs.find(
-      (candidate) => candidate.number === parsed.surah
+    const exceededSurah = catalog.surahs.find(
+      (candidate) =>
+        candidate.number === parsed.surah &&
+        lastVerse > candidate.numberOfVerses
     );
-    if (!surah) {
-      return Option.none();
-    }
-    if (lastVerse > surah.numberOfVerses) {
+    if (exceededSurah) {
       return yield* invalidRange(
-        `Surah ${parsed.surah} ends at verse ${surah.numberOfVerses}.`
+        `Surah ${parsed.surah} ends at verse ${exceededSurah.numberOfVerses}.`
       );
     }
-    return Option.some(parsed);
+    return parsed;
   }
 );
 

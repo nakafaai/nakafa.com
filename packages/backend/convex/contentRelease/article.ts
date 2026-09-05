@@ -1,18 +1,19 @@
-import { query } from "@repo/backend/convex/_generated/server";
+import { convexArticleLayer } from "@repo/backend/content/article/convex";
 import {
   readArticleBucket,
   readCategoryArticles,
   readLatestArticles,
-} from "@repo/backend/convex/contentRelease/article/discovery";
-import { readArticleModel } from "@repo/backend/convex/contentRelease/article/model";
+} from "@repo/backend/content/article/discovery";
+import { readArticleModel } from "@repo/backend/content/article/model";
 import {
   readArticlePage,
   readCategoryPage,
-} from "@repo/backend/convex/contentRelease/article/read";
+} from "@repo/backend/content/article/read";
 import {
   readArticleBuckets,
   readArticleSitemap,
-} from "@repo/backend/convex/contentRelease/article/sitemap";
+} from "@repo/backend/content/article/sitemap";
+import { query } from "@repo/backend/convex/_generated/server";
 import { articleApiPageValidator } from "@repo/backend/convex/contentRelease/article/spec";
 import { readPartnerApiPage } from "@repo/backend/convex/contentRelease/partner/page";
 import {
@@ -26,6 +27,7 @@ import {
   paginationResultValidator,
 } from "convex/server";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const projectionValidator = v.object({
   appLocale: appLocaleValidator,
@@ -144,7 +146,9 @@ export const route = query({
   returns: articleModelValidator,
   handler: (ctx, { appLocale, expectedActiveReleaseId, publicPath }) =>
     runConvexProgram(
-      readArticleModel(ctx, appLocale, publicPath, expectedActiveReleaseId)
+      readArticleModel(appLocale, publicPath, expectedActiveReleaseId).pipe(
+        Effect.provide(convexArticleLayer(ctx))
+      )
     ),
 });
 
@@ -161,13 +165,12 @@ export const publications = query({
   handler: (ctx, args) =>
     runConvexProgram(
       readArticlePage(
-        ctx,
         args.category,
         args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
         args.paginationOpts
-      )
+      ).pipe(Effect.provide(convexArticleLayer(ctx)))
     ),
 });
 
@@ -183,12 +186,11 @@ export const categories = query({
   handler: (ctx, args) =>
     runConvexProgram(
       readCategoryPage(
-        ctx,
         args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
         args.paginationOpts
-      )
+      ).pipe(Effect.provide(convexArticleLayer(ctx)))
     ),
 });
 
@@ -200,7 +202,11 @@ export const bucket = query({
   },
   returns: articleBucketValidator,
   handler: (ctx, args) =>
-    runConvexProgram(readArticleBucket(ctx, args.appLocale, args.bucket)),
+    runConvexProgram(
+      readArticleBucket(args.appLocale, args.bucket).pipe(
+        Effect.provide(convexArticleLayer(ctx))
+      )
+    ),
 });
 
 /** Returns a bounded newest-first article set for discovery surfaces. */
@@ -211,7 +217,11 @@ export const latest = query({
   },
   returns: articleDiscoveryValidator,
   handler: (ctx, args) =>
-    runConvexProgram(readLatestArticles(ctx, args.appLocale, args.limit)),
+    runConvexProgram(
+      readLatestArticles(args.appLocale, args.limit).pipe(
+        Effect.provide(convexArticleLayer(ctx))
+      )
+    ),
 });
 
 /** Returns a bounded newest-first article set for one exact category. */
@@ -224,7 +234,9 @@ export const listing = query({
   returns: articleDiscoveryValidator,
   handler: (ctx, args) =>
     runConvexProgram(
-      readCategoryArticles(ctx, args.appLocale, args.category, args.limit)
+      readCategoryArticles(args.appLocale, args.category, args.limit).pipe(
+        Effect.provide(convexArticleLayer(ctx))
+      )
     ),
 });
 
@@ -233,7 +245,11 @@ export const sitemapBuckets = query({
   args: { appLocale: appLocaleValidator },
   returns: sitemapBucketsValidator,
   handler: (ctx, { appLocale }) =>
-    runConvexProgram(readArticleBuckets(ctx, appLocale)),
+    runConvexProgram(
+      readArticleBuckets(appLocale).pipe(
+        Effect.provide(convexArticleLayer(ctx))
+      )
+    ),
 });
 
 /** Returns one verified article sitemap partition by its stable bucket. */
@@ -244,5 +260,9 @@ export const sitemapPage = query({
   },
   returns: sitemapPageValidator,
   handler: (ctx, { appLocale, bucket }) =>
-    runConvexProgram(readArticleSitemap(ctx, appLocale, bucket)),
+    runConvexProgram(
+      readArticleSitemap(appLocale, bucket).pipe(
+        Effect.provide(convexArticleLayer(ctx))
+      )
+    ),
 });

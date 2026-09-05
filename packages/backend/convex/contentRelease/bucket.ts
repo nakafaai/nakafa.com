@@ -1,3 +1,4 @@
+import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import {
   TRANSACTION_READ_HEADROOM,
@@ -19,6 +20,8 @@ export const CONTENT_BUCKET_SIZE = Math.floor(
 );
 
 /** Derives one stable discovery bucket from an authenticated SHA-256 hash. */
+export function getHashBucket(hash: Sha256Hash): string;
+export function getHashBucket(hash: string): string | null;
 export function getHashBucket(hash: string) {
   if (!hash.startsWith(HASH_PREFIX)) {
     return null;

@@ -1,10 +1,8 @@
 import { createServer } from "node:net";
-import {
-  contentRuntimeCiError,
-  sanitizeRuntimeCommandError,
-} from "@repo/backend/scripts/content/runtime/ci/error";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
+import { readContentRuntimeSchemaFingerprint } from "@repo/backend/content/snapshot/tables";
+import { sanitizeRuntimeCommandError } from "@repo/backend/scripts/content/runtime/ci/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/runtime/local";
-import { readContentRuntimeSchemaFingerprint } from "@repo/backend/scripts/content/runtime/tables";
 import { Effect, FileSystem, Schedule, Stream } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 
@@ -12,10 +10,10 @@ import { ChildProcess } from "effect/unstable/process";
 export const runBuildCommand = Effect.fn("contentRuntime.runBuildCommand")(
   function* (
     cwd: string,
-    args: readonly string[],
+    [command, ...args]: readonly [string, ...string[]],
     env: Readonly<Record<string, string | undefined>> = {}
   ) {
-    const child = yield* ChildProcess.make("pnpm", args, {
+    const child = yield* ChildProcess.make(command, args, {
       cwd,
       env: {
         ...env,
@@ -24,15 +22,18 @@ export const runBuildCommand = Effect.fn("contentRuntime.runBuildCommand")(
         CONVEX_DEPLOYMENT_TOKEN: undefined,
       },
       extendEnv: true,
-      forceKillAfter: "5 seconds",
+      // Turbo's wrapper forwards SIGTERM, duplicating the process-group signal.
+      killSignal: "SIGINT",
+      // Let Portless finish its 10-second descendant shutdown before escalating.
+      forceKillAfter: "15 seconds",
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
     });
     const code = yield* child.exitCode;
     if (code !== 0) {
-      return yield* contentRuntimeCiError(
-        `pnpm ${args.join(" ")} failed with exit code ${code}.`
+      return yield* contentSnapshotError(
+        `${command} ${args.join(" ")} failed with exit code ${code}.`
       );
     }
   }
@@ -75,11 +76,11 @@ const reservePort = Effect.fn("contentRuntime.reservePort")(function* (
         socket.close(() => resume(Effect.void));
       })
   );
-  yield* Effect.callback<void, ReturnType<typeof contentRuntimeCiError>>(
+  yield* Effect.callback<void, ReturnType<typeof contentSnapshotError>>(
     (resume) => {
       server.once("error", () =>
         resume(
-          contentRuntimeCiError(
+          contentSnapshotError(
             `The saved local runtime port at ${url} is occupied; its process is preserved.`
           )
         )
@@ -107,7 +108,7 @@ export const withLocalBackend = Effect.fn("contentRuntime.withLocalBackend")(
       runtime.runtimeSchemaFingerprint !==
       (yield* readContentRuntimeSchemaFingerprint())
     ) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         "The prepared snapshot schema changed. Run pnpm runtime:clean and prepare the matching snapshot before building or starting."
       );
     }
@@ -147,7 +148,7 @@ export const withLocalBackend = Effect.fn("contentRuntime.withLocalBackend")(
           yield* fileSystem.readFileString(logPath),
           []
         );
-        return yield* contentRuntimeCiError(
+        return yield* contentSnapshotError(
           `The local Convex process exited before readiness: ${detail}`
         );
       }
@@ -158,7 +159,7 @@ export const withLocalBackend = Effect.fn("contentRuntime.withLocalBackend")(
       return yield* Effect.tryPromise({
         try: (signal) => fetch(`${runtime.query}/instance_name`, { signal }),
         catch: () =>
-          contentRuntimeCiError("The local Convex readiness request failed."),
+          contentSnapshotError("The local Convex readiness request failed."),
       }).pipe(Effect.map((response) => response.ok));
     });
     yield* ready().pipe(
@@ -169,7 +170,7 @@ export const withLocalBackend = Effect.fn("contentRuntime.withLocalBackend")(
       Effect.timeoutOrElse({
         duration: "4 minutes",
         orElse: () =>
-          contentRuntimeCiError(
+          contentSnapshotError(
             "The local Convex process did not become ready."
           ),
       })
@@ -178,7 +179,7 @@ export const withLocalBackend = Effect.fn("contentRuntime.withLocalBackend")(
       program,
       child.exitCode.pipe(
         Effect.flatMap((code) =>
-          contentRuntimeCiError(
+          contentSnapshotError(
             `The local Convex process exited during the application operation with exit code ${code}.`
           )
         )

@@ -8,6 +8,7 @@ import {
   MaterialKeySchema,
   MaterialSectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
+import { readMaterialIdentity } from "@repo/backend/content/material/identity";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -41,7 +42,8 @@ export const readPublishedTrustLesson = Effect.fn(
   } satisfies FunctionArgs<typeof api.contentRelease.material.identity>;
   const result = yield* readRuntimeQuery(
     api.contentRelease.material.identity,
-    args
+    args,
+    (queryArgs) => readMaterialIdentity(queryArgs)
   );
   if (!result.managed || result.publicPath === null) {
     return yield* new PublishedProjectionError({

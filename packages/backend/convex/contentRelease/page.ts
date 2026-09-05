@@ -1,7 +1,9 @@
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { readPageCatalog } from "@repo/backend/content/publication/page";
 import { query } from "@repo/backend/convex/_generated/server";
-import { readPageCatalog } from "@repo/backend/convex/contentRelease/page/catalog";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const pageCatalogValidator = v.object({
   activeReleaseId: v.union(v.string(), v.null()),
@@ -13,5 +15,8 @@ const pageCatalogValidator = v.object({
 export const catalog = query({
   args: {},
   returns: pageCatalogValidator,
-  handler: (ctx) => runConvexProgram(readPageCatalog(ctx)),
+  handler: (ctx) =>
+    runConvexProgram(
+      readPageCatalog().pipe(Effect.provide(convexPublicationLayer(ctx)))
+    ),
 });

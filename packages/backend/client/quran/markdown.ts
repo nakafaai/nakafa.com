@@ -5,7 +5,7 @@ import {
   QuranPublicationError,
 } from "@repo/backend/client/quran/publication";
 import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
-import type { QuranMarkdown } from "@repo/backend/convex/contentRelease/quran/markdown";
+import type { QuranMarkdown } from "@repo/backend/content/quran/markdown";
 import { Effect } from "effect";
 
 type QuranReadingSources = NonNullable<QuranMarkdown["sources"]>;

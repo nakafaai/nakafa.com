@@ -116,6 +116,14 @@ describe("contentRelease/receipt", () => {
         { ...release, stagedProjections: 1 },
         { ...release, completedAt: 1 },
         { ...release, receiptJson: "{}" },
+        { ...release, status: "verifying", verifiedAt: 1 },
+        {
+          ...release,
+          status: "verifying",
+          proofAt: 1,
+          proofJson: "{}",
+          proofFailure: "failed",
+        },
       ];
       for (const corrupted of invalid) {
         yield* expectIntegrity(stagedEvidence(corrupted, signed));
@@ -177,6 +185,13 @@ describe("contentRelease/receipt", () => {
         { ...completed, checkedIndex: -1 },
         { ...completed, receiptJson: undefined },
         { ...completed, receiptJson: "{}" },
+        {
+          ...completed,
+          receiptJson: JSON.stringify({
+            ...makePublicationReceipt(verified, signed),
+            releaseId: "another-release",
+          }),
+        },
       ];
       for (const corrupted of corruptions) {
         yield* expectIntegrity(completedReceipt(corrupted, signed));

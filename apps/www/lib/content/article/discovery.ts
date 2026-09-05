@@ -7,6 +7,11 @@ import {
   ArticleCategoryTitleSchema,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
+import {
+  readArticleBucket,
+  readCategoryArticles,
+  readLatestArticles,
+} from "@repo/backend/content/article/discovery";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -77,10 +82,14 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
     expectedActiveReleaseId?: ContentReleasePin
   ) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readRuntimeQuery(api.contentRelease.article.bucket, {
-      appLocale,
-      bucket,
-    });
+    const result = yield* readRuntimeQuery(
+      api.contentRelease.article.bucket,
+      {
+        appLocale,
+        bucket,
+      },
+      (queryArgs) => readArticleBucket(queryArgs.appLocale, queryArgs.bucket)
+    );
     const activeReleaseId = yield* decodeContentReleasePin(
       result.activeReleaseId,
       expectedActiveReleaseId,
@@ -109,10 +118,14 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
     expectedActiveReleaseId?: ContentReleasePin
   ) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readRuntimeQuery(api.contentRelease.article.latest, {
-      appLocale,
-      limit,
-    });
+    const result = yield* readRuntimeQuery(
+      api.contentRelease.article.latest,
+      {
+        appLocale,
+        limit,
+      },
+      (queryArgs) => readLatestArticles(queryArgs.appLocale, queryArgs.limit)
+    );
     const activeReleaseId = yield* decodeContentReleasePin(
       result.activeReleaseId,
       expectedActiveReleaseId,
@@ -140,11 +153,20 @@ export const readPublishedCategoryArticles = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(api.contentRelease.article.listing, {
-    appLocale,
-    category,
-    limit,
-  });
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.article.listing,
+    {
+      appLocale,
+      category,
+      limit,
+    },
+    (queryArgs) =>
+      readCategoryArticles(
+        queryArgs.appLocale,
+        queryArgs.category,
+        queryArgs.limit
+      )
+  );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,

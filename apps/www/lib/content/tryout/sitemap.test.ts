@@ -1,63 +1,66 @@
 // @vitest-environment node
 
-import { assert, beforeEach, describe, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
+import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { Effect } from "effect";
 import {
   readPublishedTryoutSitemap,
   readPublishedTryoutSitemapCount,
 } from "@/lib/content/tryout/sitemap";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
+import { createTestSnapshotQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeQueryMock,
+}));
 
 describe("published try-out sitemap", () => {
   beforeEach(() => {
     runtimeQueryMock.mockReset();
   });
 
-  it.effect("reads route inventory and one exact bounded page", () =>
-    Effect.gen(function* () {
-      runtimeQueryMock
-        .mockResolvedValueOnce({ pageCount: 1, routeCount: 2 })
-        .mockResolvedValueOnce({ paths: ["try-out/alpha", "try-out/zeta"] });
-
-      assert.deepStrictEqual(yield* readPublishedTryoutSitemapCount("en"), {
-        pageCount: 1,
-        routeCount: 2,
-      });
-      assert.deepStrictEqual(yield* readPublishedTryoutSitemap("en", 0), {
-        paths: ["try-out/alpha", "try-out/zeta"],
-      });
-      assert.strictEqual(runtimeQueryMock.mock.calls.length, 2);
-      assert.deepStrictEqual(runtimeQueryMock.mock.calls[0]?.[1], {
-        appLocale: "en",
-      });
-      assert.deepStrictEqual(runtimeQueryMock.mock.calls[1]?.[1], {
-        appLocale: "en",
-        page: 0,
-      });
-    })
+  it.effect.each(APP_LOCALE_CODES)(
+    "reads the complete authenticated %s route inventory",
+    (locale) =>
+      Effect.gen(function* () {
+        const fixture = yield* makeTryoutRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        runtimeQueryMock.mockImplementation(createTestSnapshotQuery(context));
+        expect(yield* readPublishedTryoutSitemapCount(locale)).toEqual({
+          pageCount: 1,
+          routeCount: 5,
+        });
+        expect(yield* readPublishedTryoutSitemap(locale, 0)).toEqual({
+          paths: [
+            "try-out/indonesia",
+            "try-out/indonesia/tka",
+            "try-out/indonesia/tka/matematika",
+            "try-out/indonesia/tka/matematika/set-1",
+            "try-out/indonesia/tka/matematika/set-1/matematika",
+          ],
+        });
+        expect(yield* readPublishedTryoutSitemap(locale, 1)).toBeNull();
+        expect(yield* readPublishedTryoutSitemap(locale, -1)).toBeNull();
+      })
   );
 
   it.effect(
-    "preserves runtime query failures in the Effect error channel",
+    "fails closed when the authenticated release has no try-out snapshot",
     () =>
       Effect.gen(function* () {
-        runtimeQueryMock.mockRejectedValueOnce(
-          new Error("sitemap unavailable")
+        const inactive = yield* createTestSnapshotContext(
+          makeRuntimeSource().source
         );
-
-        const failure = yield* readPublishedTryoutSitemapCount("id").pipe(
-          Effect.flip
-        );
-        assert.strictEqual(failure._tag, "TestRuntimeQueryError");
-        assert.strictEqual(failure.message, "Error: sitemap unavailable");
+        runtimeQueryMock.mockImplementation(createTestSnapshotQuery(inactive));
+        expect(
+          yield* readPublishedTryoutSitemapCount("id").pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ReleaseError",
+          code: "CONTENT_RELEASE_MISSING",
+        });
       })
   );
 });

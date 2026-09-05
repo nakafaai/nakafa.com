@@ -3,6 +3,8 @@ import "server-only";
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { ProgramTranslation } from "@nakafa/aksara-contracts/program/spec";
+import { readProgramCatalog } from "@repo/backend/content/program/catalog";
+import { readProgramPage } from "@repo/backend/content/program/page";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs } from "convex/server";
@@ -56,9 +58,13 @@ export const readPublishedProgramCatalog = Effect.fn(
   "NakafaProgram.readPublishedCatalog"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(api.contentRelease.program.catalog, {
-    appLocale,
-  });
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.program.catalog,
+    {
+      appLocale,
+    },
+    (queryArgs) => readProgramCatalog(queryArgs.appLocale)
+  );
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
     publicPath: "curricula",
@@ -117,7 +123,17 @@ export const readPublishedProgramPage = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies ProgramPageArgs;
-  const result = yield* readRuntimeQuery(api.contentRelease.program.page, args);
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.program.page,
+    args,
+    (queryArgs) =>
+      readProgramPage(
+        queryArgs.appLocale,
+        queryArgs.expectedManifestHash,
+        queryArgs.expectedReleaseId,
+        queryArgs.paginationOpts
+      )
+  );
   const routes = yield* Effect.forEach(result.result.page, (source) =>
     decodeCurriculumJson(source, input.locale, "curricula")
   );

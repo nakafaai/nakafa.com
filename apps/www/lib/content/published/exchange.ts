@@ -4,7 +4,11 @@ import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
-import { readPublicContent } from "@repo/backend/client/content/public";
+import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
+import {
+  readPublicContent,
+  readSnapshotPublicContent,
+} from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
 import { env } from "@/env";
@@ -14,6 +18,7 @@ import {
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
+import { loadContentSnapshot } from "@/lib/content/runtime/snapshot";
 
 /** Exact public identity sent to the server-only content runtime seam. */
 export interface PublishedContentRouteInput {
@@ -46,26 +51,37 @@ function readSourceRevision(found: PublicContentRuntimeFound) {
 export const readCurrentPublishedContent = Effect.fn(
   "NakafaContent.readCurrentPublishedContent"
 )(function* (input: PublishedContentRouteInput) {
-  const runtimeKeys = yield* Effect.try({
-    try: contentRuntimeKeys,
-    catch: () =>
-      new ContentRuntimeConfigurationError({
-        key: "CONTENT_RUNTIME_TOKEN",
-      }),
-  });
   const request = {
     appLocale: input.appLocale,
     publicPath: input.publicPath,
   };
   const liveRenderer = yield* rendererManifest;
-  const found = yield* readPublicContent(
-    {
-      siteUrl: env.CONTENT_BUILD_SITE_URL ?? env.NEXT_PUBLIC_CONVEX_SITE_URL,
-      token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
-    },
-    request,
-    liveRenderer
-  );
+  const snapshot = yield* Effect.tryPromise({
+    try: loadContentSnapshot,
+    catch: (cause) => new ContentRuntimeVerificationError({ cause }),
+  });
+  let found: PublicContentRuntimeFound;
+  if (snapshot === undefined) {
+    const runtimeKeys = yield* Effect.try({
+      try: contentRuntimeKeys,
+      catch: () =>
+        new ContentRuntimeConfigurationError({
+          key: "CONTENT_RUNTIME_TOKEN",
+        }),
+    });
+    found = yield* readPublicContent(
+      {
+        siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+        token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
+      },
+      request,
+      liveRenderer
+    );
+  } else {
+    found = yield* readSnapshotPublicContent(request, liveRenderer).pipe(
+      Effect.provideContext(snapshot)
+    );
+  }
   const data: PublishedContentData = {
     activeReleaseId: found.activeReleaseId,
     artifact: found.artifact,

@@ -34,8 +34,10 @@ import {
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
+import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
+import { resolvePublicRoute } from "@repo/backend/content/publication/public";
 import { contentKeyResolver } from "@repo/backend/content/trust";
-import { Effect, Schema } from "effect";
+import { Effect, Array as ReadonlyArray, Schema } from "effect";
 /** Server-owned connection values for the private content runtime endpoint. */
 export type ContentRuntimeTarget = ContentHttpTarget;
 /** Public route identity without its module-owned delivery discriminator. */
@@ -207,19 +209,15 @@ export const readPublicContentEvidenceBatch = Effect.fn(
   if (decoded.responses.length !== requests.length) {
     return yield* createContentContractError(response);
   }
-  return yield* Effect.forEach(requests, (request, index) =>
-    Effect.gen(function* () {
-      const batchResponse = decoded.responses[index];
-      if (batchResponse === undefined) {
-        return yield* createContentContractError(response);
-      }
-      return yield* verifyPublicContentResponse(
+  return yield* Effect.forEach(
+    ReadonlyArray.zip(requests, decoded.responses),
+    ([request, batchResponse]) =>
+      verifyPublicContentResponse(
         request,
         batchResponse,
         { kind: "frozen" },
         response.status
-      );
-    })
+      )
   );
 });
 /** Reads one public artifact verified against the caller's live renderer. */
@@ -235,3 +233,23 @@ export const readPublicContent = Effect.fn("NakafaContent.readPublicContent")(
     });
   }
 );
+
+/** Reads the same verified public exchange from an authenticated build snapshot. */
+export const readSnapshotPublicContent = Effect.fn(
+  "NakafaContent.readSnapshotPublicContent"
+)(function* (input: PublicContentRuntimeInput, rendererManifest: unknown) {
+  const request = yield* decodePublicContentRuntimeRequest({
+    delivery: "public",
+    ...input,
+  }).pipe(
+    Effect.mapError(() => new ContentTransportError({ reason: "request" }))
+  );
+  const row = yield* resolvePublicRoute(request.appLocale, request.publicPath);
+  const response = yield* decodePublicRuntimeRow(row);
+  return yield* verifyPublicContentResponse(
+    request,
+    response ?? { kind: "missing" },
+    { kind: "live", rendererManifest },
+    response ? 200 : 404
+  );
+});

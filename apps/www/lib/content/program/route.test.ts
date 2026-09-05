@@ -2,11 +2,13 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Effect } from "effect";
 import {
   getPublishedProgramRoute,
   readPublishedProgramRoute,
 } from "@/lib/content/program/route";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 import {
   readTestPublishedRoute,
@@ -17,9 +19,14 @@ import {
   testProgramRowJson,
   testProgramSubject,
 } from "@/test/content-program";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const readQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 
 /** Builds one complete route-model response from real Merdeka rows. */
@@ -68,18 +75,45 @@ function routeResponse(overrides?: {
 vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: readQueryMock,
+}));
 
 describe("published program route", () => {
   beforeEach(() => {
     cacheMock.mockReset();
     runtimeQueryMock.mockReset();
+    readQueryMock
+      .mockReset()
+      .mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
   });
+
+  it.effect(
+    "reads signed curriculum models and preserves managed absence",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeProgramRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        readQueryMock.mockImplementation(createTestSnapshotQuery(context));
+
+        const model = yield* readPublishedProgramRoute(
+          "en",
+          "curriculum/technical-program-1"
+        );
+        expect(model).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          program: { key: "technical-program-1" },
+          route: { title: "Technical Program 1" },
+        });
+        expect(
+          yield* readPublishedProgramRoute("en", "curriculum/missing-program")
+        ).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          program: null,
+          route: null,
+        });
+      })
+  );
 
   it("fails fast when a test route is not part of the signed fixture", () => {
     expect(() => readTestPublishedRoute("curriculum/missing")).toThrow(

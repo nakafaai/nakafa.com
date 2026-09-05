@@ -37,7 +37,6 @@ cannot express.
 git clone https://github.com/nakafaai/nakafa.com.git
 cd nakafa.com
 pnpm install --frozen-lockfile
-npm install --global portless
 cp apps/www/.env.example apps/www/.env.local
 ```
 
@@ -48,10 +47,19 @@ complete content fixture.
 
 Run `pnpm dev` for hot reload. Portless starts its HTTPS proxy on port 443
 and prints the branch-specific Nakafa URL, such as `https://ci.nakafa.localhost`.
+The web, CAS, and email preview servers use the same proxy and receive separate
+names. Run `pnpm exec portless list` to inspect active routes or
+`pnpm exec portless get nakafa` from the checkout to obtain its web URL.
 It creates and trusts a local certificate authority on first use. Run
-`portless doctor` to check the proxy, DNS, and certificate trust. Configure
+`pnpm exec portless doctor` to check the proxy, DNS, and certificate trust. Configure
 authentication for that exact local origin in your own development deployment
-when testing sign-in.
+when testing sign-in. Google rejects `.localhost` subdomains as OAuth redirect
+URIs. For Google sign-in, configure Portless with a domain you own, then register
+the exact HTTPS callback URI in Google and set the development backend's
+`SITE_URL` to the matching origin. See the
+[Portless OAuth guidance](https://github.com/vercel-labs/portless/blob/main/skills/oauth/SKILL.md).
+Signed snapshot runtimes contain inert authentication credentials and are for
+content and renderer verification.
 
 For production-mode verification, use your configured nonproduction backend
 or prepare a local signed snapshot once. Obtain the current encrypted snapshot,
@@ -73,24 +81,30 @@ pnpm build
 pnpm start
 ```
 
-`pnpm build` starts the prepared backend for signed content reads and stops it
-after building. `pnpm start` reopens that database and serves the existing build
-without rebuilding. The web server defaults to port 3000 and respects `PORT`.
+`pnpm build` checks the prepared runtime identity, starts its isolated backend,
+and builds against its verified content. Protected Vercel builds read the signed
+snapshot directly through the same domain readers. `pnpm start` reopens the
+isolated database and serves the existing build through Portless without
+rebuilding. Use the printed HTTPS
+URL for browser verification. Portless assigns internal application ports;
+`PORTLESS_APP_PORT` selects a fixed port when needed. Set `PORTLESS=0` to bypass
+the proxy explicitly.
 Stop it before `pnpm runtime:clean` removes the prepared runtime. To refresh
 the snapshot, clean it and repeat preparation.
 
-CI uses the same build lifecycle with the current production selection. The
+CI uses the same build lifecycle with the current production selection and
+`PORTLESS=0` for its fixed-port browser checks. The
 protected Vercel integration invokes it through `convex deploy --cmd`; Vercel
 keeps public production client URLs, reads build content from the isolated
 snapshot, and removes all temporary state when the build ends.
 
 ## Repository layout
 
-- `apps/www`: main Next.js application on port 3000
+- `apps/www`: main Next.js application at `https://nakafa.localhost`
 - `apps/mcp`: frameworkless Vercel ingress for the Convex MCP runtime
 - `apps/api`: frameworkless Vercel ingress for the Convex REST runtime
-- `apps/cas`: Python CAS service on port 3003
-- `apps/email`: email preview application on port 3004
+- `apps/cas`: Python CAS service at `https://cas.nakafa.localhost`
+- `apps/email`: email preview application at `https://email.nakafa.localhost`
 - `packages/backend`: Convex schema, functions, workflows, and integrations
 - `packages/design-system`: shared React components and renderer implementations
 - `packages/ai`: Effect-native AI capabilities

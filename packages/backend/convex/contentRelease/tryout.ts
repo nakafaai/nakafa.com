@@ -1,13 +1,15 @@
-import { query } from "@repo/backend/convex/_generated/server";
-import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
-import { readTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { readTryoutCatalog } from "@repo/backend/content/tryout/catalog";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import {
   readTryoutSitemapCount,
   readTryoutSitemapPage,
-} from "@repo/backend/convex/contentRelease/tryout/sitemap";
+} from "@repo/backend/content/tryout/sitemap";
+import { query } from "@repo/backend/convex/_generated/server";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const tryoutCatalogValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
@@ -43,7 +45,9 @@ export const catalog = query({
   args: { appLocale: appLocaleValidator },
   returns: tryoutCatalogValidator,
   handler: (ctx, { appLocale }) =>
-    runConvexProgram(readTryoutCatalog(ctx, appLocale)),
+    runConvexProgram(
+      readTryoutCatalog(appLocale).pipe(Effect.provide(convexTryoutLayer(ctx)))
+    ),
 });
 
 /** Returns the bounded sitemap inventory for one active try-out locale. */
@@ -51,7 +55,11 @@ export const sitemapCount = query({
   args: { appLocale: appLocaleValidator },
   returns: tryoutSitemapCountValidator,
   handler: (ctx, { appLocale }) =>
-    runConvexProgram(readTryoutSitemapCount(ctx, appLocale)),
+    runConvexProgram(
+      readTryoutSitemapCount(appLocale).pipe(
+        Effect.provide(convexTryoutLayer(ctx))
+      )
+    ),
 });
 
 /** Returns one exact verified try-out sitemap page. */
@@ -62,7 +70,11 @@ export const sitemapPage = query({
   },
   returns: tryoutSitemapPageValidator,
   handler: (ctx, { appLocale, page }) =>
-    runConvexProgram(readTryoutSitemapPage(ctx, appLocale, page)),
+    runConvexProgram(
+      readTryoutSitemapPage(appLocale, page).pipe(
+        Effect.provide(convexTryoutLayer(ctx))
+      )
+    ),
 });
 
 /** Returns signed localized Tryout options and their public route count. */

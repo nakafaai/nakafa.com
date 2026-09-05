@@ -224,6 +224,16 @@ describe("contentRelease/status", () => {
     await expect(mismatched.query(currentRelease, {})).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
+    await mismatched.mutation(async (ctx) => {
+      const state = await requireState(ctx);
+      await ctx.db.patch(state._id, { candidateSequence: 99 });
+    });
+    await expect(getStatus(mismatched)).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Release ${TEST_RELEASE_ID} lost its candidate slot.`,
+      },
+    });
 
     const terminal = convexTest(schema, convexModules);
     await terminal.mutation((ctx) => insertTestRelease(ctx));
@@ -235,6 +245,24 @@ describe("contentRelease/status", () => {
     });
     await expect(terminal.query(currentRelease, {})).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects a stored signed envelope from another release in an owned slot", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertTestRelease(ctx);
+      const release = await requireRelease(ctx);
+      await ctx.db.patch(release._id, {
+        releaseJson: testReleaseJson({ releaseId: "release-other" }),
+      });
+    });
+
+    await expect(getStatus(t)).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Release ${TEST_RELEASE_ID} lost its signed slot identity.`,
+      },
     });
   });
 });

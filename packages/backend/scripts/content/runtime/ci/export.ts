@@ -1,17 +1,3 @@
-import { createEncryptedArchive } from "@repo/backend/scripts/content/runtime/ci/archive";
-import { runConvexData } from "@repo/backend/scripts/content/runtime/ci/command";
-import type { ExportConfig } from "@repo/backend/scripts/content/runtime/ci/config";
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
-import {
-  buildRuntimeGenerations,
-  readProductionGenerations,
-  verifyRuntimeSelection,
-} from "@repo/backend/scripts/content/runtime/ci/generation";
-import {
-  decodeJsonRows,
-  type JsonObject,
-} from "@repo/backend/scripts/content/runtime/ci/json";
-import { projectActiveRuntime } from "@repo/backend/scripts/content/runtime/ci/projection";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
   CONTENT_RUNTIME_CACHE_FILE,
@@ -19,12 +5,26 @@ import {
   formatManifest,
   formatMetadata,
   type ManifestEntry,
-} from "@repo/backend/scripts/content/runtime/ci/snapshot";
+} from "@repo/backend/content/snapshot/codec";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
+import {
+  decodeJsonRows,
+  type JsonObject,
+} from "@repo/backend/content/snapshot/json";
+import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
+import {
+  buildRuntimeGenerations,
+  verifyRuntimeSelection,
+} from "@repo/backend/content/snapshot/selection";
 import {
   CONTENT_RUNTIME_TABLES,
   type RuntimeTable,
   readContentRuntimeSchemaFingerprint,
-} from "@repo/backend/scripts/content/runtime/tables";
+} from "@repo/backend/content/snapshot/tables";
+import { createEncryptedArchive } from "@repo/backend/scripts/content/runtime/ci/archive";
+import { runConvexData } from "@repo/backend/scripts/content/runtime/ci/command";
+import type { ExportConfig } from "@repo/backend/scripts/content/runtime/ci/config";
+import { readProductionGenerations } from "@repo/backend/scripts/content/runtime/ci/generation";
 import { Console, Effect, FileSystem, Redacted } from "effect";
 
 export const exportSignedRuntime = Effect.fn(
@@ -40,7 +40,7 @@ export const exportSignedRuntime = Effect.fn(
       cacheExists &&
       (yield* fileSystem.readDirectory(cacheRoot)).length > 0
     ) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         "Signed runtime cache directory must be empty before export."
       );
     }
@@ -84,7 +84,7 @@ export const exportSignedRuntime = Effect.fn(
         .readFileString(sourcePath)
         .pipe(Effect.flatMap(decodeJsonRows));
       if (rows.length >= config.exportLimit) {
-        return yield* contentRuntimeCiError(
+        return yield* contentSnapshotError(
           `Content runtime table ${table} reached the export limit.`
         );
       }
@@ -147,7 +147,7 @@ export const exportSignedRuntime = Effect.fn(
       cacheEntries.length !== 1 ||
       cacheEntries[0] !== CONTENT_RUNTIME_CACHE_FILE
     ) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         "Encrypted signed runtime must be the only cache entry."
       );
     }
@@ -156,7 +156,7 @@ export const exportSignedRuntime = Effect.fn(
     const currentSchemaFingerprint =
       yield* readContentRuntimeSchemaFingerprint();
     if (config.runtimeSchemaFingerprint !== currentSchemaFingerprint) {
-      return yield* contentRuntimeCiError(
+      return yield* contentSnapshotError(
         "Runtime schema fingerprint changed after cache identity creation."
       );
     }

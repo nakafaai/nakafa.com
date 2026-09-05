@@ -1,5 +1,9 @@
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
+import type {
+  RuntimeSelectionIdentity,
+  SnapshotIdentity,
+} from "@repo/backend/content/snapshot/spec";
 import { Config, Effect, Redacted } from "effect";
 
 /** Maximum row count for one encrypted snapshot table. */
@@ -22,15 +26,6 @@ const hasDisallowedDeployKeyCharacter = (value: string) =>
       (codePoint >= 0x7f && codePoint <= 0x9f)
     );
   });
-
-export interface SnapshotIdentity {
-  readonly runtimeSchemaFingerprint: string;
-  readonly runtimeSelectionHash: string;
-}
-
-export interface RuntimeSelectionIdentity {
-  readonly runtimeSelectionHash: string;
-}
 
 export interface ProductionConfig {
   readonly deployKey: Redacted.Redacted;
@@ -56,7 +51,7 @@ const validateHex = (name: string, value: string) => {
     return Effect.succeed(value);
   }
 
-  return Effect.fail(contentRuntimeCiError(`${name} must be a SHA-256 hash.`));
+  return Effect.fail(contentSnapshotError(`${name} must be a SHA-256 hash.`));
 };
 
 export const validateProductionDeployKey = (deployKey: string) => {
@@ -80,7 +75,7 @@ export const validateProductionDeployKey = (deployKey: string) => {
     hasDisallowedDeployKeyCharacter(secret)
   ) {
     return Effect.fail(
-      contentRuntimeCiError(
+      contentSnapshotError(
         "Content runtime requires the exact production-scoped Convex deploy key."
       )
     );
@@ -152,7 +147,7 @@ export const readExportConfig = Effect.gen(function* () {
   );
 
   if (Redacted.value(cacheKey).length < 43) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "Signed content cache key is missing or too short."
     );
   }
@@ -161,7 +156,7 @@ export const readExportConfig = Effect.gen(function* () {
     exportLimit < 1 ||
     exportLimit > MAX_CONTENT_RUNTIME_EXPORT_LIMIT
   ) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       `CONTENT_RUNTIME_EXPORT_LIMIT must be between 1 and ${MAX_CONTENT_RUNTIME_EXPORT_LIMIT}.`
     );
   }
@@ -174,7 +169,7 @@ export const readImportConfig = Effect.gen(function* () {
   const runnerTemp = yield* Config.nonEmptyString("RUNNER_TEMP");
 
   if (Redacted.value(cacheKey).length < 43) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "Signed content cache key is missing or too short."
     );
   }

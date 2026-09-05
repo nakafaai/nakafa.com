@@ -1,3 +1,4 @@
+import { readContentReference } from "@repo/backend/content/reference/read";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Effect, Schema } from "effect";
@@ -64,7 +65,8 @@ export function getMetadataFromSlug(
           kind: "route",
           publicPath: slug.join("/"),
         },
-      }
+      },
+      ({ input }) => readContentReference(input)
     );
 
     if (!reference) {

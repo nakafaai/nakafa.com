@@ -1,15 +1,16 @@
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
+import { convexQuranLayer } from "@repo/backend/content/quran/convex";
+import { loadQuranOwner } from "@repo/backend/content/quran/owner";
+import { readQuranRow } from "@repo/backend/content/quran/row";
+import { authenticateQuranSearchHit } from "@repo/backend/content/quran/search";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
 import { QURAN_SEARCH_RESULT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
-import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
-import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
 import { validateSearchQuery } from "@repo/backend/convex/contentRelease/search/input";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import { interleaveSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
-import { authenticateQuranSearchHit } from "@repo/backend/convex/contents/helpers/search/quran/authenticate";
 import { readTextCandidates } from "@repo/backend/convex/contents/helpers/search/quran/candidates";
 import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
@@ -41,7 +42,9 @@ export const readSignedQuranSearchDocuments = Effect.fn(
     return [];
   }
 
-  const owner = yield* loadQuranOwner(ctx);
+  const owner = yield* loadQuranOwner().pipe(
+    Effect.provide(convexQuranLayer(ctx))
+  );
   if (owner.snapshotId === null) {
     return [];
   }
@@ -140,11 +143,10 @@ const readSignedQuranSearchDocument = Effect.fn(
   surahNumber: number
 ) {
   const signed = yield* readQuranRow(
-    ctx,
     snapshotId,
     quranSearchIdentity(appLocale, surahNumber),
     QuranSearchRowSchema
-  );
+  ).pipe(Effect.provide(convexQuranLayer(ctx)));
   return buildSignedQuranSearchDocument(signed, appLocale);
 });
 
@@ -226,7 +228,8 @@ function authenticateQuranRows(
   return Effect.forEach(
     rows,
     (row) =>
-      authenticateQuranSearchHit(ctx, snapshotId, row).pipe(
+      authenticateQuranSearchHit(snapshotId, row).pipe(
+        Effect.provide(convexQuranLayer(ctx)),
         Effect.map((signed) => ({
           document: buildSignedQuranSearchDocument(signed, appLocale),
           row,

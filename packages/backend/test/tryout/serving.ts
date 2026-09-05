@@ -5,6 +5,7 @@ import {
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { decodeSnapshotJson } from "@repo/backend/convex/contentRelease/parse";
+import { mergeManagedFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -27,7 +28,7 @@ import { Effect } from "effect";
 /** Creates an inherited active try-out snapshot with authentic immutable bundle dependencies. */
 export const makeTryoutRuntimeSource = Effect.fn(
   "RuntimeSnapshotTest.tryoutSource"
-)(function* () {
+)(function* (compiledCode?: string) {
   const t = convexTest(schema, convexModules);
   const artifacts = ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) => {
     const placement = makeTryoutStartPlacement(appLocale);
@@ -35,10 +36,14 @@ export const makeTryoutRuntimeSource = Effect.fn(
       testSignedArtifact("tka-math", {
         contentKey: placement.questionContentKey,
         artifactLocale: appLocale,
+        compiledCode:
+          compiledCode ??
+          'return { default: function TechnicalQuestion() { return "Technical question"; } };',
       }),
       testSignedArtifact("tka-math", {
         contentKey: placement.answerContentKey,
         artifactLocale: appLocale,
+        compiledCode,
       }),
     ];
   });
@@ -114,6 +119,11 @@ export const makeTryoutRuntimeSource = Effect.fn(
     "contentReleases",
     (fixture.source.get("contentReleases") ?? []).map((row) => ({
       ...row,
+      baseFamilies: [...origin.manifest.scope.families],
+      resultFamilies: mergeManagedFamilies(
+        origin.manifest.scope.families,
+        signed.manifest.scope.families
+      ),
       tryoutRuntimeBundleHash: bundle.bundleHash,
     }))
   );

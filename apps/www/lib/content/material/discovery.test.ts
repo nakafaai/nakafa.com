@@ -2,13 +2,23 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
+import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { Data, Effect } from "effect";
 import {
   readPublishedLatestMaterials,
   readPublishedMaterialBucket,
 } from "@/lib/content/material/discovery";
+import { makeMaterialRuntimeSource } from "@/test/content/material";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const runtimeReadMock = vi.hoisted(() => vi.fn());
 const publicPath =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
 const sourcePath =
@@ -21,12 +31,9 @@ class TestMaterialRuntimeUnavailable extends Data.TaggedError(
   readonly operation: "query";
 }> {}
 
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeReadMock,
+}));
 
 const summary = {
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -40,8 +47,36 @@ const summary = {
 };
 
 describe("published material discovery", () => {
+  it.effect(
+    "discovers bounded material metadata from authenticated serving rows",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeMaterialRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const projection = makeMaterialProjection("en", 1);
+        const bucket = getHashBucket(hashContentProjection(projection));
+
+        const partition = yield* readPublishedMaterialBucket("en", bucket);
+        expect(partition).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          materials: expect.arrayContaining([
+            expect.objectContaining({ publicPath: projection.publicPath }),
+          ]),
+        });
+        const latest = yield* readPublishedLatestMaterials("en", 1);
+        expect(latest.materials).toHaveLength(1);
+        expect(latest.materials[0]).toMatchObject({
+          publicPath: makeMaterialProjection("en", 2).publicPath,
+        });
+      })
+  );
+
   beforeEach(() => {
     runtimeQueryMock.mockReset();
+    runtimeReadMock.mockImplementation(
+      createTestRuntimeQuery(runtimeQueryMock)
+    );
   });
 
   it.effect("rejects unmanaged buckets and reads complete signed buckets", () =>

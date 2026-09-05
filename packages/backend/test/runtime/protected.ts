@@ -6,7 +6,10 @@ import {
   type ProtectedContentRuntimeSelector,
   ProtectedContentRuntimeSelectorSchema,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
+import {
+  type TryoutPlacement,
+  TryoutPlacementSchema,
+} from "@nakafa/aksara-contracts/tryout/placement";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -63,42 +66,53 @@ function insertArtifact(
 
 /** Activates signed protected question and answer artifacts for runtime tests. */
 export async function insertProtectedRuntime(
-  ctx: MutationCtx
+  ctx: MutationCtx,
+  options?: { readonly compiledCode?: string; readonly questionCount?: number }
 ): Promise<ProtectedRuntimeFixture> {
-  const enQuestion = testSignedArtifact("snbt-quant", {
-    contentKey:
-      "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question",
-    rawMdx: "## Technical question",
-  });
-  const enAnswer = testSignedArtifact("snbt-quant", {
-    contentKey:
-      "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/answer",
-    rawMdx: "#### Technical answer",
-  });
-  const idQuestion = testSignedArtifact("snbt-quant", {
-    artifactLocale: "id",
-    contentKey: enQuestion.payload.contentKey,
-    rawMdx: "## Pertanyaan teknis",
-  });
-  const idAnswer = testSignedArtifact("snbt-quant", {
-    artifactLocale: "id",
-    contentKey: enAnswer.payload.contentKey,
-    rawMdx: "#### Jawaban teknis",
-  });
-  const enPlacement = makeTryoutPlacementRow("en", {
-    answerArtifactHash: enAnswer.artifactHash,
-    questionArtifactHash: enQuestion.artifactHash,
-  }).record.row;
-  const idPlacement = makeTryoutPlacementRow("id", {
-    answerArtifactHash: idAnswer.artifactHash,
-    questionArtifactHash: idQuestion.artifactHash,
-  }).record.row;
+  const locales = ["en", "id"] as const;
+  const bodies = locales.flatMap((appLocale) =>
+    Array.from({ length: options?.questionCount ?? 1 }, (_, index) => {
+      const questionKey = `question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-${index + 1}`;
+      const question = testSignedArtifact("snbt-quant", {
+        artifactLocale: appLocale,
+        compiledCode: options?.compiledCode,
+        contentKey: `${questionKey}/question`,
+        rawMdx:
+          appLocale === "en" ? "## Technical question" : "## Pertanyaan teknis",
+      });
+      const answer = testSignedArtifact("snbt-quant", {
+        artifactLocale: appLocale,
+        compiledCode: options?.compiledCode,
+        contentKey: `${questionKey}/answer`,
+        rawMdx:
+          appLocale === "en" ? "#### Technical answer" : "#### Jawaban teknis",
+      });
+      const placement = Schema.decodeSync(TryoutPlacementSchema)({
+        ...makeTryoutPlacementRow(appLocale, {
+          answerArtifactHash: answer.artifactHash,
+          questionArtifactHash: question.artifactHash,
+        }).record.row,
+        answerContentKey: answer.payload.contentKey,
+        questionContentKey: question.payload.contentKey,
+        questionOrder: index + 1,
+        questionSourcePath: `packages/corpus/${questionKey}`,
+      });
+      return { answer, placement, question };
+    })
+  );
+  const english = bodies.filter(
+    ({ placement }) => placement.appLocale === "en"
+  );
+  const first = english[0];
+  if (!first) {
+    throw new Error("Expected a protected runtime question.");
+  }
   const snapshotId = await activateTryoutSnapshot(ctx, {
     catalog: [
       makeTryoutCatalogRow("en").record.row,
       makeTryoutCatalogRow("id").record.row,
     ],
-    placements: [enPlacement, idPlacement],
+    placements: bodies.map(({ placement }) => placement),
   });
   const [release, state] = await Promise.all([
     ctx.db.query("contentReleases").unique(),
@@ -153,20 +167,23 @@ export async function insertProtectedRuntime(
     tryoutRuntimeBundleHash: bundle.bundleHash,
   });
   await Promise.all(
-    [enQuestion, enAnswer, idQuestion, idAnswer].map((artifact) =>
-      insertArtifact(ctx, artifact)
-    )
+    bodies
+      .flatMap(({ question, answer }) => [question, answer])
+      .map((artifact) => insertArtifact(ctx, artifact))
   );
-  const question = protectedSelector(enPlacement, "authenticated");
-  const answer = protectedSelector(enPlacement, "entitled");
+  const question = protectedSelector(first.placement, "authenticated");
+  const answer = protectedSelector(first.placement, "entitled");
   const request = Schema.decodeSync(ProtectedContentRuntimeRequestSchema)({
     bundleHash: bundle.bundleHash,
-    selectors: [question, answer],
+    selectors: english.flatMap(({ placement }) => [
+      protectedSelector(placement, "authenticated"),
+      protectedSelector(placement, "entitled"),
+    ]),
     snapshotId,
   });
   return {
     answer,
-    placement: enPlacement,
+    placement: first.placement,
     question,
     request,
     runtimeId,

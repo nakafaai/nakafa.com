@@ -208,6 +208,7 @@ describe("contentRelease/article/write", () => {
       testHead({ delivery: "authenticated" }),
       testHead({ operation: "delete" }),
       testHead({ projectionHash: "" }),
+      testHead({ projectionHash: "sha256:invalid" }),
     ]) {
       await expect(
         invalid.mutation((ctx) => write(ctx, head))

@@ -13,11 +13,60 @@ import {
   encodeArticlePublicationCursor,
 } from "@repo/contents/_types/publication";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const categories = api.contentRelease.article.categories;
 const page = api.contentRelease.article.publications;
 
 describe("contentRelease/article", () => {
+  it.effect(
+    "preserves article modification dates through discovery and sitemap queries",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const projection = testArticleProjection(0);
+        const dateModified = "2026-08-01";
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertRuntimeArticles(ctx, 1, () => ({
+              ...projection,
+              metadata: { ...projection.metadata, dateModified },
+            }))
+          )
+        );
+        const latest = yield* Effect.promise(() =>
+          t.query(api.contentRelease.article.latest, {
+            appLocale: "en",
+            limit: 1,
+          })
+        );
+        expect(latest.articles).toMatchObject([
+          { dateModified, publicPath: projection.publicPath },
+        ]);
+        const buckets = yield* Effect.promise(() =>
+          t.query(api.contentRelease.article.sitemapBuckets, {
+            appLocale: "en",
+          })
+        );
+        const sitemap = yield* Effect.promise(() =>
+          Promise.all(
+            buckets.buckets.map((bucket) =>
+              t.query(api.contentRelease.article.sitemapPage, {
+                appLocale: "en",
+                bucket,
+              })
+            )
+          )
+        );
+        expect(
+          sitemap.flatMap((result) => result?.routes ?? [])
+        ).toContainEqual({
+          lastModified: dateModified,
+          publicPath: projection.publicPath,
+        });
+      })
+  );
+
   it("returns localized categories and newest articles through exact indexes", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => insertRuntimeArticles(ctx, 2));

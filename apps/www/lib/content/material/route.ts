@@ -14,6 +14,7 @@ import {
   type RendererDomain,
   RendererDomainSchema,
 } from "@nakafa/aksara-contracts/renderer/domain";
+import { readMaterialModel } from "@repo/backend/content/material/read";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -105,7 +106,13 @@ export const readPublishedMaterialRoute = Effect.fn(
         : { expectedActiveReleaseId }),
       appLocale,
       publicPath,
-    }
+    },
+    (queryArgs) =>
+      readMaterialModel(
+        queryArgs.appLocale,
+        queryArgs.publicPath,
+        queryArgs.expectedActiveReleaseId
+      )
   );
   const decodedActiveAppLocales = Schema.decodeUnknownEffect(
     ActiveAppLocaleListSchema

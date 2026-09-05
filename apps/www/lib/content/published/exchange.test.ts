@@ -1,14 +1,25 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   GitCommitShaSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
-import { readPublicContent } from "@repo/backend/client/content/public";
+import {
+  ContentRuntimeMissingError,
+  ContentRuntimeVerificationError,
+} from "@repo/backend/client/content/errors";
+import {
+  readPublicContent,
+  readSnapshotPublicContent,
+} from "@repo/backend/client/content/public";
+import { readActiveIdentity } from "@repo/backend/content/publication/read";
+import { snapshotPublicationLayer } from "@repo/backend/content/publication/snapshot";
+import { ContentSnapshotError } from "@repo/backend/content/snapshot/error";
+import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
+import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
-import { Effect } from "effect";
+import { Context, Effect, Layer } from "effect";
 import type { PublishedContentInput } from "@/lib/content/published/exchange";
 import {
   readCurrentPublishedContent,
@@ -21,9 +32,10 @@ import {
 } from "@/test/content-preview";
 
 const readPublicContentMock = vi.hoisted(() => vi.fn());
+const readSnapshotPublicContentMock = vi.hoisted(() => vi.fn());
+const snapshotMock = vi.hoisted(() => vi.fn());
 const runtimeKeysMock = vi.hoisted(() => vi.fn());
 const runtimeEnv = vi.hoisted(() => ({
-  CONTENT_BUILD_SITE_URL: "http://127.0.0.1:3211" as string | undefined,
   NEXT_PUBLIC_CONVEX_SITE_URL: "https://production.convex.site",
 }));
 const liveRenderer = vi.hoisted(() => ({
@@ -78,6 +90,10 @@ const routeInput = {
 
 vi.mock("@repo/backend/client/content/public", () => ({
   readPublicContent: readPublicContentMock,
+  readSnapshotPublicContent: readSnapshotPublicContentMock,
+}));
+vi.mock("@/lib/content/runtime/snapshot", () => ({
+  loadContentSnapshot: snapshotMock,
 }));
 vi.mock("@repo/next-config/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
@@ -91,11 +107,12 @@ vi.mock("@/lib/content/renderer/manifest", () => ({
 
 beforeEach(() => {
   readPublicContentMock.mockReset();
+  readSnapshotPublicContentMock.mockReset();
+  snapshotMock.mockReset().mockResolvedValue(undefined);
   runtimeKeysMock.mockReset();
   runtimeKeysMock.mockReturnValue({
     CONTENT_RUNTIME_TOKEN: "runtime-token",
   });
-  runtimeEnv.CONTENT_BUILD_SITE_URL = "http://127.0.0.1:3211";
 });
 
 describe("published content exchange", () => {
@@ -113,7 +130,7 @@ describe("published content exchange", () => {
       });
       expect(readPublicContent).toHaveBeenCalledWith(
         {
-          siteUrl: "http://127.0.0.1:3211",
+          siteUrl: runtimeEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
           token: "runtime-token",
         },
         {
@@ -122,6 +139,7 @@ describe("published content exchange", () => {
         },
         liveRenderer
       );
+      expect(readSnapshotPublicContent).not.toHaveBeenCalled();
     })
   );
 
@@ -164,21 +182,98 @@ describe("published content exchange", () => {
       })
   );
 
-  it.effect("keeps normal server reads on the public runtime", () =>
+  it.effect(
+    "provides the selected publication context without live transport credentials",
+    () =>
+      Effect.gen(function* () {
+        const source = makeRuntimeSource();
+        const tables = yield* projectActiveRuntime(source.source);
+        const context = yield* Layer.build(snapshotPublicationLayer(tables));
+        snapshotMock.mockResolvedValue(context);
+        runtimeKeysMock.mockImplementation(() => {
+          throw new Error("The live runtime token is absent.");
+        });
+        readSnapshotPublicContentMock.mockReturnValue(
+          readActiveIdentity().pipe(
+            Effect.map((identity) => {
+              assert.isNotNull(identity);
+              return { ...found, activeReleaseId: identity.releaseId };
+            })
+          )
+        );
+
+        expect(yield* readCurrentPublishedContent(routeInput)).toMatchObject({
+          activeReleaseId: source.state.activeReleaseId,
+          sourceRevision,
+        });
+
+        expect(readSnapshotPublicContent).toHaveBeenCalledWith(
+          routeInput,
+          liveRenderer
+        );
+        expect(contentRuntimeKeys).not.toHaveBeenCalled();
+        expect(readPublicContent).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "rejects snapshot loading failures before either exchange can run",
+    () =>
+      Effect.gen(function* () {
+        const failure = new ContentSnapshotError({
+          message:
+            "Serving snapshot data failed its descriptor integrity check.",
+        });
+        snapshotMock.mockRejectedValue(failure);
+
+        expect(
+          yield* readPublishedContent(input).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+          cause: failure,
+        });
+        expect(contentRuntimeKeys).not.toHaveBeenCalled();
+        expect(readPublicContent).not.toHaveBeenCalled();
+        expect(readSnapshotPublicContent).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect("preserves snapshot artifact failures without a native retry", () =>
     Effect.gen(function* () {
-      runtimeEnv.CONTENT_BUILD_SITE_URL = undefined;
-      readPublicContentMock.mockReturnValue(Effect.succeed(found));
-
-      yield* readCurrentPublishedContent(routeInput);
-
-      expect(readPublicContent).toHaveBeenCalledWith(
-        {
-          siteUrl: runtimeEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
-          token: "runtime-token",
+      snapshotMock.mockResolvedValue(Context.empty());
+      const failure = new ContentRuntimeMissingError({
+        request: {
+          ...routeInput,
+          delivery: "public",
         },
-        routeInput,
-        liveRenderer
+      });
+      readSnapshotPublicContentMock.mockReturnValue(Effect.fail(failure));
+
+      expect(yield* readPublishedContent(input).pipe(Effect.flip)).toBe(
+        failure
       );
+      expect(readPublicContent).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("enforces release ownership for snapshot exchanges", () =>
+    Effect.gen(function* () {
+      snapshotMock.mockResolvedValue(Context.empty());
+      readSnapshotPublicContentMock.mockReturnValue(
+        Effect.succeed({
+          ...found,
+          activeReleaseId: ReleaseIdSchema.make("release-next"),
+        })
+      );
+
+      expect(
+        yield* readPublishedContent(input).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: "release-next",
+        expectedReleaseId: found.activeReleaseId,
+      });
+      expect(readPublicContent).not.toHaveBeenCalled();
     })
   );
 
@@ -207,7 +302,11 @@ describe("published content exchange", () => {
       });
 
       readPublicContentMock.mockReturnValueOnce(
-        Effect.fail({ _tag: "ContentRuntimeVerificationError" })
+        Effect.fail(
+          new ContentRuntimeVerificationError({
+            cause: new Error("The signed renderer does not match."),
+          })
+        )
       );
 
       expect(
@@ -217,7 +316,7 @@ describe("published content exchange", () => {
   );
 
   it.effect(
-    "fails closed when the selected runtime has no private credential",
+    "fails closed when the live runtime has no private credential",
     () =>
       Effect.gen(function* () {
         runtimeKeysMock.mockImplementation(() => {

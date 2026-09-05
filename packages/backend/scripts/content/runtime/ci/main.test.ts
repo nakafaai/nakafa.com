@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => {
     export: vi.fn(),
     generations: vi.fn(),
     import: vi.fn(),
+    read: vi.fn(),
     start: vi.fn(),
     verify: vi.fn(),
     duplicate: false,
@@ -35,15 +36,20 @@ vi.mock("@repo/backend/scripts/content/runtime/ci/export", () => ({
   exportSignedRuntime: mocks.export,
 }));
 vi.mock("@repo/backend/scripts/content/runtime/ci/import", () => ({
-  importSignedRuntime: mocks.import,
+  importRuntimeTables: mocks.import,
+}));
+vi.mock("@repo/backend/scripts/content/runtime/ci/read", () => ({
+  readSignedRuntime: mocks.read,
 }));
 vi.mock("@repo/backend/scripts/content/runtime/ci/generation", () => ({
   formatGenerationEnvironment: (selection: { runtimeSelectionHash: string }) =>
     `CONTENT_RUNTIME_SELECTION_HASH=${selection.runtimeSelectionHash}`,
   readProductionGenerations: mocks.generations,
+}));
+vi.mock("@repo/backend/content/snapshot/selection", () => ({
   verifyRuntimeSelection: mocks.verify,
 }));
-vi.mock("@repo/backend/scripts/content/runtime/tables", () => ({
+vi.mock("@repo/backend/content/snapshot/tables", () => ({
   CONTENT_RUNTIME_TABLES: mocks.tables,
   readContentRuntimeSchemaFingerprint: () => Effect.succeed("a".repeat(64)),
   validateContentRuntimeTableDefinitions: Effect.suspend(() =>
@@ -98,6 +104,7 @@ describe("runtime CLI", () => {
     ]) {
       command.mockReturnValue(Effect.void);
     }
+    mocks.read.mockReturnValue(Effect.succeed({ contentState: [] }));
     mocks.generations.mockReturnValue(
       Effect.succeed({ runtimeSelectionHash: "b".repeat(64) })
     );
@@ -147,7 +154,10 @@ describe("runtime CLI", () => {
           expect(mocks.export).toHaveBeenCalledOnce();
         }
         if (mode === "import") {
-          expect(mocks.import).toHaveBeenCalledOnce();
+          expect(mocks.read).toHaveBeenCalledOnce();
+          expect(mocks.import).toHaveBeenCalledWith(expect.any(Object), {
+            contentState: [],
+          });
         }
         if (mode === "verify-generations") {
           expect(mocks.verify).toHaveBeenCalledOnce();
@@ -171,7 +181,7 @@ describe("runtime CLI", () => {
         yield* fixture;
         const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);
         expect(yield* execute(mode).pipe(Effect.flip)).toMatchObject({
-          _tag: "ContentRuntimeCiError",
+          _tag: "ContentSnapshotError",
         });
         expect(stderr).toHaveBeenCalledWith(
           expect.stringContaining("Usage: runtime:ci")
@@ -206,7 +216,7 @@ describe("runtime CLI", () => {
             mocks.duplicate = true;
           }
           expect(yield* execute("fingerprint").pipe(Effect.flip)).toMatchObject(
-            { _tag: "ContentRuntimeCiError" }
+            { _tag: "ContentSnapshotError" }
           );
           expect(yield* fs.exists(`${directory}/runtime-schema.env`)).toBe(
             false
@@ -232,11 +242,11 @@ describe("runtime CLI", () => {
           expect.stringContaining("private")
         );
         vi.resetModules();
-        const { contentRuntimeCiError } = yield* Effect.promise(
-          () => import("@repo/backend/scripts/content/runtime/ci/error")
+        const { contentSnapshotError } = yield* Effect.promise(
+          () => import("@repo/backend/content/snapshot/error")
         );
         mocks.build.mockReturnValue(
-          contentRuntimeCiError("signed selection changed")
+          contentSnapshotError("signed selection changed")
         );
         yield* execute("build").pipe(Effect.flip);
         expect(stderr).toHaveBeenCalledWith(

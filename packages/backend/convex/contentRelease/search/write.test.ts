@@ -187,6 +187,16 @@ describe("contentRelease/search/write", () => {
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
+    await expect(
+      invalid.mutation((ctx) =>
+        write(ctx, { ...testHead(), family: "article" })
+      )
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Search entry test:search/en changed family.",
+      },
+    });
 
     const oversized = convexTest(schema, convexModules);
     await expect(
