@@ -19,6 +19,7 @@ import {
 import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
 import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { tryoutBodyBatchValidator } from "@repo/backend/convex/tryouts/runtime/body";
 import { findTryoutRuntimeBundleByHash } from "@repo/backend/convex/tryouts/runtime/signed";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -38,19 +39,7 @@ const protectedArgsValidator = {
   selectors: v.array(protectedSelectorValidator),
   snapshotId: v.string(),
 };
-const protectedItemValidator = v.object({
-  artifactJson: v.string(),
-  delivery: protectedDeliveryValidator,
-  sourcePath: v.string(),
-});
-const protectedResultValidator = v.union(
-  v.null(),
-  v.object({
-    bundleJson: v.string(),
-    items: v.array(protectedItemValidator),
-    rendererJson: v.string(),
-  })
-);
+const protectedResultValidator = v.union(v.null(), tryoutBodyBatchValidator);
 
 /** Stored protected batch returned only through one internal query. */
 export type ProtectedRuntimeBatchRow = Infer<typeof protectedResultValidator>;
@@ -182,18 +171,7 @@ const loadBundle = Effect.fn("contentRelease.loadProtectedBundle")(function* (
   ctx: QueryCtx,
   request: ProtectedContentRuntimeRequest
 ) {
-  const stored = yield* findTryoutRuntimeBundleByHash(
-    ctx,
-    request.bundleHash
-  ).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Protected try-out bundle ${request.bundleHash} could not be read.`,
-        })
-    )
-  );
+  const stored = yield* findTryoutRuntimeBundleByHash(ctx, request.bundleHash);
   if (!stored) {
     return null;
   }

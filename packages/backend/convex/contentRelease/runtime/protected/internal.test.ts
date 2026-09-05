@@ -1,10 +1,13 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { decodeArtifactJson } from "@repo/backend/convex/contentRelease/parse";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const readProtected = internal.contentRelease.runtime.protected.internal.read;
 
@@ -25,6 +28,87 @@ function batch(
 }
 
 describe("contentRelease/runtime/protected/internal", () => {
+  it.effect("rejects invalid or reassigned protected selectors", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const fixture = yield* Effect.promise(() =>
+        t.mutation(insertProtectedRuntime)
+      );
+      for (const contentKey of [
+        "",
+        fixture.answer.contentKey,
+        fixture.question.contentKey.replace("question-1", "question-2"),
+      ]) {
+        yield* Effect.promise(() =>
+          expect(
+            t.query(readProtected, {
+              ...batch(fixture),
+              selectors: [{ ...fixture.question, contentKey }],
+            })
+          ).rejects.toMatchObject({
+            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          })
+        );
+      }
+    })
+  );
+
+  it.effect("rejects ambiguous permanent bundle ownership", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const fixture = yield* Effect.promise(() =>
+        t.mutation(insertProtectedRuntime)
+      );
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const stored = await ctx.db.get(fixture.runtimeId);
+          assert.isNotNull(stored);
+          const { _creationTime, _id, ...bundle } = stored;
+          await ctx.db.insert("tryoutRuntimeBundles", bundle);
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(t.query(readProtected, batch(fixture))).rejects.toThrow(
+          "unique() query returned more than one result"
+        )
+      );
+    })
+  );
+
+  it.effect("rejects a stored artifact moved into another locale", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const fixture = yield* Effect.promise(() =>
+        t.mutation(insertProtectedRuntime)
+      );
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const stored = await ctx.db
+            .query("contentArtifacts")
+            .withIndex("by_artifactHash", (index) =>
+              index.eq("artifactHash", fixture.question.artifactHash)
+            )
+            .unique();
+          assert.isNotNull(stored);
+          const artifact = await runConvexProgram(
+            decodeArtifactJson(stored.artifactJson)
+          );
+          await ctx.db.patch(stored._id, {
+            artifactJson: JSON.stringify({
+              ...artifact,
+              payload: { ...artifact.payload, artifactLocale: "id" },
+            }),
+          });
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(t.query(readProtected, batch(fixture))).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+    })
+  );
+
   it("returns exact signed question and answer bodies", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertProtectedRuntime);
@@ -100,6 +184,12 @@ describe("contentRelease/runtime/protected/internal", () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertProtectedRuntime);
 
+    await expect(
+      t.query(readProtected, {
+        ...batch(fixture),
+        bundleHash: Sha256HashSchema.make(`sha256:${"e".repeat(64)}`),
+      })
+    ).resolves.toBeNull();
     await expect(
       t.query(
         readProtected,
