@@ -58,11 +58,11 @@ function TrustLessonPreview({
   );
 }
 
-/** Shows the exact source used to compile the neighboring lesson body. */
+/** Shows the matching authored body without non-rendered metadata. */
 function TrustSourcePreview({
-  rawMdx,
+  sourceBody,
   sourceHref,
-}: Pick<PublishedTrustLesson, "rawMdx" | "sourceHref">) {
+}: Pick<PublishedTrustLesson, "sourceBody" | "sourceHref">) {
   const t = useTranslations("TrustSection");
 
   return (
@@ -93,7 +93,7 @@ function TrustSourcePreview({
         />
       </div>
       <pre className="min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap break-words px-6 py-7 font-mono text-xs leading-6 sm:px-8 sm:text-sm lg:px-10 lg:py-8">
-        <code>{rawMdx}</code>
+        <code>{sourceBody}</code>
       </pre>
     </aside>
   );
@@ -108,7 +108,7 @@ function TrustSourcePreview({
 function TrustComparison({
   body,
   lessonHref,
-  rawMdx,
+  sourceBody,
   sourceHref,
 }: PublishedTrustLesson) {
   const t = useTranslations("TrustSection");
@@ -118,7 +118,9 @@ function TrustComparison({
       <TrustLayout
         lesson={<TrustLessonPreview body={body} lessonHref={lessonHref} />}
         resizeLabel={t("comparison-slider-label")}
-        source={<TrustSourcePreview rawMdx={rawMdx} sourceHref={sourceHref} />}
+        source={
+          <TrustSourcePreview sourceBody={sourceBody} sourceHref={sourceHref} />
+        }
       />
     </div>
   );

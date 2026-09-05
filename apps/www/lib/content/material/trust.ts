@@ -11,6 +11,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import { readMaterialIdentity } from "@repo/backend/content/material/identity";
 import { api } from "@repo/backend/convex/_generated/api";
+import { readMdxBody } from "@repo/contents/_types/llms/mdx";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -36,10 +37,11 @@ const TrustIdentitySchema = Schema.Struct({
   activeReleaseId: ReleaseIdSchema,
   publicPath: PublicPathSchema,
 });
-/** One complete signed lesson rendered beside its exact authored MDX. */
+/** One complete signed lesson rendered beside the matching authored body. */
 export interface PublishedTrustLesson
-  extends Pick<PublishedMaterialContent, "artifactHash" | "body" | "rawMdx"> {
+  extends Pick<PublishedMaterialContent, "artifactHash" | "body"> {
   readonly lessonHref: string;
+  readonly sourceBody: string;
   readonly sourceHref: string;
 }
 /** Resolves and renders the curated lesson from one current publication. */
@@ -84,11 +86,12 @@ export const readPublishedTrustLesson = Effect.fn(
     });
   }
   const lessonHref = `/${locale}/${identity.publicPath}`;
+  const sourceBody = yield* readMdxBody(published.rawMdx);
   return {
     artifactHash: published.artifactHash,
     body: published.body,
     lessonHref,
-    rawMdx: published.rawMdx,
+    sourceBody,
     sourceHref: `${lessonHref}.md`,
   } satisfies PublishedTrustLesson;
 });

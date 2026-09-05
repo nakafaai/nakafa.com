@@ -2,8 +2,56 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   MdxAgentProjectionError,
   projectMdxForAgentMarkdown,
+  readMdxBody,
 } from "@repo/contents/_types/llms/mdx";
 import { Effect } from "effect";
+
+describe("authored MDX body", () => {
+  it.effect("omits module metadata while preserving all lesson bytes", () =>
+    Effect.gen(function* () {
+      const body = `## Source body fixture
+
+Keep **emphasis**, blank lines, and <InlineMath math="x^2" />.
+
+<Triangle
+  title="A metadata example"
+  labels={{ opposite: "a", adjacent: "b", hypotenuse: "c" }}
+/>
+
+\`\`\`ts
+export const metadata = { title: "This code belongs to the lesson" };
+\`\`\``;
+      const source = `import { Triangle } from "fixture";
+
+export const metadata = {
+  title: "Metadata with a closing brace } and semicolon ;",
+  authors: [{ name: "Fixture author" }],
+};
+
+${body}\n`;
+
+      expect(yield* readMdxBody(source)).toBe(body);
+      expect(yield* readMdxBody(body)).toBe(body);
+    })
+  );
+
+  it.effect("preserves body text on both sides of a module declaration", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* readMdxBody(
+          '## First\n\nexport const metadata = { title: "Fixture" };\n\n## Last'
+        )
+      ).toBe("## First\n\n\n\n## Last");
+    })
+  );
+
+  it.effect("rejects malformed MDX through its typed failure channel", () =>
+    Effect.gen(function* () {
+      const failure = yield* readMdxBody("<Triangle title={").pipe(Effect.flip);
+      expect(failure._tag).toBe("MdxAgentProjectionError");
+    })
+  );
+});
 
 describe("MDX agent markdown projection", () => {
   it.effect(

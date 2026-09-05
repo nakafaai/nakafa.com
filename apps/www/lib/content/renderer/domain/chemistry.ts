@@ -1,146 +1,117 @@
 import { chemistryComponentNames } from "@repo/design-system/lib/markdown/names";
-import type { RendererComponentLoader } from "@/lib/content/renderer/loader";
+import {
+  AncientAtomLab,
+  AtomShellLab,
+  AtomSymbolLab,
+  DaltonEvidenceLab,
+} from "@/lib/content/renderer/client/chemistry/atom";
+import {
+  ElectronConfigurationLab,
+  ValenceElectronLab,
+} from "@/lib/content/renderer/client/chemistry/electron";
+import {
+  CombiningVolumesLab,
+  ConstantCompositionLab,
+  MassConservationLab,
+  MultipleProportionsLab,
+} from "@/lib/content/renderer/client/chemistry/laws";
+import {
+  IonLab,
+  IsotopeLab,
+  MatterParticleReaderLab,
+  SubatomicParticlePropertiesLab,
+  SubatomicParticlesLab,
+} from "@/lib/content/renderer/client/chemistry/particles";
+import {
+  ModernPeriodicTableLab,
+  PeriodicPropertiesLab,
+} from "@/lib/content/renderer/client/chemistry/periodic";
+import {
+  ChemicalReactionCharacteristicsLab,
+  ChemicalReactionTypesLab,
+  MethaneCombustionEquationLab,
+} from "@/lib/content/renderer/client/chemistry/reaction";
+import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainComponentLoaders = [
+export const domainRenderers = [
   {
     name: chemistryComponentNames.ancientAtomLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/atom").then(
-        ({ AncientAtomLab }) => AncientAtomLab
-      ),
+    component: AncientAtomLab,
   },
   {
     name: chemistryComponentNames.atomShellLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/atom").then(
-        ({ AtomShellLab }) => AtomShellLab
-      ),
+    component: AtomShellLab,
   },
   {
     name: chemistryComponentNames.atomSymbolLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/atom").then(
-        ({ AtomSymbolLab }) => AtomSymbolLab
-      ),
+    component: AtomSymbolLab,
   },
   {
     name: chemistryComponentNames.chemicalReactionCharacteristicsLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/reaction").then(
-        ({ ChemicalReactionCharacteristicsLab }) =>
-          ChemicalReactionCharacteristicsLab
-      ),
+    component: ChemicalReactionCharacteristicsLab,
   },
   {
     name: chemistryComponentNames.chemicalReactionTypesLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/reaction").then(
-        ({ ChemicalReactionTypesLab }) => ChemicalReactionTypesLab
-      ),
+    component: ChemicalReactionTypesLab,
   },
   {
     name: chemistryComponentNames.combiningVolumesLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/laws").then(
-        ({ CombiningVolumesLab }) => CombiningVolumesLab
-      ),
+    component: CombiningVolumesLab,
   },
   {
     name: chemistryComponentNames.constantCompositionLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/laws").then(
-        ({ ConstantCompositionLab }) => ConstantCompositionLab
-      ),
+    component: ConstantCompositionLab,
   },
   {
     name: chemistryComponentNames.daltonEvidenceLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/atom").then(
-        ({ DaltonEvidenceLab }) => DaltonEvidenceLab
-      ),
+    component: DaltonEvidenceLab,
   },
   {
     name: chemistryComponentNames.electronConfigurationLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/electron").then(
-        ({ ElectronConfigurationLab }) => ElectronConfigurationLab
-      ),
+    component: ElectronConfigurationLab,
   },
   {
     name: chemistryComponentNames.ionLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/particles").then(
-        ({ IonLab }) => IonLab
-      ),
+    component: IonLab,
   },
   {
     name: chemistryComponentNames.isotopeLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/particles").then(
-        ({ IsotopeLab }) => IsotopeLab
-      ),
+    component: IsotopeLab,
   },
   {
     name: chemistryComponentNames.massConservationLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/laws").then(
-        ({ MassConservationLab }) => MassConservationLab
-      ),
+    component: MassConservationLab,
   },
   {
     name: chemistryComponentNames.matterParticleReaderLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/particles").then(
-        ({ MatterParticleReaderLab }) => MatterParticleReaderLab
-      ),
+    component: MatterParticleReaderLab,
   },
   {
     name: chemistryComponentNames.methaneCombustionEquationLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/reaction").then(
-        ({ MethaneCombustionEquationLab }) => MethaneCombustionEquationLab
-      ),
+    component: MethaneCombustionEquationLab,
   },
   {
     name: chemistryComponentNames.modernPeriodicTableLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/periodic").then(
-        ({ ModernPeriodicTableLab }) => ModernPeriodicTableLab
-      ),
+    component: ModernPeriodicTableLab,
   },
   {
     name: chemistryComponentNames.multipleProportionsLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/laws").then(
-        ({ MultipleProportionsLab }) => MultipleProportionsLab
-      ),
+    component: MultipleProportionsLab,
   },
   {
     name: chemistryComponentNames.periodicPropertiesLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/periodic").then(
-        ({ PeriodicPropertiesLab }) => PeriodicPropertiesLab
-      ),
+    component: PeriodicPropertiesLab,
   },
   {
     name: chemistryComponentNames.subatomicParticlePropertiesLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/particles").then(
-        ({ SubatomicParticlePropertiesLab }) => SubatomicParticlePropertiesLab
-      ),
+    component: SubatomicParticlePropertiesLab,
   },
   {
     name: chemistryComponentNames.subatomicParticlesLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/particles").then(
-        ({ SubatomicParticlesLab }) => SubatomicParticlesLab
-      ),
+    component: SubatomicParticlesLab,
   },
   {
     name: chemistryComponentNames.valenceElectronLab,
-    load: () =>
-      import("@/lib/content/renderer/client/chemistry/electron").then(
-        ({ ValenceElectronLab }) => ValenceElectronLab
-      ),
+    component: ValenceElectronLab,
   },
-] satisfies readonly RendererComponentLoader[];
+] satisfies readonly RendererImplementation[];

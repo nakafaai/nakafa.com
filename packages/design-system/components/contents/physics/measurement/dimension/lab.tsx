@@ -102,10 +102,7 @@ export function DimensionLab({
         </ToggleGroup>
 
         <div className={threeSceneFrameVariants()}>
-          <ThreeCanvas
-            camera={{ fov: 45, position: CAMERA_POSITION }}
-            frameloop="demand"
-          >
+          <ThreeCanvas frameloop="demand">
             <Suspense>
               <ResponsiveDimensionCamera />
               <ambientLight intensity={0.75} />
@@ -166,6 +163,7 @@ function ResponsiveDimensionCamera() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
+      fov={45}
     />
   );
 }

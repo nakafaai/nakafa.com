@@ -1,68 +1,54 @@
 import { biologyComponentNames } from "@repo/design-system/lib/markdown/names";
-import type { RendererComponentLoader } from "@/lib/content/renderer/loader";
+import { BacteriaStructureLab } from "@/lib/content/renderer/client/biology/bacteria";
+import {
+  ClimateObservationLab,
+  GreenhouseEffectLab,
+} from "@/lib/content/renderer/client/biology/climate";
+import { FungiMyceliumLab } from "@/lib/content/renderer/client/biology/fungi";
+import { SarsCov2VirionLab } from "@/lib/content/renderer/client/biology/virion";
+import {
+  VirusMorphologyLab,
+  VirusReplicationLab,
+  VirusRoleLab,
+  VirusStructureLab,
+} from "@/lib/content/renderer/client/biology/virus";
+import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainComponentLoaders = [
+export const domainRenderers = [
   {
     name: biologyComponentNames.bacteriaStructureLab,
-    load: () =>
-      import("@/lib/content/renderer/client/biology/bacteria").then(
-        ({ BacteriaStructureLab }) => BacteriaStructureLab
-      ),
+    component: BacteriaStructureLab,
   },
   {
     name: biologyComponentNames.climateObservationLab,
-    load: () =>
-      import("@/lib/content/renderer/client/biology/climate").then(
-        ({ ClimateObservationLab }) => ClimateObservationLab
-      ),
+    component: ClimateObservationLab,
   },
   {
     name: biologyComponentNames.fungiMyceliumLab,
-    load: () =>
-      import("@/lib/content/renderer/client/biology/fungi").then(
-        ({ FungiMyceliumLab }) => FungiMyceliumLab
-      ),
+    component: FungiMyceliumLab,
   },
   {
     name: biologyComponentNames.greenhouseEffectLab,
-    load: () =>
-      import("@/lib/content/renderer/client/biology/climate").then(
-        ({ GreenhouseEffectLab }) => GreenhouseEffectLab
-      ),
+    component: GreenhouseEffectLab,
   },
   {
     name: biologyComponentNames.sarsCov2VirionLab,
-    load: () =>
-      import("@/lib/content/renderer/client/biology/virion").then(
-        ({ SarsCov2VirionLab }) => SarsCov2VirionLab
-      ),
+    component: SarsCov2VirionLab,
   },
   {
     name: biologyComponentNames.virusMorphologyLab,
-    load: () =>
-      import("@/lib/content/renderer/client/biology/virus").then(
-        ({ VirusMorphologyLab }) => VirusMorphologyLab
-      ),
+    component: VirusMorphologyLab,
   },
   {
     name: biologyComponentNames.virusReplicationLab,
-    load: () =>
-      import("@/lib/content/renderer/client/biology/virus").then(
-        ({ VirusReplicationLab }) => VirusReplicationLab
-      ),
+    component: VirusReplicationLab,
   },
   {
     name: biologyComponentNames.virusRoleLab,
-    load: () =>
-      import("@/lib/content/renderer/client/biology/virus").then(
-        ({ VirusRoleLab }) => VirusRoleLab
-      ),
+    component: VirusRoleLab,
   },
   {
     name: biologyComponentNames.virusStructureLab,
-    load: () =>
-      import("@/lib/content/renderer/client/biology/virus").then(
-        ({ VirusStructureLab }) => VirusStructureLab
-      ),
+    component: VirusStructureLab,
   },
-] satisfies readonly RendererComponentLoader[];
+] satisfies readonly RendererImplementation[];

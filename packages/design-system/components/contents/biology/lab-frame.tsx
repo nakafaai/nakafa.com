@@ -98,10 +98,7 @@ export function BiologyLabFrame<Item extends BiologyLabItem>({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{ fov: 45, position: view.cameraPosition }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ResponsiveBiologyCamera key={selectedIndex} view={view} />
               <ambientLight intensity={0.58} />
@@ -163,8 +160,7 @@ function ResponsiveBiologyCamera({ view }: { view: BiologySceneView }) {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={view.cameraTarget}
-      maxDistance={7.4}
-      minDistance={1.8}
+      fov={45}
     />
   );
 }

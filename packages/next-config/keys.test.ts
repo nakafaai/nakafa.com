@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
-  analyzeKeys,
   contentRuntimeKeys,
   publicationKeys,
   readContentRuntimeTarget,
@@ -9,7 +8,6 @@ import {
 
 /** Installs one complete, valid shared Next environment for each test. */
 function stubValidEnvironment() {
-  vi.stubEnv("ANALYZE", "false");
   vi.stubEnv("CONTENT_RUNTIME_TOKEN", "runtime-token");
   vi.stubEnv("AKSARA_PUBLICATION_TOKEN", "publication-token");
   vi.stubEnv("SITE_URL", "https://nakafa.com");
@@ -23,7 +21,6 @@ describe("shared Next environment keys", () => {
   it("decodes every capability from one complete environment", () => {
     stubValidEnvironment();
 
-    expect(analyzeKeys()).toMatchObject({ ANALYZE: "false" });
     expect(publicationKeys()).toMatchObject({
       AKSARA_PUBLICATION_TOKEN: "publication-token",
     });

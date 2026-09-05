@@ -91,13 +91,7 @@ export function ChemicalReactionTypesLab({
           aria-label={labels.reactionView}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 45,
-              position: CHEMICAL_REACTION_TYPES_SCENE_VIEW.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ReactionTypeCameraControls />
               <ambientLight intensity={0.72} />
@@ -172,8 +166,7 @@ function ReactionTypeCameraControls() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CHEMICAL_REACTION_TYPES_SCENE_VIEW.cameraTarget}
-      maxDistance={9.5}
-      minDistance={2.8}
+      fov={45}
     />
   );
 }

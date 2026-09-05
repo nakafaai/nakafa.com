@@ -47,14 +47,16 @@ const verifyPublishedTrustLesson = Effect.fn(
   const sides = yield* Effect.promise(() =>
     article.locator(":scope > div > ol > li").allTextContents()
   );
-  const rawMdx = yield* Effect.promise(() => source.textContent());
+  const sourceBody = yield* Effect.promise(() => source.textContent());
   yield* Effect.sync(() => {
     expect(paragraphs.length).toBeGreaterThan(0);
     expect(sides).toHaveLength(3);
     for (const heading of headings) {
-      expect(rawMdx).toContain(`## ${heading}`);
+      expect(sourceBody).toContain(`## ${heading}`);
     }
-    expect(rawMdx).toContain("<Triangle");
+    expect(sourceBody).toContain("<Triangle");
+    expect(sourceBody?.startsWith(`## ${headings[0]}`)).toBe(true);
+    expect(sourceBody).not.toContain("export const metadata");
   });
 
   const angle = article.getByRole("textbox", {

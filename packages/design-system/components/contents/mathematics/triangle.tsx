@@ -1,8 +1,7 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
-import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
-import { Triangle as Triangle3D } from "@repo/design-system/components/three/triangle";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   Card,
@@ -13,13 +12,16 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   getCos,
   getRadians,
   getSin,
   getTan,
 } from "@repo/design-system/lib/geometry/angles";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -32,7 +34,17 @@ import {
   NumberField,
 } from "react-aria-components";
 
-const CAMERA_Z_POSITION = 4;
+// Next owns this client-only import boundary so offscreen lessons do not load WebGL.
+const TriangleScene = dynamic(
+  () =>
+    import(
+      "@repo/design-system/components/contents/mathematics/triangle/scene"
+    ).then((module) => module.TriangleScene),
+  {
+    loading: () => <Spinner aria-hidden="true" className="size-6" />,
+    ssr: false,
+  }
+);
 
 interface Props {
   angle?: number;
@@ -79,18 +91,24 @@ function Content({
 }) {
   const t = useTranslations("Common");
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
+  const [isNearViewport, setIsNearViewport] = useState(false);
   const angleValue = angleOverride ?? angle;
 
   return (
     <>
       <CardContent>
-        <CoordinateSystem
-          cameraPosition={[0, 0, CAMERA_Z_POSITION]}
-          showOrigin={false}
-          showZAxis={false}
+        <Intersection
+          className={threeSceneFrameVariants({
+            className: "grid place-items-center",
+          })}
+          data-slot="triangle-scene"
+          once
+          onIntersect={() => setIsNearViewport(true)}
         >
-          <Triangle3D angle={angleValue} labels={labels} size={size} />
-        </CoordinateSystem>
+          {isNearViewport ? (
+            <TriangleScene angle={angleValue} labels={labels} size={size} />
+          ) : null}
+        </Intersection>
       </CardContent>
       <CardFooter className="border-t px-0">
         <div className="flex w-full flex-col gap-4">

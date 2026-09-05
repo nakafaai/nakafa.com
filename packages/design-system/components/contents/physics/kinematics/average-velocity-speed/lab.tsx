@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AVERAGE_VELOCITY_SPEED_CAMERA,
   AVERAGE_VELOCITY_SPEED_CASE_IDS,
   AVERAGE_VELOCITY_SPEED_COLORS,
   type AverageVelocitySpeedCaseId,
@@ -115,13 +114,7 @@ export function AverageVelocitySpeedLab({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: AVERAGE_VELOCITY_SPEED_CAMERA.fov,
-              position: AVERAGE_VELOCITY_SPEED_CAMERA.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <AverageMotionStage motion={motion} />
           </ThreeCanvas>
         </section>

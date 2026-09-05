@@ -149,8 +149,6 @@ export function ParabolicMovementLab({
                 enableRotate
                 enableZoom
                 fov={PARABOLIC_SCENE.cameraFov}
-                maxDistance={PARABOLIC_SCENE.maxDistance}
-                minDistance={PARABOLIC_SCENE.minDistance}
               />
               <ProjectileBallScene motion={motion} />
             </Suspense>

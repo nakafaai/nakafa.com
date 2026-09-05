@@ -86,13 +86,7 @@ export function MassConservationLab({
           aria-label={labels.reactionView}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 42,
-              position: MASS_CONSERVATION_SCENE_VIEW.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <MassConservationCameraControls />
               <ambientLight intensity={0.68} />
@@ -148,8 +142,7 @@ function MassConservationCameraControls() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={MASS_CONSERVATION_SCENE_VIEW.cameraTarget}
-      maxDistance={9.2}
-      minDistance={2.9}
+      fov={42}
     />
   );
 }

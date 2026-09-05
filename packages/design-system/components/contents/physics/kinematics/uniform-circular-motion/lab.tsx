@@ -18,6 +18,7 @@ import {
   type UniformCircularMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-circular-motion/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -92,13 +93,7 @@ export function UniformCircularMotionLab({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 43,
-              position: UNIFORM_CIRCULAR_MOTION_CAMERA.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ambientLight intensity={0.75} />
               <hemisphereLight
@@ -173,8 +168,7 @@ function CircularMotionCamera() {
       enablePan
       enableRotate
       enableZoom
-      maxDistance={18}
-      minDistance={4}
+      fov={43}
     />
   );
 }
@@ -257,13 +251,24 @@ function CircularCar({ motion }: { motion: UniformCircularMotionState }) {
   });
 
   return (
-    <group
-      ref={groupRef}
-      rotation={[0, 0, 0]}
-      scale={UNIFORM_CIRCULAR_MOTION_SCENE.carScale}
+    <CameraBounds
+      motion={{
+        rotation: "y",
+        translation: {
+          x: { min: -motion.radius, max: motion.radius },
+          y: { min: 0.025, max: 0.025 },
+          z: { min: -motion.radius, max: motion.radius },
+        },
+      }}
+      objectRef={groupRef}
     >
-      <CarModel />
-    </group>
+      <group
+        rotation={[0, 0, 0]}
+        scale={UNIFORM_CIRCULAR_MOTION_SCENE.carScale}
+      >
+        <CarModel />
+      </group>
+    </CameraBounds>
   );
 }
 

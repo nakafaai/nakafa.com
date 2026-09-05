@@ -19,6 +19,7 @@ import {
   type RouteSegment,
 } from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -90,13 +91,7 @@ export function DisplacementDistanceLab({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 43,
-              position: view.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ambientLight intensity={0.72} />
               <hemisphereLight
@@ -169,8 +164,7 @@ function DisplacementDistanceCamera({
       enablePan
       enableRotate
       enableZoom
-      maxDistance={12}
-      minDistance={2.8}
+      fov={43}
     />
   );
 }
@@ -217,12 +211,30 @@ function AnimatedCar({ motion }: { motion: DisplacementDistanceState }) {
   });
 
   return (
-    <group ref={carRef} scale={DISPLACEMENT_DISTANCE_SCENE.carScale}>
-      <PhysicsCarModel
-        bodyColor={CAR_COLOR}
-        modelPath={DISPLACEMENT_DISTANCE_CAR_MODEL_PATH}
-      />
-    </group>
+    <CameraBounds
+      motion={{
+        rotation: "y",
+        translation: {
+          x: {
+            min: Math.min(...motion.route.map((point) => point.x)),
+            max: Math.max(...motion.route.map((point) => point.x)),
+          },
+          y: { min: 0.035, max: 0.035 },
+          z: {
+            min: Math.min(...motion.route.map((point) => point.z)),
+            max: Math.max(...motion.route.map((point) => point.z)),
+          },
+        },
+      }}
+      objectRef={carRef}
+    >
+      <group scale={DISPLACEMENT_DISTANCE_SCENE.carScale}>
+        <PhysicsCarModel
+          bodyColor={CAR_COLOR}
+          modelPath={DISPLACEMENT_DISTANCE_CAR_MODEL_PATH}
+        />
+      </group>
+    </CameraBounds>
   );
 }
 

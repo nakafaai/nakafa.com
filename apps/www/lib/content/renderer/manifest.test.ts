@@ -12,8 +12,8 @@ import {
 } from "@nakafa/aksara-contracts/renderer/manifest";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
 import { Effect, Exit, Schema } from "effect";
-import { baseComponentLoaders } from "@/lib/content/renderer/domain/base";
-import { loadRendererDomainModule } from "@/lib/content/renderer/selection";
+import { baseRenderers } from "@/lib/content/renderer/domain/base";
+import { rendererDomainImplementations } from "@/lib/content/renderer/selection";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
@@ -120,36 +120,32 @@ describe("renderer manifest", () => {
   );
 
   it.effect(
-    "keeps every literal loader registry exactly aligned with the manifest",
+    "keeps every registered domain exactly aligned with the manifest",
     () =>
       Effect.gen(function* () {
         const { rendererManifest } = yield* Effect.promise(
           () => import("@/lib/content/renderer/manifest")
         );
         const manifest = yield* rendererManifest;
-        const contentKey = ContentKeySchema.make("test:renderer-loaders");
         const semanticNames = new Set<string>(semanticComponentNames);
         const expectedBaseNames = manifest.base.supportedComponents
           .map(({ name }) => name)
           .filter((name) => !semanticNames.has(name))
           .sort();
 
-        expect(baseComponentLoaders.map(({ name }) => name).sort()).toEqual(
+        expect(baseRenderers.map(({ name }) => name).sort()).toEqual(
           expectedBaseNames
         );
 
         for (const domain of manifest.domains) {
-          const domainModule = yield* loadRendererDomainModule({
-            contentKey,
-            rendererDomain: domain.name,
-            requiredComponents: [],
-          });
           const expectedDomainNames = domain.supportedComponents
             .map(({ name }) => name)
             .sort();
 
           expect(
-            domainModule.domainComponentLoaders.map(({ name }) => name).sort()
+            rendererDomainImplementations[domain.name]
+              .map(({ name }) => name)
+              .sort()
           ).toEqual(expectedDomainNames);
         }
       })

@@ -38,11 +38,12 @@ const renderMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-material");
 const publicPath =
   "subjects/mathematics/trigonometry/current-right-triangle-naming";
+const sourceBody = "## Signed transport fixture\n\nThe complete source body.";
 const published = {
   activeReleaseId,
   artifactHash: previewArtifactHash,
   body: createElement("div", { "data-signed-transport-fixture": "" }),
-  rawMdx: "<!-- signed transport fixture -->\n",
+  rawMdx: `export const metadata = { title: "Signed transport fixture" };\n\n${sourceBody}\n`,
 };
 
 vi.mock("@/lib/content/cache", () => ({
@@ -92,7 +93,7 @@ describe("published marketing trust lesson", () => {
         expect(yield* readPublishedTrustLesson("en")).toEqual({
           artifactHash: published.artifactHash,
           body: published.body,
-          rawMdx: published.rawMdx,
+          sourceBody,
           lessonHref: `/en/${projection.publicPath}`,
           sourceHref: `/en/${projection.publicPath}.md`,
         });
@@ -115,7 +116,7 @@ describe("published marketing trust lesson", () => {
   });
 
   it.effect(
-    "renders one complete artifact beside its exact source at the current signed route",
+    "renders one complete artifact beside its body without metadata at the current signed route",
     () =>
       Effect.gen(function* () {
         expect(
@@ -124,7 +125,7 @@ describe("published marketing trust lesson", () => {
           artifactHash: published.artifactHash,
           body: published.body,
           lessonHref: `/en/${publicPath}`,
-          rawMdx: published.rawMdx,
+          sourceBody,
           sourceHref: `/en/${publicPath}.md`,
         });
         expect(runtimeQueryMock).toHaveBeenCalledWith(

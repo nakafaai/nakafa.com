@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { GizmoHelper, GizmoViewport } from "@react-three/drei";
 import { Axes } from "@repo/design-system/components/three/axes";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
@@ -107,12 +108,11 @@ export function CoordinateSystem({
   const { resolvedTheme } = useTheme();
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
   const [sceneState, setSceneState] = useState(() => ({
-    isDragging: false,
     play: false,
     sceneReady: false,
     showGrid: initialShowGrid,
   }));
-  const { isDragging, play, sceneReady, showGrid } = sceneState;
+  const { play, sceneReady, showGrid } = sceneState;
 
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
@@ -154,27 +154,11 @@ export function CoordinateSystem({
     }));
   }, []);
 
-  // Handle pointer events for cursor changes
-  const handlePointerDown = useCallback(() => {
-    setSceneState((current) => ({
-      ...current,
-      isDragging: true,
-    }));
-  }, []);
-
-  const handlePointerUp = useCallback(() => {
-    setSceneState((current) => ({
-      ...current,
-      isDragging: false,
-    }));
-  }, []);
-
   // Activity hides preserved routes by disconnecting effects. ThreeCanvas owns
   // WebGL remounting, so this cleanup only resets local interaction state.
   useLayoutEffect(
     () => () => {
       setSceneState({
-        isDragging: false,
         play: false,
         sceneReady: false,
         showGrid: initialShowGrid,
@@ -185,14 +169,7 @@ export function CoordinateSystem({
 
   return (
     <div
-      className={cn(
-        threeSceneFrameVariants(),
-        "grid",
-        isDragging ? "cursor-grabbing" : "cursor-grab",
-        className
-      )}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
+      className={cn(threeSceneFrameVariants(), "grid cursor-grab", className)}
     >
       <ThreeCanvas
         onCreated={() =>
@@ -223,30 +200,34 @@ export function CoordinateSystem({
           <pointLight intensity={1} position={[10, 10, 10]} />
 
           {/* Coordinate System */}
-          <Axes
-            frame={axisFrame}
-            origin={origin}
-            showLabels={showLabels}
-            showZAxis={showZAxis}
-            size={size}
-            visible={showAxes}
-          />
+          <CameraBounds exclude={!frame}>
+            <Axes
+              frame={axisFrame}
+              origin={origin}
+              showLabels={showLabels}
+              showZAxis={showZAxis}
+              size={size}
+              visible={showAxes}
+            />
 
-          {/* Origin */}
-          <Origin
-            color={originColor}
-            position={origin ? [origin.x, origin.y, origin.z] : undefined}
-            visible={showOrigin}
-          />
+            {/* Origin */}
+            <Origin
+              color={originColor}
+              position={origin ? [origin.x, origin.y, origin.z] : undefined}
+              visible={showOrigin}
+            />
+          </CameraBounds>
 
           {/* Grid */}
           {showGrid ? (
-            <CoordinateGrid
-              cellColor={gridColors.secondary}
-              frame={gridFrame}
-              origin={origin}
-              sectionColor={gridColors.main}
-            />
+            <CameraBounds exclude>
+              <CoordinateGrid
+                cellColor={gridColors.secondary}
+                frame={gridFrame}
+                origin={origin}
+                sectionColor={gridColors.main}
+              />
+            </CameraBounds>
           ) : null}
 
           {/* User Content */}

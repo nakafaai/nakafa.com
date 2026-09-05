@@ -46,10 +46,7 @@ export function ModernPeriodicTableCanvas({
 
   return (
     <section aria-label={ariaLabel} className={threeSceneFrameVariants()}>
-      <ThreeCanvas
-        camera={{ fov: 42, position: CAMERA_POSITION }}
-        frameloop="demand"
-      >
+      <ThreeCanvas frameloop="demand">
         <Suspense>
           <ModernPeriodicTableRenderSync key={focusId} />
           <ResponsiveModernPeriodicTableCamera />
@@ -107,8 +104,7 @@ function ResponsiveModernPeriodicTableCamera() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
-      maxDistance={14}
-      minDistance={4}
+      fov={42}
     />
   );
 }

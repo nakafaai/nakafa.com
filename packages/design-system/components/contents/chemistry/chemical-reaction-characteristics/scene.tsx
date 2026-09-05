@@ -9,9 +9,10 @@ import {
   type ReactionSceneColors,
   type ReactionScenePoint,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
-import { DoubleSide, type Group, type Mesh } from "three";
+import { DoubleSide, type Group } from "three";
 
 const BEFORE_BEAKER_X = -1.08;
 const AFTER_BEAKER_X = 1.08;
@@ -27,6 +28,9 @@ const LIQUID_OPACITY = 0.66;
 const SCENE_Y = -0.12;
 const SCENE_SCALE = 1.2;
 const BUBBLE_RADIUS = 0.055;
+const BUBBLE_RISE = 0.58;
+const BUBBLE_INITIAL_SCALE = 0.82;
+const BUBBLE_GROWTH = 0.32;
 const SOLID_RADIUS = 0.07;
 const COLOR_PARTICLE_RADIUS = 0.055;
 const HEAT_MARKER_HEIGHT = 0.38;
@@ -314,31 +318,45 @@ function AnimatedBubble({
   color: string;
   particle: ReactionParticle;
 }) {
-  const meshRef = useRef<Mesh>(null);
+  const bubbleRef = useRef<Group>(null);
   const [x, y, z] = particle.position;
   const speed = particle.speed ?? 0.35;
   const phase = particle.phase ?? 0;
 
   useFrame(({ clock }) => {
-    if (!meshRef.current) {
+    if (!bubbleRef.current) {
       return;
     }
 
     const progress = (clock.elapsedTime * speed + phase) % 1;
-    meshRef.current.position.y = y + progress * 0.58;
-    meshRef.current.scale.setScalar(0.82 + progress * 0.32);
+    bubbleRef.current.position.set(x, y + progress * BUBBLE_RISE, z);
+    bubbleRef.current.scale.setScalar(
+      BUBBLE_INITIAL_SCALE + progress * BUBBLE_GROWTH
+    );
   });
 
   return (
-    <mesh position={[x, y, z]} ref={meshRef}>
-      <sphereGeometry args={[BUBBLE_RADIUS, 24, 16]} />
-      <meshStandardMaterial
-        color={color}
-        opacity={0.34}
-        roughness={0.12}
-        transparent
-      />
-    </mesh>
+    <CameraBounds
+      motion={{
+        scale: BUBBLE_INITIAL_SCALE + BUBBLE_GROWTH,
+        translation: {
+          x: { min: x, max: x },
+          y: { min: y, max: y + BUBBLE_RISE },
+          z: { min: z, max: z },
+        },
+      }}
+      objectRef={bubbleRef}
+    >
+      <mesh>
+        <sphereGeometry args={[BUBBLE_RADIUS, 24, 16]} />
+        <meshStandardMaterial
+          color={color}
+          opacity={0.34}
+          roughness={0.12}
+          transparent
+        />
+      </mesh>
+    </CameraBounds>
   );
 }
 
@@ -373,7 +391,7 @@ function ColorParticles({ color }: { color: string }) {
   });
 
   return (
-    <group ref={groupRef}>
+    <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
       {COLOR_PARTICLES.map((particle) => (
         <mesh castShadow key={particle.id} position={particle.position}>
           <sphereGeometry args={[COLOR_PARTICLE_RADIUS, 24, 16]} />
@@ -385,7 +403,7 @@ function ColorParticles({ color }: { color: string }) {
           />
         </mesh>
       ))}
-    </group>
+    </CameraBounds>
   );
 }
 
@@ -404,7 +422,7 @@ function HeatMarkers({ color }: { color: string }) {
   });
 
   return (
-    <group ref={groupRef}>
+    <CameraBounds motion={{ scale: 1.02 }} objectRef={groupRef}>
       {HEAT_MARKERS.map((marker) => (
         <mesh castShadow key={marker.id} position={marker.position}>
           <cylinderGeometry
@@ -423,7 +441,7 @@ function HeatMarkers({ color }: { color: string }) {
           />
         </mesh>
       ))}
-    </group>
+    </CameraBounds>
   );
 }
 
