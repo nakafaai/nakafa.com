@@ -19,24 +19,25 @@ install standalone repository or package-local Convex skill copies.
 Read [Convex Agent Mode](https://docs.convex.dev/cli/agent-mode) before running
 Convex from a new worktree. Every concurrent task must select its own local
 backend or short-lived cloud dev deployment; never develop against Nakafa's
-shared personal dev deployment. Use cloud dev when the task needs environment
-variables, inbound HTTP, crons, or external integrations, and create a deploy
-key scoped only to that deployment. Use the repository's pnpm CLI boundary,
-set required environment values without printing secrets, and give temporary
-cloud deployments an expiration.
+shared personal dev deployment. Prefer local Agent Mode for isolated builds,
+content reads, and database rehearsals. Local deployments support explicitly
+configured environment values and local HTTP. Use cloud dev when the task
+needs public inbound traffic, project-default environment values, or an
+integration unavailable locally. Scope its deploy key to that deployment and
+set an expiration. Use the repository's pnpm CLI and never print secrets.
 
 Agent Mode isolates new development only. Existing workflows and scheduled
 functions remain on the deployment where they started, and shared-dev or
 production data/deploy windows still require explicit read-only proof and
 coordination.
 
-Nakafa is pnpm-only. From the repository root, create and select one expiring
-cloud dev deployment for a worktree with:
+For cloud development, first resolve the actual team and project slugs. From
+the repository root, create and select an expiring worktree deployment:
 
 ```sh
 worktree_name=$(basename "$PWD")
 pnpm --dir packages/backend exec convex deployment create \
-  "dev/$USER-codex/$worktree_name" \
+  "$convex_team:$convex_project:dev/$USER-codex/$worktree_name" \
   --type dev \
   --select \
   --expiration "in 5 days"
@@ -44,12 +45,13 @@ pnpm --dir packages/backend exec convex deployment token create agent-token --sa
 pnpm --dir packages/backend exec convex dev --once
 ```
 
-Use a local deployment instead when HTTP ingress, project environment values,
-and hosted integrations are unnecessary:
+For a new isolated local worktree, initialize the backend, set the required
+local environment values, then compile:
 
 ```sh
-pnpm --dir packages/backend exec convex deployment create local --select
-pnpm --dir packages/backend exec convex dev --once
+CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex init
+CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex env set --from-file <local-environment-file>
+CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex dev --once
 ```
 
 The deployment selection and URLs are worktree-owned. Never copy

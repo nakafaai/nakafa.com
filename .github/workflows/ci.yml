@@ -2,7 +2,8 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    branches: [main]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
 
 permissions:
   actions: read
@@ -32,20 +33,27 @@ jobs:
         run: |
           echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
 
-      - if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # An untrusted candidate is data for the classifier, never its code.
+          ref: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' && github.sha || github.event.pull_request.base.sha }}
           fetch-depth: 0
 
+      - name: Fetch exact candidate for classification
+        env:
+          PULL_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git fetch --no-tags origin "refs/pull/$PULL_NUMBER/head"
+          test "$(git rev-parse FETCH_HEAD)" = "$HEAD_SHA"
+
       - name: Setup toolchain
-        if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true'
         uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
           cache: true
           install: false
 
       - name: Install dependencies
-        if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Export trusted candidate decision
@@ -56,7 +64,6 @@ jobs:
           echo "trusted=$DIRECT_TRUST" >> "$GITHUB_OUTPUT"
 
       - name: Classify production acceptance
-        if: steps.trust.outputs.trusted == 'true'
         id: classify
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -106,6 +113,8 @@ jobs:
     if: always() && needs.scope.result == 'success' && needs.scope.outputs.required == 'true' && needs.scope.outputs.trusted == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    outputs:
+      runtime-selection: ${{ steps.generation.outputs.CONTENT_RUNTIME_SELECTION_HASH }}
     env:
       CONTENT_RUNTIME_TOKEN: ci-runtime
       AKSARA_PUBLICATION_TOKEN: ci-runtime
@@ -160,6 +169,7 @@ jobs:
           rm -f -- "$output"
 
       - name: Read production runtime selection
+        id: generation
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
@@ -176,6 +186,7 @@ jobs:
           fi
 
           cat "$output" >> "$GITHUB_ENV"
+          cat "$output" >> "$GITHUB_OUTPUT"
           rm -f -- "$output"
 
       - name: Verify selected production runtime generation
@@ -538,6 +549,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Verify production selection before final acceptance
+        if: needs.scope.result == 'success' && needs.scope.outputs.trusted == 'true' && needs.scope.outputs.required == 'true' && needs.production.result == 'success'
+        env:
+          CONTENT_RUNTIME_SELECTION_HASH: ${{ needs.production.outputs.runtime-selection }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
 
       - name: Verify required result
         if: always()

@@ -119,23 +119,11 @@ export const runGate = Effect.fn("CiGate.run")(function* (roleInput: unknown) {
   yield* writeOutput(`${message}\n`);
 });
 
-type GateRunner = (program: Effect.Effect<void, unknown>) => void;
-
-/** Starts the Node adapter only for the executable module. */
-export function launchGate(
-  isMain: boolean,
-  roleInput: unknown,
-  runner: GateRunner
-) {
-  if (!isMain) {
-    return;
-  }
-  runner(
-    runGate(roleInput).pipe(
+if (import.meta.main) {
+  NodeRuntime.runMain(
+    runGate(process.argv[2]).pipe(
       Effect.tapError(() => writeOutput("ERROR: CI gate failed.\n")),
       Effect.provide(NodeServices.layer)
     )
   );
 }
-
-launchGate(import.meta.main, process.argv[2], NodeRuntime.runMain);
