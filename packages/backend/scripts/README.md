@@ -35,11 +35,19 @@ Do not copy Convex deployment identity from another task.
 ## Signed runtime validation
 
 ```sh
-pnpm --filter @repo/backend runtime:ci
+pnpm runtime:prepare
+pnpm build
+pnpm start
 ```
 
-`runtime:ci` validates the configured signed Aksara artifact and its Nakafa
-runtime projections without publishing or repairing content.
+Use the signed snapshot setup in the [root README](../../../README.md).
+`runtime:prepare` verifies and imports an authorized signed snapshot into its
+own local database. Build and start reuse that database. `pnpm runtime:clean`
+removes it after its services stop.
+
+The `runtime:ci` fingerprint, generations, export, and verify-generations
+operations also serve the protected snapshot publication workflow. They do not
+publish authored content.
 
 ## Customer verification
 

@@ -4,6 +4,7 @@ import {
   sanitizeRuntimeCommandError,
 } from "@repo/backend/scripts/content/runtime/ci/error";
 import { collectConvexTableRows } from "@repo/backend/scripts/content/runtime/ci/pagination";
+import { localConvexEnvironment } from "@repo/backend/scripts/content/runtime/process";
 import { ConvexHttpClient } from "convex/browser";
 import { makeFunctionReference } from "convex/server";
 import { Effect, FileSystem, Stream } from "effect";
@@ -29,7 +30,9 @@ const CONVEX_TABLE_DATA_QUERY = makeFunctionReference<
 interface RuntimeCommand {
   readonly args: readonly string[];
   readonly command: string;
+  readonly cwd?: string;
   readonly deployKey?: string;
+  readonly env?: Readonly<Record<string, string | undefined>>;
   readonly operation: string;
   readonly reportStderr?: boolean;
   readonly sensitiveValues?: readonly string[];
@@ -94,7 +97,9 @@ export const runRuntimeCommand = Effect.fn("contentRuntime.runCommand")(
         ...spec.args,
       ],
       {
+        cwd: spec.cwd,
         env: {
+          ...spec.env,
           CONTENT_RUNTIME_CACHE_KEY: "",
           CONVEX_DEPLOY_KEY: spec.deployKey ?? "",
           CONVEX_DEPLOYMENT_TOKEN: "",
@@ -175,6 +180,7 @@ export const runConvexData = Effect.fn("contentRuntime.readProductionTable")(
 export const runConvexImport = Effect.fn("contentRuntime.importLocalTable")(
   function* (options: {
     readonly inputPath: string;
+    readonly backend?: string;
     readonly logPath: string;
     readonly table: string;
   }) {
@@ -192,6 +198,8 @@ export const runConvexImport = Effect.fn("contentRuntime.importLocalTable")(
         options.inputPath,
       ],
       command: "pnpm",
+      cwd: options.backend,
+      env: localConvexEnvironment,
       operation: `Local import for ${options.table}`,
       stderrPath: options.logPath,
       stdoutPath: options.logPath,

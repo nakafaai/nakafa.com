@@ -132,11 +132,28 @@ describe("GitHub Action policy", () => {
         expect(snapshotSource).toContain(
           "This release contains exactly one current encrypted signed snapshot."
         );
-        expect(source).toContain(
-          "schema-changing candidate needs one production export"
-        );
         expect(source).not.toContain("codex/snapshot");
-        expect(source.match(/runtime:ci export/gu)).toHaveLength(1);
+        expect(workflow).toEqual(
+          expect.objectContaining({
+            jobs: expect.objectContaining({
+              production: expect.objectContaining({
+                steps: expect.arrayContaining([
+                  expect.objectContaining({
+                    run: "pnpm build",
+                    env: expect.objectContaining({
+                      CONVEX_DEPLOY_KEY: expect.any(String),
+                      CONTENT_RUNTIME_CACHE_KEY: expect.any(String),
+                    }),
+                  }),
+                  expect.objectContaining({
+                    name: "Verify final production runtime generation",
+                  }),
+                ]),
+              }),
+            }),
+          })
+        );
+        expect(source).not.toContain("runtime:ci export");
       }).pipe(Effect.provide(NodeServices.layer))
   );
 

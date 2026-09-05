@@ -37,17 +37,52 @@ cannot express.
 git clone https://github.com/nakafaai/nakafa.com.git
 cd nakafa.com
 pnpm install --frozen-lockfile
-pnpm dev
+npm install --global portless
+cp apps/www/.env.example apps/www/.env.local
 ```
 
-The main web app is available at [http://localhost:3000](http://localhost:3000).
+Fill in the application environment and configure an isolated Convex deployment
+using [`packages/backend/AGENTS.md`](packages/backend/AGENTS.md). Content routes
+need a populated, verified Aksara signed runtime. An empty backend is not a
+complete content fixture.
 
-For production-mode local verification:
+Run `pnpm dev` for hot reload. Portless starts its HTTPS proxy on port 443
+and prints the branch-specific Nakafa URL, such as `https://ci.nakafa.localhost`.
+It creates and trusts a local certificate authority on first use. Run
+`portless doctor` to check the proxy, DNS, and certificate trust. Configure
+authentication for that exact local origin in your own development deployment
+when testing sign-in.
+
+For production-mode verification, use your configured nonproduction backend
+or prepare a local signed snapshot once. Obtain the current encrypted snapshot,
+its selection hash, and the cache key through the authorized project workflow.
+Keep `CONTENT_RUNTIME_CACHE_KEY` in your shell's secret environment, then run:
+
+```sh
+CONTENT_RUNTIME_SNAPSHOT=/absolute/path/runtime.tar.gpg \
+CONTENT_RUNTIME_SELECTION_HASH=<snapshot-selection-hash> \
+pnpm runtime:prepare
+```
+
+Preparation verifies and imports the snapshot into an isolated database under
+`.cache/runtime`. It preserves your existing Convex selection and stops the
+temporary backend when preparation finishes. Then use the ordinary commands:
 
 ```sh
 pnpm build
 pnpm start
 ```
+
+`pnpm build` starts the prepared backend for signed content reads and stops it
+after building. `pnpm start` reopens that database and serves the existing build
+without rebuilding. The web server defaults to port 3000 and respects `PORT`.
+Stop it before `pnpm runtime:clean` removes the prepared runtime. To refresh
+the snapshot, clean it and repeat preparation.
+
+CI uses the same build lifecycle with the current production selection. The
+protected Vercel integration invokes it through `convex deploy --cmd`; Vercel
+keeps public production client URLs, reads build content from the isolated
+snapshot, and removes all temporary state when the build ends.
 
 ## Repository layout
 
