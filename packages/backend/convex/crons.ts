@@ -79,8 +79,7 @@ crons.interval(
 );
 
 /**
- * Applies the Resend component's bounded finalized and abandoned email
- * retention windows instead of retaining delivery records indefinitely.
+ * Applies component retention and releases terminal app-owned email handles.
  */
 crons.interval(
   "sweep retained email delivery data",
