@@ -48,10 +48,7 @@ export function ShellModelCanvas({
 
   return (
     <section aria-label={ariaLabel} className={threeSceneFrameVariants()}>
-      <ThreeCanvas
-        camera={{ fov: 45, position: CAMERA_POSITION }}
-        frameloop="always"
-      >
+      <ThreeCanvas frameloop="always">
         <Suspense>
           <ResponsiveShellModelCamera />
           <ambientLight intensity={0.72} />
@@ -96,8 +93,7 @@ function ResponsiveShellModelCamera() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
-      maxDistance={10}
-      minDistance={2}
+      fov={45}
     />
   );
 }

@@ -127,10 +127,7 @@ export function MeasurementToolsLab({
         </ToggleGroup>
 
         <div className={threeSceneFrameVariants()}>
-          <ThreeCanvas
-            camera={{ fov: 45, position: viewConfig.cameraPosition }}
-            frameloop="demand"
-          >
+          <ThreeCanvas frameloop="demand">
             <Suspense>
               <ResponsiveMeasurementCamera viewConfig={viewConfig} />
               <ambientLight intensity={0.75} />
@@ -216,6 +213,7 @@ function ResponsiveMeasurementCamera({
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={viewConfig.cameraTarget}
+      fov={45}
     />
   );
 }

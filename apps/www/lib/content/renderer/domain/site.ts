@@ -1,4 +1,3 @@
-import type { RendererComponentLoader } from "@/lib/content/renderer/loader";
+import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainComponentLoaders =
-  [] satisfies readonly RendererComponentLoader[];
+export const domainRenderers = [] satisfies readonly RendererImplementation[];

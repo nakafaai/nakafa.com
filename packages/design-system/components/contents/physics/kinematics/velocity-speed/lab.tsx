@@ -20,6 +20,7 @@ import {
   type VelocitySpeedState,
 } from "@repo/design-system/components/contents/physics/kinematics/velocity-speed/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -118,13 +119,7 @@ export function VelocitySpeedLab({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: VELOCITY_SPEED_CAMERA.fov,
-              position: VELOCITY_SPEED_CAMERA.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ambientLight intensity={0.9} />
               <hemisphereLight
@@ -154,8 +149,6 @@ export function VelocitySpeedLab({
                 enableRotate
                 enableZoom
                 fov={VELOCITY_SPEED_CAMERA.fov}
-                maxDistance={VELOCITY_SPEED_CAMERA.maxDistance}
-                minDistance={VELOCITY_SPEED_CAMERA.minDistance}
               />
               <VelocitySpeedScene motion={motion} />
             </Suspense>
@@ -191,7 +184,9 @@ export function VelocitySpeedLab({
 function VelocitySpeedScene({ motion }: { motion: VelocitySpeedState }) {
   return (
     <group>
-      <Road />
+      <CameraBounds exclude>
+        <Road />
+      </CameraBounds>
       <MotionGuides motion={motion} />
       <RouteCones motion={motion} />
       <AnimatedCar motion={motion} />
@@ -402,11 +397,26 @@ function AnimatedCar({ motion }: { motion: VelocitySpeedState }) {
   });
 
   return (
-    <group ref={groupRef} scale={VELOCITY_SPEED_SCENE.carScale}>
-      <PhysicsCarModel
-        bodyColor={VELOCITY_SPEED_COLORS.carBody}
-        modelPath={VELOCITY_SPEED_CAR_MODEL_PATH}
-      />
-    </group>
+    <CameraBounds
+      motion={{
+        rotation: "y",
+        translation: {
+          x: {
+            min: Math.min(motion.startX, motion.turnX, motion.endX),
+            max: Math.max(motion.startX, motion.turnX, motion.endX),
+          },
+          y: { min: CAR_Y, max: CAR_Y },
+          z: { min: 0, max: 0 },
+        },
+      }}
+      objectRef={groupRef}
+    >
+      <group scale={VELOCITY_SPEED_SCENE.carScale}>
+        <PhysicsCarModel
+          bodyColor={VELOCITY_SPEED_COLORS.carBody}
+          modelPath={VELOCITY_SPEED_CAR_MODEL_PATH}
+        />
+      </group>
+    </CameraBounds>
   );
 }

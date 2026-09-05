@@ -1,9 +1,6 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
-const optionalStringSchema = Schema.toStandardSchemaV1(
-  Schema.UndefinedOr(Schema.String)
-);
 const requiredStringSchema = Schema.toStandardSchemaV1(Schema.NonEmptyString);
 const requiredUrlSchema = Schema.toStandardSchemaV1(
   Schema.String.pipe(
@@ -14,16 +11,6 @@ const requiredUrlSchema = Schema.toStandardSchemaV1(
     )
   )
 );
-/** Defines the optional bundle-analyzer flag read by Next config files. */
-export const analyzeKeys = () =>
-  createEnv({
-    server: {
-      ANALYZE: optionalStringSchema,
-    },
-    runtimeEnv: {
-      ANALYZE: process.env.ANALYZE,
-    },
-  });
 /** Defines the Aksara token accepted by publication-owned WWW routes. */
 export const publicationKeys = () =>
   createEnv({

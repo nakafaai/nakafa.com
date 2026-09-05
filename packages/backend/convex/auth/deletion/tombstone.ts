@@ -20,6 +20,5 @@ export function createDeletedUserTombstone(
     name: "Deleted user",
     plan: DEFAULT_USER_PLAN,
     role: undefined,
-    welcomeEmailId: undefined,
   };
 }

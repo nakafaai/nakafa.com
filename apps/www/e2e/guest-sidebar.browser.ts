@@ -192,17 +192,28 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
           expect(loginLink).toHaveAttribute("href", fallbackHref)
         );
 
-        const nativePagePromise = page
-          .context()
-          .waitForEvent("page", (candidate) => candidate !== page);
-        yield* Effect.promise(() => loginLink.click({ button: "middle" }));
-        const nativePage = yield* Effect.promise(() => nativePagePromise);
-        yield* Effect.promise(() =>
-          expect(nativePage).toHaveURL(
-            new URL(exactHref, page.url()).toString()
-          )
+        const nativeUrl = new URL(exactHref, page.url()).toString();
+        // Background document responses can precede Playwright's page event.
+        const [nativeResponse] = yield* Effect.all(
+          [
+            Effect.promise(() =>
+              page
+                .context()
+                .waitForEvent(
+                  "response",
+                  (candidate) =>
+                    candidate.request().isNavigationRequest() &&
+                    candidate.url() === nativeUrl
+                )
+            ),
+            Effect.promise(() => loginLink.click({ button: "middle" })),
+          ],
+          { concurrency: "unbounded" }
         );
-        yield* Effect.promise(() => nativePage.close());
+        yield* Effect.sync(() => expect(nativeResponse.ok()).toBe(true));
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL(intent, page.url()).toString())
+        );
 
         yield* Effect.promise(() =>
           page.reload({ waitUntil: "domcontentloaded" })

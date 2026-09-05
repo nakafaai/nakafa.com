@@ -67,7 +67,13 @@ function insertArtifact(
 /** Activates signed protected question and answer artifacts for runtime tests. */
 export async function insertProtectedRuntime(
   ctx: MutationCtx,
-  options?: { readonly compiledCode?: string; readonly questionCount?: number }
+  options?: {
+    readonly answerCompiledCode?: string;
+    readonly answerRawMdx?: string;
+    readonly compiledCode?: string;
+    readonly questionCount?: number;
+    readonly rawMdx?: string;
+  }
 ): Promise<ProtectedRuntimeFixture> {
   const locales = ["en", "id"] as const;
   const bodies = locales.flatMap((appLocale) =>
@@ -78,14 +84,18 @@ export async function insertProtectedRuntime(
         compiledCode: options?.compiledCode,
         contentKey: `${questionKey}/question`,
         rawMdx:
-          appLocale === "en" ? "## Technical question" : "## Pertanyaan teknis",
+          appLocale === "en"
+            ? (options?.rawMdx ?? "## Technical question")
+            : "## Pertanyaan teknis",
       });
       const answer = testSignedArtifact("snbt-quant", {
         artifactLocale: appLocale,
-        compiledCode: options?.compiledCode,
+        compiledCode: options?.answerCompiledCode ?? options?.compiledCode,
         contentKey: `${questionKey}/answer`,
         rawMdx:
-          appLocale === "en" ? "#### Technical answer" : "#### Jawaban teknis",
+          appLocale === "en"
+            ? (options?.answerRawMdx ?? "#### Technical answer")
+            : "#### Jawaban teknis",
       });
       const placement = Schema.decodeSync(TryoutPlacementSchema)({
         ...makeTryoutPlacementRow(appLocale, {

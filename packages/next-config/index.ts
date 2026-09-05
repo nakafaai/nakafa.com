@@ -1,5 +1,3 @@
-import withBundleAnalyzer from "@next/bundle-analyzer";
-import createMdx from "@next/mdx";
 import type { NextConfig } from "next";
 
 const BASE_CONTENT_SECURITY_POLICY = {
@@ -135,7 +133,6 @@ export const config = {
       fullUrl: true,
     },
   },
-  pageExtensions: ["mdx", "tsx", "ts", "jsx", "js"],
   reactCompiler: true,
   serverExternalPackages: ["shiki"],
   experimental: {
@@ -166,29 +163,3 @@ export const config = {
     ];
   },
 } satisfies NextConfig;
-
-export const withAnalyzer = (sourceConfig: NextConfig): NextConfig =>
-  withBundleAnalyzer()(sourceConfig);
-
-/**
- * Applies the shared MDX configuration used across Next.js apps in the
- * monorepo.
- *
- * Next and MDX document remark plugins as markdown-tree transforms and rehype
- * plugins as HTML-tree transforms. We intentionally keep only markdown-stage
- * plugins here, because the MDX compiler already performs the mdast -> hast
- * bridge internally and `remark-rehype` is not required for the default MDX
- * pipeline.
- *
- * @param sourceConfig - Base Next.js configuration to augment with MDX support
- * @returns Next.js configuration with MDX enabled
- */
-export const withMDX = (sourceConfig: NextConfig): NextConfig =>
-  createMdx({
-    options: {
-      remarkPlugins: [
-        "remark-gfm",
-        ["remark-math", { singleDollarTextMath: false }],
-      ],
-    },
-  })(sourceConfig);

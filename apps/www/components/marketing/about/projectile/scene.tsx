@@ -53,8 +53,7 @@ export function ProjectileScene({
           enableRotate
           enableZoom
           fov={PROJECTILE_SCENE.cameraFov}
-          maxDistance={PROJECTILE_SCENE.maxDistance}
-          minDistance={PROJECTILE_SCENE.minDistance}
+          maxPolarAngle={PROJECTILE_SCENE.maxPolarAngle}
         />
         <PirateProjectileScene motion={motion} />
       </Suspense>

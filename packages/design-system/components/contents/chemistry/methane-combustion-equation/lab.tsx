@@ -175,10 +175,7 @@ export function MethaneCombustionEquationLab({
           aria-label={labels.moleculeView}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{ fov: 42, position: VIEW.cameraPosition }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <CombustionCamera />
               <ambientLight intensity={0.72} />
@@ -350,8 +347,7 @@ function CombustionCamera() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={VIEW.cameraTarget}
-      maxDistance={8.6}
-      minDistance={3.1}
+      fov={42}
     />
   );
 }

@@ -89,6 +89,20 @@ rebuilding. Use the printed HTTPS
 URL for browser verification. Portless assigns internal application ports;
 `PORTLESS_APP_PORT` selects a fixed port when needed. Set `PORTLESS=0` to bypass
 the proxy explicitly.
+
+Run the browser suite from the repository root in a second terminal. Point
+Playwright at this checkout's URL and let its Node HTTP client trust the same
+local certificate authority:
+
+```sh
+PLAYWRIGHT_BASE_URL="$(pnpm exec portless get nakafa)" \
+NODE_EXTRA_CA_CERTS="${PORTLESS_STATE_DIR:-$HOME/.portless}/ca.pem" \
+pnpm --filter www test:browser --workers=1
+```
+
+If the proxy uses a custom state directory, set `PORTLESS_STATE_DIR` to that
+directory in both terminals.
+
 Stop it before `pnpm runtime:clean` removes the prepared runtime. To refresh
 the snapshot, clean it and repeat preparation.
 

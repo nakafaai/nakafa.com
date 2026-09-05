@@ -1,8 +1,3 @@
-import {
-  Source,
-  SourceContent,
-  SourceTrigger,
-} from "@repo/design-system/components/ai/source";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
@@ -14,19 +9,19 @@ export function Anchor({
   className,
   ...props
 }: AnchorProps) {
-  // No href - do not render anything
   if (!href) {
     return null;
   }
 
-  // Internal navigation
+  const anchorClassName = cn(
+    "h-auto p-0 font-normal text-primary underline underline-offset-4",
+    className
+  );
+
   if (href.startsWith("/")) {
     return (
       <NavigationLink
-        className={cn(
-          "h-auto p-0 font-normal text-primary underline underline-offset-4",
-          className
-        )}
+        className={anchorClassName}
         href={href}
         title={href}
         {...props}
@@ -36,7 +31,6 @@ export function Anchor({
     );
   }
 
-  // Hash anchors, mailto, and tel links
   if (
     href.startsWith("#") ||
     href.startsWith("mailto:") ||
@@ -44,10 +38,7 @@ export function Anchor({
   ) {
     return (
       <a
-        className={cn(
-          "h-auto p-0 font-normal text-primary underline underline-offset-4",
-          className
-        )}
+        className={anchorClassName}
         href={href}
         title={href}
         {...(popover !== undefined && { popover })}
@@ -58,11 +49,17 @@ export function Anchor({
     );
   }
 
-  // External link with source preview
   return (
-    <Source href={href}>
-      <SourceTrigger label={children} showFavicon />
-      <SourceContent title={href} />
-    </Source>
+    <a
+      className={anchorClassName}
+      href={href}
+      title={href}
+      {...(popover !== undefined && { popover })}
+      {...props}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      {children}
+    </a>
   );
 }

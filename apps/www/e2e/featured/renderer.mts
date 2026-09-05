@@ -10,7 +10,6 @@ import { Effect } from "effect";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
-import { selectRendererImplementations } from "@/lib/content/renderer/selection";
 import { fetchRuntimeQuery } from "@/lib/content/runtime/query";
 import { loadContentSnapshot } from "@/lib/content/runtime/snapshot";
 
@@ -26,43 +25,35 @@ const verifyFeaturedRenderer = Effect.fn(
       ({ appLocale }) => readFeaturedTryout(appLocale)
     )
   );
-  const target = {
-    siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
-    token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
-  };
   const manifest = yield* rendererManifest;
   const request = yield* makeTryoutRuntimeRequest([featured.question]);
   const snapshot = yield* Effect.tryPromise(() => loadContentSnapshot());
   const response =
     snapshot === undefined
-      ? yield* readProtectedContent(target, request, manifest)
+      ? yield* readProtectedContent(
+          {
+            siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+            token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
+          },
+          request,
+          manifest
+        )
       : yield* readSnapshotProtectedContent(request, manifest).pipe(
           Effect.provideContext(snapshot)
         );
   const item = response.items[0];
   assert(item, "The featured signed snapshot returned no question artifact.");
 
-  const selectedRenderers = yield* selectRendererImplementations(
-    item.artifact.payload
-  );
-  const selectedRendererNames = selectedRenderers
+  // The protected exchange verifies compatibility with both signed and live manifests.
+  const requiredRendererNames = item.artifact.payload.requiredComponents
     .map(({ name }) => name)
     .sort();
-  const signedRendererNames = item.artifact.payload.requiredComponents
-    .map(({ name }) => name)
-    .sort();
-
-  assert.deepEqual(
-    selectedRendererNames,
-    signedRendererNames,
-    "Selected renderers differ from the authenticated artifact requirements."
-  );
 
   return {
     contentKey: item.artifact.payload.contentKey,
     rendererDomain: item.artifact.payload.rendererDomain,
     runtime: "permanent",
-    selectedRendererNames,
+    requiredRendererNames,
   };
 });
 

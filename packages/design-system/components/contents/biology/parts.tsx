@@ -1,11 +1,9 @@
 "use client";
 
 import { Line } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
-import type { ReactNode } from "react";
-import { useMemo, useRef } from "react";
-import type { Group } from "three";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { useMemo } from "react";
 import * as THREE from "three";
 
 const NUCLEIC_ACID_STEP_COUNT = 36;
@@ -14,122 +12,6 @@ const NUCLEIC_ACID_BASE_TICK_COUNT = 9;
 const NUCLEIC_ACID_MARKER_COUNT = 8;
 const NUCLEIC_ACID_FULL_SEGMENT = [0, 1] as const;
 const TAU = Math.PI * 2;
-
-/**
- * Rotates an educational model slowly without hiding the first-read structure.
- */
-export function RotatingGroup({
-  children,
-  speed = 0.18,
-}: {
-  children: ReactNode;
-  speed?: number;
-}) {
-  const ref = useRef<Group>(null);
-
-  useFrame((_, delta) => {
-    if (!ref.current) {
-      return;
-    }
-
-    ref.current.rotation.y += delta * speed;
-  });
-
-  return <group ref={ref}>{children}</group>;
-}
-
-/**
- * Makes a structure gently expand and contract so active biological material
- * reads as alive without needing state updates.
- */
-export function PulsingGroup({
-  children,
-  phase = 0,
-  speed = 1.4,
-  strength = 0.06,
-}: {
-  children: ReactNode;
-  phase?: number;
-  speed?: number;
-  strength?: number;
-}) {
-  const ref = useRef<Group>(null);
-  const timeRef = useRef(phase);
-
-  useFrame((_, delta) => {
-    if (!ref.current) {
-      return;
-    }
-
-    timeRef.current += delta * speed;
-
-    const scale = 1 + Math.sin(timeRef.current) * strength;
-
-    ref.current.scale.setScalar(scale);
-  });
-
-  return <group ref={ref}>{children}</group>;
-}
-
-/**
- * Moves a nested structure up and down to make spores, droplets, and heat
- * indicators readable as processes instead of frozen icons.
- */
-export function FloatingGroup({
-  children,
-  phase = 0,
-  speed = 1,
-  travel = 0.08,
-}: {
-  children: ReactNode;
-  phase?: number;
-  speed?: number;
-  travel?: number;
-}) {
-  const ref = useRef<Group>(null);
-  const timeRef = useRef(phase);
-
-  useFrame((_, delta) => {
-    if (!ref.current) {
-      return;
-    }
-
-    timeRef.current += delta * speed;
-    ref.current.position.y = Math.sin(timeRef.current) * travel;
-  });
-
-  return <group ref={ref}>{children}</group>;
-}
-
-/**
- * Slides a nested structure horizontally on a loop for visible transfer,
- * spread, and circulation diagrams.
- */
-export function SlidingGroup({
-  children,
-  phase = 0,
-  speed = 1,
-  travel = 0.16,
-}: {
-  children: ReactNode;
-  phase?: number;
-  speed?: number;
-  travel?: number;
-}) {
-  const ref = useRef<Group>(null);
-  const timeRef = useRef(phase);
-
-  useFrame((_, delta) => {
-    if (!ref.current) {
-      return;
-    }
-
-    timeRef.current += delta * speed;
-    ref.current.position.x = Math.sin(timeRef.current) * travel;
-  });
-
-  return <group ref={ref}>{children}</group>;
-}
 
 /**
  * Renders DNA as two sugar-phosphate backbones with base-pair rungs.
@@ -293,19 +175,21 @@ export function BiologyGround({
   scale?: BiologyScenePoint;
 }) {
   return (
-    <mesh
-      position={[0, -0.9, 0]}
-      receiveShadow
-      scale={[scale[0] / 2, scale[1], scale[2] / 2]}
-    >
-      <cylinderGeometry args={[1, 1, 1, 56]} />
-      <meshStandardMaterial
-        color={color}
-        depthWrite={false}
-        opacity={0.26}
-        transparent
-      />
-    </mesh>
+    <CameraBounds exclude>
+      <mesh
+        position={[0, -0.9, 0]}
+        receiveShadow
+        scale={[scale[0] / 2, scale[1], scale[2] / 2]}
+      >
+        <cylinderGeometry args={[1, 1, 1, 56]} />
+        <meshStandardMaterial
+          color={color}
+          depthWrite={false}
+          opacity={0.26}
+          transparent
+        />
+      </mesh>
+    </CameraBounds>
   );
 }
 

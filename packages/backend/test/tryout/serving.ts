@@ -4,6 +4,8 @@ import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
+import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
 import { decodeSnapshotJson } from "@repo/backend/convex/contentRelease/parse";
 import { mergeManagedFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import schema from "@repo/backend/convex/schema";
@@ -28,36 +30,45 @@ import { Effect } from "effect";
 /** Creates an inherited active try-out snapshot with authentic immutable bundle dependencies. */
 export const makeTryoutRuntimeSource = Effect.fn(
   "RuntimeSnapshotTest.tryoutSource"
-)(function* (compiledCode?: string) {
+)(function* (
+  compiledCode?: string,
+  input?: {
+    readonly catalog: readonly TryoutCatalogRow[];
+    readonly placements: readonly TryoutPlacement[];
+  }
+) {
   const t = convexTest(schema, convexModules);
-  const artifacts = ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) => {
-    const placement = makeTryoutStartPlacement(appLocale);
-    return [
-      testSignedArtifact("tka-math", {
-        contentKey: placement.questionContentKey,
-        artifactLocale: appLocale,
-        compiledCode:
-          compiledCode ??
-          'return { default: function TechnicalQuestion() { return "Technical question"; } };',
-      }),
-      testSignedArtifact("tka-math", {
-        contentKey: placement.answerContentKey,
-        artifactLocale: appLocale,
-        compiledCode,
-      }),
-    ];
-  });
-  const placements = ACTIVE_APP_LOCALE_CODES.map((appLocale) => {
-    const placement = makeTryoutStartPlacement(appLocale);
+  const catalog =
+    input?.catalog ??
+    ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) =>
+      makeTryoutStartHierarchy(appLocale, "visible")
+    );
+  const sourcePlacements =
+    input?.placements ?? ACTIVE_APP_LOCALE_CODES.map(makeTryoutStartPlacement);
+  const artifacts = sourcePlacements.flatMap((placement) => [
+    testSignedArtifact(placement.rendererDomain, {
+      contentKey: placement.questionContentKey,
+      artifactLocale: placement.questionArtifactLocale,
+      compiledCode:
+        compiledCode ??
+        'return { default: function TechnicalQuestion() { return "Technical question"; } };',
+    }),
+    testSignedArtifact(placement.rendererDomain, {
+      contentKey: placement.answerContentKey,
+      artifactLocale: placement.answerArtifactLocale,
+      compiledCode,
+    }),
+  ]);
+  const placements = sourcePlacements.map((placement) => {
     const question = artifacts.find(
       (artifact) =>
         artifact.payload.contentKey === placement.questionContentKey &&
-        artifact.payload.artifactLocale === appLocale
+        artifact.payload.artifactLocale === placement.questionArtifactLocale
     );
     const answer = artifacts.find(
       (artifact) =>
         artifact.payload.contentKey === placement.answerContentKey &&
-        artifact.payload.artifactLocale === appLocale
+        artifact.payload.artifactLocale === placement.answerArtifactLocale
     );
     if (!(question && answer)) {
       throw new Error("Missing technical try-out artifacts.");
@@ -71,9 +82,7 @@ export const makeTryoutRuntimeSource = Effect.fn(
   const snapshotId = yield* Effect.promise(() =>
     t.mutation((ctx) =>
       activateTryoutSnapshot(ctx, {
-        catalog: ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) =>
-          makeTryoutStartHierarchy(appLocale, "visible")
-        ),
+        catalog,
         placements,
       })
     )
@@ -93,7 +102,7 @@ export const makeTryoutRuntimeSource = Effect.fn(
     tryout: replaceContentSnapshot({
       baseSnapshotId: null,
       resultSnapshotId: snapshot.manifest.snapshotId,
-      rowCount: 18,
+      rowCount: catalog.length + placements.length,
       rowDigest: snapshot.manifest.snapshotId,
     }),
   };

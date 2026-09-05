@@ -92,13 +92,7 @@ export function MatterParticleReaderLab({
           aria-label={labels.particleView}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 43,
-              position: MATTER_PARTICLE_SCENE_VIEW.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <MatterParticleCameraControls />
               <ambientLight intensity={0.7} />
@@ -153,8 +147,7 @@ function MatterParticleCameraControls() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={MATTER_PARTICLE_SCENE_VIEW.cameraTarget}
-      maxDistance={8.4}
-      minDistance={2.6}
+      fov={43}
     />
   );
 }

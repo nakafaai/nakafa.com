@@ -2,6 +2,7 @@ import "server-only";
 import {
   ContentKeySchema,
   PublicPathSchema,
+  ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
@@ -10,26 +11,40 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import { readMaterialIdentity } from "@repo/backend/content/material/identity";
 import { api } from "@repo/backend/convex/_generated/api";
+import { readMdxBody } from "@repo/contents/_types/llms/mdx";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { applyPublishedCatalogCache } from "@/lib/content/cache";
-import { PublishedProjectionError } from "@/lib/content/published/errors";
+import { applyPublishedContentCache } from "@/lib/content/cache";
+import {
+  PublishedProjectionError,
+  PublishedReleaseMismatchError,
+} from "@/lib/content/published/errors";
+import {
+  type PublishedMaterialContent,
+  readRenderedMaterial,
+} from "@/lib/content/published/material";
 import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 const TRUST_CONTENT_KEY = ContentKeySchema.make(
-  "material/lesson/mathematics/exponential-logarithm/basic-concept"
+  "material/lesson/mathematics/trigonometry/right-triangle-naming"
 );
 const TRUST_MATERIAL_KEY = MaterialKeySchema.make(
-  "lesson.mathematics.exponential-logarithm"
+  "lesson.mathematics.trigonometry"
 );
-const TRUST_SECTION_KEY = MaterialSectionSchema.make("basic-concept");
-/** Localized links resolved from the signed trust lesson projection. */
-export interface PublishedTrustLesson {
+const TRUST_SECTION_KEY = MaterialSectionSchema.make("right-triangle-naming");
+const TrustIdentitySchema = Schema.Struct({
+  activeReleaseId: ReleaseIdSchema,
+  publicPath: PublicPathSchema,
+});
+/** One complete signed lesson rendered beside the matching authored body. */
+export interface PublishedTrustLesson
+  extends Pick<PublishedMaterialContent, "artifactHash" | "body"> {
   readonly lessonHref: string;
+  readonly sourceBody: string;
   readonly sourceHref: string;
 }
-/** Resolves exactly one current localized route for the stable trust lesson. */
+/** Resolves and renders the curated lesson from one current publication. */
 export const readPublishedTrustLesson = Effect.fn(
   "www.marketing.readTrustLesson"
 )(function* (locale: Locale) {
@@ -51,9 +66,7 @@ export const readPublishedTrustLesson = Effect.fn(
       publicPath: "marketing/trust",
     });
   }
-  const publicPath = yield* Schema.decodeEffect(PublicPathSchema)(
-    result.publicPath
-  ).pipe(
+  const identity = yield* Schema.decodeEffect(TrustIdentitySchema)(result).pipe(
     Effect.mapError(
       () =>
         new PublishedProjectionError({
@@ -62,16 +75,30 @@ export const readPublishedTrustLesson = Effect.fn(
         })
     )
   );
-  const lessonHref = `/${locale}/${publicPath}`;
+  const published = yield* readRenderedMaterial({
+    appLocale,
+    publicPath: identity.publicPath,
+  });
+  if (published.activeReleaseId !== identity.activeReleaseId) {
+    return yield* new PublishedReleaseMismatchError({
+      actualReleaseId: published.activeReleaseId,
+      expectedReleaseId: identity.activeReleaseId,
+    });
+  }
+  const lessonHref = `/${locale}/${identity.publicPath}`;
+  const sourceBody = yield* readMdxBody(published.rawMdx);
   return {
+    artifactHash: published.artifactHash,
+    body: published.body,
     lessonHref,
+    sourceBody,
     sourceHref: `${lessonHref}.md`,
   } satisfies PublishedTrustLesson;
 });
-/** Caches the signed trust lesson links under content release invalidation. */
+/** Caches the complete comparison under release and artifact invalidation. */
 export async function getPublishedTrustLesson(locale: Locale) {
   "use cache";
   const lesson = await Effect.runPromise(readPublishedTrustLesson(locale));
-  applyPublishedCatalogCache("material");
+  applyPublishedContentCache("material", lesson.artifactHash);
   return lesson;
 }

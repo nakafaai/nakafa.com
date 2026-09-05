@@ -1,13 +1,21 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 
 const loadEnglishMessages = () =>
-  import("@repo/internationalization/dictionaries/en.json");
+  import("@repo/internationalization/dictionaries/en.json", {
+    with: { type: "json" },
+  });
 type MessagesModule = Awaited<ReturnType<typeof loadEnglishMessages>>;
 
 const loadMessagesByLocale = {
-  de: () => import("@repo/internationalization/dictionaries/de.json"),
+  de: () =>
+    import("@repo/internationalization/dictionaries/de.json", {
+      with: { type: "json" },
+    }),
   en: loadEnglishMessages,
-  id: () => import("@repo/internationalization/dictionaries/id.json"),
+  id: () =>
+    import("@repo/internationalization/dictionaries/id.json", {
+      with: { type: "json" },
+    }),
 } satisfies Record<AppLocaleCode, () => Promise<MessagesModule>>;
 
 /**

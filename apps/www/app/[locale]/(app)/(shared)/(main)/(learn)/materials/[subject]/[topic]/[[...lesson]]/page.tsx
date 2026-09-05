@@ -32,6 +32,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { ContentViewTracker } from "@/components/tracking/tracker";
+import { getPublishedMaterialContext } from "@/lib/content/material/context";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
@@ -114,7 +115,16 @@ async function MaterialRouteContent({
   ]);
   const { appLocale, route } = page;
   const materialContext = readMaterialContextQuery(query ?? {});
-  const navigation = await readMaterialNavigation(page, materialContext);
+  const publishedContext =
+    materialContext && page.kind === "published"
+      ? await getPublishedMaterialContext(
+          appLocale,
+          route,
+          materialContext,
+          page.activeReleaseId
+        )
+      : null;
+  const navigation = readMaterialNavigation(page, publishedContext);
   const trackerContext: LearningContextInput | undefined = navigation.context
     ? {
         mode: "placement",
@@ -139,6 +149,7 @@ async function MaterialRouteContent({
         content={{ body: page.body, metadata: page.metadata }}
         copyContent={page.copySourceUrl ? undefined : page.body}
         copySourceUrl={page.copySourceUrl}
+        currentHref={navigation.currentHref}
         footer={
           allowsInteractions ? <DeferredComments slug={contentKey} /> : null
         }
@@ -173,6 +184,7 @@ async function MaterialLessonPage({
   content,
   copyContent,
   copySourceUrl,
+  currentHref,
   footer,
   headerLink,
   icon,
@@ -188,6 +200,7 @@ async function MaterialLessonPage({
   content: MaterialBody;
   copyContent?: string;
   copySourceUrl: null | string;
+  currentHref: string;
   footer: ReactNode;
   headerLink?: {
     href: string;
@@ -273,7 +286,7 @@ async function MaterialLessonPage({
         githubUrl={sourceUrl ?? undefined}
         header={{
           title: metadata.title,
-          href: toMaterialHref(route),
+          href: currentHref,
           description: metadata.description ?? metadata.subject,
         }}
         showComments={showComments}

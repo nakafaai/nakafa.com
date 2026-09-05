@@ -7,6 +7,7 @@ import {
   BEAKER_CONTENT_BOTTOM_Y,
   Particle,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
@@ -24,6 +25,38 @@ const BUBBLES = [
 ] satisfies GasBubble[];
 
 const BUBBLE_RADIUS = 0.055;
+const BUBBLE_TRAVEL = 0.56;
+const BUBBLE_INITIAL_SCALE = 0.82;
+const BUBBLE_GROWTH = 0.36;
+const BUBBLE_MAX_RADIUS =
+  BUBBLE_RADIUS * (BUBBLE_INITIAL_SCALE + BUBBLE_GROWTH);
+const BUBBLE_BOUNDS = {
+  x: {
+    min:
+      Math.min(...BUBBLES.map(({ position }) => position[0])) -
+      BUBBLE_MAX_RADIUS,
+    max:
+      Math.max(...BUBBLES.map(({ position }) => position[0])) +
+      BUBBLE_MAX_RADIUS,
+  },
+  y: {
+    min:
+      Math.min(...BUBBLES.map(({ position }) => position[1])) -
+      BUBBLE_MAX_RADIUS,
+    max:
+      Math.max(...BUBBLES.map(({ position }) => position[1])) +
+      BUBBLE_TRAVEL +
+      BUBBLE_MAX_RADIUS,
+  },
+  z: {
+    min:
+      Math.min(...BUBBLES.map(({ position }) => position[2])) -
+      BUBBLE_MAX_RADIUS,
+    max:
+      Math.max(...BUBBLES.map(({ position }) => position[2])) +
+      BUBBLE_MAX_RADIUS,
+  },
+};
 const SETTLED_SOLID_RADIUS = 0.055;
 const SETTLED_SOLID_BASE_Y =
   BEAKER_CONTENT_BOTTOM_Y + SETTLED_SOLID_RADIUS + 0.02;
@@ -55,14 +88,14 @@ export function HeatRays({ color }: { color: string }) {
   });
 
   return (
-    <group ref={groupRef}>
+    <CameraBounds motion={{ scale: 1.08 }} objectRef={groupRef}>
       {[-0.28, 0, 0.28].map((x) => (
         <mesh key={x} position={[x, 0.56, 0]} rotation={[0, 0, x * 2]}>
           <coneGeometry args={[0.05, 0.34, 16]} />
           <meshStandardMaterial color={color} emissive={color} />
         </mesh>
       ))}
-    </group>
+    </CameraBounds>
   );
 }
 
@@ -95,7 +128,7 @@ export function FloatingIons({
   });
 
   return (
-    <group ref={groupRef}>
+    <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
       {FLOATING_ION_POINTS.map((point) => (
         <Particle
           color={colors.calcium}
@@ -107,7 +140,7 @@ export function FloatingIons({
           radius={0.07}
         />
       ))}
-    </group>
+    </CameraBounds>
   );
 }
 
@@ -135,7 +168,7 @@ export function SettledSolid({
 
 export function GasBubbles({ color }: { color: string }) {
   return (
-    <group>
+    <CameraBounds bounds={BUBBLE_BOUNDS}>
       {BUBBLES.map((bubble) => (
         <AnimatedBubble
           color={color}
@@ -143,7 +176,7 @@ export function GasBubbles({ color }: { color: string }) {
           {...bubble}
         />
       ))}
-    </group>
+    </CameraBounds>
   );
 }
 
@@ -162,8 +195,10 @@ function AnimatedBubble({
     }
 
     const progress = (clock.elapsedTime * speed + phase) % 1;
-    meshRef.current.position.y = y + progress * 0.56;
-    meshRef.current.scale.setScalar(0.82 + progress * 0.36);
+    meshRef.current.position.y = y + progress * BUBBLE_TRAVEL;
+    meshRef.current.scale.setScalar(
+      BUBBLE_INITIAL_SCALE + progress * BUBBLE_GROWTH
+    );
   });
 
   return (

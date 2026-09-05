@@ -89,13 +89,7 @@ export function MultipleProportionsLab({
           aria-label={labels.comparisonView}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 42,
-              position: MULTIPLE_PROPORTIONS_SCENE_VIEW.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <MultipleProportionsCameraControls />
               <ambientLight intensity={0.68} />
@@ -150,8 +144,7 @@ function MultipleProportionsCameraControls() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={MULTIPLE_PROPORTIONS_SCENE_VIEW.cameraTarget}
-      maxDistance={9}
-      minDistance={2.8}
+      fov={42}
     />
   );
 }

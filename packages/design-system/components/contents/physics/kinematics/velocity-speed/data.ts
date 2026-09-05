@@ -103,14 +103,10 @@ export const VELOCITY_SPEED_CAMERA = {
   cameraPosition: CAMERA_POSITION,
   cameraTarget: CAMERA_TARGET,
   fov: CAMERA_COMPOSITION.fov,
-  maxDistance: 26,
-  minDistance: 5,
 } satisfies {
   cameraPosition: readonly [number, number, number];
   cameraTarget: readonly [number, number, number];
   fov: number;
-  maxDistance: number;
-  minDistance: number;
 };
 
 export type VelocitySpeedState = ReturnType<typeof getVelocitySpeedState>;

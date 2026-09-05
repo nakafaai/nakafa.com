@@ -1,4 +1,3 @@
-import { vEmailId } from "@convex-dev/resend";
 import { userRoles } from "@repo/ai/types/roles";
 import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
 import { defineTable } from "convex/server";
@@ -47,7 +46,6 @@ export const userValidator = v.object({
   deletionCleanupStartedAt: v.optional(v.number()),
   deletionPreparedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
-  welcomeEmailId: v.optional(vEmailId),
 });
 
 const tables = {

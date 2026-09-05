@@ -146,10 +146,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         <Logos />
         <Features locale={locale} />
         <Curricula locale={locale} />
-        <Trust
-          lessonHref={trustLesson.lessonHref}
-          sourceHref={trustLesson.sourceHref}
-        />
+        <Trust lesson={trustLesson} />
         <Pricing />
         <Schools />
         <Faq />

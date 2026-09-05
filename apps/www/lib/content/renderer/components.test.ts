@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
-import { Data, Effect } from "effect";
+import { Effect } from "effect";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
@@ -19,12 +19,6 @@ vi.mock("next-intl", () => ({
 
 const contentKey = ContentKeySchema.make("test:renderer-components");
 
-class RendererFixtureUnavailable extends Data.TaggedError(
-  "RendererFixtureUnavailable"
-)<{
-  readonly resource: "component" | "domain";
-}> {}
-
 afterEach(() => {
   vi.doUnmock("@repo/design-system/lib/markdown/semantic");
   vi.doUnmock("@/lib/content/renderer/domain/site");
@@ -33,7 +27,7 @@ afterEach(() => {
 
 describe("renderer components", () => {
   it.effect(
-    "loads semantic HTML plus exactly the signed custom requirements",
+    "resolves semantic HTML plus exactly the signed custom requirements",
     () =>
       Effect.gen(function* () {
         const { resolveRendererComponents } = yield* Effect.promise(
@@ -107,9 +101,7 @@ describe("renderer components", () => {
     Effect.gen(function* () {
       yield* Effect.sync(() =>
         vi.doMock("@/lib/content/renderer/domain/site", () => ({
-          domainComponentLoaders: [
-            { load: () => Promise.resolve(() => null), name: "InlineMath" },
-          ],
+          domainRenderers: [{ component: () => null, name: "InlineMath" }],
         }))
       );
       const { resolveRendererComponents } = yield* Effect.promise(
@@ -136,9 +128,9 @@ describe("renderer components", () => {
       Effect.gen(function* () {
         yield* Effect.sync(() =>
           vi.doMock("@/lib/content/renderer/domain/site", () => ({
-            domainComponentLoaders: [
-              { load: () => Promise.resolve(() => null), name: "SiteWidget" },
-              { load: () => Promise.resolve(() => null), name: "SiteWidget" },
+            domainRenderers: [
+              { component: () => null, name: "SiteWidget" },
+              { component: () => null, name: "SiteWidget" },
             ],
           }))
         );
@@ -160,57 +152,38 @@ describe("renderer components", () => {
       })
   );
 
-  it.effect("preserves domain import failures in the typed error channel", () =>
+  it.effect("resolves only the signed renderer from its selected domain", () =>
     Effect.gen(function* () {
-      yield* Effect.sync(() =>
-        vi.doMock("@/lib/content/renderer/domain/site", () => {
-          throw new RendererFixtureUnavailable({ resource: "domain" });
-        })
-      );
       const { resolveRendererComponents } = yield* Effect.promise(
         () => import("@/lib/content/renderer/components")
       );
-      const failure = yield* resolveRendererComponents({
+      const components = yield* resolveRendererComponents({
         contentKey,
-        rendererDomain: "site",
-        requiredComponents: [],
-      }).pipe(Effect.flip);
-
-      expect(failure).toMatchObject({
-        _tag: "RendererDomainLoadError",
-        contentKey,
-        rendererDomain: "site",
+        rendererDomain: "mathematics",
+        requiredComponents: [{ name: "Triangle", version: 1 }],
       });
+
+      expect(Object.keys(components).sort()).toEqual(
+        [...Object.keys(semanticMdxComponents), "Triangle"].sort()
+      );
+      expect(components).not.toHaveProperty("UnitCircle");
     })
   );
 
-  it.effect("identifies the component whose implementation import failed", () =>
+  it.effect("rejects a renderer registered only in another domain", () =>
     Effect.gen(function* () {
-      yield* Effect.sync(() =>
-        vi.doMock("@/lib/content/renderer/domain/site", () => ({
-          domainComponentLoaders: [
-            {
-              load: () =>
-                Promise.reject(
-                  new RendererFixtureUnavailable({ resource: "component" })
-                ),
-              name: "SiteWidget",
-            },
-          ],
-        }))
-      );
       const { resolveRendererComponents } = yield* Effect.promise(
         () => import("@/lib/content/renderer/components")
       );
       const failure = yield* resolveRendererComponents({
         contentKey,
         rendererDomain: "site",
-        requiredComponents: [{ name: "SiteWidget", version: 1 }],
+        requiredComponents: [{ name: "Triangle", version: 1 }],
       }).pipe(Effect.flip);
 
       expect(failure).toMatchObject({
-        _tag: "RendererDomainLoadError",
-        componentName: "SiteWidget",
+        _tag: "RendererImplementationMissing",
+        componentName: "Triangle",
         contentKey,
         rendererDomain: "site",
       });

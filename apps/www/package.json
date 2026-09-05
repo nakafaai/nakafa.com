@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "analyze": "ANALYZE=true next build",
+    "analyze": "next experimental-analyze",
     "build": "next build",
     "build:vercel": "pnpm --dir ../../packages/backend typecheck && pnpm --dir ../../packages/backend exec convex deploy --yes --typecheck disable --typecheck-components --cmd 'pnpm --dir ../.. run build --filter=www' --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -18,7 +18,7 @@
     "test:coverage": "NODE_OPTIONS='--no-experimental-webstorage' vitest run --coverage",
     "test:ui": "NODE_OPTIONS='--no-experimental-webstorage' vitest --ui",
     "test:watch": "NODE_OPTIONS='--no-experimental-webstorage' vitest watch",
-    "typecheck": "next typegen && tsc --noEmit --emitDeclarationOnly false",
+    "typecheck": "next typegen && tsc --checkers 2 --noEmit --emitDeclarationOnly false",
     "verify:featured-renderer": "tsx --conditions=import --conditions=react-server e2e/featured/renderer.mts"
   },
   "dependencies": {

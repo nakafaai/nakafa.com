@@ -155,7 +155,9 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
 
   const signedContent =
     attemptPage?.content.kind === "signed"
-      ? Effect.runPromise(loadSignedTryoutContent(attemptPage.content))
+      ? Effect.runPromise(
+          loadSignedTryoutContent(attemptPage.attemptId, attemptPage.content)
+        )
       : null;
   const reviewRuntime =
     attemptPage?.content.kind === "signed" &&

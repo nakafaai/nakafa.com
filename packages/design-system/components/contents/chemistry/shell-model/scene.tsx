@@ -5,6 +5,7 @@ import type {
   ShellModelShells,
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
@@ -225,24 +226,26 @@ function OrbitingShellElectrons({
   });
 
   return (
-    <group ref={groupRef} rotation={[0, shellIndex * 0.24, 0]}>
-      {electrons.map((electronIndex) => {
-        const angle =
-          (2 * Math.PI * electronIndex) / shell.electronCount +
-          shellIndex * 0.42;
-        const x = Math.cos(angle) * radius;
-        const z = Math.sin(angle) * radius;
+    <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
+      <group rotation={[0, shellIndex * 0.24, 0]}>
+        {electrons.map((electronIndex) => {
+          const angle =
+            (2 * Math.PI * electronIndex) / shell.electronCount +
+            shellIndex * 0.42;
+          const x = Math.cos(angle) * radius;
+          const z = Math.sin(angle) * radius;
 
-        return (
-          <Electron
-            colors={colors}
-            isOuterShell={isOuterShell}
-            key={`${shell.key}-${electronIndex}`}
-            position={[x, 0, z]}
-          />
-        );
-      })}
-    </group>
+          return (
+            <Electron
+              colors={colors}
+              isOuterShell={isOuterShell}
+              key={`${shell.key}-${electronIndex}`}
+              position={[x, 0, z]}
+            />
+          );
+        })}
+      </group>
+    </CameraBounds>
   );
 }
 

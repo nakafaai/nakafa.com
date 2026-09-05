@@ -14,6 +14,7 @@ import {
   toWorldRoutePoint,
   type WorldPoint2,
 } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { getColor } from "@repo/design-system/lib/color";
 import { Suspense, useMemo, useRef } from "react";
@@ -69,8 +70,6 @@ export function AverageMotionStage({
         enableRotate
         enableZoom
         fov={AVERAGE_VELOCITY_SPEED_CAMERA.fov}
-        maxDistance={AVERAGE_VELOCITY_SPEED_CAMERA.maxDistance}
-        minDistance={AVERAGE_VELOCITY_SPEED_CAMERA.minDistance}
       />
       <AverageMotionScene motion={motion} />
     </Suspense>
@@ -344,9 +343,27 @@ function RollingBall({ motion }: { motion: AverageVelocitySpeedState }) {
       -traveledWorld / AVERAGE_VELOCITY_SPEED_SCENE.ballRadius;
   });
 
+  const route = getAverageMotionRoutePoints(motion);
+
   return (
-    <group ref={groupRef}>
-      <group ref={ballRef}>
+    <CameraBounds
+      motion={{
+        rotation: "y",
+        translation: {
+          x: {
+            min: Math.min(...route.map((point) => point.x)),
+            max: Math.max(...route.map((point) => point.x)),
+          },
+          y: { min: BALL_Y, max: BALL_Y },
+          z: {
+            min: Math.min(...route.map((point) => point.z)),
+            max: Math.max(...route.map((point) => point.z)),
+          },
+        },
+      }}
+      objectRef={groupRef}
+    >
+      <CameraBounds motion={{ rotation: "z" }} objectRef={ballRef}>
         <mesh castShadow receiveShadow>
           <sphereGeometry
             args={[AVERAGE_VELOCITY_SPEED_SCENE.ballRadius, 32, 24]}
@@ -359,8 +376,8 @@ function RollingBall({ motion }: { motion: AverageVelocitySpeedState }) {
         </mesh>
         <BallBand rotation={[Math.PI / 2, 0, 0]} />
         <BallBand rotation={[0, Math.PI / 2, 0]} />
-      </group>
-    </group>
+      </CameraBounds>
+    </CameraBounds>
   );
 }
 

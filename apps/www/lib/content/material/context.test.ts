@@ -109,6 +109,7 @@ describe("published material context", () => {
           nodeKey: testProgramSubject.nodeKey,
           publicPath: testProgramSubject.publicPath,
         },
+        resolvedCanonicalPath: mapping.canonicalPath,
       });
       expect(cacheMock).toHaveBeenCalledOnce();
     })
@@ -218,31 +219,37 @@ describe("published material context", () => {
       })
   );
 
-  it.effect("accepts a backend-verified renamed material parent", () =>
-    Effect.gen(function* () {
-      const renamedParent = PublicPathSchema.make(
-        "subjects/mathematics/renamed-functions"
-      );
-      const renamedMaterial = {
-        ...previewProjection,
-        parentPath: renamedParent,
-        publicPath: PublicPathSchema.make(
-          `${renamedParent}/renamed-function-concept`
-        ),
-      };
-      runtimeQueryMock.mockReturnValueOnce(
-        Effect.succeed({
-          ...publishedContext,
-          resolvedCanonicalPath: renamedParent,
-        })
-      );
+  it.effect.each(["parent", "lesson"] as const)(
+    "preserves the signed mapping for a backend-verified renamed material %s",
+    (scope) =>
+      Effect.gen(function* () {
+        const renamedParent = PublicPathSchema.make(
+          "subjects/mathematics/renamed-functions"
+        );
+        const renamedMaterial = {
+          ...previewProjection,
+          parentPath: renamedParent,
+          publicPath: PublicPathSchema.make(
+            `${renamedParent}/renamed-function-concept`
+          ),
+        };
+        const resolvedCanonicalPath =
+          scope === "parent" ? renamedParent : renamedMaterial.publicPath;
+        runtimeQueryMock.mockReturnValueOnce(
+          Effect.succeed({
+            ...publishedContext,
+            resolvedCanonicalPath,
+          })
+        );
 
-      expect(
-        yield* readPublishedMaterialContext("en", renamedMaterial, context)
-      ).toMatchObject({
-        mapping: { canonicalPath: mapping.canonicalPath },
-      });
-    })
+        const resolved = yield* readPublishedMaterialContext(
+          "en",
+          renamedMaterial,
+          context
+        );
+        expect(resolved).toMatchObject({ resolvedCanonicalPath });
+        expect(resolved?.mapping).toEqual(mapping);
+      })
   );
 
   it.effect.each([

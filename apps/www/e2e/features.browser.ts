@@ -127,7 +127,12 @@ const expectFeaturedTryoutResponse = Effect.fn(
 
   yield* Effect.promise(() => feature.scrollIntoViewIfNeeded());
   const choiceCount = yield* Effect.promise(() => choices.count());
-  yield* Effect.sync(() => expect(choiceCount).toBeGreaterThanOrEqual(2));
+  yield* Effect.sync(() => expect(choiceCount).toBe(5));
+  yield* Effect.promise(() =>
+    expect(
+      response.getByRole("radio", { exact: true, name: "19" })
+    ).toHaveCount(1)
+  );
 
   for (let index = 0; index < choiceCount; index += 1) {
     yield* Effect.promise(() =>
@@ -160,6 +165,9 @@ const expectFeaturedTryoutResponse = Effect.fn(
     name: INCORRECT_CHOICE_PATTERN,
   });
   yield* Effect.promise(() => expect(correctChoice).toHaveCount(1));
+  yield* Effect.promise(() =>
+    expect(correctChoice).toHaveAccessibleName("19 Correct")
+  );
   yield* Effect.promise(() =>
     expect(incorrectChoices).toHaveCount(choiceCount - 1)
   );
