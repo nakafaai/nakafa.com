@@ -1,5 +1,10 @@
+import { fileURLToPath } from "node:url";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import {
+  buildApplication,
+  startApplication,
+} from "@repo/backend/scripts/content/runtime/build";
 import {
   clearContentRuntimeSecrets,
   readExportConfig,
@@ -18,6 +23,7 @@ import {
   verifyRuntimeSelection,
 } from "@repo/backend/scripts/content/runtime/ci/generation";
 import { importSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/import";
+import { cleanLocalRuntime } from "@repo/backend/scripts/content/runtime/local";
 import {
   CONTENT_RUNTIME_TABLES,
   readContentRuntimeSchemaFingerprint,
@@ -63,6 +69,28 @@ const writeFingerprintEnvironment = Effect.gen(function* () {
 
 const runMode = (mode: string | undefined) => {
   switch (mode) {
+    case "build":
+    case "prepare":
+    case "start":
+    case "clean":
+      return Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.realPath(
+          fileURLToPath(new URL("../../../../../../", import.meta.url))
+        );
+        if (mode === "build" || mode === "prepare") {
+          return yield* buildApplication(
+            root,
+            process.argv.slice(3),
+            process.env,
+            mode
+          );
+        }
+        if (mode === "start") {
+          return yield* startApplication(root, process.argv.slice(3));
+        }
+        return yield* cleanLocalRuntime(root);
+      });
     case "fingerprint":
       return writeFingerprintEnvironment;
     case "generations":
@@ -99,7 +127,7 @@ const runMode = (mode: string | undefined) => {
     default:
       return Effect.fail(
         contentRuntimeCiError(
-          "Usage: runtime:ci <fingerprint|generations|verify-generations|export|import>"
+          "Usage: runtime:ci <build|prepare|start|clean|fingerprint|generations|verify-generations|export|import>"
         )
       );
   }

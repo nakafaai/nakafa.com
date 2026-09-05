@@ -73,8 +73,8 @@
       "persistent": true
     },
     "start": {
-      "dependsOn": ["build"],
-      "cache": false
+      "cache": false,
+      "persistent": true
     },
     "clean": {
       "cache": false

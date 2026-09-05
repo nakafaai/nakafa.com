@@ -1,14 +1,10 @@
-import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
+import {
+  CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
+  isProtectedProduction,
+} from "@repo/backend/content/deployment";
 import { convexKeys } from "@repo/backend/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Effect, Schema } from "effect";
-
-const COMMIT_PATTERN = /^[0-9a-f]{40}$/;
-const DEPLOYMENT_PATTERN = /^dpl_[A-Za-z0-9]+$/;
-const GITHUB_OWNER = "nakafaai";
-const GITHUB_REPOSITORY = "nakafa.com";
-const PRODUCTION_BRANCH = "main";
-const PROJECT_ID = "prj_QfxvXBST46wuSTOXPn4PE32NqbF4";
 
 interface VercelIdentity {
   readonly deployment: string | undefined;
@@ -28,21 +24,6 @@ interface VercelIdentity {
 interface BuildIdentity {
   readonly query: string | undefined;
   readonly site: string | undefined;
-}
-
-function isProtectedProduction(identity: VercelIdentity) {
-  return [
-    identity.marker === "1",
-    identity.environment === "production",
-    identity.target === "production",
-    identity.project === PROJECT_ID,
-    identity.git.provider === "github",
-    identity.git.owner === GITHUB_OWNER,
-    identity.git.repository === GITHUB_REPOSITORY,
-    identity.git.branch === PRODUCTION_BRANCH,
-    DEPLOYMENT_PATTERN.test(identity.deployment ?? ""),
-    COMMIT_PATTERN.test(identity.git.commit ?? ""),
-  ].every(Boolean);
 }
 
 const FailureSchema = Schema.Literals([

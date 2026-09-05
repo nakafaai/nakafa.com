@@ -455,10 +455,10 @@ describe("content runtime command diagnostics", () => {
         ).pipe(Effect.provide(NodeServices.layer));
 
         expect(result.failure.message).toContain(
-          "Usage: runtime:ci <fingerprint|generations|verify-generations|export|import>"
+          "Usage: runtime:ci <build|prepare|start|clean|fingerprint|generations|verify-generations|export|import>"
         );
         expect(result.stderr).toBe(
-          "ERROR: Usage: runtime:ci <fingerprint|generations|verify-generations|export|import>\n"
+          "ERROR: Usage: runtime:ci <build|prepare|start|clean|fingerprint|generations|verify-generations|export|import>\n"
         );
         expect(result.stdout).toBe("");
       }),

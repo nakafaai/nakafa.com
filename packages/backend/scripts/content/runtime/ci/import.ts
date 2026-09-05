@@ -24,7 +24,7 @@ import { Console, Effect, FileSystem, Redacted } from "effect";
 
 export const importSignedRuntime = Effect.fn(
   "contentRuntime.importSignedRuntime"
-)(function* (config: ImportConfig) {
+)(function* (config: ImportConfig, backend?: string) {
   const fileSystem = yield* FileSystem.FileSystem;
   const encryptedPath = `${config.runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}/${CONTENT_RUNTIME_CACHE_FILE}`;
   const encryptedInfo = yield* fileSystem.stat(encryptedPath);
@@ -108,6 +108,7 @@ export const importSignedRuntime = Effect.fn(
 
   for (const entry of manifest) {
     yield* runConvexImport({
+      backend,
       inputPath: `${snapshotRoot}/${entry.table}.jsonl`,
       logPath,
       table: entry.table,

@@ -2,10 +2,8 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize]
-  merge_group:
     branches: [main]
-    types: [checks_requested]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
 
 permissions:
   actions: read
@@ -14,11 +12,8 @@ permissions:
   pull-requests: read
 
 concurrency:
-  # Pull request heads supersede their own predecessor runs. Merge-group runs
-  # use the immutable commit SHA so a later independent change cannot cancel
-  # an already-admitted production acceptance.
-  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   scope:
@@ -26,70 +21,59 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih' }}
+      DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih' }}
     outputs:
-      pull-head: ${{ steps.queue.outputs.pull-head }}
-      pull-number: ${{ steps.queue.outputs.pull-number }}
-      required: ${{ github.event_name == 'merge_group' || steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}
-      reuse: ${{ steps.queue.outputs.reuse || steps.default.outputs.reuse }}
+      required: ${{ steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}
       trusted: ${{ steps.trust.outputs.trusted }}
     steps:
       - name: Set fail-closed default
         id: default
         env:
-          REQUIRED: ${{ github.event_name == 'merge_group' || env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' }}
+          REQUIRED: true
         run: |
           echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
-          echo "reuse=false" >> "$GITHUB_OUTPUT"
 
-      - if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' || github.event_name == 'merge_group'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # An untrusted candidate is data for the classifier, never its code.
+          ref: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' && github.sha || github.event.pull_request.base.sha }}
           fetch-depth: 0
 
+      - name: Fetch exact candidate for classification
+        env:
+          PULL_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git fetch --no-tags origin "refs/pull/$PULL_NUMBER/head"
+          test "$(git rev-parse FETCH_HEAD)" = "$HEAD_SHA"
+
       - name: Setup toolchain
-        if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' || github.event_name == 'merge_group'
         uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
           cache: true
           install: false
 
       - name: Install dependencies
-        if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' || github.event_name == 'merge_group'
         run: pnpm install --frozen-lockfile
-
-      - name: Admit exact merge queue tree
-        if: github.event_name == 'merge_group'
-        id: queue
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: pnpm ci:queue
 
       - name: Export trusted candidate decision
         id: trust
         env:
           DIRECT_TRUST: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT }}
-          QUEUE_TRUST: ${{ steps.queue.outputs.trusted }}
         run: |
-          trusted=false
-          if [ "$DIRECT_TRUST" = "true" ] || [ "$QUEUE_TRUST" = "true" ]; then
-            trusted=true
-          fi
-          echo "trusted=$trusted" >> "$GITHUB_OUTPUT"
+          echo "trusted=$DIRECT_TRUST" >> "$GITHUB_OUTPUT"
 
       - name: Classify production acceptance
-        if: steps.trust.outputs.trusted == 'true'
         id: classify
         env:
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
-          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: pnpm ci:production-acceptance
 
   quality:
     name: Quality
     needs: scope
     # The advisory registry is live state, so every current tree runs the audit.
-    # Exact source proof may replace only deterministic tests in the queue.
     if: always() && needs.scope.result == 'success'
     runs-on: ubuntu-latest
     # Keep bounded fail-closed advisory retries inside the aggregate job budget.
@@ -118,25 +102,21 @@ jobs:
         run: bash scripts/osv
 
       - name: Run tests
-        if: needs.scope.outputs.reuse != 'true'
         run: pnpm test
 
   production:
     name: Production
-    # Signed acceptance runs only for trusted same-repository candidates and
-    # their merge-group trees when they contain production-relevant changes.
-    # It always reruns in the queue because live Convex state can change after
-    # exact-head source checks without changing the Git tree. Test-only
-    # candidates retain Quality while Production is skipped.
+    # Signed acceptance runs only for trusted same-repository candidates when
+    # they contain production-relevant changes. Test-only candidates retain
+    # Quality while Production is skipped.
     needs: scope
     if: always() && needs.scope.result == 'success' && needs.scope.outputs.required == 'true' && needs.scope.outputs.trusted == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    outputs:
+      runtime-selection: ${{ steps.production_build.outputs.CONTENT_RUNTIME_SELECTION_HASH }}
     env:
-      CONTENT_RUNTIME_TOKEN: ci-runtime
-      AKSARA_PUBLICATION_TOKEN: ci-runtime
-      NAKAFA_API_EDGE_SECRET: ci-runtime-api-edge
-      NAKAFA_MCP_EDGE_SECRET: ci-runtime-mcp-edge
+      CONTENT_RUNTIME_BUILD: local-static
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_POSTHOG_KEY: phc_ci_disabled
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
@@ -168,243 +148,15 @@ jobs:
           app_version="$(node -p 'require("./package.json").version')"
           echo "NEXT_PUBLIC_VERSION=$app_version" >> "$GITHUB_ENV"
 
-      - name: Fingerprint signed runtime contract
-        run: |
-          output="$RUNNER_TEMP/runtime-schema.env"
-          rm -f -- "$output"
-          pnpm --silent --dir packages/backend runtime:ci fingerprint
-
-          if [ ! -f "$output" ] || [ -L "$output" ] || \
-            [ "$(stat -c '%a' "$output")" != "600" ] || \
-            [ "$(wc -l < "$output")" -ne 1 ] || \
-            ! grep -Exq 'CONTENT_RUNTIME_SCHEMA_HASH=[a-f0-9]{64}' "$output"; then
-            echo "Invalid signed runtime fingerprint output." >&2
-            exit 1
-          fi
-
-          cat "$output" >> "$GITHUB_ENV"
-          rm -f -- "$output"
-
-      - name: Read production runtime selection
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-        run: |
-          output="$RUNNER_TEMP/runtime-state.env"
-          rm -f -- "$output"
-          pnpm --silent --dir packages/backend runtime:ci generations
-
-          if [ ! -f "$output" ] || [ -L "$output" ] || \
-            [ "$(stat -c '%a' "$output")" != "600" ] || \
-            [ "$(wc -l < "$output")" -ne 1 ] || \
-            ! grep -Exq 'CONTENT_RUNTIME_SELECTION_HASH=[a-f0-9]{64}' "$output"; then
-            echo "Invalid production runtime selection output." >&2
-            exit 1
-          fi
-
-          cat "$output" >> "$GITHUB_ENV"
-          rm -f -- "$output"
-
-      - name: Verify selected production runtime generation
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
-
-      - name: Download snapshot
-        id: snapshot
-        run: |
-          umask 077
-          asset="snapshot.${CONTENT_RUNTIME_SELECTION_HASH}.${CONTENT_RUNTIME_SCHEMA_HASH}.gpg"
-          directory="$RUNNER_TEMP/runtime-cache"
-          target="$directory/runtime.tar.gpg"
-          mkdir -m 700 "$directory"
-
-          if curl --fail --location --silent --show-error \
-            --retry 5 --retry-all-errors --retry-delay 2 \
-            "https://github.com/nakafaai/nakafa.com/releases/download/runtime/$asset" \
-            --output "$target"; then
-            chmod 600 "$target"
-            exit 0
-          fi
-
-          rm -f -- "$target"
-          # This job is already restricted to an exact trusted candidate. A
-          # schema-changing candidate needs one production export before its
-          # main-branch release asset can exist.
-          echo "bootstrap=true" >> "$GITHUB_OUTPUT"
-
-      - name: Bootstrap snapshot
-        if: steps.snapshot.outputs.bootstrap == 'true'
-        env:
-          CONTENT_RUNTIME_CACHE_KEY: ${{ secrets.CONTENT_RUNTIME_CACHE_KEY }}
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-        run: pnpm --silent --dir packages/backend runtime:ci export
-
-      - name: Initialize anonymous local backend
-        run: |
-          umask 077
-          CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex init
-
-          convex_url="$(
-            sed -n 's/^VITE_CONVEX_URL=//p' packages/backend/.env.local
-          )"
-          convex_site_url="$(
-            sed -n 's/^VITE_CONVEX_SITE_URL=//p' packages/backend/.env.local
-          )"
-          case "$convex_url" in
-            http://127.0.0.1:*) ;;
-            *)
-              echo "Anonymous Convex client URL is not local." >&2
-              exit 1
-              ;;
-          esac
-          case "$convex_site_url" in
-            http://127.0.0.1:*) ;;
-            *)
-              echo "Anonymous Convex site URL is not local." >&2
-              exit 1
-              ;;
-          esac
-
-          {
-            echo "CONVEX_AGENT_MODE=anonymous"
-            echo "CONVEX_SITE_URL=$convex_site_url"
-            echo "CONVEX_URL=$convex_url"
-            echo "NAKAFA_CONVEX_SITE_URL=$convex_site_url"
-            echo "NEXT_PUBLIC_CONVEX_SITE_URL=$convex_site_url"
-            echo "NEXT_PUBLIC_CONVEX_URL=$convex_url"
-          } >> "$GITHUB_ENV"
-
-      - name: Configure anonymous local backend
-        run: |
-          # Production acceptance exercises content reads only. External integrations stay inert.
-          pnpm --dir packages/backend exec convex env set --force <<EOF
-          AI_GATEWAY_API_KEY=ci-disabled
-          AKSARA_PUBLICATION_TOKEN=$AKSARA_PUBLICATION_TOKEN
-          AUTH_GOOGLE_ID=ci-disabled
-          AUTH_GOOGLE_SECRET=ci-disabled
-          BETTER_AUTH_SECRET=ci-inert-secret-00000000
-          CONTENT_RUNTIME_BUILD=local-static
-          CONTENT_RUNTIME_TOKEN=$CONTENT_RUNTIME_TOKEN
-          FIRECRAWL_API_KEY=ci-disabled
-          JWKS=[]
-          NAKAFA_API_EDGE_SECRET=ci-api-edge-secret
-          NAKAFA_MCP_ALLOWED_ORIGINS=https://nakafa.com
-          NAKAFA_MCP_EDGE_SECRET=ci-mcp-edge-secret
-          NEXT_PUBLIC_POLAR_SERVER=sandbox
-          OPENWEATHER_API_KEY=ci-disabled
-          POLAR_ACCESS_TOKEN=ci-disabled
-          POLAR_WEBHOOK_SECRET=ci-disabled
-          POSTHOG_ERASURE_API_KEY=ci-disabled
-          POSTHOG_HOST=https://example.invalid
-          POSTHOG_PROJECT_ID=0
-          POSTHOG_PROJECT_TOKEN=ci-disabled
-          RESEND_API_KEY=ci-disabled
-          RESEND_WEBHOOK_SECRET=ci-disabled
-          SITE_URL=$SITE_URL
-          EOF
-
-      - name: Compile anonymous local backend
-        run: |
-          pnpm --dir packages/backend exec convex dev \
-            --once \
-            --typecheck enable \
-            --tail-logs disable
-
-      - name: Start anonymous local backend
-        run: |
-          umask 077
-          convex_log="$RUNNER_TEMP/runtime-convex.log"
-          convex_pid="$RUNNER_TEMP/runtime-convex.pid"
-
-          : > "$convex_log"
-          chmod 600 "$convex_log"
-          setsid pnpm --dir packages/backend exec convex dev \
-            --codegen disable \
-            --typecheck disable \
-            --tail-logs always > "$convex_log" 2>&1 &
-          echo "$!" > "$convex_pid"
-
-          for _attempt in {1..120}; do
-            if ! kill -0 "$(cat "$convex_pid")" 2> /dev/null; then
-              echo "The anonymous local backend exited before becoming ready." >&2
-              exit 1
-            fi
-            if grep -Fq 'Convex functions ready!' "$convex_log" && \
-              curl -fsS "$CONVEX_URL/instance_name" > /dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-
-          echo "The anonymous local backend did not become ready." >&2
-          exit 1
-
-      - name: Import signed content snapshot
-        env:
-          CONTENT_RUNTIME_CACHE_KEY: ${{ secrets.CONTENT_RUNTIME_CACHE_KEY }}
-        run: pnpm --silent --dir packages/backend runtime:ci import
-
-      - name: Verify signed featured renderer graph
-        run: pnpm --filter www verify:featured-renderer
-
       - name: Build production app
         id: production_build
         run: pnpm build
         env:
+          CONTENT_RUNTIME_CACHE_KEY: ${{ secrets.CONTENT_RUNTIME_CACHE_KEY }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
           NEXT_EXPOSE_TESTING_API: "true"
           NODE_ENV: production
           TURBO_CONCURRENCY: "2"
-
-      - name: Classify local backend build failure
-        if: failure() && steps.production_build.outcome == 'failure'
-        env:
-          CONTENT_RUNTIME_SELECTION_HASH: ""
-          CONTENT_RUNTIME_SCHEMA_HASH: ""
-          CONTENT_RUNTIME_TOKEN: ""
-          AKSARA_PUBLICATION_TOKEN: ""
-          CONVEX_SITE_URL: ""
-          CONVEX_URL: ""
-          NAKAFA_API_EDGE_SECRET: ""
-          NAKAFA_CONVEX_SITE_URL: ""
-          NAKAFA_MCP_EDGE_SECRET: ""
-          NEXT_PUBLIC_APP_URL: ""
-          NEXT_PUBLIC_CONVEX_SITE_URL: ""
-          NEXT_PUBLIC_CONVEX_URL: ""
-          NEXT_PUBLIC_POSTHOG_KEY: ""
-          NEXT_PUBLIC_POSTHOG_UI_HOST: ""
-          POSTHOG_PROXY_HOST: ""
-          SITE_URL: ""
-          VERCEL_GIT_COMMIT_SHA: ""
-        run: |
-          convex_log="$RUNNER_TEMP/runtime-convex.log"
-          log_class=unavailable
-          event_class=unavailable
-          request_id_present=false
-
-          if [ -f "$convex_log" ] && [ ! -L "$convex_log" ] && \
-            [ "$(stat -c '%a' "$convex_log")" = "600" ]; then
-            log_class=private
-            event_class=handled-or-unobserved
-            if grep -Fq '[CONVEX Q(' "$convex_log"; then
-              if grep -Fq '[CONVEX H(' "$convex_log"; then
-                event_class=multiple
-              else
-                event_class=query
-              fi
-            elif grep -Fq '[CONVEX H(' "$convex_log"; then
-              event_class=http-action
-            fi
-            if grep -Fq '[Request ID:' "$convex_log"; then
-              request_id_present=true
-            fi
-          elif [ -e "$convex_log" ] || [ -L "$convex_log" ]; then
-            log_class=unsafe
-          fi
-
-          printf '%s\n' \
-            "local_backend_log_class=$log_class" \
-            "local_backend_event_class=$event_class" \
-            "local_backend_request_id_present=$request_id_present"
 
       - name: Start web app
         run: |
@@ -413,7 +165,7 @@ jobs:
           web_pid="$RUNNER_TEMP/runtime-www.pid"
           : > "$web_log"
           chmod 600 "$web_log"
-          setsid pnpm --filter www start > "$web_log" 2>&1 &
+          setsid pnpm start > "$web_log" 2>&1 &
           echo "$!" > "$web_pid"
 
       - name: Wait for web app
@@ -451,6 +203,7 @@ jobs:
 
       - name: Verify final production runtime generation
         env:
+          CONTENT_RUNTIME_SELECTION_HASH: ${{ steps.production_build.outputs.CONTENT_RUNTIME_SELECTION_HASH }}
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: pnpm --silent --dir packages/backend runtime:ci verify-generations
 
@@ -484,25 +237,8 @@ jobs:
 
           test -n "${RUNNER_TEMP:-}"
           stop_process_group "$RUNNER_TEMP/runtime-www.pid"
-          stop_process_group "$RUNNER_TEMP/runtime-convex.pid"
-
-          rm -rf -- \
-            packages/backend/.convex \
-            "$RUNNER_TEMP/runtime-cache"
-          rm -f -- \
-            packages/backend/.env.local \
-            "$RUNNER_TEMP/runtime-schema.env" \
-            "$RUNNER_TEMP/runtime-state.env" \
-            "$RUNNER_TEMP/runtime-convex.log" \
-            "$RUNNER_TEMP/runtime-convex.pid" \
-            "$RUNNER_TEMP/runtime-www.log" \
-            "$RUNNER_TEMP/runtime-www.pid"
-
-          find "$RUNNER_TEMP" -mindepth 1 -maxdepth 1 -type d \
-            \( -name 'runtime-export-*' \
-            -o -name 'runtime-state-*' \
-            -o -name 'runtime-import-*' \) \
-            -exec rm -rf -- {} +
+          pnpm runtime:clean
+          rm -f -- "$RUNNER_TEMP/runtime-www.log" "$RUNNER_TEMP/runtime-www.pid"
 
   doctor:
     name: Doctor
@@ -525,14 +261,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run changed React Doctor
-        if: needs.scope.result == 'success' && github.event_name == 'pull_request'
+        if: needs.scope.result == 'success'
         env:
           DOCTOR_BASE: origin/main
         run: pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE" --include-untracked --blocking warning
-
-      - name: Run full React Doctor
-        if: needs.scope.result == 'success' && github.event_name == 'merge_group'
-        run: pnpm run doctor --verbose --scope full --blocking warning
 
       - name: Mark current-tree Doctor complete
         if: needs.scope.result == 'success'
@@ -545,8 +277,6 @@ jobs:
           FULL_OUTCOME: ${{ steps.full.outcome }}
           PRODUCTION_OUTCOME: skipped
           PRODUCTION_REQUIRED: ${{ needs.scope.outputs.required }}
-          REVIEW_OUTCOME: skipped
-          REUSE_SOURCE_PROOF: ${{ needs.scope.outputs.reuse }}
           SCOPE_OUTCOME: ${{ needs.scope.result }}
           TRUSTED_CANDIDATE: ${{ needs.scope.outputs.trusted }}
         run: pnpm ci:gate doctor
@@ -571,14 +301,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify final queue review state
-        if: always() && github.event_name == 'merge_group' && needs.scope.result == 'success'
-        id: review
+      - name: Verify production selection before final acceptance
+        if: needs.scope.result == 'success' && needs.scope.outputs.trusted == 'true' && needs.scope.outputs.required == 'true' && needs.production.result == 'success'
         env:
-          EXPECTED_HEAD: ${{ needs.scope.outputs.pull-head }}
-          GITHUB_TOKEN: ${{ github.token }}
-          PULL_NUMBER: ${{ needs.scope.outputs.pull-number }}
-        run: pnpm ci:review
+          CONTENT_RUNTIME_SELECTION_HASH: ${{ needs.production.outputs.runtime-selection }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
 
       - name: Verify required result
         if: always()
@@ -586,8 +314,6 @@ jobs:
           FULL_OUTCOME: ${{ needs.quality.result }}
           PRODUCTION_OUTCOME: ${{ needs.production.result }}
           PRODUCTION_REQUIRED: ${{ needs.scope.outputs.required }}
-          REVIEW_OUTCOME: ${{ steps.review.outcome }}
-          REUSE_SOURCE_PROOF: ${{ needs.scope.outputs.reuse }}
           SCOPE_OUTCOME: ${{ needs.scope.result }}
           TRUSTED_CANDIDATE: ${{ needs.scope.outputs.trusted }}
         run: pnpm ci:gate required
