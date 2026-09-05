@@ -19,5 +19,3 @@ export const config: VercelConfig = {
     paths: [{ source: "^/mcp$", suffix: "" }],
   }),
 };
-
-export default config;
