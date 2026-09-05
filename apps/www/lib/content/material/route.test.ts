@@ -4,11 +4,14 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { Effect } from "effect";
 import {
   getPublishedMaterialRoute,
   readPublishedMaterialRoute,
 } from "@/lib/content/material/route";
+import { makeMaterialRuntimeSource } from "@/test/content/material";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
   previewDeProjection,
   previewIdProjection,
@@ -16,8 +19,13 @@ import {
   previewProjection,
   previewSourcePath,
 } from "@/test/content-preview";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const runtimeReadMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 const activeManifestHash = `sha256:${"a".repeat(64)}`;
 const activeReleaseId = ReleaseIdSchema.make("release-material");
@@ -26,12 +34,9 @@ const sourceRevision = "a".repeat(40);
 vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeReadMock,
+}));
 
 /** Builds one complete backend-verified material model response. */
 function foundModel(overrides?: {
@@ -87,10 +92,42 @@ function foundModel(overrides?: {
 
 beforeEach(() => {
   runtimeQueryMock.mockReset();
+  runtimeReadMock.mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
   cacheMock.mockReset();
 });
 
 describe("published material route", () => {
+  it.effect(
+    "resolves a complete signed route and a missing route from serving rows",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeMaterialRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const projection = makeMaterialProjection("en", 1);
+
+        const route = yield* readPublishedMaterialRoute(
+          "en",
+          projection.publicPath
+        );
+        expect(route).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          projection,
+          rendererDomain: "mathematics",
+        });
+        expect(route.alternates).toHaveLength(3);
+        expect(route.siblings).toHaveLength(2);
+        expect(
+          yield* readPublishedMaterialRoute("en", "subjects/missing")
+        ).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          projection: null,
+          alternates: [],
+          siblings: [],
+        });
+      })
+  );
+
   it.effect(
     "decodes one complete signed route, locale set, and sibling group",
     () =>

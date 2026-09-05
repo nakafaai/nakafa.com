@@ -1,13 +1,14 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import { buildRuntimeGenerations } from "@repo/backend/scripts/content/runtime/ci/generation";
-import type { JsonObject } from "@repo/backend/scripts/content/runtime/ci/json";
+import type { JsonObject } from "@repo/backend/content/snapshot/json";
+import { buildRuntimeGenerations } from "@repo/backend/content/snapshot/selection";
 import {
   CONTENT_RUNTIME_TABLES,
   type RuntimeRow,
   type RuntimeTable,
-} from "@repo/backend/scripts/content/runtime/tables";
+} from "@repo/backend/content/snapshot/tables";
 import { makeTestPageProjection } from "@repo/backend/test/content/page";
 import {
   TEST_PROOF_RENDERER,
@@ -27,7 +28,8 @@ export const TEST_SNAPSHOT_RELEASE = testSignedRelease(
 
 /** Creates a complete empty serving runtime with a real signed release envelope. */
 export function makeRuntimeSource(
-  signed: SignedContentRelease = TEST_SNAPSHOT_RELEASE
+  signed: SignedContentRelease = TEST_SNAPSHOT_RELEASE,
+  resultFamilies: SignedContentRelease["manifest"]["scope"]["families"] = []
 ) {
   const source = new Map<RuntimeTable, readonly JsonObject[]>(
     CONTENT_RUNTIME_TABLES.map((table) => [table, []])
@@ -62,7 +64,7 @@ export function makeRuntimeSource(
       releaseId: signed.manifest.releaseId,
       releaseJson: JSON.stringify(signed),
       rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
-      resultFamilies: [],
+      resultFamilies: [...resultFamilies],
       role: "candidate",
       sequence: 9,
       stagedArtifacts: 0,
@@ -85,11 +87,12 @@ export const TEST_SNAPSHOT_SELECTION_HASH = Effect.runSync(
 ).runtimeSelectionHash;
 
 /** Creates one inherited public head with real signed bytes and its complete serving closure. */
-export function makePageRuntimeSource() {
+export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
   const fixture = makeRuntimeSource();
-  const projection = makeTestPageProjection("en");
+  const projection = makeTestPageProjection(appLocale);
   const projectionJson = canonicalizePublicPageProjection(projection);
   const artifact = testSignedArtifact("site", {
+    artifactLocale: appLocale,
     contentKey: projection.contentKey,
   });
   const head = {
@@ -119,6 +122,7 @@ export function makePageRuntimeSource() {
     publicPath: projection.publicPath,
     releaseId: head.releaseId,
     routeJson: testRouteJson({
+      appLocale,
       contentKey: projection.contentKey,
       publicPath: projection.publicPath,
       releaseId: head.releaseId,

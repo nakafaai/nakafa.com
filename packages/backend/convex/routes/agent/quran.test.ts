@@ -15,10 +15,67 @@ import {
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
+import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
 
 setupApiTest();
 
 describe("public Quran API routes", () => {
+  it.each([
+    "/quran/1?from_verse=2&to_verse=1",
+    `/quran/1?from_verse=1&to_verse=${NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES + 1}`,
+  ])(
+    "rejects invalid passage bounds before reading publication: %s",
+    async (path) => {
+      await expectProblem(
+        await fetchApi(createConvexTestWithBetterAuth(), path),
+        { code: "UNPROCESSABLE_REQUEST", status: 422 }
+      );
+    }
+  );
+
+  it("rejects a verse beyond the signed surah length", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
+        ...Array.from({ length: 114 }, (_, index) => makeQuranSurah(index + 1)),
+      ])
+    );
+    await expectProblem(
+      await fetchApi(test, "/quran/1?from_verse=1&to_verse=2"),
+      { code: "UNPROCESSABLE_REQUEST", status: 422 }
+    );
+  });
+
+  it("fails closed when no signed Quran catalog is available", async () => {
+    await expectProblem(
+      await fetchApi(createConvexTestWithBetterAuth(), "/quran/1"),
+      { code: "SERVICE_UNAVAILABLE", status: 503 }
+    );
+  });
+
+  it("rejects a signed search graph without a public asset identity", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const search = makeQuranSearch("en", 1);
+    await test.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
+        ...Array.from({ length: 114 }, (_, index) => makeQuranSurah(index + 1)),
+        makeQuranChunk({
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 1,
+        }),
+        { ...search, graph: { ...search.graph, assetId: "asset:en" } },
+      ])
+    );
+    await expectProblem(await fetchApi(test, "/quran/1?locale=en"), {
+      code: "SERVICE_UNAVAILABLE",
+      status: 503,
+    });
+  });
+
   it.each(["/v2/quran/1", "/v2/quran/1?locale=en"])(
     "rejects the unsupported public namespace %s",
     async (path) => {
@@ -164,5 +221,44 @@ describe("public Quran API routes", () => {
         },
       ],
     });
+  });
+
+  it("returns English references with signed external tafsir access", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
+        ...Array.from({ length: 114 }, (_, index) => makeQuranSurah(index + 1)),
+        makeQuranChunk({
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 1,
+        }),
+        makeQuranSearch("en", 1),
+      ])
+    );
+    const response = await fetchApi(test, "/quran/1?locale=en");
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toMatchObject({
+      locale: "en",
+      tafsir_access: {
+        kind: "external",
+        locale: "en",
+        source: { kind: "external" },
+      },
+      verses: [
+        {
+          number: 1,
+          translation: {
+            segments: [
+              { kind: "text", offset: 0, value: "Technical translation 1" },
+            ],
+          },
+        },
+      ],
+    });
+    expect(body.verses[0]).not.toHaveProperty("tafsir");
   });
 });

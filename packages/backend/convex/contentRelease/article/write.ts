@@ -14,10 +14,20 @@ import {
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
-import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
-type ContentHead = WithoutSystemFields<Doc<"contentHeads">>;
+type ContentHead = Pick<
+  Doc<"contentHeads">,
+  | "artifactLocale"
+  | "contentKey"
+  | "delivery"
+  | "family"
+  | "operation"
+  | "projectionHash"
+  | "releaseId"
+  | "rendererDomain"
+  | "sequence"
+>;
 type AppLocale = Doc<"articleCatalog">["appLocale"];
 
 /** Replaces one active article row and reconciles its category ownership. */

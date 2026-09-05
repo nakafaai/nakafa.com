@@ -1,16 +1,16 @@
+import {
+  articlePublicationCursor,
+  decodePublicationPosition,
+  portablePublicationCursor,
+} from "@repo/backend/content/article/cursor";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import {
-  articlePublicationCursor,
-  decodePublicationCursor,
-} from "@repo/backend/convex/contentRelease/article/cursor";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import schema from "@repo/backend/convex/schema";
-import { encodeArticlePublicationCursor } from "@repo/contents/_types/publication";
 import type { PaginationOptions } from "convex/server";
 import { type QueryStream, stream } from "convex-helpers/server/stream";
 import { Effect } from "effect";
@@ -43,12 +43,27 @@ const paginatePublicationStream = Effect.fn(
   "contentRelease.paginatePublicationStream"
 )(function* (
   publication: QueryStream<ArticleRow>,
+  slot: ModelSlot,
+  appLocale: AppLocale,
+  category: string,
   options: PaginationOptions & {
     maximumBytesRead: number;
     maximumRowsRead: number;
   }
 ) {
-  const cursor = yield* decodePublicationCursor(options.cursor);
+  const position = yield* decodePublicationPosition(options.cursor);
+  if (
+    position !== null &&
+    (position[0] !== slot ||
+      position[1] !== appLocale ||
+      position[2] !== category)
+  ) {
+    return yield* new ReleaseError({
+      code: "CONTENT_RELEASE_INTEGRITY",
+      message: "Article publication cursor belongs to another query.",
+    });
+  }
+  const cursor = position === null ? null : JSON.stringify(position);
   const scanned = yield* Effect.promise(() =>
     publication.paginate({
       ...options,
@@ -57,26 +72,20 @@ const paginatePublicationStream = Effect.fn(
       numItems: options.numItems + 1,
     })
   );
-  if (scanned.page.length <= options.numItems) {
+  const page = scanned.page.slice(0, options.numItems);
+  const last = page.at(-1);
+  if (!last || scanned.page.length <= options.numItems) {
     return {
       ...scanned,
-      continueCursor: encodeArticlePublicationCursor(scanned.continueCursor),
+      continueCursor: yield* portablePublicationCursor(scanned.continueCursor),
       ...(scanned.splitCursor == null
         ? {}
         : {
-            splitCursor: encodeArticlePublicationCursor(scanned.splitCursor),
+            splitCursor: yield* portablePublicationCursor(scanned.splitCursor),
           }),
     };
   }
 
-  const page = scanned.page.slice(0, options.numItems);
-  const last = page.at(-1);
-  if (!last) {
-    return yield* new ReleaseError({
-      code: "CONTENT_RELEASE_INTEGRITY",
-      message: "Article publication lookahead lost its retained row.",
-    });
-  }
   return {
     ...scanned,
     continueCursor: articlePublicationCursor(last),
@@ -85,7 +94,7 @@ const paginatePublicationStream = Effect.fn(
     ...(scanned.splitCursor == null
       ? {}
       : {
-          splitCursor: encodeArticlePublicationCursor(scanned.splitCursor),
+          splitCursor: yield* portablePublicationCursor(scanned.splitCursor),
         }),
   };
 });
@@ -150,6 +159,12 @@ export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
       appLocale,
       category
     );
-    return yield* paginatePublicationStream(publication, options);
+    return yield* paginatePublicationStream(
+      publication,
+      slot,
+      appLocale,
+      category,
+      options
+    );
   }
 );

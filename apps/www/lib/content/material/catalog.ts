@@ -7,6 +7,7 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { readMaterialPage } from "@repo/backend/content/material/page";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs } from "convex/server";
@@ -79,7 +80,14 @@ export const readPublishedMaterialPage = Effect.fn(
   } satisfies MaterialPageArgs;
   const result = yield* readRuntimeQuery(
     api.contentRelease.material.publications,
-    args
+    args,
+    (queryArgs) =>
+      readMaterialPage(
+        queryArgs.appLocale,
+        queryArgs.expectedManifestHash,
+        queryArgs.expectedReleaseId,
+        queryArgs.paginationOpts
+      )
   );
   const routes = yield* Effect.forEach(result.result.page, (source) =>
     decodeMaterialJson(source, {

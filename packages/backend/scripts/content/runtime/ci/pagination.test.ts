@@ -106,7 +106,7 @@ describe("content runtime production pagination", () => {
       }).pipe(Effect.flip);
 
       expect(failure).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message:
           "Production read for contentKeys exceeded the bounded snapshot capacity of 2 rows.",
       });
@@ -130,7 +130,7 @@ describe("content runtime production pagination", () => {
       }).pipe(Effect.flip);
 
       expect(failure).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message:
           "Production read for contentKeys returned an invalid pagination cursor.",
       });
@@ -150,7 +150,7 @@ describe("content runtime production pagination", () => {
       }).pipe(Effect.flip);
 
       expect(failure).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message:
           "Production read for contentKeys returned invalid pagination data.",
       });
@@ -169,11 +169,46 @@ describe("content runtime production pagination", () => {
       }).pipe(Effect.flip);
 
       expect(failure).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message:
           "Production read for contentKeys failed: Permission denied for [redacted]",
       });
       expect(failure.message).not.toContain(deployKey);
     })
+  );
+
+  it.effect(
+    "rejects an invalid negative capacity without reading production",
+    () =>
+      Effect.gen(function* () {
+        const readPage = vi.fn();
+        const failure = yield* collectConvexTableRows({
+          limit: -1,
+          readPage,
+          table: "contentKeys",
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "ContentSnapshotError",
+          message:
+            "Production read for contentKeys exceeded the bounded snapshot capacity of -1 rows.",
+        });
+        expect(readPage).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "retains query failures when no sensitive values are configured",
+    () =>
+      Effect.gen(function* () {
+        const failure = yield* collectConvexTableRows({
+          limit: 1,
+          readPage: () => Promise.reject("Query unavailable"),
+          table: "contentKeys",
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "ContentSnapshotError",
+          message: "Production read for contentKeys failed: Query unavailable",
+        });
+      })
   );
 });

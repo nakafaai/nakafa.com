@@ -1,7 +1,8 @@
+import { convexArticleLayer } from "@repo/backend/content/article/convex";
+import { loadArticleOwner } from "@repo/backend/content/article/owner";
+import { verifyCategory } from "@repo/backend/content/article/verify";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { ARTICLE_AGENT_TAXONOMY_LIMIT } from "@repo/backend/convex/contentRelease/article/limits";
-import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
-import { verifyCategory } from "@repo/backend/convex/contentRelease/article/verify";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -15,8 +16,10 @@ export const agentArticleTaxonomyValidator = v.object({
 /** Reads and authenticates one complete bounded article taxonomy. */
 export const readAgentArticleTaxonomy = Effect.fn(
   "contentRelease.readAgentArticleTaxonomy"
-)(function* (ctx: QueryCtx, appLocale: Parameters<typeof loadArticleOwner>[1]) {
-  const owner = yield* loadArticleOwner(ctx, appLocale);
+)(function* (ctx: QueryCtx, appLocale: Parameters<typeof loadArticleOwner>[0]) {
+  const owner = yield* loadArticleOwner(appLocale).pipe(
+    Effect.provide(convexArticleLayer(ctx))
+  );
   if (!(owner.managed && owner.active && owner.slot)) {
     return { categories: [], managed: false };
   }
@@ -37,7 +40,8 @@ export const readAgentArticleTaxonomy = Effect.fn(
   }
 
   const categories = yield* Effect.forEach(rows, (row) =>
-    verifyCategory(ctx, row, owner.active.sequence).pipe(
+    verifyCategory(row, owner.active.sequence).pipe(
+      Effect.provide(convexArticleLayer(ctx)),
       Effect.map(({ category }) => category)
     )
   );

@@ -1,12 +1,12 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
+import { readPublishedTrackSets } from "@repo/backend/content/tryout/hierarchy";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { TRYOUT_PROGRESS_IDENTITY_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
-import type { PublishedCatalog } from "@repo/backend/convex/tryouts/catalog/hierarchy";
-import { readPublishedTrackSets } from "@repo/backend/convex/tryouts/catalog/hierarchy";
 import { isTryoutProgressWithinReadBudget } from "@repo/backend/convex/tryouts/progress/size";
 import {
   type PublishedSetRow,

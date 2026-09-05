@@ -1,8 +1,9 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/batch";
+import { internal } from "@repo/backend/convex/_generated/api";
 import { dispatchBatchProgram } from "@repo/backend/convex/contentRelease/runtime/public/batch";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
@@ -24,6 +25,8 @@ const missingRequest = {
   delivery: "public",
   publicPath: "test/missing",
 };
+
+afterEach(() => vi.restoreAllMocks());
 
 /** Executes the bounded public batch transport program. */
 function runDispatch(t: RuntimeAction, input: unknown) {
@@ -133,6 +136,70 @@ describe("contentRelease/runtime/public/batch", () => {
     await expect(
       runDispatch(t, { requests: [foundRequest, missingRequest] })
     ).resolves.toEqual({
+      body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+      status: 500,
+    });
+  });
+
+  it("rejects corrupt artifact JSON after the stored route has been authenticated", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedPublicRuntime(t);
+    await t.mutation(async (ctx) => {
+      const artifact = await ctx.db.query("contentArtifacts").unique();
+      if (!artifact) {
+        return expect.fail("Expected one runtime artifact.");
+      }
+      await ctx.db.patch(artifact._id, { artifactJson: "{}" });
+    });
+    await expect(runDispatch(t, { requests: [foundRequest] })).resolves.toEqual(
+      {
+        body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+        status: 500,
+      }
+    );
+  });
+
+  it("rejects a transport response whose cardinality differs from its request", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const source = JSON.stringify({ requests: [foundRequest] });
+    const result = await t.action((ctx) => {
+      vi.spyOn(ctx, "runQuery").mockResolvedValueOnce([]);
+      return runConvexProgram(
+        dispatchBatchProgram(
+          ctx,
+          source,
+          new TextEncoder().encode(source).byteLength
+        )
+      );
+    });
+    expect(result).toEqual({
+      body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+      status: 500,
+    });
+  });
+
+  it("returns an internal failure when Node cannot hash an authenticated query result", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedPublicRuntime(t);
+    const source = JSON.stringify({ requests: [foundRequest] });
+    const result = await t.action(async (ctx) => {
+      const rows = await ctx.runQuery(
+        internal.contentRelease.runtime.public.internal.readBatch,
+        { requests: [{ appLocale: "en", publicPath: TEST_RUNTIME_PATH }] }
+      );
+      vi.spyOn(ctx, "runQuery").mockResolvedValueOnce(rows);
+      vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(
+        new Error("Hash service unavailable.")
+      );
+      return runConvexProgram(
+        dispatchBatchProgram(
+          ctx,
+          source,
+          new TextEncoder().encode(source).byteLength
+        )
+      );
+    });
+    expect(result).toEqual({
       body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
       status: 500,
     });

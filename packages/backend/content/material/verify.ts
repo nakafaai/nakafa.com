@@ -1,0 +1,77 @@
+import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
+import { hashText } from "@repo/backend/convex/contentRelease/digest";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
+import type { WithoutSystemFields } from "convex/server";
+import { Effect } from "effect";
+
+type MaterialRow = WithoutSystemFields<Doc<"materialCatalog">>;
+
+/** Authenticates one self-contained active material read-model row. */
+export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
+  function* (row: MaterialRow) {
+    const projection = yield* decodeProjectionJson(row.projectionJson);
+    if (projection.kind !== "subject-lesson") {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Active material ${row.contentKey}/${row.appLocale} has a non-material projection.`
+      );
+    }
+    const projectionJson = canonicalizeMaterialProjection(projection);
+    const projectionHash = yield* hashText(
+      "the active material projection",
+      projectionJson
+    );
+    if (
+      projectionJson !== row.projectionJson ||
+      projectionHash !== row.projectionHash ||
+      getHashBucket(projectionHash) !== row.bucket ||
+      projection.graph.assetId !== row.assetId ||
+      projection.metadata.dateModified !== row.dateModified ||
+      projection.metadata.datePublished !== row.datePublished ||
+      projection.contentKey !== row.contentKey ||
+      projection.appLocale !== row.appLocale ||
+      projection.materialKey !== row.materialKey ||
+      projection.order !== row.order ||
+      projection.parentPath !== row.parentPath ||
+      projection.publicPath !== row.publicPath
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Active material ${row.contentKey}/${row.appLocale} changed catalog metadata.`
+      );
+    }
+    return { projection, projectionJson };
+  }
+);
+
+/** Authenticates one material row against its effective active publication. */
+export const verifyEffectiveMaterial = Effect.fn(
+  "contentRelease.verifyEffectiveMaterial"
+)(function* (row: MaterialRow, activeSequence: number) {
+  const { projection, projectionJson } = yield* verifyMaterial(row);
+  const resolved = yield* resolvePublicProjection(
+    row.contentKey,
+    projection.artifactLocale,
+    activeSequence
+  );
+  if (
+    resolved?.family !== "material" ||
+    resolved.projectionHash !== row.projectionHash ||
+    resolved.projectionJson !== projectionJson ||
+    resolved.publicPath !== row.publicPath ||
+    resolved.releaseId !== row.releaseId ||
+    resolved.rendererDomain !== row.rendererDomain ||
+    resolved.sequence !== row.sequence ||
+    resolved.sourcePath !== row.sourcePath
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Active material ${row.contentKey}/${row.appLocale} disagrees with its effective publication.`
+    );
+  }
+  return { projection, resolved };
+});

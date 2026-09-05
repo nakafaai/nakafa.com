@@ -5,6 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { readProgramRoute } from "@repo/backend/content/program/route";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -47,10 +48,14 @@ export const readPublishedProgramRoute = Effect.fn(
   "NakafaProgram.readPublishedRoute"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(api.contentRelease.program.route, {
-    appLocale,
-    publicPath,
-  });
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.program.route,
+    {
+      appLocale,
+      publicPath,
+    },
+    (queryArgs) => readProgramRoute(queryArgs.appLocale, queryArgs.publicPath)
+  );
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
     publicPath,

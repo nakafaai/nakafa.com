@@ -28,6 +28,7 @@ import { TEST_PROOF_RENDERER } from "@repo/backend/test/content/proof";
 import {
   testArticleGraph,
   testPublicationScope,
+  testTextHash,
 } from "@repo/backend/test/content/release";
 import {
   insertTestState,
@@ -268,6 +269,9 @@ export async function insertRuntimeArticles(
     const projectionJson = canonicalizeArticleProjection(projection);
     await insertRuntimeKey(ctx, projection.contentKey, { projectionJson });
     await insertRuntimeVersion(ctx, "public", projection.contentKey, {
+      artifactHash: testTextHash(
+        `${projection.contentKey}/${projection.artifactLocale}`
+      ),
       artifactLocale: projection.artifactLocale,
       projectionJson,
       publicPath: projection.publicPath,

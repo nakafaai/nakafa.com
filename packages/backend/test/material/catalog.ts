@@ -10,8 +10,9 @@ import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { writeMaterial } from "@repo/backend/convex/contentRelease/material/write";
 import { INITIAL_MODEL_SLOT } from "@repo/backend/convex/contentRelease/models/slot";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -20,6 +21,7 @@ import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
+  testTextHash,
 } from "@repo/backend/test/content/release";
 import {
   insertTestState,
@@ -31,6 +33,7 @@ import {
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
 import type { TestConvex } from "convex-test";
+import { Effect } from "effect";
 
 export const MATERIAL_IDENTITY = {
   manifestHash: TEST_MANIFEST_HASH,
@@ -60,6 +63,9 @@ export async function insertMaterialProjection(
   const projectionJson = canonicalizeMaterialProjection(projection);
   const sourcePath = `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`;
   await insertRuntimeVersion(ctx, "public", projection.contentKey, {
+    artifactHash: testTextHash(
+      `${projection.contentKey}/${projection.artifactLocale}/${identity.sequence}`
+    ),
     artifactLocale: projection.artifactLocale,
     headReleaseId: identity.releaseId,
     headSequence: identity.sequence,
@@ -76,11 +82,10 @@ export async function insertMaterialProjection(
   });
   const resolved = await runConvexProgram(
     resolvePublicProjection(
-      ctx,
       projection.contentKey,
       projection.artifactLocale,
       identity.sequence
-    )
+    ).pipe(Effect.provide(convexPublicationLayer(ctx)))
   );
   if (resolved?.family !== "material") {
     throw new Error("Expected one resolved public material projection.");

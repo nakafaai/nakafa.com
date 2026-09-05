@@ -1,12 +1,15 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Effect } from "effect";
 import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,
 } from "@/lib/utils/system";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
+import { createTestSnapshotQuery } from "@/test/runtime-query";
 
 const routeMocks = vi.hoisted(() => ({
   read: vi.fn(),
@@ -63,6 +66,25 @@ beforeEach(() => {
 });
 
 describe("current content reference metadata", () => {
+  it.effect(
+    "uses signed snapshot metadata and keeps defaults for absent routes",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeTryoutRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        routeMocks.read.mockImplementation(createTestSnapshotQuery(context));
+
+        expect(
+          yield* getMetadataFromSlug("en", ["try-out", "indonesia"])
+        ).toMatchObject({
+          title: "Indonesia",
+          authors: [{ name: "Nakafa" }],
+        });
+        expect(
+          yield* getMetadataFromSlug("en", ["try-out", "missing-country"])
+        ).toEqual(translatedDefaults);
+      })
+  );
   it.effect("reads complete metadata from the current signed reference", () =>
     Effect.gen(function* () {
       expect(yield* getMetadataFromSlug("en", ["quran", "1"])).toEqual({

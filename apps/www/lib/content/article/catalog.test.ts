@@ -6,6 +6,7 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
+  ArticleCategorySchema,
   ArticleProjectionSchema,
   ArticleRouteSlugSchema,
   canonicalizeArticleProjection,
@@ -20,14 +21,21 @@ import {
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
+import { makeArticleRuntimeSource } from "@/test/content/article";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
   makeTestArticleProjection,
   testArticleProjection,
   testArticleSourcePath,
 } from "@/test/content-article";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const runtimeReadMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 const activeManifestHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const activeReleaseId = ReleaseIdSchema.make("release-article");
@@ -119,17 +127,53 @@ function categoryPage(overrides?: {
 vi.mock("@/lib/content/cache", () => ({
   applyPublishedCatalogCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeReadMock,
+}));
 
 describe("published article catalog", () => {
+  it.effect(
+    "reads localized articles and categories from authenticated serving rows",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeArticleRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const cursor = {
+          cursor: null,
+          expectedManifestHash: null,
+          expectedReleaseId: null,
+          locale: "de" as const,
+        };
+
+        const page = yield* readPublishedArticlePage({
+          ...cursor,
+          category: ArticleCategorySchema.make("politics"),
+        });
+        expect(page).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          done: true,
+          articles: [
+            { publicPath: "articles/politik/artikel-2" },
+            { publicPath: "articles/politik/artikel-1" },
+          ],
+        });
+        expect(yield* readPublishedCategories(cursor)).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          done: true,
+          categories: [
+            { category: "politics", route: "politik", title: "Politik" },
+          ],
+        });
+      })
+  );
+
   beforeEach(() => {
     cacheMock.mockReset();
     runtimeQueryMock.mockReset();
+    runtimeReadMock.mockImplementation(
+      createTestRuntimeQuery(runtimeQueryMock)
+    );
   });
 
   it.effect(

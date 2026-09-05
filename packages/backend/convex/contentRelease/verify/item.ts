@@ -1,8 +1,9 @@
 import type { ContentReleaseItem } from "@nakafa/aksara-contracts/release";
 import { canonicalizeContentHead } from "@nakafa/aksara-contracts/release/head";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { contentHead } from "@repo/backend/content/publication/projection";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { resolveContentHead } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadVersion } from "@repo/backend/convex/contentRelease/model";
 import {
@@ -49,14 +50,13 @@ const checkRollback = Effect.fn("contentRelease.checkRollback")(function* (
     }
     return;
   }
-  const head = yield* resolveContentHead(
-    ctx,
-    row.contentKey,
-    row.artifactLocale,
-    row.priorSequence ?? prior.sequence
+  const sequence = yield* Effect.fromNullishOr(row.priorSequence).pipe(
+    Effect.orDie
+  );
+  const head = yield* contentHead(prior, sequence).pipe(
+    Effect.provide(convexPublicationLayer(ctx))
   );
   if (
-    !head ||
     snapshot.snapshot.state !== head.family ||
     head.family !== item.change.family ||
     canonicalizeContentHead(head) !==

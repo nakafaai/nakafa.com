@@ -1,34 +1,36 @@
-import { query } from "@repo/backend/convex/_generated/server";
-import { readQuranAttribution } from "@repo/backend/convex/contentRelease/quran/attribution";
-import { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
+import { readQuranAttribution } from "@repo/backend/content/quran/attribution";
+import { readQuranSurahs } from "@repo/backend/content/quran/catalog";
+import { convexQuranLayer } from "@repo/backend/content/quran/convex";
 import {
   quranDocumentValidator,
   readQuranDocument,
-} from "@repo/backend/convex/contentRelease/quran/document";
+} from "@repo/backend/content/quran/document";
 import {
   quranInterpretationValidator,
   readQuranInterpretation,
-} from "@repo/backend/convex/contentRelease/quran/interpretation";
+} from "@repo/backend/content/quran/interpretation";
 import {
   quranMarkdownValidator,
   readQuranMarkdown,
-} from "@repo/backend/convex/contentRelease/quran/markdown";
+} from "@repo/backend/content/quran/markdown";
 import {
   quranPassageValidator,
   readQuranPassage,
-} from "@repo/backend/convex/contentRelease/quran/reference";
+} from "@repo/backend/content/quran/reference";
+import {
+  quranViewValidator,
+  readQuranView,
+} from "@repo/backend/content/quran/view";
+import { query } from "@repo/backend/convex/_generated/server";
 import {
   quranAppLocaleValidator,
   quranReferenceArgsValidator,
   quranSourceFields,
   quranTafsirAppLocaleValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
-import {
-  quranViewValidator,
-  readQuranView,
-} from "@repo/backend/convex/contentRelease/quran/view";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const attributionValidator = v.object({
   ...quranSourceFields,
@@ -44,14 +46,20 @@ const surahCatalogValidator = v.object({
 export const attribution = query({
   args: {},
   returns: attributionValidator,
-  handler: (ctx) => runConvexProgram(readQuranAttribution(ctx)),
+  handler: (ctx) =>
+    runConvexProgram(
+      readQuranAttribution().pipe(Effect.provide(convexQuranLayer(ctx)))
+    ),
 });
 
 /** Returns every verified Quran surah metadata row without verse bodies. */
 export const surahs = query({
   args: {},
   returns: surahCatalogValidator,
-  handler: (ctx) => runConvexProgram(readQuranSurahs(ctx)),
+  handler: (ctx) =>
+    runConvexProgram(
+      readQuranSurahs().pipe(Effect.provide(convexQuranLayer(ctx)))
+    ),
 });
 
 /** Returns one complete signed Quran surah for product and public readers. */
@@ -59,7 +67,11 @@ export const surah = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
   returns: quranDocumentValidator,
   handler: (ctx, { appLocale, surahNumber }) =>
-    runConvexProgram(readQuranDocument(ctx, appLocale, surahNumber)),
+    runConvexProgram(
+      readQuranDocument(appLocale, surahNumber).pipe(
+        Effect.provide(convexQuranLayer(ctx))
+      )
+    ),
 });
 
 /** Returns one signed Quran surah as semantic Markdown source fields. */
@@ -72,7 +84,9 @@ export const prose = query({
   returns: quranMarkdownValidator,
   handler: (ctx, { appLocale, surahNumber, verseLimit }) =>
     runConvexProgram(
-      readQuranMarkdown(ctx, appLocale, surahNumber, verseLimit)
+      readQuranMarkdown(appLocale, surahNumber, verseLimit).pipe(
+        Effect.provide(convexQuranLayer(ctx))
+      )
     ),
 });
 
@@ -81,7 +95,11 @@ export const page = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
   returns: quranViewValidator,
   handler: (ctx, { appLocale, surahNumber }) =>
-    runConvexProgram(readQuranView(ctx, appLocale, surahNumber)),
+    runConvexProgram(
+      readQuranView(appLocale, surahNumber).pipe(
+        Effect.provide(convexQuranLayer(ctx))
+      )
+    ),
 });
 
 /** Returns one exact signed Tafsir entry after the verse is requested. */
@@ -96,12 +114,11 @@ export const tafsir = query({
   handler: (ctx, { appLocale, expectedSnapshotId, surahNumber, verseNumber }) =>
     runConvexProgram(
       readQuranInterpretation(
-        ctx,
         appLocale,
         expectedSnapshotId,
         surahNumber,
         verseNumber
-      )
+      ).pipe(Effect.provide(convexQuranLayer(ctx)))
     ),
 });
 
@@ -109,5 +126,8 @@ export const tafsir = query({
 export const passage = query({
   args: quranReferenceArgsValidator.fields,
   returns: quranPassageValidator,
-  handler: (ctx, args) => runConvexProgram(readQuranPassage(ctx, args)),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      readQuranPassage(args).pipe(Effect.provide(convexQuranLayer(ctx)))
+    ),
 });

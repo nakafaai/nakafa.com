@@ -9,6 +9,51 @@ import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 
 describe("contents/helpers/search/quran/read", () => {
+  it("deduplicates equivalent canonical route variants before signed reads", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [makeQuranSearch("en", 1)])
+    );
+    const queries = ["quran/1", "en/quran/1", "/quran/1/"];
+    const documents = await t.query((ctx) =>
+      runConvexProgram(
+        readSignedQuranSearchDocuments(
+          ctx,
+          { limit: 2, locale: "en", offset: 0, queries, section: "quran" },
+          queries,
+          2
+        )
+      )
+    );
+    expect(documents.map(({ route }) => route)).toEqual(["quran/1"]);
+  });
+
+  it("returns only selected authenticated candidates when query prefixes exceed capacity", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranSearch("en", 1, "mercy"),
+        makeQuranSearch("en", 2, "wisdom"),
+      ])
+    );
+    const queries = ["mercy", "wisdom"];
+    const documents = await t.query((ctx) =>
+      runConvexProgram(
+        readSignedQuranSearchDocuments(
+          ctx,
+          { limit: 1, locale: "en", offset: 0, queries, section: "quran" },
+          queries,
+          1
+        )
+      )
+    );
+    expect(documents.map(({ route }) => route)).toEqual(["quran/1"]);
+    expect(documents[0]).toMatchObject({
+      content_id: "asset:en:quran:quran-surah:1",
+      text: expect.stringContaining("mercy"),
+    });
+  });
+
   it("returns no source fallback before signed Quran activation", async () => {
     const t = convexTest(schema, convexModules);
 

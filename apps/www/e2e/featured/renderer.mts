@@ -1,33 +1,44 @@
 import assert from "node:assert/strict";
-import { readProtectedContent } from "@repo/backend/client/content/protected";
+import {
+  readProtectedContent,
+  readSnapshotProtectedContent,
+} from "@repo/backend/client/content/protected";
+import { readFeaturedTryout } from "@repo/backend/content/tryout/featured";
 import { api } from "@repo/backend/convex/_generated/api";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
-import { ConvexHttpClient } from "convex/browser";
 import { Effect } from "effect";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import { selectRendererImplementations } from "@/lib/content/renderer/selection";
+import { fetchRuntimeQuery } from "@/lib/content/runtime/query";
+import { loadContentSnapshot } from "@/lib/content/runtime/snapshot";
 
 const verifyFeaturedRenderer = Effect.fn(
   "NakafaContent.verifyFeaturedRenderer"
 )(function* () {
-  const client = new ConvexHttpClient(env.NEXT_PUBLIC_CONVEX_URL);
   const featured = yield* Effect.tryPromise(() =>
-    client.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
-      appLocale: "en",
-    })
+    fetchRuntimeQuery(
+      api.tryouts.queries.catalog.getFeaturedQuestion,
+      {
+        appLocale: "en",
+      },
+      ({ appLocale }) => readFeaturedTryout(appLocale)
+    )
   );
   const target = {
     siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
     token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
   };
   const manifest = yield* rendererManifest;
-  const response = yield* readProtectedContent(
-    target,
-    yield* makeTryoutRuntimeRequest([featured.question]),
-    manifest
-  );
+  const request = yield* makeTryoutRuntimeRequest([featured.question]);
+  const snapshot = yield* Effect.tryPromise(() => loadContentSnapshot());
+  const response =
+    snapshot === undefined
+      ? yield* readProtectedContent(target, request, manifest)
+      : yield* readSnapshotProtectedContent(request, manifest).pipe(
+          Effect.provideContext(snapshot)
+        );
   const item = response.items[0];
   assert(item, "The featured signed snapshot returned no question artifact.");
 

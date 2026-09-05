@@ -1,3 +1,7 @@
+import { readQuranAttribution } from "@repo/backend/content/quran/attribution";
+import { readQuranSurahs } from "@repo/backend/content/quran/catalog";
+import { readQuranMarkdown } from "@repo/backend/content/quran/markdown";
+import { readQuranView } from "@repo/backend/content/quran/view";
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
@@ -17,7 +21,8 @@ export const readPublishedQuranIdentity = Effect.fn(
 )(function* () {
   const result = yield* readRuntimeQuery(
     api.contentRelease.quran.attribution,
-    {}
+    {},
+    () => readQuranAttribution()
   );
   return yield* decodePublishedQuranSource(result, "attribution");
 });
@@ -26,7 +31,11 @@ export const readPublishedQuranIdentity = Effect.fn(
 export const readPublishedQuranCatalog = Effect.fn(
   "NakafaQuran.readPublishedCatalog"
 )(function* () {
-  const result = yield* readRuntimeQuery(api.contentRelease.quran.surahs, {});
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.quran.surahs,
+    {},
+    () => readQuranSurahs()
+  );
   return yield* decodePublishedQuranCatalog(result);
 });
 
@@ -39,7 +48,9 @@ export const readPublishedQuranMarkdown = Effect.fn(
     api.contentRelease.quran.prose,
     verseLimit === undefined
       ? { appLocale, surahNumber }
-      : { appLocale, surahNumber, verseLimit }
+      : { appLocale, surahNumber, verseLimit },
+    ({ appLocale, surahNumber, verseLimit }) =>
+      readQuranMarkdown(appLocale, surahNumber, verseLimit)
   );
   return yield* decodePublishedQuranMarkdown(result, {
     appLocale,
@@ -52,10 +63,14 @@ export const readPublishedQuranMarkdown = Effect.fn(
 const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
   function* (locale: Locale, surahNumber: number) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readRuntimeQuery(api.contentRelease.quran.page, {
-      appLocale,
-      surahNumber,
-    });
+    const result = yield* readRuntimeQuery(
+      api.contentRelease.quran.page,
+      {
+        appLocale,
+        surahNumber,
+      },
+      ({ appLocale, surahNumber }) => readQuranView(appLocale, surahNumber)
+    );
     return yield* decodePublishedQuranView(result, {
       appLocale,
       surahNumber,

@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
+import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Effect } from "effect";
 import {
   getPublishedProgramCatalog,
@@ -10,15 +11,21 @@ import {
   readPublishedProgramPage,
   readPublishedProgramRoutes,
 } from "@/lib/content/program/catalog";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
   testCurriculumRowJson,
   testProgramClass,
   testProgramRoot,
   testProgramRowJson,
 } from "@/test/content-program";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const readQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 
 /** Builds one successful bounded program catalog response. */
@@ -67,18 +74,50 @@ function pageResponse(overrides?: {
 vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: readQueryMock,
+}));
 
 describe("published program catalog", () => {
   beforeEach(() => {
     cacheMock.mockReset();
     runtimeQueryMock.mockReset();
+    readQueryMock
+      .mockReset()
+      .mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
   });
+
+  it.effect(
+    "reads curriculum roots and release-bound pages from the signed snapshot",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeProgramRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        readQueryMock.mockImplementation(createTestSnapshotQuery(context));
+
+        const catalog = yield* readPublishedProgramCatalog("en");
+        expect(
+          catalog.entries.map(({ translation }) => translation.title)
+        ).toEqual(["Technical Program 1", "Technical Program 2"]);
+        const page = yield* readPublishedProgramPage({
+          cursor: null,
+          expectedManifestHash: null,
+          expectedReleaseId: null,
+          locale: "en",
+        });
+        expect(page).toMatchObject({
+          activeManifestHash: fixture.state.activeManifestHash,
+          activeReleaseId: fixture.state.activeReleaseId,
+          done: true,
+          managed: true,
+          stale: false,
+        });
+        expect(page.routes.map(({ publicPath }) => publicPath)).toEqual([
+          "curriculum/technical-program-1",
+          "curriculum/technical-program-2",
+        ]);
+      })
+  );
 
   it.effect("decodes real program roots and applies the runtime cache", () =>
     Effect.gen(function* () {

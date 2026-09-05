@@ -2,21 +2,29 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/runtime/local";
 import {
   localConvexEnvironment,
   runBuildCommand,
   withLocalBackend,
 } from "@repo/backend/scripts/content/runtime/process";
-import { Deferred, Effect, Fiber, FileSystem, Sink, Stream } from "effect";
+import {
+  Deferred,
+  Effect,
+  Fiber,
+  FileSystem,
+  Schedule,
+  Sink,
+  Stream,
+} from "effect";
 import { TestClock } from "effect/testing";
 import {
   type ChildProcess,
   ChildProcessSpawner,
 } from "effect/unstable/process";
 
-vi.mock("@repo/backend/scripts/content/runtime/tables", () => ({
+vi.mock("@repo/backend/content/snapshot/tables", () => ({
   readContentRuntimeSchemaFingerprint: () => Effect.succeed("schema"),
 }));
 
@@ -85,7 +93,7 @@ describe("application process ownership", () => {
         vi.stubGlobal("fetch", () => Promise.resolve(new Response("owned")));
         const program = Effect.gen(function* () {
           if (outcome === "failure") {
-            return yield* contentRuntimeCiError("application failed");
+            return yield* contentSnapshotError("application failed");
           }
           if (outcome === "interruption") {
             return yield* Effect.interrupt;
@@ -133,7 +141,7 @@ describe("application process ownership", () => {
           Effect.flip
         );
         expect(error).toMatchObject({
-          _tag: "ContentRuntimeCiError",
+          _tag: "ContentSnapshotError",
           message: expect.stringContaining("schema changed"),
         });
         expect(child.commands).toHaveLength(0);
@@ -164,7 +172,7 @@ describe("application process ownership", () => {
           Effect.flip
         );
         expect(error).toMatchObject({
-          _tag: "ContentRuntimeCiError",
+          _tag: "ContentSnapshotError",
           message: expect.stringContaining("occupied"),
         });
         expect(listener.listening).toBe(true);
@@ -198,7 +206,7 @@ describe("application process ownership", () => {
           during: "during the application",
         };
         expect(error).toMatchObject({
-          _tag: "ContentRuntimeCiError",
+          _tag: "ContentSnapshotError",
           message: expect.stringContaining(messages[failure]),
         });
         expect(child.release).toHaveBeenCalledOnce();
@@ -225,10 +233,42 @@ describe("application process ownership", () => {
       yield* Deferred.await(entered);
       yield* TestClock.adjust("4 minutes");
       expect(yield* Fiber.join(fiber)).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message: expect.stringContaining("did not become ready"),
       });
       expect(child.release).toHaveBeenCalledOnce();
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.live("waits for an interrupted command to finish its cleanup", () =>
+    Effect.gen(function* () {
+      const { fs, runtime } = yield* fixture;
+      const script = `${runtime.directory}/worker.mjs`;
+      yield* fs.writeFileString(
+        script,
+        `import { writeFileSync } from "node:fs";
+process.once("SIGINT", () => {
+  writeFileSync("stopped", "SIGINT");
+  process.exit(0);
+});
+setInterval(() => {}, 1000);
+writeFileSync("ready", "ready");`
+      );
+      const child = yield* runBuildCommand(runtime.directory, [
+        process.execPath,
+        script,
+      ]).pipe(Effect.scoped, Effect.forkChild);
+      yield* fs.exists(`${runtime.directory}/ready`).pipe(
+        Effect.repeat({
+          while: (ready) => !ready,
+          schedule: Schedule.spaced("10 millis"),
+        }),
+        Effect.timeout("5 seconds")
+      );
+      yield* Fiber.interrupt(child);
+      expect(yield* fs.readFileString(`${runtime.directory}/stopped`)).toBe(
+        "SIGINT"
+      );
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
@@ -240,7 +280,7 @@ describe("application process ownership", () => {
           const child = spawner({
             exit: Effect.succeed(ChildProcessSpawner.ExitCode(code)),
           });
-          const result = yield* runBuildCommand("/tmp", ["build"], {
+          const result = yield* runBuildCommand("/tmp", ["pnpm", "build"], {
             NEXT_PUBLIC_CONVEX_URL: "https://production.convex.cloud",
             CONTENT_RUNTIME_CACHE_KEY: "private",
           }).pipe(
@@ -264,7 +304,7 @@ describe("application process ownership", () => {
             }),
           ]);
           if (code === 0) {
-            yield* runBuildCommand("/tmp", ["build"]).pipe(
+            yield* runBuildCommand("/tmp", ["pnpm", "build"]).pipe(
               Effect.provideService(
                 ChildProcessSpawner.ChildProcessSpawner,
                 child.service

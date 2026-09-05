@@ -1,6 +1,6 @@
+import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import type {
   TryoutSectionAttemptPageRequest,
@@ -173,16 +173,14 @@ export const readSectionAttemptPage = Effect.fn(
     },
     { concurrency: "unbounded" }
   );
-  if (!loaded) {
-    return null;
-  }
-
+  // This same attempt object already supplied the exact section snapshot above.
+  const current = yield* Effect.fromNullishOr(loaded).pipe(Effect.orDie);
   const result: RetainedSectionPageResult = {
     activeSectionPublicPath: destinations.activeSectionPublicPath,
     activeSetPublicPath: destinations.activeSetPublicPath,
     attemptId: attempt._id,
-    content: loaded.content,
-    initialState: loaded.state,
+    content: current.content,
+    initialState: current.state,
     kind: "retained",
     page,
   };

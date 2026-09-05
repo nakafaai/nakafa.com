@@ -225,6 +225,57 @@ const activatePlacement = Effect.fn("contents.views.test.activatePlacement")(
 );
 
 describe("contents/views/context", () => {
+  it.effect.each([
+    { mode: "placement" },
+    { mode: "placement", nodeKey: GROUP_KEY },
+    { mode: "placement", programKey: PROGRAM_KEY },
+  ] satisfies LearningContextInput[])(
+    "keeps an incomplete placement hint canonical: %j",
+    (hint) =>
+      Effect.gen(function* () {
+        const target = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          activateMaterialCatalog(target, [FUNCTION_MATERIAL])
+        );
+        expect(yield* readContext(target, FUNCTION_MATERIAL, hint)).toEqual({
+          contextKey: "canonical",
+          contextMode: "canonical",
+        });
+      })
+  );
+
+  it("keeps unplaced target facts canonical before reading any curriculum", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+    await target.query(async (ctx) => {
+      const material = await runConvexProgram(
+        validateIncomingContentTarget(ctx, {
+          contentId: FUNCTION_MATERIAL.graph.assetId,
+          locale: "en",
+          publicPath: FUNCTION_MATERIAL.publicPath,
+          section: "material",
+        })
+      );
+      if (!material) {
+        expect.fail("Expected the signed material target.");
+      }
+      for (const unplaced of [
+        { ...material, kind: "article" as const },
+        { ...material, materialKey: undefined },
+        { ...material, parentPath: undefined },
+      ]) {
+        expect(
+          await runConvexProgram(
+            resolveLearningContext(ctx, unplaced, PLACEMENT)
+          )
+        ).toEqual({
+          contextKey: "canonical",
+          contextMode: "canonical",
+        });
+      }
+    });
+  });
+
   it.effect("keeps a direct visit canonical", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);

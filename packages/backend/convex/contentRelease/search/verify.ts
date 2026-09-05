@@ -1,6 +1,7 @@
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search/owner";
 import { Effect } from "effect";
@@ -16,11 +17,10 @@ export const resolveSearchProjection = Effect.fn(
     return yield* staleSearchRow(row);
   }
   const resolved = yield* resolvePublicProjection(
-    ctx,
     row.contentKey,
     row.appLocale,
     owner.sequence
-  );
+  ).pipe(Effect.provide(convexPublicationLayer(ctx)));
   if (
     !resolved ||
     resolved.appLocale !== row.appLocale ||

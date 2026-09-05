@@ -1,6 +1,6 @@
+import { validateArchiveListing } from "@repo/backend/content/snapshot/codec";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
 import { runRuntimeCommand } from "@repo/backend/scripts/content/runtime/ci/command";
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
-import { validateArchiveListing } from "@repo/backend/scripts/content/runtime/ci/snapshot";
 import { Effect, FileSystem } from "effect";
 
 const runGpg = (options: {
@@ -113,14 +113,14 @@ export const createEncryptedArchive = Effect.fn(
   });
   const packetLog = yield* fileSystem.readFileString(options.logPath);
   if (!packetLog.includes(":aead encrypted packet: cipher=9 aead=2")) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "Signed runtime archive is not AES256 OCB authenticated encryption."
     );
   }
 
   const encryptedInfo = yield* fileSystem.stat(options.encryptedPath);
   if (encryptedInfo.type !== "File" || encryptedInfo.size === 0n) {
-    return yield* contentRuntimeCiError(
+    return yield* contentSnapshotError(
       "Signed runtime encrypted archive is empty."
     );
   }

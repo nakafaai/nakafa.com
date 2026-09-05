@@ -1,6 +1,9 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it, layer } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
+import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
 import {
   encodeTestQuranRow,
   makeQuranLocaleSources,
@@ -8,7 +11,8 @@ import {
   makeQuranSurah,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
-import { Effect } from "effect";
+import { makeQuranRuntimeSource } from "@repo/backend/test/quran/runtime";
+import { Context, Effect, Layer } from "effect";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -16,18 +20,21 @@ import {
   readPublishedQuranIdentity,
   readPublishedQuranMarkdown,
 } from "@/lib/content/quran/publication";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const readRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/content/cache", () => ({
   applyPublishedSnapshotCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: readRuntimeQueryMock,
+}));
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
   activeReleaseId: "quran-release",
@@ -39,6 +46,10 @@ const source = {
 beforeEach(() => {
   cacheMock.mockReset();
   runtimeQueryMock.mockReset();
+  readRuntimeQueryMock.mockReset();
+  readRuntimeQueryMock.mockImplementation(
+    createTestRuntimeQuery(runtimeQueryMock)
+  );
 });
 describe("published Quran content", () => {
   it.effect("reads the active identity through the attribution query", () =>
@@ -201,6 +212,98 @@ describe("published Quran content", () => {
         },
       });
     })
+  );
+});
+
+describe("immutable Quran application reads", () => {
+  const prepareQuran = Effect.gen(function* () {
+    const fixture = yield* makeQuranRuntimeSource();
+    const context = yield* createTestSnapshotContext(fixture.source);
+    return { context, manifest: fixture.manifest, state: fixture.state };
+  });
+  class QuranFixture extends Context.Service<
+    QuranFixture,
+    Effect.Success<typeof prepareQuran>
+  >()("TestContent.QuranFixture") {}
+
+  layer(Layer.effect(QuranFixture, prepareQuran))((test) => {
+    test.effect(
+      "returns the authenticated identity and complete cached metadata catalog",
+      () =>
+        Effect.gen(function* () {
+          const quran = yield* QuranFixture;
+          readRuntimeQueryMock.mockImplementation(
+            createTestSnapshotQuery(quran.context)
+          );
+          const identity = yield* readPublishedQuranIdentity();
+          const catalog = yield* readPublishedQuranCatalog();
+          const cached = yield* Effect.promise(getPublishedQuranCatalog);
+          expect(identity).toMatchObject({
+            activeReleaseId: quran.state.activeReleaseId,
+            activeManifestHash: quran.state.activeManifestHash,
+            snapshotId: quran.manifest.snapshotId,
+          });
+          expect(catalog.surahs.map((surah) => surah.number)).toEqual(
+            Array.from({ length: QURAN_SURAH_COUNT }, (_, index) => index + 1)
+          );
+          expect(cached).toEqual(catalog);
+          expect(cacheMock).toHaveBeenCalledWith(quran.manifest.snapshotId);
+        })
+    );
+
+    test.effect.each(APP_LOCALE_CODES)(
+      "preserves %s source attribution, verses, and web navigation",
+      (appLocale) =>
+        Effect.gen(function* () {
+          const quran = yield* QuranFixture;
+          readRuntimeQueryMock.mockImplementation(
+            createTestSnapshotQuery(quran.context)
+          );
+          const prefix = yield* readPublishedQuranMarkdown(appLocale, 1, 3);
+          const complete = yield* readPublishedQuranMarkdown(appLocale, 1);
+          const view = yield* Effect.promise(() =>
+            getPublishedQuranView(appLocale, 1)
+          );
+          expect(prefix.toVerse).toBe(3);
+          expect(prefix.verses).toHaveLength(3);
+          expect(complete.verses).toHaveLength(complete.surah.numberOfVerses);
+          expect(prefix.verses).toEqual(complete.verses.slice(0, 3));
+          expect(prefix.sources).toEqual(makeQuranLocaleSources(appLocale));
+          expect(view.sources).toEqual(prefix.sources);
+          expect(view.tafsirAccess).toEqual(
+            makeQuranTafsirProjection(appLocale)
+          );
+          expect(view.surah.name.meaning).toEqual(makeQuranMeaning(1));
+          expect(view.previousSurah).toBeNull();
+          expect(view.nextSurah?.number).toBe(2);
+          expect(view.verses[0]).toMatchObject({
+            arabic: "آية 1",
+            number: { inQuran: 1, inSurah: 1 },
+            translation: prefix.verses[0]?.translation,
+          });
+          expect(view.verses).toHaveLength(complete.verses.length);
+        })
+    );
+  });
+
+  it.effect(
+    "keeps an inactive Quran publication in the domain error channel",
+    () =>
+      Effect.gen(function* () {
+        const inactive = yield* createTestSnapshotContext(
+          makeRuntimeSource().source
+        );
+        readRuntimeQueryMock.mockImplementation(
+          createTestSnapshotQuery(inactive)
+        );
+        expect(
+          yield* readPublishedQuranIdentity().pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "QuranPublicationError",
+          operation: "attribution",
+          reason: "Signed Quran publication is not active.",
+        });
+      })
   );
 });
 /** Builds the complete signed metadata catalog response. */

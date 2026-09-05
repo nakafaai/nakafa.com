@@ -2,10 +2,8 @@ import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { projectQuranVerse } from "@repo/backend/agent/quran/verse";
 import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
-import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
-import type { readQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import type { readQuranPassage } from "@repo/backend/content/quran/reference";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect } from "effect";
@@ -33,16 +31,6 @@ export const projectNakafaQuranReference = Effect.fn(
   "agent.quran.projectReference"
 )(function* (input: QuranReferenceProjectionInput) {
   const { sources, tafsirAccess } = input.reference;
-  if (
-    sources === null ||
-    tafsirAccess === null ||
-    !hasExpectedQuranSources(sources, tafsirAccess, input.appLocale)
-  ) {
-    return yield* new NakafaAgentDataReadError({
-      cause: `Signed Quran reference has incomplete ${input.appLocale} source attribution.`,
-      message: "Unable to read signed Nakafa Quran reference.",
-    });
-  }
   const verses = yield* Effect.forEach(input.reference.verses, (verse) =>
     projectQuranVerse(verse, input.appLocale, input.includeTafsir)
   );

@@ -1,15 +1,14 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   deleteMaterial,
   writeMaterial,
 } from "@repo/backend/convex/contentRelease/material/write";
 import { loadModelItems } from "@repo/backend/convex/contentRelease/models/items";
 import type { ModelBuildPage } from "@repo/backend/convex/contentRelease/models/spec";
-import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
 
 type ModelBuild = Doc<"contentModelBuilds">;
@@ -23,12 +22,11 @@ const syncMaterialIdentity = Effect.fn("contentRelease.syncMaterialIdentity")(
     artifactLocale: Doc<"contentKeys">["artifactLocale"]
   ) {
     const resolved = yield* resolvePublicProjection(
-      ctx,
       contentKey,
       artifactLocale,
       build.sequence
-    );
-    if (resolved?.family !== "material") {
+    ).pipe(Effect.provide(convexPublicationLayer(ctx)));
+    if (resolved?.projection.kind !== "subject-lesson") {
       return yield* deleteMaterial(
         ctx,
         build.slots.materialTargetSlot,
@@ -36,18 +34,11 @@ const syncMaterialIdentity = Effect.fn("contentRelease.syncMaterialIdentity")(
         artifactLocale
       );
     }
-    const projection = yield* decodeProjectionJson(resolved.projectionJson);
-    if (projection.kind !== "subject-lesson") {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Material head ${contentKey}/${artifactLocale} is incomplete.`
-      );
-    }
     yield* writeMaterial(
       ctx,
       build.slots.materialTargetSlot,
       resolved,
-      projection
+      resolved.projection
     );
   }
 );

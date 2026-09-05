@@ -1,6 +1,10 @@
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  readMaterialBuckets,
+  readMaterialSitemap,
+} from "@repo/backend/content/material/sitemap";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -18,7 +22,8 @@ export const readPublishedMaterialBuckets = Effect.fn(
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(
     api.contentRelease.material.sitemapBuckets,
-    { appLocale }
+    { appLocale },
+    (queryArgs) => readMaterialBuckets(queryArgs.appLocale)
   );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
@@ -43,8 +48,12 @@ export const readPublishedMaterialSitemap = Effect.fn(
   "www.materials.readSitemapPage"
 )(function* (locale: Locale, bucket: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  return yield* readRuntimeQuery(api.contentRelease.material.sitemapPage, {
-    appLocale,
-    bucket,
-  });
+  return yield* readRuntimeQuery(
+    api.contentRelease.material.sitemapPage,
+    {
+      appLocale,
+      bucket,
+    },
+    (queryArgs) => readMaterialSitemap(queryArgs.appLocale, queryArgs.bucket)
+  );
 });

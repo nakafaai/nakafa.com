@@ -348,13 +348,6 @@ describe("proxy", () => {
     const response = await requestProxy(path);
 
     expectHardNotFound(response, "en");
-    expect(runtimeMocks.readTryout).toHaveBeenCalledWith(expect.anything(), {
-      input: {
-        appLocale: "en",
-        kind: "route",
-        publicPath: "try-out/indonesia/snbt/2027/missing-set",
-      },
-    });
   });
 
   it("delegates one retained attempt capability to the authenticated page", async () => {

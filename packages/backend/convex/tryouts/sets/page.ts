@@ -1,10 +1,9 @@
 import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
+import { toPublicPublishedSet } from "@repo/backend/content/tryout/published";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import type { PublishedCatalog } from "@repo/backend/convex/tryouts/catalog/hierarchy";
-import { toPublicPublishedSet } from "@repo/backend/convex/tryouts/catalog/published";
 import type { ListArgs } from "@repo/backend/convex/tryouts/sets/spec";
 import { Effect, Schema } from "effect";
 
@@ -35,12 +34,6 @@ export const paginatePublishedSets = Effect.fn(
   rows: readonly PublishedSetRow[]
 ) {
   const snapshotId = catalog.snapshotId;
-  if (!snapshotId) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Signed try-out catalog lost its snapshot identity."
-    );
-  }
   if (!(Number.isSafeInteger(pagination.numItems) && pagination.numItems > 0)) {
     return yield* new PublishedSetPaginationError({
       code: "INVALID_TRYOUT_SET_PAGE_SIZE",

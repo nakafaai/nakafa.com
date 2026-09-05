@@ -1,6 +1,7 @@
+import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import {
   MODEL_BUILD_PAGE_BYTES,
   MODEL_BUILD_PAGE_ROWS,
@@ -26,7 +27,9 @@ export const validateMaterialModel = Effect.fn(
       })
   );
   yield* Effect.forEach(page.page, (row) =>
-    verifyEffectiveMaterial(ctx, row, build.sequence)
+    verifyEffectiveMaterial(row, build.sequence).pipe(
+      Effect.provide(convexPublicationLayer(ctx))
+    )
   );
   return {
     cursor: page.isDone ? undefined : page.continueCursor,

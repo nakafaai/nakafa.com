@@ -1,6 +1,6 @@
+import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
-import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {

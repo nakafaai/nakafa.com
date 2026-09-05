@@ -5,9 +5,17 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import {
+  makeRuntimeSource,
+  TEST_SNAPSHOT_RELEASE,
+} from "@repo/backend/test/content/snapshot";
 import { Effect } from "effect";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
-import { createTestRuntimeQuery } from "@/test/runtime-query";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const readQueryMock = vi.hoisted(() => vi.fn());
@@ -24,6 +32,22 @@ beforeEach(() => {
 
 describe("published active identity", () => {
   it.effect(
+    "reads the active identity from the authenticated build snapshot",
+    () =>
+      Effect.gen(function* () {
+        const context = yield* createTestSnapshotContext(
+          makeRuntimeSource().source
+        );
+        readQueryMock.mockImplementation(createTestSnapshotQuery(context));
+
+        expect(yield* readActiveContentIdentity()).toEqual({
+          manifestHash: TEST_SNAPSHOT_RELEASE.manifestHash,
+          releaseId: TEST_SNAPSHOT_RELEASE.manifest.releaseId,
+          sequence: 9,
+        });
+      })
+  );
+  it.effect(
     "reads the exact active release without another state interpretation",
     () =>
       Effect.gen(function* () {
@@ -35,7 +59,11 @@ describe("published active identity", () => {
         fetchQueryMock.mockResolvedValue(identity);
 
         expect(yield* readActiveContentIdentity()).toEqual(identity);
-        expect(readQueryMock).toHaveBeenCalledWith(expect.anything(), {});
+        expect(readQueryMock).toHaveBeenCalledWith(
+          expect.anything(),
+          {},
+          expect.any(Function)
+        );
       })
   );
 

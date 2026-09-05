@@ -5,7 +5,8 @@ import {
   TryoutSetSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -101,7 +102,9 @@ describe("tryouts/sets/page", () => {
           t.query((ctx) =>
             runConvexProgram(
               Effect.gen(function* () {
-                const catalog = yield* loadTryoutCatalog(ctx, "id");
+                const catalog = yield* loadTryoutCatalog("id").pipe(
+                  Effect.provide(convexTryoutLayer(ctx))
+                );
                 const firstSet = catalog.entries.find(
                   ({ row }) => row.kind === "set" && row.appLocale === "id"
                 )?.row;
@@ -123,6 +126,35 @@ describe("tryouts/sets/page", () => {
                   { cursor: null, numItems: 1 },
                   initialRows
                 );
+                const secondPage = yield* paginatePublishedSets(
+                  catalog,
+                  { cursor: firstPage.continueCursor, numItems: 1 },
+                  initialRows
+                );
+                expect(secondPage).toMatchObject({
+                  continueCursor: "",
+                  isDone: true,
+                  page: [{ setKey: "set-2" }],
+                });
+                const separator = firstPage.continueCursor.lastIndexOf(":");
+                const cursorPrefix = firstPage.continueCursor.slice(
+                  0,
+                  separator + 1
+                );
+                for (const offset of ["-1", "1.5", "not-a-number"]) {
+                  expect(
+                    yield* paginatePublishedSets(
+                      catalog,
+                      {
+                        cursor: `${cursorPrefix}${offset}`,
+                        numItems: 1,
+                      },
+                      initialRows
+                    ).pipe(Effect.flip, Effect.orDie)
+                  ).toMatchObject({
+                    code: "INVALID_TRYOUT_SET_CURSOR",
+                  });
+                }
                 const changedRows: readonly PublishedSetRow[] = [
                   { progress, set: firstSet },
                   { progress: null, set: secondSet },

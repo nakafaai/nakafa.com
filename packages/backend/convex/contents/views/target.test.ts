@@ -113,6 +113,99 @@ describe("contents/views/target", () => {
     });
   });
 
+  it.each(["articles", "material"] as const)(
+    "rejects durable %s reads without active signed ownership",
+    async (section) => {
+      const target = convexTest(schema, convexModules);
+      await expect(
+        hydrateDurableTarget(target, {
+          contentId: "missing-asset",
+          locale: "en",
+          section,
+        })
+      ).rejects.toMatchObject({ data: { code: "CONTENT_VIEW_IO_FAILED" } });
+    }
+  );
+
+  it("returns null when durable content no longer has an active catalog row", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+    await expect(
+      hydrateDurableTarget(target, {
+        contentId: "retired-material",
+        locale: "en",
+        section: "material",
+      })
+    ).resolves.toBeNull();
+    const articles = convexTest(schema, convexModules);
+    await articles.mutation((ctx) => insertRuntimeArticles(ctx, 1));
+    await expect(
+      hydrateDurableTarget(articles, {
+        contentId: "retired-article",
+        locale: "en",
+        section: "articles",
+      })
+    ).resolves.toBeNull();
+  });
+
+  it("returns null when an article binding outlives its catalog row", async () => {
+    const target = convexTest(schema, convexModules);
+    const article = testArticleProjection(0);
+    await target.mutation(async (ctx) => {
+      await insertRuntimeArticles(ctx, 1);
+      const row = await ctx.db.query("articleCatalog").unique();
+      if (!row) {
+        expect.fail("Expected the current article catalog row.");
+      }
+      await ctx.db.delete("articleCatalog", row._id);
+    });
+    await expect(
+      validateIncomingTarget(target, {
+        contentId: article.graph.assetId,
+        locale: "en",
+        publicPath: article.publicPath,
+        section: "articles",
+      })
+    ).resolves.toBeNull();
+  });
+
+  it.each(["articles", "material"] as const)(
+    "fails closed when a durable %s catalog asset disagrees with its signed projection",
+    async (section) => {
+      const target = convexTest(schema, convexModules);
+      if (section === "articles") {
+        await target.mutation(async (ctx) => {
+          await insertRuntimeArticles(ctx, 1);
+          const row = await ctx.db.query("articleCatalog").unique();
+          if (!row) {
+            expect.fail("Expected the current article catalog row.");
+          }
+          await ctx.db.patch("articleCatalog", row._id, {
+            assetId: "corrupted-asset",
+          });
+        });
+      } else {
+        await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+        await target.mutation(async (ctx) => {
+          const row = await ctx.db.query("materialCatalog").unique();
+          if (!row) {
+            expect.fail("Expected the current material catalog row.");
+          }
+          await ctx.db.patch("materialCatalog", row._id, {
+            assetId: "corrupted-asset",
+          });
+        });
+      }
+      await expect(
+        hydrateDurableTarget(target, {
+          contentId: "corrupted-asset",
+          locale: "en",
+          section,
+        })
+      ).rejects.toMatchObject({ data: { code: "CONTENT_VIEW_IO_FAILED" } });
+    }
+  );
+
   it("returns null for missing or mismatched current material bindings", async () => {
     const target = convexTest(schema, convexModules);
     await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);

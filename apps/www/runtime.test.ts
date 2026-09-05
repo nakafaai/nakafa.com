@@ -20,12 +20,10 @@ const TASK_QUERY = "https://helpful-capybara-123.convex.cloud";
 const TASK_SITE = "https://helpful-capybara-123.convex.site";
 const OTHER_SITE = "https://different-capybara-456.convex.site";
 const emptyBuild = {
-  query: undefined,
-  site: undefined,
+  snapshot: undefined,
 } satisfies RuntimeTarget["build"];
 const localBuild = {
-  query: "http://127.0.0.1:3210",
-  site: "http://127.0.0.1:3211",
+  snapshot: "/tmp/runtime/serving/snapshot.json",
 } satisfies RuntimeTarget["build"];
 
 const emptyIdentity = {
@@ -188,33 +186,20 @@ describe("content runtime target", () => {
   );
 
   it.effect.each([
+    { snapshot: "snapshot.json", name: "a relative descriptor path" },
     {
-      build: { query: localBuild.query, site: undefined },
-      name: "a missing HTTP target",
-      reason: "unisolated-production" as const,
+      snapshot: "https://example.com/snapshot.json",
+      name: "a remote descriptor",
     },
     {
-      build: { query: undefined, site: localBuild.site },
-      name: "a missing query target",
-      reason: "unisolated-production" as const,
+      snapshot: "/tmp/runtime/data.json",
+      name: "a data file instead of its descriptor",
     },
-    {
-      build: { query: TASK_QUERY, site: TASK_SITE },
-      name: "a remote deployment",
-      reason: "unisolated-production" as const,
-    },
-    {
-      build: { query: "not a URL", site: localBuild.site },
-      name: "an invalid query target",
-      reason: "invalid-target" as const,
-    },
-    {
-      build: { query: localBuild.query, site: "not a URL" },
-      name: "an invalid HTTP target",
-      reason: "invalid-target" as const,
-    },
-  ])("rejects protected production with $name", ({ build, reason }) =>
-    expectFailure(target({ build, vercel: productionIdentity }), reason)
+  ])("rejects protected production with $name", ({ snapshot }) =>
+    expectFailure(
+      target({ build: { snapshot }, vercel: productionIdentity }),
+      "unisolated-production"
+    )
   );
 
   it.effect.each([

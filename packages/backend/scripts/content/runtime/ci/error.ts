@@ -1,18 +1,8 @@
-import { Schema } from "effect";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
 import stripAnsi from "strip-ansi";
 
-const MAX_COMMAND_ERROR_LENGTH = 500;
+const MAX_COMMAND_ERROR_LENGTH = 2000;
 const WHITESPACE = /\s+/u;
-
-export class ContentRuntimeCiError extends Schema.TaggedError<ContentRuntimeCiError>()(
-  "ContentRuntimeCiError",
-  {
-    message: Schema.String,
-  }
-) {}
-
-export const contentRuntimeCiError = (message: string) =>
-  new ContentRuntimeCiError({ message });
 
 export const sanitizeRuntimeCommandError = (
   text: string,
@@ -30,7 +20,7 @@ export const sanitizeRuntimeCommandError = (
     .trim()
     .split(WHITESPACE)
     .join(" ")
-    .slice(0, MAX_COMMAND_ERROR_LENGTH);
+    .slice(-MAX_COMMAND_ERROR_LENGTH);
 };
 
 export const productionRuntimeReadError = (
@@ -44,7 +34,7 @@ export const productionRuntimeReadError = (
   );
   const message = `Production read for ${table} failed`;
 
-  return contentRuntimeCiError(
+  return contentSnapshotError(
     detail.length > 0 ? `${message}: ${detail}` : `${message}.`
   );
 };

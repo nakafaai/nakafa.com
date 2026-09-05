@@ -1,11 +1,13 @@
+import { convexArticleLayer } from "@repo/backend/content/article/convex";
+import { loadArticleOwner } from "@repo/backend/content/article/owner";
+import { verifyArticle } from "@repo/backend/content/article/verify";
+import { loadMaterialOwner } from "@repo/backend/content/material/owner";
+import { verifyMaterial } from "@repo/backend/content/material/verify";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
-import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
 import type { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
-import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import {
   decodePartnerCursor,
   encodePartnerCursor,
@@ -126,13 +128,6 @@ const readPartnerRows = Effect.fn("contentRelease.readPartnerRows")(function* <
     source.readDescendants(prefixRange(input), remaining)
   );
   const rows = exact === null ? descendants : [exact, ...descendants];
-  if (rows.some((row) => !matchesPrefix(row.contentKey, input.prefix))) {
-    const label = input.family === "article" ? "Article" : "Material";
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `${label} API catalog scan escaped its requested prefix.`
-    );
-  }
   yield* Effect.forEach(rows, source.verify);
   return rows;
 });
@@ -144,8 +139,12 @@ export const readPartnerApiPage = Effect.fn(
   const input = yield* validatePartnerPageInput(rawInput);
   const owner =
     input.family === "article"
-      ? yield* loadArticleOwner(ctx, input.appLocale)
-      : yield* loadMaterialOwner(ctx, input.appLocale);
+      ? yield* loadArticleOwner(input.appLocale).pipe(
+          Effect.provide(convexArticleLayer(ctx))
+        )
+      : yield* loadMaterialOwner(input.appLocale).pipe(
+          Effect.provide(convexPublicationLayer(ctx))
+        );
   const slot = owner.slot;
   if (!(owner.active && owner.managed && slot)) {
     return yield* releaseFail(
@@ -191,7 +190,10 @@ export const readPartnerApiPage = Effect.fn(
               .eq("contentKey", input.prefix)
           )
           .unique(),
-      verify: (row) => verifyArticle(ctx, row, active.sequence),
+      verify: (row) =>
+        verifyArticle(row, active.sequence).pipe(
+          Effect.provide(convexArticleLayer(ctx))
+        ),
     });
   } else {
     rows = yield* readPartnerRows<Doc<"materialCatalog">>(input, {
@@ -226,13 +228,10 @@ export const readPartnerApiPage = Effect.fn(
   const isDone = rows.length <= input.limit;
   let continueCursor = "";
   if (!isDone) {
-    const last = selected.at(-1);
-    if (!last) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `The ${input.family} partner page lost its continuation row.`
-      );
-    }
+    // Positive page limits guarantee a selected row whenever lookahead exists.
+    const last = yield* Effect.fromNullishOr(selected.at(-1)).pipe(
+      Effect.orDie
+    );
     continueCursor = yield* encodePartnerCursor({
       appLocale: input.appLocale,
       activeReleaseId: active.releaseId,

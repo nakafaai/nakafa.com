@@ -39,7 +39,8 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-The main web app is available at [http://localhost:3000](http://localhost:3000).
+Use the HTTPS Portless URL printed by `pnpm dev`. Run `portless get nakafa`
+from the checkout to obtain its branch-specific web URL.
 
 ## Before editing
 
@@ -62,8 +63,9 @@ The main web app is available at [http://localhost:3000](http://localhost:3000).
   modules.
 - Do not add workaround casts, generic errors, wrapper chains, compatibility
   layers, duplicate sources of truth, or dead migration code.
-- Keep tests colocated as `name.test.ts` or `name.test.tsx` and use
-  `vitest.config.ts`.
+- Keep behavior tests colocated as `name.test.ts` beside their owning `.ts`
+  module. Verify React and TSX behavior through Browser or E2E acceptance,
+  and follow the workspace's Vitest configuration.
 - Author educational MDX in Aksara and use the reviewed Nakafa renderer
   components for mathematical notation.
 

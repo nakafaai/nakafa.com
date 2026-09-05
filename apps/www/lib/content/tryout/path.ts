@@ -1,3 +1,4 @@
+import { readTryoutLocalizedPath } from "@repo/backend/content/tryout/metadata";
 import "server-only";
 
 import { api } from "@repo/backend/convex/_generated/api";
@@ -15,6 +16,7 @@ export const readPublishedTryoutLocalizedPath = Effect.fn(
 )(function* (args: TryoutLocalizedPathArgs) {
   return yield* readRuntimeQuery(
     api.tryouts.queries.catalog.getLocalizedPath,
-    args
+    args,
+    readTryoutLocalizedPath
   );
 });

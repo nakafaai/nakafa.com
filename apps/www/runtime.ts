@@ -1,7 +1,9 @@
+import { basename, isAbsolute } from "node:path";
 import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   isProtectedProduction,
 } from "@repo/backend/content/deployment";
+import { CONTENT_SERVING_DESCRIPTOR_FILE } from "@repo/backend/content/snapshot/spec";
 import { convexKeys } from "@repo/backend/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Effect, Schema } from "effect";
@@ -22,8 +24,7 @@ interface VercelIdentity {
 }
 
 interface BuildIdentity {
-  readonly query: string | undefined;
-  readonly site: string | undefined;
+  readonly snapshot: string | undefined;
 }
 
 const FailureSchema = Schema.Literals([
@@ -42,7 +43,7 @@ const messages = {
   "mixed-production":
     "The content runtime query and HTTP targets cannot mix deployments.",
   "unisolated-production":
-    "The protected Vercel build must read content from an isolated local Convex snapshot.",
+    "The protected Vercel build must read content from its verified private snapshot.",
   "untrusted-production":
     "Production content is restricted to the protected Vercel production build. Import the verified snapshot into isolated Convex Agent Mode for local or CI builds.",
 } satisfies Record<Failure, string>;
@@ -111,16 +112,14 @@ function isLoopbackPair(query: string, site: string | undefined) {
 const validateBuildIdentity = Effect.fn("www.runtime.validateBuild")(function* (
   build: BuildIdentity
 ) {
-  if (build.query === undefined && build.site === undefined) {
+  if (build.snapshot === undefined) {
     return;
   }
-  if (build.query === undefined || build.site === undefined) {
-    return yield* failure("unisolated-production");
-  }
-  const queryUrl = yield* decode(build.query);
-  const siteUrl = yield* decode(build.site);
   if (
-    !isLoopbackPair(normalize(queryUrl.hostname), normalize(siteUrl.hostname))
+    !(
+      isAbsolute(build.snapshot) &&
+      basename(build.snapshot) === CONTENT_SERVING_DESCRIPTOR_FILE
+    )
   ) {
     return yield* failure("unisolated-production");
   }
@@ -151,7 +150,7 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
       ) {
         return yield* failure("untrusted-production");
       }
-      if (target.build.query === undefined) {
+      if (target.build.snapshot === undefined) {
         return yield* failure("unisolated-production");
       }
       return;
@@ -192,10 +191,7 @@ export function readRuntimeConfig() {
   const env = createEnv({
     extends: [convexKeys()],
     server: {
-      CONTENT_BUILD_SITE_URL: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      CONTENT_BUILD_URL: Schema.toStandardSchemaV1(
+      CONTENT_BUILD_SNAPSHOT: Schema.toStandardSchemaV1(
         Schema.UndefinedOr(Schema.String)
       ),
       CONVEX_AGENT_MODE: Schema.toStandardSchemaV1(
@@ -236,8 +232,7 @@ export function readRuntimeConfig() {
       ),
     },
     runtimeEnv: {
-      CONTENT_BUILD_SITE_URL: process.env.CONTENT_BUILD_SITE_URL,
-      CONTENT_BUILD_URL: process.env.CONTENT_BUILD_URL,
+      CONTENT_BUILD_SNAPSHOT: process.env.CONTENT_BUILD_SNAPSHOT,
       CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
       VERCEL: process.env.VERCEL,
@@ -255,8 +250,7 @@ export function readRuntimeConfig() {
   const target = {
     agent: env.CONVEX_AGENT_MODE,
     build: {
-      query: env.CONTENT_BUILD_URL,
-      site: env.CONTENT_BUILD_SITE_URL,
+      snapshot: env.CONTENT_BUILD_SNAPSHOT,
     },
     query: env.NEXT_PUBLIC_CONVEX_URL,
     site: env.NEXT_PUBLIC_CONVEX_SITE_URL,

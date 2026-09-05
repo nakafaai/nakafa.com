@@ -7,22 +7,58 @@ import {
   readPublishedMaterialBuckets,
   readPublishedMaterialSitemap,
 } from "@/lib/content/material/sitemap";
+import { makeMaterialRuntimeSource } from "@/test/content/material";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const runtimeReadMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-material");
 
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeReadMock,
+}));
 
 beforeEach(() => {
   runtimeQueryMock.mockReset();
+  runtimeReadMock.mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
 });
 
 describe("published material sitemap", () => {
+  it.effect(
+    "enumerates every localized route through authenticated bucket reads",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeMaterialRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+
+        const inventory = yield* readPublishedMaterialBuckets("de");
+        const pages = yield* Effect.forEach(inventory.buckets, (bucket) =>
+          readPublishedMaterialSitemap("de", bucket).pipe(
+            Effect.flatMap(Effect.fromNullishOr)
+          )
+        );
+        expect(inventory).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          materialCount: 2,
+        });
+        expect(
+          pages
+            .flatMap((page) => page.routes.map((row) => row.publicPath))
+            .sort()
+        ).toEqual(
+          fixture.projections
+            .filter((row) => row.appLocale === "de")
+            .map((row) => row.publicPath)
+            .sort()
+        );
+      })
+  );
+
   it.effect("decodes the release identity and reads one sitemap page", () =>
     Effect.gen(function* () {
       runtimeQueryMock

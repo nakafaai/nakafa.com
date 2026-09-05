@@ -3,6 +3,7 @@ import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { readProgramContext } from "@repo/backend/content/program/context";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import { slugify } from "@repo/design-system/lib/routing/slug";
@@ -39,18 +40,35 @@ export const readPublishedMaterialContext = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(api.contentRelease.program.context, {
-    ...(expectedActiveReleaseId === undefined
-      ? {}
-      : { expectedActiveReleaseId }),
-    contentKey: material.contentKey,
-    appLocale,
-    materialKey: material.materialKey,
-    nodeKey: context.nodeKey,
-    parentPath: material.parentPath,
-    programKey: context.programKey,
-    publicPath: material.publicPath,
-  });
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.program.context,
+    {
+      ...(expectedActiveReleaseId === undefined
+        ? {}
+        : { expectedActiveReleaseId }),
+      contentKey: material.contentKey,
+      appLocale,
+      materialKey: material.materialKey,
+      nodeKey: context.nodeKey,
+      parentPath: material.parentPath,
+      programKey: context.programKey,
+      publicPath: material.publicPath,
+    },
+    (queryArgs) =>
+      readProgramContext(
+        queryArgs.appLocale,
+        queryArgs,
+        queryArgs.expectedActiveReleaseId
+      ).pipe(
+        Effect.map(({ context: resolved, managed }) => ({
+          groupJson: resolved?.groupJson ?? null,
+          managed,
+          mappingJson: resolved?.mappingJson ?? null,
+          parentJson: resolved?.parentJson ?? null,
+          resolvedCanonicalPath: resolved?.resolvedCanonicalPath ?? null,
+        }))
+      )
+  );
   if (!result.managed) {
     return yield* new PublishedProjectionError({
       appLocale,

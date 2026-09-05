@@ -1,15 +1,16 @@
-import { query } from "@repo/backend/convex/_generated/server";
+import { convexMaterialLayer } from "@repo/backend/content/material/convex";
 import {
   readLatestMaterials,
   readMaterialBucket,
-} from "@repo/backend/convex/contentRelease/material/discovery";
-import { readMaterialIdentity } from "@repo/backend/convex/contentRelease/material/identity";
-import { readMaterialModel } from "@repo/backend/convex/contentRelease/material/model";
-import { readMaterialPage } from "@repo/backend/convex/contentRelease/material/page";
+} from "@repo/backend/content/material/discovery";
+import { readMaterialIdentity } from "@repo/backend/content/material/identity";
+import { readMaterialPage } from "@repo/backend/content/material/page";
+import { readMaterialModel } from "@repo/backend/content/material/read";
 import {
   readMaterialBuckets,
   readMaterialSitemap,
-} from "@repo/backend/convex/contentRelease/material/sitemap";
+} from "@repo/backend/content/material/sitemap";
+import { query } from "@repo/backend/convex/_generated/server";
 import { materialApiPageValidator } from "@repo/backend/convex/contentRelease/material/spec";
 import { readPartnerApiPage } from "@repo/backend/convex/contentRelease/partner/page";
 import {
@@ -22,6 +23,7 @@ import {
   paginationResultValidator,
 } from "convex/server";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const materialModelValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
@@ -100,7 +102,10 @@ export const identity = query({
     expectedSectionKey: v.string(),
   },
   returns: materialIdentityValidator,
-  handler: (ctx, args) => runConvexProgram(readMaterialIdentity(ctx, args)),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      readMaterialIdentity(args).pipe(Effect.provide(convexMaterialLayer(ctx)))
+    ),
 });
 
 /** Returns one current signed material partner API page. */
@@ -121,7 +126,11 @@ export const bucket = query({
   args: { appLocale: appLocaleValidator, bucket: v.string() },
   returns: materialBucketValidator,
   handler: (ctx, { appLocale, bucket: bucketId }) =>
-    runConvexProgram(readMaterialBucket(ctx, appLocale, bucketId)),
+    runConvexProgram(
+      readMaterialBucket(appLocale, bucketId).pipe(
+        Effect.provide(convexMaterialLayer(ctx))
+      )
+    ),
 });
 
 /** Returns a bounded newest-first material list for RSS discovery. */
@@ -129,7 +138,11 @@ export const latest = query({
   args: { appLocale: appLocaleValidator, limit: v.number() },
   returns: materialDiscoveryValidator,
   handler: (ctx, { appLocale, limit }) =>
-    runConvexProgram(readLatestMaterials(ctx, appLocale, limit)),
+    runConvexProgram(
+      readLatestMaterials(appLocale, limit).pipe(
+        Effect.provide(convexMaterialLayer(ctx))
+      )
+    ),
 });
 
 /** Resolves one current complete material shell model by localized path. */
@@ -142,7 +155,9 @@ export const publication = query({
   returns: materialModelValidator,
   handler: (ctx, { appLocale, expectedActiveReleaseId, publicPath }) =>
     runConvexProgram(
-      readMaterialModel(ctx, appLocale, publicPath, expectedActiveReleaseId)
+      readMaterialModel(appLocale, publicPath, expectedActiveReleaseId).pipe(
+        Effect.provide(convexMaterialLayer(ctx))
+      )
     ),
 });
 
@@ -151,7 +166,11 @@ export const sitemapBuckets = query({
   args: { appLocale: appLocaleValidator },
   returns: materialBucketsValidator,
   handler: (ctx, { appLocale }) =>
-    runConvexProgram(readMaterialBuckets(ctx, appLocale)),
+    runConvexProgram(
+      readMaterialBuckets(appLocale).pipe(
+        Effect.provide(convexMaterialLayer(ctx))
+      )
+    ),
 });
 
 /** Returns one verified material sitemap partition. */
@@ -159,7 +178,11 @@ export const sitemapPage = query({
   args: { appLocale: appLocaleValidator, bucket: v.string() },
   returns: materialSitemapValidator,
   handler: (ctx, { appLocale, bucket: bucketId }) =>
-    runConvexProgram(readMaterialSitemap(ctx, appLocale, bucketId)),
+    runConvexProgram(
+      readMaterialSitemap(appLocale, bucketId).pipe(
+        Effect.provide(convexMaterialLayer(ctx))
+      )
+    ),
 });
 
 /** Returns one current release-bound page of localized material routes. */
@@ -174,11 +197,10 @@ export const publications = query({
   handler: (ctx, args) =>
     runConvexProgram(
       readMaterialPage(
-        ctx,
         args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
         args.paginationOpts
-      )
+      ).pipe(Effect.provide(convexMaterialLayer(ctx)))
     ),
 });

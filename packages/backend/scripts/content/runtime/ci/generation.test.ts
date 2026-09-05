@@ -1,12 +1,14 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { decodeJsonRows } from "@repo/backend/content/snapshot/json";
 import {
   buildRuntimeGenerations,
+  verifyRuntimeSelection,
+} from "@repo/backend/content/snapshot/selection";
+import {
   formatGenerationEnvironment,
   readProductionGenerations,
-  verifyRuntimeSelection,
 } from "@repo/backend/scripts/content/runtime/ci/generation";
-import { decodeJsonRows } from "@repo/backend/scripts/content/runtime/ci/json";
 import { Effect, FileSystem, Redacted } from "effect";
 
 const runDataMock = vi.hoisted(() => vi.fn());
@@ -136,7 +138,7 @@ describe("content runtime generations", () => {
           changed
         ).pipe(Effect.flip)
       ).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message:
           "Production signed content pointer changed during runtime verification.",
       });
@@ -155,7 +157,7 @@ describe("content runtime generations", () => {
       for (const row of invalidRows) {
         expect(
           yield* buildRuntimeGenerations([row]).pipe(Effect.flip)
-        ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+        ).toMatchObject({ _tag: "ContentSnapshotError" });
       }
     })
   );
@@ -188,7 +190,7 @@ describe("content runtime generations", () => {
         expect(
           yield* buildRuntimeGenerations([row]).pipe(Effect.flip)
         ).toMatchObject({
-          _tag: "ContentRuntimeCiError",
+          _tag: "ContentSnapshotError",
           message:
             "Production contentState has an invalid compaction identity.",
         });
@@ -201,28 +203,28 @@ describe("content runtime generations", () => {
       expect(yield* decodeJsonRows("")).toEqual([]);
       expect(
         yield* buildRuntimeGenerations([]).pipe(Effect.flip)
-      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      ).toMatchObject({ _tag: "ContentSnapshotError" });
       expect(
         yield* buildRuntimeGenerations([...contentState, ...contentState]).pipe(
           Effect.flip
         )
-      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      ).toMatchObject({ _tag: "ContentSnapshotError" });
       const sparse: (typeof contentStateRow)[] = [];
       sparse.length = 1;
       expect(
         yield* buildRuntimeGenerations(sparse).pipe(Effect.flip)
-      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      ).toMatchObject({ _tag: "ContentSnapshotError" });
       expect(
         yield* buildRuntimeGenerations([
           { ...contentStateRow, unexpectedField: true },
         ]).pipe(Effect.flip)
-      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      ).toMatchObject({ _tag: "ContentSnapshotError" });
       const { articleManifestHash: _missing, ...incomplete } = contentStateRow;
       expect(
         yield* buildRuntimeGenerations([incomplete]).pipe(Effect.flip)
-      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      ).toMatchObject({ _tag: "ContentSnapshotError" });
       expect(yield* decodeJsonRows("not-json").pipe(Effect.flip)).toMatchObject(
-        { _tag: "ContentRuntimeCiError" }
+        { _tag: "ContentSnapshotError" }
       );
     })
   );

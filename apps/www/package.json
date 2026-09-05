@@ -2,6 +2,7 @@
   "name": "www",
   "version": "2.0.2",
   "private": true,
+  "type": "module",
   "scripts": {
     "analyze": "ANALYZE=true next build",
     "build": "next build",
@@ -11,7 +12,7 @@
     "doctor": "pnpm dlx react-doctor@0.9.12",
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts",
     "index-now": "node --env-file=.env.local --import tsx scripts/index-now.ts",
-    "start": "next start",
+    "start": "portless run --name nakafa next start",
     "test": "NODE_OPTIONS='--no-experimental-webstorage' vitest run",
     "test:browser": "playwright test",
     "test:coverage": "NODE_OPTIONS='--no-experimental-webstorage' vitest run --coverage",

@@ -1,10 +1,10 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { PublicationRow } from "@repo/backend/content/publication/source";
 
 interface MaterialReadModelIdentity {
   readonly manifestHash: string;
   readonly releaseId: string;
   readonly sequence: number;
-  readonly state: Doc<"contentState">;
+  readonly state: PublicationRow<"contentState">;
 }
 
 /** Checks the material projection against one active release identity. */

@@ -15,6 +15,7 @@ import {
   readPublicContent,
   readPublicContentEvidence,
   readPublicContentEvidenceBatch,
+  readSnapshotPublicContent,
 } from "@repo/backend/client/content/public";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -22,8 +23,11 @@ import {
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
+import { snapshotPublicationLayer } from "@repo/backend/content/publication/snapshot";
+import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
+import { TEST_PROOF_RENDERER } from "@repo/backend/test/content/proof";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -31,6 +35,7 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
+import { makePageRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { Effect } from "effect";
 
 const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
@@ -101,6 +106,76 @@ afterEach(() => {
 });
 
 describe("public content runtime client", () => {
+  it.effect(
+    "reads the exact signed snapshot body and preserves explicit absence without network access",
+    () =>
+      Effect.gen(function* () {
+        const fixture = makePageRuntimeSource();
+        const tables = yield* projectActiveRuntime(fixture.source);
+        yield* Effect.gen(function* () {
+          const selected = {
+            appLocale: fixture.projection.appLocale,
+            publicPath: fixture.projection.publicPath,
+          };
+          const result = yield* readSnapshotPublicContent(
+            selected,
+            TEST_PROOF_RENDERER
+          );
+          expect(result.artifact).toEqual(fixture.artifact);
+          expect(result.sourcePath).toEqual(fixture.projection.sourcePath);
+          expect(result.activeReleaseId).toEqual(fixture.state.activeReleaseId);
+          expect(
+            yield* readSnapshotPublicContent(
+              { ...selected, publicPath: "missing/page" },
+              TEST_PROOF_RENDERER
+            ).pipe(Effect.flip)
+          ).toMatchObject({ _tag: "ContentRuntimeMissingError" });
+          expect(
+            yield* readSnapshotPublicContent(
+              { ...selected, publicPath: "" },
+              TEST_PROOF_RENDERER
+            ).pipe(Effect.flip)
+          ).toEqual(new ContentTransportError({ reason: "request" }));
+        }).pipe(Effect.provide(snapshotPublicationLayer(tables)));
+        expect(fetchMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect("rejects invalid single and batch routes before transport", () =>
+    Effect.gen(function* () {
+      const invalid = { ...input, publicPath: "" };
+      expect(
+        yield* readPublicContentEvidence(target, invalid).pipe(Effect.flip)
+      ).toEqual(new ContentTransportError({ reason: "request" }));
+      expect(
+        yield* readPublicContentEvidenceBatch(target, [invalid]).pipe(
+          Effect.flip
+        )
+      ).toEqual(new ContentTransportError({ reason: "request" }));
+      expect(fetchMock).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect(
+    "rejects malformed batch errors and single-item absence at the batch endpoint",
+    () =>
+      Effect.gen(function* () {
+        fetchMock.mockResolvedValueOnce(
+          createResponse({ unexpected: true }, 500, true, batchEndpoint)
+        );
+        fetchMock.mockResolvedValueOnce(
+          createResponse({ kind: "missing" }, 404, true, batchEndpoint)
+        );
+        for (let index = 0; index < 2; index += 1) {
+          expect(
+            yield* readPublicContentEvidenceBatch(target, [input]).pipe(
+              Effect.flip
+            )
+          ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+        }
+        expect(verifyMock).not.toHaveBeenCalled();
+      })
+  );
   it.live("posts, verifies, and returns one active public artifact", () =>
     Effect.gen(function* () {
       const found = foundResponse();

@@ -1,11 +1,11 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
+import { CONTENT_RUNTIME_TABLES } from "@repo/backend/content/snapshot/tables";
 import {
   createEncryptedArchive,
   decryptAndExtractArchive,
 } from "@repo/backend/scripts/content/runtime/ci/archive";
 import * as commands from "@repo/backend/scripts/content/runtime/ci/command";
-import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
 import { Effect, FileSystem } from "effect";
 
 const CACHE_KEY = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGH";
@@ -53,7 +53,7 @@ describe("content runtime archive", () => {
         Effect.ensuring(Effect.sync(() => command.mockRestore()))
       );
       expect(failure).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message:
           "Signed runtime archive is not AES256 OCB authenticated encryption.",
       });
@@ -95,7 +95,7 @@ describe("content runtime archive", () => {
             Effect.ensuring(Effect.sync(() => command.mockRestore()))
           );
           expect(failure).toMatchObject({
-            _tag: "ContentRuntimeCiError",
+            _tag: "ContentSnapshotError",
             message: "Signed runtime encrypted archive is empty.",
           });
         }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
@@ -126,7 +126,7 @@ describe("content runtime archive", () => {
         Effect.ensuring(Effect.sync(() => command.mockRestore()))
       );
       expect(failure).toMatchObject({
-        _tag: "ContentRuntimeCiError",
+        _tag: "ContentSnapshotError",
         message:
           "Signed runtime authenticated encryption failed: unsupported encryption: [redacted]",
       });
@@ -217,7 +217,7 @@ describe("content runtime archive", () => {
             }).pipe(Effect.flip);
           })
         ).pipe(Effect.provide(NodeServices.layer));
-        expect(failure).toMatchObject({ _tag: "ContentRuntimeCiError" });
+        expect(failure).toMatchObject({ _tag: "ContentSnapshotError" });
       }),
     20_000
   );

@@ -3,9 +3,10 @@ import {
   HeadPageRequestSchema,
   HeadPageSchema,
 } from "@nakafa/aksara-contracts/release/head";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { resolveContentHead } from "@repo/backend/content/publication/projection";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { resolveContentHead } from "@repo/backend/convex/contentRelease/catalog";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { loadReadableSnapshot } from "@repo/backend/convex/contentRelease/snapshot";
 import {
@@ -70,11 +71,10 @@ const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
   const heads: ContentHead[] = [];
   for (const key of stored.page) {
     const head = yield* resolveContentHead(
-      ctx,
       key.contentKey,
       key.artifactLocale,
       sequence
-    );
+    ).pipe(Effect.provide(convexPublicationLayer(ctx)));
     if (head) {
       heads.push(head);
     }

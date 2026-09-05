@@ -50,7 +50,17 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
   function* (
     ctx: MutationCtx,
     slot: ModelSlot,
-    head: WithoutSystemFields<Doc<"contentHeads">>,
+    head: Pick<
+      Doc<"contentHeads">,
+      | "operation"
+      | "delivery"
+      | "projectionHash"
+      | "contentKey"
+      | "artifactLocale"
+      | "family"
+      | "releaseId"
+      | "sequence"
+    >,
     projection: ContentProjection,
     plainText: string
   ) {

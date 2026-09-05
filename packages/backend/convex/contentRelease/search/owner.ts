@@ -1,13 +1,16 @@
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import { Effect } from "effect";
 
 /** Loads active ownership only when the public search model is fully synced. */
 export const loadSearchOwner = Effect.fn("contentRelease.loadSearchOwner")(
   function* (ctx: QueryCtx) {
-    const active = yield* loadActiveIdentity(ctx);
+    const active = yield* loadActiveIdentity().pipe(
+      Effect.provide(convexPublicationLayer(ctx))
+    );
     if (!active) {
       return null;
     }

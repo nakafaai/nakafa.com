@@ -1,12 +1,17 @@
 import { tmpdir } from "node:os";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
+import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
 import {
   assertBuildHost,
   buildApplication,
   startApplication,
 } from "@repo/backend/scripts/content/runtime/build";
-import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
+import {
+  makeRuntimeSource,
+  TEST_SNAPSHOT_SELECTION_HASH,
+} from "@repo/backend/test/content/snapshot";
 import { Effect, FileSystem } from "effect";
 
 const mocks = vi.hoisted(() => ({
@@ -14,13 +19,14 @@ const mocks = vi.hoisted(() => ({
   command: vi.fn(),
   export: vi.fn(),
   generations: vi.fn(),
+  generationRead: vi.fn(),
   import: vi.fn(),
   initialize: vi.fn(),
   lease: vi.fn(),
   read: vi.fn(),
   release: vi.fn(),
   reserve: vi.fn(),
-  verify: vi.fn(),
+  snapshot: vi.fn(),
   backend: vi.fn(),
 }));
 vi.mock("@repo/backend/scripts/content/runtime/ci/command", () => ({
@@ -30,11 +36,13 @@ vi.mock("@repo/backend/scripts/content/runtime/ci/export", () => ({
   exportSignedRuntime: mocks.export,
 }));
 vi.mock("@repo/backend/scripts/content/runtime/ci/import", () => ({
-  importSignedRuntime: mocks.import,
+  importRuntimeTables: mocks.import,
+}));
+vi.mock("@repo/backend/scripts/content/runtime/ci/read", () => ({
+  readSignedRuntime: mocks.snapshot,
 }));
 vi.mock("@repo/backend/scripts/content/runtime/ci/generation", () => ({
   readProductionGenerations: mocks.generations,
-  verifyRuntimeSelection: mocks.verify,
 }));
 vi.mock("@repo/backend/scripts/content/runtime/local", async (load) => ({
   ...(await load<
@@ -53,10 +61,8 @@ vi.mock("@repo/backend/scripts/content/runtime/process", async (load) => ({
   runBuildCommand: mocks.compile,
   withLocalBackend: mocks.backend,
 }));
-vi.mock("@repo/backend/scripts/content/runtime/tables", async (load) => ({
-  ...(await load<
-    typeof import("@repo/backend/scripts/content/runtime/tables")
-  >()),
+vi.mock("@repo/backend/content/snapshot/tables", async (load) => ({
+  ...(await load<typeof import("@repo/backend/content/snapshot/tables")>()),
   readContentRuntimeSchemaFingerprint: () => Effect.succeed("a".repeat(64)),
 }));
 
@@ -96,7 +102,7 @@ const fixture = Effect.gen(function* () {
     query: "http://127.0.0.1:43120",
     site: "http://127.0.0.1:43121",
     runtimeSchemaFingerprint: "a".repeat(64),
-    runtimeSelectionHash: "b".repeat(64),
+    runtimeSelectionHash: TEST_SNAPSHOT_SELECTION_HASH,
   };
   mocks.reserve.mockImplementation(() =>
     fs
@@ -126,9 +132,14 @@ describe("shared application build lifecycle", () => {
     mocks.read.mockReturnValue(Effect.void);
     mocks.backend.mockImplementation((_runtime, program) => program);
     mocks.generations.mockReturnValue(
-      Effect.succeed({ runtimeSelectionHash: "b".repeat(64) })
+      Effect.sync(() => {
+        mocks.generationRead();
+        return { runtimeSelectionHash: TEST_SNAPSHOT_SELECTION_HASH };
+      })
     );
-    mocks.verify.mockReturnValue(Effect.void);
+    mocks.snapshot.mockReturnValue(
+      projectActiveRuntime(makeRuntimeSource().source)
+    );
     mocks.command.mockImplementation(
       (spec: { command: string; args: readonly string[] }) =>
         Effect.gen(function* () {
@@ -175,7 +186,7 @@ describe("shared application build lifecycle", () => {
             yield* buildApplication("/unused", [], { ...host, ...change }).pipe(
               Effect.flip
             )
-          ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+          ).toMatchObject({ _tag: "ContentSnapshotError" });
           expect(mocks.reserve).not.toHaveBeenCalled();
           expect(mocks.generations).not.toHaveBeenCalled();
         }).pipe(Effect.provide(NodeServices.layer))
@@ -188,8 +199,8 @@ describe("shared application build lifecycle", () => {
       Effect.gen(function* () {
         yield* buildApplication("/checkout", ["--filter=www"], {});
         expect(mocks.compile).toHaveBeenCalledWith("/checkout", [
-          "exec",
-          "turbo",
+          process.execPath,
+          "/checkout/node_modules/turbo/bin/turbo",
           "run",
           "build",
           "--filter=www",
@@ -207,6 +218,9 @@ describe("shared application build lifecycle", () => {
         expect(mocks.import).toHaveBeenCalledWith(
           expect.objectContaining({
             runtimeSelectionHash: runtime.runtimeSelectionHash,
+          }),
+          expect.objectContaining({
+            contentState: [makeRuntimeSource().state],
           }),
           runtime.backend
         );
@@ -232,7 +246,12 @@ describe("shared application build lifecycle", () => {
         expect(mocks.compile).toHaveBeenCalledTimes(3);
         expect(mocks.compile).toHaveBeenLastCalledWith(
           root,
-          ["exec", "turbo", "run", "build"],
+          [
+            process.execPath,
+            `${root}/node_modules/turbo/bin/turbo`,
+            "run",
+            "build",
+          ],
           expect.objectContaining({ NEXT_PUBLIC_CONVEX_URL: runtime.query })
         );
         mocks.compile.mockClear();
@@ -240,7 +259,13 @@ describe("shared application build lifecycle", () => {
         expect(mocks.compile).toHaveBeenCalledOnce();
         expect(mocks.compile).toHaveBeenCalledWith(
           root,
-          ["exec", "turbo", "run", "start", "--filter=www"],
+          [
+            process.execPath,
+            `${root}/node_modules/turbo/bin/turbo`,
+            "run",
+            "start",
+            "--filter=www",
+          ],
           expect.objectContaining({ NEXT_PUBLIC_CONVEX_URL: runtime.query })
         );
         expect(mocks.lease).toHaveBeenCalledTimes(2);
@@ -254,8 +279,8 @@ describe("shared application build lifecycle", () => {
       Effect.gen(function* () {
         yield* startApplication("/checkout", []);
         expect(mocks.compile).toHaveBeenCalledWith("/checkout", [
-          "exec",
-          "turbo",
+          process.execPath,
+          "/checkout/node_modules/turbo/bin/turbo",
           "run",
           "start",
         ]);
@@ -270,7 +295,9 @@ describe("shared application build lifecycle", () => {
         Effect.gen(function* () {
           const { fs, root, runtime } = yield* fixture;
           if (source === "missing") {
-            mocks.command.mockReturnValue(contentRuntimeCiError("not found"));
+            mocks.command.mockReturnValue(
+              Effect.fail(contentSnapshotError("not found"))
+            );
           }
           if (source === "empty") {
             mocks.command.mockReturnValue(Effect.void);
@@ -284,7 +311,7 @@ describe("shared application build lifecycle", () => {
           expect(mocks.export).toHaveBeenCalledTimes(
             source === "download" ? 0 : 1
           );
-          expect(mocks.verify).toHaveBeenCalledTimes(2);
+          expect(mocks.generationRead).toHaveBeenCalledTimes(3);
           expect(mocks.compile).toHaveBeenCalledTimes(3);
           expect(yield* fs.readFileString(output)).toBe(
             `CONTENT_RUNTIME_SELECTION_HASH=${runtime.runtimeSelectionHash}\n`
@@ -295,7 +322,7 @@ describe("shared application build lifecycle", () => {
   }
 
   it.live(
-    "keeps production browser URLs while Vercel reads local content and erases its runtime",
+    "keeps production browser URLs while Vercel compiles the verified file snapshot and removes temporary state",
     () =>
       Effect.gen(function* () {
         const { root, runtime } = yield* fixture;
@@ -305,14 +332,25 @@ describe("shared application build lifecycle", () => {
         );
         expect(mocks.compile).toHaveBeenLastCalledWith(
           root,
-          ["exec", "turbo", "run", "build", "--filter=www"],
+          [
+            process.execPath,
+            `${root}/node_modules/turbo/bin/turbo`,
+            "run",
+            "build",
+            "--filter=www",
+          ],
           expect.objectContaining({
-            CONTENT_BUILD_URL: runtime.query,
+            CONTENT_BUILD_SNAPSHOT: `${runtime.directory}/serving/snapshot.json`,
+            CONTENT_RUNTIME_SELECTION_HASH: TEST_SNAPSHOT_SELECTION_HASH,
+            CONTENT_RUNTIME_SCHEMA_HASH: runtime.runtimeSchemaFingerprint,
             NEXT_PUBLIC_CONVEX_URL: host.NEXT_PUBLIC_CONVEX_URL,
             NEXT_PUBLIC_CONVEX_SITE_URL: host.VITE_CONVEX_SITE_URL,
             TURBO_CONCURRENCY: "2",
           })
         );
+        expect(mocks.initialize).not.toHaveBeenCalled();
+        expect(mocks.backend).not.toHaveBeenCalled();
+        expect(mocks.import).not.toHaveBeenCalled();
         expect(mocks.release).toHaveBeenCalledOnce();
       }).pipe(Effect.provide(NodeServices.layer))
   );
@@ -324,23 +362,29 @@ describe("shared application build lifecycle", () => {
           ...host,
           CONTENT_RUNTIME_SNAPSHOT: "/stale",
         }).pipe(Effect.flip)
-      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      ).toMatchObject({ _tag: "ContentSnapshotError" });
       expect(mocks.reserve).not.toHaveBeenCalled();
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.live("releases temporary state when signed import fails", () =>
-    Effect.gen(function* () {
-      const { root, supplied } = yield* fixture;
-      mocks.import.mockReturnValue(contentRuntimeCiError("signature rejected"));
-      expect(
-        yield* buildApplication(root, [], supplied).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "ContentRuntimeCiError",
-        message: "signature rejected",
-      });
-      expect(mocks.compile).not.toHaveBeenCalled();
-      expect(mocks.release).toHaveBeenCalledOnce();
-    }).pipe(Effect.provide(NodeServices.layer))
+  it.live(
+    "releases temporary state before compilation when snapshot authentication fails",
+    () =>
+      Effect.gen(function* () {
+        const { root, supplied } = yield* fixture;
+        mocks.snapshot.mockReturnValue(
+          Effect.fail(contentSnapshotError("signature rejected"))
+        );
+        expect(
+          yield* buildApplication(root, [], supplied).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentSnapshotError",
+          message: "signature rejected",
+        });
+        expect(mocks.compile).not.toHaveBeenCalled();
+        expect(mocks.initialize).not.toHaveBeenCalled();
+        expect(mocks.import).not.toHaveBeenCalled();
+        expect(mocks.release).toHaveBeenCalledOnce();
+      }).pipe(Effect.provide(NodeServices.layer))
   );
 });

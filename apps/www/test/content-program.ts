@@ -222,7 +222,8 @@ const germanSubject = CurriculumRouteSchema.make({
   title: "Mathematik",
 });
 
-const publishedRoutes = [
+/** Complete localized curriculum fixture used by authenticated snapshot tests. */
+export const testPublishedCurriculumRoutes = [
   englishRoot,
   englishClass,
   englishSubject,
@@ -241,7 +242,7 @@ export function readTestPublishedRoute(
   publicPath: string,
   locale: ActiveAppLocaleCode = "en"
 ) {
-  const route = publishedRoutes.find(
+  const route = testPublishedCurriculumRoutes.find(
     (candidate) =>
       candidate.appLocale === locale && candidate.publicPath === publicPath
   );

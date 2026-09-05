@@ -1,13 +1,16 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import { Effect } from "effect";
 
 /** Reads localized options and route counts from one verified Tryout catalog. */
 export const readTryoutTaxonomy = Effect.fn(
   "contentRelease.readTryoutTaxonomy"
 )(function* (ctx: QueryCtx, locale: AppLocaleCode) {
-  const catalog = yield* loadTryoutCatalog(ctx, locale);
+  const catalog = yield* loadTryoutCatalog(locale).pipe(
+    Effect.provide(convexTryoutLayer(ctx))
+  );
   const countries: Array<{ id: string; label: string }> = [];
   const exams = new Map<string, string>();
 

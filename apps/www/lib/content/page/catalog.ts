@@ -8,6 +8,7 @@ import {
   canonicalizePublicPageProjection,
   type PublicPageProjection,
 } from "@nakafa/aksara-contracts/projection/page";
+import { readPageCatalog } from "@repo/backend/content/publication/page";
 import { api } from "@repo/backend/convex/_generated/api";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
@@ -47,7 +48,11 @@ export const readPublishedPageCatalog = Effect.fn(
     appLocale: AppLocaleSchema.make(routing.defaultLocale),
     publicPath: "pages",
   };
-  const result = yield* readRuntimeQuery(api.contentRelease.page.catalog, {});
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.page.catalog,
+    {},
+    () => readPageCatalog()
+  );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     undefined,

@@ -12,9 +12,16 @@ import {
   readPublishedMaterialPage,
   readPublishedMaterialRoutes,
 } from "@/lib/content/material/catalog";
+import { makeMaterialRuntimeSource } from "@/test/content/material";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
+import {
+  createTestRuntimeQuery,
+  createTestSnapshotQuery,
+} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const runtimeReadMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 const manifestHash = `sha256:${"a".repeat(64)}`;
 const releaseId = "release-material";
@@ -23,12 +30,9 @@ const sourceRevision = "a".repeat(40);
 vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeReadMock,
+}));
 
 /** Builds one bounded material page returned by Convex. */
 function materialPage({
@@ -60,10 +64,27 @@ function materialPage({
 
 beforeEach(() => {
   runtimeQueryMock.mockReset();
+  runtimeReadMock.mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
   cacheMock.mockReset();
 });
 
 describe("published material catalog", () => {
+  it.effect("reads the localized catalog from authenticated serving rows", () =>
+    Effect.gen(function* () {
+      const fixture = yield* makeMaterialRuntimeSource();
+      const context = yield* createTestSnapshotContext(fixture.source);
+      runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+
+      const catalog = yield* readPublishedMaterialRoutes("en");
+      expect(catalog).toMatchObject({
+        activeManifestHash: fixture.state.activeManifestHash,
+        activeReleaseId: fixture.state.activeReleaseId,
+        routes: fixture.projections.filter((row) => row.appLocale === "en"),
+      });
+      expect(runtimeQueryMock).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("decodes one bounded release page", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockResolvedValueOnce(materialPage({ done: false }));

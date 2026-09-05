@@ -3,13 +3,13 @@ import type {
   SignedContentRelease,
 } from "@nakafa/aksara-contracts/release";
 import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeReceiptJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
 
 /** Checks that every staged counter is an exact nonnegative integer. */
-function hasStageCounters(release: Doc<"contentReleases">) {
+function hasStageCounters(release: PublicationRow<"contentReleases">) {
   return [
     release.stagedArtifacts,
     release.stagedDeletes,
@@ -24,7 +24,7 @@ function hasStageCounters(release: Doc<"contentReleases">) {
 
 /** Checks the durable verifier cursor against the signed item count. */
 function hasCheckedCursor(
-  release: Doc<"contentReleases">,
+  release: PublicationRow<"contentReleases">,
   manifest: ContentReleaseManifest
 ) {
   return (
@@ -35,7 +35,7 @@ function hasCheckedCursor(
 
 /** Derives the exact publication receipt from signed immutable counts. */
 export function makePublicationReceipt(
-  release: Doc<"contentReleases">,
+  release: PublicationRow<"contentReleases">,
   signed: SignedContentRelease
 ) {
   const manifest = signed.manifest;
@@ -61,7 +61,10 @@ export function makePublicationReceipt(
 /** Binds one receipt to every signed immutable operation count. */
 export const publicationReceipt = Effect.fn(
   "contentRelease.publicationReceipt"
-)(function* (release: Doc<"contentReleases">, signed: SignedContentRelease) {
+)(function* (
+  release: PublicationRow<"contentReleases">,
+  signed: SignedContentRelease
+) {
   const manifest = signed.manifest;
   const bound =
     release.releaseId === manifest.releaseId &&
@@ -84,7 +87,10 @@ export const publicationReceipt = Effect.fn(
 
 /** Validates resumable preactivation counters and verifier progress. */
 export const stagedEvidence = Effect.fn("contentRelease.stagedEvidence")(
-  function* (release: Doc<"contentReleases">, signed: SignedContentRelease) {
+  function* (
+    release: PublicationRow<"contentReleases">,
+    signed: SignedContentRelease
+  ) {
     const manifest = signed.manifest;
     const staging = release.status === "staging";
     const checking = release.status === "verifying";
@@ -167,7 +173,10 @@ export const stagedEvidence = Effect.fn("contentRelease.stagedEvidence")(
 
 /** Validates terminal durability before exposing active release evidence. */
 export const completedReceipt = Effect.fn("contentRelease.completedReceipt")(
-  function* (release: Doc<"contentReleases">, signed: SignedContentRelease) {
+  function* (
+    release: PublicationRow<"contentReleases">,
+    signed: SignedContentRelease
+  ) {
     const expected = yield* publicationReceipt(release, signed);
     if (
       release.status !== "completed" ||

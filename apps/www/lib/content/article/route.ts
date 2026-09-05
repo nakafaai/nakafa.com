@@ -5,6 +5,7 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
+import { readArticleModel } from "@repo/backend/content/article/model";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -43,13 +44,22 @@ export const readPublishedArticleRoute = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(api.contentRelease.article.route, {
-    ...(expectedActiveReleaseId === undefined
-      ? {}
-      : { expectedActiveReleaseId }),
-    appLocale,
-    publicPath,
-  });
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.article.route,
+    {
+      ...(expectedActiveReleaseId === undefined
+        ? {}
+        : { expectedActiveReleaseId }),
+      appLocale,
+      publicPath,
+    },
+    (queryArgs) =>
+      readArticleModel(
+        queryArgs.appLocale,
+        queryArgs.publicPath,
+        queryArgs.expectedActiveReleaseId
+      )
+  );
   const [activeAppLocales, activeReleaseId] = yield* Effect.all([
     Schema.decodeUnknownEffect(ActiveAppLocaleListSchema)(
       result.activeAppLocales

@@ -1,7 +1,19 @@
 import { describe, expect, it } from "@effect/vitest";
-import { listCurriculumPrograms } from "@repo/backend/convex/learningPreferences/program";
+import { makeProgramSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { setPreferredCurriculumProgram } from "@repo/backend/convex/learningPreferences/impl";
+import {
+  listCurriculumPrograms,
+  readCurrentCurriculumProgram,
+  saveCurriculumProgram,
+} from "@repo/backend/convex/learningPreferences/program";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import {
+  createConvexTestWithBetterAuth,
+  seedAuthenticatedUser,
+} from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateProgramSnapshot,
@@ -9,9 +21,143 @@ import {
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 describe("learningPreferences/program", () => {
+  it.effect("returns no curriculum for a retired saved key", () =>
+    Effect.gen(function* () {
+      const test = createConvexTestWithBetterAuth();
+      const data = yield* makeProgramSnapshotData();
+      yield* Effect.promise(() => activateProgramSnapshot(test, data));
+      const userId = yield* Effect.promise(() =>
+        test.mutation(async (ctx) => {
+          const user = await seedAuthenticatedUser(ctx, { now: 1 });
+          await runConvexProgram(
+            setPreferredCurriculumProgram({
+              ctx,
+              now: 1,
+              programKey: "retired-program",
+              userId: user.userId,
+            })
+          );
+          return user.userId;
+        })
+      );
+      expect(
+        yield* Effect.promise(() =>
+          test.query((ctx) =>
+            runConvexProgram(readCurrentCurriculumProgram(ctx, "en", userId))
+          )
+        )
+      ).toBeNull();
+    })
+  );
+
+  it.effect(
+    "maps preference read and write failures to the curriculum error contract",
+    () =>
+      Effect.gen(function* () {
+        const test = createConvexTestWithBetterAuth();
+        const data = yield* makeProgramSnapshotData();
+        yield* Effect.promise(() => activateProgramSnapshot(test, data));
+        const userId = yield* Effect.promise(() =>
+          test.mutation(
+            async (ctx) => (await seedAuthenticatedUser(ctx, { now: 1 })).userId
+          )
+        );
+        yield* Effect.promise(() =>
+          test.query(async (ctx) => {
+            vi.spyOn(ctx.db, "query").mockImplementation(() => {
+              throw new TypeError("private query detail");
+            });
+            const failure = await runConvexProgram(
+              readCurrentCurriculumProgram(ctx, "en", userId).pipe(
+                Effect.flip,
+                Effect.orDie
+              )
+            );
+            expect(failure).toMatchObject({
+              _tag: "CurriculumPreferenceError",
+              code: "CURRICULUM_PREFERENCE_IO_FAILED",
+            });
+            expect(JSON.stringify(failure)).not.toContain(
+              "private query detail"
+            );
+          })
+        );
+        yield* Effect.promise(() =>
+          test.mutation(async (ctx) => {
+            vi.spyOn(ctx.db, "insert").mockRejectedValue(
+              "private write detail"
+            );
+            const failure = await runConvexProgram(
+              saveCurriculumProgram(
+                ctx,
+                "en",
+                "technical-program-1",
+                userId
+              ).pipe(Effect.flip, Effect.orDie)
+            );
+            expect(failure).toMatchObject({
+              _tag: "CurriculumPreferenceError",
+              code: "CURRICULUM_PREFERENCE_IO_FAILED",
+            });
+            expect(JSON.stringify(failure)).not.toContain(
+              "private write detail"
+            );
+          })
+        );
+      })
+  );
+
+  it.effect(
+    "rejects a signed program row that loses its requested translation",
+    () =>
+      Effect.gen(function* () {
+        const test = convexTest(schema, convexModules);
+        const data = yield* makeProgramSnapshotData([makeTechnicalProgram(1)]);
+        yield* Effect.promise(() => activateProgramSnapshot(test, data));
+        const original = makeTechnicalProgram(1);
+        const program = yield* Schema.decodeUnknownEffect(
+          LearningProgramSchema
+        )({
+          ...original,
+          translations: original.translations.filter(
+            ({ appLocale }) => appLocale !== "en"
+          ),
+        });
+        const record = yield* makeProgramSnapshotRow(program);
+        yield* Effect.promise(() =>
+          test.mutation(async (ctx) => {
+            const row = await ctx.db.query("programCatalog").unique();
+            if (!row) {
+              expect.fail("Expected the current program catalog row.");
+            }
+            await ctx.db.patch("programCatalog", row._id, {
+              rowHash: record.rowHash,
+              rowJson: canonicalizeContentSnapshotRow({
+                family: "program",
+                record,
+              }),
+            });
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            test.query((ctx) =>
+              runConvexProgram(listCurriculumPrograms(ctx, "en"))
+            )
+          ).rejects.toMatchObject({
+            data: {
+              code: "CURRICULUM_PREFERENCE_IO_FAILED",
+              message:
+                "Curriculum program technical-program-1 has no en translation.",
+            },
+          })
+        );
+      })
+  );
+
   it.effect("fails closed when no signed program snapshot is active", () => {
     const t = convexTest(schema, convexModules);
 

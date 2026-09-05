@@ -1,14 +1,15 @@
 import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { TryoutCountry } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
+import { readTryoutCatalogRowByIdentity } from "@repo/backend/content/tryout/row";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { readTryoutCatalogRowByIdentity } from "@repo/backend/convex/tryouts/catalog/row";
 import { Effect, Schema } from "effect";
 
 type PreferenceCtx = MutationCtx | QueryCtx;
@@ -71,17 +72,18 @@ export const readActiveTryoutCountry = Effect.fn(
   ctx: QueryCtx,
   args: { readonly countryKey: string; readonly locale: Locale }
 ) {
-  const owner = yield* loadTryoutOwner(ctx);
+  const owner = yield* loadTryoutOwner().pipe(
+    Effect.provide(convexTryoutLayer(ctx))
+  );
   const identity = tryoutCatalogNodeIdentity({
     appLocale: ActiveAppLocaleSchema.make(args.locale),
     countryKey: args.countryKey,
     kind: "country",
   });
   const country = yield* readTryoutCatalogRowByIdentity(
-    ctx,
     owner.snapshotId,
     identity
-  );
+  ).pipe(Effect.provide(convexTryoutLayer(ctx)));
   return country?.kind === "country" ? country : null;
 });
 

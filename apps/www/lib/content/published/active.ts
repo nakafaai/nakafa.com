@@ -1,3 +1,4 @@
+import { readActiveIdentity } from "@repo/backend/content/publication/read";
 import "server-only";
 import {
   ReleaseIdSchema,
@@ -25,7 +26,8 @@ export const readActiveContentIdentity = Effect.fn(
 )(function* () {
   const identity = yield* readRuntimeQuery(
     api.contentRelease.runtime.active.read,
-    {}
+    {},
+    () => readActiveIdentity()
   );
   return yield* Schema.decodeEffect(ActiveContentIdentitySchema)(identity);
 });

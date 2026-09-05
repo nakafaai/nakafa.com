@@ -208,6 +208,9 @@ const nextConfig = {
   // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/output
   // `process.cwd()` resolves to the app directory (`apps/www`) during Next.js
   // config loading, so walking up two levels targets the monorepo root.
+  outputFileTracingExcludes: {
+    "/*": ["../../.cache/runtime/**"],
+  },
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
   outputFileTracingIncludes: {
     "/llms.mdx/[...slug]": [

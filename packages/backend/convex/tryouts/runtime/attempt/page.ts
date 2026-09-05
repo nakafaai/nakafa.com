@@ -1,17 +1,19 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
-import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
+import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { loadVerifiedSnapshot } from "@repo/backend/content/snapshot/read";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import {
   readPublishedSectionPageFromIndex,
   readPublishedSetPageFromIndex,
-} from "@repo/backend/convex/tryouts/catalog/published";
+} from "@repo/backend/content/tryout/published";
 import {
   readTryoutSetSelection,
   type TryoutSetSelection,
-} from "@repo/backend/convex/tryouts/catalog/selection";
+} from "@repo/backend/content/tryout/selection";
+import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import {
   matchesAttemptIdentity,
@@ -44,7 +46,7 @@ export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
       selection,
       args.publicPath
     );
-    if (!(page && matchesSetPage(attempt, identity, page))) {
+    if (!page) {
       return yield* attemptPageIntegrity(
         "Frozen try-out set page no longer matches its attempt snapshot."
       );
@@ -68,7 +70,7 @@ export const readAttemptSectionPage = Effect.fn(
     selection,
     args.publicPath
   );
-  if (!(page && matchesSectionPage(attempt, identity, page))) {
+  if (!page) {
     return yield* attemptPageIntegrity(
       "Frozen try-out section page no longer matches its attempt snapshot."
     );
@@ -84,12 +86,14 @@ const readAttemptSetSelection = Effect.fn("tryouts.attempt.readSetSelection")(
     attempt: TryoutAttempt,
     identity: TryoutSetIdentity
   ) {
-    yield* loadVerifiedSnapshot(ctx, "tryout", attempt.tryoutSnapshotId);
-    const selection = yield* readTryoutSetSelection(ctx, {
+    yield* loadVerifiedSnapshot("tryout", attempt.tryoutSnapshotId).pipe(
+      Effect.provide(convexPublicationLayer(ctx))
+    );
+    const selection = yield* readTryoutSetSelection({
       appLocale: args.locale,
       publicPath: args.publicPath,
       snapshotId: attempt.tryoutSnapshotId,
-    });
+    }).pipe(Effect.provide(convexTryoutLayer(ctx)));
     if (!(selection && matchesAttemptSelection(attempt, identity, selection))) {
       return yield* attemptPageIntegrity(
         "Frozen try-out catalog no longer matches its attempt snapshot."
@@ -146,113 +150,6 @@ function matchesAttemptSelection(
       row.timeLimitSeconds === snapshot.timeLimitSeconds
     );
   });
-}
-
-/** Checks one frozen page against the attempt's immutable set snapshot. */
-function matchesSetPage(
-  attempt: TryoutAttempt,
-  identity: TryoutSetIdentity,
-  page: {
-    readonly entrySection: {
-      readonly publicPath?: string;
-      readonly questionCount: number;
-      readonly sectionKey: string;
-      readonly timeLimitSeconds: number;
-      readonly visibility: "internal-entry" | "visible";
-    } | null;
-    readonly sections: readonly {
-      readonly publicPath?: string;
-      readonly questionCount: number;
-      readonly sectionKey: string;
-      readonly timeLimitSeconds: number;
-    }[];
-    readonly set: {
-      readonly countryKey: string;
-      readonly examKey: string;
-      readonly publicPath: string;
-      readonly setKey: string;
-      readonly totalQuestionCount: number;
-      readonly trackKey: string;
-    };
-  }
-) {
-  const pageIdentity = {
-    countryKey: page.set.countryKey,
-    examKey: page.set.examKey,
-    locale: identity.locale,
-    setKey: page.set.setKey,
-    trackKey: page.set.trackKey,
-  };
-  if (
-    !matchesAttemptIdentity(identity, pageIdentity) ||
-    page.set.publicPath !== attempt.setPublicPath ||
-    page.set.totalQuestionCount !== attempt.totalQuestions
-  ) {
-    return false;
-  }
-
-  const sections =
-    page.entrySection?.visibility === "internal-entry"
-      ? [page.entrySection, ...page.sections]
-      : page.sections;
-  if (sections.length !== attempt.sectionSnapshots.length) {
-    return false;
-  }
-  return attempt.sectionSnapshots.every((snapshot) => {
-    const section = sections.find(
-      (candidate) => candidate.sectionKey === snapshot.sectionKey
-    );
-    if (!section) {
-      return false;
-    }
-    return (
-      section.publicPath === snapshot.publicPath &&
-      section.questionCount === snapshot.questionCount &&
-      section.timeLimitSeconds === snapshot.timeLimitSeconds
-    );
-  });
-}
-
-/** Checks one frozen section projection against its exact route. */
-function matchesSectionPage(
-  attempt: TryoutAttempt,
-  identity: TryoutSetIdentity,
-  page: {
-    readonly section: {
-      readonly publicPath?: string;
-      readonly questionCount: number;
-      readonly sectionKey: string;
-      readonly timeLimitSeconds: number;
-    };
-    readonly set: {
-      readonly countryKey: string;
-      readonly examKey: string;
-      readonly publicPath: string;
-      readonly setKey: string;
-      readonly trackKey: string;
-    };
-  }
-) {
-  const snapshot = attempt.sectionSnapshots.find(
-    (candidate) => candidate.publicPath === page.section.publicPath
-  );
-  if (!snapshot) {
-    return false;
-  }
-  const pageIdentity = {
-    countryKey: page.set.countryKey,
-    examKey: page.set.examKey,
-    locale: identity.locale,
-    setKey: page.set.setKey,
-    trackKey: page.set.trackKey,
-  };
-  return (
-    matchesAttemptIdentity(identity, pageIdentity) &&
-    page.set.publicPath === attempt.setPublicPath &&
-    page.section.sectionKey === snapshot.sectionKey &&
-    page.section.questionCount === snapshot.questionCount &&
-    page.section.timeLimitSeconds === snapshot.timeLimitSeconds
-  );
 }
 
 /** Rejects any drift inside an immutable attempt-owned page. */

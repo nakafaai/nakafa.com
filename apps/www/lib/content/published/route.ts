@@ -1,3 +1,4 @@
+import { readRouteOwnership } from "@repo/backend/content/publication/route";
 import "server-only";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
@@ -96,7 +97,9 @@ export const readActiveContentRoute = Effect.fn(
   };
   const result = yield* readRuntimeQuery(
     api.contentRelease.ownership.resolve,
-    args
+    args,
+    ({ family, appLocale, publicPath }) =>
+      readRouteOwnership(family, appLocale, publicPath)
   );
   if (result.kind === "unmanaged") {
     const activeReleaseId = yield* Schema.decodeEffect(

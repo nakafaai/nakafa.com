@@ -1,7 +1,10 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { MAX_PROTECTED_RUNTIME_REQUEST_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
+import {
+  MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
+  MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
+} from "@nakafa/aksara-contracts/runtime/protected/limits";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/protected/dispatch";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -113,6 +116,25 @@ describe("contentRelease/runtime/protected/dispatch", () => {
       runDispatch(t, JSON.stringify(fixture.request))
     ).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+      status: 500,
+    });
+  });
+
+  it("bounds the complete signed batch even when every stored artifact fits", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const fixture = await t.mutation((ctx) =>
+      insertProtectedRuntime(ctx, {
+        compiledCode: "x".repeat(
+          Math.ceil(MAX_PROTECTED_RUNTIME_RESPONSE_BYTES / 6)
+        ),
+        questionCount: 3,
+      })
+    );
+    expect(fixture.request.selectors).toHaveLength(6);
+    await expect(
+      runDispatch(t, JSON.stringify(fixture.request))
+    ).resolves.toEqual({
+      body: '{"code":"CONTENT_RUNTIME_RESPONSE_TOO_LARGE","kind":"failure"}',
       status: 500,
     });
   });

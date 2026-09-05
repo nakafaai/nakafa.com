@@ -6,9 +6,14 @@ import {
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
+  ACTIVE_APP_LOCALE_CODES,
   AppLocaleSchema,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
+import {
+  makePageRuntimeSource,
+  TEST_SNAPSHOT_RELEASE,
+} from "@repo/backend/test/content/snapshot";
 import { Effect } from "effect";
 import {
   getPublishedPageCatalog,
@@ -16,7 +21,9 @@ import {
   readPublishedPageLocalePath,
   verifyPublishedPageCatalog,
 } from "@/lib/content/page/catalog";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { testPageProjection } from "@/test/content-page";
+import { createTestSnapshotQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -53,6 +60,40 @@ describe("published Page catalog", () => {
       })
     );
   });
+
+  it.effect(
+    "reads the inherited Page and active release identity from authenticated snapshot rows",
+    () =>
+      Effect.gen(function* () {
+        const locales = ACTIVE_APP_LOCALE_CODES.map(makePageRuntimeSource);
+        const fixture = locales[0];
+        for (const table of [
+          "contentHeads",
+          "contentBindings",
+          "contentArtifacts",
+          "contentKeys",
+        ] as const) {
+          fixture.source.set(
+            table,
+            locales.flatMap(({ source }) => source.get(table) ?? [])
+          );
+        }
+        fixture.source.set(
+          "contentReleases",
+          (fixture.source.get("contentReleases") ?? []).map((release) => ({
+            ...release,
+            resultFamilies: TEST_SNAPSHOT_RELEASE.manifest.scope.families,
+          }))
+        );
+        const context = yield* createTestSnapshotContext(fixture.source);
+        runtimeQueryMock.mockImplementation(createTestSnapshotQuery(context));
+
+        expect(yield* readPublishedPageCatalog()).toEqual({
+          activeReleaseId: fixture.state.activeReleaseId,
+          projections: locales.map(({ projection }) => projection),
+        });
+      })
+  );
 
   it.effect("decodes every verified Page projection with its release pin", () =>
     Effect.gen(function* () {

@@ -2,6 +2,9 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
+import { makeMaterialRuntimeSource } from "@/test/content/material";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
+import { createTestSnapshotQuery } from "@/test/runtime-query";
 
 const readRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const articleMocks = vi.hoisted(() => ({
@@ -52,14 +55,45 @@ describe("public URL migration redirects", () => {
       expect(redirect).toBe(
         "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
       );
-      expect(readRuntimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-        appLocale: "id",
-        contentKey:
-          "material/lesson/mathematics/circle/central-angle-and-inscribed-angle",
-        expectedMaterialKey: "lesson.mathematics.circle",
-        expectedSectionKey: "central-angle-and-inscribed-angle",
-      });
+      expect(readRuntimeQueryMock).toHaveBeenCalledWith(
+        expect.anything(),
+        {
+          appLocale: "id",
+          contentKey:
+            "material/lesson/mathematics/circle/central-angle-and-inscribed-angle",
+          expectedMaterialKey: "lesson.mathematics.circle",
+          expectedSectionKey: "central-angle-and-inscribed-angle",
+        },
+        expect.any(Function)
+      );
     })
+  );
+
+  it.effect(
+    "resolves historical material URLs against authenticated snapshot ownership",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeMaterialRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        readRuntimeQueryMock.mockImplementation(
+          createTestSnapshotQuery(context)
+        );
+
+        expect(
+          yield* readPublicUrlMigrationRedirect({
+            method: "GET",
+            pathname:
+              "/id/subject/high-school/11/mathematics/technical-topic/section-1",
+          })
+        ).toBe("/id/materi/mathematics/teknis-topic/section-1");
+        expect(
+          yield* readPublicUrlMigrationRedirect({
+            method: "GET",
+            pathname:
+              "/id/subject/high-school/11/mathematics/technical-topic/missing-section",
+          })
+        ).toBeNull();
+      })
   );
 
   it.effect.each([
@@ -105,7 +139,8 @@ describe("public URL migration redirects", () => {
         expect(redirect).toBe(`/${expectedIdentity.appLocale}/${publicPath}`);
         expect(readRuntimeQueryMock).toHaveBeenCalledWith(
           expect.anything(),
-          expectedIdentity
+          expectedIdentity,
+          expect.any(Function)
         );
       })
   );

@@ -1,13 +1,14 @@
-import { query } from "@repo/backend/convex/_generated/server";
-import { readProgramCatalog } from "@repo/backend/convex/contentRelease/program/catalog";
-import { readProgramContext } from "@repo/backend/convex/contentRelease/program/context";
-import { readProgramPage } from "@repo/backend/convex/contentRelease/program/page";
-import { readProgramPath } from "@repo/backend/convex/contentRelease/program/path";
-import { readProgramRoute } from "@repo/backend/convex/contentRelease/program/route";
+import { readProgramCatalog } from "@repo/backend/content/program/catalog";
+import { readProgramContext } from "@repo/backend/content/program/context";
+import { convexProgramLayer } from "@repo/backend/content/program/convex";
+import { readProgramPage } from "@repo/backend/content/program/page";
+import { readProgramPath } from "@repo/backend/content/program/path";
+import { readProgramRoute } from "@repo/backend/content/program/route";
 import {
   readProgramBuckets,
   readProgramSitemap,
-} from "@repo/backend/convex/contentRelease/program/sitemap";
+} from "@repo/backend/content/program/sitemap";
+import { query } from "@repo/backend/convex/_generated/server";
 import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
@@ -84,7 +85,11 @@ export const catalog = query({
   args: { appLocale: appLocaleValidator },
   returns: programCatalogValidator,
   handler: (ctx, { appLocale }) =>
-    runConvexProgram(readProgramCatalog(ctx, appLocale)),
+    runConvexProgram(
+      readProgramCatalog(appLocale).pipe(
+        Effect.provide(convexProgramLayer(ctx))
+      )
+    ),
 });
 
 /** Resolves a validated curriculum return context for one material route. */
@@ -103,7 +108,6 @@ export const context = query({
   handler: (ctx, args) =>
     runConvexProgram(
       readProgramContext(
-        ctx,
         args.appLocale,
         {
           contentKey: args.contentKey,
@@ -115,6 +119,7 @@ export const context = query({
         },
         args.expectedActiveReleaseId
       ).pipe(
+        Effect.provide(convexProgramLayer(ctx)),
         Effect.map(({ context: resolved, managed }) => ({
           groupJson: resolved?.groupJson ?? null,
           managed,
@@ -138,12 +143,11 @@ export const page = query({
   handler: (ctx, args) =>
     runConvexProgram(
       readProgramPage(
-        ctx,
         args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
         args.paginationOpts
-      )
+      ).pipe(Effect.provide(convexProgramLayer(ctx)))
     ),
 });
 
@@ -152,7 +156,11 @@ export const path = query({
   args: { appLocale: appLocaleValidator, publicPath: v.string() },
   returns: programPathValidator,
   handler: (ctx, { appLocale, publicPath }) =>
-    runConvexProgram(readProgramPath(ctx, appLocale, publicPath)),
+    runConvexProgram(
+      readProgramPath(appLocale, publicPath).pipe(
+        Effect.provide(convexProgramLayer(ctx))
+      )
+    ),
 });
 
 /** Resolves one complete indexed curriculum page model by public path. */
@@ -160,7 +168,11 @@ export const route = query({
   args: { appLocale: appLocaleValidator, publicPath: v.string() },
   returns: programRouteValidator,
   handler: (ctx, { appLocale, publicPath }) =>
-    runConvexProgram(readProgramRoute(ctx, appLocale, publicPath)),
+    runConvexProgram(
+      readProgramRoute(appLocale, publicPath).pipe(
+        Effect.provide(convexProgramLayer(ctx))
+      )
+    ),
 });
 
 /** Returns non-empty curriculum sitemap partitions for one locale. */
@@ -168,7 +180,11 @@ export const sitemapBuckets = query({
   args: { appLocale: appLocaleValidator },
   returns: programBucketsValidator,
   handler: (ctx, { appLocale }) =>
-    runConvexProgram(readProgramBuckets(ctx, appLocale)),
+    runConvexProgram(
+      readProgramBuckets(appLocale).pipe(
+        Effect.provide(convexProgramLayer(ctx))
+      )
+    ),
 });
 
 /** Returns one verified curriculum sitemap partition. */
@@ -176,5 +192,9 @@ export const sitemapPage = query({
   args: { appLocale: appLocaleValidator, bucket: v.string() },
   returns: programSitemapValidator,
   handler: (ctx, { appLocale, bucket }) =>
-    runConvexProgram(readProgramSitemap(ctx, appLocale, bucket)),
+    runConvexProgram(
+      readProgramSitemap(appLocale, bucket).pipe(
+        Effect.provide(convexProgramLayer(ctx))
+      )
+    ),
 });

@@ -5,7 +5,7 @@
   "scripts": {
     "build": "email export --outDir dist --dir ../../packages/email/templates",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev": "email dev --port 3004 --dir ../../packages/email/templates",
+    "dev": "portless run --name email.nakafa sh -c 'email dev --port \"${PORT:-3004}\" --dir ../../packages/email/templates'",
     "export": "email export --dir ../../packages/email/templates",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },

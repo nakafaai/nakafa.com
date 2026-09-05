@@ -8,7 +8,6 @@ import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
-import type { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import {
   deleteMaterial,
@@ -19,11 +18,8 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { ingressProjection } from "@repo/backend/test/content/ingress";
 import { convexTest } from "convex-test";
-import type { Effect } from "effect";
 
-type PublicProjection = NonNullable<
-  Effect.Success<ReturnType<typeof resolvePublicProjection>>
->;
+type PublicProjection = Parameters<typeof writeMaterial>[2];
 /** Builds one resolved public material projection for the writer boundary. */
 function testResolved(
   options?: {
@@ -64,11 +60,22 @@ describe("contentRelease/material/write", () => {
       ...ingressProjection,
       metadata: {
         ...ingressProjection.metadata,
+        dateModified: "2026-08-01",
         description: "Updated material summary.",
         title: "Updated Material",
       },
       topicTitle: "Updated Topic",
     };
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        writeMaterial(
+          ctx,
+          "blue",
+          testResolved({ sequence: 2 }, updated),
+          updated
+        )
+      )
+    );
     await t.mutation((ctx) =>
       runConvexProgram(
         writeMaterial(

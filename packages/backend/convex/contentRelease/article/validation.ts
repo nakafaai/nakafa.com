@@ -1,3 +1,5 @@
+import { convexArticleLayer } from "@repo/backend/content/article/convex";
+import { verifyArticle } from "@repo/backend/content/article/verify";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ARTICLE_VALIDATION_SCAN_LIMIT } from "@repo/backend/convex/contentRelease/article/limits";
@@ -8,7 +10,6 @@ import {
   validateCategoryClaim,
   validateCategoryMember,
 } from "@repo/backend/convex/contentRelease/article/ownership";
-import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
 import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import { RELEASE_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
@@ -43,7 +44,9 @@ export const validateArticleModel = Effect.fn(
   const categoryClaims = new Map<string, ArticleCategoryClaim>();
   const predecessorRoutes = new Map<AppLocale, ArticlePredecessorRoutes>();
   for (const article of stored.page) {
-    yield* verifyArticle(ctx, article, sequence);
+    yield* verifyArticle(article, sequence).pipe(
+      Effect.provide(convexArticleLayer(ctx))
+    );
     const categoryIdentity = `${article.appLocale}/${article.category}`;
     const existingClaim = categoryClaims.get(categoryIdentity);
     if (existingClaim) {

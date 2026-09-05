@@ -1,4 +1,4 @@
-import type { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
+import type { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { Effect } from "effect";
 
 type ActiveIdentity = NonNullable<

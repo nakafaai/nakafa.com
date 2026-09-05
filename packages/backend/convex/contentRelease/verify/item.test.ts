@@ -253,17 +253,50 @@ describe("contentRelease/verify/item", () => {
     await expect(rollback.mutation(verifyOnly)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
+    await rollback.mutation(async (ctx) => {
+      const row = await ctx.db.query("contentItems").unique();
+      if (!row) {
+        return expect.fail("Expected one staged item.");
+      }
+      await ctx.db.patch(row._id, {
+        rollbackJson: testRollbackJson({ index: 1 }),
+      });
+    });
+    await expect(rollback.mutation(verifyOnly)).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Rollback evidence ${TEST_RELEASE_ID}/0 lost its identity.`,
+      },
+    });
 
     const deleted = convexTest(schema, convexModules);
     await stageDeleteFixture(deleted);
     await deleted.mutation(async (ctx) => {
       const row = await ctx.db.query("contentItems").unique();
       if (!row) {
+        return expect.fail("Expected one staged delete.");
+      }
+      await ctx.db.patch(row._id, {
+        rollbackJson: testRollbackJson({ contentKey: row.contentKey }),
+      });
+    });
+    await expect(deleted.mutation(verifyOnly)).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Rollback evidence ${TEST_RELEASE_ID}/0 differs from its base.`,
+      },
+    });
+
+    const withBody = convexTest(schema, convexModules);
+    await stageDeleteFixture(withBody);
+    await withBody.mutation(async (ctx) => {
+      const row = await ctx.db.query("contentItems").unique();
+      if (!row) {
         throw new Error("Expected delete item.");
       }
       await ctx.db.patch("contentItems", row._id, { artifactReady: true });
     });
-    await expect(deleted.mutation(verifyOnly)).rejects.toMatchObject({
+    await expect(withBody.mutation(verifyOnly)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });

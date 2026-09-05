@@ -1,5 +1,6 @@
+import { readProgramContext } from "@repo/backend/content/program/context";
+import { convexProgramLayer } from "@repo/backend/content/program/convex";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { readProgramContext } from "@repo/backend/convex/contentRelease/program/context";
 import {
   createCanonicalLearningContext,
   createContextKey,
@@ -34,42 +35,6 @@ function readTargetMaterial(target: ContentViewTarget) {
   } satisfies MaterialTarget;
 }
 
-/** Projects a verified public-route context row into engagement storage fields. */
-function toLearningContextStorage(input: {
-  readonly context: LearningContextInput;
-  readonly contextRoute: {
-    readonly materialContextNodeKey?: string;
-    readonly materialContextParentPath?: string;
-    readonly materialContextPublicPath?: string;
-    readonly programKey?: string;
-  };
-  readonly material: MaterialTarget;
-}): LearningContextStorage {
-  const nodeKey = input.contextRoute.materialContextNodeKey;
-  const parentPath = input.contextRoute.materialContextParentPath;
-  const programKey = input.contextRoute.programKey;
-  const publicPath = input.contextRoute.materialContextPublicPath;
-
-  if (!(nodeKey && parentPath && programKey && publicPath)) {
-    return createCanonicalLearningContext();
-  }
-
-  return {
-    contextKey: createContextKey({
-      mode: input.context.mode,
-      nodeKey,
-      programKey,
-    }),
-    contextMaterialKey: input.material.materialKey,
-    contextMode: input.context.mode,
-    contextNodeKey: nodeKey,
-    contextParentPath: parentPath,
-    contextProgramKey: programKey,
-    contextPublicPath: publicPath,
-    contextSourcePath: input.material.sourcePath,
-  };
-}
-
 /** Resolves placement from the active immutable program snapshot. */
 const resolvePublishedContext = Effect.fn(
   "contents.views.resolvePublishedContext"
@@ -81,14 +46,17 @@ const resolvePublishedContext = Effect.fn(
   programKey: string,
   nodeKey: string
 ) {
-  const resolved = yield* readProgramContext(ctx, target.locale, {
+  const resolved = yield* readProgramContext(target.locale, {
     contentKey: target.contentKey,
     materialKey: material.materialKey,
     nodeKey,
     parentPath: material.parentPath,
     programKey,
     publicPath: material.publicPath,
-  }).pipe(Effect.mapError(toContentViewIoError));
+  }).pipe(
+    Effect.provide(convexProgramLayer(ctx)),
+    Effect.mapError(toContentViewIoError)
+  );
   if (!resolved.managed) {
     return { managed: false, storage: createCanonicalLearningContext() };
   }
@@ -97,11 +65,16 @@ const resolvePublishedContext = Effect.fn(
   }
   return {
     managed: true,
-    storage: toLearningContextStorage({
-      context,
-      contextRoute: resolved.context.mapping,
-      material,
-    }),
+    storage: {
+      contextKey: createContextKey({ mode: context.mode, nodeKey, programKey }),
+      contextMaterialKey: material.materialKey,
+      contextMode: context.mode,
+      contextNodeKey: nodeKey,
+      contextParentPath: resolved.context.mapping.materialContextParentPath,
+      contextProgramKey: programKey,
+      contextPublicPath: resolved.context.mapping.materialContextPublicPath,
+      contextSourcePath: material.sourcePath,
+    } satisfies LearningContextStorage,
   };
 });
 

@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { Effect } from "effect";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
+import { createTestSnapshotContext } from "@/test/content/snapshot";
+import { createTestSnapshotQuery } from "@/test/runtime-query";
 
 const mockReadRuntimeContentReference = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
@@ -65,6 +68,21 @@ describe("projected public html route rejection", () => {
       })
   );
 
+  it.effect(
+    "accepts signed snapshot routes and rejects missing snapshot routes",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeTryoutRuntimeSource();
+        const context = yield* createTestSnapshotContext(fixture.source);
+        mockReadRuntimeContentReference.mockImplementation(
+          createTestSnapshotQuery(context)
+        );
+
+        expect(yield* readRejection("/en/try-out/indonesia")).toBeNull();
+        expect(yield* readRejection("/en/try-out/missing-country")).toBe("en");
+      })
+  );
+
   it.effect("accepts concrete renderable routes", () =>
     Effect.gen(function* () {
       const paths = [
@@ -111,7 +129,8 @@ describe("projected public html route rejection", () => {
               kind: "route",
               publicPath: "try-out/indonesia/snbt/2027",
             },
-          }
+          },
+          expect.any(Function)
         );
       })
   );

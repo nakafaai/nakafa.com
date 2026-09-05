@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
+import { INITIAL_MODEL_SLOT } from "@repo/backend/convex/contentRelease/models/slot";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
@@ -122,6 +123,104 @@ describe("contentRelease/partner/page", () => {
       page: [{ appLocale: "en", publicPath: second.publicPath }],
     });
   });
+
+  it.each(["article", "material"] as const)(
+    "normalizes an unfiltered %s prefix across continuation pages",
+    async (family) => {
+      const target = convexTest(schema, convexModules);
+      const query =
+        family === "article"
+          ? api.contentRelease.article.apiPage
+          : api.contentRelease.material.apiPage;
+      const paths =
+        family === "article"
+          ? [
+              testArticleProjection(0).publicPath,
+              testArticleProjection(1).publicPath,
+            ]
+          : [
+              makeMaterialProjection("en", 1).publicPath,
+              makeMaterialProjection("en", 2).publicPath,
+            ];
+      if (family === "article") {
+        await target.mutation((ctx) => insertRuntimeArticles(ctx, 2));
+      } else {
+        await activateMaterialCatalog(target);
+      }
+      const first = await target.query(query, {
+        appLocale: "en",
+        cursor: null,
+        limit: 1,
+        prefix: "///",
+      });
+      const second = await target.query(query, {
+        appLocale: "en",
+        cursor: first.continueCursor,
+        limit: 1,
+        prefix: "",
+      });
+      expect(first.isDone).toBe(false);
+      expect(second).toMatchObject({ isDone: true, continueCursor: "" });
+      expect(
+        [...first.page, ...second.page].map((row) => row.publicPath)
+      ).toEqual(paths);
+    }
+  );
+
+  it.each(["article", "material"] as const)(
+    "authenticates the %s lookahead row before returning a continuation",
+    async (family) => {
+      const target = convexTest(schema, convexModules);
+      const query =
+        family === "article"
+          ? api.contentRelease.article.apiPage
+          : api.contentRelease.material.apiPage;
+      if (family === "article") {
+        await target.mutation((ctx) => insertRuntimeArticles(ctx, 2));
+      } else {
+        await activateMaterialCatalog(target);
+      }
+      await target.mutation(async (ctx) => {
+        if (family === "article") {
+          const row = await ctx.db
+            .query("articleCatalog")
+            .withIndex("by_slot_and_appLocale_and_contentKey", (index) =>
+              index.eq("slot", INITIAL_MODEL_SLOT).eq("appLocale", "en")
+            )
+            .order("desc")
+            .first();
+          if (!row) {
+            throw new Error("Expected an article continuation fixture.");
+          }
+          await ctx.db.patch("articleCatalog", row._id, {
+            publicPath: "articles/foreign",
+          });
+          return;
+        }
+        const row = await ctx.db
+          .query("materialCatalog")
+          .withIndex("by_slot_and_appLocale_and_contentKey", (index) =>
+            index.eq("slot", INITIAL_MODEL_SLOT).eq("appLocale", "en")
+          )
+          .order("desc")
+          .first();
+        if (!row) {
+          throw new Error("Expected a material continuation fixture.");
+        }
+        await ctx.db.patch("materialCatalog", row._id, {
+          projectionJson: "{}",
+        });
+      });
+      await expect(
+        target.query(query, {
+          appLocale: "en",
+          cursor: null,
+          limit: 1,
+          prefix: "",
+        })
+      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    }
+  );
 
   it("preserves Convex index ordering across punctuation keys", async () => {
     const target = convexTest(schema, convexModules);

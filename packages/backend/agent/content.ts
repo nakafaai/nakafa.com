@@ -8,20 +8,17 @@ import {
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
+import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
+import type { PublicRuntimeRow } from "@repo/backend/content/publication/public";
 import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { agentContentSourceValidator } from "@repo/backend/convex/contentRelease/reference/agent";
 import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
-import { decodePublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
-import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
-import {
-  createNakafaContentRefFromGraphProjection,
-  createNakafaContentRefFromSummary,
-} from "@repo/contents/_lib/agent/refs";
+import { createNakafaContentRefFromSummary } from "@repo/contents/_lib/agent/refs";
 import {
   type NakafaAgentMarkdown,
   NakafaAgentMarkdownSchema,
@@ -85,17 +82,7 @@ export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
     );
   }
   if (source.kind === "quran") {
-    if (ref.value.section !== "quran") {
-      return yield* contentReadError(
-        "The signed Quran source has an inconsistent section identity."
-      );
-    }
     return yield* renderQuranMarkdown(ref.value, source);
-  }
-  if (ref.value.section === "quran") {
-    return yield* contentReadError(
-      "The signed Quran reference is missing its transactional source."
-    );
   }
   if (isPublishedRef(ref.value)) {
     return yield* readPublishedMarkdown(ctx, ref.value);
@@ -125,24 +112,10 @@ const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
       ref.section === "articles" ? "article" : "subject-lesson";
     if (
       found.projection.kind !== expectedKind ||
-      found.projection.graph.assetId !== ref.content_id ||
-      found.projection.appLocale !== ref.locale ||
-      `${found.projection.publicPath}` !== `${ref.route}`
+      found.projection.graph.assetId !== ref.content_id
     ) {
       return yield* contentReadError(
         "The signed projection changed its requested public identity."
-      );
-    }
-    const currentRef = createNakafaContentRefFromGraphProjection({
-      ...found.projection.graph,
-      content_id: found.projection.graph.assetId,
-      locale: found.projection.appLocale,
-      route: found.projection.publicPath,
-      section: ref.section,
-    });
-    if (Option.isNone(currentRef)) {
-      return yield* contentReadError(
-        "The signed projection has an invalid public graph identity."
       );
     }
     const body = yield* projectMdxForAgentMarkdown(
@@ -155,7 +128,8 @@ const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
     const markdown = yield* decodeAgentOutput(
       NakafaAgentMarkdownSchema,
       {
-        ...currentRef.value,
+        ...ref,
+        ...found.projection.graph,
         ...(description === undefined ? {} : { description }),
         text: [`# ${metadata.title}`, "", body.trim()].join("\n"),
         title: metadata.title,
