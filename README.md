@@ -22,7 +22,7 @@ authored content source or publication path.
 - pnpm 11.23.0
 - Turborepo
 - Next.js 16 and React 19
-- TypeScript 7 CLI with TypeScript 6 API compatibility
+- Native TypeScript 7
 - Convex
 - Vitest
 - Biome through Ultracite

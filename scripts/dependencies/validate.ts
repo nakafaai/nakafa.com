@@ -136,10 +136,8 @@ export function validateDependencyPolicy({
       "The platform-node-shared override must match Effect RC 110."
     );
   }
-  if (workspace.catalog?.typescript !== "npm:@typescript/typescript6@6.0.2") {
-    problems.push(
-      "The TypeScript JavaScript API compatibility alias must be 6.0.2."
-    );
+  if (workspace.catalog?.typescript !== "7.0.2") {
+    problems.push("The native TypeScript catalog must be exactly 7.0.2.");
   }
   if (rootManifest.packageManager !== "pnpm@11.23.0") {
     problems.push("packageManager must be pnpm@11.23.0.");

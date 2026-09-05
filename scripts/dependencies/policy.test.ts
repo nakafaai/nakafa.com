@@ -58,7 +58,7 @@ function validInput() {
         "@effect/platform-node": "4.0.0-rc.110",
         "@effect/vitest": "4.0.0-rc.110",
         effect: "4.0.0-rc.110",
-        typescript: "npm:@typescript/typescript6@6.0.2",
+        typescript: "7.0.2",
       },
       overrides: {
         "@effect/platform-node-shared": "4.0.0-rc.110",

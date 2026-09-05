@@ -111,9 +111,9 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     const nestedTestFiles = files.filter((file) =>
       file.split(path.sep).some((segment) => TEST_DIRECTORIES.has(segment))
     );
-    const effectViolations = (yield* Effect.forEach(effectTests, (test) =>
+    const sources = yield* Effect.forEach(effectTests, (test) =>
       fileSystem.readFileString(test).pipe(
-        Effect.map(effectTestViolations.bind(undefined, test)),
+        Effect.map((sourceText) => ({ file: test, sourceText })),
         Effect.mapError(
           (cause) =>
             new TestPolicyReadError({
@@ -122,7 +122,8 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
             })
         )
       )
-    )).flat();
+    );
+    const effectViolations = yield* effectTestViolations(sources);
 
     if (
       orphanTests.length === 0 &&

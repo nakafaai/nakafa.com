@@ -1,4 +1,18 @@
-import ts from "typescript";
+import getEffectPath from "@effect/tsgo/lib/getExePath";
+import { Effect, Schema } from "effect";
+import * as ts from "typescript/unstable/ast";
+import { createVirtualFileSystem } from "typescript/unstable/fs";
+import { API, type Symbol as NativeSymbol } from "typescript/unstable/sync";
+
+export const EffectTestSource = Schema.Struct({
+  file: Schema.String,
+  sourceText: Schema.String,
+});
+
+export class TestCompilerError extends Schema.TaggedError<TestCompilerError>()(
+  "TestCompilerError",
+  { cause: Schema.Unknown, message: Schema.String }
+) {}
 
 const TEST_MODULE_PATTERN = /\.test\.ts$/u;
 const EFFECT_RUNNERS = new Set(
@@ -18,41 +32,9 @@ type RuntimeKind =
   | "root";
 
 interface RuntimeImports {
-  readonly bindings: Map<ts.Symbol, RuntimeKind>;
-  readonly checker: ts.TypeChecker;
+  readonly bindings: Map<NativeSymbol, RuntimeKind>;
   readonly directRunner: boolean;
-}
-
-interface ParsedTestModule {
-  readonly checker: ts.TypeChecker;
-  readonly sourceFile: ts.SourceFile;
-}
-
-/** Parses one test with enough binding information to resolve lexical scope. */
-function parseTestModule(file: string, sourceText: string): ParsedTestModule {
-  const sourceFile = ts.createSourceFile(
-    file,
-    sourceText,
-    ts.ScriptTarget.Latest,
-    true
-  );
-  const host: ts.CompilerHost = {
-    fileExists: (candidate) => candidate === file,
-    getCanonicalFileName: (candidate) => candidate,
-    getCurrentDirectory: () => "",
-    getDefaultLibFileName: () => "",
-    getNewLine: () => "\n",
-    getSourceFile: (candidate) => (candidate === file ? sourceFile : undefined),
-    readFile: (candidate) => (candidate === file ? sourceText : undefined),
-    useCaseSensitiveFileNames: () => true,
-    writeFile: () => undefined,
-  };
-  const program = ts.createProgram({
-    host,
-    options: { noLib: true, noResolve: true },
-    rootNames: [file],
-  });
-  return { checker: program.getTypeChecker(), sourceFile };
+  readonly symbols: ReadonlyMap<ts.Node, NativeSymbol | undefined>;
 }
 
 /** Returns value-position descendants while excluding type-only subtrees. */
@@ -62,7 +44,7 @@ function descendants(sourceFile: ts.SourceFile) {
     if (ts.isTypeNode(node)) {
       continue;
     }
-    ts.forEachChild(node, (child) => {
+    node.forEachChild((child) => {
       nodes.push(child);
     });
   }
@@ -81,7 +63,7 @@ function importedModule(node: ts.Node) {
     node.expression.kind === ts.SyntaxKind.ImportKeyword
   ) {
     const [specifier] = node.arguments;
-    return specifier !== undefined && ts.isStringLiteralLike(specifier)
+    return specifier !== undefined && ts.isStringLiteralLikeNode(specifier)
       ? specifier.text
       : undefined;
   }
@@ -89,83 +71,78 @@ function importedModule(node: ts.Node) {
 
 function staticProperty(node: ts.Node | undefined) {
   return node !== undefined &&
-    (ts.isIdentifier(node) || ts.isStringLiteralLike(node))
+    (ts.isIdentifier(node) || ts.isStringLiteralLikeNode(node))
     ? node.text
     : undefined;
 }
 
 function staticElement(node: ts.Expression) {
-  return ts.isStringLiteralLike(node) || ts.isNumericLiteral(node)
+  return ts.isStringLiteralLikeNode(node) || ts.isNumericLiteral(node)
     ? node.text
     : undefined;
+}
+
+function importedRuntimeKind(node: ts.Node): RuntimeKind | undefined {
+  switch (importedModule(node)) {
+    case "effect":
+      return "root";
+    case "effect/Effect":
+      return "effect";
+    case "effect/ManagedRuntime":
+      return "managed-module";
+    default:
+      return undefined;
+  }
 }
 
 /** Collects local bindings that expose Effect runtime modules. */
 function runtimeImports(
   nodes: readonly ts.Node[],
-  checker: ts.TypeChecker
+  symbols: RuntimeImports["symbols"]
 ): RuntimeImports {
-  const bindings = new Map<ts.Symbol, RuntimeKind>();
+  const bindings = new Map<NativeSymbol, RuntimeKind>();
   let directRunner = false;
 
   for (const node of nodes) {
-    const moduleName = importedModule(node);
-    if (
-      moduleName !== "effect" &&
-      moduleName !== "effect/Effect" &&
-      moduleName !== "effect/ManagedRuntime"
-    ) {
-      continue;
-    }
     if (!ts.isImportDeclaration(node)) {
       continue;
     }
-
+    const kind = importedRuntimeKind(node);
     const clause = node.importClause;
     const namedBindings = clause?.namedBindings;
-    if (clause?.isTypeOnly !== false || namedBindings === undefined) {
+    if (
+      kind === undefined ||
+      clause === undefined ||
+      clause.phaseModifier === ts.SyntaxKind.TypeKeyword ||
+      namedBindings === undefined
+    ) {
       continue;
     }
-    if (ts.isNamespaceImport(namedBindings)) {
-      const symbol = checker.getSymbolAtLocation(namedBindings.name);
+    const candidates = ts.isNamespaceImport(namedBindings)
+      ? [{ name: namedBindings.name, kind, runner: false }]
+      : namedBindings.elements
+          .filter((binding) => !binding.isTypeOnly)
+          .map((binding) => {
+            const name = binding.propertyName?.text ?? binding.name.text;
+            return {
+              name: binding.name,
+              kind: runtimeMemberKind(kind, name),
+              runner: kind === "effect" && EFFECT_RUNNERS.has(name),
+            };
+          });
+    for (const candidate of candidates) {
+      const symbol = symbols.get(candidate.name);
       if (symbol === undefined) {
         continue;
       }
-      if (moduleName === "effect") {
-        bindings.set(symbol, "root");
-      } else {
-        bindings.set(
-          symbol,
-          moduleName === "effect/Effect" ? "effect" : "managed-module"
-        );
+      if (candidate.kind !== undefined) {
+        bindings.set(symbol, candidate.kind);
       }
-      continue;
-    }
-
-    for (const binding of namedBindings.elements) {
-      if (binding.isTypeOnly) {
-        continue;
-      }
-      const importedName = binding.propertyName?.text ?? binding.name.text;
-      const symbol = checker.getSymbolAtLocation(binding.name);
-      if (symbol === undefined) {
-        continue;
-      }
-      if (moduleName === "effect") {
-        if (importedName === "Effect") {
-          bindings.set(symbol, "effect");
-        } else if (importedName === "ManagedRuntime") {
-          bindings.set(symbol, "managed-module");
-        }
-      } else if (moduleName === "effect/Effect") {
-        directRunner ||= EFFECT_RUNNERS.has(importedName);
-      } else if (importedName === "make") {
-        bindings.set(symbol, "managed-make");
-      }
+      directRunner ||= candidate.runner;
     }
   }
 
-  return { bindings, checker, directRunner };
+  return { bindings, symbols, directRunner };
 }
 
 /** Resolves an imported Effect module, factory, or runtime expression. */
@@ -177,7 +154,7 @@ function runtimeKind(
     return runtimeKind(node.expression, imports);
   }
   if (ts.isIdentifier(node)) {
-    const symbol = imports.checker.getSymbolAtLocation(node);
+    const symbol = imports.symbols.get(node);
     return symbol === undefined ? undefined : imports.bindings.get(symbol);
   }
   if (
@@ -193,16 +170,7 @@ function runtimeKind(
     return undefined;
   }
   if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-    const moduleName = importedModule(node);
-    if (moduleName === "effect") {
-      return "root";
-    }
-    if (moduleName === "effect/Effect") {
-      return "effect";
-    }
-    return moduleName === "effect/ManagedRuntime"
-      ? "managed-module"
-      : undefined;
+    return importedRuntimeKind(node);
   }
   return runtimeKind(node.expression, imports) === "managed-make"
     ? "managed-runtime"
@@ -231,12 +199,12 @@ function collectMemberBindings(
 ) {
   let changed = false;
   for (const element of pattern.elements) {
-    if (!ts.isIdentifier(element.name)) {
+    if (element.name === undefined || !ts.isIdentifier(element.name)) {
       continue;
     }
     const member = staticProperty(element.propertyName ?? element.name);
     const kind = runtimeMemberKind(owner, member);
-    const symbol = imports.checker.getSymbolAtLocation(element.name);
+    const symbol = imports.symbols.get(element.name);
     if (
       kind !== undefined &&
       symbol !== undefined &&
@@ -264,7 +232,7 @@ function collectVariableAlias(
     );
   }
   const symbol = ts.isIdentifier(declaration.name)
-    ? imports.checker.getSymbolAtLocation(declaration.name)
+    ? imports.symbols.get(declaration.name)
     : undefined;
   if (
     kind === undefined ||
@@ -329,23 +297,108 @@ function destructuresRunner(node: ts.Node, imports: RuntimeImports) {
   );
 }
 
-/** Reports authored tests that manually run an Effect runtime. */
-export function effectTestViolations(file: string, sourceText: string) {
-  if (!TEST_MODULE_PATTERN.test(file)) {
-    return [];
+/** Keeps each test in its own native project so lexical bindings stay local. */
+const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
+  api: API,
+  index: number,
+  file: string
+) {
+  const configFile = `/test-policy/${index}/tsconfig.json`;
+  const compilerFailure = (cause: unknown) =>
+    new TestCompilerError({ cause, message: `Unable to inspect ${file}.` });
+  const snapshot = yield* Effect.acquireRelease(
+    Effect.try({
+      try: () =>
+        api.updateSnapshot({
+          openProjects: [configFile],
+          closeProjects:
+            index === 0 ? [] : [`/test-policy/${index - 1}/tsconfig.json`],
+        }),
+      catch: compilerFailure,
+    }),
+    (resource) => Effect.sync(() => resource.dispose())
+  );
+  const { project, sourceFile } = yield* Effect.try({
+    try: () => {
+      const project = snapshot.getProject(configFile);
+      return {
+        project,
+        sourceFile: project?.program.getSourceFile(
+          `/test-policy/${index}/case.test.ts`
+        ),
+      };
+    },
+    catch: compilerFailure,
+  });
+  if (project === undefined || sourceFile === undefined) {
+    return yield* compilerFailure("The native test project is missing.");
   }
-  const { checker, sourceFile } = parseTestModule(file, sourceText);
-  const nodes = descendants(sourceFile);
-  const imports = runtimeImports(nodes, checker);
-  collectAliases(nodes, imports);
-  const hasRunner =
-    imports.directRunner ||
-    nodes.some(
-      (node) =>
-        isRunnerMember(node, imports) || destructuresRunner(node, imports)
-    );
+  return yield* Effect.try({
+    try: () => {
+      const nodes = descendants(sourceFile);
+      const identifiers = nodes.filter(ts.isIdentifier);
+      const symbols = project.checker.getSymbolAtLocation(identifiers);
+      const imports = runtimeImports(
+        nodes,
+        new Map(identifiers.map((node, offset) => [node, symbols[offset]]))
+      );
+      collectAliases(nodes, imports);
+      const hasRunner =
+        imports.directRunner ||
+        nodes.some(
+          (node) =>
+            isRunnerMember(node, imports) || destructuresRunner(node, imports)
+        );
+      return hasRunner
+        ? [
+            `${file}: return the Effect to @effect/vitest instead of running it.`,
+          ]
+        : [];
+    },
+    catch: compilerFailure,
+  });
+}, Effect.scoped);
 
-  return hasRunner
-    ? [`${file}: return the Effect to @effect/vitest instead of running it.`]
-    : [];
-}
+/** Reports authored tests using one scoped, Effect-patched native compiler. */
+export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
+  function* (sources: readonly (typeof EffectTestSource.Type)[]) {
+    const tests = sources.filter(({ file }) => TEST_MODULE_PATTERN.test(file));
+    if (tests.length === 0) {
+      return [];
+    }
+    const files = Object.fromEntries(
+      tests.flatMap(({ sourceText }, index) => [
+        [`/test-policy/${index}/case.test.ts`, sourceText],
+        [
+          `/test-policy/${index}/tsconfig.json`,
+          JSON.stringify({
+            compilerOptions: { noLib: true, noResolve: true },
+            files: ["case.test.ts"],
+          }),
+        ],
+      ])
+    );
+    const api = yield* Effect.acquireRelease(
+      Effect.try({
+        try: () =>
+          new API({
+            cwd: "/",
+            fs: createVirtualFileSystem(files),
+            tsserverPath: getEffectPath(),
+          }),
+        catch: (cause) =>
+          new TestCompilerError({
+            cause,
+            message: "Unable to start the native test compiler.",
+          }),
+      }),
+      (resource) => Effect.sync(() => resource.close())
+    );
+    return (yield* Effect.forEach(
+      tests,
+      ({ file }, index) => inspectTest(api, index, file),
+      { concurrency: 1 }
+    )).flat();
+  },
+  Effect.scoped
+);

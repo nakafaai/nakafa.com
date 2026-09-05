@@ -30,11 +30,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "npm:typescript@7.0.2",
-    dependency: "@typescript/native",
-    minimumDeclarations: 1,
-  },
-  {
     allowed: ["7.0.2", "catalog:", "npm:typescript@7.0.2"],
     dependency: "typescript",
     minimumDeclarations: 1,
@@ -129,14 +124,9 @@ export const REGISTRY_REVIEWS = [
   ["@effect/tsgo@latest", "0.36.5", "Compiler patching moves with TypeScript."],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
-    "@typescript/typescript6@latest",
-    "6.0.2",
-    "Programmatic consumers still require the TypeScript 6 API.",
-  ],
-  [
     "next@latest",
     "16.3.4",
-    "Stable 16.3.4 includes the AVIF security fix and TypeScript 6 alias support.",
+    "Stable 16.3.4 includes the AVIF security fix and native TypeScript CLI checks.",
   ],
   ["convex@latest", "1.45.0", "Convex acceptance uses an isolated deployment."],
   ["ai@latest", "7.0.77", "AI SDK packages move as one reviewed cohort."],
