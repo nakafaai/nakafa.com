@@ -60,9 +60,12 @@ export async function readMaterialNavigation(
   page: MaterialPageContent,
   context: MaterialContextIdentity | undefined
 ) {
+  const currentHref = toMaterialHref(page.route);
+
   if (!context || page.kind === "preview") {
     return {
       context: undefined,
+      currentHref,
       link: undefined,
       pagination: readRoutePagination(page.route, page.siblings),
     };
@@ -74,25 +77,26 @@ export async function readMaterialNavigation(
     context,
     page.activeReleaseId
   );
-  const toHref = published
-    ? (target: MaterialLessonProjection) => {
-        const href = toMaterialHref(target);
-        if (
-          !(
-            published.mapping.canonicalPath === target.publicPath ||
-            published.mapping.canonicalPath === target.parentPath
-          )
-        ) {
-          return href;
-        }
-        return toContextualMaterialHref({
-          href,
-          ref: published.context,
-        });
-      }
-    : undefined;
+  const toHref = (target: MaterialLessonProjection) => {
+    const href = toMaterialHref(target);
+    if (
+      !(
+        published &&
+        (published.mapping.canonicalPath === target.publicPath ||
+          published.mapping.canonicalPath === target.parentPath)
+      )
+    ) {
+      return href;
+    }
+    return toContextualMaterialHref({
+      href,
+      ref: published.context,
+    });
+  };
+
   return {
     context: published?.context,
+    currentHref: toHref(page.route),
     link: published
       ? { href: published.href, label: published.label }
       : undefined,
