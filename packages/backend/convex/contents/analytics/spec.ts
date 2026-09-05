@@ -1,6 +1,6 @@
 import {
+  learningPopularityFiniteWindowValues,
   learningPopularityScopeValues,
-  learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
@@ -12,12 +12,11 @@ export const invalidContentAnalyticsPartitionCode =
 export const contentAnalyticsIoFailedCode = "CONTENT_ANALYTICS_IO_FAILED";
 
 const learningPopularityWindowValidator = literals(
-  ...learningPopularityWindowValues
+  ...learningPopularityFiniteWindowValues
 );
 const learningPopularityScopeValidator = literals(
   ...learningPopularityScopeValues
 );
-
 export const scheduleContentAnalyticsPartitionsResultValidator = v.object({
   enqueuedPartitions: v.number(),
 });
@@ -56,8 +55,15 @@ export const scheduleLearningPopularityRefreshesResultValidator = v.object({
   scheduledWindows: v.number(),
 });
 
+export const scheduleLearningPopularityExpiriesResultValidator = v.object({
+  expiryWindows: v.number(),
+  repairWindows: v.number(),
+  skippedWindows: v.number(),
+});
+
 export const refreshLearningPopularityWindowPageArgs = {
   cursor: v.optional(v.string()),
+  day: v.number(),
   scopeMode: learningPopularityScopeValidator,
   windowKey: learningPopularityWindowValidator,
 };
@@ -73,6 +79,40 @@ export const refreshLearningPopularityWindowPageResultValidator = v.object({
   isDone: v.boolean(),
   refreshedCounters: v.number(),
   removedCounters: v.number(),
+  skipped: v.boolean(),
+});
+
+export const expireLearningPopularityWindowPageArgs = {
+  cursor: v.optional(v.string()),
+  day: v.number(),
+  scopeMode: learningPopularityScopeValidator,
+  windowKey: learningPopularityWindowValidator,
+};
+
+export const expireLearningPopularityWindowPageArgsValidator = v.object(
+  expireLearningPopularityWindowPageArgs
+);
+
+export const expireLearningPopularityWindowPageResultValidator = v.object({
+  continueCursor: v.string(),
+  expiredCounters: v.number(),
+  isDone: v.boolean(),
+  removedCounters: v.number(),
+  repairedCounters: v.number(),
+  skipped: v.boolean(),
+});
+
+export const sweepLearningPopularityRetentionArgs = {
+  day: v.number(),
+};
+
+export const sweepLearningPopularityRetentionArgsValidator = v.object(
+  sweepLearningPopularityRetentionArgs
+);
+
+export const sweepLearningPopularityRetentionResultValidator = v.object({
+  deleted: v.number(),
+  done: v.boolean(),
   skipped: v.boolean(),
 });
 
@@ -100,12 +140,32 @@ export type ScheduleLearningPopularityRefreshesResult = Infer<
   typeof scheduleLearningPopularityRefreshesResultValidator
 >;
 
+export type ScheduleLearningPopularityExpiriesResult = Infer<
+  typeof scheduleLearningPopularityExpiriesResultValidator
+>;
+
 export type RefreshLearningPopularityWindowPageArgs = Infer<
   typeof refreshLearningPopularityWindowPageArgsValidator
 >;
 
 export type RefreshLearningPopularityWindowPageResult = Infer<
   typeof refreshLearningPopularityWindowPageResultValidator
+>;
+
+export type ExpireLearningPopularityWindowPageArgs = Infer<
+  typeof expireLearningPopularityWindowPageArgsValidator
+>;
+
+export type ExpireLearningPopularityWindowPageResult = Infer<
+  typeof expireLearningPopularityWindowPageResultValidator
+>;
+
+export type SweepLearningPopularityRetentionArgs = Infer<
+  typeof sweepLearningPopularityRetentionArgsValidator
+>;
+
+export type SweepLearningPopularityRetentionResult = Infer<
+  typeof sweepLearningPopularityRetentionResultValidator
 >;
 
 /** Raised when a requested analytics partition is outside the configured set. */
