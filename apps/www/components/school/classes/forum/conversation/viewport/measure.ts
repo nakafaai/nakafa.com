@@ -15,16 +15,16 @@ import type { ViewportRuntime } from "@/components/school/classes/forum/conversa
 import { updateViewportState } from "@/components/school/classes/forum/conversation/viewport/state";
 
 /** Applies one normalized scroll measurement to placement and control state. */
-export function handleViewportMeasurement(
-  runtime: ViewportRuntime,
-  measurement: ViewportMeasurement | null,
-  source: "frame" | "scroll"
-) {
-  if (!measurement) {
-    return Effect.void;
-  }
+export const handleViewportMeasurement = Effect.fn("forum.viewport.measure")(
+  function* (
+    runtime: ViewportRuntime,
+    measurement: ViewportMeasurement | null,
+    source: "frame" | "scroll"
+  ) {
+    if (!measurement) {
+      return;
+    }
 
-  return Effect.gen(function* () {
     const previousMeasurement = yield* Ref.get(runtime.lastMeasurementRef);
     yield* Ref.set(runtime.lastMeasurementRef, measurement);
     const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
@@ -54,10 +54,6 @@ export function handleViewportMeasurement(
       isAtLatest: measurement.isAtLatest,
       pendingPlacement: pendingPlacementForAffinity,
     });
-    const shouldRetryPendingPlacement =
-      source === "frame" &&
-      pendingPlacement !== null &&
-      !(hasUserDetachedFromLatest || reachedPendingPlacement);
     const reachedLatestPlacement =
       pendingPlacement?.view.kind === "bottom" &&
       reachedPendingPlacement &&
@@ -81,7 +77,6 @@ export function handleViewportMeasurement(
         previousMeasurement,
       });
     const didManualScrollLeaveBackTarget =
-      currentState.backStack.length > 0 &&
       pendingPlacement === null &&
       !measurement.isAtLatest &&
       didScrollMeasurementMove;
@@ -89,6 +84,8 @@ export function handleViewportMeasurement(
       hasUserDetachedFromLatest ||
       didManualScrollInterruptPlacement ||
       reachedPendingPlacement;
+    const shouldRetryPendingPlacement =
+      source === "frame" && !shouldCancelPendingPlacement;
     const shouldClearBackStack =
       currentState.backStack.length > 0 &&
       ((measurement.isAtLatest &&
@@ -109,7 +106,9 @@ export function handleViewportMeasurement(
     }));
 
     if (shouldRetryPendingPlacement && pendingPlacement) {
-      const didPlace = runtime.adapters.scroller.place(pendingPlacement);
+      const didPlace = yield* Effect.sync(() =>
+        runtime.adapters.scroller.place(pendingPlacement)
+      );
 
       if (!didPlace) {
         yield* updateViewportState(runtime, (state) => ({
@@ -129,8 +128,8 @@ export function handleViewportMeasurement(
       measurement.lastVisiblePostId
     );
     yield* scheduleViewportSnapshotPersist(runtime);
-  });
-}
+  }
+);
 
 /** Cancels semantic jump state when direct user input takes over scrolling. */
 export function handleViewportUserScroll(

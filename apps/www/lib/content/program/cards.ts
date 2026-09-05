@@ -31,22 +31,17 @@ const selectMaterialRoutes = Effect.fn("NakafaProgram.selectMaterialRoutes")(
   function* ({
     canonicalPath,
     locale,
-    materialKey,
-    materials,
+    materialGroup,
     publicPath,
   }: {
     readonly canonicalPath: NonNullable<
       PublishedCurriculumRoute["canonicalPath"]
     >;
     readonly locale: Locale;
-    readonly materialKey: NonNullable<PublishedCurriculumRoute["materialKey"]>;
-    readonly materials: readonly MaterialLessonProjection[];
+    readonly materialGroup: readonly MaterialLessonProjection[];
     readonly publicPath: PublishedCurriculumRoute["publicPath"];
   }) {
     const appLocale = AppLocaleSchema.make(locale);
-    const materialGroup = materials.filter(
-      (material) => material.materialKey === materialKey
-    );
     if (materialGroup.length === 0) {
       return [];
     }
@@ -72,6 +67,39 @@ const selectMaterialRoutes = Effect.fn("NakafaProgram.selectMaterialRoutes")(
   }
 );
 
+/** Resolves one group's immutable contexts before projecting its ordered cards. */
+const readGroupMaterialPaths = Effect.fn(
+  "NakafaProgram.readGroupMaterialPaths"
+)(function* (
+  contexts: readonly PublishedCurriculumRoute[],
+  materialsByKey: ReadonlyMap<string, readonly MaterialLessonProjection[]>,
+  locale: Locale,
+  publicPath: PublishedCurriculumRoute["publicPath"]
+) {
+  const appLocale = AppLocaleSchema.make(locale);
+  let hasMaterialContext = false;
+  const selected = new Set<string>();
+  for (const context of contexts) {
+    if (!context.materialKey) {
+      continue;
+    }
+    hasMaterialContext = true;
+    if (!context.canonicalPath) {
+      return yield* new PublishedProjectionError({ appLocale, publicPath });
+    }
+    const owned = yield* selectMaterialRoutes({
+      canonicalPath: context.canonicalPath,
+      locale,
+      materialGroup: materialsByKey.get(context.materialKey) ?? [],
+      publicPath,
+    });
+    for (const material of owned) {
+      selected.add(material.publicPath);
+    }
+  }
+  return { hasMaterialContext, selected };
+});
+
 /** Builds the established material-card model from published projections. */
 export const readPublishedMaterialCards = Effect.fn(
   "NakafaProgram.readMaterialCards"
@@ -92,35 +120,33 @@ export const readPublishedMaterialCards = Effect.fn(
   if (!(route.level === "subject" || route.level === "course")) {
     return [] satisfies MaterialList;
   }
+  const contextsByGroup = new Map<
+    PublishedCurriculumRoute["materialContextPublicPath"],
+    PublishedCurriculumRoute[]
+  >();
+  for (const context of contexts) {
+    const members =
+      contextsByGroup.get(context.materialContextPublicPath) ?? [];
+    members.push(context);
+    contextsByGroup.set(context.materialContextPublicPath, members);
+  }
+  const materialsByKey = new Map<
+    MaterialLessonProjection["materialKey"],
+    MaterialLessonProjection[]
+  >();
+  for (const material of materials) {
+    const members = materialsByKey.get(material.materialKey) ?? [];
+    members.push(material);
+    materialsByKey.set(material.materialKey, members);
+  }
   const cards: MaterialList = [];
   for (const group of groups) {
-    let hasMaterialContext = false;
-    const selected = new Set<string>();
-    for (const context of contexts) {
-      if (context.materialContextPublicPath !== group.publicPath) {
-        continue;
-      }
-      if (!context.materialKey) {
-        continue;
-      }
-      hasMaterialContext = true;
-      if (!context.canonicalPath) {
-        return yield* new PublishedProjectionError({
-          appLocale,
-          publicPath: route.publicPath,
-        });
-      }
-      const owned = yield* selectMaterialRoutes({
-        canonicalPath: context.canonicalPath,
-        locale,
-        materialKey: context.materialKey,
-        materials,
-        publicPath: route.publicPath,
-      });
-      for (const material of owned) {
-        selected.add(material.publicPath);
-      }
-    }
+    const { hasMaterialContext, selected } = yield* readGroupMaterialPaths(
+      contextsByGroup.get(group.publicPath) ?? [],
+      materialsByKey,
+      locale,
+      route.publicPath
+    );
     const items: MaterialList[number]["items"] = [];
     for (const material of materials) {
       if (!selected.has(material.publicPath)) {

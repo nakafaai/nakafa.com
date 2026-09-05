@@ -205,6 +205,25 @@ function rangeOutranks(candidate: RangePreference, current: RangePreference) {
   return candidate.quality > current.quality;
 }
 
+function parseMediaName(source: string, allowsWeight: boolean) {
+  const mediaTypeParts = trimOptionalWhitespace(source)
+    .toLowerCase()
+    .split("/");
+  if (mediaTypeParts.length !== 2) {
+    return Option.none();
+  }
+  const [type, subtype] = mediaTypeParts;
+  const hasValidType = TOKEN_PATTERN.test(type) && TOKEN_PATTERN.test(subtype);
+  if (
+    !hasValidType ||
+    (type === "*" && subtype !== "*") ||
+    (!allowsWeight && (type === "*" || subtype === "*"))
+  ) {
+    return Option.none();
+  }
+  return Option.some({ type, subtype });
+}
+
 /** Parses one media type or range with validated RFC token parameters. */
 function parseMediaType(
   source: string,
@@ -216,20 +235,8 @@ function parseMediaType(
   }
 
   const [rawMediaType, ...rawParameters] = parts.value;
-  const mediaTypeParts = trimOptionalWhitespace(rawMediaType)
-    .toLowerCase()
-    .split("/");
-  if (mediaTypeParts.length !== 2) {
-    return Option.none();
-  }
-
-  const [type, subtype] = mediaTypeParts;
-  const hasValidType = TOKEN_PATTERN.test(type) && TOKEN_PATTERN.test(subtype);
-  if (
-    !hasValidType ||
-    (type === "*" && subtype !== "*") ||
-    (!allowsWeight && (type === "*" || subtype === "*"))
-  ) {
+  const mediaName = parseMediaName(rawMediaType, allowsWeight);
+  if (Option.isNone(mediaName)) {
     return Option.none();
   }
 
@@ -271,7 +278,7 @@ function parseMediaType(
     );
   }
 
-  return Option.some({ parameters, quality, subtype, type });
+  return Option.some({ parameters, quality, ...mediaName.value });
 }
 
 /** Parses one token or quoted-string parameter value for exact matching. */

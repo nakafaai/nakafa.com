@@ -144,11 +144,11 @@ async function TryoutSectionRoute({
     set,
     track,
   }).slice(1);
-  if (!attemptId) {
-    const preview = await readTryoutQuestionPreview(locale, sectionPath);
-    if (Option.isSome(preview)) {
-      return <TryoutQuestionPreview content={preview.value} />;
-    }
+  const preview = attemptId
+    ? Option.none()
+    : await readTryoutQuestionPreview(locale, sectionPath);
+  if (Option.isSome(preview)) {
+    return <TryoutQuestionPreview content={preview.value} />;
   }
   const resolved = await readRoutePage(locale, sectionPath, attemptId);
   if (resolved.authRequired && attemptId) {
@@ -188,6 +188,9 @@ async function TryoutSectionRoute({
     attemptPage.content.answers.length > 0
       ? attemptPage.initialState.runtime
       : null;
+  const startHref = attemptPage?.activeSectionPublicPath
+    ? getTryoutPublicPathHref(attemptPage.activeSectionPublicPath)
+    : null;
 
   return (
     <TryoutSectionPageClient
@@ -196,9 +199,7 @@ async function TryoutSectionRoute({
           ? {
               attemptId: attemptPage.attemptId,
               initialState: attemptPage.initialState,
-              startHref: attemptPage.activeSectionPublicPath
-                ? getTryoutPublicPathHref(attemptPage.activeSectionPublicPath)
-                : null,
+              startHref,
             }
           : null
       }

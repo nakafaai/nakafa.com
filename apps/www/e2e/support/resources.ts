@@ -1,5 +1,5 @@
 import type { Browser, Page, Request } from "@playwright/test";
-import { Clock, Duration, Effect, Schema } from "effect";
+import { Clock, Duration, Effect, Option, Schema } from "effect";
 import { withBrowserContext } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import {
@@ -155,6 +155,24 @@ const readJavascriptRun = Effect.fn("NakafaE2E.readJavascriptRun")(function* (
   );
 });
 
+const readStableJavascriptRun = Effect.fn("NakafaE2E.readStableJavascriptRun")(
+  function* (page: Page, href: string, requestTracker: RequestTracker) {
+    const snapshotRevision = requestTracker.revision;
+    const javascriptRun = yield* readJavascriptRun(page);
+    const snapshotFailure = requestTracker.getFailure("javascript");
+    if (snapshotFailure) {
+      return yield* new JavascriptResourceRequestError({
+        ...snapshotFailure,
+        href,
+      });
+    }
+    return requestTracker.pendingCount === 0 &&
+      requestTracker.revision === snapshotRevision
+      ? Option.some(javascriptRun)
+      : Option.none<JavascriptRun>();
+  }
+);
+
 const readSettledJavascriptRun = Effect.fn(
   "NakafaE2E.readSettledJavascriptRun"
 )(function* (page: Page, href: string, requestTracker: RequestTracker) {
@@ -183,10 +201,9 @@ const readSettledJavascriptRun = Effect.fn(
     }
     if (requestTracker.successfulCount("prefetch") === 0) {
       if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
-        const lastFailure = requestTracker.getFailure("prefetch");
         return yield* new JavascriptPrefetchReadinessTimeout({
           href,
-          ...(lastFailure ? { lastFailure } : {}),
+          lastFailure: requestTracker.getFailure("prefetch"),
           timeoutMilliseconds: RESOURCE_SETTLE_TIMEOUT_MILLISECONDS,
         });
       }
@@ -197,20 +214,13 @@ const readSettledJavascriptRun = Effect.fn(
       requestTracker.pendingCount === 0 &&
       observedAt - lastChangeAt >= RESOURCE_IDLE_MILLISECONDS
     ) {
-      const snapshotRevision = requestTracker.revision;
-      const javascriptRun = yield* readJavascriptRun(page);
-      const snapshotFailure = requestTracker.getFailure("javascript");
-      if (snapshotFailure) {
-        return yield* new JavascriptResourceRequestError({
-          ...snapshotFailure,
-          href,
-        });
-      }
-      if (
-        requestTracker.pendingCount === 0 &&
-        requestTracker.revision === snapshotRevision
-      ) {
-        return javascriptRun;
+      const snapshot = yield* readStableJavascriptRun(
+        page,
+        href,
+        requestTracker
+      );
+      if (Option.isSome(snapshot)) {
+        return snapshot.value;
       }
     }
     if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
