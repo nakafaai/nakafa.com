@@ -101,9 +101,7 @@ export function SubatomicParticlesLab({
         </ToggleGroup>
 
         <div className={threeSceneFrameVariants()}>
-          <ThreeCanvas
-            camera={{ fov: 45, position: viewConfig.cameraPosition }}
-          >
+          <ThreeCanvas>
             <Suspense>
               <SubatomicCameraControls viewConfig={viewConfig} />
               <ambientLight intensity={0.75} />
@@ -174,6 +172,7 @@ function SubatomicCameraControls({
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={viewConfig.cameraTarget}
+      fov={45}
     />
   );
 }

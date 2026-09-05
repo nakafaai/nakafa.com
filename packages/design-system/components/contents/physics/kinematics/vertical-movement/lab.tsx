@@ -2,6 +2,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -94,10 +95,7 @@ export function VerticalMovementLab({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{ fov: 42, position: CAMERA_POSITION }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ambientLight intensity={0.72} />
               <hemisphereLight
@@ -120,7 +118,7 @@ export function VerticalMovementLab({
                 enablePan
                 enableRotate
                 enableZoom
-                minDistance={2.4}
+                fov={42}
               />
               <VerticalMotionScene motion={motion} />
             </Suspense>
@@ -235,16 +233,34 @@ function AnimatedBall({ motion }: { motion: MotionState }) {
   });
 
   return (
-    <group ref={ballRef}>
-      <mesh castShadow>
-        <sphereGeometry args={[BALL_RADIUS, 32, 32]} />
-        <meshStandardMaterial color={getColor("BLUE")} roughness={0.34} />
-      </mesh>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[BALL_RADIUS + 0.004, 0.008, 8, 32]} />
-        <meshStandardMaterial color={getColor("BLUE", 200)} roughness={0.42} />
-      </mesh>
-    </group>
+    <CameraBounds
+      motion={{
+        rotation: "x",
+        translation: {
+          x: { min: 0, max: 0 },
+          y: {
+            min: BALL_RADIUS,
+            max: motion.maxHeight * WORLD_SCALE + BALL_RADIUS,
+          },
+          z: { min: 0, max: 0 },
+        },
+      }}
+      objectRef={ballRef}
+    >
+      <group>
+        <mesh castShadow>
+          <sphereGeometry args={[BALL_RADIUS, 32, 32]} />
+          <meshStandardMaterial color={getColor("BLUE")} roughness={0.34} />
+        </mesh>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[BALL_RADIUS + 0.004, 0.008, 8, 32]} />
+          <meshStandardMaterial
+            color={getColor("BLUE", 200)}
+            roughness={0.42}
+          />
+        </mesh>
+      </group>
+    </CameraBounds>
   );
 }
 

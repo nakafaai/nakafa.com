@@ -40,10 +40,7 @@ export function PeriodicPropertiesCanvas({
 
   return (
     <section aria-label={ariaLabel} className={threeSceneFrameVariants()}>
-      <ThreeCanvas
-        camera={{ fov: 44, position: CAMERA_POSITION }}
-        frameloop="demand"
-      >
+      <ThreeCanvas frameloop="demand">
         <Suspense>
           <PeriodicPropertiesRenderSync key={modeId} />
           <ResponsivePeriodicPropertiesCamera />
@@ -96,8 +93,7 @@ function ResponsivePeriodicPropertiesCamera() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={cameraTarget}
-      maxDistance={12}
-      minDistance={3}
+      fov={44}
     />
   );
 }

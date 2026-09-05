@@ -36,7 +36,7 @@ export function TrustLayout({
 
   return (
     <div
-      className="grid divide-y lg:h-[50rem] lg:grid-cols-[minmax(0,var(--trust-primary-size))_1px_minmax(0,var(--trust-source-size))] lg:divide-y-0"
+      className="grid auto-rows-[50rem] divide-y lg:grid-cols-[minmax(0,var(--trust-primary-size))_1px_minmax(0,var(--trust-source-size))] lg:divide-y-0"
       data-trust-layout=""
       ref={ref}
       style={layoutStyle}

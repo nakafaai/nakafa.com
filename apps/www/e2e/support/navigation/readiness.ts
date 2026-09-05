@@ -1,11 +1,14 @@
 import { errors, expect, type Locator, type Page } from "@playwright/test";
-import { Effect } from "effect";
+import { Duration, Effect, Schedule } from "effect";
 import {
   NavigationBrowserReadinessError,
   NavigationReadinessTimeout,
   NavigationRequestError,
   readErrorText,
 } from "@/e2e/support/navigation/failure";
+
+const DETACHED_ELEMENT_MESSAGE = "Element is not attached to the DOM";
+const VIEWPORT_RETRY_MILLISECONDS = 100;
 
 const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
   page: Page,
@@ -111,7 +114,7 @@ const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
     targetHref: string,
     timeoutMilliseconds: number
   ) {
-    const mapViewportError = (error: unknown) =>
+    const viewportTimeout = (error: unknown) =>
       new NavigationReadinessTimeout({
         errorText: readErrorText(error),
         href: targetHref,
@@ -120,14 +123,41 @@ const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
         timeoutMilliseconds,
       });
 
-    yield* Effect.tryPromise({
-      try: () => link.scrollIntoViewIfNeeded({ timeout: timeoutMilliseconds }),
-      catch: mapViewportError,
-    });
-    yield* Effect.tryPromise({
-      try: () => expect(link).toBeInViewport({ timeout: timeoutMilliseconds }),
-      catch: mapViewportError,
-    });
+    yield* Effect.gen(function* () {
+      yield* Effect.tryPromise({
+        // Re-resolve the Locator when React replaces its mounted ElementHandle.
+        try: (signal) =>
+          link.scrollIntoViewIfNeeded({ signal, timeout: timeoutMilliseconds }),
+        catch: (error) =>
+          error instanceof errors.TimeoutError
+            ? viewportTimeout(error)
+            : new NavigationBrowserReadinessError({
+                errorText: readErrorText(error),
+                href: targetHref,
+                phase: "viewport",
+                sourceHref,
+              }),
+      }).pipe(
+        Effect.retry({
+          schedule: Schedule.spaced(
+            Duration.millis(VIEWPORT_RETRY_MILLISECONDS)
+          ),
+          while: (error) =>
+            error._tag === "NavigationBrowserReadinessError" &&
+            error.errorText?.includes(DETACHED_ELEMENT_MESSAGE) === true,
+        })
+      );
+      yield* Effect.tryPromise({
+        try: () =>
+          expect(link).toBeInViewport({ timeout: timeoutMilliseconds }),
+        catch: viewportTimeout,
+      });
+    }).pipe(
+      Effect.timeoutOrElse({
+        duration: Duration.millis(timeoutMilliseconds),
+        orElse: () => viewportTimeout(undefined),
+      })
+    );
   }
 );
 

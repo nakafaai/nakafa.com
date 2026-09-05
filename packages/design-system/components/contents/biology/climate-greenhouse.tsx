@@ -7,6 +7,7 @@ import {
   type BiologySceneColors,
   getBiologySceneColors,
 } from "@repo/design-system/components/contents/biology/data";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -62,17 +63,13 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{ fov: 42, position: [3, 1.7, 4.05] }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <CameraControls
                 autoRotate={false}
                 cameraPosition={[3, 1.7, 4.05]}
                 cameraTarget={[0.1, 0.08, 0]}
-                maxDistance={7}
-                minDistance={2.15}
+                fov={42}
               />
               <ambientLight intensity={0.58} />
               <hemisphereLight
@@ -137,9 +134,9 @@ function GreenhouseScene({
   return (
     <group position={[0, 0.02, 0]}>
       <SunLight color={colors.grain} />
-      <group ref={earthRef}>
+      <CameraBounds motion={{ rotation: "y" }} objectRef={earthRef}>
         <EarthModel colors={colors} gasLevel={gasLevel} />
-      </group>
+      </CameraBounds>
       <HeatParticles
         color={colors.heat}
         gasLevel={gasLevel}
@@ -221,7 +218,7 @@ function HeatParticles({
   const particleCount = 4 + gasLevel * 2;
 
   return (
-    <group ref={refObject}>
+    <CameraBounds motion={{ rotation: "y" }} objectRef={refObject}>
       {HEAT_PARTICLE_IDS.slice(0, particleCount).map((id, index) => (
         <mesh key={id} position={getHeatParticlePosition(index, particleCount)}>
           <sphereGeometry args={[0.026, 18, 12]} />
@@ -234,7 +231,7 @@ function HeatParticles({
           />
         </mesh>
       ))}
-    </group>
+    </CameraBounds>
   );
 }
 

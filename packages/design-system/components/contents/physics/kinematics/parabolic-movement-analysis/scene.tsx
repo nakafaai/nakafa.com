@@ -1,6 +1,6 @@
 "use client";
 
-import { Sky, useGLTF } from "@react-three/drei";
+import { Environment, Sky, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {
   getProjectileLoopSample,
@@ -11,8 +11,9 @@ import {
   type ProjectileScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { Ocean } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/ocean";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
-import { type RefObject, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import {
   CatmullRomCurve3,
   type Group,
@@ -42,32 +43,36 @@ export function PirateProjectileScene({
 }: {
   motion: ProjectileMotionState;
 }) {
-  const worldRef = useRef<Group>(null);
-
   return (
-    <group ref={worldRef}>
+    <group>
       <SceneSky />
-      <Ocean motion={motion} />
+      <CameraBounds exclude>
+        <Ocean motion={motion} />
+      </CameraBounds>
       <StartIsland />
       <TargetIsland motion={motion} />
       <Trajectory motion={motion} />
       <GhostBalls motion={motion} />
-      <AnimatedCannonBall motion={motion} worldRef={worldRef} />
-      <MuzzleBlast motion={motion} />
+      <AnimatedCannonBall motion={motion} />
+      <CameraBounds exclude>
+        <MuzzleBlast motion={motion} />
+      </CameraBounds>
     </group>
   );
 }
 
 function SceneSky() {
   return (
-    <Sky
-      distance={450}
-      mieCoefficient={0.006}
-      mieDirectionalG={0.72}
-      rayleigh={1.2}
-      sunPosition={[8, 5, 6]}
-      turbidity={4.2}
-    />
+    <Environment background="only" frames={1} resolution={128}>
+      <Sky
+        distance={450}
+        mieCoefficient={0.006}
+        mieDirectionalG={0.72}
+        rayleigh={1.2}
+        sunPosition={[8, 5, 6]}
+        turbidity={4.2}
+      />
+    </Environment>
   );
 }
 
@@ -187,13 +192,7 @@ function GhostBalls({ motion }: { motion: ProjectileMotionState }) {
   );
 }
 
-function AnimatedCannonBall({
-  motion,
-  worldRef,
-}: {
-  motion: ProjectileMotionState;
-  worldRef: RefObject<Group | null>;
-}) {
+function AnimatedCannonBall({ motion }: { motion: ProjectileMotionState }) {
   const ballRef = useRef<Group>(null);
   const startRef = useRef<number | null>(null);
   const scenarioRef = useRef<ProjectileScenarioId | null>(null);
@@ -219,16 +218,34 @@ function AnimatedCannonBall({
 
     ballRef.current.position.set(...position);
     ballRef.current.rotation.z = -sample.point.x * 2.3;
-
-    if (worldRef.current) {
-      worldRef.current.position.x = -sample.point.x * 0.42;
-    }
   });
 
   return (
-    <group ref={ballRef} scale={PROJECTILE_SCENE.ballScale}>
-      <SceneAsset path={PROJECTILE_ASSET_PATHS.ball} />
-    </group>
+    <CameraBounds
+      motion={{
+        rotation: "z",
+        translation: {
+          x: {
+            min: PROJECTILE_SCENE.launchOffset[0],
+            max: PROJECTILE_SCENE.launchOffset[0] + motion.rangeWorld,
+          },
+          y: {
+            min: PROJECTILE_SCENE.launchOffset[1],
+            max: PROJECTILE_SCENE.launchOffset[1] + motion.peakWorld,
+          },
+          z: {
+            min: PROJECTILE_SCENE.launchOffset[2],
+            max: PROJECTILE_SCENE.launchOffset[2],
+          },
+        },
+      }}
+      objectRef={ballRef}
+    >
+      <SceneAsset
+        path={PROJECTILE_ASSET_PATHS.ball}
+        scale={PROJECTILE_SCENE.ballScale}
+      />
+    </CameraBounds>
   );
 }
 

@@ -69,10 +69,7 @@ export function VectorConceptLab({
           aria-label={labels.bridgeView}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{ fov: 44, position: CAMERA_POSITION }}
-            frameloop="demand"
-          >
+          <ThreeCanvas frameloop="demand">
             <Suspense>
               <ResponsiveVectorConceptCamera />
               <ambientLight intensity={0.72} />
@@ -138,8 +135,7 @@ function ResponsiveVectorConceptCamera() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
-      maxDistance={9.2}
-      minDistance={3.2}
+      fov={44}
     />
   );
 }

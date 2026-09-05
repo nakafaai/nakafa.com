@@ -19,6 +19,7 @@ import {
   type StoppingDistanceState,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -95,13 +96,7 @@ export function StoppingDistanceLab({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 44,
-              position: STOPPING_DISTANCE_CAMERA.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ambientLight intensity={0.7} />
               <hemisphereLight
@@ -172,18 +167,17 @@ function StoppingDistanceCamera() {
       enablePan
       enableRotate
       enableZoom
-      maxDistance={20}
-      minDistance={3.1}
+      fov={44}
     />
   );
 }
 
 function StoppingDistanceScene({ motion }: { motion: StoppingDistanceState }) {
-  const sceneRef = useRef<Group>(null);
-
   return (
-    <group ref={sceneRef}>
-      <Road />
+    <group>
+      <CameraBounds exclude>
+        <Road />
+      </CameraBounds>
       <DistanceStrip
         color={REACTION_DISTANCE_COLOR}
         endX={motion.reactionEndX}
@@ -197,18 +191,12 @@ function StoppingDistanceScene({ motion }: { motion: StoppingDistanceState }) {
         z={DISTANCE_MARKER_Z}
       />
       <StopCone x={motion.stopX} />
-      <AnimatedCar motion={motion} sceneRef={sceneRef} />
+      <AnimatedCar motion={motion} />
     </group>
   );
 }
 
-function AnimatedCar({
-  motion,
-  sceneRef,
-}: {
-  motion: StoppingDistanceState;
-  sceneRef: RefObject<Group | null>;
-}) {
+function AnimatedCar({ motion }: { motion: StoppingDistanceState }) {
   const groupRef = useRef<Group>(null);
   const brakeDustRef = useRef<Group>(null);
   const animationStartRef = useRef<number | null>(null);
@@ -233,10 +221,6 @@ function AnimatedCar({
     const carX = getAnimatedCarX(motion, elapsed);
     groupRef.current.position.set(carX, 0.025, 0);
 
-    if (sceneRef.current) {
-      sceneRef.current.position.x = -carX;
-    }
-
     if (!brakeDustRef.current) {
       return;
     }
@@ -251,10 +235,23 @@ function AnimatedCar({
 
   return (
     <>
-      <group ref={groupRef} rotation={[0, Math.PI / 2, 0]} scale={0.66}>
-        <CarModel />
-      </group>
-      <BrakeDust dustRef={brakeDustRef} />
+      <CameraBounds
+        motion={{
+          translation: {
+            x: { min: motion.startX, max: motion.stopX },
+            y: { min: 0.025, max: 0.025 },
+            z: { min: 0, max: 0 },
+          },
+        }}
+        objectRef={groupRef}
+      >
+        <group rotation={[0, Math.PI / 2, 0]} scale={0.66}>
+          <CarModel />
+        </group>
+      </CameraBounds>
+      <CameraBounds exclude>
+        <BrakeDust dustRef={brakeDustRef} />
+      </CameraBounds>
     </>
   );
 }

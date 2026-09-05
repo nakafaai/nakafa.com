@@ -7,6 +7,7 @@ import { readProgramContext } from "@repo/backend/content/program/context";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import { slugify } from "@repo/design-system/lib/routing/slug";
+import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
@@ -28,6 +29,11 @@ export interface PublishedMaterialContext {
   readonly label: string;
   readonly mapping: CurriculumRoute;
   readonly parent: CurriculumRoute;
+  readonly resolvedCanonicalPath: NonNullable<
+    FunctionReturnType<
+      typeof api.contentRelease.program.context
+    >["resolvedCanonicalPath"]
+  >;
 }
 
 /** Reads one exact published curriculum context for a material identity. */
@@ -131,6 +137,7 @@ export const readPublishedMaterialContext = Effect.fn(
     label,
     mapping,
     parent,
+    resolvedCanonicalPath: result.resolvedCanonicalPath,
   } satisfies PublishedMaterialContext;
 });
 

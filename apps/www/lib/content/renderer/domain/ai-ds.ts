@@ -1,12 +1,10 @@
 import { aiDsComponentNames } from "@repo/design-system/lib/markdown/names";
-import type { RendererComponentLoader } from "@/lib/content/renderer/loader";
+import { LineEquation } from "@/lib/content/renderer/client/ai/equation";
+import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainComponentLoaders = [
+export const domainRenderers = [
   {
     name: aiDsComponentNames.lineEquation,
-    load: () =>
-      import("@/lib/content/renderer/client/ai/equation").then(
-        ({ LineEquation }) => LineEquation
-      ),
+    component: LineEquation,
   },
-] satisfies readonly RendererComponentLoader[];
+] satisfies readonly RendererImplementation[];

@@ -18,6 +18,7 @@ import {
   type UniformLinearMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-linear-motion/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -114,13 +115,7 @@ export function UniformLinearMotionLab({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 43,
-              position: UNIFORM_LINEAR_MOTION_CAMERA.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ambientLight intensity={0.72} />
               <hemisphereLight
@@ -144,8 +139,7 @@ export function UniformLinearMotionLab({
                 enablePan
                 enableRotate
                 enableZoom
-                maxDistance={18}
-                minDistance={3}
+                fov={43}
               />
               <UniformLinearMotionScene motion={motion} />
             </Suspense>
@@ -185,7 +179,9 @@ function UniformLinearMotionScene({
 }) {
   return (
     <group>
-      <Road roadLength={motion.roadLength} />
+      <CameraBounds exclude>
+        <Road roadLength={motion.roadLength} />
+      </CameraBounds>
       <mesh position={[motion.trackCenterX, 0.045, TRACK_Z]}>
         <boxGeometry args={[motion.trackLength, 0.03, 0.08]} />
         <meshStandardMaterial
@@ -233,12 +229,23 @@ function AnimatedCar({ motion }: { motion: UniformLinearMotionState }) {
   });
 
   return (
-    <group ref={groupRef} rotation={[0, Math.PI / 2, 0]} scale={0.66}>
-      <PhysicsCarModel
-        bodyColor={UNIFORM_LINEAR_MOTION_COLORS.car}
-        modelPath={UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH}
-      />
-    </group>
+    <CameraBounds
+      motion={{
+        translation: {
+          x: { min: motion.startX, max: motion.endX },
+          y: { min: 0.025, max: 0.025 },
+          z: { min: 0, max: 0 },
+        },
+      }}
+      objectRef={groupRef}
+    >
+      <group rotation={[0, Math.PI / 2, 0]} scale={0.66}>
+        <PhysicsCarModel
+          bodyColor={UNIFORM_LINEAR_MOTION_COLORS.car}
+          modelPath={UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH}
+        />
+      </group>
+    </CameraBounds>
   );
 }
 

@@ -1,134 +1,103 @@
+import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
 import { mathematicsComponentNames } from "@repo/design-system/lib/markdown/names";
-import type { RendererComponentLoader } from "@/lib/content/renderer/loader";
+import {
+  BarChart,
+  FunctionChart,
+  HistogramChart,
+  ScatterDiagram,
+  VectorChart,
+} from "@/lib/content/renderer/client/mathematics/charts";
+import {
+  Inequality,
+  LineEquation,
+  QuadraticEquationReadingRoomProblem,
+} from "@/lib/content/renderer/client/mathematics/equation";
+import {
+  FunctionAndNonFunctionDiagram,
+  FunctionAndNonFunctionRelationVisualizer,
+  FunctionMachine,
+  InverseFunctionIllustration,
+} from "@/lib/content/renderer/client/mathematics/function";
+import { UnitCircle } from "@/lib/content/renderer/client/mathematics/geometry";
+import {
+  BacterialGrowth,
+  FunctionExplorationVirusChart,
+} from "@/lib/content/renderer/client/mathematics/growth";
+import { SequenceConceptTableChairsAnimation } from "@/lib/content/renderer/client/mathematics/sequence";
+import { Vector3d } from "@/lib/content/renderer/client/mathematics/vector";
+import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainComponentLoaders = [
+export const domainRenderers = [
   {
     name: mathematicsComponentNames.bacterialGrowth,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/growth").then(
-        ({ BacterialGrowth }) => BacterialGrowth
-      ),
+    component: BacterialGrowth,
   },
   {
     name: mathematicsComponentNames.barChart,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/charts").then(
-        ({ BarChart }) => BarChart
-      ),
+    component: BarChart,
   },
   {
     name: mathematicsComponentNames.functionAndNonFunctionDiagram,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/function").then(
-        ({ FunctionAndNonFunctionDiagram }) => FunctionAndNonFunctionDiagram
-      ),
+    component: FunctionAndNonFunctionDiagram,
   },
   {
     name: mathematicsComponentNames.functionAndNonFunctionRelationVisualizer,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/function").then(
-        ({ FunctionAndNonFunctionRelationVisualizer }) =>
-          FunctionAndNonFunctionRelationVisualizer
-      ),
+    component: FunctionAndNonFunctionRelationVisualizer,
   },
   {
     name: mathematicsComponentNames.functionChart,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/charts").then(
-        ({ FunctionChart }) => FunctionChart
-      ),
+    component: FunctionChart,
   },
   {
     name: mathematicsComponentNames.functionExplorationVirusChart,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/growth").then(
-        ({ FunctionExplorationVirusChart }) => FunctionExplorationVirusChart
-      ),
+    component: FunctionExplorationVirusChart,
   },
   {
     name: mathematicsComponentNames.functionMachine,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/function").then(
-        ({ FunctionMachine }) => FunctionMachine
-      ),
+    component: FunctionMachine,
   },
   {
     name: mathematicsComponentNames.histogramChart,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/charts").then(
-        ({ HistogramChart }) => HistogramChart
-      ),
+    component: HistogramChart,
   },
   {
     name: mathematicsComponentNames.inequality,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/equation").then(
-        ({ Inequality }) => Inequality
-      ),
+    component: Inequality,
   },
   {
     name: mathematicsComponentNames.inverseFunctionIllustration,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/function").then(
-        ({ InverseFunctionIllustration }) => InverseFunctionIllustration
-      ),
+    component: InverseFunctionIllustration,
   },
   {
     name: mathematicsComponentNames.lineEquation,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/equation").then(
-        ({ LineEquation }) => LineEquation
-      ),
+    component: LineEquation,
   },
   {
     name: mathematicsComponentNames.quadraticEquationReadingRoomProblem,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/equation").then(
-        ({ QuadraticEquationReadingRoomProblem }) =>
-          QuadraticEquationReadingRoomProblem
-      ),
+    component: QuadraticEquationReadingRoomProblem,
   },
   {
     name: mathematicsComponentNames.scatterDiagram,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/charts").then(
-        ({ ScatterDiagram }) => ScatterDiagram
-      ),
+    component: ScatterDiagram,
   },
   {
     name: mathematicsComponentNames.sequenceConceptTableChairsAnimation,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/sequence").then(
-        ({ SequenceConceptTableChairsAnimation }) =>
-          SequenceConceptTableChairsAnimation
-      ),
+    component: SequenceConceptTableChairsAnimation,
   },
   {
     name: mathematicsComponentNames.triangle,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/geometry").then(
-        ({ Triangle }) => Triangle
-      ),
+    component: Triangle,
   },
   {
     name: mathematicsComponentNames.unitCircle,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/geometry").then(
-        ({ UnitCircle }) => UnitCircle
-      ),
+    component: UnitCircle,
   },
   {
     name: mathematicsComponentNames.vector3d,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/vector").then(
-        ({ Vector3d }) => Vector3d
-      ),
+    component: Vector3d,
   },
   {
     name: mathematicsComponentNames.vectorChart,
-    load: () =>
-      import("@/lib/content/renderer/client/mathematics/charts").then(
-        ({ VectorChart }) => VectorChart
-      ),
+    component: VectorChart,
   },
-] satisfies readonly RendererComponentLoader[];
+] satisfies readonly RendererImplementation[];

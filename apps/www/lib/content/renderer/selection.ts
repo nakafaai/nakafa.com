@@ -7,41 +7,40 @@ import {
   RendererDomainSchema,
 } from "@nakafa/aksara-contracts/renderer/domain";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
+import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Effect, Schema } from "effect";
-import { baseComponentLoaders } from "@/lib/content/renderer/domain/base";
-import type {
-  RendererComponentLoader,
-  RendererDomainModule,
-} from "@/lib/content/renderer/loader";
+import { domainRenderers as aiDsRenderers } from "@/lib/content/renderer/domain/ai-ds";
+import { baseRenderers } from "@/lib/content/renderer/domain/base";
+import { domainRenderers as biologyRenderers } from "@/lib/content/renderer/domain/biology";
+import { domainRenderers as chemistryRenderers } from "@/lib/content/renderer/domain/chemistry";
+import { domainRenderers as mathematicsRenderers } from "@/lib/content/renderer/domain/mathematics";
+import { domainRenderers as physicsRenderers } from "@/lib/content/renderer/domain/physics";
+import { domainRenderers as politicsRenderers } from "@/lib/content/renderer/domain/politics";
+import { domainRenderers as siteRenderers } from "@/lib/content/renderer/domain/site";
+import { domainRenderers as snbtGeneralRenderers } from "@/lib/content/renderer/domain/snbt-general";
+import { domainRenderers as snbtMathRenderers } from "@/lib/content/renderer/domain/snbt-math";
+import { domainRenderers as snbtPlainRenderers } from "@/lib/content/renderer/domain/snbt-plain";
+import { domainRenderers as snbtQuantRenderers } from "@/lib/content/renderer/domain/snbt-quant";
+import { domainRenderers as tkaMathRenderers } from "@/lib/content/renderer/domain/tka-math";
 
 export type RendererSelection = Pick<
   CompiledContentPayload,
   "contentKey" | "rendererDomain" | "requiredComponents"
 >;
 
-type RendererDomainModuleLoader = () => Promise<RendererDomainModule>;
-type RendererDomainModuleLoaders = {
-  readonly [Domain in RendererDomain]: RendererDomainModuleLoader;
-};
+/** One signed name and its statically registered server or lazy client renderer. */
+export interface RendererImplementation {
+  readonly component: MDXComponents[string];
+  readonly name: string;
+}
 
 export type SelectedRenderer =
   | {
       readonly kind: "implementation";
-      readonly loader: RendererComponentLoader;
+      readonly component: MDXComponents[string];
       readonly name: string;
     }
   | { readonly kind: "semantic"; readonly name: string };
-
-/** A selected renderer domain module or implementation could not be loaded. */
-export class RendererDomainLoadError extends Schema.TaggedError<RendererDomainLoadError>()(
-  "RendererDomainLoadError",
-  {
-    cause: Schema.Unknown,
-    componentName: Schema.optional(Schema.String),
-    contentKey: ContentKeySchema,
-    rendererDomain: RendererDomainSchema,
-  }
-) {}
 
 /** A signed requirement has no physical implementation. */
 export class RendererImplementationMissing extends Schema.TaggedError<RendererImplementationMissing>()(
@@ -63,61 +62,49 @@ export class RendererComponentCollision extends Schema.TaggedError<RendererCompo
   }
 ) {}
 
-const rendererDomainModuleLoaders: RendererDomainModuleLoaders = {
-  "ai-ds": () => import("@/lib/content/renderer/domain/ai-ds"),
-  biology: () => import("@/lib/content/renderer/domain/biology"),
-  chemistry: () => import("@/lib/content/renderer/domain/chemistry"),
-  mathematics: () => import("@/lib/content/renderer/domain/mathematics"),
-  physics: () => import("@/lib/content/renderer/domain/physics"),
-  politics: () => import("@/lib/content/renderer/domain/politics"),
-  site: () => import("@/lib/content/renderer/domain/site"),
-  "snbt-general": () => import("@/lib/content/renderer/domain/snbt-general"),
-  "snbt-math": () => import("@/lib/content/renderer/domain/snbt-math"),
-  "snbt-plain": () => import("@/lib/content/renderer/domain/snbt-plain"),
-  "snbt-quant": () => import("@/lib/content/renderer/domain/snbt-quant"),
-  "tka-math": () => import("@/lib/content/renderer/domain/tka-math"),
+/** Registers every lightweight domain before Next replays cached client references. */
+export const rendererDomainImplementations = {
+  "ai-ds": aiDsRenderers,
+  biology: biologyRenderers,
+  chemistry: chemistryRenderers,
+  mathematics: mathematicsRenderers,
+  physics: physicsRenderers,
+  politics: politicsRenderers,
+  site: siteRenderers,
+  "snbt-general": snbtGeneralRenderers,
+  "snbt-math": snbtMathRenderers,
+  "snbt-plain": snbtPlainRenderers,
+  "snbt-quant": snbtQuantRenderers,
+  "tka-math": tkaMathRenderers,
+} satisfies {
+  readonly [Domain in RendererDomain]: readonly RendererImplementation[];
 };
 
 const semanticNames = new Set<string>(semanticComponentNames);
 
-function findLoaders(
+function findImplementations(
   componentName: string,
-  loaders: readonly RendererComponentLoader[]
+  implementations: readonly RendererImplementation[]
 ) {
-  return loaders.filter(({ name }) => name === componentName);
+  return implementations.filter(({ name }) => name === componentName);
 }
-
-/** Loads the one literal domain registry selected by an authenticated payload. */
-export const loadRendererDomainModule = Effect.fn(
-  "NakafaContent.loadRendererDomainModule"
-)(function* (selection: RendererSelection) {
-  return yield* Effect.tryPromise({
-    catch: (cause) =>
-      new RendererDomainLoadError({
-        cause,
-        contentKey: selection.contentKey,
-        rendererDomain: selection.rendererDomain,
-      }),
-    try: rendererDomainModuleLoaders[selection.rendererDomain],
-  });
-});
 
 /** Resolves signed names to one semantic or physical implementation owner. */
 export const selectRendererImplementations = Effect.fn(
   "NakafaContent.selectRendererImplementations"
 )(function* (selection: RendererSelection) {
-  const domainModule = yield* loadRendererDomainModule(selection);
+  const domainRenderers =
+    rendererDomainImplementations[selection.rendererDomain];
 
   const selected: SelectedRenderer[] = [];
   for (const { name } of selection.requiredComponents) {
     const isSemantic = semanticNames.has(name);
-    const baseLoaders = findLoaders(name, baseComponentLoaders);
-    const domainLoaders = findLoaders(
-      name,
-      domainModule.domainComponentLoaders
-    );
+    const baseImplementations = findImplementations(name, baseRenderers);
+    const domainImplementations = findImplementations(name, domainRenderers);
     const matchCount =
-      Number(isSemantic) + baseLoaders.length + domainLoaders.length;
+      Number(isSemantic) +
+      baseImplementations.length +
+      domainImplementations.length;
 
     if (matchCount > 1) {
       return yield* new RendererComponentCollision({
@@ -130,14 +117,14 @@ export const selectRendererImplementations = Effect.fn(
       selected.push({ kind: "semantic", name });
       continue;
     }
-    const baseLoader = baseLoaders[0];
-    if (baseLoader !== undefined) {
-      selected.push({ kind: "implementation", loader: baseLoader, name });
+    const baseImplementation = baseImplementations[0];
+    if (baseImplementation !== undefined) {
+      selected.push({ kind: "implementation", ...baseImplementation });
       continue;
     }
-    const domainLoader = domainLoaders[0];
-    if (domainLoader !== undefined) {
-      selected.push({ kind: "implementation", loader: domainLoader, name });
+    const domainImplementation = domainImplementations[0];
+    if (domainImplementation !== undefined) {
+      selected.push({ kind: "implementation", ...domainImplementation });
       continue;
     }
     return yield* new RendererImplementationMissing({

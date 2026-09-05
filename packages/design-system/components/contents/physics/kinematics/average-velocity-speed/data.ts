@@ -96,8 +96,6 @@ export const AVERAGE_VELOCITY_SPEED_CAMERA = {
   cameraPosition: [4.8, 5.4, 7.2],
   cameraTarget: [0, 0.16, -0.05],
   fov: 40,
-  maxDistance: 18,
-  minDistance: 2.8,
 } as const;
 
 export const AVERAGE_VELOCITY_SPEED_COLORS = {

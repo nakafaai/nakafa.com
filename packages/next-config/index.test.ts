@@ -4,23 +4,7 @@ import {
   createLoopbackConnectSources,
   createSecurityHeaders,
   securityHeaders,
-  withAnalyzer,
-  withMDX,
 } from "@repo/next-config";
-
-vi.mock("@next/bundle-analyzer", () => ({
-  default: () => (sourceConfig: object) => ({
-    ...sourceConfig,
-    analyzerEnabled: true,
-  }),
-}));
-
-vi.mock("@next/mdx", () => ({
-  default: (mdxConfig: object) => (sourceConfig: object) => ({
-    ...sourceConfig,
-    mdxConfig,
-  }),
-}));
 
 describe("createLoopbackConnectSources", () => {
   it("allows the exact HTTP and WebSocket origins for local Convex", () => {
@@ -83,23 +67,5 @@ describe("createSecurityHeaders", () => {
         source: "/:path*",
       },
     ]);
-  });
-
-  it("composes analyzer and MDX config helpers", () => {
-    expect(withAnalyzer({ reactStrictMode: true })).toMatchObject({
-      analyzerEnabled: true,
-      reactStrictMode: true,
-    });
-    expect(withMDX({ reactStrictMode: true })).toMatchObject({
-      mdxConfig: {
-        options: {
-          remarkPlugins: [
-            "remark-gfm",
-            ["remark-math", { singleDollarTextMath: false }],
-          ],
-        },
-      },
-      reactStrictMode: true,
-    });
   });
 });

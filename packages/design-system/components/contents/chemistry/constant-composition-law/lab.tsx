@@ -89,13 +89,7 @@ export function ConstantCompositionLab({
           aria-label={labels.reactionView}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 43,
-              position: CONSTANT_COMPOSITION_SCENE_VIEW.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ConstantCompositionCameraControls />
               <ambientLight intensity={0.7} />
@@ -151,8 +145,7 @@ function ConstantCompositionCameraControls() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CONSTANT_COMPOSITION_SCENE_VIEW.cameraTarget}
-      maxDistance={8.6}
-      minDistance={2.7}
+      fov={43}
     />
   );
 }

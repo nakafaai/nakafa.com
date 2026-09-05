@@ -9,6 +9,8 @@ import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
 const MANY_SOLUTIONS_TITLE = "Sistem Persamaan Linear dengan Banyak Solusi";
+const TRIANGLE_ROUTE =
+  "/en/subjects/mathematics/trigonometry/right-triangle-naming";
 const VISUAL_ASSERTION_TIMEOUT = 5000;
 const REQUIRED_STABLE_SAMPLES = 2;
 
@@ -122,6 +124,64 @@ const orbitScene = Effect.fn("NakafaE2E.orbitScene")(function* (
   yield* Effect.promise(() => page.mouse.up());
 });
 
+const zoomScene = Effect.fn("NakafaE2E.zoomScene")(function* (
+  page: Page,
+  canvas: Locator,
+  deltaY: number,
+  steps = 12
+) {
+  yield* Effect.promise(() => canvas.hover());
+  for (let step = 0; step < steps; step += 1) {
+    yield* Effect.promise(() => page.mouse.wheel(0, deltaY));
+  }
+  yield* waitForStableCanvas(canvas);
+});
+
+const expectBoundedTriangleZoom = Effect.fn(
+  "NakafaE2E.expectBoundedTriangleZoom"
+)(function* (page: Page) {
+  yield* seedDeniedAnalyticsConsent(page);
+  const response = yield* Effect.promise(() =>
+    page.goto(TRIANGLE_ROUTE, { waitUntil: "domcontentloaded" })
+  );
+  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+  const scene = page.locator('[data-slot="triangle-scene"]');
+  const canvas = scene.locator("canvas");
+  const label = scene.getByText("Hypotenuse", { exact: true });
+  yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => expect(canvas).toBeVisible({ timeout: 30_000 }));
+  yield* Effect.promise(() => expect(label).toBeVisible());
+  yield* waitForStableCanvas(canvas);
+  const initialWidth = yield* Effect.promise(() =>
+    label.evaluate((element) => element.getBoundingClientRect().width)
+  );
+  yield* Effect.sync(() => expect(initialWidth).toBeGreaterThan(0));
+
+  yield* zoomScene(page, canvas, 240);
+  const boundedWidth = yield* Effect.promise(() =>
+    label.evaluate((element) => element.getBoundingClientRect().width)
+  );
+  yield* Effect.sync(() => {
+    // The label is offset from the target, so its perspective scale exceeds 2/3.
+    expect(boundedWidth / initialWidth).toBeGreaterThanOrEqual(0.66);
+    expect(boundedWidth / initialWidth).toBeLessThanOrEqual(0.75);
+  });
+  const atLimit = yield* Effect.promise(() => canvas.screenshot());
+  yield* zoomScene(page, canvas, 240);
+  const afterMoreZoom = yield* Effect.promise(() => canvas.screenshot());
+  yield* Effect.sync(() => expect(afterMoreZoom.equals(atLimit)).toBe(true));
+
+  yield* zoomScene(page, canvas, -240, 1);
+  yield* expectCanvasToMove(canvas, atLimit);
+  const zoomedInWidth = yield* Effect.promise(() =>
+    label.evaluate((element) => element.getBoundingClientRect().width)
+  );
+  yield* Effect.sync(() => expect(zoomedInWidth).toBeGreaterThan(boundedWidth));
+  const beforeOrbit = yield* Effect.promise(() => canvas.screenshot());
+  yield* orbitScene(page, canvas);
+  yield* expectCanvasToMove(canvas, beforeOrbit);
+});
+
 const expectStableCoordinateSystem = Effect.fn(
   "NakafaE2E.expectStableCoordinateSystem"
 )(function* (page: Page) {
@@ -210,3 +270,30 @@ test("coordinate-system interaction keeps its drawing buffer stable", async ({
     )
   );
 });
+
+for (const width of [390, 1200]) {
+  test(`triangle zoom remains readable and interactive at ${width}px`, async ({
+    baseURL,
+    browser,
+  }) => {
+    expect(baseURL).toBeTruthy();
+    await Effect.runPromise(
+      withBrowserContext(
+        browser,
+        {
+          baseURL: baseURL ?? "",
+          serviceWorkers: "block",
+          viewport: { height: 844, width },
+        },
+        (context) =>
+          Effect.gen(function* () {
+            const page = yield* Effect.promise(() => context.newPage());
+            yield* withObservedPageErrors(
+              page,
+              expectBoundedTriangleZoom(page)
+            );
+          })
+      )
+    );
+  });
+}

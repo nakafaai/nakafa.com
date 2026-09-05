@@ -3,191 +3,85 @@ import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
-import {
-  type TryoutCatalogRow,
-  TryoutCatalogRowSchema,
-} from "@nakafa/aksara-contracts/tryout/catalog";
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
-import { readFeaturedTryout } from "@repo/backend/content/tryout/featured";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { LANDING_FEATURED_TRYOUT } from "@repo/backend/content/tryout/featured";
+import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
-import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
-  activateTryoutStartSource,
-  makeTryoutStartCatalog,
-  makeTryoutStartHierarchy,
-  makeTryoutStartPlacement,
-  TRYOUT_REUSED_SECTION,
-  TRYOUT_REUSED_SET,
-  TRYOUT_START_CONTENT_HASH,
-  TRYOUT_START_COUNTRY,
-  TRYOUT_START_EXAM,
-  TRYOUT_START_SECTION,
-  TRYOUT_START_SET,
-  TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout/source";
+  activateLandingSource,
+  makeLandingHierarchy,
+  makeLandingPlacement,
+} from "@repo/backend/test/tryout/landing";
+import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
+import { TRYOUT_START_CONTENT_HASH } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
-const FIRST_SOURCE_SEGMENT = `/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
-const SECOND_SOURCE_SEGMENT = `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}`;
-const SECOND_SET_PATH = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_REUSED_SET}`;
-const SECOND_TRACK = "second-track";
-const SECOND_TRACK_PATH = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${SECOND_TRACK}`;
-const SECOND_TRACK_SET_PATH = `${SECOND_TRACK_PATH}/${TRYOUT_REUSED_SET}`;
-type NestedCatalogRow = Extract<
-  TryoutCatalogRow,
-  { readonly kind: "section" | "set" | "track" }
->;
+const LANDING_SET_PATH = "try-out/indonesia/snbt/2027/set-1";
+const DISTRACTOR_CONTENT_ROOT =
+  "question-bank/tryout/indonesia/snbt/general-reasoning/set-1";
+const DISTRACTOR_SOURCE_ROOT =
+  "packages/corpus/question-bank/tryout/indonesia/snbt/general-reasoning/set-1";
+const DISTRACTOR_QUESTION_ROOT = `${DISTRACTOR_CONTENT_ROOT}/question-1`;
+const DISTRACTOR_QUESTION_SOURCE_ROOT = `${DISTRACTOR_SOURCE_ROOT}/question-1`;
 
-/** Gives copied fixture rows distinct graph identities. */
-function makeSecondSetGraph(graph: TryoutCatalogRow["graph"]) {
-  return {
-    alignmentId: `${graph.alignmentId}:second`,
-    assetId: `${graph.assetId}:second`,
-    conceptId: `${graph.conceptId}:second`,
-    learningObjectId: `${graph.learningObjectId}:second`,
-    lensId: `${graph.lensId}:second`,
-  };
-}
+/** Adds an earlier signed section without changing the landing target. */
+function makeLeadingSectionHierarchy(locale: ActiveAppLocaleCode) {
+  const hierarchy = makeLandingHierarchy(locale, "visible");
+  const target = hierarchy.find(
+    (row) =>
+      row.kind === "section" &&
+      row.sectionKey === LANDING_FEATURED_TRYOUT.sectionKey
+  );
+  if (!(target && target.kind === "section")) {
+    throw new Error("Expected the stable landing section fixture.");
+  }
 
-/** Builds a hierarchy whose first set is private and second set is public. */
-function makeInternalThenVisibleCatalog(locale: ActiveAppLocaleCode) {
-  const privateFirstHierarchy = makeTryoutStartHierarchy(
-    locale,
-    "internal-entry"
-  ).map((row) =>
-    row.kind === "track"
-      ? {
+  return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
+    ...hierarchy.map((row) => {
+      if (row.kind === "track" || row.kind === "set") {
+        return {
           ...row,
           questionCount: 2,
           sectionCount: 2,
-          setCount: 2,
-          visibleSectionCount: 1,
-        }
-      : row
-  );
-  const publicSecondSet = makeTryoutStartCatalog(locale, "visible").map(
-    (row) => {
-      const graph = makeSecondSetGraph(row.graph);
-      if (row.kind === "set") {
-        return {
-          ...row,
-          graph,
-          order: 2,
-          publicPath: SECOND_SET_PATH,
-          setKey: TRYOUT_REUSED_SET,
-          title: "Set 2",
+          visibleSectionCount: 2,
         };
       }
-
       if (row.kind === "section") {
-        return {
-          ...row,
-          graph,
-          publicPath: `${SECOND_SET_PATH}/${TRYOUT_REUSED_SECTION}`,
-          questionSourcePath: row.questionSourcePath.replace(
-            FIRST_SOURCE_SEGMENT,
-            SECOND_SOURCE_SEGMENT
-          ),
-          sectionKey: TRYOUT_REUSED_SECTION,
-          setKey: TRYOUT_REUSED_SET,
-          title: "Aljabar",
-        };
+        return { ...row, order: 2 };
       }
-
       return row;
-    }
-  );
-
-  return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
-    ...privateFirstHierarchy,
-    ...publicSecondSet,
+    }),
+    {
+      ...target,
+      order: 1,
+      publicPath: `${LANDING_SET_PATH}/general-reasoning`,
+      questionSourcePath: DISTRACTOR_SOURCE_ROOT,
+      sectionKey: "general-reasoning",
+      title: "General Reasoning",
+    },
   ]);
 }
 
-/** Moves the technical placement into the public second set. */
-function makeSecondSetPlacement(locale: ActiveAppLocaleCode) {
-  const placement = makeTryoutStartPlacement(locale);
-  const moveToSecondSet = (value: string) =>
-    value.replace(FIRST_SOURCE_SEGMENT, SECOND_SOURCE_SEGMENT);
-
+/** Creates the earlier signed placement used to prove order independence. */
+function makeLeadingPlacement(locale: ActiveAppLocaleCode) {
   return Schema.decodeSync(TryoutPlacementSchema)({
-    ...placement,
-    answerContentKey: moveToSecondSet(placement.answerContentKey),
-    questionContentKey: moveToSecondSet(placement.questionContentKey),
-    questionSourcePath: moveToSecondSet(placement.questionSourcePath),
-    sectionKey: TRYOUT_REUSED_SECTION,
-    setKey: TRYOUT_REUSED_SET,
-  });
-}
-
-/** Builds a hierarchy whose first track is private and second track is public. */
-function makeInternalTrackThenVisibleCatalog(locale: ActiveAppLocaleCode) {
-  const privateFirstTrack = makeTryoutStartHierarchy(locale, "internal-entry");
-  const publicSecondTrack = makeTryoutStartHierarchy(locale, "visible")
-    .filter(
-      (row): row is NestedCatalogRow =>
-        row.kind === "track" || row.kind === "set" || row.kind === "section"
-    )
-    .map((row) => {
-      const graph = makeSecondSetGraph(row.graph);
-      if (row.kind === "track") {
-        return {
-          ...row,
-          graph,
-          order: 2,
-          publicPath: SECOND_TRACK_PATH,
-          title: "Second track",
-          trackKey: SECOND_TRACK,
-        };
-      }
-      if (row.kind === "set") {
-        return {
-          ...row,
-          graph,
-          publicPath: SECOND_TRACK_SET_PATH,
-          setKey: TRYOUT_REUSED_SET,
-          title: "Set 2",
-          trackKey: SECOND_TRACK,
-        };
-      }
-      return {
-        ...row,
-        graph,
-        publicPath: `${SECOND_TRACK_SET_PATH}/${TRYOUT_REUSED_SECTION}`,
-        questionSourcePath: row.questionSourcePath.replace(
-          FIRST_SOURCE_SEGMENT,
-          SECOND_SOURCE_SEGMENT
-        ),
-        sectionKey: TRYOUT_REUSED_SECTION,
-        setKey: TRYOUT_REUSED_SET,
-        title: "Aljabar",
-        trackKey: SECOND_TRACK,
-      };
-    });
-
-  return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
-    ...privateFirstTrack,
-    ...publicSecondTrack,
-  ]);
-}
-
-/** Moves the public technical placement into the second authored track. */
-function makeSecondTrackPlacement(locale: ActiveAppLocaleCode) {
-  return Schema.decodeSync(TryoutPlacementSchema)({
-    ...makeSecondSetPlacement(locale),
-    trackKey: SECOND_TRACK,
+    ...makeLandingPlacement(locale),
+    answerContentKey: `${DISTRACTOR_QUESTION_ROOT}/answer`,
+    questionContentKey: `${DISTRACTOR_QUESTION_ROOT}/question`,
+    questionSourcePath: DISTRACTOR_QUESTION_SOURCE_ROOT,
+    rendererDomain: "snbt-plain",
+    sectionKey: "general-reasoning",
   });
 }
 
 /** Makes the first authored placement exercise the full response contract. */
 function makeMultipleChoicePlacement(locale: ActiveAppLocaleCode) {
-  const placement = makeTryoutStartPlacement(locale);
+  const placement = makeLandingPlacement(locale);
   return Schema.decodeSync(TryoutPlacementSchema)({
     ...placement,
     response: {
@@ -203,7 +97,7 @@ function makeMultipleChoicePlacement(locale: ActiveAppLocaleCode) {
 
 /** Makes the first authored placement exercise category assignments. */
 function makeCategoryPlacement(locale: ActiveAppLocaleCode) {
-  const placement = makeTryoutStartPlacement(locale);
+  const placement = makeLandingPlacement(locale);
   return Schema.decodeSync(TryoutPlacementSchema)({
     ...placement,
     response: {
@@ -225,24 +119,88 @@ function makeCategoryPlacement(locale: ActiveAppLocaleCode) {
 }
 
 describe("tryouts/catalog/featured", () => {
+  it.effect.each(["country", "exam", "track", "set"] as const)(
+    "rejects a publication missing its featured %s",
+    (kind) =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const snapshotId = await activateTryoutSnapshot(ctx, {
+              catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+                makeLandingHierarchy(locale, "visible").filter(
+                  (row) => row.kind !== kind
+                )
+              ),
+              placements: ACTIVE_APP_LOCALE_CODES.map(makeLandingPlacement),
+            });
+            await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+          })
+        );
+        const failure = yield* Effect.tryPromise(() =>
+          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+            appLocale: "id",
+          })
+        ).pipe(Effect.flip);
+        expect(failure.cause).toMatchObject({
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: `The active try-out publication has no featured ${kind}.`,
+          },
+        });
+      })
+  );
+
+  it.effect.each(["set", "bundle"] as const)(
+    "rejects a replaced featured %s without selecting another example",
+    (missing) =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const snapshotId = await activateTryoutSnapshot(ctx, {
+              catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+                makeLandingHierarchy(locale, "visible").map((row) =>
+                  missing === "set" && "setKey" in row
+                    ? { ...row, setKey: "set-2" }
+                    : row
+                )
+              ),
+              placements: ACTIVE_APP_LOCALE_CODES.map(makeLandingPlacement),
+            });
+            if (missing !== "bundle") {
+              await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+            }
+          })
+        );
+        const failure = yield* Effect.tryPromise(() =>
+          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+            appLocale: "id",
+          })
+        ).pipe(Effect.flip);
+        expect(failure.cause).toMatchObject({
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: `The active try-out publication has no featured ${missing === "set" ? "set" : "question"}.`,
+          },
+        });
+      })
+  );
+
   it.effect(
-    "returns the first visible signed question for the public landing demo",
+    "returns the stable signed question for the public landing demo",
     () =>
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
-        const source = makeTryoutStartPlacement("id");
+        const source = makeLandingPlacement("id");
         yield* Effect.promise(() =>
-          t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"))
+          t.mutation((ctx) => activateLandingSource(ctx, "visible"))
         );
 
         const featured = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              readFeaturedTryout("id").pipe(
-                Effect.provide(convexTryoutLayer(ctx))
-              )
-            )
-          )
+          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+            appLocale: "id",
+          })
         );
 
         expect(featured).toEqual({
@@ -288,17 +246,13 @@ describe("tryouts/catalog/featured", () => {
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
-          t.mutation((ctx) => activateTryoutStartSource(ctx, "internal-entry"))
+          t.mutation((ctx) => activateLandingSource(ctx, "internal-entry"))
         );
 
         const failure = yield* Effect.tryPromise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              readFeaturedTryout("id").pipe(
-                Effect.provide(convexTryoutLayer(ctx))
-              )
-            )
-          )
+          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+            appLocale: "id",
+          })
         ).pipe(Effect.flip);
         expect(failure.cause).toMatchObject({
           data: { code: "CONTENT_RELEASE_INTEGRITY" },
@@ -307,7 +261,7 @@ describe("tryouts/catalog/featured", () => {
   );
 
   it.effect(
-    "continues to the next set when the first set has no visible section",
+    "ignores an earlier section when selecting the landing question",
     () =>
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
@@ -315,11 +269,11 @@ describe("tryouts/catalog/featured", () => {
           t.mutation(async (ctx) => {
             const snapshotId = await activateTryoutSnapshot(ctx, {
               catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
-                makeInternalThenVisibleCatalog
+                makeLeadingSectionHierarchy
               ),
               placements: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
-                makeTryoutStartPlacement(locale),
-                makeSecondSetPlacement(locale),
+                makeLeadingPlacement(locale),
+                makeLandingPlacement(locale),
               ]),
             });
             await insertTestTryoutRuntimeBundle(ctx, snapshotId);
@@ -327,23 +281,19 @@ describe("tryouts/catalog/featured", () => {
         );
 
         const featured = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              readFeaturedTryout("id").pipe(
-                Effect.provide(convexTryoutLayer(ctx))
-              )
-            )
-          )
+          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+            appLocale: "id",
+          })
         );
 
-        expect(featured.question.contentKey).toContain(
-          `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}/`
+        expect(featured.question.contentKey).toBe(
+          LANDING_FEATURED_TRYOUT.questionContentKey
         );
       })
   );
 
   it.effect(
-    "returns the first authored question for every response format",
+    "returns the stable authored question for every response format",
     () =>
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
@@ -351,7 +301,7 @@ describe("tryouts/catalog/featured", () => {
           t.mutation(async (ctx) => {
             const snapshotId = await activateTryoutSnapshot(ctx, {
               catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
-                makeTryoutStartHierarchy(locale, "visible")
+                makeLandingHierarchy(locale, "visible")
               ),
               placements: ACTIVE_APP_LOCALE_CODES.map(
                 makeMultipleChoicePlacement
@@ -362,13 +312,9 @@ describe("tryouts/catalog/featured", () => {
         );
 
         const featured = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              readFeaturedTryout("id").pipe(
-                Effect.provide(convexTryoutLayer(ctx))
-              )
-            )
-          )
+          t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+            appLocale: "id",
+          })
         );
 
         expect(featured.response.kind).toBe("multiple-choice");
@@ -383,7 +329,7 @@ describe("tryouts/catalog/featured", () => {
         t.mutation(async (ctx) => {
           const snapshotId = await activateTryoutSnapshot(ctx, {
             catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
-              makeTryoutStartHierarchy(locale, "visible")
+              makeLandingHierarchy(locale, "visible")
             ),
             placements: ACTIVE_APP_LOCALE_CODES.map(makeCategoryPlacement),
           });
@@ -392,13 +338,9 @@ describe("tryouts/catalog/featured", () => {
       );
 
       const featured = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          runConvexProgram(
-            readFeaturedTryout("id").pipe(
-              Effect.provide(convexTryoutLayer(ctx))
-            )
-          )
-        )
+        t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+          appLocale: "id",
+        })
       );
 
       expect(featured.response).toMatchObject({
@@ -417,52 +359,14 @@ describe("tryouts/catalog/featured", () => {
     })
   );
 
-  it.effect("continues to the next track when the first track is private", () =>
-    Effect.gen(function* () {
-      const t = convexTest(schema, convexModules);
-      yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const snapshotId = await activateTryoutSnapshot(ctx, {
-            catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
-              makeInternalTrackThenVisibleCatalog
-            ),
-            placements: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
-              makeTryoutStartPlacement(locale),
-              makeSecondTrackPlacement(locale),
-            ]),
-          });
-          await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-        })
-      );
-
-      const featured = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          runConvexProgram(
-            readFeaturedTryout("id").pipe(
-              Effect.provide(convexTryoutLayer(ctx))
-            )
-          )
-        )
-      );
-
-      expect(featured.question.contentKey).toContain(
-        `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}/`
-      );
-    })
-  );
-
   it.effect("requires one active signed hierarchy", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
 
       const failure = yield* Effect.tryPromise(() =>
-        t.query((ctx) =>
-          runConvexProgram(
-            readFeaturedTryout("id").pipe(
-              Effect.provide(convexTryoutLayer(ctx))
-            )
-          )
-        )
+        t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+          appLocale: "id",
+        })
       ).pipe(Effect.flip);
       expect(failure.cause).toMatchObject({
         data: { code: "CONTENT_RELEASE_MISSING" },

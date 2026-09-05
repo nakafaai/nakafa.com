@@ -1,4 +1,7 @@
-import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
+import {
+  type CameraProjection,
+  resolveCameraDistanceLimits,
+} from "@repo/design-system/lib/geometry/camera";
 
 import type {
   SpacePoint,
@@ -14,7 +17,6 @@ import {
 const CAMERA_DISTANCE_RATIO = 2.4;
 const CAMERA_HEIGHT_RATIO = 0.7;
 const CAMERA_FAR_RATIO = 8;
-const CAMERA_MAX_DISTANCE_RATIO = 4;
 const CAMERA_MIN_DISTANCE_RATIO = 1000;
 const CAMERA_NEAR_RATIO = 10_000;
 const ISOMETRIC_VIEW_HEIGHT_RATIO = 2.4;
@@ -52,10 +54,11 @@ function cameraEnvelope(
   const nearScale = Math.max(Math.min(extent, distance), Number.EPSILON);
 
   return {
-    controls: {
-      maxDistance: scale * CAMERA_MAX_DISTANCE_RATIO,
+    controls: resolveCameraDistanceLimits({
       minDistance: nearScale / CAMERA_MIN_DISTANCE_RATIO,
-    },
+      position,
+      target,
+    }),
     far: scale * CAMERA_FAR_RATIO,
     near: nearScale / CAMERA_NEAR_RATIO,
   };
