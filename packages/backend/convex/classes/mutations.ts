@@ -6,6 +6,7 @@ import {
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { classJoinMutationResultValidator } from "@repo/backend/convex/classes/validators";
 import { mutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   validateInviteCodeState,
@@ -38,10 +39,12 @@ export const createClass = mutation({
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
-    await requirePermission(ctx, PERMISSIONS.CLASS_CREATE, {
-      schoolId: args.schoolId,
-      userId,
-    });
+    await runConvexProgram(
+      requirePermission(ctx, PERMISSIONS.CLASS_CREATE, {
+        schoolId: args.schoolId,
+        userId,
+      })
+    );
 
     const now = Date.now();
 
@@ -175,11 +178,13 @@ export const updateClassVisibility = mutation({
 
     const classData = await loadActiveClass(ctx, args.classId);
 
-    await requirePermission(ctx, PERMISSIONS.CLASS_WRITE, {
-      userId,
-      classId: args.classId,
-      schoolId: classData.schoolId,
-    });
+    await runConvexProgram(
+      requirePermission(ctx, PERMISSIONS.CLASS_WRITE, {
+        userId,
+        classId: args.classId,
+        schoolId: classData.schoolId,
+      })
+    );
 
     await ctx.db.patch("schoolClasses", args.classId, {
       visibility: args.visibility,
@@ -257,11 +262,13 @@ export const updateClassImage = mutation({
 
     const classData = await loadActiveClass(ctx, args.classId);
 
-    await requirePermission(ctx, PERMISSIONS.CLASS_WRITE, {
-      userId,
-      classId: args.classId,
-      schoolId: classData.schoolId,
-    });
+    await runConvexProgram(
+      requirePermission(ctx, PERMISSIONS.CLASS_WRITE, {
+        userId,
+        classId: args.classId,
+        schoolId: classData.schoolId,
+      })
+    );
 
     if (!isValidClassImage(args.image)) {
       throw new ConvexError({

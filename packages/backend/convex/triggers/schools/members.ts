@@ -1,143 +1,137 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
+import { Clock, Effect } from "effect";
 
-/**
- * Trigger handler for schoolMembers table changes.
- *
- * Manages school membership lifecycle and invite code tracking:
- * - Tracks invite code usage when members join via invite
- * - Logs member joins, invitations, role changes, and removals
- * - Handles status transitions (invited → active → removed)
- *
- * @param ctx - The Convex mutation context with database access
- * @param change - The change object containing operation details and document state
- */
-export async function schoolMembersHandler(
-  ctx: GenericMutationCtx<DataModel>,
-  change: Change<DataModel, "schoolMembers">
-) {
-  const member = change.newDoc;
-  const oldMember = change.oldDoc;
+/** Records membership lifecycle changes after invite usage is updated. */
+const recordSchoolMembership = Effect.fn("triggers.schools.recordMembership")(
+  function* (
+    ctx: GenericMutationCtx<DataModel>,
+    change: Change<DataModel, "schoolMembers">
+  ) {
+    if (change.operation === "insert") {
+      const member = change.newDoc;
+      const inviteCodeId = member.inviteCodeId;
 
-  switch (change.operation) {
-    case "insert": {
-      if (!member) {
-        break;
-      }
-
-      if (member.inviteCodeId) {
-        const inviteCode = await ctx.db.get(
-          "schoolInviteCodes",
-          member.inviteCodeId
+      if (inviteCodeId) {
+        const inviteCode = yield* Effect.promise(() =>
+          ctx.db.get("schoolInviteCodes", inviteCodeId)
         );
         if (inviteCode) {
-          await ctx.db.patch("schoolInviteCodes", member.inviteCodeId, {
-            currentUsage: inviteCode.currentUsage + 1,
-            updatedAt: Date.now(),
-          });
+          const updatedAt = yield* Clock.currentTimeMillis;
+          yield* Effect.promise(() =>
+            ctx.db.patch("schoolInviteCodes", inviteCodeId, {
+              currentUsage: inviteCode.currentUsage + 1,
+              updatedAt,
+            })
+          );
         }
       }
 
       switch (member.status) {
         case "active": {
-          await ctx.db.insert("schoolActivityLogs", {
-            schoolId: member.schoolId,
-            userId: member.userId,
-            action: "member_joined",
-            entityType: "schoolMembers",
-            entityId: change.id,
-            metadata: {
-              role: member.role,
-              joinedAt: member.joinedAt,
-            },
-          });
+          yield* Effect.promise(() =>
+            ctx.db.insert("schoolActivityLogs", {
+              schoolId: member.schoolId,
+              userId: member.userId,
+              action: "member_joined",
+              entityType: "schoolMembers",
+              entityId: change.id,
+              metadata: {
+                role: member.role,
+                joinedAt: member.joinedAt,
+              },
+            })
+          );
           break;
         }
         case "invited": {
-          await ctx.db.insert("schoolActivityLogs", {
-            schoolId: member.schoolId,
-            userId: member.invitedBy ?? member.userId,
-            action: "member_invited",
-            entityType: "schoolMembers",
-            entityId: change.id,
-            metadata: {
-              invitedUserId: member.userId,
-              role: member.role,
-              invitedAt: member.invitedAt,
-            },
-          });
+          yield* Effect.promise(() =>
+            ctx.db.insert("schoolActivityLogs", {
+              schoolId: member.schoolId,
+              userId: member.invitedBy ?? member.userId,
+              action: "member_invited",
+              entityType: "schoolMembers",
+              entityId: change.id,
+              metadata: {
+                invitedUserId: member.userId,
+                role: member.role,
+                invitedAt: member.invitedAt,
+              },
+            })
+          );
           break;
         }
         default: {
           break;
         }
       }
-      break;
+      return;
     }
-
-    case "update": {
-      if (!(member && oldMember)) {
-        break;
-      }
+    if (change.operation === "update") {
+      const { newDoc: member, oldDoc: oldMember } = change;
 
       if (oldMember.role !== member.role) {
-        await ctx.db.insert("schoolActivityLogs", {
-          schoolId: member.schoolId,
-          userId: member.userId,
-          action: "member_role_changed",
-          entityType: "schoolMembers",
-          entityId: change.id,
-          metadata: {
-            oldRole: oldMember.role,
-            newRole: member.role,
-          },
-        });
+        yield* Effect.promise(() =>
+          ctx.db.insert("schoolActivityLogs", {
+            schoolId: member.schoolId,
+            userId: member.userId,
+            action: "member_role_changed",
+            entityType: "schoolMembers",
+            entityId: change.id,
+            metadata: {
+              oldRole: oldMember.role,
+              newRole: member.role,
+            },
+          })
+        );
       }
 
       const statusTransition = `${oldMember.status}-${member.status}` as const;
       switch (statusTransition) {
         case "invited-active": {
-          await ctx.db.insert("schoolActivityLogs", {
-            schoolId: member.schoolId,
-            userId: member.userId,
-            action: "member_joined",
-            entityType: "schoolMembers",
-            entityId: change.id,
-            metadata: {
-              role: member.role,
-              joinedAt: member.joinedAt,
-            },
-          });
+          yield* Effect.promise(() =>
+            ctx.db.insert("schoolActivityLogs", {
+              schoolId: member.schoolId,
+              userId: member.userId,
+              action: "member_joined",
+              entityType: "schoolMembers",
+              entityId: change.id,
+              metadata: {
+                role: member.role,
+                joinedAt: member.joinedAt,
+              },
+            })
+          );
           break;
         }
         default: {
           if (oldMember.status !== "removed" && member.status === "removed") {
-            await ctx.db.insert("schoolActivityLogs", {
-              schoolId: member.schoolId,
-              userId: member.removedBy ?? member.userId,
-              action: "member_removed",
-              entityType: "schoolMembers",
-              entityId: change.id,
-              metadata: {
-                removedUserId: member.userId,
-                role: member.role,
-                removedAt: member.removedAt,
-              },
-            });
+            yield* Effect.promise(() =>
+              ctx.db.insert("schoolActivityLogs", {
+                schoolId: member.schoolId,
+                userId: member.removedBy ?? member.userId,
+                action: "member_removed",
+                entityType: "schoolMembers",
+                entityId: change.id,
+                metadata: {
+                  removedUserId: member.userId,
+                  role: member.role,
+                  removedAt: member.removedAt,
+                },
+              })
+            );
           }
           break;
         }
       }
-      break;
+      return;
     }
+    const oldMember = change.oldDoc;
 
-    case "delete": {
-      if (!oldMember) {
-        break;
-      }
-
-      await ctx.db.insert("schoolActivityLogs", {
+    yield* Effect.promise(() =>
+      ctx.db.insert("schoolActivityLogs", {
         schoolId: oldMember.schoolId,
         userId: oldMember.userId,
         action: "member_removed",
@@ -147,11 +141,15 @@ export async function schoolMembersHandler(
           removedUserId: oldMember.userId,
           role: oldMember.role,
         },
-      });
-      break;
-    }
-    default: {
-      break;
-    }
+      })
+    );
   }
+);
+
+/** Runs the registered school membership trigger at its native Convex boundary. */
+export function schoolMembersHandler(
+  ctx: GenericMutationCtx<DataModel>,
+  change: Change<DataModel, "schoolMembers">
+) {
+  return runConvexProgram(recordSchoolMembership(ctx, change));
 }

@@ -1,95 +1,97 @@
-import { describe, expect, it } from "@effect/vitest";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE,
-  ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
-} from "@repo/backend/convex/auth/deletion/constants";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { finalizeAccountDeletion } from "@repo/backend/convex/auth/deletion/finalize";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  seedDeletionUser,
+  seedPreparedDeletionSchool,
+} from "@repo/backend/test/deletion/seed";
 import { convexTest } from "convex-test";
 
 const NOW = Date.UTC(2026, 6, 28, 10, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 
-/** Inserts one app user with optional deletion state. */
-function insertUser(
-  ctx: MutationCtx,
-  authId: string,
-  deletionPreparedAt?: number
-) {
-  return ctx.db.insert("users", {
-    authId,
-    credits: 0,
-    creditsResetAt: 0,
-    deletionPreparedAt,
-    email: `${authId}@example.com`,
-    name: authId,
-    plan: "free",
-  });
-}
-
-async function seedPreparedSchool(ctx: MutationCtx, authId: string) {
-  const ownerId = await insertUser(ctx, authId, NOW);
-  const successorId = await insertUser(ctx, `${authId}-successor`);
-  const schoolId = await ctx.db.insert("schools", {
-    city: "Jakarta",
-    createdBy: ownerId,
-    currentStudents: 1,
-    currentTeachers: 0,
-    email: `${authId}-school@example.com`,
-    name: "Prepared School",
-    province: "DKI Jakarta",
-    slug: `${authId}-school`,
-    type: "high-school",
-    updatedAt: NOW,
-  });
-  await ctx.db.insert("schoolMembers", {
-    joinedAt: NOW,
-    role: "admin",
-    schoolId,
-    status: "active",
-    updatedAt: NOW,
-    userId: ownerId,
-  });
-  const successorMembershipId = await ctx.db.insert("schoolMembers", {
-    joinedAt: NOW,
-    role: "student",
-    schoolId,
-    status: "active",
-    updatedAt: NOW,
-    userId: successorId,
-  });
-  const preparationId = await ctx.db.insert("accountDeletionPreparations", {
-    attemptId: ATTEMPT_ID,
-    authId,
-    recoveryAt: NOW,
-    recoveryGeneration: 0,
-    userId: ownerId,
-  });
-  await ctx.db.insert("accountDeletionSchoolTransfers", {
-    preparationId,
-    schoolId,
-    successorMembershipId,
-    successorUserId: successorId,
-  });
-
-  return {
-    ownerId,
-    preparationId,
-    schoolId,
-    successorId,
-    successorMembershipId,
-  };
-}
-
 describe("auth/deletion/finalize", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("does not restart absent or already-running cleanup and repairs its missing receipt", async () => {
+    const t = convexTest(schema, convexModules);
+    const scheduleCleanup = vi.fn(async () => undefined);
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        finalizeAccountDeletion(ctx, "missing-user", undefined, scheduleCleanup)
+      )
+    );
+    const userId = await t.mutation(async (ctx) => {
+      const id = await seedDeletionUser(ctx, "started-user");
+      await ctx.db.patch("users", id, { deletionCleanupStartedAt: NOW });
+      return id;
+    });
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        finalizeAccountDeletion(ctx, "started-user", undefined, scheduleCleanup)
+      )
+    );
+    await t.mutation((ctx) =>
+      ctx.db.insert("accountDeletionPreparations", {
+        authId: "started-user",
+        userId,
+        attemptId: ATTEMPT_ID,
+        finalizedAt: NOW,
+        recoveryGeneration: 0,
+      })
+    );
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        finalizeAccountDeletion(ctx, "started-user", undefined, scheduleCleanup)
+      )
+    );
+    expect(scheduleCleanup).not.toHaveBeenCalled();
+    await expect(
+      t.query((ctx) => ctx.db.query("accountDeletionReceipts").unique())
+    ).resolves.toMatchObject({
+      attemptId: ATTEMPT_ID,
+      committedAt: NOW,
+    });
+  });
+
+  it("rolls back anonymization when durable cleanup scheduling fails", async () => {
+    const t = convexTest(schema, convexModules);
+    const userId = await t.mutation((ctx) =>
+      seedDeletionUser(ctx, "scheduler-failure")
+    );
+    const before = await t.query((ctx) => ctx.db.get("users", userId));
+    const scheduleCleanup = vi.fn(() =>
+      Promise.reject(new Error("scheduler offline"))
+    );
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          finalizeAccountDeletion(
+            ctx,
+            "scheduler-failure",
+            undefined,
+            scheduleCleanup
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "USER_CLEANUP_FAILED", message: "scheduler offline" },
+    });
+    await expect(
+      t.query((ctx) => ctx.db.get("users", userId))
+    ).resolves.toEqual(before);
+    await expect(
+      t.query((ctx) => ctx.db.query("accountDeletionPreparations").collect())
+    ).resolves.toEqual([]);
+  });
+
   it("atomically transfers schools, tombstones the user, and queues cleanup", async () => {
     const t = convexTest(schema, convexModules);
     const scheduleCleanup = vi.fn(async () => undefined);
     const seeded = await t.mutation((ctx) =>
-      seedPreparedSchool(ctx, "finalize-owner")
+      seedPreparedDeletionSchool(ctx, "finalize-owner", NOW, ATTEMPT_ID)
     );
 
     await t.mutation((ctx) =>
@@ -156,7 +158,12 @@ describe("auth/deletion/finalize", () => {
     const t = convexTest(schema, convexModules);
     const scheduleCleanup = vi.fn(async () => undefined);
     const seeded = await t.mutation(async (ctx) => {
-      const result = await seedPreparedSchool(ctx, "newer-finalize-owner");
+      const result = await seedPreparedDeletionSchool(
+        ctx,
+        "newer-finalize-owner",
+        NOW,
+        ATTEMPT_ID
+      );
       await ctx.db.patch("accountDeletionPreparations", result.preparationId, {
         recoveryGeneration: 1,
       });
@@ -196,7 +203,7 @@ describe("auth/deletion/finalize", () => {
     const t = convexTest(schema, convexModules);
     const scheduleCleanup = vi.fn(async () => undefined);
     const seeded = await t.mutation((ctx) =>
-      seedPreparedSchool(ctx, "requeue-finalize-owner")
+      seedPreparedDeletionSchool(ctx, "requeue-finalize-owner", NOW, ATTEMPT_ID)
     );
 
     await t.mutation((ctx) =>
@@ -237,7 +244,12 @@ describe("auth/deletion/finalize", () => {
     const scheduleCleanup = vi.fn(async () => undefined);
     const scheduleContinuation = vi.fn(async () => undefined);
     const seeded = await t.mutation(async (ctx) => {
-      const result = await seedPreparedSchool(ctx, "blocked-finalize-owner");
+      const result = await seedPreparedDeletionSchool(
+        ctx,
+        "blocked-finalize-owner",
+        NOW,
+        ATTEMPT_ID
+      );
       await ctx.db.patch("users", result.successorId, {
         deletionPreparedAt: NOW,
       });
@@ -299,86 +311,11 @@ describe("auth/deletion/finalize", () => {
     });
   });
 
-  it("continues fallback past a full page of unavailable successors", async () => {
-    const t = convexTest(schema, convexModules);
-    const scheduleCleanup = vi.fn(async () => undefined);
-    const scheduleContinuation = vi.fn(async () => undefined);
-    const seeded = await t.mutation(async (ctx) => {
-      const result = await seedPreparedSchool(ctx, "fallback-finalize-owner");
-      await ctx.db.patch("users", result.successorId, {
-        deletionPreparedAt: NOW,
-      });
-
-      for (
-        let index = 1;
-        index < ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE;
-        index += 1
-      ) {
-        const userId = await insertUser(ctx, `fallback-deleting-${index}`, NOW);
-        await ctx.db.insert("schoolMembers", {
-          joinedAt: NOW,
-          role: "student",
-          schoolId: result.schoolId,
-          status: "active",
-          updatedAt: NOW,
-          userId,
-        });
-      }
-
-      const activeSuccessorId = await insertUser(ctx, "fallback-active");
-      await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "student",
-        schoolId: result.schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: activeSuccessorId,
-      });
-
-      return { ...result, activeSuccessorId };
-    });
-    const expectedPreparation = {
-      attemptId: ATTEMPT_ID,
-      preparationId: seeded.preparationId,
-      recoveryGeneration: 0,
-    };
-    const finalize = () =>
-      t.mutation((ctx) =>
-        runConvexProgram(
-          finalizeAccountDeletion(
-            ctx,
-            "fallback-finalize-owner",
-            expectedPreparation,
-            scheduleCleanup,
-            scheduleContinuation
-          )
-        )
-      );
-
-    await finalize();
-    expect(scheduleContinuation).toHaveBeenCalledOnce();
-    expect(scheduleCleanup).not.toHaveBeenCalled();
-
-    await finalize();
-    expect(scheduleContinuation).toHaveBeenCalledTimes(2);
-    expect(scheduleCleanup).not.toHaveBeenCalled();
-
-    await finalize();
-    const state = await t.query(async (ctx) => ({
-      owner: await ctx.db.get("users", seeded.ownerId),
-      school: await ctx.db.get("schools", seeded.schoolId),
-    }));
-
-    expect(state.owner?.deletedAt).toEqual(expect.any(Number));
-    expect(state.school?.createdBy).toBe(seeded.activeSuccessorId);
-    expect(scheduleCleanup).toHaveBeenCalledOnce();
-  });
-
   it("journals direct auth removals without a preparation", async () => {
     const t = convexTest(schema, convexModules);
     const scheduleCleanup = vi.fn(async () => undefined);
     const userId = await t.mutation((ctx) =>
-      insertUser(ctx, "direct-auth-removal")
+      seedDeletionUser(ctx, "direct-auth-removal")
     );
 
     await t.mutation((ctx) =>
@@ -416,26 +353,21 @@ describe("auth/deletion/finalize", () => {
     });
   });
 
-  it("continues finalization beyond one transaction batch", async () => {
+  it("persists the preparation version when scheduling a transfer continuation", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
     const t = convexTest(schema, convexModules);
     const scheduleCleanup = vi.fn(async () => undefined);
-    const scheduleContinuation = vi.fn(async () => undefined);
     const seeded = await t.mutation(async (ctx) => {
-      const result = await seedPreparedSchool(ctx, "batch-finalize-owner");
-
-      for (
-        let index = 1;
-        index <= ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
-        index += 1
-      ) {
-        await ctx.db.insert("accountDeletionSchoolTransfers", {
-          preparationId: result.preparationId,
-          schoolId: result.schoolId,
-          successorMembershipId: result.successorMembershipId,
-          successorUserId: result.successorId,
-        });
-      }
-
+      const result = await seedPreparedDeletionSchool(
+        ctx,
+        "scheduled-finalize-owner",
+        NOW,
+        ATTEMPT_ID
+      );
+      await ctx.db.patch("users", result.successorId, {
+        deletionPreparedAt: NOW,
+      });
       return result;
     });
     const expectedPreparation = {
@@ -448,39 +380,28 @@ describe("auth/deletion/finalize", () => {
       runConvexProgram(
         finalizeAccountDeletion(
           ctx,
-          "batch-finalize-owner",
+          "scheduled-finalize-owner",
           expectedPreparation,
-          scheduleCleanup,
-          scheduleContinuation
+          scheduleCleanup
         )
       )
     );
-    const pendingOwner = await t.query((ctx) =>
-      ctx.db.get("users", seeded.ownerId)
-    );
 
-    expect(pendingOwner).not.toHaveProperty("deletedAt");
-    expect(scheduleContinuation).toHaveBeenCalledOnce();
+    const jobs = await t.query((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(jobs).toMatchObject([
+      {
+        args: [{ authId: "scheduled-finalize-owner", expectedPreparation }],
+        name: "customers/deletion/workflow:finalizeDeletedUserCleanup",
+        scheduledTime: NOW,
+        state: { kind: "pending" },
+      },
+    ]);
     expect(scheduleCleanup).not.toHaveBeenCalled();
-
-    await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(
-          ctx,
-          "batch-finalize-owner",
-          expectedPreparation,
-          scheduleCleanup,
-          scheduleContinuation
-        )
-      )
-    );
-    const completed = await t.query(async (ctx) => ({
-      owner: await ctx.db.get("users", seeded.ownerId),
-      transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
-    }));
-
-    expect(completed.owner?.deletedAt).toEqual(expect.any(Number));
-    expect(completed.transfers).toEqual([]);
-    expect(scheduleCleanup).toHaveBeenCalledOnce();
+    const continuation = jobs[0];
+    assert(continuation);
+    await t.mutation((ctx) => ctx.scheduler.cancel(continuation._id));
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
   });
 });

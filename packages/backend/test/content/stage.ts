@@ -90,55 +90,68 @@ export async function insertSignedCandidate(
 /** Inserts one pending release with exact sequence-slot ownership. */
 export async function insertTestRelease(
   ctx: MutationCtx,
-  options?: StagedReleaseOptions
+  {
+    activeAppLocales,
+    baseFamilies = [],
+    checkedIndex = -1,
+    checkedItems = 0,
+    itemCount = 1,
+    upsertCount = itemCount,
+    deleteCount = itemCount - upsertCount,
+    originReleaseId,
+    projectionCount = upsertCount,
+    releaseId = TEST_RELEASE_ID,
+    role = "candidate",
+    routeCount = upsertCount,
+    sequence = 1,
+    snapshots,
+    scope = testPublicationScope({ snapshots }),
+    resultFamilies = role === "candidate" ? scope.families : [],
+    stagedArtifacts = 0,
+    stagedDeletes = 0,
+    stagedItems = 0,
+    stagedProjections = 0,
+    stagedRoutes = 0,
+    stagedSnapshotBatches = 0,
+    stagedSnapshotRows = 0,
+    stagedUpserts = 0,
+    status = "staging",
+  }: StagedReleaseOptions = {}
 ) {
   const now = Date.UTC(2026, 6, 22, 12);
-  const releaseId = options?.releaseId ?? TEST_RELEASE_ID;
-  const role = options?.role ?? "candidate";
-  const sequence = options?.sequence ?? 1;
-  const itemCount = options?.itemCount ?? 1;
-  const upsertCount = options?.upsertCount ?? itemCount;
-  const scope =
-    options?.scope ??
-    testPublicationScope({
-      snapshots: options?.snapshots,
-    });
   await ctx.db.insert("contentReleases", {
-    baseFamilies: [...(options?.baseFamilies ?? [])],
-    checkedIndex: options?.checkedIndex ?? -1,
-    checkedItems: options?.checkedItems ?? 0,
+    baseFamilies: [...baseFamilies],
+    checkedIndex,
+    checkedItems,
     createdAt: now,
     releaseId,
     releaseJson: testReleaseJson({
-      activeAppLocales: options?.activeAppLocales,
-      baseManifestHash: options?.originReleaseId ? TEST_DIGEST : null,
-      baseReleaseId: options?.originReleaseId ?? null,
-      deleteCount: options?.deleteCount ?? itemCount - upsertCount,
+      activeAppLocales,
+      baseManifestHash: originReleaseId ? TEST_DIGEST : null,
+      baseReleaseId: originReleaseId ?? null,
+      deleteCount,
       itemCount,
-      originReleaseId: options?.originReleaseId,
-      projectionCount: options?.projectionCount ?? upsertCount,
+      originReleaseId,
+      projectionCount,
       releaseId,
-      routeCount: options?.routeCount ?? upsertCount,
+      routeCount,
       scope,
-      snapshots: options?.snapshots,
+      snapshots,
       upsertCount,
     }),
     rendererJson: testRendererJson(),
-    resultFamilies: [
-      ...(options?.resultFamilies ??
-        (role === "candidate" ? scope.families : [])),
-    ],
+    resultFamilies: [...resultFamilies],
     role,
     sequence,
-    stagedArtifacts: options?.stagedArtifacts ?? 0,
-    stagedDeletes: options?.stagedDeletes ?? 0,
-    stagedItems: options?.stagedItems ?? 0,
-    stagedProjections: options?.stagedProjections ?? 0,
-    stagedRoutes: options?.stagedRoutes ?? 0,
-    stagedSnapshotBatches: options?.stagedSnapshotBatches ?? 0,
-    stagedSnapshotRows: options?.stagedSnapshotRows ?? 0,
-    stagedUpserts: options?.stagedUpserts ?? 0,
-    status: options?.status ?? "staging",
+    stagedArtifacts,
+    stagedDeletes,
+    stagedItems,
+    stagedProjections,
+    stagedRoutes,
+    stagedSnapshotBatches,
+    stagedSnapshotRows,
+    stagedUpserts,
+    status,
     updatedAt: now,
   });
   await ctx.db.insert("contentState", {

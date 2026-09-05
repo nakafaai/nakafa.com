@@ -114,14 +114,30 @@ export function testPublicationScope(options?: {
   });
 }
 /** Creates one schema-valid signed release envelope for backend tests. */
-export function testReleaseJson(options?: ReleaseOptions) {
-  const itemCount = options?.itemCount ?? 1;
-  const upsertCount = options?.upsertCount ?? itemCount;
-  const baseReleaseId = options?.baseReleaseId ?? null;
-  const snapshots = options?.snapshots ?? inheritContentSnapshots(null);
-  const activeAppLocales = options?.activeAppLocales ?? ACTIVE_APP_LOCALE_CODES;
-  const origin = options?.originReleaseId
-    ? { kind: "rollback", releaseId: options.originReleaseId }
+export function testReleaseJson({
+  itemCount = 1,
+  upsertCount = itemCount,
+  baseReleaseId = null,
+  snapshots = inheritContentSnapshots(null),
+  activeAppLocales = ACTIVE_APP_LOCALE_CODES,
+  baseManifestHash,
+  baseResultCount = 1,
+  baseResultDigest = TEST_DIGEST,
+  deleteCount = itemCount - upsertCount,
+  manifestHash = TEST_MANIFEST_HASH,
+  originReleaseId,
+  projectionCount = upsertCount,
+  releaseId = TEST_RELEASE_ID,
+  rendererHash = TEST_DIGEST,
+  resultCount = upsertCount,
+  resultDigest = TEST_DIGEST,
+  rollbackDigest = TEST_DIGEST,
+  routeCount = upsertCount,
+  routeDigest = TEST_DIGEST,
+  scope = testPublicationScope({ snapshots }),
+}: ReleaseOptions = {}) {
+  const origin = originReleaseId
+    ? { kind: "rollback", releaseId: originReleaseId }
     : { kind: "git", sha: "a".repeat(40) };
   return JSON.stringify({
     keyId: "test-key",
@@ -131,35 +147,32 @@ export function testReleaseJson(options?: ReleaseOptions) {
       baseManifestHash:
         baseReleaseId === null
           ? null
-          : (options?.baseManifestHash ?? TEST_MANIFEST_HASH),
+          : (baseManifestHash ?? TEST_MANIFEST_HASH),
       baseReleaseId,
-      baseResultCount:
-        baseReleaseId === null ? 0 : (options?.baseResultCount ?? 1),
+      baseResultCount: baseReleaseId === null ? 0 : baseResultCount,
       baseResultDigest:
-        baseReleaseId === null
-          ? EMPTY_RESULT_CATALOG_DIGEST
-          : (options?.baseResultDigest ?? TEST_DIGEST),
-      deleteCount: options?.deleteCount ?? itemCount - upsertCount,
+        baseReleaseId === null ? EMPTY_RESULT_CATALOG_DIGEST : baseResultDigest,
+      deleteCount,
       itemCount,
       itemsDigest: TEST_DIGEST,
       origin,
-      projectionCount: options?.projectionCount ?? upsertCount,
+      projectionCount,
       projectionDigest: TEST_DIGEST,
-      releaseId: options?.releaseId ?? TEST_RELEASE_ID,
+      releaseId,
       rendererContractVersion: "1.0.0",
-      rendererManifestHash: options?.rendererHash ?? TEST_DIGEST,
-      resultCount: options?.resultCount ?? upsertCount,
-      resultDigest: options?.resultDigest ?? TEST_DIGEST,
+      rendererManifestHash: rendererHash,
+      resultCount,
+      resultDigest,
       rollbackCount: itemCount,
-      rollbackDigest: options?.rollbackDigest ?? TEST_DIGEST,
-      routeCount: options?.routeCount ?? upsertCount,
-      routeDigest: options?.routeDigest ?? TEST_DIGEST,
-      scope: options?.scope ?? testPublicationScope({ snapshots }),
+      rollbackDigest,
+      routeCount,
+      routeDigest,
+      scope,
       snapshots,
       upsertCount,
       format: CONTENT_RELEASE_FORMAT,
     },
-    manifestHash: options?.manifestHash ?? TEST_MANIFEST_HASH,
+    manifestHash,
     signature: "A".repeat(86),
   });
 }

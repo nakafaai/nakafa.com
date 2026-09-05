@@ -5,20 +5,11 @@
     "ultracite/biome/react",
     "ultracite/biome/next"
   ],
-  "formatter": {
-    "indentStyle": "space"
-  },
   "assist": {
     "actions": {
       "source": {
         "useSortedKeys": "off"
       }
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double",
-      "jsxQuoteStyle": "double"
     }
   },
   "overrides": [
@@ -108,50 +99,41 @@
       "javascript": {
         "globals": ["vi"]
       }
+    },
+    {
+      // Next.js requires this PostCSS entrypoint to expose the shared config.
+      "includes": ["apps/www/postcss.config.mjs"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off"
+          }
+        }
+      }
     }
   ],
   "linter": {
     "rules": {
-      "correctness": {
-        "useImportExtensions": "off",
-        "noUnresolvedImports": "off"
-      },
-      "a11y": {
-        "noNoninteractiveElementInteractions": "off"
-      },
       "complexity": {
-        "noRedundantDefaultExport": "off",
-        "noExcessiveCognitiveComplexity": {
-          "level": "warn",
-          "options": {
-            "maxAllowedComplexity": 40
-          }
-        },
-        "noUselessReturn": "off",
-        "useArrayFind": "off"
+        "noUselessReturn": "off"
       },
       "suspicious": {
         "noEqualsToNull": "off",
         "noLeakedRender": "off",
-        "noNestedPromises": "off",
         "noShadow": "off",
-        "noUnknownAtRules": "off",
         "noUnknownAttribute": "off",
-        "noUnnecessaryConditions": "off",
-        "useArraySortCompare": "off"
+        "noUnnecessaryConditions": "off"
       },
       "performance": {
         "noAwaitInLoops": "off",
         "noNamespaceImport": "off",
-        "noBarrelFile": "off",
         "noJsxPropsBind": "off"
       },
       "style": {
         "noIncrementDecrement": "off",
         "useConsistentMethodSignatures": "off",
         "useDestructuring": "off",
-        "useFilenamingConvention": "off",
-        "useNamingConvention": "off"
+        "useFilenamingConvention": "off"
       }
     }
   },

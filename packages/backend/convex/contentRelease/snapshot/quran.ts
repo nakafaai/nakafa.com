@@ -1,4 +1,5 @@
 import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -10,9 +11,45 @@ import {
   QURAN_SEARCH_DOCUMENT_LIMIT,
   quranRowDocumentLimit,
 } from "@repo/backend/convex/contentRelease/quran/limits";
+import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
 type QuranRow = Extract<ContentSnapshotRow, { readonly family: "quran" }>;
+
+/** Validates the complete search companion of an existing immutable Quran row. */
+const verifySearchReplay = Effect.fn("contentRelease.verifyQuranSearchReplay")(
+  function* (
+    snapshotId: string,
+    searchStored: WithoutSystemFields<Doc<"quranSearch">> | null,
+    searchByIndex: Doc<"quranSearch"> | null,
+    searchByIdentity: Doc<"quranSearch"> | null
+  ) {
+    if (searchStored === null) {
+      if (searchByIndex !== null) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_CONFLICT",
+          `Quran snapshot ${snapshotId} has an orphaned search row.`
+        );
+      }
+      return;
+    }
+    if (
+      !(searchByIndex && searchByIdentity) ||
+      searchByIndex._id !== searchByIdentity._id ||
+      searchByIndex.assetId !== searchStored.assetId ||
+      searchByIndex.identity !== searchStored.identity ||
+      searchByIndex.appLocale !== searchStored.appLocale ||
+      searchByIndex.rowHash !== searchStored.rowHash ||
+      searchByIndex.surahNumber !== searchStored.surahNumber ||
+      searchByIndex.text !== searchStored.text
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_CONFLICT",
+        `Quran snapshot ${snapshotId} has a search identity collision.`
+      );
+    }
+  }
+);
 
 /** Stores one immutable Quran row at its exact signed snapshot index. */
 export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
@@ -128,30 +165,12 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
           `Quran snapshot ${snapshotId} has a row identity collision.`
         );
       }
-      if (searchStored === null) {
-        if (searchByIndex !== null) {
-          return yield* releaseFail(
-            "CONTENT_RELEASE_CONFLICT",
-            `Quran snapshot ${snapshotId} has an orphaned search row.`
-          );
-        }
-        return true;
-      }
-      if (
-        !(searchByIndex && searchByIdentity) ||
-        searchByIndex._id !== searchByIdentity._id ||
-        searchByIndex.assetId !== searchStored.assetId ||
-        searchByIndex.identity !== searchStored.identity ||
-        searchByIndex.appLocale !== searchStored.appLocale ||
-        searchByIndex.rowHash !== searchStored.rowHash ||
-        searchByIndex.surahNumber !== searchStored.surahNumber ||
-        searchByIndex.text !== searchStored.text
-      ) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_CONFLICT",
-          `Quran snapshot ${snapshotId} has a search identity collision.`
-        );
-      }
+      yield* verifySearchReplay(
+        snapshotId,
+        searchStored,
+        searchByIndex,
+        searchByIdentity
+      );
       return true;
     }
     if (searchByIndex || searchByIdentity) {

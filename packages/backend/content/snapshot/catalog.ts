@@ -64,6 +64,71 @@ const verifyBuckets = Effect.fn("contentRuntime.verifyCatalogBuckets")(
   }
 );
 
+/** Verifies article metadata and each category's active representative together. */
+const verifyArticles = Effect.fn("contentRuntime.verifyArticleCatalog")(
+  function* (
+    articles: RuntimeTables["articleCatalog"],
+    categories: RuntimeTables["articleCategories"],
+    publicByIdentity: ReadonlyMap<string, PublicProjection>
+  ) {
+    const expectedCategories = new Set<string>();
+    const articleProjections = new Map<
+      string,
+      Extract<ContentProjection, { readonly kind: "article" }>
+    >();
+    for (const row of articles) {
+      const entry = publicByIdentity.get(identity(row));
+      const projection = entry?.projection;
+      if (
+        !entry ||
+        projection?.kind !== "article" ||
+        projection.graph.assetId !== row.assetId ||
+        projection.category !== row.category ||
+        projection.categoryTitle !== row.categoryTitle ||
+        projection.metadata.dateModified !== row.dateModified ||
+        projection.metadata.datePublished !== row.datePublished ||
+        getHashBucket(row.projectionHash) !== row.bucket ||
+        row.rendererDomain !== entry.head.rendererDomain
+      ) {
+        return yield* contentSnapshotError(
+          "Signed runtime article metadata disagrees with its public head."
+        );
+      }
+      articleProjections.set(identity(row), projection);
+      expectedCategories.add(JSON.stringify([row.appLocale, row.category]));
+    }
+    const seenCategories = new Set<string>();
+    for (const row of categories) {
+      const key = JSON.stringify([row.appLocale, row.category]);
+      const projection = articleProjections.get(identity(row));
+      const head = publicByIdentity.get(identity(row))?.head;
+      if (
+        seenCategories.has(key) ||
+        !expectedCategories.has(key) ||
+        projection?.category !== row.category ||
+        projection.categoryTitle !== row.title ||
+        (row.route !== undefined &&
+          projection.categoryRouteSlug !== row.route) ||
+        row.projectionHash !== head?.projectionHash ||
+        row.releaseId !== head?.releaseId ||
+        row.sequence !== head?.sequence ||
+        row.rendererDomain !== head?.rendererDomain ||
+        getHashBucket(row.projectionHash) !== row.bucket
+      ) {
+        return yield* contentSnapshotError(
+          "Signed runtime article category lost its active representative."
+        );
+      }
+      seenCategories.add(key);
+    }
+    if (seenCategories.size !== expectedCategories.size) {
+      return yield* contentSnapshotError(
+        "Signed runtime article catalog lost a category."
+      );
+    }
+  }
+);
+
 /** Validates active catalog coverage and all references to effective public heads. */
 export const validateRuntimeCatalogs = Effect.fn(
   "contentRuntime.validateCatalogClosure"
@@ -160,60 +225,11 @@ export const validateRuntimeCatalogs = Effect.fn(
       );
     }
   }
-  const expectedCategories = new Set<string>();
-  const articleProjections = new Map<
-    string,
-    Extract<ContentProjection, { readonly kind: "article" }>
-  >();
-  for (const row of tables.articleCatalog) {
-    const entry = publicByIdentity.get(identity(row));
-    const projection = entry?.projection;
-    if (
-      !entry ||
-      projection?.kind !== "article" ||
-      projection.graph.assetId !== row.assetId ||
-      projection.category !== row.category ||
-      projection.categoryTitle !== row.categoryTitle ||
-      projection.metadata.dateModified !== row.dateModified ||
-      projection.metadata.datePublished !== row.datePublished ||
-      getHashBucket(row.projectionHash) !== row.bucket ||
-      row.rendererDomain !== entry.head.rendererDomain
-    ) {
-      return yield* contentSnapshotError(
-        "Signed runtime article metadata disagrees with its public head."
-      );
-    }
-    articleProjections.set(identity(row), projection);
-    expectedCategories.add(JSON.stringify([row.appLocale, row.category]));
-  }
-  const seenCategories = new Set<string>();
-  for (const row of tables.articleCategories) {
-    const key = JSON.stringify([row.appLocale, row.category]);
-    const projection = articleProjections.get(identity(row));
-    const head = publicByIdentity.get(identity(row))?.head;
-    if (
-      seenCategories.has(key) ||
-      !expectedCategories.has(key) ||
-      projection?.category !== row.category ||
-      projection.categoryTitle !== row.title ||
-      (row.route !== undefined && projection.categoryRouteSlug !== row.route) ||
-      row.projectionHash !== head?.projectionHash ||
-      row.releaseId !== head?.releaseId ||
-      row.sequence !== head?.sequence ||
-      row.rendererDomain !== head?.rendererDomain ||
-      getHashBucket(row.projectionHash) !== row.bucket
-    ) {
-      return yield* contentSnapshotError(
-        "Signed runtime article category lost its active representative."
-      );
-    }
-    seenCategories.add(key);
-  }
-  if (seenCategories.size !== expectedCategories.size) {
-    return yield* contentSnapshotError(
-      "Signed runtime article catalog lost a category."
-    );
-  }
+  yield* verifyArticles(
+    tables.articleCatalog,
+    tables.articleCategories,
+    publicByIdentity
+  );
   if (
     tables.materialBuckets.some((row) => row.count <= 0) ||
     tables.articleBuckets.some(

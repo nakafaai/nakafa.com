@@ -1,67 +1,40 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
+import { Effect } from "effect";
 
-/**
- * Trigger handler for commentVotes table changes.
- *
- * Maintains denormalized vote counts on comments table:
- * - On insert: Increments upvote or downvote count
- * - On delete: Decrements the corresponding count
- *
- * @param ctx - The Convex mutation context with database access
- * @param change - The change object containing operation details and document state
- */
-export async function commentVotesHandler(
+/** Applies insert/delete deltas to the matching denormalized vote counter. */
+const updateCommentVoteCount = Effect.fn("triggers.comments.updateVoteCount")(
+  function* (
+    ctx: GenericMutationCtx<DataModel>,
+    change: Change<DataModel, "commentVotes">
+  ) {
+    if (change.operation === "update") {
+      return;
+    }
+    const vote = change.operation === "insert" ? change.newDoc : change.oldDoc;
+    const comment = yield* Effect.promise(() =>
+      ctx.db.get("comments", vote.commentId)
+    );
+    if (!comment) {
+      return;
+    }
+    const counter = vote.vote === 1 ? "upvoteCount" : "downvoteCount";
+    const count =
+      change.operation === "insert"
+        ? comment[counter] + 1
+        : Math.max(comment[counter] - 1, 0);
+    yield* Effect.promise(() =>
+      ctx.db.patch("comments", vote.commentId, { [counter]: count })
+    );
+  }
+);
+
+/** Runs the registered comment vote trigger at its native Convex boundary. */
+export function commentVotesHandler(
   ctx: GenericMutationCtx<DataModel>,
   change: Change<DataModel, "commentVotes">
 ) {
-  const vote = change.newDoc;
-  const oldVote = change.oldDoc;
-
-  switch (change.operation) {
-    case "insert": {
-      if (!vote) {
-        break;
-      }
-
-      const comment = await ctx.db.get("comments", vote.commentId);
-      if (comment) {
-        if (vote.vote === 1) {
-          await ctx.db.patch("comments", vote.commentId, {
-            upvoteCount: comment.upvoteCount + 1,
-          });
-        } else if (vote.vote === -1) {
-          await ctx.db.patch("comments", vote.commentId, {
-            downvoteCount: comment.downvoteCount + 1,
-          });
-        }
-      }
-      break;
-    }
-
-    case "delete": {
-      if (!oldVote) {
-        break;
-      }
-
-      const comment = await ctx.db.get("comments", oldVote.commentId);
-      if (comment) {
-        if (oldVote.vote === 1) {
-          await ctx.db.patch("comments", oldVote.commentId, {
-            upvoteCount: Math.max(comment.upvoteCount - 1, 0),
-          });
-        } else if (oldVote.vote === -1) {
-          await ctx.db.patch("comments", oldVote.commentId, {
-            downvoteCount: Math.max(comment.downvoteCount - 1, 0),
-          });
-        }
-      }
-      break;
-    }
-
-    default: {
-      break;
-    }
-  }
+  return runConvexProgram(updateCommentVoteCount(ctx, change));
 }
