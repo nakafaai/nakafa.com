@@ -5,7 +5,7 @@ import { Effect, FileSystem } from "effect";
 
 const runGpg = (options: {
   readonly args: readonly string[];
-  readonly input?: string;
+  readonly input: string;
   readonly logPath: string;
   readonly operation: string;
 }) =>
@@ -13,6 +13,8 @@ const runGpg = (options: {
     args: options.args,
     command: "gpg",
     operation: options.operation,
+    reportStderr: true,
+    sensitiveValues: [options.input.trim()],
     stderrPath: options.logPath,
     stdin: options.input,
     stdoutPath: options.logPath,
@@ -70,7 +72,9 @@ export const createEncryptedArchive = Effect.fn(
       "--symmetric",
       "--cipher-algo",
       "AES256",
-      "--force-ocb",
+      // Amazon Linux 2023 uses GnuPG 2.3, which names this option force-aead.
+      // Both names select the same mode; packet validation below requires OCB.
+      "--force-aead",
       "--s2k-mode",
       "3",
       "--s2k-digest-algo",

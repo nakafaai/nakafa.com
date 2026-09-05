@@ -4,11 +4,136 @@ import {
   createEncryptedArchive,
   decryptAndExtractArchive,
 } from "@repo/backend/scripts/content/runtime/ci/archive";
+import * as commands from "@repo/backend/scripts/content/runtime/ci/command";
 import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
 import { Effect, FileSystem } from "effect";
 
 const CACHE_KEY = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGH";
+const runCommand = commands.runRuntimeCommand;
+
+const makeFixture = Effect.fn("ArchiveTest.makeFixture")(function* () {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const root = yield* fileSystem.makeTempDirectoryScoped({
+    directory: "/tmp",
+    prefix: "content-runtime-archive-test-",
+  });
+  const snapshotRoot = `${root}/snapshot`;
+  const gpgHome = `${root}/gnupg`;
+  for (const directory of [snapshotRoot, gpgHome]) {
+    yield* fileSystem.makeDirectory(directory);
+    yield* fileSystem.chmod(directory, 0o700);
+  }
+  yield* fileSystem.writeFileString(`${snapshotRoot}/metadata.json`, "{}\n");
+  return {
+    archivePath: `${root}/runtime.tar`,
+    cacheKey: CACHE_KEY,
+    encryptedPath: `${root}/runtime.tar.gpg`,
+    gpgHome,
+    logPath: `${root}/runtime.log`,
+    snapshotRoot,
+  };
+});
+
 describe("content runtime archive", () => {
+  it.live("rejects archives without the required authenticated cipher", () =>
+    Effect.gen(function* () {
+      const fixture = yield* makeFixture();
+      const command = vi
+        .spyOn(commands, "runRuntimeCommand")
+        .mockImplementation((spec) =>
+          runCommand({
+            ...spec,
+            args: spec.args.map((arg) =>
+              arg === "--force-aead" ? "--rfc4880" : arg
+            ),
+          })
+        );
+      const failure = yield* createEncryptedArchive(fixture).pipe(
+        Effect.flip,
+        Effect.ensuring(Effect.sync(() => command.mockRestore()))
+      );
+      expect(failure).toMatchObject({
+        _tag: "ContentRuntimeCiError",
+        message:
+          "Signed runtime archive is not AES256 OCB authenticated encryption.",
+      });
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+  );
+
+  for (const replacement of ["empty", "directory"]) {
+    it.live(
+      `rejects ciphertext replaced by an ${replacement} after verification`,
+      () =>
+        Effect.gen(function* () {
+          const fileSystem = yield* FileSystem.FileSystem;
+          const fixture = yield* makeFixture();
+          const command = vi
+            .spyOn(commands, "runRuntimeCommand")
+            .mockImplementation((spec) =>
+              runCommand(spec).pipe(
+                Effect.tap(() =>
+                  spec.args.includes("--list-packets")
+                    ? Effect.gen(function* () {
+                        yield* fileSystem.remove(fixture.encryptedPath);
+                        if (replacement === "empty") {
+                          yield* fileSystem.writeFileString(
+                            fixture.encryptedPath,
+                            ""
+                          );
+                        } else {
+                          yield* fileSystem.makeDirectory(
+                            fixture.encryptedPath
+                          );
+                        }
+                      })
+                    : Effect.void
+                )
+              )
+            );
+          const failure = yield* createEncryptedArchive(fixture).pipe(
+            Effect.flip,
+            Effect.ensuring(Effect.sync(() => command.mockRestore()))
+          );
+          expect(failure).toMatchObject({
+            _tag: "ContentRuntimeCiError",
+            message: "Signed runtime encrypted archive is empty.",
+          });
+        }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    );
+  }
+
+  it.live("reports command failures without exposing the passphrase", () =>
+    Effect.gen(function* () {
+      const fixture = yield* makeFixture();
+      const command = vi
+        .spyOn(commands, "runRuntimeCommand")
+        .mockImplementation((spec) =>
+          runCommand(
+            spec.command === "gpg"
+              ? {
+                  ...spec,
+                  command: "sh",
+                  args: [
+                    "-c",
+                    "read -r value; printf 'unsupported encryption: %s' \"$value\"; exit 2",
+                  ],
+                }
+              : spec
+          )
+        );
+      const failure = yield* createEncryptedArchive(fixture).pipe(
+        Effect.flip,
+        Effect.ensuring(Effect.sync(() => command.mockRestore()))
+      );
+      expect(failure).toMatchObject({
+        _tag: "ContentRuntimeCiError",
+        message:
+          "Signed runtime authenticated encryption failed: unsupported encryption: [redacted]",
+      });
+      expect(JSON.stringify(failure)).not.toContain(CACHE_KEY);
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+  );
+
   it.live(
     "uses OCB authenticated encryption and rejects ciphertext tampering",
     () =>

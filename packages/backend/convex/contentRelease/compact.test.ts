@@ -21,6 +21,20 @@ import {
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
+vi.mock("@repo/backend/convex/_generated/server", async (importOriginal) => {
+  const server =
+    await importOriginal<
+      typeof import("@repo/backend/convex/_generated/server")
+    >();
+  return {
+    ...server,
+    env: new Proxy(
+      {},
+      { get: (_target, property) => Reflect.get(process.env, property) }
+    ),
+  };
+});
+
 afterEach(() => vi.unstubAllEnvs());
 
 describe("contentRelease/compact", () => {
@@ -76,7 +90,7 @@ describe("contentRelease/compact", () => {
     ).toMatchObject({ compactedFloor: 1 });
   });
 
-  it("skips local static builds before reading lifecycle state or dispatching pages", async () => {
+  it("reads Convex proxy configuration before lifecycle state or page dispatch", async () => {
     vi.stubEnv("CONTENT_RUNTIME_BUILD", "local-static");
     vi.stubEnv("CONVEX_CLOUD_URL", "http://127.0.0.1:3210");
     vi.stubEnv("CONVEX_SITE_URL", "http://127.0.0.1:3211");
