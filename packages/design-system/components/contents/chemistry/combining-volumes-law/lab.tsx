@@ -89,13 +89,7 @@ export function CombiningVolumesLab({
           aria-label={labels.reactionView}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 42,
-              position: COMBINING_VOLUMES_SCENE_VIEW.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <CombiningVolumesCameraControls />
               <ambientLight intensity={0.7} />
@@ -148,8 +142,7 @@ function CombiningVolumesCameraControls() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={COMBINING_VOLUMES_SCENE_VIEW.cameraTarget}
-      maxDistance={9.5}
-      minDistance={3}
+      fov={42}
     />
   );
 }

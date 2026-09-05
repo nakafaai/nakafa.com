@@ -12,10 +12,8 @@ import type {
   BiologySceneView,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
-import {
-  BiologyLine,
-  FloatingGroup,
-} from "@repo/design-system/components/contents/biology/parts";
+import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
+import { BiologyLine } from "@repo/design-system/components/contents/biology/parts";
 import { useMemo } from "react";
 import {
   Box3,

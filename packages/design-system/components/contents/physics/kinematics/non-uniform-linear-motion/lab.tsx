@@ -20,6 +20,7 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import { PhysicsTrainModel } from "@repo/design-system/components/contents/physics/kinematics/train-model";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -118,8 +119,6 @@ export function NonUniformLinearMotionLab({
                 enableRotate
                 enableZoom
                 fov={GLBB_SCENE.cameraFov}
-                maxDistance={13}
-                minDistance={3}
               />
               <GlbbScene motion={motion} />
             </Suspense>
@@ -175,7 +174,9 @@ export function NonUniformLinearMotionLab({
 function GlbbScene({ motion }: { motion: GlbbMotionState }) {
   return (
     <group>
-      <RailTrack trackLength={motion.trackLength} />
+      <CameraBounds exclude>
+        <RailTrack trackLength={motion.trackLength} />
+      </CameraBounds>
       <PositionMarkers motion={motion} />
       <AnimatedTrain motion={motion} />
     </group>
@@ -212,16 +213,26 @@ function AnimatedTrain({ motion }: { motion: GlbbMotionState }) {
   });
 
   return (
-    <group
-      ref={groupRef}
-      rotation={[0, Math.PI / 2, 0]}
-      scale={GLBB_SCENE.trainScale}
+    <CameraBounds
+      motion={{
+        translation: {
+          x: {
+            min: motion.trainStartX,
+            max: motion.trainStartX + motion.worldDisplacement,
+          },
+          y: { min: 0.05, max: 0.05 },
+          z: { min: 0, max: 0 },
+        },
+      }}
+      objectRef={groupRef}
     >
-      <PhysicsTrainModel
-        bodyColor={GLBB_COLORS.trainBody}
-        modelPath={GLBB_TRAIN_MODEL_PATH}
-      />
-    </group>
+      <group rotation={[0, Math.PI / 2, 0]} scale={GLBB_SCENE.trainScale}>
+        <PhysicsTrainModel
+          bodyColor={GLBB_COLORS.trainBody}
+          modelPath={GLBB_TRAIN_MODEL_PATH}
+        />
+      </group>
+    </CameraBounds>
   );
 }
 

@@ -8,10 +8,8 @@ import type {
   BiologySceneView,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
-import {
-  BiologyTube,
-  FloatingGroup,
-} from "@repo/design-system/components/contents/biology/parts";
+import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
+import { BiologyTube } from "@repo/design-system/components/contents/biology/parts";
 
 const FUNGI_VIEW = {
   cameraPosition: [2.25, 1.7, 3.05],

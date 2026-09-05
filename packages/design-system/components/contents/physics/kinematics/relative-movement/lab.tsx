@@ -16,6 +16,7 @@ import {
   type RelativeMovementState,
 } from "@repo/design-system/components/contents/physics/kinematics/relative-movement/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -89,13 +90,7 @@ export function RelativeMovementLab({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{
-              fov: 43,
-              position: RELATIVE_MOVEMENT_CAMERA.cameraPosition,
-            }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <ambientLight intensity={0.7} />
               <hemisphereLight
@@ -168,8 +163,7 @@ function RelativeMovementCamera() {
       enablePan
       enableRotate
       enableZoom
-      maxDistance={16}
-      minDistance={3}
+      fov={43}
     />
   );
 }
@@ -177,13 +171,21 @@ function RelativeMovementCamera() {
 function RelativeMovementScene({ motion }: { motion: RelativeMovementState }) {
   return (
     <group>
-      <Road />
+      <CameraBounds exclude>
+        <Road />
+      </CameraBounds>
       <AnimatedCarPair motion={motion} />
     </group>
   );
 }
 
 function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
+  const initial = getInitialCarPositions(motion);
+  const seconds = getLoopSeconds(motion);
+  const worldScale = getSceneUnitsPerMeter(motion, seconds);
+  const observerEnd =
+    initial.observerX + motion.observerSpeed * worldScale * seconds;
+  const targetEnd = initial.targetX + motion.targetSpeed * worldScale * seconds;
   const observerRef = useRef<Group>(null);
   const targetRef = useRef<Group>(null);
   const animationStartRef = useRef<number | null>(null);
@@ -211,26 +213,48 @@ function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
 
   return (
     <>
-      <group
-        position={[0, 0.025, RELATIVE_MOVEMENT_SCENE.laneOffset]}
-        ref={observerRef}
+      <CameraBounds
+        motion={{
+          translation: {
+            x: {
+              min: Math.min(initial.observerX, observerEnd),
+              max: Math.max(initial.observerX, observerEnd),
+            },
+            y: { min: 0, max: 0 },
+            z: { min: 0, max: 0 },
+          },
+        }}
+        objectRef={observerRef}
       >
-        <Car
-          accentColor={OBSERVER_COLOR}
-          heading="right"
-          modelPath={RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH}
-        />
-      </group>
-      <group
-        position={[0, 0.025, -RELATIVE_MOVEMENT_SCENE.laneOffset]}
-        ref={targetRef}
+        <group position={[0, 0.025, RELATIVE_MOVEMENT_SCENE.laneOffset]}>
+          <Car
+            accentColor={OBSERVER_COLOR}
+            heading="right"
+            modelPath={RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH}
+          />
+        </group>
+      </CameraBounds>
+      <CameraBounds
+        motion={{
+          translation: {
+            x: {
+              min: Math.min(initial.targetX, targetEnd),
+              max: Math.max(initial.targetX, targetEnd),
+            },
+            y: { min: 0, max: 0 },
+            z: { min: 0, max: 0 },
+          },
+        }}
+        objectRef={targetRef}
       >
-        <Car
-          accentColor={TARGET_COLOR}
-          heading={motion.targetHeading}
-          modelPath={RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH}
-        />
-      </group>
+        <group position={[0, 0.025, -RELATIVE_MOVEMENT_SCENE.laneOffset]}>
+          <Car
+            accentColor={TARGET_COLOR}
+            heading={motion.targetHeading}
+            modelPath={RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH}
+          />
+        </group>
+      </CameraBounds>
     </>
   );
 }

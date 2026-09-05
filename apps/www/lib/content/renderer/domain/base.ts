@@ -1,83 +1,64 @@
+import { AgentContext } from "@repo/design-system/components/markdown/agent-context";
+import { CodeBlockMdx } from "@repo/design-system/components/markdown/code/client";
+import {
+  BlockMath,
+  InlineMath,
+  MathContainer,
+} from "@repo/design-system/components/markdown/math";
+import {
+  ContentBlock,
+  ContentGrid,
+  ContentStack,
+} from "@repo/design-system/components/markdown/mdx";
 import { baseComponentNames } from "@repo/design-system/lib/markdown/names";
-import type { RendererComponentLoader } from "@/lib/content/renderer/loader";
+import { MermaidMdx, Youtube } from "@/lib/content/renderer/client/base/media";
+import { MathVisual } from "@/lib/content/renderer/client/base/visual/math";
+import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-/** Literal implementation boundaries for signed base custom components. */
-export const baseComponentLoaders = [
+/** Statically registered implementations for signed base custom components. */
+export const baseRenderers = [
   {
     name: baseComponentNames.agentContext,
-    load: () =>
-      import("@repo/design-system/components/markdown/agent-context").then(
-        ({ AgentContext }) => AgentContext
-      ),
+    component: AgentContext,
   },
   {
     name: baseComponentNames.blockMath,
-    load: () =>
-      import("@repo/design-system/components/markdown/math").then(
-        ({ BlockMath }) => BlockMath
-      ),
+    component: BlockMath,
   },
   {
     name: baseComponentNames.codeBlock,
-    load: () =>
-      import("@repo/design-system/components/markdown/code/client").then(
-        ({ CodeBlockMdx }) => CodeBlockMdx
-      ),
+    component: CodeBlockMdx,
   },
   {
     name: baseComponentNames.contentBlock,
-    load: () =>
-      import("@repo/design-system/components/markdown/mdx").then(
-        ({ ContentBlock }) => ContentBlock
-      ),
+    component: ContentBlock,
   },
   {
     name: baseComponentNames.contentGrid,
-    load: () =>
-      import("@repo/design-system/components/markdown/mdx").then(
-        ({ ContentGrid }) => ContentGrid
-      ),
+    component: ContentGrid,
   },
   {
     name: baseComponentNames.contentStack,
-    load: () =>
-      import("@repo/design-system/components/markdown/mdx").then(
-        ({ ContentStack }) => ContentStack
-      ),
+    component: ContentStack,
   },
   {
     name: baseComponentNames.inlineMath,
-    load: () =>
-      import("@repo/design-system/components/markdown/math").then(
-        ({ InlineMath }) => InlineMath
-      ),
+    component: InlineMath,
   },
   {
     name: baseComponentNames.mathContainer,
-    load: () =>
-      import("@repo/design-system/components/markdown/math").then(
-        ({ MathContainer }) => MathContainer
-      ),
+    component: MathContainer,
   },
   {
     name: baseComponentNames.mathVisual,
-    load: () =>
-      import("@/lib/content/renderer/client/base/visual/math").then(
-        ({ MathVisual }) => MathVisual
-      ),
+    component: MathVisual,
   },
   {
     name: baseComponentNames.mermaid,
-    load: () =>
-      import("@/lib/content/renderer/client/base/media").then(
-        ({ MermaidMdx }) => MermaidMdx
-      ),
+    component: MermaidMdx,
   },
   {
     name: baseComponentNames.youtube,
-    load: () =>
-      import("@/lib/content/renderer/client/base/media").then(
-        ({ Youtube }) => Youtube
-      ),
+    component: Youtube,
   },
-] satisfies readonly RendererComponentLoader[];
+] satisfies readonly RendererImplementation[];

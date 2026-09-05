@@ -60,7 +60,6 @@ export const ACCELERATION_LAB_SCENE = {
   cameraTarget: [0.95, 0.22, 0],
   gateRadius: 0.52,
   minSceneLength: 13.2,
-  rocketPosition: [1.05, 0, 0],
   rocketScale: 0.24,
   scenePadding: 6,
   worldScale: 0.18,

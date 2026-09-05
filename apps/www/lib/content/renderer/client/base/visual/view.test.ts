@@ -32,6 +32,30 @@ function scene(view: SpaceVisual["view"]): SpaceVisual {
 }
 
 describe("MathVisual space view", () => {
+  it.each<SpaceVisual["view"]>([
+    { kind: "fit", padding: 2 },
+    { kind: "isometric" },
+    {
+      kind: "camera",
+      position: { x: 4, y: 5, z: 6 },
+      target: { x: 1, y: 2, z: 3 },
+    },
+  ])(
+    "bounds the $kind view relative to its initial framing",
+    (authoredView) => {
+      const view = resolveSpaceView(scene(authoredView));
+      const distance = Math.hypot(
+        view.position[0] - view.target[0],
+        view.position[1] - view.target[1],
+        view.position[2] - view.target[2]
+      );
+
+      expect(view.controls.maxDistance / distance).toBeCloseTo(1.5);
+      expect(view.controls.minDistance).toBeLessThan(distance);
+      expect(view.projection.far).toBeGreaterThan(view.controls.maxDistance);
+    }
+  );
+
   it("uses equal camera directions and orthographic projection for isometric views", () => {
     const view = resolveSpaceView(scene({ kind: "isometric" }));
     const offsets = view.position.map(

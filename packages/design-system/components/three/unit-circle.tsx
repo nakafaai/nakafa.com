@@ -124,6 +124,7 @@ export function UnitCircle({
   const sin = getSin(angle);
   const cos = getCos(angle);
   const tan = getTan(angle);
+  const sineLabelDirection = cos < 0 ? -1 : 1;
 
   const arcPoints = useMemo(
     () => createArcPoints(ARC_RADIUS, angleInRadians, GRAPH_ANGLE_ARC_SEGMENTS),
@@ -294,10 +295,14 @@ export function UnitCircle({
               />
             </ThreeLabel>
             <ThreeLabel
-              anchorX="left"
+              anchorX={cos < 0 ? "right" : "left"}
               color={COLORS.ORANGE}
               fontSize={LABEL_FONT_SIZE}
-              position={[cos + SIN_LABEL_X_OFFSET, sin / 2, 0]}
+              position={[
+                cos + SIN_LABEL_X_OFFSET * sineLabelDirection,
+                sin / 2,
+                0,
+              ]}
             >
               <InlineMath
                 math={`\\sin\\left(${angle}^\\circ\\right) = ${labels.sin}`}

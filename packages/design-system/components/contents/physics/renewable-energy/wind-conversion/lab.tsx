@@ -3,6 +3,7 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -26,6 +27,11 @@ const MIN_WIND_SPEED = 3;
 const MAX_WIND_SPEED = 12;
 const DEFAULT_WIND_SPEED = 7;
 const WIND_GUST_COUNT = 72;
+const GUST_SWIRL = 0.16;
+const GUST_LIFT = 0.08;
+const GUST_FRONT_Z = 1.42;
+const GUST_TRAVEL = 1.85;
+const GUST_DEPTH_SCALE = 0.7;
 const WIND_GUSTS = Array.from({ length: WIND_GUST_COUNT }, (_, index) => ({
   id: `wind-gust-${index}`,
   index,
@@ -75,17 +81,13 @@ export function WindEnergyConversionLab({
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas
-            camera={{ fov: 34, position: [1.9, 1.5, 3.45] }}
-            frameloop="always"
-          >
+          <ThreeCanvas frameloop="always">
             <Suspense>
               <CameraControls
                 autoRotate={false}
                 cameraPosition={[1.9, 1.5, 3.45]}
                 cameraTarget={[0.03, 0.72, 0.14]}
-                maxDistance={6}
-                minDistance={1.8}
+                fov={34}
               />
               <ambientLight intensity={0.68} />
               <hemisphereLight
@@ -214,13 +216,13 @@ function WindGust({
     const swirl =
       Math.sin(wakeProgress * Math.PI * 2.4 + index * 0.73) *
       wakeProgress *
-      0.16;
+      GUST_SWIRL;
     const lift =
-      Math.cos(wakeProgress * Math.PI * 1.8 + index) * wakeProgress * 0.08;
+      Math.cos(wakeProgress * Math.PI * 1.8 + index) * wakeProgress * GUST_LIFT;
 
     ref.current.position.x = seed.baseX + swirl;
     ref.current.position.y = seed.baseY + lift;
-    ref.current.position.z = 1.42 - progress * 1.85;
+    ref.current.position.z = GUST_FRONT_Z - progress * GUST_TRAVEL;
     ref.current.rotation.set(
       Math.PI / 2 + wakeProgress * 0.34,
       seed.spin * (0.34 + wakeProgress * 0.55),
@@ -229,12 +231,23 @@ function WindGust({
     ref.current.scale.set(
       seed.size * 0.42,
       seed.size * (0.16 - wakeProgress * 0.04),
-      seed.size * 0.7
+      seed.size * GUST_DEPTH_SCALE
     );
   });
 
   return (
-    <group ref={ref}>
+    <CameraBounds
+      motion={{
+        rotation: "all",
+        scale: seed.size * GUST_DEPTH_SCALE,
+        translation: {
+          x: { min: seed.baseX - GUST_SWIRL, max: seed.baseX + GUST_SWIRL },
+          y: { min: seed.baseY - GUST_LIFT, max: seed.baseY + GUST_LIFT },
+          z: { min: GUST_FRONT_Z - GUST_TRAVEL, max: GUST_FRONT_Z },
+        },
+      }}
+      objectRef={ref}
+    >
       <mesh>
         <icosahedronGeometry args={[0.08, 1]} />
         <meshStandardMaterial
@@ -246,7 +259,7 @@ function WindGust({
           transparent
         />
       </mesh>
-    </group>
+    </CameraBounds>
   );
 }
 
@@ -296,22 +309,24 @@ function WindTurbine({
           roughness={0.34}
         />
       </mesh>
-      <group position={[-0.08, 1.23, 0.26]} ref={rotorRef}>
-        {[0, 1, 2].map((bladeIndex) => (
-          <WindBlade
-            color={colors.blade}
-            key={bladeIndex}
-            rotation={(bladeIndex * Math.PI * 2) / 3}
-          />
-        ))}
-        <mesh castShadow>
-          <sphereGeometry args={[0.13, 32, 20]} />
-          <meshStandardMaterial
-            color={colors.hub}
-            metalness={0.18}
-            roughness={0.34}
-          />
-        </mesh>
+      <group position={[-0.08, 1.23, 0.26]}>
+        <CameraBounds motion={{ rotation: "z" }} objectRef={rotorRef}>
+          {[0, 1, 2].map((bladeIndex) => (
+            <WindBlade
+              color={colors.blade}
+              key={bladeIndex}
+              rotation={(bladeIndex * Math.PI * 2) / 3}
+            />
+          ))}
+          <mesh castShadow>
+            <sphereGeometry args={[0.13, 32, 20]} />
+            <meshStandardMaterial
+              color={colors.hub}
+              metalness={0.18}
+              roughness={0.34}
+            />
+          </mesh>
+        </CameraBounds>
       </group>
     </group>
   );

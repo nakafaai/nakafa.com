@@ -3,6 +3,7 @@
 import { Sad02Icon } from "@hugeicons/core-free-icons";
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, type CanvasProps } from "@react-three/fiber";
+import { CameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -75,7 +76,7 @@ function ThreeCanvasComponent({
 }: {
   children: ReactNode;
   frameloop?: "always" | "demand" | "never";
-} & CanvasProps) {
+} & Omit<CanvasProps, "camera" | "orthographic">) {
   const powerPreference = getPowerPreference();
   const [canvasKey, setCanvasKey] = useState(0);
 
@@ -134,7 +135,7 @@ function ThreeCanvasComponent({
         {...props}
       >
         <AdaptiveDpr />
-        {children}
+        <CameraFraming>{children}</CameraFraming>
       </Canvas>
     </ErrorBoundary>
   );

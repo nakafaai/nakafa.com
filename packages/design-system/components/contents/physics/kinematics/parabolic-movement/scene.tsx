@@ -9,6 +9,7 @@ import {
   type ParabolicLaunchId,
   type ParabolicMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
 import { useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
@@ -220,9 +221,24 @@ function AnimatedBall({ motion }: { motion: ParabolicMotionState }) {
   });
 
   return (
-    <group ref={ballRef}>
-      <ProjectileBall color={motion.scenario.color} />
-    </group>
+    <CameraBounds
+      motion={{
+        rotation: "all",
+        translation: {
+          x: { min: -motion.rangeWorld / 2, max: motion.rangeWorld / 2 },
+          y: {
+            min: getProjectileSceneY(0),
+            max: getProjectileSceneY(motion.peakWorld),
+          },
+          z: { min: 0, max: 0 },
+        },
+      }}
+      objectRef={ballRef}
+    >
+      <group>
+        <ProjectileBall color={motion.scenario.color} />
+      </group>
+    </CameraBounds>
   );
 }
 

@@ -1,61 +1,51 @@
+import { StateTable } from "@repo/design-system/components/contents/politics/nepotism/table";
 import { politicsComponentNames } from "@repo/design-system/lib/markdown/names";
-import type { RendererComponentLoader } from "@/lib/content/renderer/loader";
+import {
+  PorkBarrelBudgetChart,
+  PorkBarrelFundChart,
+} from "@/lib/content/renderer/client/politics/budget";
+import {
+  MerahPutihCabinetChart,
+  MerahPutihCompositionChart,
+} from "@/lib/content/renderer/client/politics/cabinet";
+import {
+  KimPlusElectabilityChart,
+  PorkBarrelElectabilityChart,
+} from "@/lib/content/renderer/client/politics/elections";
+import { NepotismStage } from "@/lib/content/renderer/client/politics/nepotism";
+import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
-export const domainComponentLoaders = [
+export const domainRenderers = [
   {
     name: politicsComponentNames.kimPlusElectabilityChart,
-    load: () =>
-      import("@/lib/content/renderer/client/politics/elections").then(
-        ({ KimPlusElectabilityChart }) => KimPlusElectabilityChart
-      ),
+    component: KimPlusElectabilityChart,
   },
   {
     name: politicsComponentNames.merahPutihCabinetChart,
-    load: () =>
-      import("@/lib/content/renderer/client/politics/cabinet").then(
-        ({ MerahPutihCabinetChart }) => MerahPutihCabinetChart
-      ),
+    component: MerahPutihCabinetChart,
   },
   {
     name: politicsComponentNames.merahPutihCompositionChart,
-    load: () =>
-      import("@/lib/content/renderer/client/politics/cabinet").then(
-        ({ MerahPutihCompositionChart }) => MerahPutihCompositionChart
-      ),
+    component: MerahPutihCompositionChart,
   },
   {
     name: politicsComponentNames.nepotismStage,
-    load: () =>
-      import("@/lib/content/renderer/client/politics/nepotism").then(
-        ({ NepotismStage }) => NepotismStage
-      ),
+    component: NepotismStage,
   },
   {
     name: politicsComponentNames.nepotismStateTable,
-    load: () =>
-      import(
-        "@repo/design-system/components/contents/politics/nepotism/table"
-      ).then(({ StateTable }) => StateTable),
+    component: StateTable,
   },
   {
     name: politicsComponentNames.porkBarrelBudgetChart,
-    load: () =>
-      import("@/lib/content/renderer/client/politics/budget").then(
-        ({ PorkBarrelBudgetChart }) => PorkBarrelBudgetChart
-      ),
+    component: PorkBarrelBudgetChart,
   },
   {
     name: politicsComponentNames.porkBarrelElectabilityChart,
-    load: () =>
-      import("@/lib/content/renderer/client/politics/elections").then(
-        ({ PorkBarrelElectabilityChart }) => PorkBarrelElectabilityChart
-      ),
+    component: PorkBarrelElectabilityChart,
   },
   {
     name: politicsComponentNames.porkBarrelFundChart,
-    load: () =>
-      import("@/lib/content/renderer/client/politics/budget").then(
-        ({ PorkBarrelFundChart }) => PorkBarrelFundChart
-      ),
+    component: PorkBarrelFundChart,
   },
-] satisfies readonly RendererComponentLoader[];
+] satisfies readonly RendererImplementation[];

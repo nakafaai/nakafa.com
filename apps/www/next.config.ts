@@ -6,10 +6,7 @@ import {
   config,
   createLoopbackConnectSources,
   createSecurityHeaders,
-  withAnalyzer,
-  withMDX,
 } from "@repo/next-config";
-import { analyzeKeys } from "@repo/next-config/keys";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
@@ -22,7 +19,6 @@ import { readRuntimeConfig } from "@/runtime";
 
 const runtime = readRuntimeConfig();
 const configEnv = createEnv({
-  extends: [analyzeKeys()],
   server: {
     NEXT_EXPOSE_TESTING_API: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.Literal("true"))
@@ -212,11 +208,6 @@ const nextConfig = {
     "/*": ["../../.cache/runtime/**"],
   },
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
-  outputFileTracingIncludes: {
-    "/llms.mdx/[...slug]": [
-      "./app/[locale]/(app)/(shared)/(site)/(legal)/**/*.mdx",
-    ],
-  },
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
     "@takumi-rs/core",
@@ -251,6 +242,4 @@ const nextConfig = {
       : {}),
   },
 } satisfies NextConfig;
-const analyzedConfig =
-  configEnv.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
-export default withMDX(withNextIntl(analyzedConfig));
+export default withNextIntl(nextConfig);

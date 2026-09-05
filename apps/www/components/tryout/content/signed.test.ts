@@ -23,6 +23,7 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helper
 import type { TryoutBodyBatch } from "@repo/backend/convex/tryouts/runtime/body";
 import type { TryoutHistoryRequest } from "@repo/backend/convex/tryouts/runtime/history/spec";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
+import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { makeFunctionReference } from "convex/server";
@@ -90,7 +91,10 @@ vi.mock("@repo/backend/content/trust", async () => {
 const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
   compiledCode?: string
 ) {
-  const source = yield* makeTryoutRuntimeSource(compiledCode);
+  const source = yield* makeTryoutRuntimeSource(
+    compiledCode,
+    makeLandingSource()
+  );
   const context = yield* createTestSnapshotContext(source.source);
   const featured = yield* readFeaturedTryout("en").pipe(
     Effect.provideContext(context)

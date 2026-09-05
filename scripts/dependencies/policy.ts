@@ -42,12 +42,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "16.3.4", dependency: "next", minimumDeclarations: 1 },
   {
     approved: "16.3.4",
-    dependency: "@next/bundle-analyzer",
-    minimumDeclarations: 1,
-  },
-  { approved: "16.3.4", dependency: "@next/mdx", minimumDeclarations: 1 },
-  {
-    approved: "16.3.4",
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },

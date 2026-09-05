@@ -17,6 +17,7 @@ import {
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
 import { DoubleSide, type Group } from "three";
@@ -281,8 +282,10 @@ function FloatingMolecule({
   });
 
   return (
-    <group ref={groupRef} scale={0.78}>
-      <Molecule colors={colors} kind={kind} />
+    <group scale={0.78}>
+      <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
+        <Molecule colors={colors} kind={kind} />
+      </CameraBounds>
     </group>
   );
 }

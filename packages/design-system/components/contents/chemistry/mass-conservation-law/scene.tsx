@@ -6,9 +6,10 @@ import {
   type MassConservationScenePoint,
   OPEN_SYSTEM_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
-import { DoubleSide, type Mesh, type MeshStandardMaterial } from "three";
+import { DoubleSide, type Group, type MeshStandardMaterial } from "three";
 
 const BEFORE_X = -1.08;
 const AFTER_X = 1.08;
@@ -19,6 +20,8 @@ const VESSEL_RADIUS = 0.48;
 const PARTICLE_RADIUS = 0.075;
 const GAS_RISE_HEIGHT = 0.7;
 const GAS_START_OPACITY = 0.56;
+const GAS_INITIAL_SCALE = 0.74;
+const GAS_GROWTH = 0.48;
 
 const BEFORE_PARTICLES = [
   { id: "zn-1", element: "zinc", position: [-0.22, -0.38, 0.05] },
@@ -343,33 +346,44 @@ function AnimatedEscapedGas({
   particle: EscapedGasParticle;
 }) {
   const materialRef = useRef<MeshStandardMaterial>(null);
-  const meshRef = useRef<Mesh>(null);
-  const [x, y] = particle.position;
+  const gasRef = useRef<Group>(null);
+  const [x, y, z] = particle.position;
 
   useFrame(({ clock }) => {
-    if (!(meshRef.current && materialRef.current)) {
+    if (!(gasRef.current && materialRef.current)) {
       return;
     }
 
     const progress = (clock.elapsedTime * particle.speed + particle.phase) % 1;
     const drift = Math.sin(progress * Math.PI * 2) * particle.drift;
 
-    meshRef.current.position.x = x + drift;
-    meshRef.current.position.y = y + progress * GAS_RISE_HEIGHT;
-    meshRef.current.scale.setScalar(0.74 + progress * 0.48);
+    gasRef.current.position.set(x + drift, y + progress * GAS_RISE_HEIGHT, z);
+    gasRef.current.scale.setScalar(GAS_INITIAL_SCALE + progress * GAS_GROWTH);
     materialRef.current.opacity = GAS_START_OPACITY * (1 - progress);
   });
 
   return (
-    <mesh position={particle.position} ref={meshRef}>
-      <sphereGeometry args={[PARTICLE_RADIUS * 0.72, 18, 12]} />
-      <meshStandardMaterial
-        color={color}
-        opacity={GAS_START_OPACITY}
-        ref={materialRef}
-        transparent
-      />
-    </mesh>
+    <CameraBounds
+      motion={{
+        scale: GAS_INITIAL_SCALE + GAS_GROWTH,
+        translation: {
+          x: { min: x - particle.drift, max: x + particle.drift },
+          y: { min: y, max: y + GAS_RISE_HEIGHT },
+          z: { min: z, max: z },
+        },
+      }}
+      objectRef={gasRef}
+    >
+      <mesh>
+        <sphereGeometry args={[PARTICLE_RADIUS * 0.72, 18, 12]} />
+        <meshStandardMaterial
+          color={color}
+          opacity={GAS_START_OPACITY}
+          ref={materialRef}
+          transparent
+        />
+      </mesh>
+    </CameraBounds>
   );
 }
 

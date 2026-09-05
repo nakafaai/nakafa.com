@@ -13,7 +13,7 @@ import {
   FloatingGroup,
   PulsingGroup,
   RotatingGroup,
-} from "@repo/design-system/components/contents/biology/parts";
+} from "@repo/design-system/components/contents/biology/motion";
 import {
   BacteriophageModel,
   createVirusSurfaceAnchors,
