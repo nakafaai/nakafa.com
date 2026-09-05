@@ -1,7 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 
@@ -146,22 +146,44 @@ test("published unit-circle controls preserve finite angles after clearing", asy
   page,
 }) => {
   const { APP_LOCALE_CODES } = await import("@nakafa/aksara-contracts/locale");
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        const response = yield* Effect.promise(() =>
+          page.goto(
+            "/en/subjects/mathematics/trigonometry/trigonometry-concept",
+            { waitUntil: "domcontentloaded" }
+          )
+        );
+        yield* Effect.sync(() => expect(response?.status()).toBe(200));
+      })
+    )
+  );
   for (const locale of APP_LOCALE_CODES) {
     await test.step(locale, () =>
       Effect.runPromise(
         withObservedPageErrors(
           page,
           Effect.gen(function* () {
-            yield* seedDeniedAnalyticsConsent(page);
             const messages = yield* Effect.promise(() =>
               loadLocaleMessages(locale)
             );
-            yield* Effect.promise(() =>
-              page.goto(
-                `/${locale}/materials/mathematics/trigonometry/trigonometry-concept`,
-                { waitUntil: "domcontentloaded" }
-              )
+            const alternate = page.locator(
+              `link[rel="alternate"][hreflang="${locale}"]`
             );
+            yield* Effect.promise(() => expect(alternate).toHaveCount(1));
+            const href = yield* Effect.promise(() =>
+              alternate.getAttribute("href")
+            );
+            const localized = yield* Schema.decodeUnknownEffect(
+              Schema.URLFromString
+            )(href);
+            const response = yield* Effect.promise(() =>
+              page.goto(localized.pathname, { waitUntil: "domcontentloaded" })
+            );
+            yield* Effect.sync(() => expect(response?.status()).toBe(200));
             const article = page.locator("article");
             const angles = article.getByRole("textbox", {
               exact: true,
