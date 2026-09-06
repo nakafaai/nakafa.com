@@ -16,6 +16,7 @@ import {
   makeMaterialProjection,
   testMaterialGraph,
 } from "@repo/backend/test/content/material";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect } from "effect";
 import { createElement } from "react";
 import {
@@ -24,11 +25,10 @@ import {
 } from "@/lib/content/material/trust";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { previewArtifactHash } from "@/test/content-preview";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
@@ -47,13 +47,13 @@ const published = {
 };
 
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedContentCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
 vi.mock("@/lib/content/published/material", () => ({
   readRenderedMaterial: renderMock,
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 describe("published marketing trust lesson", () => {
@@ -84,8 +84,8 @@ describe("published marketing trust lesson", () => {
           sectionKey: MaterialSectionSchema.make("right-triangle-naming"),
         });
         const fixture = yield* makeMaterialRuntimeSource([projection]);
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
         renderMock.mockReturnValueOnce(
           Effect.succeed({
             ...published,
@@ -145,10 +145,7 @@ describe("published marketing trust lesson", () => {
           appLocale: "en",
           publicPath,
         });
-        expect(cacheMock).toHaveBeenCalledWith(
-          "material",
-          published.artifactHash
-        );
+        expect(cacheMock).toHaveBeenCalledWith("material");
       })
   );
 
@@ -230,3 +227,7 @@ describe("published marketing trust lesson", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

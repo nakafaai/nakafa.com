@@ -3,22 +3,19 @@ import { getTranslations } from "next-intl/server";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import { FeaturesBento } from "@/components/marketing/about/features-bento";
 import { readFeaturedTryout } from "@/components/tryout/catalog/server";
-import { getPublishedProgramRoutes } from "@/lib/content/program/catalog";
+import { getPublishedProgramSubjects } from "@/lib/content/program/catalog";
 
 export async function Features({ locale }: { locale: Locale }) {
-  const [t, catalog, featuredTryout] = await Promise.all([
+  const [t, subjects, featuredTryout] = await Promise.all([
     getTranslations({ locale, namespace: "Features" }),
-    getPublishedProgramRoutes(locale),
+    getPublishedProgramSubjects(locale),
     readFeaturedTryout(locale),
   ]);
-  const subjectPaths = catalog.routes
-    .filter((route) => route.level === "subject" && route.sitemap)
-    .slice(0, 4)
-    .map((route) => ({
-      href: `/${locale}/${route.publicPath}`,
-      icon: readCurriculumRouteIcon(route),
-      title: route.title,
-    }));
+  const subjectPaths = subjects.map((route) => ({
+    href: `/${locale}/${route.publicPath}`,
+    icon: readCurriculumRouteIcon(route),
+    title: route.title,
+  }));
 
   return (
     <section

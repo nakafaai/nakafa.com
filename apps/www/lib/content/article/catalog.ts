@@ -1,3 +1,5 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 import {
   type GitCommitShaSchema,
@@ -14,19 +16,14 @@ import {
   type ArticleRouteSlug,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import {
-  readArticlePage,
-  readCategoryPage,
-} from "@repo/backend/content/article/read";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { applyPublishedCatalogCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 /** Stable source root for immutable Aksara article links. */
 export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
 type ArticlePageArgs = FunctionArgs<
@@ -198,17 +195,10 @@ export const readPublishedArticlePage = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies ArticlePageArgs;
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.article.publications,
-    args,
-    (queryArgs) =>
-      readArticlePage(
-        queryArgs.category,
-        queryArgs.appLocale,
-        queryArgs.expectedManifestHash,
-        queryArgs.expectedReleaseId,
-        queryArgs.paginationOpts
-      )
+    args
   );
   const {
     activeManifestHash: rawManifestHash,
@@ -262,16 +252,10 @@ export const readPublishedCategories = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies CategoryPageArgs;
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.article.categories,
-    args,
-    (queryArgs) =>
-      readCategoryPage(
-        queryArgs.appLocale,
-        queryArgs.expectedManifestHash,
-        queryArgs.expectedReleaseId,
-        queryArgs.paginationOpts
-      )
+    args
   );
   const {
     activeManifestHash: rawManifestHash,
@@ -316,7 +300,7 @@ export async function getPublishedArticlePage(
 ) {
   "use cache";
   const page = await Effect.runPromise(readPublishedArticlePage(input));
-  applyPublishedCatalogCache("article");
+  applyContentCache("article");
   return page;
 }
 /** Caches one bounded category page under exact article release tags. */
@@ -327,6 +311,6 @@ export async function getPublishedCategories(
 ) {
   "use cache";
   const page = await Effect.runPromise(readPublishedCategories(input));
-  applyPublishedCatalogCache("article");
+  applyContentCache("article");
   return page;
 }

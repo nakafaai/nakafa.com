@@ -20,7 +20,8 @@ import {
   getRadians,
   getSin,
   getTan,
-} from "@repo/design-system/lib/geometry/angles";
+  ISOSCELES_RIGHT_TRIANGLE_ANGLE,
+} from "@repo/math/angles";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -61,7 +62,7 @@ interface Props {
 export function Triangle({
   title,
   description,
-  angle = 45,
+  angle = ISOSCELES_RIGHT_TRIANGLE_ANGLE,
   size = 2,
   labels,
 }: Props) {
@@ -115,10 +116,10 @@ function Content({
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge className="font-mono" variant="outline">
               Sin ({angleValue}°) = {getSin(angleValue).toFixed(2)}
-            </Badge>
+            </Badge>{" "}
             <Badge className="font-mono" variant="outline">
               Cos ({angleValue}°) = {getCos(angleValue).toFixed(2)}
-            </Badge>
+            </Badge>{" "}
             <Badge className="font-mono" variant="outline">
               Tan ({angleValue}°) ={" "}
               {Number.isFinite(getTan(angleValue))
@@ -133,7 +134,7 @@ function Content({
             <div className="flex items-center gap-2">
               <Badge className="font-mono" variant="outline">
                 {angleValue}°
-              </Badge>
+              </Badge>{" "}
               <Badge className="font-mono" variant="outline">
                 {getRadians(angleValue).toFixed(2)} {t("radian")}
               </Badge>

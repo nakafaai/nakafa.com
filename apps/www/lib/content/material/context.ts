@@ -1,20 +1,20 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import { readProgramContext } from "@repo/backend/content/program/context";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import type { ContentReleasePin } from "@/lib/content/published/release";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type PublishedMaterialIdentity = Pick<
   MaterialLessonProjection,
@@ -46,7 +46,8 @@ export const readPublishedMaterialContext = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.program.context,
     {
       ...(expectedActiveReleaseId === undefined
@@ -59,21 +60,7 @@ export const readPublishedMaterialContext = Effect.fn(
       parentPath: material.parentPath,
       programKey: context.programKey,
       publicPath: material.publicPath,
-    },
-    (queryArgs) =>
-      readProgramContext(
-        queryArgs.appLocale,
-        queryArgs,
-        queryArgs.expectedActiveReleaseId
-      ).pipe(
-        Effect.map(({ context: resolved, managed }) => ({
-          groupJson: resolved?.groupJson ?? null,
-          managed,
-          mappingJson: resolved?.mappingJson ?? null,
-          parentJson: resolved?.parentJson ?? null,
-          resolvedCanonicalPath: resolved?.resolvedCanonicalPath ?? null,
-        }))
-      )
+    }
   );
   if (!result.managed) {
     return yield* new PublishedProjectionError({
@@ -141,23 +128,17 @@ export const readPublishedMaterialContext = Effect.fn(
   } satisfies PublishedMaterialContext;
 });
 
-/** Caches one validated material context under release invalidation. */
+/** Caches a stable material identity under material and curriculum changes. */
 export async function getPublishedMaterialContext(
   locale: Locale,
   material: PublishedMaterialIdentity,
-  context: MaterialContextIdentity,
-  expectedActiveReleaseId?: ContentReleasePin
+  context: MaterialContextIdentity
 ) {
   "use cache";
 
   const result = await Effect.runPromise(
-    readPublishedMaterialContext(
-      locale,
-      material,
-      context,
-      expectedActiveReleaseId
-    )
+    readPublishedMaterialContext(locale, material, context)
   );
-  applyContentRuntimeCache();
+  applyContentCache("material", "program");
   return result;
 }

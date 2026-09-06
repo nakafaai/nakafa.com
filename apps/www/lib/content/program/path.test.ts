@@ -1,16 +1,16 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Effect } from "effect";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { testCurriculumRowJson, testProgramRoot } from "@/test/content-program";
-import { createTestSnapshotQuery } from "@/test/runtime-query";
+import { createTestNativeQuery } from "@/test/runtime-query";
 
 const readQueryMock = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: readQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: readQueryMock,
 }));
 
 describe("published curriculum snapshot paths", () => {
@@ -37,8 +37,8 @@ describe("published curriculum snapshot paths", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeProgramRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        readQueryMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        readQueryMock.mockImplementation(createTestNativeQuery(context));
 
         expect(
           yield* readPublishedProgramPath(
@@ -58,3 +58,7 @@ describe("published curriculum snapshot paths", () => {
       })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

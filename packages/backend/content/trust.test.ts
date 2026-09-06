@@ -50,6 +50,7 @@ describe("content trust", () => {
           return;
         }
         vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", agentKeyId);
+        vi.stubEnv("CONVEX_CLOUD_URL", "http://127.0.0.1:3210");
         vi.stubEnv(
           "AKSARA_AGENT_SIGNING_PUBLIC_KEY",
           productionKey.publicKeyPem
@@ -79,4 +80,36 @@ describe("content trust", () => {
       expect(import("@repo/backend/content/trust")).rejects.toThrow()
     );
   });
+
+  it.effect(
+    "rejects acceptance trust on production and unverified targets",
+    () =>
+      Effect.gen(function* () {
+        const key = TRUSTED_CONTENT_KEYS[0];
+        if (key === undefined) {
+          return yield* Effect.die("Expected a retained signing key.");
+        }
+        vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", agentKeyId);
+        vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", key.publicKeyPem);
+        for (const target of [
+          undefined,
+          "https://dapper-antelope-269.convex.cloud",
+          "https://dapper-antelope-269.convex.cloud.",
+          "https://example.com",
+          "http://user@127.0.0.1:3210",
+          "http://127.0.0.1:3210",
+        ]) {
+          vi.stubEnv("CONVEX_CLOUD_URL", target);
+          vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", undefined);
+          vi.stubEnv(
+            "VERCEL_ENV",
+            target === "http://127.0.0.1:3210" ? "production" : undefined
+          );
+          vi.resetModules();
+          yield* Effect.promise(() =>
+            expect(import("@repo/backend/content/trust")).rejects.toThrow()
+          );
+        }
+      })
+  );
 });

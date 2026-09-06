@@ -20,6 +20,11 @@ export class ProgramSource extends Context.Service<
       snapshotId: string,
       limit: number
     ) => Effect.Effect<readonly ProgramRow[], ReleaseError>;
+    readonly subjects: (
+      snapshotId: string,
+      appLocale: AppLocale,
+      limit: number
+    ) => Effect.Effect<readonly RouteRow[], ReleaseError>;
     readonly route: (
       snapshotId: string,
       appLocale: AppLocale,

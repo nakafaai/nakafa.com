@@ -1,3 +1,5 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 import {
   ContentKeySchema,
@@ -9,13 +11,12 @@ import {
   MaterialKeySchema,
   MaterialSectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
-import { readMaterialIdentity } from "@repo/backend/content/material/identity";
 import { api } from "@repo/backend/convex/_generated/api";
 import { readMdxBody } from "@repo/contents/_types/llms/mdx";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { applyPublishedContentCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import {
   PublishedProjectionError,
   PublishedReleaseMismatchError,
@@ -24,7 +25,6 @@ import {
   type PublishedMaterialContent,
   readRenderedMaterial,
 } from "@/lib/content/published/material";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 const TRUST_CONTENT_KEY = ContentKeySchema.make(
   "material/lesson/mathematics/trigonometry/right-triangle-naming"
@@ -55,10 +55,10 @@ export const readPublishedTrustLesson = Effect.fn(
     expectedMaterialKey: TRUST_MATERIAL_KEY,
     expectedSectionKey: TRUST_SECTION_KEY,
   } satisfies FunctionArgs<typeof api.contentRelease.material.identity>;
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.material.identity,
-    args,
-    (queryArgs) => readMaterialIdentity(queryArgs)
+    args
   );
   if (!result.managed || result.publicPath === null) {
     return yield* new PublishedProjectionError({
@@ -99,6 +99,6 @@ export const readPublishedTrustLesson = Effect.fn(
 export async function getPublishedTrustLesson(locale: Locale) {
   "use cache";
   const lesson = await Effect.runPromise(readPublishedTrustLesson(locale));
-  applyPublishedContentCache("material", lesson.artifactHash);
+  applyContentCache("material");
   return lesson;
 }

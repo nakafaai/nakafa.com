@@ -1,25 +1,22 @@
-import {
-  readTryoutSitemapCount,
-  readTryoutSitemapPage,
-} from "@repo/backend/content/tryout/sitemap";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Reads the active signed try-out sitemap inventory for one locale. */
 export const readPublishedTryoutSitemapCount = Effect.fn(
   "www.tryouts.readSitemapCount"
 )(function* (locale: Locale) {
-  return yield* readRuntimeQuery(
+  return yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.tryout.sitemapCount,
     {
       appLocale: AppLocaleSchema.make(locale),
-    },
-    ({ appLocale }) => readTryoutSitemapCount(appLocale)
+    }
   );
 });
 
@@ -27,12 +24,12 @@ export const readPublishedTryoutSitemapCount = Effect.fn(
 export const readPublishedTryoutSitemap = Effect.fn(
   "www.tryouts.readSitemapPage"
 )(function* (locale: Locale, page: number) {
-  return yield* readRuntimeQuery(
+  return yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.tryout.sitemapPage,
     {
       appLocale: AppLocaleSchema.make(locale),
       page,
-    },
-    ({ appLocale, page }) => readTryoutSitemapPage(appLocale, page)
+    }
   );
 });

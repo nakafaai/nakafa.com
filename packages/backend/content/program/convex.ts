@@ -34,6 +34,24 @@ export const convexProgramLayer = (ctx: QueryCtx) =>
             .take(limit)
         )
       ),
+      subjects: Effect.fn("program.convex.subjects")(
+        (snapshotId, appLocale, limit) =>
+          Effect.promise(() =>
+            ctx.db
+              .query("curriculumRoutes")
+              .withIndex(
+                "by_snapshotId_and_appLocale_and_level_and_bucket_and_path",
+                (index) =>
+                  index
+                    .eq("snapshotId", snapshotId)
+                    .eq("appLocale", appLocale)
+                    .eq("level", "subject")
+                    // Signed sitemap routes have a bucket; hidden routes omit it.
+                    .gte("bucket", "")
+              )
+              .take(limit)
+          )
+      ),
       route: Effect.fn("program.convex.route")(
         (snapshotId, appLocale, publicPath) =>
           Effect.promise(() =>

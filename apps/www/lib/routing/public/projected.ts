@@ -3,17 +3,17 @@ import {
   type AppLocale,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { readContentReference } from "@repo/backend/content/reference/read";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";
+import { env } from "@/env";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 interface ProjectedHtmlRouteInput {
   readonly hasAttemptCapability: boolean;
@@ -107,7 +107,8 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   ) {
     return null;
   }
-  const reference = yield* readRuntimeQuery(
+  const reference = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.reference.read,
     {
       input: {
@@ -115,8 +116,7 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
         kind: "route",
         publicPath,
       },
-    },
-    ({ input }) => readContentReference(input)
+    }
   );
   return reference ? null : locale;
 });

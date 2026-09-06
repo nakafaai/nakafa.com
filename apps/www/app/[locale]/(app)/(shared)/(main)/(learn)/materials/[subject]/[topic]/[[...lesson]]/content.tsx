@@ -19,7 +19,6 @@ import {
   type MaterialPreviewContent,
   readMaterialPreview,
 } from "@/lib/content/preview/material";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { getAksaraUrl, getRawAksaraUrl } from "@/lib/utils/github";
 
 interface PreviewOwner {
@@ -57,7 +56,6 @@ interface PreviewContent extends MaterialFields {
 }
 
 interface PublishedContent extends MaterialFields {
-  readonly activeReleaseId: ActiveContentReleaseId;
   readonly body: string;
   readonly children: ReactNode;
   readonly copySourceUrl: null | string;
@@ -170,7 +168,6 @@ export async function readMaterialPage(
   }
   const { model, published } = publication;
   return {
-    activeReleaseId: published.activeReleaseId,
     alternates: model.alternates,
     body: published.rawMdx,
     children: published.body,

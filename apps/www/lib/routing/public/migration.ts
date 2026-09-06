@@ -1,11 +1,11 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import { readMaterialIdentity } from "@repo/backend/content/material/identity";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Option, Schema } from "effect";
+import { env } from "@/env";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
 const PREVIOUS_MATERIAL_LEVELS = new Set([
@@ -174,10 +174,10 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
     return null;
   }
 
-  const redirect = yield* readRuntimeQuery(
+  const redirect = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.material.identity,
-    identity.value,
-    (queryArgs) => readMaterialIdentity(queryArgs)
+    identity.value
   );
   if (!(redirect.activeReleaseId && redirect.managed && redirect.publicPath)) {
     return null;

@@ -1,46 +1,38 @@
 import assert from "node:assert/strict";
-import {
-  readProtectedContent,
-  readSnapshotProtectedContent,
-} from "@repo/backend/client/content/protected";
-import { readFeaturedTryout } from "@repo/backend/content/tryout/featured";
+import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { api } from "@repo/backend/convex/_generated/api";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
+import { fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
-import { fetchRuntimeQuery } from "@/lib/content/runtime/query";
-import { loadContentSnapshot } from "@/lib/content/runtime/snapshot";
+import { readRuntimeConfig } from "@/runtime";
+
+readRuntimeConfig();
 
 const verifyFeaturedRenderer = Effect.fn(
   "NakafaContent.verifyFeaturedRenderer"
 )(function* () {
   const featured = yield* Effect.tryPromise(() =>
-    fetchRuntimeQuery(
+    fetchQuery(
       api.tryouts.queries.catalog.getFeaturedQuestion,
       {
         appLocale: "en",
       },
-      ({ appLocale }) => readFeaturedTryout(appLocale)
+      { url: env.NEXT_PUBLIC_CONVEX_URL }
     )
   );
   const manifest = yield* rendererManifest;
   const request = yield* makeTryoutRuntimeRequest([featured.question]);
-  const snapshot = yield* Effect.tryPromise(() => loadContentSnapshot());
-  const response =
-    snapshot === undefined
-      ? yield* readProtectedContent(
-          {
-            siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
-            token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
-          },
-          request,
-          manifest
-        )
-      : yield* readSnapshotProtectedContent(request, manifest).pipe(
-          Effect.provideContext(snapshot)
-        );
+  const response = yield* readProtectedContent(
+    {
+      siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+      token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
+    },
+    request,
+    manifest
+  );
   const item = response.items[0];
   assert(item, "The featured signed snapshot returned no question artifact.");
 

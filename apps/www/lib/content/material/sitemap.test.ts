@@ -2,24 +2,24 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect } from "effect";
 import {
   readPublishedMaterialBuckets,
   readPublishedMaterialSitemap,
 } from "@/lib/content/material/sitemap";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const runtimeReadMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-material");
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 beforeEach(() => {
@@ -33,8 +33,8 @@ describe("published material sitemap", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeMaterialRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
 
         const inventory = yield* readPublishedMaterialBuckets("de");
         const pages = yield* Effect.forEach(inventory.buckets, (bucket) =>
@@ -120,3 +120,7 @@ describe("published material sitemap", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

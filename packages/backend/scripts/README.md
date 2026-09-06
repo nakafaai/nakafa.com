@@ -32,22 +32,19 @@ pnpm --dir packages/backend exec convex dev --once
 The selected deployment and its generated URLs belong only to that worktree.
 Do not copy Convex deployment identity from another task.
 
-## Signed runtime validation
+## Signed acceptance publication
 
 ```sh
-pnpm runtime:prepare
-pnpm build
-pnpm start
+pnpm acceptance:prepare
+pnpm acceptance:build
+pnpm acceptance:start
 ```
 
-Use the signed snapshot setup in the [root README](../../../README.md).
-`runtime:prepare` verifies and imports an authorized signed snapshot into its
-own local database. Build and start reuse that database. `pnpm runtime:clean`
-removes it after its services stop.
-
-The `runtime:ci` fingerprint, generations, export, and verify-generations
-operations also serve the protected snapshot publication workflow. They do not
-publish authored content.
+The [root README](../../../README.md) describes the pinned Aksara fixture.
+Preparation publishes a fixed, independently signed corpus into a new native
+local database. Build and start reopen that owned database. After stopping its
+services, `pnpm acceptance:clean` removes the exact task-owned reservation.
+These commands never read production tables or use production credentials.
 
 ## Customer verification
 

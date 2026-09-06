@@ -148,10 +148,14 @@ const expectBoundedTriangleZoom = Effect.fn(
   const scene = page.locator('[data-slot="triangle-scene"]');
   const canvas = scene.locator("canvas");
   const label = scene.getByText("Hypotenuse", { exact: true });
-  // Next can stage the scene in hidden streaming markup before committing it.
-  yield* Effect.promise(() => expect(scene).toBeVisible({ timeout: 30_000 }));
-  yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => expect(canvas).toBeVisible({ timeout: 30_000 }));
+  // Keep the deferred scene in view while streaming startup finishes.
+  yield* Effect.promise(() =>
+    expect(async () => {
+      await expect(scene).toBeVisible();
+      await scene.scrollIntoViewIfNeeded();
+      expect(await canvas.isVisible()).toBe(true);
+    }).toPass({ timeout: 30_000 })
+  );
   yield* Effect.promise(() => expect(label).toBeVisible());
   yield* waitForStableCanvas(canvas);
   const initialWidth = yield* Effect.promise(() =>

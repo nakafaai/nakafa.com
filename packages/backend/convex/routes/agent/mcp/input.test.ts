@@ -83,8 +83,8 @@ describe("MCP request input", () => {
             contentType
           )
       );
-      const results = yield* Effect.all(
-        requests.map((request) => readMcpRequest(request).pipe(Effect.result))
+      const results = yield* Effect.forEach(requests, (request) =>
+        readMcpRequest(request).pipe(Effect.result)
       );
 
       for (const result of results) {
@@ -164,10 +164,9 @@ describe("MCP request input", () => {
           },
           method: "POST",
         });
-        const results = yield* Effect.all(
-          [invalidLength, failed, malformedUtf8, absent].map((request) =>
-            readMcpRequest(request).pipe(Effect.result)
-          )
+        const results = yield* Effect.forEach(
+          [invalidLength, failed, malformedUtf8, absent],
+          (request) => readMcpRequest(request).pipe(Effect.result)
         );
 
         for (const result of results) {

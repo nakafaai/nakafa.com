@@ -40,7 +40,7 @@ function validActionUses(): GithubActionUse[] {
 
 describe("GitHub Action policy", () => {
   it.effect(
-    "runs candidate validation before merge and isolates snapshot publishing",
+    "runs candidate validation with a signed isolated acceptance publication",
     () =>
       Effect.gen(function* () {
         const source = yield* readRepositoryFile(
@@ -72,87 +72,24 @@ describe("GitHub Action policy", () => {
         );
         expect(source).not.toContain("actions/cache/save@");
 
-        const snapshotSource = yield* readRepositoryFile(
-          "../../.github/workflows/snapshot.yml"
-        );
-        const snapshotWorkflow = yield* parseWorkflow(snapshotSource);
-        expect(snapshotWorkflow).toEqual(
-          expect.objectContaining({
-            concurrency: {
-              "cancel-in-progress": false,
-              group: "snapshot",
-            },
-            jobs: {
-              publish: expect.objectContaining({
-                if: expect.stringContaining(
-                  "github.event.deployment_status.state == 'success'"
-                ),
-                name: "Publish",
-                steps: expect.arrayContaining([
-                  expect.objectContaining({
-                    name: "Verify current main deployment",
-                  }),
-                  expect.objectContaining({
-                    name: "Export snapshot",
-                    run: "pnpm --silent --dir packages/backend runtime:ci export",
-                  }),
-                  {
-                    env: expect.objectContaining({
-                      CONVEX_DEPLOY_KEY: expect.any(String),
-                    }),
-                    name: "Verify selection",
-                    run: "pnpm --silent --dir packages/backend runtime:ci verify-generations",
-                  },
-                ]),
-              }),
-            },
-            on: {
-              deployment_status: {},
-              workflow_dispatch: {},
-            },
-          })
-        );
-        expect(snapshotWorkflow).not.toEqual(
-          expect.objectContaining({
-            on: expect.objectContaining({ merge_group: expect.anything() }),
-          })
-        );
-        expect(snapshotWorkflow).not.toEqual(
-          expect.objectContaining({
-            on: expect.objectContaining({ pull_request: expect.anything() }),
-          })
-        );
-        expect(snapshotWorkflow).not.toEqual(
-          expect.objectContaining({
-            on: expect.objectContaining({ push: expect.anything() }),
-          })
-        );
-        expect(snapshotSource).toContain("Production – www");
-        expect(snapshotSource).not.toContain("actions/cache/");
-        expect(snapshotSource).toContain(
-          "This release contains exactly one current encrypted signed snapshot."
-        );
-        expect(source).not.toContain("codex/snapshot");
         expect(workflow).toEqual(
           expect.objectContaining({
             jobs: expect.objectContaining({
               production: expect.objectContaining({
                 steps: expect.arrayContaining([
+                  expect.objectContaining({ run: "pnpm acceptance:prepare" }),
+                  expect.objectContaining({ run: "pnpm acceptance:build" }),
                   expect.objectContaining({
-                    run: "pnpm build",
-                    env: expect.objectContaining({
-                      CONVEX_DEPLOY_KEY: expect.any(String),
-                      CONTENT_RUNTIME_CACHE_KEY: expect.any(String),
-                    }),
-                  }),
-                  expect.objectContaining({
-                    name: "Verify final production runtime generation",
+                    run: "pnpm --filter www test:browser",
                   }),
                 ]),
               }),
             }),
           })
         );
+        expect(source).not.toContain("secrets.CONVEX_DEPLOY_KEY");
+        expect(source).not.toContain("secrets.CONTENT_RUNTIME_CACHE_KEY");
+        expect(source).toContain("pnpm acceptance:clean");
         expect(source).not.toContain("runtime:ci export");
       }).pipe(Effect.provide(NodeServices.layer))
   );

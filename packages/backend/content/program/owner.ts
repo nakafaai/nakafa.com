@@ -1,5 +1,5 @@
+import { loadActiveSnapshot } from "@repo/backend/content/publication/snapshot";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { loadActiveSnapshot } from "@repo/backend/content/snapshot/read";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";

@@ -6,7 +6,7 @@ interface DependencyHold {
   readonly minimumDeclarations?: number;
 }
 
-export const CONTRACT_VERSION = "0.36.0";
+export const CONTRACT_VERSION = "0.37.0";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
@@ -150,7 +150,7 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "0.36.0",
+    CONTRACT_VERSION,
     "Signed content contracts move with the exact Effect peer cohort.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],

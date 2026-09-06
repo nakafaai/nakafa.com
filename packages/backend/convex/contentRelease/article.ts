@@ -4,7 +4,10 @@ import {
   readCategoryArticles,
   readLatestArticles,
 } from "@repo/backend/content/article/discovery";
-import { readArticleModel } from "@repo/backend/content/article/model";
+import {
+  readArticleDelivery,
+  readArticleModel,
+} from "@repo/backend/content/article/model";
 import {
   readArticlePage,
   readCategoryPage,
@@ -121,6 +124,21 @@ const articleModelValidator = v.object({
   activeReleaseId: v.string(),
   alternateJson: v.array(v.string()),
   projectionJson: v.union(v.string(), v.null()),
+});
+
+/** Delivers one generation-consistent public article shell and signed body. */
+export const delivery = query({
+  args: { appLocale: appLocaleValidator, publicPath: v.string() },
+  returns: v.object({
+    model: articleModelValidator,
+    runtimeJson: v.union(v.string(), v.null()),
+  }),
+  handler: (ctx, { appLocale, publicPath }) =>
+    runConvexProgram(
+      readArticleDelivery(appLocale, publicPath).pipe(
+        Effect.provide(convexArticleLayer(ctx))
+      )
+    ),
 });
 
 /** Returns one current signed article partner API page. */

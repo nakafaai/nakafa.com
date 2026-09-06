@@ -23,7 +23,7 @@ vi.mock("@/lib/content/article/catalog", () => ({
   readPublishedCategories: categoryReaderMock,
 }));
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedCatalogCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
 vi.mock("@/lib/content/preview/config", () => ({
   hasPreviewConfig: previewConfigMock,

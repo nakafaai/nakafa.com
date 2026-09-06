@@ -55,6 +55,72 @@ ${body}\n`;
 
 describe("MDX agent markdown projection", () => {
   it.effect(
+    "includes a triangle's initial computed values and source props",
+    () =>
+      Effect.gen(function* () {
+        const markdown = yield* projectMdxForAgentMarkdown(`
+<Triangle angle={30} title="Right triangle" labels={{ opposite: "a", adjacent: "b", hypotenuse: "c" }} />
+`);
+
+        expect(markdown).toContain("Component: Triangle");
+        expect(markdown).toContain("- angle: 30");
+        expect(markdown).toContain('hypotenuse: "c"');
+        expect(markdown).toContain("Initial interactive values");
+        expect(markdown).toContain(
+          "Sin (30°) = 0.50 Cos (30°) = 0.87 Tan (30°) = 0.58"
+        );
+        expect(markdown).toContain("Angle: 30° = 0.52 radians.");
+      })
+  );
+
+  it.effect("uses the renderer's isosceles default and undefined tangent", () =>
+    Effect.gen(function* () {
+      const defaultAngle = yield* projectMdxForAgentMarkdown("<Triangle />");
+      expect(defaultAngle).toContain(
+        "Sin (45°) = 0.71 Cos (45°) = 0.71 Tan (45°) = 1.00"
+      );
+      const verticalAngle = yield* projectMdxForAgentMarkdown(
+        "<Triangle angle={90} />"
+      );
+      expect(verticalAngle).toContain("Tan (90°) = undefined");
+      expect(verticalAngle).not.toContain("Infinity");
+    })
+  );
+
+  it.effect("reads signed numeric syntax without running expressions", () =>
+    Effect.gen(function* () {
+      const signedAngles = yield* projectMdxForAgentMarkdown(
+        "<Triangle angle={-30} />\n\n<Triangle angle={+60} />"
+      );
+      expect(signedAngles).toContain("Sin (-30°) = -0.50");
+      expect(signedAngles).toContain("Cos (60°) = 0.50");
+
+      const repeatedAngle = yield* projectMdxForAgentMarkdown(
+        "<Triangle angle={30} angle={60} />"
+      );
+      expect(repeatedAngle).toContain("Sin (60°) = 0.87");
+      expect(repeatedAngle).not.toContain("Sin (30°)");
+
+      for (const props of [
+        "angle={calculateAngle()}",
+        "angle={Number.POSITIVE_INFINITY}",
+        "angle={1e400}",
+        'angle="30"',
+        "angle",
+        "angle={30} {...props}",
+      ]) {
+        const markdown = yield* projectMdxForAgentMarkdown(
+          `<Triangle ${props} />`
+        );
+        expect(markdown).toContain(
+          "Initial trigonometric values require a static numeric angle."
+        );
+        expect(markdown).not.toContain("Sin (");
+      }
+    })
+  );
+
+  it.effect(
     "preserves authored math, diagrams, visual data, and agent context",
     () =>
       Effect.gen(function* () {

@@ -1,10 +1,8 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import {
-  readArticleBuckets,
-  readArticleSitemap,
-} from "@repo/backend/content/article/sitemap";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -13,17 +11,16 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Reads non-empty article sitemap partitions for one localized catalog. */
 export const readPublishedArticleBuckets = Effect.fn(
   "www.articles.readSitemapBuckets"
 )(function* (locale: Locale, expectedActiveReleaseId?: ContentReleasePin) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.article.sitemapBuckets,
-    { appLocale },
-    (queryArgs) => readArticleBuckets(queryArgs.appLocale)
+    { appLocale }
   );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
@@ -48,12 +45,12 @@ export const readPublishedArticleSitemap = Effect.fn(
   "www.articles.readSitemapPage"
 )(function* (locale: Locale, bucket: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  return yield* readRuntimeQuery(
+  return yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.article.sitemapPage,
     {
       appLocale,
       bucket,
-    },
-    (queryArgs) => readArticleSitemap(queryArgs.appLocale, queryArgs.bucket)
+    }
   );
 });

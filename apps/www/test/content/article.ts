@@ -5,20 +5,20 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
-import type { RuntimeRow } from "@repo/backend/content/snapshot/tables";
+import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import {
   testEmptyManifest,
   testSignedArtifact,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
+import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import {
   testPublicationScope,
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
-import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { Array as Arr, Effect, Struct } from "effect";
 
 /** Creates signed localized articles with their complete immutable discovery closure. */
@@ -35,12 +35,12 @@ export const makeArticleRuntimeSource = Effect.fn(
       testLocalizedArticleProjection(1, locale),
       testLocalizedArticleProjection(2, locale),
     ]);
-    const heads: RuntimeRow<"contentHeads">[] = [];
-    const bindings: RuntimeRow<"contentBindings">[] = [];
-    const artifacts: RuntimeRow<"contentArtifacts">[] = [];
-    const catalog: RuntimeRow<"articleCatalog">[] = [];
-    const search: RuntimeRow<"contentIndex">[] = [];
-    const categories = new Map<string, RuntimeRow<"articleCategories">>();
+    const heads: PublicationRow<"contentHeads">[] = [];
+    const bindings: PublicationRow<"contentBindings">[] = [];
+    const artifacts: PublicationRow<"contentArtifacts">[] = [];
+    const catalog: PublicationRow<"articleCatalog">[] = [];
+    const search: PublicationRow<"contentIndex">[] = [];
+    const categories = new Map<string, PublicationRow<"articleCategories">>();
     for (const [index, projection] of projections.entries()) {
       const artifact = testSignedArtifact("politics", {
         artifactLocale: activeAppLocaleCode(projection.appLocale),
@@ -132,7 +132,7 @@ export const makeArticleRuntimeSource = Effect.fn(
         category: 1,
       })),
     ];
-    const buckets: RuntimeRow<"articleBuckets">[] = Object.values(
+    const buckets: PublicationRow<"articleBuckets">[] = Object.values(
       Arr.groupBy(partitionRows, ({ row }) => `${row.appLocale}/${row.bucket}`)
     ).map((rows) => ({
       appLocale: rows[0].row.appLocale,

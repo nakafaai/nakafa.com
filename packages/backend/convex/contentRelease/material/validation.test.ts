@@ -1,6 +1,6 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import { validateMaterialModel } from "@repo/backend/convex/contentRelease/material/validation";
-import { copyMaterialModel } from "@repo/backend/convex/contentRelease/models/material";
+import { reconcileMaterialModel } from "@repo/backend/convex/contentRelease/models/material";
 import { MODEL_BUILD_PAGE_ROWS } from "@repo/backend/convex/contentRelease/models/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -15,7 +15,7 @@ import { Effect } from "effect";
 
 describe("inactive material validation pages", () => {
   it.effect(
-    "copies and verifies every candidate projection across a durable page boundary",
+    "reconciles and verifies every candidate projection across a durable page boundary",
     () =>
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
@@ -32,7 +32,7 @@ describe("inactive material validation pages", () => {
               itemIndex: -1,
               key: "primary",
               manifestHash: MATERIAL_IDENTITY.manifestHash,
-              phase: "materialCopyCatalog",
+              phase: "materialCatalog",
               releaseId: MATERIAL_IDENTITY.releaseId,
               sequence: MATERIAL_IDENTITY.sequence,
               updatedAt: 1,
@@ -50,7 +50,9 @@ describe("inactive material validation pages", () => {
         );
         assert(stored);
         const firstCopy = yield* Effect.promise(() =>
-          t.mutation((ctx) => runConvexProgram(copyMaterialModel(ctx, stored)))
+          t.mutation((ctx) =>
+            runConvexProgram(reconcileMaterialModel(ctx, stored))
+          )
         );
         expect(firstCopy).toMatchObject({
           done: false,
@@ -59,7 +61,7 @@ describe("inactive material validation pages", () => {
         const secondCopy = yield* Effect.promise(() =>
           t.mutation((ctx) =>
             runConvexProgram(
-              copyMaterialModel(ctx, {
+              reconcileMaterialModel(ctx, {
                 ...stored,
                 cursor: firstCopy.cursor,
               })

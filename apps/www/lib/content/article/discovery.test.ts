@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
 import { Effect } from "effect";
 import {
@@ -12,10 +13,9 @@ import {
   readPublishedLatestArticles,
 } from "@/lib/content/article/discovery";
 import { makeArticleRuntimeSource } from "@/test/content/article";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
@@ -42,8 +42,8 @@ const localeCases = [
   },
 ] as const;
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 /** Builds one source-owned locale summary returned by Convex discovery. */
@@ -74,8 +74,8 @@ describe("published article discovery", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeArticleRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
         const projection = testLocalizedArticleProjection(1, "de");
         const bucket = getHashBucket(hashContentProjection(projection));
 
@@ -246,7 +246,7 @@ describe("published article discovery", () => {
 
         expect(unmanaged).toMatchObject({ _tag: "PublishedProjectionError" });
         expect(malformed).toMatchObject({ _tag: "PublishedProjectionError" });
-        expect(unavailable).toMatchObject({ _tag: "TestRuntimeQueryError" });
+        expect(unavailable).toMatchObject({ _tag: "NakafaAgentDataReadError" });
       })
   );
 
@@ -329,3 +329,7 @@ describe("published article discovery", () => {
       })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

@@ -6,20 +6,21 @@ import {
   resolveContentHead,
   resolvePublicProjection,
 } from "@repo/backend/content/publication/projection";
-import { snapshotPublicationLayer } from "@repo/backend/content/publication/snapshot";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeTestPageProjection } from "@repo/backend/test/content/page";
+import {
+  createTestPublication,
+  makePageRuntimeSource,
+} from "@repo/backend/test/content/publication";
 import {
   TEST_QUESTION_CONTENT_KEY,
   TEST_QUESTION_PROJECTION_JSON,
   TEST_QUESTION_SOURCE,
 } from "@repo/backend/test/content/question";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
-import { makePageRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { insertRuntimeVersion } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
@@ -79,20 +80,26 @@ describe("immutable publication projections", () => {
   it.effect("rejects incomplete or invalid head contracts", () =>
     Effect.gen(function* () {
       const fixture = makePageRuntimeSource();
-      const tables = yield* projectActiveRuntime(fixture.source);
+      const runtime = yield* createTestPublication(fixture.source);
       for (const patch of [
         { compilerConfigHash: "not-a-digest" },
         { sourcePath: "outside-corpus.mdx" },
         { artifactHash: undefined },
       ]) {
-        expect(
-          yield* contentHead(
-            { ...fixture.head, ...patch },
-            fixture.state.activeSequence
-          ).pipe(Effect.provide(snapshotPublicationLayer(tables)), Effect.flip)
-        ).toMatchObject({
-          code: "CONTENT_RELEASE_INTEGRITY",
-        });
+        yield* Effect.promise(() =>
+          runtime.query((ctx) =>
+            runConvexProgram(
+              Effect.gen(function* () {
+                expect(
+                  yield* contentHead(
+                    { ...fixture.head, ...patch },
+                    fixture.state.activeSequence
+                  ).pipe(Effect.flip, Effect.orDie)
+                ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+              }).pipe(Effect.provide(convexPublicationLayer(ctx)))
+            )
+          )
+        );
       }
     })
   );
@@ -102,7 +109,6 @@ describe("immutable publication projections", () => {
     () =>
       Effect.gen(function* () {
         const fixture = makePageRuntimeSource();
-        const tables = yield* projectActiveRuntime(fixture.source);
         const patches: readonly Partial<PublicationRow<"contentHeads">>[] = [
           { projectionHash: undefined },
           { family: "material" },
@@ -116,43 +122,47 @@ describe("immutable publication projections", () => {
           { sourcePath: undefined },
         ];
         for (const patch of patches) {
-          expect(
-            yield* resolvePublicProjection(
-              fixture.projection.contentKey,
-              fixture.projection.artifactLocale,
-              fixture.state.activeSequence
-            ).pipe(
-              Effect.provide(
-                snapshotPublicationLayer({
-                  ...tables,
-                  contentHeads: tables.contentHeads.map((row) => ({
-                    ...row,
-                    ...patch,
-                  })),
-                })
-              ),
-              Effect.flip
+          const runtime = yield* createTestPublication(
+            new Map(fixture.source).set("contentHeads", [
+              { ...fixture.head, ...patch },
+            ])
+          );
+          yield* Effect.promise(() =>
+            runtime.query((ctx) =>
+              runConvexProgram(
+                Effect.gen(function* () {
+                  expect(
+                    yield* resolvePublicProjection(
+                      fixture.projection.contentKey,
+                      fixture.projection.artifactLocale,
+                      fixture.state.activeSequence
+                    ).pipe(Effect.flip, Effect.orDie)
+                  ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+                }).pipe(Effect.provide(convexPublicationLayer(ctx)))
+              )
             )
-          ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+          );
         }
-        expect(
-          yield* resolveContentHead(
-            fixture.projection.contentKey,
-            fixture.projection.artifactLocale,
-            fixture.state.activeSequence
-          ).pipe(
-            Effect.provide(
-              snapshotPublicationLayer({
-                ...tables,
-                contentHeads: tables.contentHeads.map((row) => ({
-                  ...row,
-                  projectionJson: undefined,
-                })),
-              })
-            ),
-            Effect.flip
+        const runtime = yield* createTestPublication(
+          new Map(fixture.source).set("contentHeads", [
+            { ...fixture.head, projectionJson: undefined },
+          ])
+        );
+        yield* Effect.promise(() =>
+          runtime.query((ctx) =>
+            runConvexProgram(
+              Effect.gen(function* () {
+                expect(
+                  yield* resolveContentHead(
+                    fixture.projection.contentKey,
+                    fixture.projection.artifactLocale,
+                    fixture.state.activeSequence
+                  ).pipe(Effect.flip, Effect.orDie)
+                ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+              }).pipe(Effect.provide(convexPublicationLayer(ctx)))
+            )
           )
-        ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+        );
       })
   );
 });

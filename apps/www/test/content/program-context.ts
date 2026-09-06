@@ -15,15 +15,15 @@ import {
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { compareCodeUnits } from "@nakafa/aksara-contracts/text/order";
-import type { RuntimeRow } from "@repo/backend/content/snapshot/tables";
+import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
 import {
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
+import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
-import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { Array as Arr, Effect, Stream, Struct } from "effect";
 import {
   testPublishedCurriculumRoutes,
@@ -89,7 +89,7 @@ export const makeProgramContextRuntimeSource = Effect.fn(
       snapshotId: manifest.snapshotId,
     },
   ]);
-  const storedRoutes: RuntimeRow<"curriculumRoutes">[] = curriculum.map(
+  const storedRoutes: PublicationRow<"curriculumRoutes">[] = curriculum.map(
     (record, index) => ({
       ...Struct.pick(record.row, ["materialKey", "parentPath"]),
       ...(record.row.sitemap ? { bucket: getHashBucket(record.rowHash) } : {}),

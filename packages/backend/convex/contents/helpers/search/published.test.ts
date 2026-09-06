@@ -66,11 +66,9 @@ describe("readPublishedSearchDocuments", () => {
   it("keeps smaller pages stable across empty and overlapping queries", async () => {
     const t = createConvexTestWithBetterAuth();
     const queries = ["missing", "alpha", "beta", "gamma"];
-    const texts = [
-      "alpha beta bounded search",
-      "beta bounded search",
-      "gamma bounded search",
-    ];
+    const texts = Array.from({ length: 20 }, (_, index) =>
+      index < 10 ? "alpha beta bounded search" : "gamma bounded search"
+    );
 
     await t.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, texts.length);

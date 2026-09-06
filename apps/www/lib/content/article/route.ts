@@ -1,3 +1,5 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 
 import {
@@ -5,8 +7,8 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
-import { readArticleModel } from "@repo/backend/content/article/model";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
@@ -14,13 +16,12 @@ import {
   isArticleCounterpart,
   makeArticleProjectionError,
 } from "@/lib/content/article/decode";
-import { applyPublishedCatalogCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Complete active article route or a signed missing-route tombstone. */
 export type PublishedArticleRoute =
@@ -44,7 +45,8 @@ export const readPublishedArticleRoute = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.article.route,
     {
       ...(expectedActiveReleaseId === undefined
@@ -52,14 +54,26 @@ export const readPublishedArticleRoute = Effect.fn(
         : { expectedActiveReleaseId }),
       appLocale,
       publicPath,
-    },
-    (queryArgs) =>
-      readArticleModel(
-        queryArgs.appLocale,
-        queryArgs.publicPath,
-        queryArgs.expectedActiveReleaseId
-      )
+    }
   );
+  return yield* decodePublishedArticleRoute(
+    result,
+    locale,
+    publicPath,
+    expectedActiveReleaseId
+  );
+});
+
+/** Validates the route model delivered alone or with its signed public body. */
+export const decodePublishedArticleRoute = Effect.fn(
+  "NakafaArticle.decodePublishedRoute"
+)(function* (
+  result: FunctionReturnType<typeof api.contentRelease.article.route>,
+  locale: Locale,
+  publicPath: string,
+  expectedActiveReleaseId?: ContentReleasePin
+) {
+  const appLocale = AppLocaleSchema.make(locale);
   const [activeAppLocales, activeReleaseId] = yield* Effect.all([
     Schema.decodeUnknownEffect(ActiveAppLocaleListSchema)(
       result.activeAppLocales
@@ -132,6 +146,6 @@ export async function getPublishedArticleRoute(
   const result = await Effect.runPromise(
     readPublishedArticleRoute(locale, publicPath, expectedActiveReleaseId)
   );
-  applyPublishedCatalogCache("article");
+  applyContentCache("article");
   return result;
 }

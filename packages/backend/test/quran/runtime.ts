@@ -24,11 +24,11 @@ import {
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
+import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import {
   TEST_DIGEST,
   testPublicationScope,
 } from "@repo/backend/test/content/release";
-import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
 import {
   makeQuranAttribution,
   makeQuranChunk,

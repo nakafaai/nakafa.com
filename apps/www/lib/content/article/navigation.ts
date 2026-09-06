@@ -12,7 +12,7 @@ import {
   type PublishedCategoryPage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
-import { applyPublishedCatalogCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
@@ -70,7 +70,7 @@ export async function getArticleNavigation(locale: Locale) {
   "use cache";
 
   const navigation = await Effect.runPromise(readArticleNavigation(locale));
-  applyPublishedCatalogCache("article");
+  applyContentCache("article");
   return navigation;
 }
 

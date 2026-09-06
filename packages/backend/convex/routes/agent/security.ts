@@ -33,8 +33,8 @@ export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
       return false;
     }
 
-    const comparisons = yield* Effect.all(
-      acceptedSecrets.map((expected) => constantTimeEqual(expected, supplied))
+    const comparisons = yield* Effect.forEach(acceptedSecrets, (expected) =>
+      constantTimeEqual(expected, supplied)
     );
     return comparisons.some(Boolean);
   }
@@ -57,11 +57,11 @@ const constantTimeEqual = Effect.fn("agent.constantTimeEqual")(function* (
         crypto.subtle.digest("SHA-256", new TextEncoder().encode(supplied)),
       ]),
   });
-  const left = new Uint8Array(expectedDigest);
-  const right = new Uint8Array(suppliedDigest);
+  const left = new DataView(expectedDigest);
+  const right = new DataView(suppliedDigest);
   let difference = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    difference += Math.abs((left[index] ?? 0) - (right[index] ?? 0));
+  for (let index = 0; index < left.byteLength; index += 1) {
+    difference += Math.abs(left.getUint8(index) - right.getUint8(index));
   }
   return difference === 0;
 });

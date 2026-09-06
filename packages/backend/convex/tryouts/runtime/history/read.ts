@@ -5,7 +5,7 @@ import {
   protectedRuntimeResponseBytes,
 } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
-import { loadVerifiedSnapshot } from "@repo/backend/content/snapshot/read";
+import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   decodeRendererJson,

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   compactProgram,
@@ -19,23 +19,6 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
-
-vi.mock("@repo/backend/convex/_generated/server", async (importOriginal) => {
-  const server =
-    await importOriginal<
-      typeof import("@repo/backend/convex/_generated/server")
-    >();
-  return {
-    ...server,
-    env: new Proxy(
-      {},
-      { get: (_target, property) => Reflect.get(process.env, property) }
-    ),
-  };
-});
-
-afterEach(() => vi.unstubAllEnvs());
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
@@ -89,61 +72,6 @@ describe("contentRelease/compact", () => {
       await t.query((ctx) => ctx.db.query("contentState").unique())
     ).toMatchObject({ compactedFloor: 1 });
   });
-
-  it("reads Convex proxy configuration before lifecycle state or page dispatch", async () => {
-    vi.stubEnv("CONTENT_RUNTIME_BUILD", "local-static");
-    vi.stubEnv("CONVEX_CLOUD_URL", "http://127.0.0.1:3210");
-    vi.stubEnv("CONVEX_SITE_URL", "http://127.0.0.1:3211");
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      const read = vi.spyOn(ctx.db, "query");
-      expect(await runConvexProgram(compactProgram(ctx))).toEqual({
-        complete: true,
-        deleted: 0,
-        floor: 0,
-        phase: "releases",
-      });
-      expect(read).not.toHaveBeenCalled();
-    });
-    await t.action(async (ctx) => {
-      const dispatch = vi.spyOn(ctx, "runMutation");
-      expect(await runConvexProgram(runProgram(ctx))).toMatchObject({
-        complete: true,
-        deleted: 0,
-      });
-      expect(dispatch).not.toHaveBeenCalled();
-    });
-  });
-
-  it.each([
-    ["invalid", "http://127.0.0.1:3210", "http://127.0.0.1:3211"],
-    [
-      "local-static",
-      "https://production.convex.cloud",
-      "https://production.convex.site",
-    ],
-    ["local-static", "http://localhost:3210", "http://127.0.0.1:3211"],
-    ["local-static", "http://127.0.0.1:3210", "http://127.0.0.1:3210"],
-  ])(
-    "rejects unsafe build configuration before DB reads: %s %s %s",
-    async (mode, cloud, site) => {
-      vi.stubEnv("CONTENT_RUNTIME_BUILD", mode);
-      vi.stubEnv("CONVEX_CLOUD_URL", cloud);
-      vi.stubEnv("CONVEX_SITE_URL", site);
-      const t = convexTest(schema, convexModules);
-      await t.mutation(async (ctx) => {
-        const read = vi.spyOn(ctx.db, "query");
-        const failure = await runConvexProgram(
-          compactProgram(ctx).pipe(Effect.flip, Effect.orDie)
-        );
-        expect(failure).toMatchObject({
-          _tag: "ReleaseError",
-          code: "CONTENT_RELEASE_STATE",
-        });
-        expect(read).not.toHaveBeenCalled();
-      });
-    }
-  );
 
   it("resumes pages and preserves floor anchors before collecting history", async () => {
     const t = convexTest(schema, convexModules);

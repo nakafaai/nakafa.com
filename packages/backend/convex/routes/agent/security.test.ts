@@ -8,6 +8,7 @@ import { Effect, Result } from "effect";
 const SECRET_NAME = NAKAFA_API_EDGE_CONTRACT.secretEnvironment;
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
 
@@ -55,6 +56,26 @@ describe("agent edge security", () => {
           NAKAFA_API_EDGE_CONTRACT
         )
       ).toBe(false);
+    })
+  );
+
+  it.effect("fails closed when digest computation is unavailable", () =>
+    Effect.gen(function* () {
+      vi.stubEnv(SECRET_NAME, "current-secret");
+      vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(
+        new Error("digest unavailable")
+      );
+
+      expect(
+        yield* hasValidEdgeSecret(
+          requestWithSecret("current-secret"),
+          NAKAFA_API_EDGE_CONTRACT
+        ).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "NakafaAgentDataReadError",
+        cause: "digest unavailable",
+        message: "The public agent edge boundary is unavailable.",
+      });
     })
   );
 

@@ -2,15 +2,15 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { Effect } from "effect";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
-import { createTestSnapshotQuery } from "@/test/runtime-query";
+import { createTestNativeQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeQueryMock,
 }));
 
 describe("published try-out localized paths", () => {
@@ -23,8 +23,8 @@ describe("published try-out localized paths", () => {
     (targetAppLocale) =>
       Effect.gen(function* () {
         const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeQueryMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeQueryMock.mockImplementation(createTestNativeQuery(context));
         for (const publicPath of [
           "try-out/indonesia/tka/matematika/set-1",
           "try-out/indonesia/tka/matematika/set-1/matematika",
@@ -43,8 +43,8 @@ describe("published try-out localized paths", () => {
   it.effect("returns no localized route for an absent signed identity", () =>
     Effect.gen(function* () {
       const fixture = yield* makeTryoutRuntimeSource();
-      const context = yield* createTestSnapshotContext(fixture.source);
-      runtimeQueryMock.mockImplementation(createTestSnapshotQuery(context));
+      const context = yield* createTestPublication(fixture.source);
+      runtimeQueryMock.mockImplementation(createTestNativeQuery(context));
       expect(
         yield* readPublishedTryoutLocalizedPath({
           currentAppLocale: "id",
@@ -55,3 +55,7 @@ describe("published try-out localized paths", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

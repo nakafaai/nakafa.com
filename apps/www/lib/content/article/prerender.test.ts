@@ -8,19 +8,19 @@ import {
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import type { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { readPublishedArticlePrerenderRoute } from "@/lib/content/article/prerender";
 import { makeArticleRuntimeSource } from "@/test/content/article";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
   makeTestArticleProjection,
   testArticleProjection,
   testArticleSourcePath,
 } from "@/test/content-article";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
@@ -37,10 +37,10 @@ type ArticleRow = FunctionReturnType<
 >["result"]["page"][number];
 
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedCatalogCache: vi.fn(),
+  applyContentCache: vi.fn(),
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 /** Provides a category page with more inventory beyond its first bounded read. */
@@ -104,12 +104,12 @@ beforeEach(() => {
 
 describe("published article prerender selection", () => {
   it.effect(
-    "reads a real localized article through the authenticated snapshot",
+    "reads a real localized article through the native publication queries",
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeArticleRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
 
         expect(yield* readPublishedArticlePrerenderRoute("de")).toEqual({
           category: "politik",
@@ -200,3 +200,7 @@ describe("published article prerender selection", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

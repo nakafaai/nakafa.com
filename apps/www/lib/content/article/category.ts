@@ -15,12 +15,12 @@ import {
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
-import { applyPublishedCatalogCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
 type CategoryMatch = (category: PublishedArticleCategory) => boolean;
 
-/** One localized category bound to the exact signed catalog generation. */
+/** One localized category with the generation observed during its catalog read. */
 export interface PublishedArticleCategoryModel
   extends PublishedArticleCategory {
   readonly activeManifestHash: PublishedCategoryPage["activeManifestHash"];
@@ -112,11 +112,18 @@ export const readPublishedCategoryAlternates = Effect.fn(
     { concurrency: ACTIVE_APP_LOCALE_CODES.length }
   );
 
+  const selected = categories.find(
+    (category) => category.appLocale === current.appLocale
+  );
   if (
+    !selected ||
+    selected.route !== current.route ||
+    selected.title !== current.title ||
+    selected.rendererDomain !== current.rendererDomain ||
     categories.some(
       (category) =>
-        category.activeManifestHash !== current.activeManifestHash ||
-        category.activeReleaseId !== current.activeReleaseId
+        category.activeManifestHash !== selected.activeManifestHash ||
+        category.activeReleaseId !== selected.activeReleaseId
     )
   ) {
     return yield* categoryError(current.appLocale);
@@ -128,7 +135,7 @@ export const readPublishedCategoryAlternates = Effect.fn(
   }));
 });
 
-/** Reads one category page from the same signed generation as its route. */
+/** Reads a current category page and verifies its cached route identity. */
 export const readPublishedCategoryPage = Effect.fn(
   "www.articles.readResolvedCategoryPage"
 )(function* (
@@ -150,11 +157,7 @@ export const readPublishedCategoryPage = Effect.fn(
       article.categoryTitle !== current.title ||
       article.route.category !== current.route
   );
-  if (
-    page.activeManifestHash !== current.activeManifestHash ||
-    page.activeReleaseId !== current.activeReleaseId ||
-    mismatched
-  ) {
+  if (mismatched) {
     return yield* categoryError(current.appLocale, `articles/${current.route}`);
   }
 
@@ -178,7 +181,7 @@ export async function getPublishedArticleCategory(
   const category = await Effect.runPromise(
     readPublishedArticleCategory(route, locale)
   );
-  applyPublishedCatalogCache("article");
+  applyContentCache("article");
   return Option.getOrNull(category);
 }
 
@@ -191,7 +194,7 @@ export async function getPublishedCategoryAlternates(
   const alternates = await Effect.runPromise(
     readPublishedCategoryAlternates(current)
   );
-  applyPublishedCatalogCache("article");
+  applyContentCache("article");
   return alternates;
 }
 
@@ -205,6 +208,6 @@ export async function getPublishedCategoryPage(
   const page = await Effect.runPromise(
     readPublishedCategoryPage(current, cursor)
   );
-  applyPublishedCatalogCache("article");
+  applyContentCache("article");
   return page;
 }

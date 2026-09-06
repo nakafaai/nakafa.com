@@ -1,7 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
-import { loadVerifiedSnapshot } from "@repo/backend/content/snapshot/read";
+import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
 import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import {
   readPublishedSectionPageFromIndex,

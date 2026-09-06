@@ -3,10 +3,7 @@ import "server-only";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import {
-  readProtectedContent,
-  readSnapshotProtectedContent,
-} from "@repo/backend/client/content/protected";
+import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { TryoutBodyBatch } from "@repo/backend/convex/tryouts/runtime/body";
@@ -31,10 +28,9 @@ import {
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
-import { applyPublishedContentBatchCache } from "@/lib/content/cache";
+import { applyImmutableContentCache } from "@/lib/content/cache";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
-import { loadContentSnapshot } from "@/lib/content/runtime/snapshot";
 
 const SIGNED_RENDER_CONCURRENCY = 4;
 const attemptContentQuery = makeFunctionReference<
@@ -149,10 +145,7 @@ async function renderAttemptBatch(
       return yield* renderFoundItems(selectors, found.items);
     })
   );
-  applyPublishedContentBatchCache(
-    "question",
-    content.map(({ artifactHash }) => artifactHash)
-  );
+  applyImmutableContentCache(content.map(({ artifactHash }) => artifactHash));
   return content;
 }
 
@@ -160,12 +153,8 @@ async function renderAttemptBatch(
 async function renderBatch(selectors: readonly TryoutSelector[]) {
   "use cache";
 
-  await loadContentSnapshot();
   const content = await Effect.runPromise(readBatch(selectors));
-  applyPublishedContentBatchCache(
-    "question",
-    content.map(({ artifactHash }) => artifactHash)
-  );
+  applyImmutableContentCache(content.map(({ artifactHash }) => artifactHash));
   return content;
 }
 
@@ -175,17 +164,11 @@ const readBatch = Effect.fn("NakafaContent.readTryoutBatch")(function* (
 ) {
   const request = yield* makeTryoutRuntimeRequest(selectors);
   const liveRenderer = yield* rendererManifest;
-  const snapshot = yield* Effect.tryPromise(() => loadContentSnapshot());
-  const found =
-    snapshot === undefined
-      ? yield* readProtectedContent(
-          yield* readRuntimeTarget,
-          request,
-          liveRenderer
-        )
-      : yield* readSnapshotProtectedContent(request, liveRenderer).pipe(
-          Effect.provideContext(snapshot)
-        );
+  const found = yield* readProtectedContent(
+    yield* readRuntimeTarget,
+    request,
+    liveRenderer
+  );
   return yield* renderFoundItems(selectors, found.items);
 });
 

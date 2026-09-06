@@ -6,7 +6,7 @@ import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import type { PublishedCurriculumRoute } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
@@ -181,6 +181,6 @@ export async function getPublishedMaterialCards(
   "use cache";
 
   const cards = await Effect.runPromise(readPublishedMaterialCards(input));
-  applyContentRuntimeCache();
+  applyContentCache("program", "material");
   return cards;
 }

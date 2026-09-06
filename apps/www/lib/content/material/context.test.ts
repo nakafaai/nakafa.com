@@ -9,13 +9,13 @@ import {
   type CurriculumRoute,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Schema } from "effect";
 import {
   getPublishedMaterialContext,
   readPublishedMaterialContext,
 } from "@/lib/content/material/context";
 import { makeProgramContextRuntimeSource } from "@/test/content/program-context";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { previewProjection } from "@/test/content-preview";
 import {
   testCurriculumRowJson,
@@ -23,7 +23,7 @@ import {
   testProgramGroups,
   testProgramSubject,
 } from "@/test/content-program";
-import { createTestSnapshotQuery } from "@/test/runtime-query";
+import { createTestNativeQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -46,10 +46,10 @@ const publishedContext = {
 };
 
 vi.mock("@/lib/content/cache", () => ({
-  applyContentRuntimeCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeQueryMock,
 }));
 
 beforeEach(() => {
@@ -63,8 +63,8 @@ describe("published material context", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeProgramContextRuntimeSource();
-        const snapshot = yield* createTestSnapshotContext(fixture.source);
-        runtimeQueryMock.mockImplementation(createTestSnapshotQuery(snapshot));
+        const snapshot = yield* createTestPublication(fixture.source);
+        runtimeQueryMock.mockImplementation(createTestNativeQuery(snapshot));
 
         expect(
           yield* readPublishedMaterialContext("en", previewProjection, context)
@@ -152,36 +152,52 @@ describe("published material context", () => {
       })
   );
 
-  it.effect("pins a context read to the expected active release", () =>
-    Effect.gen(function* () {
-      const activeReleaseId = ReleaseIdSchema.make("release-material");
-      runtimeQueryMock.mockReturnValueOnce(
-        Effect.succeed({
-          groupJson: null,
-          managed: true,
-          mappingJson: null,
-          parentJson: null,
-          resolvedCanonicalPath: null,
-        })
-      );
+  it.effect(
+    "resolves a cached material identity without a global release pin",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
 
-      expect(
+        expect(
+          yield* readPublishedMaterialContext("en", previewProjection, context)
+        ).toMatchObject({ context, group, mapping });
+        expect(runtimeQueryMock).toHaveBeenCalledWith(
+          "https://test.convex.cloud",
+          expect.anything(),
+          {
+            appLocale: "en",
+            contentKey: previewProjection.contentKey,
+            materialKey: previewProjection.materialKey,
+            nodeKey: context.nodeKey,
+            parentPath: previewProjection.parentPath,
+            programKey: context.programKey,
+            publicPath: previewProjection.publicPath,
+          }
+        );
+      })
+  );
+
+  it.effect(
+    "pins sequential uncached context reads when their caller requires it",
+    () =>
+      Effect.gen(function* () {
+        const activeReleaseId = ReleaseIdSchema.make("release-material");
+        runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
         yield* readPublishedMaterialContext(
           "en",
           previewProjection,
           context,
           activeReleaseId
-        )
-      ).toBeNull();
-      expect(runtimeQueryMock).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          contentKey: previewProjection.contentKey,
-          expectedActiveReleaseId: activeReleaseId,
-        }),
-        expect.any(Function)
-      );
-    })
+        );
+        expect(runtimeQueryMock).toHaveBeenCalledWith(
+          "https://test.convex.cloud",
+          expect.anything(),
+          expect.objectContaining({
+            contentKey: previewProjection.contentKey,
+            expectedActiveReleaseId: activeReleaseId,
+          })
+        );
+      })
   );
 
   it.effect(
@@ -327,3 +343,7 @@ describe("published material context", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

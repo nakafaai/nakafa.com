@@ -1,4 +1,4 @@
-import { loadSnapshotOwner } from "@repo/backend/content/snapshot/read";
+import { loadSnapshotOwner } from "@repo/backend/content/publication/snapshot";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
 

@@ -1,11 +1,11 @@
-import { readContentReference } from "@repo/backend/content/reference/read";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { resolveReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
+import { env } from "@/env";
+import { applyContentCache } from "@/lib/content/cache";
 
 /** Expected failure raised when route metadata translations cannot be loaded. */
 class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
@@ -24,14 +24,8 @@ interface SystemMetadata {
 }
 
 /** Gets SEO metadata from the Convex route catalog with translation defaults. */
-export function getMetadataFromSlug(
-  locale: Locale,
-  slug: string[]
-): Effect.Effect<
-  SystemMetadata,
-  NakafaAgentDataReadError | TranslationLoadError
-> {
-  return Effect.gen(function* () {
+export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
+  function* (locale: Locale, slug: string[]) {
     const [tCommon, tMetadata] = yield* Effect.all(
       [
         Effect.tryPromise({
@@ -57,7 +51,8 @@ export function getMetadataFromSlug(
       date: "",
     };
 
-    const reference = yield* readRuntimeQuery(
+    const reference = yield* readNakafaRuntimeQuery(
+      env.NEXT_PUBLIC_CONVEX_URL,
       api.contentRelease.reference.read,
       {
         input: {
@@ -65,8 +60,7 @@ export function getMetadataFromSlug(
           kind: "route",
           publicPath: slug.join("/"),
         },
-      },
-      ({ input }) => readContentReference(input)
+      }
     );
 
     if (!reference) {
@@ -78,8 +72,8 @@ export function getMetadataFromSlug(
       description: reference.description ?? shortDescription,
       title: reference.title || defaultTitle,
     };
-  });
-}
+  }
+);
 
 /** Resolves metadata inside a Cache Components-safe helper for OG routes. */
 export async function getCachedMetadataFromSlug(
@@ -88,7 +82,17 @@ export async function getCachedMetadataFromSlug(
 ) {
   "use cache";
 
-  applyContentRuntimeCache();
-
-  return await Effect.runPromise(getMetadataFromSlug(locale, slug));
+  return await Effect.runPromise(
+    Effect.gen(function* () {
+      const reference = yield* resolveReferenceInput({
+        appLocale: locale,
+        kind: "route",
+        publicPath: slug.join("/"),
+      });
+      if (reference) {
+        yield* Effect.sync(() => applyContentCache(reference.family));
+      }
+      return yield* getMetadataFromSlug(locale, slug);
+    })
+  );
 }

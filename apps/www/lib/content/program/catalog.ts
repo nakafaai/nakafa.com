@@ -1,16 +1,15 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { ProgramTranslation } from "@nakafa/aksara-contracts/program/spec";
-import { readProgramCatalog } from "@repo/backend/content/program/catalog";
-import { readProgramPage } from "@repo/backend/content/program/page";
 import { api } from "@repo/backend/convex/_generated/api";
-import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
-import type { FunctionArgs } from "convex/server";
+import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import {
   decodeCurriculumJson,
   decodeProgramJson,
@@ -19,16 +18,6 @@ import {
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
-
-type ProgramPageArgs = FunctionArgs<typeof api.contentRelease.program.page>;
-
-/** Active release identity required to continue one stable program read. */
-interface ProgramCursor {
-  readonly cursor: null | string;
-  readonly expectedManifestHash: null | string;
-  readonly expectedReleaseId: null | string;
-}
 
 /** Complete bounded program catalog used by root curriculum navigation. */
 export interface PublishedProgramCatalog {
@@ -40,30 +29,17 @@ export interface PublishedProgramCatalog {
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
 }
 
-/** One bounded immutable curriculum-route page from Aksara. */
-export interface PublishedProgramPage {
-  readonly activeManifestHash: null | string;
-  readonly activeReleaseId: null | string;
-  readonly done: boolean;
-  readonly managed: boolean;
-  readonly nextCursor: null | string;
-  readonly routes: readonly PublishedCurriculumRoute[];
-  readonly snapshotId: null | string;
-  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-  readonly stale: boolean;
-}
-
 /** Reads and validates the bounded published program catalog. */
 export const readPublishedProgramCatalog = Effect.fn(
   "NakafaProgram.readPublishedCatalog"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.program.catalog,
     {
       appLocale,
-    },
-    (queryArgs) => readProgramCatalog(queryArgs.appLocale)
+    }
   );
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
@@ -124,118 +100,59 @@ export const readPublishedProgramPrerenderRoute = Effect.fn(
   return entry.route;
 });
 
-/** Reads and decodes one release-bound page of curriculum routes. */
-export const readPublishedProgramPage = Effect.fn(
-  "NakafaProgram.readPublishedPage"
-)(function* (input: ProgramCursor & { readonly locale: Locale }) {
-  const appLocale = AppLocaleSchema.make(input.locale);
-  const args = {
-    appLocale,
-    expectedManifestHash: input.expectedManifestHash,
-    expectedReleaseId: input.expectedReleaseId,
-    paginationOpts: {
-      cursor: input.cursor,
-      numItems: PROJECTION_PAGE_LIMIT,
-    },
-  } satisfies ProgramPageArgs;
-  const result = yield* readRuntimeQuery(
-    api.contentRelease.program.page,
-    args,
-    (queryArgs) =>
-      readProgramPage(
-        queryArgs.appLocale,
-        queryArgs.expectedManifestHash,
-        queryArgs.expectedReleaseId,
-        queryArgs.paginationOpts
-      )
-  );
-  const routes = yield* Effect.forEach(result.result.page, (source) =>
-    decodeCurriculumJson(source, input.locale, "curricula")
-  );
-  const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
-    appLocale,
-    publicPath: "curricula",
-  });
-  const nextCursor = result.result.isDone ? null : result.result.continueCursor;
-  return {
-    activeManifestHash: result.activeManifestHash,
-    activeReleaseId: result.activeReleaseId,
-    done: result.result.isDone,
-    managed: result.managed,
-    nextCursor,
-    routes,
-    snapshotId: result.snapshotId,
-    sourceRevision,
-    stale: result.stale,
-  } satisfies PublishedProgramPage;
-});
-
-/** Reads every bounded route page under one immutable release identity. */
-export const readPublishedProgramRoutes = Effect.fn(
-  "NakafaProgram.readPublishedRoutes"
+/** Reads only the authenticated public subjects needed by the About feature list. */
+export const readPublishedProgramSubjects = Effect.fn(
+  "NakafaProgram.readPublishedSubjects"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const routes: PublishedCurriculumRoute[] = [];
-  let cursor: ProgramCursor = {
-    cursor: null,
-    expectedManifestHash: null,
-    expectedReleaseId: null,
-  };
-  let sourceRevision: null | string = null;
-  while (true) {
-    const page: PublishedProgramPage = yield* readPublishedProgramPage({
-      ...cursor,
-      locale,
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
+    api.contentRelease.program.subjects,
+    { appLocale }
+  );
+  if (
+    !result.managed ||
+    result.routeJson.length > PROGRAM_FEATURED_SUBJECT_LIMIT
+  ) {
+    return yield* new PublishedProjectionError({
+      appLocale,
+      publicPath: "curricula",
     });
-    if (page.stale) {
-      return yield* new PublishedProjectionError({
-        appLocale,
-        publicPath: "curricula",
-      });
-    }
-    if (!page.managed) {
-      return yield* new PublishedProjectionError({
-        appLocale,
-        publicPath: "curricula",
-      });
-    }
-    routes.push(...page.routes);
-    sourceRevision = page.sourceRevision;
-    if (page.done) {
-      return { routes, sourceRevision };
-    }
-    if (
-      page.nextCursor === null ||
-      page.activeManifestHash === null ||
-      page.activeReleaseId === null
-    ) {
-      return yield* new PublishedProjectionError({
-        appLocale,
-        publicPath: "curricula",
-      });
-    }
-    cursor = {
-      cursor: page.nextCursor,
-      expectedManifestHash: page.activeManifestHash,
-      expectedReleaseId: page.activeReleaseId,
-    };
   }
+  return yield* Effect.forEach(result.routeJson, (source) =>
+    Effect.gen(function* () {
+      const route = yield* decodeCurriculumJson(source, locale, "curricula");
+      if (
+        route.appLocale !== appLocale ||
+        route.level !== "subject" ||
+        !route.sitemap
+      ) {
+        return yield* new PublishedProjectionError({
+          appLocale,
+          publicPath: route.publicPath,
+        });
+      }
+      return route;
+    })
+  );
 });
 
-/** Caches every localized curriculum route under global release invalidation. */
-export async function getPublishedProgramRoutes(locale: Locale) {
+/** Caches the fixed-size subject sample under current publication invalidation. */
+export async function getPublishedProgramSubjects(locale: Locale) {
   "use cache";
 
-  const result = await Effect.runPromise(readPublishedProgramRoutes(locale));
-  applyContentRuntimeCache();
-  return result;
+  const subjects = await Effect.runPromise(
+    readPublishedProgramSubjects(locale)
+  );
+  applyContentCache("program");
+  return subjects;
 }
 
-/** Caches the bounded program catalog under global release invalidation. */
+/** Caches the bounded program catalog under program publication invalidation. */
 export async function getPublishedProgramCatalog(locale: Locale) {
   "use cache";
 
   const result = await Effect.runPromise(readPublishedProgramCatalog(locale));
-  applyContentRuntimeCache();
+  applyContentCache("program");
   return result;
 }

@@ -4,10 +4,9 @@ import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
-import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import {
   readPublicContent,
-  readSnapshotPublicContent,
+  verifyPublicContentDelivery,
 } from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
@@ -18,7 +17,6 @@ import {
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
-import { loadContentSnapshot } from "@/lib/content/runtime/snapshot";
 
 /** Exact public identity sent to the server-only content runtime seam. */
 export interface PublishedContentRouteInput {
@@ -47,6 +45,22 @@ function readSourceRevision(found: PublicContentRuntimeFound) {
   return origin.kind === "git" ? origin.sha : null;
 }
 
+/** Verifies a signed envelope selected with its shell by one Convex query. */
+export const decodePublishedDelivery = Effect.fn(
+  "NakafaContent.decodePublishedDelivery"
+)(function* (input: PublishedContentRouteInput, source: string) {
+  const liveRenderer = yield* rendererManifest;
+  const found = yield* verifyPublicContentDelivery(input, source, liveRenderer);
+  return {
+    activeReleaseId: found.activeReleaseId,
+    artifact: found.artifact,
+    projection: found.projection,
+    rendererManifest: found.rendererManifest,
+    sourcePath: found.sourcePath,
+    sourceRevision: readSourceRevision(found),
+  } satisfies PublishedContentData;
+});
+
 /** Verifies active membership and every signed runtime value for one route. */
 export const readCurrentPublishedContent = Effect.fn(
   "NakafaContent.readCurrentPublishedContent"
@@ -56,32 +70,21 @@ export const readCurrentPublishedContent = Effect.fn(
     publicPath: input.publicPath,
   };
   const liveRenderer = yield* rendererManifest;
-  const snapshot = yield* Effect.tryPromise({
-    try: loadContentSnapshot,
-    catch: (cause) => new ContentRuntimeVerificationError({ cause }),
+  const runtimeKeys = yield* Effect.try({
+    try: contentRuntimeKeys,
+    catch: () =>
+      new ContentRuntimeConfigurationError({
+        key: "CONTENT_RUNTIME_TOKEN",
+      }),
   });
-  let found: PublicContentRuntimeFound;
-  if (snapshot === undefined) {
-    const runtimeKeys = yield* Effect.try({
-      try: contentRuntimeKeys,
-      catch: () =>
-        new ContentRuntimeConfigurationError({
-          key: "CONTENT_RUNTIME_TOKEN",
-        }),
-    });
-    found = yield* readPublicContent(
-      {
-        siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
-        token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
-      },
-      request,
-      liveRenderer
-    );
-  } else {
-    found = yield* readSnapshotPublicContent(request, liveRenderer).pipe(
-      Effect.provideContext(snapshot)
-    );
-  }
+  const found = yield* readPublicContent(
+    {
+      siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+      token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
+    },
+    request,
+    liveRenderer
+  );
   const data: PublishedContentData = {
     activeReleaseId: found.activeReleaseId,
     artifact: found.artifact,

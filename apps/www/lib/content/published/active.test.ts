@@ -6,22 +6,22 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
+  createTestPublication,
   makeRuntimeSource,
-  TEST_SNAPSHOT_RELEASE,
-} from "@repo/backend/test/content/snapshot";
+  TEST_PUBLICATION_RELEASE,
+} from "@repo/backend/test/content/publication";
 import { Effect } from "effect";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const readQueryMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: readQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: readQueryMock,
 }));
 
 beforeEach(() => {
@@ -32,17 +32,17 @@ beforeEach(() => {
 
 describe("published active identity", () => {
   it.effect(
-    "reads the active identity from the authenticated build snapshot",
+    "reads the active identity through the native publication query",
     () =>
       Effect.gen(function* () {
-        const context = yield* createTestSnapshotContext(
+        const context = yield* createTestPublication(
           makeRuntimeSource().source
         );
-        readQueryMock.mockImplementation(createTestSnapshotQuery(context));
+        readQueryMock.mockImplementation(createTestNativeQuery(context));
 
         expect(yield* readActiveContentIdentity()).toEqual({
-          manifestHash: TEST_SNAPSHOT_RELEASE.manifestHash,
-          releaseId: TEST_SNAPSHOT_RELEASE.manifest.releaseId,
+          manifestHash: TEST_PUBLICATION_RELEASE.manifestHash,
+          releaseId: TEST_PUBLICATION_RELEASE.manifest.releaseId,
           sequence: 9,
         });
       })
@@ -60,9 +60,9 @@ describe("published active identity", () => {
 
         expect(yield* readActiveContentIdentity()).toEqual(identity);
         expect(readQueryMock).toHaveBeenCalledWith(
+          "https://test.convex.cloud",
           expect.anything(),
-          {},
-          expect.any(Function)
+          {}
         );
       })
   );
@@ -75,3 +75,7 @@ describe("published active identity", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

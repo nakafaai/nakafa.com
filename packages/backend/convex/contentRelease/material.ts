@@ -5,7 +5,10 @@ import {
 } from "@repo/backend/content/material/discovery";
 import { readMaterialIdentity } from "@repo/backend/content/material/identity";
 import { readMaterialPage } from "@repo/backend/content/material/page";
-import { readMaterialModel } from "@repo/backend/content/material/read";
+import {
+  readMaterialDelivery,
+  readMaterialModel,
+} from "@repo/backend/content/material/read";
 import {
   readMaterialBuckets,
   readMaterialSitemap,
@@ -91,6 +94,21 @@ const materialIdentityValidator = v.object({
   activeReleaseId: v.union(v.string(), v.null()),
   managed: v.boolean(),
   publicPath: v.union(v.string(), v.null()),
+});
+
+/** Delivers one generation-consistent public material shell and signed body. */
+export const delivery = query({
+  args: { appLocale: appLocaleValidator, publicPath: v.string() },
+  returns: v.object({
+    model: materialModelValidator,
+    runtimeJson: v.union(v.string(), v.null()),
+  }),
+  handler: (ctx, { appLocale, publicPath }) =>
+    runConvexProgram(
+      readMaterialDelivery(appLocale, publicPath).pipe(
+        Effect.provide(convexMaterialLayer(ctx))
+      )
+    ),
 });
 
 /** Resolves one active material route from its stable signed identity. */

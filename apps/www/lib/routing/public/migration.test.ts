@@ -1,20 +1,20 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect } from "effect";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
-import { createTestSnapshotQuery } from "@/test/runtime-query";
+import { createTestNativeQuery } from "@/test/runtime-query";
 
-const readRuntimeQueryMock = vi.hoisted(() => vi.fn());
+const readNakafaRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const articleMocks = vi.hoisted(() => ({
   hasCategory: vi.fn(),
   readActiveIdentity: vi.fn(),
   readActiveRoute: vi.fn(),
 }));
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: readRuntimeQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: readNakafaRuntimeQueryMock,
 }));
 vi.mock("@/lib/content/article/category", () => ({
   hasPublishedArticleCategory: articleMocks.hasCategory,
@@ -28,7 +28,7 @@ vi.mock("@/lib/content/published/route", () => ({
 
 describe("public URL migration redirects", () => {
   beforeEach(() => {
-    readRuntimeQueryMock.mockReset();
+    readNakafaRuntimeQueryMock.mockReset();
     articleMocks.hasCategory.mockReset();
     articleMocks.readActiveIdentity
       .mockReset()
@@ -38,7 +38,7 @@ describe("public URL migration redirects", () => {
 
   it.effect("redirects a retired URL to its authenticated current route", () =>
     Effect.gen(function* () {
-      readRuntimeQueryMock.mockReturnValueOnce(
+      readNakafaRuntimeQueryMock.mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId: "release-test",
           managed: true,
@@ -55,7 +55,8 @@ describe("public URL migration redirects", () => {
       expect(redirect).toBe(
         "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
       );
-      expect(readRuntimeQueryMock).toHaveBeenCalledWith(
+      expect(readNakafaRuntimeQueryMock).toHaveBeenCalledWith(
+        "https://test.convex.cloud",
         expect.anything(),
         {
           appLocale: "id",
@@ -63,8 +64,7 @@ describe("public URL migration redirects", () => {
             "material/lesson/mathematics/circle/central-angle-and-inscribed-angle",
           expectedMaterialKey: "lesson.mathematics.circle",
           expectedSectionKey: "central-angle-and-inscribed-angle",
-        },
-        expect.any(Function)
+        }
       );
     })
   );
@@ -74,9 +74,9 @@ describe("public URL migration redirects", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeMaterialRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        readRuntimeQueryMock.mockImplementation(
-          createTestSnapshotQuery(context)
+        const context = yield* createTestPublication(fixture.source);
+        readNakafaRuntimeQueryMock.mockImplementation(
+          createTestNativeQuery(context)
         );
 
         expect(
@@ -124,7 +124,7 @@ describe("public URL migration redirects", () => {
     "redirects the source-proven statistics topic split for $pathname",
     ({ expectedIdentity, pathname, publicPath }) =>
       Effect.gen(function* () {
-        readRuntimeQueryMock.mockReturnValueOnce(
+        readNakafaRuntimeQueryMock.mockReturnValueOnce(
           Effect.succeed({
             activeReleaseId: "release-test",
             managed: true,
@@ -137,10 +137,10 @@ describe("public URL migration redirects", () => {
           pathname,
         });
         expect(redirect).toBe(`/${expectedIdentity.appLocale}/${publicPath}`);
-        expect(readRuntimeQueryMock).toHaveBeenCalledWith(
+        expect(readNakafaRuntimeQueryMock).toHaveBeenCalledWith(
+          "https://test.convex.cloud",
           expect.anything(),
-          expectedIdentity,
-          expect.any(Function)
+          expectedIdentity
         );
       })
   );
@@ -199,7 +199,7 @@ describe("public URL migration redirects", () => {
         pathname,
       });
       expect(redirect).toBe(expected);
-      expect(readRuntimeQueryMock).not.toHaveBeenCalled();
+      expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
     })
   );
 
@@ -282,7 +282,7 @@ describe("public URL migration redirects", () => {
     },
   ])("does not redirect an absent signed identity", (decision) =>
     Effect.gen(function* () {
-      readRuntimeQueryMock.mockReturnValueOnce(Effect.succeed(decision));
+      readNakafaRuntimeQueryMock.mockReturnValueOnce(Effect.succeed(decision));
 
       const redirect = yield* readPublicUrlMigrationRedirect({
         method: "HEAD",
@@ -336,9 +336,13 @@ describe("public URL migration redirects", () => {
       const redirect = yield* readPublicUrlMigrationRedirect(request);
 
       expect(redirect).toBeNull();
-      expect(readRuntimeQueryMock).not.toHaveBeenCalled();
+      expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
       expect(articleMocks.hasCategory).not.toHaveBeenCalled();
       expect(articleMocks.readActiveIdentity).not.toHaveBeenCalled();
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

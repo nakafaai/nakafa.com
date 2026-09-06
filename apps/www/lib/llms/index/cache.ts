@@ -1,6 +1,9 @@
 import { Effect } from "effect";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { getLlmsSectionIndexText } from "@/lib/llms/index/generate";
+import { applyContentCache } from "@/lib/content/cache";
+import {
+  getLlmsSectionIndexText,
+  readLlmsIndexCacheScopes,
+} from "@/lib/llms/index/generate";
 
 /** Caches section index generation at the Next.js Cache Components boundary. */
 export async function getCachedLlmsSectionIndexText({
@@ -10,7 +13,14 @@ export async function getCachedLlmsSectionIndexText({
 }) {
   "use cache";
 
-  applyContentRuntimeCache();
-
-  return await Effect.runPromise(getLlmsSectionIndexText(cleanSlug));
+  return await Effect.runPromise(
+    Effect.gen(function* () {
+      const scopes = yield* readLlmsIndexCacheScopes(cleanSlug);
+      if (!scopes) {
+        return null;
+      }
+      yield* Effect.sync(() => applyContentCache(...scopes));
+      return yield* getLlmsSectionIndexText(cleanSlug);
+    })
+  );
 }

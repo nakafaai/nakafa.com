@@ -1,9 +1,7 @@
-import { basename, isAbsolute } from "node:path";
 import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   isProtectedProduction,
 } from "@repo/backend/content/deployment";
-import { CONTENT_SERVING_DESCRIPTOR_FILE } from "@repo/backend/content/snapshot/spec";
 import { convexKeys } from "@repo/backend/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Effect, Schema } from "effect";
@@ -23,15 +21,10 @@ interface VercelIdentity {
   readonly target: string | undefined;
 }
 
-interface BuildIdentity {
-  readonly snapshot: string | undefined;
-}
-
 const FailureSchema = Schema.Literals([
   "anonymous-production",
   "invalid-target",
   "mixed-production",
-  "unisolated-production",
   "untrusted-production",
 ]);
 type Failure = Schema.Schema.Type<typeof FailureSchema>;
@@ -42,10 +35,8 @@ const messages = {
   "invalid-target": "The content runtime build target must use valid URLs.",
   "mixed-production":
     "The content runtime query and HTTP targets cannot mix deployments.",
-  "unisolated-production":
-    "The protected Vercel build must read content from its verified private snapshot.",
   "untrusted-production":
-    "Production content is restricted to the protected Vercel production build. Import the verified snapshot into isolated Convex Agent Mode for local or CI builds.",
+    "Production content is restricted to the protected Vercel production build. Use an isolated Convex deployment for local or CI builds.",
 } satisfies Record<Failure, string>;
 
 /** One Next process attempted to cross the protected production-content seam. */
@@ -60,7 +51,6 @@ export class UnsafeRuntimeError extends Schema.TaggedError<UnsafeRuntimeError>()
 
 export interface RuntimeTarget {
   readonly agent: "anonymous" | undefined;
-  readonly build: BuildIdentity;
   readonly query: string;
   readonly site: string | undefined;
   readonly vercel: VercelIdentity;
@@ -109,22 +99,6 @@ function isLoopbackPair(query: string, site: string | undefined) {
   return isLoopback(query) && (site === undefined || isLoopback(site));
 }
 
-const validateBuildIdentity = Effect.fn("www.runtime.validateBuild")(function* (
-  build: BuildIdentity
-) {
-  if (build.snapshot === undefined) {
-    return;
-  }
-  if (
-    !(
-      isAbsolute(build.snapshot) &&
-      basename(build.snapshot) === CONTENT_SERVING_DESCRIPTOR_FILE
-    )
-  ) {
-    return yield* failure("unisolated-production");
-  }
-});
-
 const validateProtectedTarget = Effect.fn(
   "www.runtime.validateProtectedTarget"
 )(function* (
@@ -142,9 +116,6 @@ const validateProtectedTarget = Effect.fn(
   ) {
     return yield* failure("untrusted-production");
   }
-  if (target.build.snapshot === undefined) {
-    return yield* failure("unisolated-production");
-  }
 });
 
 /** Blocks production-backed Next commands before route discovery begins. */
@@ -159,7 +130,6 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
     const queryDeployment = deployment(queryHost, ".convex.cloud");
     const siteDeployment =
       siteHost === undefined ? undefined : deployment(siteHost, ".convex.site");
-    yield* validateBuildIdentity(target.build);
 
     if (isProtectedProduction(target.vercel)) {
       return yield* validateProtectedTarget(
@@ -204,9 +174,6 @@ export function readRuntimeConfig() {
   const env = createEnv({
     extends: [convexKeys()],
     server: {
-      CONTENT_BUILD_SNAPSHOT: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
       CONVEX_AGENT_MODE: Schema.toStandardSchemaV1(
         Schema.UndefinedOr(Schema.Literal("anonymous"))
       ),
@@ -245,7 +212,6 @@ export function readRuntimeConfig() {
       ),
     },
     runtimeEnv: {
-      CONTENT_BUILD_SNAPSHOT: process.env.CONTENT_BUILD_SNAPSHOT,
       CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
       VERCEL: process.env.VERCEL,
@@ -262,9 +228,6 @@ export function readRuntimeConfig() {
   });
   const target = {
     agent: env.CONVEX_AGENT_MODE,
-    build: {
-      snapshot: env.CONTENT_BUILD_SNAPSHOT,
-    },
     query: env.NEXT_PUBLIC_CONVEX_URL,
     site: env.NEXT_PUBLIC_CONVEX_SITE_URL,
     vercel: {
@@ -285,7 +248,6 @@ export function readRuntimeConfig() {
   Effect.runSync(assertRuntimeTarget(target));
   return {
     agent: target.agent,
-    build: target.build,
     query: target.query,
     site: target.site,
     vercel: target.vercel.marker,

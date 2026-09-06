@@ -1,70 +1,76 @@
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { Effect, Schema } from "effect";
+import { api } from "@repo/backend/convex/_generated/api";
+import { fetchQuery } from "convex/nextjs";
+import type { FunctionReturnType } from "convex/server";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import {
-  applyPublishedCatalogCache,
-  applyPublishedContentCache,
-} from "@/lib/content/cache";
+import { env } from "@/env";
+import { applyContentCache } from "@/lib/content/cache";
 import {
   makeMaterialProjectionError,
   verifyMaterialPublication,
 } from "@/lib/content/material/decode";
-import { getPublishedMaterialRoute } from "@/lib/content/material/route";
-import { readRenderedMaterial } from "@/lib/content/published/material";
+import { decodePublishedMaterialRoute } from "@/lib/content/material/route";
+import { decodePublishedDelivery } from "@/lib/content/published/exchange";
+import {
+  decodeMaterialData,
+  renderMaterialArtifact,
+} from "@/lib/content/published/material";
 
-class MaterialRouteReadError extends Schema.TaggedError<MaterialRouteReadError>()(
-  "MaterialRouteReadError",
-  {
-    appLocale: AppLocaleSchema,
-    cause: Schema.Unknown,
-    publicPath: Schema.String,
+/** Verifies the complete query result before evaluating its immutable body. */
+export const decodeMaterialDelivery = Effect.fn(
+  "NakafaMaterial.decodeDelivery"
+)(function* (
+  source: FunctionReturnType<typeof api.contentRelease.material.delivery>,
+  locale: Locale,
+  publicPath: string
+) {
+  const input = { appLocale: AppLocaleSchema.make(locale), publicPath };
+  const model = yield* decodePublishedMaterialRoute(
+    source.model,
+    locale,
+    publicPath
+  );
+  if (!model.projection) {
+    if (source.runtimeJson !== null) {
+      return yield* makeMaterialProjectionError(input);
+    }
+    return null;
   }
-) {}
+  if (source.runtimeJson === null) {
+    return yield* makeMaterialProjectionError(input);
+  }
+  const data = yield* decodePublishedDelivery(input, source.runtimeJson);
+  const narrowed = yield* decodeMaterialData(data, input);
+  yield* verifyMaterialPublication(
+    { activeReleaseId: model.activeReleaseId, projection: model.projection },
+    narrowed
+  );
+  const published = yield* renderMaterialArtifact(narrowed);
+  return { model, published };
+});
 
-/** Caches one coherent material publication at the Next.js boundary. */
+/** Caches a coherent shell selection separately from immutable body rendering. */
 export async function getMaterialPublication(
   locale: Locale,
   publicPath: string
 ) {
   "use cache";
 
-  const appLocale = AppLocaleSchema.make(locale);
-  const readModel = Effect.tryPromise({
-    catch: (cause) =>
-      new MaterialRouteReadError({ appLocale, cause, publicPath }),
-    try: () => getPublishedMaterialRoute(locale, publicPath),
-  });
-  const readPublished = readRenderedMaterial({ appLocale, publicPath }).pipe(
-    Effect.catchTag("ContentRuntimeMissingError", () => Effect.succeed(null))
+  applyContentCache("material");
+  // Start native IO before Effect during request-less static rendering.
+  // https://nextjs.org/docs/messages/next-prerender-current-time
+  const source = await fetchQuery(
+    api.contentRelease.material.delivery,
+    {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    },
+    { url: env.NEXT_PUBLIC_CONVEX_URL }
   );
-  const program = Effect.gen(function* () {
-    const [model, published] = yield* Effect.all([readModel, readPublished], {
-      concurrency: "unbounded",
-    });
-    yield* Effect.sync(() => applyPublishedCatalogCache("material"));
-    if (!model.projection) {
-      if (published) {
-        return yield* makeMaterialProjectionError({ appLocale, publicPath });
-      }
-      return null;
-    }
-    if (!published) {
-      return yield* makeMaterialProjectionError({ appLocale, publicPath });
-    }
-    yield* verifyMaterialPublication(
-      {
-        activeReleaseId: model.activeReleaseId,
-        projection: model.projection,
-      },
-      published
-    );
-    yield* Effect.sync(() =>
-      applyPublishedContentCache("material", published.artifactHash)
-    );
-    return { model, published };
-  });
-
-  return await Effect.runPromise(program);
+  return await Effect.runPromise(
+    decodeMaterialDelivery(source, locale, publicPath)
+  );
 }

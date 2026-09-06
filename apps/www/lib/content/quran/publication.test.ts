@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, layer } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
-import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
+import {
+  createTestPublication,
+  makeRuntimeSource,
+} from "@repo/backend/test/content/publication";
 import {
   encodeTestQuranRow,
   makeQuranLocaleSources,
@@ -20,20 +23,20 @@ import {
   readPublishedQuranIdentity,
   readPublishedQuranMarkdown,
 } from "@/lib/content/quran/publication";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const readRuntimeQueryMock = vi.hoisted(() => vi.fn());
+const readNakafaRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedSnapshotCache: cacheMock,
+  applyContentCache: cacheMock,
+  applyImmutableContentCache: vi.fn(),
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: readRuntimeQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: readNakafaRuntimeQueryMock,
 }));
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
@@ -46,8 +49,8 @@ const source = {
 beforeEach(() => {
   cacheMock.mockReset();
   runtimeQueryMock.mockReset();
-  readRuntimeQueryMock.mockReset();
-  readRuntimeQueryMock.mockImplementation(
+  readNakafaRuntimeQueryMock.mockReset();
+  readNakafaRuntimeQueryMock.mockImplementation(
     createTestRuntimeQuery(runtimeQueryMock)
   );
 });
@@ -78,7 +81,7 @@ describe("published Quran content", () => {
       expect(catalog).toMatchObject({ surahs: expect.any(Array) });
       expect(cachedCatalog).toMatchObject({ surahs: expect.any(Array) });
       expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
-      expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
+      expect(cacheMock).toHaveBeenCalledWith("quran");
     })
   );
 
@@ -149,8 +152,8 @@ describe("published Quran content", () => {
       expect(result).toMatchObject({
         _tag: "Failure",
         failure: {
-          _tag: "TestRuntimeQueryError",
-          message: "Error: Quran unavailable",
+          _tag: "NakafaAgentDataReadError",
+          cause: "Error: Quran unavailable",
         },
       });
     })
@@ -200,7 +203,7 @@ describe("published Quran content", () => {
         appLocale: "id",
         surahNumber: 1,
       });
-      expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
+      expect(cacheMock).toHaveBeenCalledWith("quran");
       expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
     })
   );
@@ -235,7 +238,7 @@ describe("published Quran content", () => {
 describe("immutable Quran application reads", () => {
   const prepareQuran = Effect.gen(function* () {
     const fixture = yield* makeQuranRuntimeSource();
-    const context = yield* createTestSnapshotContext(fixture.source);
+    const context = yield* createTestPublication(fixture.source);
     return { context, manifest: fixture.manifest, state: fixture.state };
   });
   class QuranFixture extends Context.Service<
@@ -249,8 +252,8 @@ describe("immutable Quran application reads", () => {
       () =>
         Effect.gen(function* () {
           const quran = yield* QuranFixture;
-          readRuntimeQueryMock.mockImplementation(
-            createTestSnapshotQuery(quran.context)
+          readNakafaRuntimeQueryMock.mockImplementation(
+            createTestNativeQuery(quran.context)
           );
           const identity = yield* readPublishedQuranIdentity();
           const catalog = yield* readPublishedQuranCatalog();
@@ -264,7 +267,7 @@ describe("immutable Quran application reads", () => {
             Array.from({ length: QURAN_SURAH_COUNT }, (_, index) => index + 1)
           );
           expect(cached).toEqual(catalog);
-          expect(cacheMock).toHaveBeenCalledWith(quran.manifest.snapshotId);
+          expect(cacheMock).toHaveBeenCalledWith("quran");
         })
     );
 
@@ -273,8 +276,8 @@ describe("immutable Quran application reads", () => {
       (appLocale) =>
         Effect.gen(function* () {
           const quran = yield* QuranFixture;
-          readRuntimeQueryMock.mockImplementation(
-            createTestSnapshotQuery(quran.context)
+          readNakafaRuntimeQueryMock.mockImplementation(
+            createTestNativeQuery(quran.context)
           );
           const prefix = yield* readPublishedQuranMarkdown(appLocale, 1, 3);
           const complete = yield* readPublishedQuranMarkdown(appLocale, 1);
@@ -307,11 +310,11 @@ describe("immutable Quran application reads", () => {
     "keeps an inactive Quran publication in the domain error channel",
     () =>
       Effect.gen(function* () {
-        const inactive = yield* createTestSnapshotContext(
+        const inactive = yield* createTestPublication(
           makeRuntimeSource().source
         );
-        readRuntimeQueryMock.mockImplementation(
-          createTestSnapshotQuery(inactive)
+        readNakafaRuntimeQueryMock.mockImplementation(
+          createTestNativeQuery(inactive)
         );
         expect(
           yield* readPublishedQuranIdentity().pipe(Effect.flip)
@@ -435,3 +438,7 @@ function markdownResult() {
     ],
   };
 }
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

@@ -11,20 +11,13 @@ function changesMaterial(build: ModelBuild) {
   return build.slots.materialBaseSlot !== build.slots.materialTargetSlot;
 }
 
-function changesSearch(build: ModelBuild) {
-  return build.slots.searchBaseSlot !== build.slots.searchTargetSlot;
-}
-
 /** Selects the first required inactive-buffer phase for one release scope. */
 export function firstModelPhase(build: ModelBuild): ModelBuildPhase {
   if (changesArticle(build)) {
-    return "articleClearCatalog";
+    return "articleCatalog";
   }
   if (changesMaterial(build)) {
-    return "materialClearCatalog";
-  }
-  if (changesSearch(build)) {
-    return "searchClear";
+    return "materialCatalog";
   }
   return "ready";
 }
@@ -34,36 +27,21 @@ export function nextModelPhase(
   build: ModelBuild,
   phase: ModelBuildPhase
 ): ModelBuildPhase {
-  const direct: Partial<Record<ModelBuildPhase, ModelBuildPhase>> = {
+  // Search is owned by article and material changes, as derived by getReadModelImpact.
+  const next: Record<ModelBuildPhase, ModelBuildPhase> = {
     articleApply: "articleVerify",
-    articleClearBuckets: "articleCopyCatalog",
-    articleClearCatalog: "articleClearCategories",
-    articleClearCategories: "articleClearBuckets",
-    articleCopyBuckets: "articleApply",
-    articleCopyCatalog: "articleCopyCategories",
-    articleCopyCategories: "articleCopyBuckets",
+    articleBuckets: "articleApply",
+    articleCatalog: "articleCategories",
+    articleCategories: "articleBuckets",
+    articleVerify: changesMaterial(build) ? "materialCatalog" : "search",
     materialApply: "materialVerify",
-    materialClearCatalog: "materialClearBuckets",
-    materialClearBuckets: "materialCopyCatalog",
-    materialCopyCatalog: "materialCopyBuckets",
-    materialCopyBuckets: "materialApply",
+    materialCatalog: "materialBuckets",
+    materialBuckets: "materialApply",
+    materialVerify: "search",
     searchApply: "searchVerify",
-    searchClear: "searchCopy",
-    searchCopy: "searchApply",
+    search: "searchApply",
     searchVerify: "ready",
+    ready: "ready",
   };
-  const next = direct[phase];
-  if (next) {
-    return next;
-  }
-  if (phase === "articleVerify") {
-    if (changesMaterial(build)) {
-      return "materialClearCatalog";
-    }
-    return changesSearch(build) ? "searchClear" : "ready";
-  }
-  if (phase === "materialVerify") {
-    return changesSearch(build) ? "searchClear" : "ready";
-  }
-  return phase;
+  return next[phase];
 }

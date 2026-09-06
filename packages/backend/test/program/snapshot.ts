@@ -11,6 +11,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import {
   CURRICULUM_NAMESPACES,
+  type CurriculumRoute,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
 import { digestProgramRows } from "@nakafa/aksara-contracts/program/snapshot/digest";
@@ -142,7 +143,8 @@ export const makeProgramSnapshotData = Effect.fn(
     makeTechnicalProgram(1),
     makeTechnicalProgram(2),
   ],
-  activeAppLocales: ActiveAppLocaleList = ACTIVE_APP_LOCALES
+  activeAppLocales: ActiveAppLocaleList = ACTIVE_APP_LOCALES,
+  additionalRoutes: readonly CurriculumRoute[] = []
 ) {
   const catalog = yield* Effect.forEach(programs, makeProgramSnapshotRow);
   const curriculumRoutes = programs
@@ -152,6 +154,7 @@ export const makeProgramSnapshotData = Effect.fn(
         technicalCurriculum(program, appLocale)
       )
     )
+    .concat(additionalRoutes)
     .sort(compareCurriculum);
   const curriculum = yield* Effect.forEach(
     curriculumRoutes,

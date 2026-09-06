@@ -13,6 +13,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import type { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import {
@@ -22,15 +23,14 @@ import {
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
 import { makeArticleRuntimeSource } from "@/test/content/article";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
   makeTestArticleProjection,
   testArticleProjection,
   testArticleSourcePath,
 } from "@/test/content-article";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -125,47 +125,45 @@ function categoryPage(overrides?: {
 }
 
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedCatalogCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 describe("published article catalog", () => {
-  it.effect(
-    "reads localized articles and categories from authenticated serving rows",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* makeArticleRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
-        const cursor = {
-          cursor: null,
-          expectedManifestHash: null,
-          expectedReleaseId: null,
-          locale: "de" as const,
-        };
+  it.effect("reads localized signed articles and categories", () =>
+    Effect.gen(function* () {
+      const fixture = yield* makeArticleRuntimeSource();
+      const context = yield* createTestPublication(fixture.source);
+      runtimeReadMock.mockImplementation(createTestNativeQuery(context));
+      const cursor = {
+        cursor: null,
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+        locale: "de" as const,
+      };
 
-        const page = yield* readPublishedArticlePage({
-          ...cursor,
-          category: ArticleCategorySchema.make("politics"),
-        });
-        expect(page).toMatchObject({
-          activeReleaseId: fixture.state.activeReleaseId,
-          done: true,
-          articles: [
-            { publicPath: "articles/politik/artikel-2" },
-            { publicPath: "articles/politik/artikel-1" },
-          ],
-        });
-        expect(yield* readPublishedCategories(cursor)).toMatchObject({
-          activeReleaseId: fixture.state.activeReleaseId,
-          done: true,
-          categories: [
-            { category: "politics", route: "politik", title: "Politik" },
-          ],
-        });
-      })
+      const page = yield* readPublishedArticlePage({
+        ...cursor,
+        category: ArticleCategorySchema.make("politics"),
+      });
+      expect(page).toMatchObject({
+        activeReleaseId: fixture.state.activeReleaseId,
+        done: true,
+        articles: [
+          { publicPath: "articles/politik/artikel-2" },
+          { publicPath: "articles/politik/artikel-1" },
+        ],
+      });
+      expect(yield* readPublishedCategories(cursor)).toMatchObject({
+        activeReleaseId: fixture.state.activeReleaseId,
+        done: true,
+        categories: [
+          { category: "politics", route: "politik", title: "Politik" },
+        ],
+      });
+    })
   );
 
   beforeEach(() => {
@@ -476,24 +474,26 @@ describe("published article catalog", () => {
     })
   );
 
-  it.effect(
-    "preserves runtime query failures in the Effect error channel",
-    () =>
-      Effect.gen(function* () {
-        const failure = new Error("catalog unavailable");
-        runtimeQueryMock.mockRejectedValueOnce(failure);
+  it.effect("preserves typed query failures", () =>
+    Effect.gen(function* () {
+      const failure = new Error("catalog unavailable");
+      runtimeQueryMock.mockRejectedValueOnce(failure);
 
-        const error = yield* readPublishedCategories({
-          cursor: null,
-          expectedManifestHash: null,
-          expectedReleaseId: null,
-          locale: "en",
-        }).pipe(Effect.flip);
+      const error = yield* readPublishedCategories({
+        cursor: null,
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+        locale: "en",
+      }).pipe(Effect.flip);
 
-        expect(error).toMatchObject({
-          _tag: "TestRuntimeQueryError",
-          message: String(failure),
-        });
-      })
+      expect(error).toMatchObject({
+        _tag: "NakafaAgentDataReadError",
+        cause: String(failure),
+      });
+    })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

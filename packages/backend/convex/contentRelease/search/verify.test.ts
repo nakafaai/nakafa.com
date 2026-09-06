@@ -5,6 +5,12 @@ import { resolveSearchProjection } from "@repo/backend/convex/contentRelease/sea
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
+  insertTestPage,
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+} from "@repo/backend/test/content/page";
+import { testTextHash } from "@repo/backend/test/content/release";
+import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
@@ -28,19 +34,29 @@ describe("search result publication integrity", () => {
         searchSequence: TEST_RUNTIME_RELEASE.sequence,
       });
     });
-    const read = () =>
+    const owner = await t.query((ctx) =>
+      runConvexProgram(loadSearchOwner(ctx))
+    );
+    if (!owner) {
+      return expect.fail("Expected one active search owner.");
+    }
+    const read = (selectedOwner = owner) =>
       t.query(async (ctx) => {
-        const owner = await runConvexProgram(loadSearchOwner(ctx));
         const row = await ctx.db.query("contentIndex").unique();
-        if (!(owner && row)) {
+        if (!row) {
           return expect.fail("Expected one active search hit.");
         }
-        return runConvexProgram(resolveSearchProjection(ctx, row, owner));
+        return runConvexProgram(
+          resolveSearchProjection(ctx, row, selectedOwner)
+        );
       });
     expect(await read()).toMatchObject({
       contentKey: projection.contentKey,
       publicPath: projection.publicPath,
       projection,
+    });
+    await expect(read({ ...owner, families: [] })).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
     const original = await t.query((ctx) =>
       ctx.db.query("contentIndex").unique()
@@ -48,26 +64,59 @@ describe("search result publication integrity", () => {
     if (!original) {
       return expect.fail("Expected one active search hit.");
     }
+    const identity = {
+      appLocale: original.appLocale,
+      contentKey: original.contentKey,
+      family: original.family,
+      projectionHash: original.projectionHash,
+      publicPath: original.publicPath,
+      releaseId: original.releaseId,
+      sequence: original.sequence,
+      slot: original.slot,
+    };
     const patches: readonly Partial<Doc<"contentIndex">>[] = [
       { slot: "green" },
       { family: "material" },
+      { appLocale: "id" },
       { projectionHash: `sha256:${"f".repeat(64)}` },
+      { publicPath: "articles/politics/other-route" },
+      { releaseId: "different-release" },
+      { sequence: original.sequence + 1 },
     ];
     for (const patch of patches) {
       await t.mutation((ctx) =>
         ctx.db.patch(original._id, {
-          family: original.family,
-          projectionHash: original.projectionHash,
-          slot: original.slot,
+          ...identity,
           ...patch,
         })
       );
       await expect(read()).rejects.toMatchObject({
         data: {
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Active search entry ${projection.contentKey}/en is stale.`,
+          message: `Active search entry ${projection.contentKey}/${patch.appLocale ?? original.appLocale} is stale.`,
         },
       });
     }
+
+    await t.mutation(async (ctx) => {
+      const page = await insertTestPage(
+        ctx,
+        "en",
+        "terms-of-service",
+        TEST_PAGE_PATH
+      );
+      await ctx.db.patch(original._id, {
+        ...identity,
+        contentKey: TEST_PAGE_KEY,
+        projectionHash: testTextHash(page),
+        publicPath: TEST_PAGE_PATH,
+      });
+    });
+    await expect(read()).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Active search entry ${TEST_PAGE_KEY}/en is stale.`,
+      },
+    });
   });
 });

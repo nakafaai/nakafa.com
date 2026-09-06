@@ -126,7 +126,7 @@ describe("contentRelease/models", () => {
       state: await ctx.db.query("contentState").unique(),
     }));
     expect(building.build).toMatchObject({
-      phase: "articleClearCatalog",
+      phase: "articleCatalog",
       slots: {
         articleBaseSlot: "blue",
         articleTargetSlot: "green",

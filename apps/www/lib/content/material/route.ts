@@ -1,3 +1,5 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 import {
   CorpusSourcePathSchema,
@@ -14,11 +16,11 @@ import {
   type RendererDomain,
   RendererDomainSchema,
 } from "@nakafa/aksara-contracts/renderer/domain";
-import { readMaterialModel } from "@repo/backend/content/material/read";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import {
   decodeMaterialJson,
   isMaterialCounterpart,
@@ -30,7 +32,6 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 interface PublishedMaterialIdentity {
   readonly activeManifestHash: typeof Sha256HashSchema.Type;
@@ -98,7 +99,8 @@ export const readPublishedMaterialRoute = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.material.publication,
     {
       ...(expectedActiveReleaseId === undefined
@@ -106,14 +108,26 @@ export const readPublishedMaterialRoute = Effect.fn(
         : { expectedActiveReleaseId }),
       appLocale,
       publicPath,
-    },
-    (queryArgs) =>
-      readMaterialModel(
-        queryArgs.appLocale,
-        queryArgs.publicPath,
-        queryArgs.expectedActiveReleaseId
-      )
+    }
   );
+  return yield* decodePublishedMaterialRoute(
+    result,
+    locale,
+    publicPath,
+    expectedActiveReleaseId
+  );
+});
+
+/** Validates the route model delivered alone or with its signed public body. */
+export const decodePublishedMaterialRoute = Effect.fn(
+  "NakafaMaterial.decodePublishedRoute"
+)(function* (
+  result: FunctionReturnType<typeof api.contentRelease.material.publication>,
+  locale: Locale,
+  publicPath: string,
+  expectedActiveReleaseId?: ContentReleasePin
+) {
+  const appLocale = AppLocaleSchema.make(locale);
   const decodedActiveAppLocales = Schema.decodeUnknownEffect(
     ActiveAppLocaleListSchema
   )(result.activeAppLocales).pipe(
@@ -210,6 +224,6 @@ export async function getPublishedMaterialRoute(
   const result = await Effect.runPromise(
     readPublishedMaterialRoute(locale, publicPath, expectedActiveReleaseId)
   );
-  applyContentRuntimeCache();
+  applyContentCache("material");
   return result;
 }

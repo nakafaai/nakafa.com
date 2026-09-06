@@ -2,6 +2,7 @@ import {
   type ContentFamily,
   ContentFamilySchema,
 } from "@nakafa/aksara-contracts/content";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_DIGEST,
@@ -97,3 +98,39 @@ export async function selectActiveRelease(
     activeSequence: identity.sequence,
   });
 }
+
+/** Creates a native inactive-buffer coordinator for bounded model acceptance. */
+export async function insertModelBuild(
+  ctx: MutationCtx,
+  phase: Doc<"contentModelBuilds">["phase"]
+) {
+  const id = await ctx.db.insert("contentModelBuilds", {
+    base: {
+      kind: "release",
+      releaseId: "active",
+      manifestHash: "hash",
+      sequence: 1,
+    },
+    generation: 1,
+    itemIndex: -1,
+    key: "primary",
+    manifestHash: "next-hash",
+    phase,
+    releaseId: "next",
+    sequence: 2,
+    slots: {
+      articleBaseSlot: "blue",
+      articleTargetSlot: "green",
+      materialBaseSlot: "blue",
+      materialTargetSlot: "green",
+      searchBaseSlot: "blue",
+      searchTargetSlot: "green",
+    },
+    updatedAt: 0,
+  });
+  const build = await ctx.db.get("contentModelBuilds", id);
+  assert(build);
+  return build;
+}
+
+import { assert } from "@effect/vitest";

@@ -1,10 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import {
-  PublicPathSchema,
-  ReleaseIdSchema,
-} from "@nakafa/aksara-contracts/ids";
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { Schema } from "effect";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
@@ -24,14 +21,12 @@ import {
   testProgramSubject,
 } from "@/test/content-program";
 
-const activeReleaseId = ReleaseIdSchema.make("release-material");
 const metadata = previewProjection.metadata;
 const context = {
   nodeKey: "class-11-mathematics-function-composition-inverse-function",
   programKey: "merdeka",
 };
 const publishedPage = {
-  activeReleaseId,
   alternates: [previewProjection, previewIdProjection],
   body: "## Function Concept",
   children: "Function Concept",

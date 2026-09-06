@@ -1,169 +1,91 @@
-import { compareCodeUnits } from "@nakafa/aksara-contracts/text/order";
 import {
-  type PublicationRow,
-  PublicationSource,
-} from "@repo/backend/content/publication/source";
+  type ContentSnapshotManifest,
+  contentSnapshotId,
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import { loadActiveIdentity } from "@repo/backend/content/publication/read";
+import { PublicationSource } from "@repo/backend/content/publication/source";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { Effect, Layer, Option } from "effect";
+import { decodeSnapshotJson } from "@repo/backend/convex/contentRelease/parse";
+import { Effect, Option } from "effect";
 
-type PublicationTable =
-  | "contentState"
-  | "contentReleases"
-  | "contentHeads"
-  | "contentBindings"
-  | "contentArtifacts"
-  | "contentSnapshots"
-  | "contentKeys";
-type PublicationSnapshot = {
-  readonly [Table in PublicationTable]: readonly PublicationRow<Table>[];
-};
+/** Narrows a decoded snapshot through its actual family discriminant. */
+function hasSnapshotFamily<Family extends ContentSnapshotKind>(
+  snapshot: ContentSnapshotManifest,
+  family: Family
+): snapshot is Extract<ContentSnapshotManifest, { readonly family: Family }> {
+  return snapshot.family === family;
+}
 
-/** Rejects duplicate immutable identities while constructing one worker's index. */
-const indexRows = Effect.fn("publication.snapshot.indexRows")(function* <Row>(
-  rows: readonly Row[],
-  identity: (row: Row) => string
+/** Loads and authenticates one retained immutable family snapshot. */
+export const loadVerifiedSnapshot = Effect.fn(
+  "contentRelease.loadVerifiedSnapshot"
+)(function* <const Family extends ContentSnapshotKind>(
+  family: Family,
+  snapshotId: string
 ) {
-  const index = new Map<string, Row>();
-  for (const row of rows) {
-    const key = identity(row);
-    if (index.has(key)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Signed serving snapshot has duplicate publication identities."
-      );
-    }
-    index.set(key, row);
+  const stored = Option.getOrNull(
+    yield* (yield* PublicationSource).snapshot(family, snapshotId)
+  );
+  if (!stored || stored.verifiedAt === undefined) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_MISSING",
+      `Verified ${family} snapshot ${snapshotId} is unavailable.`
+    );
   }
-  return index;
+  const decoded = yield* decodeSnapshotJson(stored.snapshotJson);
+  const snapshot = decoded;
+  if (
+    !hasSnapshotFamily(snapshot, family) ||
+    contentSnapshotId(snapshot) !== snapshotId
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Verified ${family} snapshot lost its signed identity.`
+    );
+  }
+  if (
+    decoded.family === "quran" &&
+    decoded.manifest.provenanceStatus !== "approved"
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_UNSUPPORTED",
+      "Verified Quran snapshot has blocked provenance."
+    );
+  }
+  return { snapshot, stored };
 });
 
-/** Pins indexed content lookups to the single authenticated serving generation. */
-export const snapshotPublicationLayer = (tables: PublicationSnapshot) =>
-  Layer.effect(
-    PublicationSource,
-    Effect.gen(function* () {
-      const [state] = tables.contentState;
-      if (
-        tables.contentState.length !== 1 ||
-        !state?.activeReleaseId ||
-        state.activeSequence === undefined
-      ) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_STATE",
-          "Signed serving snapshot has no selected active generation."
-        );
-      }
-      const releases = yield* indexRows(
-        tables.contentReleases,
-        (row) => row.releaseId
-      );
-      const versions = yield* indexRows(tables.contentHeads, (row) =>
-        JSON.stringify([row.contentKey, row.artifactLocale])
-      );
-      const bindings = yield* indexRows(tables.contentBindings, (row) =>
-        JSON.stringify([row.appLocale, row.publicPath])
-      );
-      const artifacts = yield* indexRows(
-        tables.contentArtifacts,
-        (row) => row.artifactHash
-      );
-      const snapshots = yield* indexRows(tables.contentSnapshots, (row) =>
-        JSON.stringify([row.family, row.snapshotId])
-      );
-      const keys = new Map<
-        PublicationRow<"contentKeys">["artifactLocale"],
-        PublicationRow<"contentKeys">[]
-      >();
-      for (const row of tables.contentKeys) {
-        if (
-          row.family !== "page" ||
-          row.createdSequence > state.activeSequence
-        ) {
-          return yield* releaseFail(
-            "CONTENT_RELEASE_INTEGRITY",
-            "Signed serving snapshot contains an unselected page identity."
-          );
-        }
-        const group = keys.get(row.artifactLocale) ?? [];
-        group.push(row);
-        keys.set(row.artifactLocale, group);
-      }
-      for (const group of keys.values()) {
-        group.sort(
-          (a, b) =>
-            a.createdSequence - b.createdSequence ||
-            compareCodeUnits(a.contentKey, b.contentKey)
-        );
-      }
-      const requireSequence = Effect.fn("publication.snapshot.requireSequence")(
-        function* (sequence: number) {
-          if (sequence !== state.activeSequence) {
-            return yield* releaseFail(
-              "CONTENT_RELEASE_STATE",
-              "Signed serving snapshot cannot read a different publication generation."
-            );
-          }
-        }
-      );
-      return PublicationSource.of({
-        state: Effect.succeed(Option.some(state)),
-        release: Effect.fn("publication.snapshot.release")(
-          function* (releaseId) {
-            const release = releases.get(releaseId);
-            if (!release) {
-              return yield* releaseFail(
-                "CONTENT_RELEASE_MISSING",
-                `Content release ${releaseId} does not exist.`
-              );
-            }
-            return release;
-          }
-        ),
-        version: Effect.fn("publication.snapshot.version")(
-          function* (contentKey, artifactLocale, sequence) {
-            yield* requireSequence(sequence);
-            const row = versions.get(
-              JSON.stringify([contentKey, artifactLocale])
-            );
-            if (row && row.sequence > sequence) {
-              return yield* releaseFail(
-                "CONTENT_RELEASE_INTEGRITY",
-                "Signed serving snapshot contains a future content version."
-              );
-            }
-            return Option.fromUndefinedOr(row);
-          }
-        ),
-        binding: Effect.fn("publication.snapshot.binding")(
-          function* (appLocale, publicPath, sequence) {
-            yield* requireSequence(sequence);
-            const row = bindings.get(JSON.stringify([appLocale, publicPath]));
-            if (row && row.sequence > sequence) {
-              return yield* releaseFail(
-                "CONTENT_RELEASE_INTEGRITY",
-                "Signed serving snapshot contains a future route binding."
-              );
-            }
-            return Option.fromUndefinedOr(row);
-          }
-        ),
-        artifact: Effect.fn("publication.snapshot.artifact")((artifactHash) =>
-          Effect.sync(() => Option.fromUndefinedOr(artifacts.get(artifactHash)))
-        ),
-        snapshot: Effect.fn("publication.snapshot.family")(
-          (family, snapshotId) =>
-            Effect.sync(() =>
-              Option.fromUndefinedOr(
-                snapshots.get(JSON.stringify([family, snapshotId]))
-              )
-            )
-        ),
-        pageKeys: Effect.fn("publication.snapshot.pageKeys")(
-          function* (appLocale, sequence, limit) {
-            yield* requireSequence(sequence);
-            return (keys.get(appLocale) ?? []).slice(0, limit);
-          }
-        ),
-      });
-    })
-  );
+/** Resolves active release ownership and its optional verified family snapshot. */
+export const loadSnapshotOwner = Effect.fn("contentRelease.loadSnapshotOwner")(
+  function* <const Family extends ContentSnapshotKind>(family: Family) {
+    const active = yield* loadActiveIdentity();
+    if (!active) {
+      return { active: null, snapshot: null, snapshotId: null };
+    }
+    const state = active.signed.manifest.snapshots[family];
+    if (state.resultSnapshotId === null) {
+      return { active, snapshot: null, snapshotId: null };
+    }
+    const { snapshot } = yield* loadVerifiedSnapshot(
+      family,
+      state.resultSnapshotId
+    );
+    return { active, snapshot, snapshotId: state.resultSnapshotId };
+  }
+);
+
+/** Selects one verified immutable family snapshot from the active release. */
+export const loadActiveSnapshot = Effect.fn(
+  "contentRelease.loadActiveSnapshot"
+)(function* <const Family extends ContentSnapshotKind>(family: Family) {
+  const owner = yield* loadSnapshotOwner(family);
+  if (
+    owner.active === null ||
+    owner.snapshot === null ||
+    owner.snapshotId === null
+  ) {
+    return null;
+  }
+  return owner;
+});

@@ -7,8 +7,8 @@
       "env": [
         "CONVEX_AGENT_MODE",
         "NEXT_EXPOSE_TESTING_API",
-        "CONTENT_RUNTIME_SELECTION_HASH",
-        "CONTENT_RUNTIME_SCHEMA_HASH"
+        "AKSARA_AGENT_SIGNING_KEY_ID",
+        "AKSARA_AGENT_SIGNING_PUBLIC_KEY"
       ]
     }
   }

@@ -1,6 +1,13 @@
 import { formatCodeBlockData } from "@repo/contents/_types/llms/code";
 import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
-import { Effect, Schema } from "effect";
+import {
+  getCos,
+  getRadians,
+  getSin,
+  getTan,
+  ISOSCELES_RIGHT_TRIANGLE_ANGLE,
+} from "@repo/math/angles";
+import { Effect, Option, Schema } from "effect";
 import type { Parent, Root, RootContent } from "mdast";
 import type {
   MdxJsxAttribute,
@@ -33,6 +40,26 @@ const MdxPositionSchema = Schema.Struct({
   end: Schema.Struct({
     offset: Schema.Finite,
   }),
+});
+const NumericLiteralSchema = Schema.Struct({
+  type: Schema.Literal("Literal"),
+  value: Schema.Finite,
+});
+const StaticNumericExpressionSchema = Schema.Struct({
+  body: Schema.Tuple([
+    Schema.Struct({
+      expression: Schema.Union([
+        NumericLiteralSchema,
+        Schema.Struct({
+          argument: NumericLiteralSchema,
+          operator: Schema.Literals(["+", "-"]),
+          type: Schema.Literal("UnaryExpression"),
+        }),
+      ]),
+      type: Schema.Literal("ExpressionStatement"),
+    }),
+  ]),
+  type: Schema.Literal("Program"),
 });
 
 /** Expected failure while parsing authored MDX for agent markdown projection. */
@@ -141,7 +168,69 @@ function renderMdxElement(
     return renderMermaid(attributes, node, source);
   }
 
+  if (name === "Triangle") {
+    return renderTriangle(attributes, node, source);
+  }
+
   return renderGenericComponent(name, attributes, node, source);
+}
+
+/** Preserves the computed initial values shown by the interactive triangle. */
+function renderTriangle(
+  attributes: MdxAttribute[],
+  node: MdxJsxFlowElement | MdxJsxTextElement,
+  source: string
+) {
+  const rows = renderGenericComponentRows(
+    "Triangle",
+    attributes,
+    node,
+    source,
+    []
+  );
+  const initialAngle = readTriangleAngle(attributes);
+  if (Option.isNone(initialAngle)) {
+    rows.push("Initial trigonometric values require a static numeric angle.");
+    return rows.join("\n");
+  }
+
+  const angle = initialAngle.value;
+  const tangent = getTan(angle);
+  rows.push("Initial interactive values (rounded to two decimal places):");
+  rows.push(
+    `Sin (${angle}°) = ${getSin(angle).toFixed(2)} Cos (${angle}°) = ${getCos(angle).toFixed(2)} Tan (${angle}°) = ${Number.isFinite(tangent) ? tangent.toFixed(2) : "undefined"}`
+  );
+  rows.push(`Angle: ${angle}° = ${getRadians(angle).toFixed(2)} radians.`);
+  return rows.join("\n");
+}
+
+/** Reads literal angle syntax without evaluating authored JavaScript. */
+function readTriangleAngle(attributes: MdxAttribute[]) {
+  if (attributes.some(isExpressionAttribute)) {
+    return Option.none();
+  }
+  const attribute = attributes
+    .filter((candidate) => readAttributeName(candidate) === "angle")
+    .at(-1);
+  if (!attribute) {
+    return Option.some(ISOSCELES_RIGHT_TRIANGLE_ANGLE);
+  }
+  if (typeof attribute.value !== "object" || attribute.value === null) {
+    return Option.none();
+  }
+
+  return Schema.decodeUnknownOption(StaticNumericExpressionSchema)(
+    attribute.value.data?.estree
+  ).pipe(
+    Option.map(({ body: [{ expression }] }) => {
+      if (expression.type === "Literal") {
+        return expression.value;
+      }
+      return expression.operator === "-"
+        ? -expression.argument.value
+        : expression.argument.value;
+    })
+  );
 }
 
 /** Renders Mermaid with chart fences while preserving component props when present. */

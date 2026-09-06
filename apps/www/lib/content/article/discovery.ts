@@ -1,3 +1,5 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
@@ -7,11 +9,6 @@ import {
   ArticleCategoryTitleSchema,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import {
-  readArticleBucket,
-  readCategoryArticles,
-  readLatestArticles,
-} from "@repo/backend/content/article/discovery";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -22,7 +19,6 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type DiscoveryItem = FunctionReturnType<
   typeof api.contentRelease.article.latest
@@ -82,13 +78,13 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
     expectedActiveReleaseId?: ContentReleasePin
   ) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readRuntimeQuery(
+    const result = yield* readNakafaRuntimeQuery(
+      env.NEXT_PUBLIC_CONVEX_URL,
       api.contentRelease.article.bucket,
       {
         appLocale,
         bucket,
-      },
-      (queryArgs) => readArticleBucket(queryArgs.appLocale, queryArgs.bucket)
+      }
     );
     const activeReleaseId = yield* decodeContentReleasePin(
       result.activeReleaseId,
@@ -118,13 +114,13 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
     expectedActiveReleaseId?: ContentReleasePin
   ) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readRuntimeQuery(
+    const result = yield* readNakafaRuntimeQuery(
+      env.NEXT_PUBLIC_CONVEX_URL,
       api.contentRelease.article.latest,
       {
         appLocale,
         limit,
-      },
-      (queryArgs) => readLatestArticles(queryArgs.appLocale, queryArgs.limit)
+      }
     );
     const activeReleaseId = yield* decodeContentReleasePin(
       result.activeReleaseId,
@@ -153,19 +149,14 @@ export const readPublishedCategoryArticles = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.article.listing,
     {
       appLocale,
       category,
       limit,
-    },
-    (queryArgs) =>
-      readCategoryArticles(
-        queryArgs.appLocale,
-        queryArgs.category,
-        queryArgs.limit
-      )
+    }
   );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,

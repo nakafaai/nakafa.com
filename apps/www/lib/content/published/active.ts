@@ -1,4 +1,5 @@
-import { readActiveIdentity } from "@repo/backend/content/publication/read";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 import {
   ReleaseIdSchema,
@@ -6,7 +7,6 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Schema } from "effect";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 const ActiveContentIdentitySchema = Schema.NullOr(
   Schema.Struct({
@@ -24,10 +24,10 @@ export type ActiveContentReleaseId =
 export const readActiveContentIdentity = Effect.fn(
   "NakafaContent.readActiveContentIdentity"
 )(function* () {
-  const identity = yield* readRuntimeQuery(
+  const identity = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.runtime.active.read,
-    {},
-    () => readActiveIdentity()
+    {}
   );
   return yield* Schema.decodeEffect(ActiveContentIdentitySchema)(identity);
 });

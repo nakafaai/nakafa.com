@@ -2,7 +2,7 @@ import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
 import type { TryoutCatalogCounts } from "@nakafa/aksara-contracts/tryout/snapshot/spec";
-import { loadVerifiedSnapshot } from "@repo/backend/content/snapshot/read";
+import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
 import { findTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";

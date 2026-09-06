@@ -2,8 +2,8 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
+  ContentCacheRequestSchema,
   makeArtifactCacheTag,
-  makeContentCacheRequest,
 } from "@nakafa/aksara-contracts/cache/content";
 import {
   ReleaseIdSchema,
@@ -19,12 +19,11 @@ import {
 const releaseId = ReleaseIdSchema.make("release-cache-test");
 const artifactHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const artifactTag = makeArtifactCacheTag(artifactHash);
-const exactRequest = makeContentCacheRequest({
-  artifactHashes: [artifactHash],
-  family: "material",
+const exactRequest = ContentCacheRequestSchema.make({
+  scope: "material",
   releaseId,
 });
-const exactTags = exactRequest.tags;
+
 const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const invalidateContentCacheMock = vi.hoisted(() =>
   vi.fn<typeof invalidateContentCache>()
@@ -151,9 +150,8 @@ describe("content runtime cache revalidation route", () => {
     const response = await POST(
       createBodyRequest(
         JSON.stringify({
-          family: "material",
+          scope: "material",
           releaseId,
-          tags: ["content-runtime", "content-family:material"],
         })
       )
     );
@@ -179,7 +177,7 @@ describe("content runtime cache revalidation route", () => {
     expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 
-  it("invalidates and echoes the exact release artifact tags", async () => {
+  it("invalidates and echoes exactly one release-bound mutable scope", async () => {
     const { POST } = await import("@/app/api/internal/content/cache/route");
     const body = JSON.stringify(exactRequest);
     const response = await POST(
@@ -190,14 +188,13 @@ describe("content runtime cache revalidation route", () => {
     );
 
     await expect(response.json()).resolves.toEqual({
-      family: "material",
+      scope: "material",
       releaseId,
       revalidated: true,
-      tags: exactTags,
     });
     expect(response.status).toBe(200);
     expect(readActiveContentIdentityMock).toHaveBeenCalledTimes(1);
-    expect(invalidateContentCacheMock).toHaveBeenCalledWith(exactTags);
+    expect(invalidateContentCacheMock).toHaveBeenCalledWith("material");
   });
 
   it("reports a typed cache invalidation failure without a false receipt", async () => {
@@ -213,7 +210,7 @@ describe("content runtime cache revalidation route", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Content cache invalidation failed.",
     });
-    expect(invalidateContentCacheMock).toHaveBeenCalledWith(exactTags);
+    expect(invalidateContentCacheMock).toHaveBeenCalledWith("material");
   });
 
   it.each([
@@ -221,16 +218,15 @@ describe("content runtime cache revalidation route", () => {
     [
       JSON.stringify({
         extra: true,
-        family: "material",
+        scope: "material",
         releaseId,
-        tags: ["content-runtime", "content-family:material"],
       }),
       { "Content-Type": "application/json" },
       400,
     ],
     [
       JSON.stringify({
-        family: "material",
+        scope: "material",
         releaseId,
         tags: ["unknown"],
       }),
@@ -240,7 +236,7 @@ describe("content runtime cache revalidation route", () => {
     [
       JSON.stringify({
         releaseId,
-        family: "material",
+        scope: "material",
         tags: ["content-family:material", "content-runtime"],
       }),
       { "Content-Type": "application/json" },
@@ -249,7 +245,7 @@ describe("content runtime cache revalidation route", () => {
     [
       JSON.stringify({
         releaseId,
-        family: "material",
+        scope: "material",
         tags: [
           "content-runtime",
           "content-family:material",
@@ -261,18 +257,16 @@ describe("content runtime cache revalidation route", () => {
     ],
     [
       JSON.stringify({
-        family: "material",
+        scope: "material",
         releaseId,
-        tags: ["content-runtime", "content-family:material"],
       }),
       { "Content-Type": "text/plain" },
       415,
     ],
     [
       JSON.stringify({
-        family: "material",
+        scope: "material",
         releaseId,
-        tags: ["content-runtime", "content-family:material"],
       }),
       {},
       415,
@@ -286,7 +280,7 @@ describe("content runtime cache revalidation route", () => {
     [new Uint8Array([255]), { "Content-Type": "application/json" }, 400],
     ["x".repeat(32 * 1024 + 1), { "Content-Type": "application/json" }, 413],
   ] as const)(
-    "rejects an invalid exact-tag body",
+    "rejects an invalid scoped body",
     async (body, headers, status) => {
       const { POST } = await import("@/app/api/internal/content/cache/route");
       const response = await POST(createBodyRequest(body, headers));

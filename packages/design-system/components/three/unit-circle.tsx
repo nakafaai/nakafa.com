@@ -14,13 +14,8 @@ import {
 } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
-import {
-  getCos,
-  getRadians,
-  getSin,
-  getTan,
-} from "@repo/design-system/lib/geometry/angles";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";

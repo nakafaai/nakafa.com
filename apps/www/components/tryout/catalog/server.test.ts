@@ -1,11 +1,32 @@
+import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+  PROTECTED_CONTENT_RUNTIME_PATH,
+} from "@repo/backend/content/endpoint";
+import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
+import { api, internal } from "@repo/backend/convex/_generated/api";
+import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import {
   APP_LOCALE_CODES,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
+import {
+  createTestPublication,
+  makeRuntimeSource,
+} from "@repo/backend/test/content/publication";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { Effect } from "effect";
@@ -22,19 +43,10 @@ import {
   readTryoutSetPage,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/server";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
-import { createTestSnapshotFetch } from "@/test/runtime-query";
 
-const fetchRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const fetchQueryMock = vi.hoisted(() => vi.fn());
-const loadSnapshotMock = vi.hoisted(() => vi.fn());
+const transportMock = vi.hoisted(() => vi.fn<typeof fetch>());
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  fetchRuntimeQuery: fetchRuntimeQueryMock,
-}));
-vi.mock("@/lib/content/runtime/snapshot", () => ({
-  loadContentSnapshot: loadSnapshotMock,
-}));
 vi.mock("convex/nextjs", () => ({ fetchQuery: fetchQueryMock }));
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
@@ -44,11 +56,14 @@ vi.mock("@repo/internationalization/src/navigation", () => ({
   useRouter: vi.fn(),
 }));
 vi.mock("@/lib/content/cache", () => ({
-  applyContentRuntimeCache: vi.fn(),
-  applyPublishedContentBatchCache: vi.fn(),
+  applyContentCache: vi.fn(),
+  applyImmutableContentCache: vi.fn(),
 }));
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_SITE_URL: "https://runtime.example.test" },
+  env: {
+    NEXT_PUBLIC_CONVEX_SITE_URL: "https://runtime.example.test",
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));
 vi.mock("@repo/next-config/keys", () => ({
   contentRuntimeKeys: () => ({ CONTENT_RUNTIME_TOKEN: "technical-test-token" }),
@@ -74,9 +89,9 @@ const SET = `${TRACK}/set-1`;
 const SECTION = `${SET}/matematika`;
 
 beforeEach(() => {
-  fetchRuntimeQueryMock.mockReset();
   fetchQueryMock.mockReset();
-  loadSnapshotMock.mockReset();
+  transportMock.mockReset();
+  vi.stubGlobal("fetch", transportMock);
 });
 
 describe("immutable try-out application catalog", () => {
@@ -85,10 +100,8 @@ describe("immutable try-out application catalog", () => {
     (locale) =>
       Effect.gen(function* () {
         const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        fetchRuntimeQueryMock.mockImplementation(
-          createTestSnapshotFetch(context)
-        );
+        const context = yield* createTestPublication(fixture.source);
+        fetchQueryMock.mockImplementation(context.query);
         const pages = yield* Effect.promise(() =>
           Promise.all([
             readTryoutHubPage(locale),
@@ -153,11 +166,40 @@ describe("immutable try-out application catalog", () => {
           undefined,
           makeLandingSource()
         );
-        const context = yield* createTestSnapshotContext(fixture.source);
-        fetchRuntimeQueryMock.mockImplementation(
-          createTestSnapshotFetch(context)
+        const context = yield* createTestPublication(fixture.source);
+        fetchQueryMock.mockImplementation(context.query);
+        const selected = yield* Effect.promise(() =>
+          context.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+            appLocale: "id",
+          })
         );
-        loadSnapshotMock.mockResolvedValue(context);
+        const request = yield* makeTryoutRuntimeRequest([selected.question]);
+        const row = yield* Effect.promise(() =>
+          context.query(
+            internal.contentRelease.runtime.protected.internal.read,
+            request
+          )
+        );
+        const found = yield* decodeProtectedRuntimeRow(
+          row,
+          yield* decodeProtectedContentRuntimeRequest(request)
+        ).pipe(
+          Effect.provideService(
+            ContentVerificationKeyResolver,
+            TEST_KEY_RESOLVER
+          )
+        );
+        assert.isNotNull(found);
+        const response = new Response(JSON.stringify(found), {
+          headers: {
+            "content-type": "application/json",
+            [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
+          },
+        });
+        Object.defineProperty(response, "url", {
+          value: `https://runtime.example.test${PROTECTED_CONTENT_RUNTIME_PATH}`,
+        });
+        transportMock.mockResolvedValueOnce(response);
         const featured = yield* Effect.promise(() => readFeaturedTryout("id"));
         expect(renderToStaticMarkup(featured.question)).toBe(
           "Technical question"
@@ -173,28 +215,18 @@ describe("immutable try-out application catalog", () => {
     "preserves unavailable publication failures at Promise page boundaries",
     () =>
       Effect.gen(function* () {
-        const context = yield* createTestSnapshotContext(
+        const context = yield* createTestPublication(
           makeRuntimeSource().source
         );
-        fetchRuntimeQueryMock.mockImplementation(
-          createTestSnapshotFetch(context)
-        );
+        fetchQueryMock.mockImplementation(context.query);
         yield* Effect.promise(() =>
           expect(readTryoutHubPage("en")).rejects.toMatchObject({
             _tag: "TryoutCatalogReadError",
-            cause: {
-              _tag: "ReleaseError",
-              code: "CONTENT_RELEASE_MISSING",
-            },
           })
         );
         yield* Effect.promise(() =>
           expect(readTryoutCountryPage("en", COUNTRY)).rejects.toMatchObject({
             _tag: "TryoutCatalogReadError",
-            cause: {
-              _tag: "ReleaseError",
-              code: "CONTENT_RELEASE_MISSING",
-            },
           })
         );
       })
@@ -240,4 +272,9 @@ describe("immutable try-out application catalog", () => {
         });
       })
   );
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });

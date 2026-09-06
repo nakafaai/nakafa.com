@@ -20,6 +20,11 @@ fi
 
 repository_root=$(git rev-parse --show-toplevel) || exit 1
 
+# Vercel's shallow checkout may omit the previous deployment's commit.
+# Build whenever a shared history cannot be proven.
+git -C "$repository_root" merge-base "$base_revision" "$head_revision" \
+  >/dev/null 2>&1 || exit 1
+
 git -C "$repository_root" diff --quiet "$base_revision...$head_revision" --
 change_status=$?
 case "$change_status" in

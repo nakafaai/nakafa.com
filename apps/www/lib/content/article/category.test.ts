@@ -37,7 +37,7 @@ vi.mock("@/lib/content/article/catalog", () => ({
   readPublishedCategories: categoryReaderMock,
 }));
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedCatalogCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
 
 /** Builds one bounded category result from the signed catalog. */
@@ -197,6 +197,49 @@ describe("published article category", () => {
   );
 
   it.effect(
+    "preserves an unchanged cached category after an unrelated release",
+    () =>
+      Effect.gen(function* () {
+        categoryReaderMock.mockImplementation(
+          ({ locale }: { locale: string }) =>
+            Effect.succeed({
+              ...categoryPage({
+                route: locale === "de" ? "politik" : "politics",
+              }),
+              activeManifestHash: Sha256HashSchema.make(
+                `sha256:${"b".repeat(64)}`
+              ),
+              activeReleaseId: ReleaseIdSchema.make("release-other-family"),
+            })
+        );
+
+        expect(yield* readPublishedCategoryAlternates(categoryModel())).toEqual(
+          [
+            { appLocale: "en", publicPath: "articles/politics" },
+            { appLocale: "id", publicPath: "articles/politics" },
+            { appLocale: "de", publicPath: "articles/politik" },
+          ]
+        );
+      })
+  );
+
+  it.effect(
+    "rejects a changed current category in a fresh alternate catalog",
+    () =>
+      Effect.gen(function* () {
+        categoryReaderMock.mockReturnValue(
+          Effect.succeed(categoryPage({ route: "renamed-politics" }))
+        );
+
+        expect(
+          yield* readPublishedCategoryAlternates(categoryModel()).pipe(
+            Effect.flip
+          )
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+      })
+  );
+
+  it.effect(
     "fails closed for invalid, stale, truncated, or incomplete routes",
     () =>
       Effect.gen(function* () {
@@ -243,83 +286,97 @@ describe("published article category", () => {
       })
   );
 
-  it.effect("keeps category pages on the same signed locale generation", () =>
-    Effect.gen(function* () {
-      const model = categoryModel({ locale: "de", route: "politik" });
-      const page = {
-        activeManifestHash: manifestHash,
-        activeReleaseId: releaseId,
-        articles: [
-          {
-            authors: [{ name: "Nakafa" }],
-            category: "politics",
-            categoryTitle: "Politics",
-            datePublished: "2026-08-22",
-            description: "Article",
-            official: true,
-            publicPath: "articles/politik/artikel",
-            route: { category: "politik", slug: "artikel" },
-            title: "Artikel",
-          },
-        ],
-        done: true,
-        nextCursor: null,
-        sourceRevision: null,
-        stale: false,
-      };
-      articleReaderMock.mockReturnValue(Effect.succeed(page));
-
-      const category = yield* Effect.tryPromise(() =>
-        getPublishedCategoryPage(model, {
-          cursor: null,
-          expectedManifestHash: null,
-          expectedReleaseId: null,
-        })
-      );
-      expect(category).toEqual(page);
-      expect(cacheMock).toHaveBeenCalledWith("article");
-
-      const stalePage = { ...page, stale: true };
-      articleReaderMock.mockReturnValueOnce(Effect.succeed(stalePage));
-      const staleCategory = yield* readPublishedCategoryPage(model, {
-        cursor: null,
-        expectedManifestHash: null,
-        expectedReleaseId: null,
-      });
-      expect(staleCategory).toEqual(stalePage);
-
-      const mismatches = [
-        { ...page, activeManifestHash: `sha256:${"b".repeat(64)}` },
-        { ...page, activeReleaseId: "release-next" },
-        {
-          ...page,
-          articles: [{ ...page.articles[0], category: "science" }],
-        },
-        {
-          ...page,
-          articles: [{ ...page.articles[0], categoryTitle: "Politik" }],
-        },
-        {
-          ...page,
+  it.effect(
+    "preserves category identity and stale-cursor handling across releases",
+    () =>
+      Effect.gen(function* () {
+        const model = categoryModel({ locale: "de", route: "politik" });
+        const page = {
+          activeManifestHash: manifestHash,
+          activeReleaseId: releaseId,
           articles: [
             {
-              ...page.articles[0],
-              route: { category: "wissenschaft", slug: "artikel" },
+              authors: [{ name: "Nakafa" }],
+              category: "politics",
+              categoryTitle: "Politics",
+              datePublished: "2026-08-22",
+              description: "Article",
+              official: true,
+              publicPath: "articles/politik/artikel",
+              route: { category: "politik", slug: "artikel" },
+              title: "Artikel",
             },
           ],
-        },
-      ];
+          done: true,
+          nextCursor: null,
+          sourceRevision: null,
+          stale: false,
+        };
+        articleReaderMock.mockReturnValue(Effect.succeed(page));
 
-      for (const mismatch of mismatches) {
-        articleReaderMock.mockReturnValueOnce(Effect.succeed(mismatch));
-        const error = yield* readPublishedCategoryPage(model, {
+        const category = yield* Effect.tryPromise(() =>
+          getPublishedCategoryPage(model, {
+            cursor: null,
+            expectedManifestHash: null,
+            expectedReleaseId: null,
+          })
+        );
+        expect(category).toEqual(page);
+        expect(cacheMock).toHaveBeenCalledWith("article");
+
+        const stalePage = { ...page, stale: true };
+        articleReaderMock.mockReturnValueOnce(Effect.succeed(stalePage));
+        const staleCategory = yield* readPublishedCategoryPage(model, {
           cursor: null,
           expectedManifestHash: null,
           expectedReleaseId: null,
-        }).pipe(Effect.flip);
-        expect(error).toMatchObject({ _tag: "PublishedProjectionError" });
-      }
-    })
+        });
+        expect(staleCategory).toEqual(stalePage);
+
+        const nextPage = {
+          ...page,
+          activeManifestHash: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+          activeReleaseId: ReleaseIdSchema.make("release-other-family"),
+        };
+        articleReaderMock.mockReturnValueOnce(Effect.succeed(nextPage));
+        expect(
+          yield* readPublishedCategoryPage(model, {
+            cursor: null,
+            expectedManifestHash: null,
+            expectedReleaseId: null,
+          })
+        ).toEqual(nextPage);
+
+        const mismatches = [
+          {
+            ...page,
+            articles: [{ ...page.articles[0], category: "science" }],
+          },
+          {
+            ...page,
+            articles: [{ ...page.articles[0], categoryTitle: "Politik" }],
+          },
+          {
+            ...page,
+            articles: [
+              {
+                ...page.articles[0],
+                route: { category: "wissenschaft", slug: "artikel" },
+              },
+            ],
+          },
+        ];
+
+        for (const mismatch of mismatches) {
+          articleReaderMock.mockReturnValueOnce(Effect.succeed(mismatch));
+          const error = yield* readPublishedCategoryPage(model, {
+            cursor: null,
+            expectedManifestHash: null,
+            expectedReleaseId: null,
+          }).pipe(Effect.flip);
+          expect(error).toMatchObject({ _tag: "PublishedProjectionError" });
+        }
+      })
   );
 
   it.effect("preserves catalog failures in the Effect error channel", () =>

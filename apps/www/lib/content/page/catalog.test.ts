@@ -11,9 +11,10 @@ import {
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import {
+  createTestPublication,
   makePageRuntimeSource,
-  TEST_SNAPSHOT_RELEASE,
-} from "@repo/backend/test/content/snapshot";
+  TEST_PUBLICATION_RELEASE,
+} from "@repo/backend/test/content/publication";
 import { Effect } from "effect";
 import {
   getPublishedPageCatalog,
@@ -21,9 +22,8 @@ import {
   readPublishedPageLocalePath,
   verifyPublishedPageCatalog,
 } from "@/lib/content/page/catalog";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { testPageProjection } from "@/test/content-page";
-import { createTestSnapshotQuery } from "@/test/runtime-query";
+import { createTestNativeQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -41,12 +41,12 @@ const dePageProjection = {
   publicPath: PublicPathSchema.make("nutzungsbedingungen"),
 };
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeQueryMock,
 }));
 
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedCatalogCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
 
 describe("published Page catalog", () => {
@@ -78,15 +78,14 @@ describe("published Page catalog", () => {
             locales.flatMap(({ source }) => source.get(table) ?? [])
           );
         }
-        fixture.source.set(
-          "contentReleases",
-          (fixture.source.get("contentReleases") ?? []).map((release) => ({
-            ...release,
-            resultFamilies: TEST_SNAPSHOT_RELEASE.manifest.scope.families,
-          }))
-        );
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeQueryMock.mockImplementation(createTestSnapshotQuery(context));
+        fixture.source.set("contentReleases", [
+          {
+            ...fixture.release,
+            resultFamilies: TEST_PUBLICATION_RELEASE.manifest.scope.families,
+          },
+        ]);
+        const context = yield* createTestPublication(fixture.source);
+        runtimeQueryMock.mockImplementation(createTestNativeQuery(context));
 
         expect(yield* readPublishedPageCatalog()).toEqual({
           activeReleaseId: fixture.state.activeReleaseId,
@@ -193,21 +192,19 @@ describe("published Page catalog", () => {
           projections: [testPageProjection],
         };
         const verified = yield* verifyPublishedPageCatalog(catalog, {
-          activeReleaseId,
           projection: testPageProjection,
         });
         expect(verified).toEqual([testPageProjection]);
 
-        const releaseFailure = yield* verifyPublishedPageCatalog(catalog, {
+        const independentlyCachedPage = {
           activeReleaseId: ReleaseIdSchema.make("release-next"),
           projection: testPageProjection,
-        }).pipe(Effect.flip);
-        expect(releaseFailure).toMatchObject({
-          _tag: "PublishedReleaseMismatchError",
-        });
+        };
+        expect(
+          yield* verifyPublishedPageCatalog(catalog, independentlyCachedPage)
+        ).toEqual([testPageProjection]);
 
         const projectionFailure = yield* verifyPublishedPageCatalog(catalog, {
-          activeReleaseId,
           projection: {
             ...testPageProjection,
             publicPath: PublicPathSchema.make("other-page"),
@@ -267,3 +264,7 @@ describe("published Page catalog", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

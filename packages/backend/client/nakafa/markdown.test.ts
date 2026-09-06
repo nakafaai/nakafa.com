@@ -56,11 +56,9 @@ describe("readNakafaMarkdown", () => {
     (ref) =>
       Effect.gen(function* () {
         runtimeMocks.resolveNakafaContentRef.mockReturnValue(
-          Effect.succeed(Option.some(ref))
+          Effect.succeedSome(ref)
         );
-        runtimeMocks.readPublishedMarkdown.mockReturnValue(
-          Effect.succeed(Option.none())
-        );
+        runtimeMocks.readPublishedMarkdown.mockReturnValue(Effect.succeedNone);
 
         yield* readNakafaMarkdown(
           "https://example.convex.cloud",
@@ -78,11 +76,9 @@ describe("readNakafaMarkdown", () => {
   it.effect("dispatches Quran through its signed snapshot reader", () =>
     Effect.gen(function* () {
       runtimeMocks.resolveNakafaContentRef.mockReturnValue(
-        Effect.succeed(Option.some(quranRef))
+        Effect.succeedSome(quranRef)
       );
-      runtimeMocks.readQuranMarkdown.mockReturnValue(
-        Effect.succeed(Option.none())
-      );
+      runtimeMocks.readQuranMarkdown.mockReturnValue(Effect.succeedNone);
 
       yield* readNakafaMarkdown(
         "https://example.convex.cloud",

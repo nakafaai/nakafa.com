@@ -1,16 +1,17 @@
-import { assert, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
 import {
   resolvePublicRoute,
   resolvePublicRoutes,
 } from "@repo/backend/content/publication/public";
-import { snapshotPublicationLayer } from "@repo/backend/content/publication/snapshot";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makePageRuntimeSource } from "@repo/backend/test/content/snapshot";
+import {
+  createTestPublication,
+  makePageRuntimeSource,
+} from "@repo/backend/test/content/publication";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -37,11 +38,6 @@ describe("active public body selection", () => {
     () =>
       Effect.gen(function* () {
         const fixture = makePageRuntimeSource();
-        const tables = yield* projectActiveRuntime(fixture.source);
-        const head = tables.contentHeads.find(
-          (row) => row.contentKey === fixture.projection.contentKey
-        );
-        assert(head, "Expected the page's immutable content head.");
         const incomplete: readonly Partial<PublicationRow<"contentHeads">>[] = [
           { artifactHash: undefined },
           { compilerConfigHash: undefined },
@@ -52,31 +48,32 @@ describe("active public body selection", () => {
           { sourcePath: undefined },
         ];
         const sources = [
-          {
-            ...tables,
-            contentBindings: tables.contentBindings.map((row) => ({
-              ...row,
-              contentKey: undefined,
-            })),
-          },
-          { ...tables, contentHeads: [] },
-          ...incomplete.map((patch) => ({
-            ...tables,
-            contentHeads: tables.contentHeads.map((row) =>
-              row === head ? { ...row, ...patch } : row
-            ),
-          })),
+          new Map(fixture.source).set("contentBindings", [
+            { ...fixture.binding, contentKey: undefined },
+          ]),
+          new Map(fixture.source).set("contentHeads", []),
+          ...incomplete.map((patch) =>
+            new Map(fixture.source).set("contentHeads", [
+              { ...fixture.head, ...patch },
+            ])
+          ),
         ];
         for (const source of sources) {
-          expect(
-            yield* resolvePublicRoute(
-              fixture.projection.appLocale,
-              fixture.projection.publicPath
-            ).pipe(
-              Effect.provide(snapshotPublicationLayer(source)),
-              Effect.flip
+          const runtime = yield* createTestPublication(source);
+          yield* Effect.promise(() =>
+            runtime.query((ctx) =>
+              runConvexProgram(
+                Effect.gen(function* () {
+                  expect(
+                    yield* resolvePublicRoute(
+                      fixture.projection.appLocale,
+                      fixture.projection.publicPath
+                    ).pipe(Effect.flip, Effect.orDie)
+                  ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+                }).pipe(Effect.provide(convexPublicationLayer(ctx)))
+              )
             )
-          ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+          );
         }
       })
   );

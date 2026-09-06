@@ -1,3 +1,5 @@
+import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
+
 // @vitest-environment node
 
 // Node tests isolate Next navigation imports while real semantic renderers execute.
@@ -9,19 +11,28 @@ vi.mock("@repo/internationalization/src/navigation", () => ({
   useRouter: vi.fn(),
 }));
 
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import { compile } from "@mdx-js/mdx";
-import { readSnapshotProtectedContent } from "@repo/backend/client/content/protected";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PROTECTED_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
-import { ContentSnapshotError } from "@repo/backend/content/snapshot/error";
-import { readFeaturedTryout } from "@repo/backend/content/tryout/featured";
+import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
+import { api, internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import type { TryoutBodyBatch } from "@repo/backend/convex/tryouts/runtime/body";
 import type { TryoutHistoryRequest } from "@repo/backend/convex/tryouts/runtime/history/spec";
+import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
@@ -36,10 +47,7 @@ import {
   loadTryoutQuestion,
 } from "@/components/tryout/content/signed";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
-import { rendererManifest } from "@/lib/content/renderer/manifest";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 
-const loadSnapshotMock = vi.hoisted(() => vi.fn());
 const runtimeKeysMock = vi.hoisted(() => vi.fn());
 const runtimeSiteMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -64,11 +72,8 @@ const attemptQuery = makeFunctionReference<
 
 vi.mock("convex/nextjs", () => ({ fetchQuery: queryMock }));
 vi.mock("@/lib/auth/server", () => ({ getToken: tokenMock }));
-vi.mock("@/lib/content/runtime/snapshot", () => ({
-  loadContentSnapshot: loadSnapshotMock,
-}));
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedContentBatchCache: cacheMock,
+  applyImmutableContentCache: cacheMock,
 }));
 vi.mock("@repo/next-config/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
@@ -87,7 +92,7 @@ vi.mock("@repo/backend/content/trust", async () => {
   return { contentKeyResolver: TEST_KEY_RESOLVER };
 });
 
-/** Selects a genuine public question from a verified build snapshot. */
+/** Selects a public question through the real active Convex catalog query. */
 const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
   compiledCode?: string
 ) {
@@ -95,11 +100,13 @@ const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
     compiledCode,
     makeLandingSource()
   );
-  const context = yield* createTestSnapshotContext(source.source);
-  const featured = yield* readFeaturedTryout("en").pipe(
-    Effect.provideContext(context)
+  const runtime = yield* createTestPublication(source.source);
+  const featured = yield* Effect.promise(() =>
+    runtime.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+      appLocale: "en",
+    })
   );
-  return { context, question: featured.question };
+  return { runtime, question: featured.question };
 });
 
 /** Routes the app transport into real session and retained membership queries. */
@@ -142,7 +149,6 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
 
 beforeEach(() => {
   vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
-  loadSnapshotMock.mockReset();
   cacheMock.mockReset();
   fetchMock.mockReset();
   queryMock.mockReset();
@@ -161,36 +167,6 @@ afterEach(() => {
 });
 
 describe("signed try-out execution", () => {
-  it.effect(
-    "renders a signed snapshot question without reading live credentials or site configuration",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* readFixture();
-        loadSnapshotMock.mockResolvedValue(fixture.context);
-        runtimeSiteMock.mockImplementation(() => {
-          throw new ContentRuntimeConfigurationError({
-            key: "CONTENT_RUNTIME_TOKEN",
-          });
-        });
-        const rendered = yield* loadTryoutQuestion(fixture.question);
-
-        expect(renderToStaticMarkup(rendered.content)).toBe(
-          "Technical question"
-        );
-        expect(rendered).toMatchObject({
-          contentHash: fixture.question.contentHash,
-          sourcePath: fixture.question.sourcePath,
-          sourceRevision: fixture.question.sourceRevision,
-        });
-        expect(runtimeKeysMock).not.toHaveBeenCalled();
-        expect(runtimeSiteMock).not.toHaveBeenCalled();
-        expect(fetchMock).not.toHaveBeenCalled();
-        expect(cacheMock).toHaveBeenCalledWith("question", [
-          fixture.question.artifactHash,
-        ]);
-      })
-  );
-
   it.effect(
     "renders complete original question and answer bodies after release compaction",
     () =>
@@ -240,10 +216,9 @@ describe("signed try-out execution", () => {
           sourceRevision: fixture.answer.sourceRevision,
         });
         expect(queryMock).toHaveBeenCalledOnce();
-        expect(loadSnapshotMock).not.toHaveBeenCalled();
         expect(runtimeKeysMock).not.toHaveBeenCalled();
         expect(fetchMock).not.toHaveBeenCalled();
-        expect(cacheMock).toHaveBeenCalledWith("question", [
+        expect(cacheMock).toHaveBeenCalledWith([
           fixture.question.artifactHash,
           fixture.answer.artifactHash,
         ]);
@@ -256,11 +231,22 @@ describe("signed try-out execution", () => {
       Effect.gen(function* () {
         const fixture = yield* readFixture();
         const request = yield* makeTryoutRuntimeRequest([fixture.question]);
-        const renderer = yield* rendererManifest;
-        const found = yield* readSnapshotProtectedContent(
-          request,
-          renderer
-        ).pipe(Effect.provideContext(fixture.context));
+        const row = yield* Effect.promise(() =>
+          fixture.runtime.query(
+            internal.contentRelease.runtime.protected.internal.read,
+            request
+          )
+        );
+        const found = yield* decodeProtectedRuntimeRow(
+          row,
+          yield* decodeProtectedContentRuntimeRequest(request)
+        ).pipe(
+          Effect.provideService(
+            ContentVerificationKeyResolver,
+            TEST_KEY_RESOLVER
+          )
+        );
+        assert.isNotNull(found);
         const response = new Response(JSON.stringify(found), {
           headers: {
             "content-type": "application/json",
@@ -270,7 +256,6 @@ describe("signed try-out execution", () => {
         });
         Object.defineProperty(response, "url", { value: endpoint });
         fetchMock.mockResolvedValueOnce(response);
-        loadSnapshotMock.mockResolvedValue(undefined);
         runtimeKeysMock.mockReturnValue({
           CONTENT_RUNTIME_TOKEN: "technical-test-token",
         });
@@ -281,9 +266,7 @@ describe("signed try-out execution", () => {
         );
         expect(fetchMock).toHaveBeenCalledOnce();
         expect(runtimeKeysMock).toHaveBeenCalledOnce();
-        expect(cacheMock).toHaveBeenCalledWith("question", [
-          fixture.question.artifactHash,
-        ]);
+        expect(cacheMock).toHaveBeenCalledWith([fixture.question.artifactHash]);
       })
   );
 
@@ -340,7 +323,6 @@ describe("signed try-out execution", () => {
           _tag: "ContentRuntimeVerificationError",
           cause: "Protected content batch is empty.",
         });
-        expect(loadSnapshotMock).not.toHaveBeenCalled();
         expect(queryMock).not.toHaveBeenCalled();
         expect(cacheMock).not.toHaveBeenCalled();
       })
@@ -351,7 +333,6 @@ describe("signed try-out execution", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* readFixture();
-        loadSnapshotMock.mockResolvedValue(undefined);
         expect(
           yield* loadTryoutQuestion(fixture.question).pipe(Effect.flip)
         ).toMatchObject({
@@ -361,26 +342,6 @@ describe("signed try-out execution", () => {
             key: "CONTENT_RUNTIME_TOKEN",
           },
         });
-        expect(fetchMock).not.toHaveBeenCalled();
-        expect(cacheMock).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect(
-    "preserves a snapshot read failure without trying the live transport",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* readFixture();
-        loadSnapshotMock.mockRejectedValue(
-          new ContentSnapshotError({ message: "Snapshot unavailable" })
-        );
-        expect(
-          yield* loadTryoutQuestion(fixture.question).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "ContentRuntimeVerificationError",
-          cause: { _tag: "ContentSnapshotError" },
-        });
-        expect(runtimeKeysMock).not.toHaveBeenCalled();
         expect(fetchMock).not.toHaveBeenCalled();
         expect(cacheMock).not.toHaveBeenCalled();
       })
@@ -431,7 +392,6 @@ describe("signed try-out execution", () => {
       });
       expect(queryMock).toHaveBeenCalledTimes(2);
       expect(cacheMock).toHaveBeenCalledOnce();
-      expect(loadSnapshotMock).not.toHaveBeenCalled();
     })
   );
 
@@ -477,7 +437,6 @@ describe("signed try-out execution", () => {
           ).pipe(Effect.flip)
         ).toMatchObject({ _tag: "ContentRuntimeVerificationError", cause });
         expect(cacheMock).not.toHaveBeenCalled();
-        expect(loadSnapshotMock).not.toHaveBeenCalled();
       })
   );
 });

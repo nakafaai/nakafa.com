@@ -94,7 +94,7 @@ vi.mock("@/lib/content/preview/config", () => ({
 }));
 
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedCatalogCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
 
 beforeEach(() => {

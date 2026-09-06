@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Effect } from "effect";
@@ -8,8 +9,7 @@ import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,
 } from "@/lib/utils/system";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
-import { createTestSnapshotQuery } from "@/test/runtime-query";
+import { createTestNativeQuery } from "@/test/runtime-query";
 
 const routeMocks = vi.hoisted(() => ({
   read: vi.fn(),
@@ -20,8 +20,8 @@ const cacheMocks = vi.hoisted(() => ({
 }));
 const mockGetTranslations = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: routeMocks.read,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: routeMocks.read,
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -71,8 +71,8 @@ describe("current content reference metadata", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        routeMocks.read.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        routeMocks.read.mockImplementation(createTestNativeQuery(context));
 
         expect(
           yield* getMetadataFromSlug("en", ["try-out", "indonesia"])
@@ -175,8 +175,41 @@ describe("current content reference metadata", () => {
       );
 
       expect(metadata).toMatchObject({ title: "Runtime title" });
-      expect(cacheMocks.tag).toHaveBeenCalledWith("content-runtime");
+      expect(cacheMocks.tag).toHaveBeenCalledExactlyOnceWith(
+        "content-scope:quran"
+      );
       expect(cacheMocks.life).toHaveBeenCalledWith("contentRuntime");
     })
   );
+
+  it.effect.each([
+    ["articles", "content-scope:article"],
+    ["subjects", "content-scope:material"],
+    ["try-out", "content-scope:tryout"],
+  ])("tags %s metadata with its current reference owner", ([namespace, tag]) =>
+    Effect.gen(function* () {
+      yield* Effect.promise(() =>
+        getCachedMetadataFromSlug("en", [namespace, "entry"])
+      );
+      expect(cacheMocks.tag).toHaveBeenCalledExactlyOnceWith(tag);
+    })
+  );
+
+  it.effect(
+    "keeps a translation-only route independent of content publication",
+    () =>
+      Effect.gen(function* () {
+        routeMocks.read.mockReturnValueOnce(Effect.succeed(null));
+        expect(
+          yield* Effect.promise(() =>
+            getCachedMetadataFromSlug("en", ["pricing"])
+          )
+        ).toEqual(translatedDefaults);
+        expect(cacheMocks.tag).not.toHaveBeenCalled();
+      })
+  );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));
