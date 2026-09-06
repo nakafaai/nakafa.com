@@ -180,41 +180,31 @@ export function LineEquation({
     }
 
     // Adjust line end points to account for the cone size to prevent overlap
-    if (cone && arrowSize > 0) {
-      if (
-        (cone.position === "start" || cone.position === "both") &&
-        basePoints.length >= 2
-      ) {
-        const startPoint = basePoints[0];
-        const nextPoint = basePoints[1];
-        const direction = new Vector3()
-          .subVectors(nextPoint, startPoint)
-          .normalize();
-        basePoints[0] = startPoint
-          .clone()
-          .add(direction.multiplyScalar(arrowSize)); // Move start point forward
-      }
+    if (!(cone && arrowSize > 0) || basePoints.length < 2) {
+      return basePoints;
+    }
 
-      if (
-        (cone.position === "end" || cone.position === "both") &&
-        basePoints.length >= 2
-      ) {
-        const endPoint = basePoints.at(-1);
-        const prevPoint = basePoints.at(-2);
-        // Ensure points exist
-        if (!(endPoint && prevPoint)) {
-          return basePoints; // Return unmodified points if check fails
-        }
+    if (cone.position === "start" || cone.position === "both") {
+      const startPoint = basePoints[0];
+      const nextPoint = basePoints[1];
+      const direction = new Vector3()
+        .subVectors(nextPoint, startPoint)
+        .normalize();
+      basePoints[0] = startPoint
+        .clone()
+        .add(direction.multiplyScalar(arrowSize));
+    }
 
-        const direction = new Vector3()
-          .subVectors(endPoint, prevPoint)
-          .normalize();
-        // Find the index of the last point to modify it directly
-        const lastIndex = basePoints.length - 1;
-        basePoints[lastIndex] = endPoint
-          .clone()
-          .sub(direction.multiplyScalar(arrowSize)); // Move end point backward
-      }
+    if (cone.position === "end" || cone.position === "both") {
+      const lastIndex = basePoints.length - 1;
+      const endPoint = basePoints[lastIndex];
+      const prevPoint = basePoints[lastIndex - 1];
+      const direction = new Vector3()
+        .subVectors(endPoint, prevPoint)
+        .normalize();
+      basePoints[lastIndex] = endPoint
+        .clone()
+        .sub(direction.multiplyScalar(arrowSize));
     }
     return basePoints;
   }, [vectorPoints, smooth, curvePoints, cone, arrowSize]);

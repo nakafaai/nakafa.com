@@ -1,6 +1,10 @@
 "use client";
 
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
+import {
+  type Ripple,
+  sampleRippleCells,
+} from "@repo/design-system/lib/block-art/ripple";
 import type { useAnimate } from "motion/react";
 import { useCallback, useEffect, useRef } from "react";
 
@@ -14,35 +18,10 @@ interface BlockArtRippleAnimationOptions {
   waveDuration: number;
 }
 
-interface Ripple {
-  startTime: number;
-  x: number;
-  y: number;
-}
-
 type BlockArtAnimate = ReturnType<typeof useAnimate<HTMLButtonElement>>[1];
 type BlockArtScope = ReturnType<typeof useAnimate<HTMLButtonElement>>[0];
 
 const MAX_CONCURRENT_RIPPLES = 3;
-const RIPPLE_RADIUS_MULTIPLIER = 1.5;
-const RIPPLE_WAVE_WIDTH = 2;
-
-function getWaveIntensity(
-  distance: number,
-  radius: number,
-  progress: number
-): number {
-  const waveHalfWidth = RIPPLE_WAVE_WIDTH / 2;
-  const distanceFromWave = Math.abs(distance - radius);
-
-  if (distanceFromWave > waveHalfWidth) {
-    return 0;
-  }
-
-  const normalizedDistance = distanceFromWave / waveHalfWidth;
-  return (1 - normalizedDistance ** 2) * (1 - progress);
-}
-
 /** Runs and restores the animation frames for concurrent block-art ripples. */
 export function useBlockArtRippleAnimation({
   animate,
@@ -141,35 +120,18 @@ export function useBlockArtRippleAnimation({
     const affectedCells = new Map<number, number>();
 
     for (const ripple of limitedRipples) {
-      const elapsed = currentTime - ripple.startTime;
-      const progress = elapsed / waveDuration;
-      const radius =
-        progress * Math.max(columnCount, rowCount) * RIPPLE_RADIUS_MULTIPLIER;
-      const searchRadius = radius + RIPPLE_WAVE_WIDTH;
-      const minRow = Math.max(0, Math.floor(ripple.y - searchRadius));
-      const maxRow = Math.min(rowCount - 1, Math.ceil(ripple.y + searchRadius));
-      const minCol = Math.max(0, Math.floor(ripple.x - searchRadius));
-      const maxCol = Math.min(
-        columnCount - 1,
-        Math.ceil(ripple.x + searchRadius)
-      );
-
-      for (let row = minRow; row <= maxRow; row += 1) {
-        for (let col = minCol; col <= maxCol; col += 1) {
-          const distance = Math.sqrt(
-            (col - ripple.x) ** 2 + (row - ripple.y) ** 2
-          );
-          const intensity = getWaveIntensity(distance, radius, progress);
-          if (intensity <= 0) {
-            continue;
-          }
-
-          const cellIndex = row * columnCount + col;
-          const existingIntensity = affectedCells.get(cellIndex) ?? 0;
-          if (intensity > existingIntensity) {
-            affectedCells.set(cellIndex, intensity);
-          }
-        }
+      const cells = sampleRippleCells({
+        ripple,
+        columnCount,
+        rowCount,
+        currentTime,
+        waveDuration,
+      });
+      for (const [cellIndex, intensity] of cells) {
+        affectedCells.set(
+          cellIndex,
+          Math.max(affectedCells.get(cellIndex) ?? 0, intensity)
+        );
       }
     }
 

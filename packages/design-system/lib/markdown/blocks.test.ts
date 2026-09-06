@@ -23,6 +23,18 @@ afterEach(() => {
 });
 
 describe("markdown blocks", () => {
+  it("keeps empty input empty without inventing or dropping text blocks", () => {
+    expect(parseMarkdownIntoBlocks("")).toEqual([]);
+    for (const markdown of [
+      "$$",
+      "tail $$",
+      "$$\nx + 1\n$$",
+      "$$ closed $$\n\n$$",
+    ]) {
+      expect(parseMarkdownIntoBlocks(markdown).join("")).toBe(markdown);
+    }
+  });
+
   it("preserves marked block boundaries", () => {
     expect(parseMarkdownIntoBlocks("First\n\nSecond\n")).toEqual([
       "First",
@@ -57,24 +69,12 @@ describe("markdown blocks", () => {
     ]);
   });
 
-  it("ignores an empty preceding lexer token before a standalone delimiter", () => {
-    mockLexerBlocks("", "$$");
-
-    expect(parseMarkdownIntoBlocks("ignored by mocked lexer")).toEqual([""]);
-  });
-
   it("rejoins a continuation that owns one closing delimiter", () => {
     mockLexerBlocks("$$\nx +", " 1 $$");
 
     expect(parseMarkdownIntoBlocks("ignored by mocked lexer")).toEqual([
       "$$\nx + 1 $$",
     ]);
-  });
-
-  it("ignores an empty preceding lexer token before a continuation", () => {
-    mockLexerBlocks("", "tail $$");
-
-    expect(parseMarkdownIntoBlocks("ignored by mocked lexer")).toEqual([""]);
   });
 
   it("keeps a new math block separate from an unclosed block", () => {

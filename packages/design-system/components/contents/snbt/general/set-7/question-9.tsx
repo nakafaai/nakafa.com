@@ -3,10 +3,12 @@
 import {
   ActiveDot,
   Dot,
+  Line,
+} from "@repo/design-system/components/evilcharts/charts/line/series";
+import {
   EvilLineChart,
   Grid,
   Legend,
-  Line,
   Tooltip,
   XAxis,
   YAxis,

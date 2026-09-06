@@ -153,22 +153,34 @@ function TooltipItem({
                 {itemConfig?.label ?? item.name}
               </span>
             </div>
-            {item.value == null ? null : (
-              <span
-                className={cn(
-                  "font-medium font-mono tabular-nums",
-                  isDeemphasized ? "text-muted-foreground" : "text-foreground"
-                )}
-              >
-                {typeof item.value === "number"
-                  ? item.value.toLocaleString()
-                  : String(item.value)}
-              </span>
-            )}
+            <TooltipValue isDeemphasized={isDeemphasized} value={item.value} />
           </div>
         </>
       )}
     </div>
+  );
+}
+
+/** Formats numeric values while preserving text and hiding absent values. */
+function TooltipValue({
+  isDeemphasized,
+  value,
+}: {
+  isDeemphasized: boolean;
+  value: TooltipPayloadItem["value"];
+}) {
+  if (value == null) {
+    return null;
+  }
+  return (
+    <span
+      className={cn(
+        "font-medium font-mono tabular-nums",
+        isDeemphasized ? "text-muted-foreground" : "text-foreground"
+      )}
+    >
+      {typeof value === "number" ? value.toLocaleString() : String(value)}
+    </span>
   );
 }
 

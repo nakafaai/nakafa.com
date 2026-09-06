@@ -4,8 +4,8 @@ import {
   type GlbbScenario,
   getFinalVelocity,
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
+import { Area } from "@repo/design-system/components/evilcharts/charts/area/series";
 import {
-  Area,
   EvilAreaChart,
   Grid,
   XAxis,

@@ -1,71 +1,17 @@
 "use client";
 import { captureException } from "@repo/analytics/posthog/browser";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import {
+  type MermaidRenderConfig,
+  renderMermaid,
+} from "@repo/design-system/lib/mermaid/render";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "@repo/design-system/lib/utils";
-import { Effect, Fiber, Schema } from "effect";
-import type { MermaidConfig } from "mermaid";
+import { createStableId } from "@repo/utilities/helper";
+import { Effect, Fiber } from "effect";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
 
-const HASH_SEED = 0;
-const SHIFT_5 = 5;
-const MermaidOperationSchema = Schema.Literals(["initialize", "render"]);
-/** Expected client failure while loading, configuring, or rendering Mermaid. */
-class MermaidRenderError extends Schema.TaggedError<MermaidRenderError>()(
-  "MermaidRenderError",
-  {
-    cause: Schema.Unknown,
-    operation: MermaidOperationSchema,
-  }
-) {}
-/**
- * Loads Mermaid on the client and applies the site defaults before rendering.
- */
-const initializeMermaid = Effect.fn("designSystem.mermaid.initialize")(
-  function* (customConfig?: MermaidConfig) {
-    const defaultConfig = {
-      startOnLoad: false,
-      theme: "default",
-      securityLevel: "strict",
-      fontFamily: "inherit",
-      suppressErrorRendering: true,
-    } satisfies MermaidConfig;
-    const config = { ...defaultConfig, ...customConfig };
-    const mermaidModule = yield* Effect.tryPromise({
-      try: () => import("mermaid"),
-      catch: (cause) =>
-        new MermaidRenderError({ cause, operation: "initialize" }),
-    });
-    const mermaid = mermaidModule.default;
-    yield* Effect.try({
-      try: () => mermaid.initialize(config),
-      catch: (cause) =>
-        new MermaidRenderError({ cause, operation: "initialize" }),
-    });
-    return mermaid;
-  }
-);
-/** Renders one Mermaid chart through the typed client boundary. */
-const renderMermaid = Effect.fn("designSystem.mermaid.render")(function* (
-  renderId: string,
-  chart: string,
-  config: MermaidConfig
-) {
-  const mermaid = yield* initializeMermaid(config);
-  return yield* Effect.tryPromise({
-    try: () => mermaid.render(renderId, chart),
-    catch: (cause) => new MermaidRenderError({ cause, operation: "render" }),
-  });
-});
-/** Creates a stable Mermaid DOM id for one component instance and chart body. */
-function getMermaidRenderId(componentId: string, chart: string) {
-  const chartHash = chart.split("").reduce((acc, char) => {
-    // biome-ignore lint/suspicious/noBitwiseOperators: Mermaid render ids only need a compact deterministic hash.
-    return ((acc << SHIFT_5) - acc + char.charCodeAt(0)) | HASH_SEED;
-  }, HASH_SEED);
-  return `mermaid-${componentId.replaceAll(":", "")}-${Math.abs(chartHash).toString(36)}`;
-}
 /** Converts unknown Mermaid renderer failures into a user-visible message. */
 function getMermaidRenderErrorMessage(error: unknown) {
   if (error instanceof Error) {
@@ -76,7 +22,7 @@ function getMermaidRenderErrorMessage(error: unknown) {
 interface MermaidProps {
   chart: string;
   className?: string;
-  config?: MermaidConfig;
+  config?: MermaidRenderConfig;
   label: string;
 }
 /**
@@ -85,7 +31,10 @@ interface MermaidProps {
 export function Mermaid({ chart, className, config, label }: MermaidProps) {
   const componentId = useId();
   const { resolvedTheme } = useTheme();
-  const renderId = getMermaidRenderId(componentId, chart);
+  const renderId = createStableId(
+    `mermaid-${componentId.replaceAll(":", "")}`,
+    chart
+  );
   const theme =
     config?.theme ??
     (getThemeAppearance(resolvedTheme) === "dark" ? "dark" : "default");
@@ -96,9 +45,14 @@ export function Mermaid({ chart, className, config, label }: MermaidProps) {
     svg: "",
   });
   const lastValidSvg = useRef("");
+  const renderSequence = useRef(0);
   useEffect(() => {
+    // Mermaid removes existing elements with its render ID before drawing.
+    // Each attempt needs a fresh ID so it cannot remove the cached live SVG.
+    renderSequence.current += 1;
+    const attemptId = `${renderId}-${renderSequence.current}`;
     const renderFiber = Effect.runFork(
-      renderMermaid(renderId, chart, { ...config, theme }).pipe(
+      renderMermaid(attemptId, chart, { ...config, theme }).pipe(
         Effect.matchEffect({
           onFailure: (error) =>
             Effect.sync(() => {

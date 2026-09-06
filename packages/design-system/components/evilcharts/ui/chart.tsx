@@ -6,6 +6,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import { cn } from "@repo/design-system/lib/utils";
+import { domAnimation, LazyMotion } from "motion/react";
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
@@ -64,28 +65,30 @@ function ChartContainer({
   validateChartConfigColors(config);
 
   return (
-    <ChartContext.Provider value={contextValue}>
-      <div
-        className={cn(
-          "min-h-0 w-full flex-1",
-          "relative flex flex-col justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
-          !footer && "aspect-video",
-          className
-        )}
-        data-chart={chartId}
-        data-slot="chart"
-        {...props}
-      >
-        <ChartStyle config={config} id={chartId} />
-        <RechartsPrimitive.ResponsiveContainer
-          className="min-h-0 w-full flex-1"
-          initialDimension={initialDimension}
+    <LazyMotion features={domAnimation} strict>
+      <ChartContext.Provider value={contextValue}>
+        <div
+          className={cn(
+            "min-h-0 w-full flex-1",
+            "relative flex flex-col justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
+            !footer && "aspect-video",
+            className
+          )}
+          data-chart={chartId}
+          data-slot="chart"
+          {...props}
         >
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
-        {footer}
-      </div>
-    </ChartContext.Provider>
+          <ChartStyle config={config} id={chartId} />
+          <RechartsPrimitive.ResponsiveContainer
+            className="min-h-0 w-full flex-1"
+            initialDimension={initialDimension}
+          >
+            {children}
+          </RechartsPrimitive.ResponsiveContainer>
+          {footer}
+        </div>
+      </ChartContext.Provider>
+    </LazyMotion>
   );
 }
 

@@ -17,48 +17,19 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   const mergedBlocks: string[] = [];
 
   for (const currentBlock of blocks) {
-    // Check if this is a standalone $$ that might be a closing delimiter
-    if (currentBlock.trim() === "$$" && mergedBlocks.length > 0) {
-      const previousBlock = mergedBlocks.at(-1);
-
-      if (!previousBlock) {
-        continue;
-      }
-
-      // Check if the previous block starts with $$ but doesn't end with $$
-      const prevStartsWith$$ = previousBlock.trimStart().startsWith("$$");
-      const prevDollarCount = countDisplayMathDelimiters(previousBlock);
-
-      // If previous block has odd number of $$ and starts with $$, merge them
-      if (prevStartsWith$$ && prevDollarCount % 2 === 1) {
-        mergedBlocks[mergedBlocks.length - 1] = previousBlock + currentBlock;
-        continue;
-      }
-    }
-
-    // Check if current block ends with $$ and previous block started with $$ but didn't close
-    if (mergedBlocks.length > 0 && currentBlock.trimEnd().endsWith("$$")) {
-      const previousBlock = mergedBlocks.at(-1);
-
-      if (!previousBlock) {
-        continue;
-      }
-
-      const prevStartsWith$$ = previousBlock.trimStart().startsWith("$$");
-      const prevDollarCount = countDisplayMathDelimiters(previousBlock);
-      const currDollarCount = countDisplayMathDelimiters(currentBlock);
-
-      // If previous block has unclosed math (odd $$) and current block ends with $$
-      // AND current block doesn't start with $$, it's likely a continuation
-      if (
-        prevStartsWith$$ &&
-        prevDollarCount % 2 === 1 &&
+    const previousBlock = mergedBlocks.at(-1);
+    const hasUnclosedMath =
+      previousBlock?.trimStart().startsWith("$$") &&
+      countDisplayMathDelimiters(previousBlock) % 2 === 1;
+    const closesMath =
+      currentBlock.trim() === "$$" ||
+      (currentBlock.trimEnd().endsWith("$$") &&
         !currentBlock.trimStart().startsWith("$$") &&
-        currDollarCount === 1
-      ) {
-        mergedBlocks[mergedBlocks.length - 1] = previousBlock + currentBlock;
-        continue;
-      }
+        countDisplayMathDelimiters(currentBlock) === 1);
+
+    if (hasUnclosedMath && closesMath) {
+      mergedBlocks[mergedBlocks.length - 1] = previousBlock + currentBlock;
+      continue;
     }
 
     mergedBlocks.push(currentBlock);

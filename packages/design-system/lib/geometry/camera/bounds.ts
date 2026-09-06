@@ -34,7 +34,7 @@ export type CameraSubjectBounds = Box3 | false | CameraMotionBounds;
  * the same fit without duplicating or flattening its rendered content.
  */
 export const measureCameraBounds = Effect.fn("camera.measureBounds")(
-  ({
+  function* ({
     labels,
     position,
     root,
@@ -46,79 +46,54 @@ export const measureCameraBounds = Effect.fn("camera.measureBounds")(
     root: Object3D;
     subjects: ReadonlyMap<Object3D, CameraSubjectBounds>;
     target: Vector3;
-  }) =>
-    Effect.sync(() => {
-      const basis = new Matrix4().lookAt(
-        position,
-        target,
-        new Vector3(0, 1, 0)
-      );
-      const right = new Vector3().setFromMatrixColumn(basis, 0);
-      const up = new Vector3().setFromMatrixColumn(basis, 1);
-      root.updateWorldMatrix(true, true);
+  }) {
+    const basis = new Matrix4().lookAt(position, target, new Vector3(0, 1, 0));
+    const right = new Vector3().setFromMatrixColumn(basis, 0);
+    const up = new Vector3().setFromMatrixColumn(basis, 1);
+    yield* Effect.sync(() => root.updateWorldMatrix(true, true));
 
-      function visit(object: Object3D, parent: Matrix4): Box3 {
-        const bounds = new Box3();
-        const subject = subjects.get(object);
-        if (!object.visible || subject === false) {
-          return bounds;
-        }
-
-        const matrix = parent.clone().multiply(object.matrix);
-        if (subject instanceof Box3) {
-          return subject.clone().applyMatrix4(matrix);
-        }
-        if (subject) {
-          for (const child of object.children) {
-            bounds.union(motionEnvelope(visit(child, new Matrix4()), subject));
-          }
-          return bounds.applyMatrix4(parent);
-        }
-
-        if (object instanceof InstancedMesh) {
-          object.boundingBox ??= new Box3();
-          object.computeBoundingBox();
-          bounds.union(object.boundingBox.clone().applyMatrix4(matrix));
-        } else if (
-          object instanceof Mesh ||
-          object instanceof Line ||
-          object instanceof Points
-        ) {
-          object.geometry.boundingBox ??= new Box3();
-          object.geometry.computeBoundingBox();
-          bounds.union(
-            object.geometry.boundingBox.clone().applyMatrix4(matrix)
-          );
-        }
-
-        const label = labels.get(object);
-        if (label) {
-          const origin = new Vector3().setFromMatrixPosition(matrix);
-          const cosine = Math.cos(label.rotation);
-          const sine = Math.sin(label.rotation);
-          for (const x of [label.anchorX, label.anchorX + 1]) {
-            for (const y of [label.anchorY, label.anchorY + 1]) {
-              const horizontal = x * label.width;
-              const vertical = y * label.height;
-              bounds.expandByPoint(
-                origin
-                  .clone()
-                  .addScaledVector(right, horizontal * cosine - vertical * sine)
-                  .addScaledVector(up, -(horizontal * sine + vertical * cosine))
-              );
-            }
-          }
-        }
-
-        for (const child of object.children) {
-          bounds.union(visit(child, matrix));
-        }
+    const visit = Effect.fn("camera.measureSubjectBounds")(function* (
+      object: Object3D,
+      parent: Matrix4
+    ): Effect.fn.Return<Box3> {
+      const bounds = new Box3();
+      const subject = subjects.get(object);
+      if (!object.visible || subject === false) {
         return bounds;
       }
 
-      const bounds = visit(root, root.parent?.matrixWorld ?? new Matrix4());
-      return bounds.isEmpty() ? Option.none() : Option.some(bounds);
-    })
+      const matrix = parent.clone().multiply(object.matrix);
+      if (subject instanceof Box3) {
+        return subject.clone().applyMatrix4(matrix);
+      }
+      if (subject) {
+        for (const child of object.children) {
+          bounds.union(
+            motionEnvelope(yield* visit(child, new Matrix4()), subject)
+          );
+        }
+        return bounds.applyMatrix4(parent);
+      }
+
+      bounds.union(yield* measureGeometryBounds(object, matrix));
+
+      const label = labels.get(object);
+      if (label) {
+        bounds.union(labelBounds(label, matrix, right, up));
+      }
+
+      for (const child of object.children) {
+        bounds.union(yield* visit(child, matrix));
+      }
+      return bounds;
+    });
+
+    const bounds = yield* visit(
+      root,
+      root.parent?.matrixWorld ?? new Matrix4()
+    );
+    return bounds.isEmpty() ? Option.none() : Option.some(bounds);
+  }
 );
 
 function motionEnvelope(
@@ -161,3 +136,53 @@ function motionEnvelope(
   }
   return envelope;
 }
+
+/** Resolves a camera-facing HTML rectangle in the geometry's world space. */
+function labelBounds(
+  label: CameraLabelBounds,
+  matrix: Matrix4,
+  right: Vector3,
+  up: Vector3
+) {
+  const bounds = new Box3();
+  const origin = new Vector3().setFromMatrixPosition(matrix);
+  const cosine = Math.cos(label.rotation);
+  const sine = Math.sin(label.rotation);
+  for (const x of [label.anchorX, label.anchorX + 1]) {
+    for (const y of [label.anchorY, label.anchorY + 1]) {
+      const horizontal = x * label.width;
+      const vertical = y * label.height;
+      bounds.expandByPoint(
+        origin
+          .clone()
+          .addScaledVector(right, horizontal * cosine - vertical * sine)
+          .addScaledVector(up, -(horizontal * sine + vertical * cosine))
+      );
+    }
+  }
+  return bounds;
+}
+
+/** Samples the renderer-owned buffers, including the current instance matrices. */
+const measureGeometryBounds = Effect.fn("camera.measureGeometryBounds")(
+  (object: Object3D, matrix: Matrix4) =>
+    Effect.sync(() => {
+      if (object instanceof InstancedMesh) {
+        object.boundingBox ??= new Box3();
+        object.computeBoundingBox();
+        return object.boundingBox.clone().applyMatrix4(matrix);
+      }
+      if (
+        !(
+          object instanceof Mesh ||
+          object instanceof Line ||
+          object instanceof Points
+        )
+      ) {
+        return new Box3();
+      }
+      object.geometry.boundingBox ??= new Box3();
+      object.geometry.computeBoundingBox();
+      return object.geometry.boundingBox.clone().applyMatrix4(matrix);
+    })
+);

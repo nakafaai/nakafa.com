@@ -1,10 +1,10 @@
 "use client";
 
+import { Line } from "@repo/design-system/components/evilcharts/charts/line/series";
 import {
   EvilLineChart,
   Grid,
   Legend,
-  Line,
   XAxis,
   YAxis,
 } from "@repo/design-system/components/evilcharts/charts/line-chart";
