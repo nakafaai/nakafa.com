@@ -243,7 +243,7 @@ describe("shared application build lifecycle", () => {
         const { root, runtime } = yield* fixture;
         mocks.read.mockReturnValue(Effect.succeed(runtime));
         yield* buildApplication(root, [], {});
-        expect(mocks.compile).toHaveBeenCalledTimes(3);
+        expect(mocks.compile).toHaveBeenCalledTimes(2);
         expect(mocks.compile).toHaveBeenLastCalledWith(
           root,
           [
@@ -312,7 +312,7 @@ describe("shared application build lifecycle", () => {
             source === "download" ? 0 : 1
           );
           expect(mocks.generationRead).toHaveBeenCalledTimes(3);
-          expect(mocks.compile).toHaveBeenCalledTimes(3);
+          expect(mocks.compile).toHaveBeenCalledTimes(2);
           expect(yield* fs.readFileString(output)).toBe(
             `CONTENT_RUNTIME_SELECTION_HASH=${runtime.runtimeSelectionHash}\n`
           );
@@ -345,7 +345,6 @@ describe("shared application build lifecycle", () => {
             CONTENT_RUNTIME_SCHEMA_HASH: runtime.runtimeSchemaFingerprint,
             NEXT_PUBLIC_CONVEX_URL: host.NEXT_PUBLIC_CONVEX_URL,
             NEXT_PUBLIC_CONVEX_SITE_URL: host.VITE_CONVEX_SITE_URL,
-            TURBO_CONCURRENCY: "2",
           })
         );
         expect(mocks.initialize).not.toHaveBeenCalled();

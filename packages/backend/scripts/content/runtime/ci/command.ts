@@ -130,50 +130,31 @@ export const runRuntimeCommand = Effect.fn("contentRuntime.runCommand")(
   }
 );
 
-export const runConvexData = Effect.fn("contentRuntime.readProductionTable")(
-  function* (options: {
-    readonly deployKey: string;
-    readonly limit: number;
-    readonly logPath: string;
-    readonly outputPath: string;
-    readonly table: string;
-  }) {
-    const fileSystem = yield* FileSystem.FileSystem;
-    const outputPaths = new Set([options.logPath, options.outputPath]);
+export const readProductionTable = Effect.fn(
+  "contentRuntime.readProductionTable"
+)(function* (options: {
+  readonly deployKey: string;
+  readonly limit: number;
+  readonly table: string;
+}) {
+  const client = new ConvexHttpClient(
+    `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`,
+    { logger: false }
+  );
+  yield* setConvexAdminAuth(client, options.deployKey);
 
-    for (const path of outputPaths) {
-      yield* fileSystem.writeFileString(path, "", { mode: 0o600 });
-      yield* fileSystem.chmod(path, 0o600);
-    }
-
-    const client = new ConvexHttpClient(
-      `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`,
-      { logger: false }
-    );
-    yield* setConvexAdminAuth(client, options.deployKey);
-
-    const rows = yield* collectConvexTableRows({
-      limit: options.limit,
-      readPage: ({ cursor, numItems }) =>
-        client.query(CONVEX_TABLE_DATA_QUERY, {
-          order: "desc",
-          paginationOpts: { cursor, numItems },
-          table: options.table,
-        }),
-      sensitiveValues: [options.deployKey],
-      table: options.table,
-    }).pipe(Effect.ensuring(Effect.sync(() => client.clearAuth())));
-
-    yield* fileSystem.writeFileString(
-      options.outputPath,
-      JSON.stringify(rows),
-      {
-        mode: 0o600,
-      }
-    );
-    yield* fileSystem.chmod(options.outputPath, 0o600);
-  }
-);
+  return yield* collectConvexTableRows({
+    limit: options.limit,
+    readPage: ({ cursor, numItems }) =>
+      client.query(CONVEX_TABLE_DATA_QUERY, {
+        order: "desc",
+        paginationOpts: { cursor, numItems },
+        table: options.table,
+      }),
+    sensitiveValues: [options.deployKey],
+    table: options.table,
+  }).pipe(Effect.ensuring(Effect.sync(() => client.clearAuth())));
+});
 
 export const runConvexImport = Effect.fn("contentRuntime.importLocalTable")(
   function* (options: {

@@ -166,22 +166,6 @@ const nextConfig = {
   ...config,
   cacheComponents: true,
   partialPrefetching: true,
-  // The Vercel command completes an isolated app typecheck before `next build`.
-  // Repeating static analysis after Turbopack compilation retained enough
-  // memory to exceed Vercel's build limit on every cold-cache production build.
-  // Local and CI builds keep Next's built-in typecheck as an independent gate.
-  // https://nextjs.org/docs/app/guides/memory-usage#disable-static-analysis
-  typescript: {
-    ignoreBuildErrors: runtime.vercel === "1",
-  },
-  // Cache Components enables prerender source maps by default. The anonymous
-  // CI build does not publish those artifacts, and retaining them exhausted
-  // the static worker's isolated 4 GiB heap with two pages in flight.
-  // Production keeps source maps enabled. Docs:
-  // https://nextjs.org/docs/app/guides/memory-usage#disable-source-maps
-  ...(runtime.agent === "anonymous"
-    ? { enablePrerenderSourceMaps: false }
-    : {}),
   env: {
     NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: `${isAksaraPreviewChild}`,
   },
@@ -217,13 +201,6 @@ const nextConfig = {
   headers: createAppHeaders,
   experimental: {
     ...config.experimental,
-    // Persistent caching also retains Turbopack's dependency graph. Cold Linux
-    // builds exceed the bounded host memory while emitting this app's assets.
-    // https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopackFileSystemCache
-    turbopackFileSystemCacheForBuild: false,
-    // Run Babel and PostCSS in threads to reduce build process overhead.
-    // https://github.com/vercel/next.js/blob/v16.3.4/packages/next/src/server/config-shared.ts
-    turbopackPluginRuntimeStrategy: "workerThreads",
     ...(configEnv.NEXT_EXPOSE_TESTING_API === "true"
       ? { exposeTestingApiInProductionBuild: true }
       : {}),
@@ -231,20 +208,6 @@ const nextConfig = {
     instantInsights: {
       validationLevel: "warning",
     },
-    // Anonymous Convex and Vercel builds share bounded host memory. One static
-    // worker avoids duplicating page modules and caches across worker heaps.
-    // Export pages sequentially within that worker.
-    // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
-    ...(runtime.agent === "anonymous" || runtime.vercel === "1"
-      ? { cpus: 1, staticGenerationMaxConcurrency: 1 }
-      : {}),
-    // The anonymous runner also shares one local backend. Retry one complete
-    // page after an intermittent response. Repeated failures still fail.
-    ...(runtime.agent === "anonymous"
-      ? {
-          staticGenerationRetryCount: 2,
-        }
-      : {}),
   },
 } satisfies NextConfig;
 export default withNextIntl(nextConfig);

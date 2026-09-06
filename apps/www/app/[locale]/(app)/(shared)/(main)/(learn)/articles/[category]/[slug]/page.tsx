@@ -4,7 +4,7 @@ import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/arti
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -18,12 +18,10 @@ import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { ContentViewTracker } from "@/components/tracking/tracker";
-import { getPublishedCategories } from "@/lib/content/article/catalog";
-import { getPublishedCategoryPage } from "@/lib/content/article/category";
+import { readPublishedArticlePrerenderRoute } from "@/lib/content/article/prerender";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { selectLearningStaticParams } from "@/lib/routing/prerender";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
@@ -113,7 +111,7 @@ export async function generateMetadata({
   };
 }
 
-/** Prebuilds a bounded article page set from the signed catalog. */
+/** Supplies one real article per locale for Cache Components. */
 export async function generateStaticParams({
   params,
 }: {
@@ -126,39 +124,10 @@ export async function generateStaticParams({
     );
     return [preview];
   }
-  const categories = await getPublishedCategories({
-    cursor: null,
-    expectedManifestHash: null,
-    expectedReleaseId: null,
-    locale,
-  });
-  const pages = await Promise.all(
-    categories.categories.map((category) =>
-      getPublishedCategoryPage(
-        {
-          ...category,
-          activeManifestHash: categories.activeManifestHash,
-          activeReleaseId: categories.activeReleaseId,
-          appLocale: locale,
-        },
-        {
-          cursor: null,
-          expectedManifestHash: null,
-          expectedReleaseId: null,
-        }
-      )
-    )
+  const route = await Effect.runPromise(
+    readPublishedArticlePrerenderRoute(locale)
   );
-  const articles = pages.flatMap((page) =>
-    page.articles.map((article) => ({
-      category: article.route.category,
-      slug: article.route.slug,
-    }))
-  );
-  return selectLearningStaticParams(articles, {
-    category: "build-placeholder",
-    slug: "build-placeholder",
-  });
+  return [route];
 }
 
 /** Renders an article after Convex confirms the published route exists. */

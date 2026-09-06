@@ -4,7 +4,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import {
-  runConvexData,
+  readProductionTable,
   runConvexImport,
   runRuntimeCommand,
   setConvexAdminAuth,
@@ -315,7 +315,7 @@ describe("content runtime command diagnostics", () => {
   );
 
   it.live(
-    "reads a bounded authenticated production table into a private file",
+    "returns validated production rows without a filesystem dependency",
     () =>
       Effect.gen(function* () {
         const deployKey = "prod:deployment:data:view|private-key";
@@ -344,32 +344,13 @@ describe("content runtime command diagnostics", () => {
           })
         );
 
-        const result = yield* Effect.scoped(
-          Effect.gen(function* () {
-            const fileSystem = yield* FileSystem.FileSystem;
-            const root = yield* fileSystem.makeTempDirectoryScoped({
-              directory: tmpdir(),
-              prefix: "content-runtime-data-test-",
-            });
-            const logPath = `${root}/runtime.log`;
-            const outputPath = `${root}/contentKeys.json`;
+        const result = yield* readProductionTable({
+          deployKey,
+          limit: 2,
+          table: "contentKeys",
+        });
 
-            yield* runConvexData({
-              deployKey,
-              limit: 2,
-              logPath,
-              outputPath,
-              table: "contentKeys",
-            });
-
-            return {
-              log: yield* fileSystem.readFileString(logPath),
-              output: yield* fileSystem.readFileString(outputPath),
-            };
-          })
-        ).pipe(Effect.provide(NodeServices.layer));
-
-        expect(result).toEqual({ log: "", output: '[{"slug":"safe"}]' });
+        expect(result).toEqual([{ slug: "safe" }]);
         expect(requests).toHaveLength(1);
         expect(requests[0]?.input).toBe(
           `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud/api/query`
@@ -385,6 +366,30 @@ describe("content runtime command diagnostics", () => {
         );
         expect(clearAuth).toHaveBeenCalledTimes(2);
       })
+  );
+
+  it.effect("clears authentication when production rows fail validation", () =>
+    Effect.gen(function* () {
+      const clearAuth = vi.spyOn(ConvexHttpClient.prototype, "clearAuth");
+      vi.spyOn(ConvexHttpClient.prototype, "query").mockResolvedValueOnce({
+        continueCursor: "done",
+        isDone: true,
+        page: [null],
+      });
+
+      expect(
+        yield* readProductionTable({
+          deployKey: "production-key",
+          limit: 2,
+          table: "contentKeys",
+        }).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "ContentSnapshotError",
+        message:
+          "Production read for contentKeys returned invalid pagination data.",
+      });
+      expect(clearAuth).toHaveBeenCalledTimes(2);
+    })
   );
 
   it.live("invokes local imports with the exact replacement contract", () =>

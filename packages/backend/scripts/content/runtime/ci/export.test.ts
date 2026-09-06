@@ -28,7 +28,7 @@ vi.mock("@repo/backend/scripts/content/runtime/ci/archive", () => ({
 }));
 
 vi.mock("@repo/backend/scripts/content/runtime/ci/command", () => ({
-  runConvexData: mocks.runData,
+  readProductionTable: mocks.runData,
 }));
 
 vi.mock(
@@ -55,7 +55,6 @@ const events: string[] = [];
 const rowsByTable = new Map<string, readonly Record<string, unknown>[]>();
 
 interface DataOptions {
-  readonly outputPath: string;
   readonly table: string;
 }
 
@@ -98,13 +97,9 @@ beforeEach(() => {
     })
   );
   mocks.runData.mockImplementation((options: DataOptions) =>
-    Effect.gen(function* () {
+    Effect.sync(() => {
       events.push(`data:${options.table}`);
-      const fileSystem = yield* FileSystem.FileSystem;
-      yield* fileSystem.writeFileString(
-        options.outputPath,
-        JSON.stringify(rowsByTable.get(options.table) ?? [])
-      );
+      return rowsByTable.get(options.table) ?? [];
     })
   );
   mocks.createArchive.mockImplementation((options: ArchiveOptions) =>

@@ -5,7 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -21,7 +21,6 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import {
   ARTICLE_SOURCE_ROOT,
-  getPublishedCategories,
   type PublishedArticleSummary,
 } from "@/lib/content/article/catalog";
 import {
@@ -29,6 +28,7 @@ import {
   getPublishedCategoryAlternates,
   getPublishedCategoryPage,
 } from "@/lib/content/article/category";
+import { readPublishedArticlePrerenderRoute } from "@/lib/content/article/prerender";
 import {
   getArticleNextHref,
   readArticlePageCursor,
@@ -37,7 +37,6 @@ import {
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { selectLearningStaticParams } from "@/lib/routing/prerender";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
@@ -104,7 +103,7 @@ export async function generateMetadata({
   };
 }
 
-/** Generates a bounded category set from the signed article catalog. */
+/** Supplies one real article category per locale for Cache Components. */
 export async function generateStaticParams({
   params,
 }: {
@@ -117,16 +116,10 @@ export async function generateStaticParams({
     );
     return [{ category: preview.category }];
   }
-  const catalog = await getPublishedCategories({
-    cursor: null,
-    expectedManifestHash: null,
-    expectedReleaseId: null,
-    locale,
-  });
-  return selectLearningStaticParams(
-    catalog.categories.map(({ route }) => ({ category: route })),
-    { category: "build-placeholder" }
+  const route = await Effect.runPromise(
+    readPublishedArticlePrerenderRoute(locale)
   );
+  return [{ category: route.category }];
 }
 
 /** Renders one category from the signed article catalog. */

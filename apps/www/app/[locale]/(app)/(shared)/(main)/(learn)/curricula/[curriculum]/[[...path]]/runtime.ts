@@ -12,18 +12,13 @@ import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";
-import {
-  getPublishedProgramCatalog,
-  getPublishedProgramRoutes,
-} from "@/lib/content/program/catalog";
+import { getPublishedProgramCatalog } from "@/lib/content/program/catalog";
 import { getPublishedProgramRoute } from "@/lib/content/program/route";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 type CurriculumParams =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">["params"];
-type CurriculumStaticParam = Omit<Awaited<CurriculumParams>, "locale">;
 
 /** Route shape consumed by the shared curriculum presentation. */
 export type CurriculumViewRoute = PublishedCurriculumRoute;
@@ -60,21 +55,6 @@ export interface CurriculumRouteModel {
 /** Checks whether one signed route owns a learner-renderable page. */
 export function isRenderableCurriculumView(route: CurriculumViewRoute) {
   return isRenderableCurriculumLevel(route.level) && route.sitemap;
-}
-
-/** Lists a bounded static-param subset from the signed route catalog. */
-export async function listRuntimeCurriculumStaticParams(rawLocale: string) {
-  const locale = getLocaleOrThrow(rawLocale);
-  const catalog = await getPublishedProgramRoutes(locale);
-  const params: CurriculumStaticParam[] = [];
-  for (const route of catalog.routes) {
-    if (!isRenderableCurriculumView(route)) {
-      continue;
-    }
-    const [, curriculum, ...path] = route.publicPath.split("/");
-    params.push(path.length > 0 ? { curriculum, path } : { curriculum });
-  }
-  return selectLearningStaticParams(params);
 }
 
 /** Resolves one route through the signed Aksara owner. */

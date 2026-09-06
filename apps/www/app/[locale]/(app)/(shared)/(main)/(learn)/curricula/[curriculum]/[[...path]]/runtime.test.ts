@@ -5,7 +5,6 @@ import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import {
   type CurriculumRouteModel,
   isRenderableCurriculumView,
-  listRuntimeCurriculumStaticParams,
   readRuntimeCurriculumBreadcrumbs,
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,
@@ -23,13 +22,11 @@ import {
 } from "@/test/content-program";
 
 const catalogMock = vi.hoisted(() => vi.fn());
-const routesMock = vi.hoisted(() => vi.fn());
 const routeMock = vi.hoisted(() => vi.fn());
 const revision = GitCommitShaSchema.make("a".repeat(40));
 
 vi.mock("@/lib/content/program/catalog", () => ({
   getPublishedProgramCatalog: catalogMock,
-  getPublishedProgramRoutes: routesMock,
 }));
 vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: vi.fn(),
@@ -61,24 +58,7 @@ function publishedRoute(overrides?: {
 describe("signed curriculum runtime", () => {
   beforeEach(() => {
     catalogMock.mockReset();
-    routesMock.mockReset();
     routeMock.mockReset();
-  });
-
-  it("builds static params from the signed route inventory", async () => {
-    routesMock.mockResolvedValueOnce({
-      routes: [
-        testProgramRoot,
-        testProgramClass,
-        { ...testProgramSubject, sitemap: false },
-      ],
-      sourceRevision: revision,
-    });
-
-    await expect(listRuntimeCurriculumStaticParams("en")).resolves.toEqual([
-      { curriculum: "merdeka" },
-      { curriculum: "merdeka", path: ["class-11"] },
-    ]);
   });
 
   it("resolves a signed route with published cards and hierarchy", async () => {

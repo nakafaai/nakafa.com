@@ -102,13 +102,10 @@ export async function generateMetadata({
   };
 }
 
-/** Prebuilds Quran surah routes from the active signed Quran catalog. */
+/** Supplies one real surah per locale for Cache Components. */
 export async function generateStaticParams() {
   const { surahs } = await getPublishedQuranCatalog();
-
-  return surahs.map((surah) => ({
-    surah: surah.number.toString(),
-  }));
+  return [{ surah: surahs[0].number.toString() }];
 }
 
 /** Keeps the public page export synchronous while the resolved shell owns async route validation. */
