@@ -217,6 +217,10 @@ const nextConfig = {
   headers: createAppHeaders,
   experimental: {
     ...config.experimental,
+    // Persistent caching also retains Turbopack's dependency graph. Cold Linux
+    // builds exceed the bounded host memory while emitting this app's assets.
+    // https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopackFileSystemCache
+    turbopackFileSystemCacheForBuild: false,
     ...(configEnv.NEXT_EXPOSE_TESTING_API === "true"
       ? { exposeTestingApiInProductionBuild: true }
       : {}),
