@@ -1,6 +1,10 @@
 "use client";
 
-import { useDocumentVisibility, useLocalStorage } from "@mantine/hooks";
+import {
+  readLocalStorageValue,
+  useDocumentVisibility,
+  useLocalStorage,
+} from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
@@ -9,10 +13,12 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { nanoid } from "nanoid";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createContentViewKey } from "@/lib/content/views/key";
 import { useContentViews } from "@/lib/context/use-content-views";
 import { useUser } from "@/lib/context/use-user";
+
+const DEVICE_STORAGE_KEY = "nakafa-device-id";
 
 /** Client-side graph content-view recording configuration. */
 interface UseRecordContentViewOptions {
@@ -62,10 +68,9 @@ export function useRecordContentView({
     context,
     signedInUserId,
   });
-  const [defaultDeviceId] = useState(() => `${Date.now()}-${nanoid(9)}`);
-  const [deviceId] = useLocalStorage({
-    key: "nakafa-device-id",
-    defaultValue: defaultDeviceId,
+  const [deviceId, setDeviceId] = useLocalStorage({
+    key: DEVICE_STORAGE_KEY,
+    defaultValue: "",
   });
 
   useEffect(() => {
@@ -86,6 +91,15 @@ export function useRecordContentView({
     }
 
     if (!isVisible) {
+      return;
+    }
+
+    // Browser identity must not make the surrounding reading page dynamic.
+    if (!deviceId) {
+      setDeviceId(
+        readLocalStorageValue<string>({ key: DEVICE_STORAGE_KEY }) ||
+          `${Date.now()}-${nanoid(9)}`
+      );
       return;
     }
 
@@ -134,6 +148,7 @@ export function useRecordContentView({
     publicPath,
     recordView,
     section,
+    setDeviceId,
     signedInUserId,
     viewKey,
   ]);
