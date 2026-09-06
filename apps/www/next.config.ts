@@ -221,6 +221,9 @@ const nextConfig = {
     // builds exceed the bounded host memory while emitting this app's assets.
     // https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopackFileSystemCache
     turbopackFileSystemCacheForBuild: false,
+    // Run Babel and PostCSS in threads to reduce build process overhead.
+    // https://github.com/vercel/next.js/blob/v16.3.4/packages/next/src/server/config-shared.ts
+    turbopackPluginRuntimeStrategy: "workerThreads",
     ...(configEnv.NEXT_EXPOSE_TESTING_API === "true"
       ? { exposeTestingApiInProductionBuild: true }
       : {}),
