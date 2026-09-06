@@ -109,6 +109,21 @@ export const readPublishedProgramCatalog = Effect.fn(
   } satisfies PublishedProgramCatalog;
 });
 
+/** Selects one renderable root from the authenticated bounded program catalog. */
+export const readPublishedProgramPrerenderRoute = Effect.fn(
+  "NakafaProgram.readPrerenderRoute"
+)(function* (locale: Locale) {
+  const catalog = yield* readPublishedProgramCatalog(locale);
+  const entry = catalog.entries.find(({ route }) => route.sitemap);
+  if (!entry) {
+    return yield* new PublishedProjectionError({
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath: "curricula",
+    });
+  }
+  return entry.route;
+});
+
 /** Reads and decodes one release-bound page of curriculum routes. */
 export const readPublishedProgramPage = Effect.fn(
   "NakafaProgram.readPublishedPage"

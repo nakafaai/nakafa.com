@@ -6,7 +6,7 @@ import {
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
 import { ConvexError } from "convex/values";
-import { Cause, Clock, Effect, Schema } from "effect";
+import { Cause, Clock, Config, Effect, Schema } from "effect";
 
 const boundaryFailureCode = "BOUNDARY_FAILURE";
 
@@ -20,6 +20,8 @@ class BoundaryFailure extends Schema.TaggedError<BoundaryFailure>()(
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
 describe("lib/effect", () => {
@@ -30,6 +32,105 @@ describe("lib/effect", () => {
       );
 
       expect(result).toBe("ok");
+    })
+  );
+
+  it.effect("loads the native environment for each invocation", () =>
+    Effect.gen(function* () {
+      const configuredValue = Config.string("BOUNDARY_CONFIG_VALUE").pipe(
+        Effect.mapError(
+          () =>
+            new BoundaryFailure({
+              code: boundaryFailureCode,
+              message: "BOUNDARY_CONFIG_VALUE is required.",
+            })
+        )
+      );
+      yield* Effect.sync(() => {
+        vi.stubEnv("BOUNDARY_CONFIG_VALUE", "first");
+      });
+      expect(
+        yield* Effect.promise(() => runConvexProgram(configuredValue))
+      ).toBe("first");
+
+      yield* Effect.sync(() => {
+        vi.stubEnv("BOUNDARY_CONFIG_VALUE", "second");
+      });
+      expect(
+        yield* Effect.promise(() => runConvexProgram(configuredValue))
+      ).toBe("second");
+
+      yield* Effect.sync(() => {
+        vi.stubEnv("BOUNDARY_CONFIG_VALUE", undefined);
+      });
+      yield* Effect.promise(() =>
+        expect(runConvexProgram(configuredValue)).rejects.toMatchObject({
+          data: {
+            code: boundaryFailureCode,
+            message: "BOUNDARY_CONFIG_VALUE is required.",
+          },
+        })
+      );
+    })
+  );
+
+  it.effect("reads named values from Convex's environment proxy", () =>
+    Effect.gen(function* () {
+      const values = new Map([
+        ["BOUNDARY_HOST", "https://local.nakafa.com"],
+        ["BOUNDARY_EMPTY", ""],
+      ]);
+      const env = new Proxy(
+        {},
+        {
+          get: (_target, key) =>
+            typeof key === "string" ? values.get(key) : undefined,
+        }
+      );
+      yield* Effect.sync(() => {
+        vi.stubGlobal("process", { ...process, env });
+      });
+      const configuredValues = Config.all({
+        host: Config.schema(Schema.URL, "HOST").pipe(Config.nested("BOUNDARY")),
+        empty: Config.option(Config.string("BOUNDARY_EMPTY")),
+        missing: Config.option(Config.string("BOUNDARY_MISSING")),
+      }).pipe(
+        Effect.mapError(
+          () =>
+            new BoundaryFailure({
+              code: boundaryFailureCode,
+              message: "Native configuration failed.",
+            })
+        )
+      );
+      const result = yield* Effect.promise(() =>
+        runConvexProgram(configuredValues)
+      );
+
+      expect(Object.keys(env)).toEqual([]);
+      expect(Object.hasOwn(env, "BOUNDARY_HOST")).toBe(false);
+      expect(result.host.href).toBe("https://local.nakafa.com/");
+      expect(result.empty._tag).toBe("None");
+      expect(result.missing._tag).toBe("None");
+    })
+  );
+
+  it.effect("rejects discovery of native environment records", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.promise(() =>
+        runConvexProgram(
+          Config.schema(Schema.Record(Schema.String, Schema.String)).pipe(
+            Effect.flip,
+            Effect.orDie
+          )
+        )
+      );
+
+      expect(failure.cause).toMatchObject({
+        _tag: "SourceError",
+        message:
+          "Native Convex configuration requires named values; record and array discovery is unavailable.",
+      });
     })
   );
 
@@ -71,6 +172,7 @@ describe("lib/effect", () => {
             Effect.sync(() => [
               clock.currentTimeMillisUnsafe(),
               clock.currentTimeNanosUnsafe(),
+              clock.monotonicTimeNanosUnsafe(),
             ])
           )
         )
@@ -78,7 +180,14 @@ describe("lib/effect", () => {
 
       expect(milliseconds).toBe(now);
       expect(nanoseconds).toBe(BigInt(now) * 1_000_000n);
-      expect(unsafeTimes).toEqual([now, BigInt(now) * 1_000_000n]);
+      expect(unsafeTimes).toEqual([
+        now,
+        BigInt(now) * 1_000_000n,
+        BigInt(now) * 1_000_000n,
+      ]);
+      expect(
+        yield* Effect.promise(() => runConvexProgram(Clock.monotonicTimeNanos))
+      ).toBe(BigInt(now) * 1_000_000n);
     })
   );
 
@@ -110,6 +219,35 @@ describe("lib/effect", () => {
       expect(setImmediateSpy).not.toHaveBeenCalled();
       expect(setTimeoutSpy).not.toHaveBeenCalled();
     })
+  );
+
+  it.effect("flushes queued native tasks once in priority order", () =>
+    Effect.gen(function* () {
+      const order: number[] = [];
+      yield* Effect.promise(() =>
+        runConvexProgram(
+          Effect.withFiber((fiber) =>
+            Effect.sync(() => {
+              const dispatcher = fiber.currentDispatcher;
+              dispatcher.scheduleTask(() => order.push(2), 2);
+              dispatcher.scheduleTask(() => order.push(1), 1);
+              dispatcher.flush();
+            })
+          )
+        )
+      );
+      yield* Effect.promise(() => Promise.resolve());
+
+      expect(order).toEqual([1, 2]);
+    })
+  );
+
+  it.effect("preserves interruption at the native boundary", () =>
+    Effect.promise(() =>
+      expect(runConvexProgram(Effect.interrupt)).rejects.toThrow(
+        "All fibers interrupted without error"
+      )
+    )
   );
 
   it.effect("supports the live clock at the Node action boundary", () =>
@@ -184,6 +322,9 @@ describe("lib/effect", () => {
     ).toEqual({ code: "BOUNDARY_FAILURE", message: "Failed" });
     expect(
       readConvexErrorData(new ConvexError({ code: "MISSING" }))
+    ).toBeNull();
+    expect(
+      readConvexErrorData(new ConvexError({ message: "Missing code" }))
     ).toBeNull();
     expect(readConvexErrorData(new ConvexError("opaque"))).toBeNull();
     expect(readConvexErrorData(new Error("not Convex"))).toBeNull();

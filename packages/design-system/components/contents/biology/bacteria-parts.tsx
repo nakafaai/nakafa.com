@@ -3,7 +3,7 @@
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import { DnaDoubleHelix } from "@repo/design-system/components/contents/biology/parts";
 import { useMemo } from "react";
-import * as THREE from "three";
+import { CatmullRomCurve3, Vector3 } from "three";
 
 const BACILLUS_RIBOSOMES = [
   { id: "ribo-1", position: [-0.44, 0.08, 0.28], scale: 0.86 },
@@ -271,10 +271,7 @@ function BacterialAppendage({
   transparent?: boolean;
 }) {
   const curve = useMemo(
-    () =>
-      new THREE.CatmullRomCurve3(
-        points.map((point) => new THREE.Vector3(...point))
-      ),
+    () => new CatmullRomCurve3(points.map((point) => new Vector3(...point))),
     [points]
   );
 

@@ -7,17 +7,24 @@ import {
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import { cn } from "@repo/design-system/lib/utils";
 import { domAnimation, LazyMotion } from "motion/react";
-import * as React from "react";
-import * as RechartsPrimitive from "recharts";
+import {
+  type ComponentProps,
+  createContext,
+  type ReactNode,
+  use,
+  useId,
+  useMemo,
+} from "react";
+import { ResponsiveContainer } from "recharts";
 
 interface ChartContextProps {
   config: ChartConfig;
 }
 
-const ChartContext = React.createContext<ChartContextProps | null>(null);
+const ChartContext = createContext<ChartContextProps | null>(null);
 
 export function useChart() {
-  const context = React.use(ChartContext);
+  const context = use(ChartContext);
 
   if (!context) {
     throw new Error("useChart must be used within a <ChartContainer />");
@@ -27,9 +34,9 @@ export function useChart() {
 }
 
 interface ChartContainerProps
-  extends Omit<React.ComponentProps<"div">, "children">,
+  extends Omit<ComponentProps<"div">, "children">,
     Pick<
-      React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>,
+      ComponentProps<typeof ResponsiveContainer>,
       | "initialDimension"
       | "aspect"
       | "debounce"
@@ -43,9 +50,9 @@ interface ChartContainerProps
     > {
   config: ChartConfig;
   /** Optional content rendered below the chart (e.g. EvilBrush) */
-  footer?: React.ReactNode;
-  innerResponsiveContainerStyle?: React.ComponentProps<
-    typeof RechartsPrimitive.ResponsiveContainer
+  footer?: ReactNode;
+  innerResponsiveContainerStyle?: ComponentProps<
+    typeof ResponsiveContainer
   >["style"];
 }
 
@@ -58,9 +65,9 @@ function ChartContainer({
   footer,
   ...props
 }: Readonly<ChartContainerProps>) {
-  const uniqueId = React.useId();
+  const uniqueId = useId();
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
-  const contextValue = React.useMemo(() => ({ config }), [config]);
+  const contextValue = useMemo(() => ({ config }), [config]);
 
   validateChartConfigColors(config);
 
@@ -79,12 +86,12 @@ function ChartContainer({
           {...props}
         >
           <ChartStyle config={config} id={chartId} />
-          <RechartsPrimitive.ResponsiveContainer
+          <ResponsiveContainer
             className="min-h-0 w-full flex-1"
             initialDimension={initialDimension}
           >
             {children}
-          </RechartsPrimitive.ResponsiveContainer>
+          </ResponsiveContainer>
           {footer}
         </div>
       </ChartContext.Provider>

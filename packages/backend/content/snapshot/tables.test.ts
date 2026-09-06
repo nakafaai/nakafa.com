@@ -15,11 +15,11 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "88cdbd1d5c853b348fdd6a15aa874a2a26e69747e9f3e9dd5ee3d38d2e58d924";
+  "5d3fbc78dabfd0d3b3e4513269ae0787b2e717ca52e6de25070e8c3923dae8f0";
 const CURRENT_DECODER_CONTRACT_IDENTITY = Object.freeze({
   name: "@nakafa/aksara-contracts",
   specifier: "@nakafa/aksara-contracts",
-  version: "0.33.0",
+  version: "0.36.0",
 });
 const DECODER_CONTRACT_IDENTITIES = [CURRENT_DECODER_CONTRACT_IDENTITY];
 

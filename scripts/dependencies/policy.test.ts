@@ -36,7 +36,7 @@ function validInput() {
         ])
       ),
       scripts:
-        index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.12" } : undefined,
+        index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.13" } : undefined,
     },
     path,
   }));
@@ -50,18 +50,21 @@ function validInput() {
   return {
     manifests,
     rootManifest: {
-      devEngines: { runtime: { version: "24.19.0" } },
-      packageManager: "pnpm@11.23.0",
+      devEngines: { runtime: { version: "24.20.0" } },
+      packageManager: "pnpm@11.25.0",
     },
     workspace: {
       catalog: {
-        "@effect/platform-node": "4.0.0-rc.110",
-        "@effect/vitest": "4.0.0-rc.110",
-        effect: "4.0.0-rc.110",
+        "@effect/platform-node": "4.0.0-rc.112",
+        "@effect/vitest": "4.0.0-rc.112",
+        "@vitest/coverage-istanbul": "4.1.11",
+        "@vitest/ui": "4.1.11",
+        effect: "4.0.0-rc.112",
         typescript: "7.0.2",
+        vitest: "4.1.11",
       },
       overrides: {
-        "@effect/platform-node-shared": "4.0.0-rc.110",
+        "@effect/platform-node-shared": "4.0.0-rc.112",
       },
       update: { ignoreDeps },
     },
@@ -118,13 +121,13 @@ describe("dependency policy", () => {
     if (!firstManifest) {
       return;
     }
-    firstManifest.manifest.dependencies.effect = "4.0.0-rc.111";
+    firstManifest.manifest.dependencies.effect = "4.0.0-rc.112";
     firstManifest.manifest.dependencies["@effect/platform"] = "0.97.1";
     if (firstManifest.manifest.scripts) {
       firstManifest.manifest.scripts.doctor = "pnpm dlx react-doctor@0.9.5";
     }
     input.manifests.splice(1);
-    input.workspace.overrides["@effect/platform-node-shared"] = "4.0.0-rc.111";
+    input.workspace.overrides["@effect/platform-node-shared"] = "4.0.0-rc.110";
     input.workspace.update.ignoreDeps = [];
 
     const problems = validateDependencyPolicy(input);
@@ -154,7 +157,7 @@ describe("dependency policy", () => {
         {
           manifest: {
             dependencies: { effect: "catalog:" },
-            peerDependencies: { effect: "4.0.0-rc.110" },
+            peerDependencies: { effect: "4.0.0-rc.112" },
           },
           path: "package.json",
         },

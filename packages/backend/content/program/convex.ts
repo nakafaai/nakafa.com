@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/content/program/cursor";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Predicate } from "effect";
 
 /** Reads program relationships through their existing immutable native indexes. */
 export const convexProgramLayer = (ctx: QueryCtx) =>
@@ -124,10 +124,9 @@ export const convexProgramLayer = (ctx: QueryCtx) =>
               .paginate({ ...options, cursor: null })
           );
           const last = stored.page.at(-1);
-          const split =
-            stored.splitCursor == null
-              ? undefined
-              : stored.page[Math.floor((stored.page.length - 1) / 2)];
+          const split = Predicate.isNullish(stored.splitCursor)
+            ? undefined
+            : stored.page[Math.floor((stored.page.length - 1) / 2)];
           return {
             ...stored,
             continueCursor: last

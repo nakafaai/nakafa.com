@@ -29,7 +29,7 @@ Do not submit a contribution if you cannot grant these rights.
 The supported toolchain is declared in `package.json`:
 
 - Node.js 24
-- pnpm 11.23.0
+- pnpm 11.25.0
 - Git
 
 ```sh

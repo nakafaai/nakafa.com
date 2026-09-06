@@ -16,14 +16,13 @@ import {
   deferWelcomeIntent,
   tryWelcomeIntent,
 } from "@repo/backend/convex/emails/welcome/impl";
-import { siteOrigin } from "@repo/backend/convex/utils/site";
+import { readSiteUrl } from "@repo/backend/convex/site/config";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
 const PRIVACY_POLICY_PAGE_KEY = PageKeySchema.make("privacy-policy");
 const TERMS_OF_SERVICE_PAGE_KEY = PageKeySchema.make("terms-of-service");
-const canonicalSiteUrl = new URL(siteOrigin);
 
 interface PageCatalogInput {
   readonly managed: boolean;
@@ -130,7 +129,7 @@ export const readWelcomeIntentInput = Effect.fn(
   const links = yield* resolveWelcomeEmailLinks(
     catalog,
     intent.locale,
-    canonicalSiteUrl
+    yield* readSiteUrl()
   );
 
   return {

@@ -6,7 +6,7 @@ import {
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Predicate } from "effect";
 
 /** Reads material identities and groups through their native ordered indexes. */
 export const convexMaterialLayer = (ctx: QueryCtx) =>
@@ -134,10 +134,9 @@ export const convexMaterialLayer = (ctx: QueryCtx) =>
               .paginate({ ...options, cursor: null })
           );
           const last = stored.page.at(-1);
-          const split =
-            stored.splitCursor == null
-              ? undefined
-              : stored.page[Math.floor((stored.page.length - 1) / 2)];
+          const split = Predicate.isNullish(stored.splitCursor)
+            ? undefined
+            : stored.page[Math.floor((stored.page.length - 1) / 2)];
           return {
             ...stored,
             continueCursor: last

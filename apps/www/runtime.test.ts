@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { fileURLToPath } from "node:url";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import { Effect, Stream } from "effect";
@@ -132,7 +132,7 @@ describe("content runtime target", () => {
       expect(exitCode).toBe(1);
       expect(stderr).toContain("UnsafeRuntimeError");
       expect(stderr).toContain("untrusted-production");
-    }).pipe(Effect.provide(NodeServices.layer))
+    }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.effect.each([

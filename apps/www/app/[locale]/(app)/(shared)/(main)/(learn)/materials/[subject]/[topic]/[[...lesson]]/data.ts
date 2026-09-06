@@ -1,11 +1,6 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { readNamespaceSegment } from "@repo/contents/_types/route/surface";
 import type { Locale } from "next-intl";
-import { getPublishedMaterialRoutes } from "@/lib/content/material/catalog";
-import { hasPreviewConfig } from "@/lib/content/preview/config";
-import { readMaterialPreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 export type MaterialParams =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">["params"];
@@ -40,22 +35,4 @@ export async function readMaterialRequest(params: MaterialParams) {
     locale,
     publicPath: [namespace, subject, topic, ...(lesson ?? [])].join("/"),
   };
-}
-
-/** Builds static params exclusively from the signed material catalog. */
-export async function listMaterialStaticParams(rawLocale: string) {
-  const locale = getLocaleOrThrow(rawLocale);
-  if (hasPreviewConfig()) {
-    const preview = await readMaterialPreviewStaticParams(
-      AppLocaleSchema.make(locale)
-    );
-    return [preview];
-  }
-
-  const published = await getPublishedMaterialRoutes(locale);
-  const params = published.routes.map((route) => {
-    const [, subject, topic, ...lesson] = route.publicPath.split("/");
-    return { lesson, subject, topic };
-  });
-  return selectLearningStaticParams(params);
 }

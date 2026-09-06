@@ -1,6 +1,7 @@
 import type { GenericCtx } from "@convex-dev/better-auth";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { createAuth } from "@repo/backend/convex/auth/runtime";
+import { createAuthOptions } from "@repo/backend/convex/auth/runtime";
+import { betterAuth } from "better-auth/minimal";
 
 /**
  * Static Better Auth instance for local-install schema generation.
@@ -11,4 +12,4 @@ import { createAuth } from "@repo/backend/convex/auth/runtime";
  * request paths.
  * @see https://labs.convex.dev/better-auth/features/local-install#generate-the-schema
  */
-export const auth = createAuth({} as GenericCtx<DataModel>);
+export const auth = betterAuth(createAuthOptions({} as GenericCtx<DataModel>));

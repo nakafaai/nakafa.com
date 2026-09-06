@@ -8,7 +8,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip-item";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
-import * as RechartsPrimitive from "recharts";
+import { type DefaultTooltipContentProps, Tooltip } from "recharts";
 import type {
   NameType,
   ValueType,
@@ -18,7 +18,7 @@ export type TooltipRoundness = "sm" | "md" | "lg" | "xl";
 export type TooltipVariant = "default" | "frosted-glass";
 
 type TooltipPayloadItem = NonNullable<
-  RechartsPrimitive.DefaultTooltipContentProps<ValueType, NameType>["payload"]
+  DefaultTooltipContentProps<ValueType, NameType>["payload"]
 >[number];
 
 /** Resolves the stable React key for one tooltip payload item. */
@@ -56,7 +56,7 @@ function ChartTooltipContent({
   selected,
   roundness = "lg",
   variant = "default",
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
+}: React.ComponentProps<typeof Tooltip> &
   React.ComponentProps<"div"> & {
     hideLabel?: boolean;
     hideIndicator?: boolean;
@@ -67,7 +67,7 @@ function ChartTooltipContent({
     roundness?: TooltipRoundness;
     variant?: TooltipVariant;
   } & Omit<
-    RechartsPrimitive.DefaultTooltipContentProps<ValueType, NameType>,
+    DefaultTooltipContentProps<ValueType, NameType>,
     "accessibilityLayer"
   >) {
   const { config } = useChart();
@@ -128,13 +128,8 @@ function ChartTooltipContent({
 function ChartTooltip({
   animationDuration = 200,
   ...props
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip>) {
-  return (
-    <RechartsPrimitive.Tooltip
-      animationDuration={animationDuration}
-      {...props}
-    />
-  );
+}: React.ComponentProps<typeof Tooltip>) {
+  return <Tooltip animationDuration={animationDuration} {...props} />;
 }
 
 export { ChartTooltip, ChartTooltipContent };

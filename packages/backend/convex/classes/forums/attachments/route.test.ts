@@ -1,11 +1,15 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  ActionCtx,
+  MutationCtx,
+} from "@repo/backend/convex/_generated/server";
 import {
   FORUM_PENDING_UPLOAD_EXPIRATION_MS,
   FORUM_PENDING_UPLOAD_LEASE_MS,
 } from "@repo/backend/convex/classes/forums/attachments/constants";
+import { registerForumAttachmentUploadRoute } from "@repo/backend/convex/classes/forums/attachments/route";
 import { MAX_FORUM_ATTACHMENT_BYTES } from "@repo/backend/convex/classes/forums/utils/constants";
 import {
   insertClass,
@@ -18,11 +22,13 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { getFunctionName } from "convex/server";
+import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Effect, Schema } from "effect";
+import { Hono } from "hono";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
 const LEASE_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
-const polarSecretName = "POLAR_WEBHOOK_SECRET";
 const uploadTokenSuffixPattern = /[^/]+$/;
 
 /** Seeds one authenticated teacher and an open forum for HTTP upload tests. */
@@ -33,28 +39,16 @@ const seedOpenForum = Effect.fn("test.forumAttachments.seedOpenForum")(
         now: NOW,
         suffix: "forum-upload-route",
       });
-      const schoolId = await insertSchool(ctx, {
-        now: NOW,
-        userId: user.userId,
-      });
-      const classId = await insertClass(ctx, {
-        now: NOW,
-        schoolId,
-        userId: user.userId,
-      });
-      await insertSchoolMembership(ctx, {
-        now: NOW,
+      const ownership = { now: NOW, userId: user.userId };
+      const schoolId = await insertSchool(ctx, ownership);
+      const classId = await insertClass(ctx, { ...ownership, schoolId });
+      const membership = {
+        ...ownership,
         role: "teacher",
         schoolId,
-        userId: user.userId,
-      });
-      await insertClassMembership(ctx, {
-        now: NOW,
-        role: "teacher",
-        classId,
-        schoolId,
-        userId: user.userId,
-      });
+      } satisfies Parameters<typeof insertSchoolMembership>[1];
+      await insertSchoolMembership(ctx, membership);
+      await insertClassMembership(ctx, { ...membership, classId });
       const forumId = await ctx.db.insert("schoolClassForums", {
         body: "Attachment forum body",
         classId,
@@ -127,26 +121,33 @@ function expectPrivate(response: Response) {
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
-  vi.stubEnv(polarSecretName, "technical-webhook-secret");
+  vi.stubEnv("POLAR_WEBHOOK_SECRET", "technical-webhook-secret");
 });
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.useRealTimers();
   vi.unstubAllEnvs();
 });
 
 describe("classes/forums/attachments/route", () => {
-  it.effect(
-    "stores, binds, and finalizes an attachment through the browser protocol",
-    () =>
+  it.effect.each([
+    { siteOrigin: "http://localhost:3000", bodyText: "hello" },
+    { siteOrigin: "https://local.nakafa.com", bodyText: "hello" },
+    { siteOrigin: "http://localhost:3000", bodyText: undefined },
+  ])(
+    "stores, binds, and finalizes $bodyText from $siteOrigin",
+    ({ siteOrigin, bodyText }) =>
       Effect.gen(function* () {
+        vi.stubEnv("SITE_URL", siteOrigin);
+        const bodySize = bodyText?.length ?? 0;
         const { capabilityPath, owner, t, uploadId } =
           yield* createPendingUpload();
         const response = yield* Effect.promise(() =>
           t.fetch(capabilityPath, {
-            body: "hello",
+            body: bodyText,
             headers: {
               "content-type": "text/plain",
-              origin: "http://localhost:3000",
+              origin: siteOrigin,
             },
             method: "POST",
           })
@@ -154,7 +155,7 @@ describe("classes/forums/attachments/route", () => {
         expect(response.status).toBe(200);
         expectPrivate(response);
         expect(response.headers.get("access-control-allow-origin")).toBe(
-          "http://localhost:3000"
+          siteOrigin
         );
         const responseBody = yield* Effect.promise(() => response.json());
         const body = yield* Schema.decodeUnknownEffect(
@@ -170,7 +171,7 @@ describe("classes/forums/attachments/route", () => {
         const savedUploadId = yield* Effect.promise(() =>
           owner.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
             name: "notes.txt",
-            size: 5,
+            size: bodySize,
             storageId,
             type: "text/plain",
             uploadId,
@@ -194,91 +195,63 @@ describe("classes/forums/attachments/route", () => {
         expect(state.pendingUpload).toMatchObject({
           mimeType: "text/plain",
           name: "notes.txt",
-          size: 5,
+          size: bodySize,
           storageId: body.storageId,
         });
-        expect(state.storageMetadata).toMatchObject({ size: 5 });
+        expect(state.storageMetadata).toMatchObject({ size: bodySize });
       })
   );
-  it.effect("rejects a wrong capability before consuming a hostile body", () =>
-    Effect.gen(function* () {
-      const { capabilityPath, t } = yield* createPendingUpload();
-      const wrongPath = capabilityPath.replace(
-        uploadTokenSuffixPattern,
-        "wrong-token"
-      );
-      let pulls = 0;
-      const body = new ReadableStream<Uint8Array>(
-        {
-          pull(controller) {
-            pulls += 1;
-            controller.error(new Error("Unauthorized body was consumed."));
-          },
-        },
-        { highWaterMark: 0 }
-      );
-      const request = {
-        body,
-        duplex: "half",
-        headers: { "content-type": "text/plain" },
-        method: "POST",
-      } satisfies RequestInit & {
-        readonly duplex: "half";
-      };
-      const response = yield* Effect.promise(() => t.fetch(wrongPath, request));
-      expect(response.status).toBe(404);
-      expectPrivate(response);
-      expect(pulls).toBe(0);
-      expect(yield* Effect.promise(() => response.json())).toEqual({
-        code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
-      });
-    })
-  );
-
-  it.effect(
-    "rejects a concurrent request before consuming its hostile body",
-    () =>
+  it.effect.each(["wrong-token", "leased", "expired"])(
+    "rejects a %s capability before consuming its hostile body",
+    (state) =>
       Effect.gen(function* () {
-        const pendingUpload = yield* createPendingUpload();
-        const { capabilityPath, t, uploadId } = pendingUpload;
-        expect(yield* claimPendingUpload(pendingUpload)).toBe(true);
+        const pending = yield* createPendingUpload();
+        const { capabilityPath, t, uploadId } = pending;
+        if (state === "leased") {
+          expect(yield* claimPendingUpload(pending)).toBe(true);
+        } else if (state === "expired") {
+          vi.setSystemTime(NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS);
+        }
+        const path =
+          state === "wrong-token"
+            ? capabilityPath.replace(uploadTokenSuffixPattern, "wrong-token")
+            : capabilityPath;
         let pulls = 0;
-        const body = new ReadableStream<Uint8Array>(
-          {
-            pull(controller) {
-              pulls += 1;
-              controller.error(
-                new Error("Leased capability body was consumed.")
-              );
-            },
-          },
-          { highWaterMark: 0 }
-        );
         const request = {
-          body,
+          body: new ReadableStream<Uint8Array>(
+            {
+              pull(controller) {
+                pulls += 1;
+                controller.error(new Error("Unauthorized body was consumed."));
+              },
+            },
+            { highWaterMark: 0 }
+          ),
           duplex: "half",
           headers: { "content-type": "text/plain" },
           method: "POST",
-        } satisfies RequestInit & {
-          readonly duplex: "half";
-        };
-        const response = yield* Effect.promise(() =>
-          t.fetch(capabilityPath, request)
-        );
+        } satisfies RequestInit & { readonly duplex: "half" };
+        const response = yield* Effect.promise(() => t.fetch(path, request));
         expect(response.status).toBe(404);
         expectPrivate(response);
         expect(pulls).toBe(0);
+        expect(yield* Effect.promise(() => response.json())).toEqual({
+          code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
+        });
         const upload = yield* Effect.promise(() =>
           t.query((ctx) =>
             ctx.db.get("schoolClassForumPendingUploads", uploadId)
           )
         );
-        expect(upload).toMatchObject({
-          uploadLease: {
-            expiresAt: NOW + FORUM_PENDING_UPLOAD_LEASE_MS,
-            id: LEASE_ID,
-          },
-        });
+        expect(upload).not.toBeNull();
+        if (state === "leased") {
+          expect(upload).toMatchObject({
+            uploadLease: {
+              expiresAt: NOW + FORUM_PENDING_UPLOAD_LEASE_MS,
+              id: LEASE_ID,
+            },
+          });
+        }
       })
   );
 
@@ -305,193 +278,152 @@ describe("classes/forums/attachments/route", () => {
     })
   );
 
-  it.effect(
-    "rejects an expired capability before consuming the request body",
-    () =>
+  it.effect.each([
+    { bodyFailure: "declared-size", status: 413 },
+    { bodyFailure: "stream", status: 413 },
+    { bodyFailure: "missing-content-type", status: 415 },
+  ])(
+    "rejects $bodyFailure without binding storage",
+    ({ bodyFailure, status }) =>
       Effect.gen(function* () {
         const { capabilityPath, t, uploadId } = yield* createPendingUpload();
-        vi.setSystemTime(NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS);
-        let pulls = 0;
-        const body = new ReadableStream<Uint8Array>(
-          {
-            pull(controller) {
-              pulls += 1;
-              controller.error(
-                new Error("Expired capability body was consumed.")
-              );
-            },
-          },
-          { highWaterMark: 0 }
-        );
+        const headers = new Headers();
+        if (bodyFailure !== "missing-content-type") {
+          headers.set("content-type", "text/plain");
+        }
+        if (bodyFailure === "declared-size") {
+          headers.set("content-length", String(MAX_FORUM_ATTACHMENT_BYTES + 1));
+        }
+        const body =
+          bodyFailure === "stream"
+            ? new ReadableStream<Uint8Array>({
+                start(controller) {
+                  controller.error(new Error("Body read failed."));
+                },
+              })
+            : new Uint8Array([1]);
         const request = {
           body,
           duplex: "half",
-          headers: { "content-type": "text/plain" },
+          headers,
           method: "POST",
-        } satisfies RequestInit & {
-          readonly duplex: "half";
-        };
+        } satisfies RequestInit & { readonly duplex: "half" };
         const response = yield* Effect.promise(() =>
           t.fetch(capabilityPath, request)
         );
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(status);
         expectPrivate(response);
-        expect(pulls).toBe(0);
         expect(yield* Effect.promise(() => response.json())).toEqual({
-          code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
+          code: "FORUM_ATTACHMENT_UPLOAD_INVALID",
         });
-        expect(
-          yield* Effect.promise(() =>
-            t.query((ctx) =>
-              ctx.db.get("schoolClassForumPendingUploads", uploadId)
-            )
+        const upload = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            ctx.db.get("schoolClassForumPendingUploads", uploadId)
           )
-        ).not.toBeNull();
+        );
+        expect(upload).not.toHaveProperty("storageId");
+        expect(upload).not.toHaveProperty("uploadLease");
       })
   );
 
-  it.effect("rejects an oversized upload without binding storage", () =>
+  it.effect.each([
+    "claim",
+    "uuid",
+    "store",
+    "settle",
+    "cleanup",
+    "release",
+    "deletion",
+    "expiry",
+  ])("preserves upload safety when %s interrupts the request", (failure) =>
     Effect.gen(function* () {
-      const { capabilityPath, t, uploadId } = yield* createPendingUpload();
-      const response = yield* Effect.promise(() =>
-        t.fetch(capabilityPath, {
-          body: "hello",
-          headers: {
-            "content-length": String(MAX_FORUM_ATTACHMENT_BYTES + 1),
-            "content-type": "text/plain",
-          },
-          method: "POST",
+      const { capabilityPath, seeded, t, uploadId } =
+        yield* createPendingUpload();
+      const result = yield* Effect.promise(() =>
+        t.action(async (ctx) => {
+          const app: HonoWithConvex<ActionCtx> = new Hono();
+          registerForumAttachmentUploadRoute(app);
+          const originalMutation = ctx.runMutation;
+          const runMutation: typeof ctx.runMutation = (reference, ...args) => {
+            const name = getFunctionName(reference);
+            const failedMutation = failure === "cleanup" ? "settle" : failure;
+            if (
+              name === `classes/forums/attachments/upload:${failedMutation}`
+            ) {
+              return Promise.reject(new Error("Private mutation failure."));
+            }
+            return originalMutation(reference, ...args);
+          };
+          vi.spyOn(ctx, "runMutation").mockImplementation(runMutation);
+          const originalStore = ctx.storage.store;
+          vi.spyOn(ctx.storage, "store").mockImplementation(async (blob) => {
+            if (failure === "store" || failure === "release") {
+              throw new Error("Private storage failure.");
+            }
+            const storageId = await originalStore(blob);
+            if (failure === "deletion") {
+              await t.mutation((mutation) =>
+                mutation.db.patch("users", seeded.userId, {
+                  deletionPreparedAt: NOW,
+                })
+              );
+            } else if (failure === "expiry") {
+              vi.setSystemTime(NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS);
+            }
+            return storageId;
+          });
+          const deleteStorage = vi.spyOn(ctx.storage, "delete");
+          if (failure === "cleanup") {
+            deleteStorage.mockRejectedValue(
+              new Error("Private cleanup failure.")
+            );
+          }
+          if (failure === "uuid") {
+            vi.spyOn(crypto, "randomUUID").mockImplementation(() => {
+              throw new Error("Random source unavailable.");
+            });
+          }
+          const response = await app.request(
+            `https://example.convex.site${capabilityPath}`,
+            {
+              body: "hello",
+              headers: { "content-type": "text/plain" },
+              method: "POST",
+            },
+            ctx
+          );
+          expectPrivate(response);
+          return {
+            body: await response.json(),
+            cleanupAttempts: deleteStorage.mock.calls.length,
+            status: response.status,
+          };
         })
       );
-      expect(response.status).toBe(413);
-      expectPrivate(response);
-      expect(yield* Effect.promise(() => response.json())).toEqual({
-        code: "FORUM_ATTACHMENT_UPLOAD_INVALID",
+      const lostRace = failure === "deletion" || failure === "expiry";
+      expect(result.status).toBe(lostRace ? 404 : 500);
+      expect(result.body).toEqual({
+        code: lostRace
+          ? "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND"
+          : "FORUM_ATTACHMENT_UPLOAD_FAILED",
       });
-      const upload = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.get("schoolClassForumPendingUploads", uploadId))
+      if (failure === "settle" || failure === "cleanup") {
+        expect(result.cleanupAttempts).toBe(1);
+      }
+      const state = yield* Effect.promise(() =>
+        t.query(async (ctx) => ({
+          pending: await ctx.db.get("schoolClassForumPendingUploads", uploadId),
+          storage: await ctx.db.system.query("_storage").collect(),
+        }))
       );
-      expect({
-        storageId: upload?.storageId ?? null,
-        uploadLease: upload?.uploadLease,
-      }).toEqual({
-        storageId: null,
-        uploadLease: undefined,
-      });
+      expect(state.storage).toHaveLength(failure === "cleanup" ? 1 : 0);
+      if (lostRace) {
+        expect(state.pending).toBeNull();
+      } else if (failure === "release") {
+        expect(state.pending).toHaveProperty("uploadLease");
+      } else {
+        expect(state.pending).not.toHaveProperty("uploadLease");
+      }
     })
-  );
-
-  it.effect(
-    "binds a server-created object for an active upload capability",
-    () =>
-      Effect.gen(function* () {
-        const pendingUpload = yield* createPendingUpload();
-        const { t, uploadId, uploadToken } = pendingUpload;
-        expect(yield* claimPendingUpload(pendingUpload)).toBe(true);
-        const storageId = yield* Effect.promise(() =>
-          t.run((ctx) =>
-            ctx.storage.store(new Blob(["hello"], { type: "text/plain" }))
-          )
-        );
-        const storageMetadata = yield* Effect.promise(() =>
-          t.query((ctx) => ctx.db.system.get("_storage", storageId))
-        );
-        expect(storageMetadata).toMatchObject({ size: 5 });
-        const settlement = yield* Effect.promise(() =>
-          t.mutation(internal.classes.forums.attachments.upload.settle, {
-            contentType: "text/plain",
-            leaseId: LEASE_ID,
-            size: 5,
-            storageId,
-            uploadId,
-            uploadToken,
-          })
-        );
-        expect(settlement).toBe("accepted");
-      })
-  );
-
-  it.effect(
-    "removes a newly stored object when deletion wins the settlement race",
-    () =>
-      Effect.gen(function* () {
-        const pendingUpload = yield* createPendingUpload();
-        const { seeded, t, uploadId, uploadToken } = pendingUpload;
-        expect(yield* claimPendingUpload(pendingUpload)).toBe(true);
-        const storageId = yield* Effect.promise(() =>
-          t.run((ctx) =>
-            ctx.storage.store(new Blob(["hello"], { type: "text/plain" }))
-          )
-        );
-        yield* Effect.promise(() =>
-          t.mutation((ctx) =>
-            ctx.db.patch("users", seeded.userId, { deletionPreparedAt: NOW })
-          )
-        );
-        const settlement = yield* Effect.promise(() =>
-          t.mutation(internal.classes.forums.attachments.upload.settle, {
-            contentType: "text/plain",
-            leaseId: LEASE_ID,
-            size: 5,
-            storageId,
-            uploadId,
-            uploadToken,
-          })
-        );
-        expect(settlement).toBe("discarded");
-        const state = yield* Effect.promise(() =>
-          t.query(async (ctx) => ({
-            pendingUpload: await ctx.db.get(
-              "schoolClassForumPendingUploads",
-              uploadId
-            ),
-            storageMetadata: await ctx.db.system.get("_storage", storageId),
-          }))
-        );
-        expect(state).toEqual({
-          pendingUpload: null,
-          storageMetadata: null,
-        });
-      })
-  );
-
-  it.effect(
-    "removes a server-created object when settlement reaches its deadline",
-    () =>
-      Effect.gen(function* () {
-        const pendingUpload = yield* createPendingUpload();
-        const { t, uploadId, uploadToken } = pendingUpload;
-        expect(yield* claimPendingUpload(pendingUpload)).toBe(true);
-        const storageId = yield* Effect.promise(() =>
-          t.run((ctx) =>
-            ctx.storage.store(new Blob(["hello"], { type: "text/plain" }))
-          )
-        );
-        vi.setSystemTime(NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS);
-        const settlement = yield* Effect.promise(() =>
-          t.mutation(internal.classes.forums.attachments.upload.settle, {
-            contentType: "text/plain",
-            leaseId: LEASE_ID,
-            size: 5,
-            storageId,
-            uploadId,
-            uploadToken,
-          })
-        );
-        expect(settlement).toBe("rejected");
-        const state = yield* Effect.promise(() =>
-          t.query(async (ctx) => ({
-            pendingUpload: await ctx.db.get(
-              "schoolClassForumPendingUploads",
-              uploadId
-            ),
-            storageMetadata: await ctx.db.system.get("_storage", storageId),
-          }))
-        );
-        expect(state).toEqual({
-          pendingUpload: null,
-          storageMetadata: null,
-        });
-      })
   );
 });

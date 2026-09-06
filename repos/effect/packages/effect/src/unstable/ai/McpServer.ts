@@ -719,17 +719,23 @@ const runWithProtocolState = Effect.fnUntraced(function*(options: {
         return {
           send(id, request, _transferables) {
             cid = id
-            return protocol.send(key.clientId, {
-              ...request,
-              headers: undefined,
-              traceId: undefined,
-              spanId: undefined,
-              sampled: undefined
-            } as any)
+            if (request._tag === "Request") {
+              return protocol.send(key.clientId, {
+                _tag: "Request",
+                id: request.id,
+                tag: request.tag,
+                payload: request.payload,
+                headers: []
+              })
+            }
+            // Ack & co are not part of FromServerEncoded, but the JSON-RPC
+            // serializer encodes them symmetrically for reverse control flow
+            return protocol.send(key.clientId, request as any)
           },
           supportsAck: true,
           supportsTransferables: false,
-          supportsStructuredClone: false
+          supportsStructuredClone: false,
+          codecFor: protocol.codecFor
         }
       }))
       const client = yield* selectedProtocol.makeReverseClient(key.profile).pipe(
@@ -1061,6 +1067,11 @@ const runWithProtocolState = Effect.fnUntraced(function*(options: {
           server.initializedClients.delete(clientId)
           continue
         }
+        // This must stay below stale-client cleanup so transports without
+        // notification support still prune initializedClients.
+        if (!patchedProtocol.supportsNotifications) {
+          continue
+        }
         const selectedProtocol = clientProtocols.get(clientId)
         if (!selectedProtocol) {
           continue
@@ -1088,14 +1099,14 @@ const runWithProtocolState = Effect.fnUntraced(function*(options: {
             return
           }
           const encoded = yield* selectedProtocol.payloadCodecs(rpc).encode(projected.payload)
-          // TODO: Extend RpcServer.Protocol's outbound message contract with server-originated
-          // notifications so MCP does not need to treat this notification as an RPC response.
-          const message: RpcMessage.RequestEncoded = {
+          yield* patchedProtocol.send(clientId, {
             _tag: "Request",
+            id: "",
             tag: projected.tag,
-            payload: encoded
-          } as any
-          yield* patchedProtocol.send(clientId, message as any)
+            payload: encoded,
+            headers: [],
+            isNotification: true
+          })
         }).pipe(Effect.catchCause(() => Effect.void))
       }
     })),
@@ -1219,6 +1230,7 @@ const mcpStdioSerialization = (
   return RpcSerialization.RpcSerialization.of({
     contentType: serialization.contentType,
     includesFraming: true,
+    codecFor: serialization.codecFor,
     makeUnsafe: () => {
       const frames = RpcSerialization.ndjson.makeUnsafe()
       const parser = serialization.makeUnsafe()
@@ -1346,7 +1358,7 @@ const layerMcpProtocolHttp = (options: {
 > =>
   Layer.effect(RpcServer.Protocol)(Effect.gen(function*() {
     const state = yield* McpProtocolState
-    const { httpEffect, protocol } = yield* RpcServer.makeProtocolWithHttpEffect
+    const { httpEffect, protocol } = yield* RpcServer.makeProtocolWithHttpEffect()
     const router = yield* HttpRouter.HttpRouter
     yield* router.add("POST", options.path, (request) => {
       if (!isAllowedMcpOrigin(request, options.allowedOrigins)) {
@@ -1367,81 +1379,76 @@ const layerMcpProtocolHttp = (options: {
       if (sessionId !== undefined && session === undefined) {
         return Effect.succeed(HttpServerResponse.empty({ status: 404 }))
       }
-      if (
-        protocolVersion !== undefined &&
-        !state.protocolRegistry.protocols.some((protocol) => protocol.protocolVersion === protocolVersion)
-      ) {
-        return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
-      }
-      if (
-        session?.protocol.transport.requiresVersionHeader === true &&
-        protocolVersion !== session.protocol.protocolVersion
-      ) {
-        return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
-      }
+      const protocolVersionHeaderRejected = (protocolVersion !== undefined &&
+        !state.protocolRegistry.protocols.some((protocol) => protocol.protocolVersion === protocolVersion)) ||
+        (session?.protocol.transport.requiresVersionHeader === true &&
+          protocolVersion !== session.protocol.protocolVersion)
+      const parseErrorResponse = protocolVersionHeaderRejected
+        ? HttpServerResponse.empty({ status: 400 })
+        : HttpServerResponse.jsonUnsafe({
+          jsonrpc: "2.0",
+          id: null,
+          error: new McpSchema.ParseError({ message: "Parse error" })
+        })
       return request.text.pipe(
+        Effect.flatMap(Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)),
         Effect.matchEffect({
-          onFailure: () =>
-            Effect.succeed(HttpServerResponse.jsonUnsafe({
-              jsonrpc: "2.0",
-              id: null,
-              error: new McpSchema.ParseError({ message: "Parse error" })
-            })),
-          onSuccess: (body) =>
-            Effect.matchEffect(Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)(body), {
-              onFailure: () =>
-                Effect.succeed(HttpServerResponse.jsonUnsafe({
-                  jsonrpc: "2.0",
-                  id: null,
-                  error: new McpSchema.ParseError({ message: "Parse error" })
-                })),
-              onSuccess: (input) => {
-                if (!Array.isArray(input)) {
-                  const hasId = Predicate.hasProperty(input, "id")
-                  const id = hasId && (typeof input.id === "string" || typeof input.id === "number")
-                    ? input.id
-                    : null
-                  const isJsonRpc = Predicate.hasProperty(input, "jsonrpc") && input.jsonrpc === "2.0"
-                  const hasValidRequestId = !hasId || typeof input.id === "string" || typeof input.id === "number"
-                  const isRequest = isJsonRpc && hasValidRequestId &&
-                    Predicate.hasProperty(input, "method") && typeof input.method === "string"
-                  const hasValidResponseId = hasId &&
-                    (typeof input.id === "string" || typeof input.id === "number" || input.id === null)
-                  const hasResult = Predicate.hasProperty(input, "result")
-                  const hasError = Predicate.hasProperty(input, "error")
-                  const isResponse = isJsonRpc && hasValidResponseId && hasResult !== hasError
-                  if (!isRequest && !isResponse) {
-                    return Effect.succeed(HttpServerResponse.jsonUnsafe({
-                      jsonrpc: "2.0",
-                      id,
-                      error: new InvalidRequest({ message: "Invalid Request" })
-                    }))
-                  }
-                  const isInitialize = isInitializeJsonRpcMessage(input)
-                  if (isInitialize && sessionId !== undefined) {
-                    return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
-                  }
-                  if (!isInitialize && isRequest && sessionId === undefined) {
-                    return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
-                  }
-                  return httpEffect
-                }
-                if (input.length === 0) {
-                  return Effect.succeed(HttpServerResponse.jsonUnsafe({
-                    jsonrpc: "2.0",
-                    id: null,
-                    error: new InvalidRequest({ message: "Invalid Request" })
-                  }, { status: 400 }))
-                }
-                if (input.some(isInitializeJsonRpcMessage) || session === undefined) {
-                  return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
-                }
-                const selectedProtocol = session.protocol
-                return selectedProtocol.transport.acceptsJsonRpcBatches
-                  ? httpEffect
-                  : Effect.succeed(HttpServerResponse.empty({ status: 400 }))
+          onFailure: () => Effect.succeed(parseErrorResponse),
+          onSuccess: (input) => {
+            if (!Array.isArray(input)) {
+              const hasId = Predicate.hasProperty(input, "id")
+              const id = hasId && (typeof input.id === "string" || typeof input.id === "number")
+                ? input.id
+                : null
+              const isJsonRpc = Predicate.hasProperty(input, "jsonrpc") && input.jsonrpc === "2.0"
+              const hasValidRequestId = !hasId || typeof input.id === "string" || typeof input.id === "number"
+              const isRequest = isJsonRpc && hasValidRequestId &&
+                Predicate.hasProperty(input, "method") && typeof input.method === "string"
+              const hasValidResponseId = hasId &&
+                (typeof input.id === "string" || typeof input.id === "number" || input.id === null)
+              const hasResult = Predicate.hasProperty(input, "result")
+              const hasError = Predicate.hasProperty(input, "error")
+              const isResponse = isJsonRpc && hasValidResponseId && hasResult !== hasError
+              const isInitialize = isRequest && isInitializeJsonRpcMessage(input)
+              // Initialize requests are exempt from the version header check:
+              // rejecting them with a 400 makes clients treat the endpoint as a
+              // legacy HTTP+SSE server and retry initialization with a GET.
+              if (!isInitialize && protocolVersionHeaderRejected) {
+                return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
               }
-            })
+              if (!isRequest && !isResponse) {
+                return Effect.succeed(HttpServerResponse.jsonUnsafe({
+                  jsonrpc: "2.0",
+                  id,
+                  error: new InvalidRequest({ message: "Invalid Request" })
+                }))
+              }
+              if (isInitialize && sessionId !== undefined) {
+                return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
+              }
+              if (!isInitialize && isRequest && sessionId === undefined) {
+                return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
+              }
+              return httpEffect
+            }
+            if (protocolVersionHeaderRejected) {
+              return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
+            }
+            if (input.length === 0) {
+              return Effect.succeed(HttpServerResponse.jsonUnsafe({
+                jsonrpc: "2.0",
+                id: null,
+                error: new InvalidRequest({ message: "Invalid Request" })
+              }, { status: 400 }))
+            }
+            if (input.some(isInitializeJsonRpcMessage) || session === undefined) {
+              return Effect.succeed(HttpServerResponse.empty({ status: 400 }))
+            }
+            const selectedProtocol = session.protocol
+            return selectedProtocol.transport.acceptsJsonRpcBatches
+              ? httpEffect
+              : Effect.succeed(HttpServerResponse.empty({ status: 400 }))
+          }
         })
       )
     })

@@ -14,6 +14,18 @@
   },
   "overrides": [
     {
+      // The shared Next config compiles these React surfaces with React Compiler.
+      // Preserve compiler-managed callbacks and Next.js Server Action references.
+      "includes": ["apps/www/**/*.tsx", "packages/design-system/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noJsxPropsBind": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": [
         "apps/**/*.{ts,tsx,mts,cts}",
         "packages/**/*.{ts,tsx,mts,cts}",
@@ -121,7 +133,49 @@
       "linter": {
         "rules": {
           "suspicious": {
-            "noUnknownAttribute": "off"
+            "noUnknownAttribute": {
+              "level": "error",
+              "options": {
+                "ignore": [
+                  "args",
+                  "attach",
+                  "castShadow",
+                  "depthWrite",
+                  "distance",
+                  "emissive",
+                  "emissiveIntensity",
+                  "frustumCulled",
+                  "geometry",
+                  "groundColor",
+                  "intensity",
+                  "map",
+                  "material",
+                  "metalness",
+                  "object",
+                  "polygonOffset",
+                  "polygonOffsetFactor",
+                  "polygonOffsetUnits",
+                  "position",
+                  "quaternion",
+                  "receiveShadow",
+                  "renderOrder",
+                  "rotation",
+                  "roughness",
+                  "shadow-bias",
+                  "shadow-camera-bottom",
+                  "shadow-camera-left",
+                  "shadow-camera-right",
+                  "shadow-camera-top",
+                  "shadow-mapSize-height",
+                  "shadow-mapSize-width",
+                  "shadow-normalBias",
+                  "side",
+                  "transparent",
+                  "visible",
+                  "wireframe"
+                ]
+              }
+            }
           }
         }
       }
@@ -147,18 +201,14 @@
   "linter": {
     "rules": {
       "suspicious": {
-        "noEqualsToNull": "off",
         "noLeakedRender": "off",
         "noShadow": "off",
         "noUnnecessaryConditions": "off"
       },
       "performance": {
-        "noAwaitInLoops": "off",
-        "noNamespaceImport": "off",
-        "noJsxPropsBind": "off"
+        "noAwaitInLoops": "off"
       },
       "style": {
-        "useConsistentMethodSignatures": "off",
         "useDestructuring": "off"
       }
     }
@@ -166,12 +216,9 @@
   "files": {
     "includes": [
       "**/*",
-      "!apps/www/scripts/_data/**/*",
-      "!packages/contents/_data/quran.ts",
       "!packages/backend/convex/_generated/**/*",
       "!packages/backend/convex/betterAuth/_generated/**/*",
-      "!repos/**/*",
-      "!.agents/**/*"
+      "!repos/**/*"
     ]
   }
 }

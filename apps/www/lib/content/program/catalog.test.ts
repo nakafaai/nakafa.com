@@ -9,6 +9,7 @@ import {
   getPublishedProgramRoutes,
   readPublishedProgramCatalog,
   readPublishedProgramPage,
+  readPublishedProgramPrerenderRoute,
   readPublishedProgramRoutes,
 } from "@/lib/content/program/catalog";
 import { createTestSnapshotContext } from "@/test/content/snapshot";
@@ -88,6 +89,52 @@ describe("published program catalog", () => {
   });
 
   it.effect(
+    "selects one renderable root without enumerating descendant routes",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockResolvedValueOnce(catalogResponse());
+
+        expect(yield* readPublishedProgramPrerenderRoute("en")).toEqual(
+          testProgramRoot
+        );
+        expect(runtimeQueryMock).toHaveBeenCalledExactlyOnceWith(
+          expect.anything(),
+          {
+            appLocale: "en",
+          }
+        );
+      })
+  );
+
+  it.effect.each([
+    ["empty inventory", catalogResponse({ routeJson: [] })],
+    [
+      "hidden roots",
+      catalogResponse({
+        routeJson: [
+          testCurriculumRowJson({ ...testProgramRoot, sitemap: false }),
+        ],
+      }),
+    ],
+    ["unmanaged inventory", catalogResponse({ managed: false })],
+    [
+      "non-root route",
+      catalogResponse({ routeJson: [testCurriculumRowJson(testProgramClass)] }),
+    ],
+  ])("rejects a prerender seed from %s", ([_label, result]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(result);
+
+      expect(
+        yield* readPublishedProgramPrerenderRoute("en").pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "PublishedProjectionError",
+        appLocale: "en",
+      });
+    })
+  );
+
+  it.effect(
     "reads curriculum roots and release-bound pages from the signed snapshot",
     () =>
       Effect.gen(function* () {
@@ -99,6 +146,9 @@ describe("published program catalog", () => {
         expect(
           catalog.entries.map(({ translation }) => translation.title)
         ).toEqual(["Technical Program 1", "Technical Program 2"]);
+        expect(yield* readPublishedProgramPrerenderRoute("en")).toEqual(
+          catalog.entries[0].route
+        );
         const page = yield* readPublishedProgramPage({
           cursor: null,
           expectedManifestHash: null,

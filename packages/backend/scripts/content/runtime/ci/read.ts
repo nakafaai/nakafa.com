@@ -37,12 +37,9 @@ export const readSignedRuntime = Effect.fn("contentRuntime.readSignedRuntime")(
       directory: config.runnerTemp,
       prefix: "runtime-import-",
     });
-    const gpgHome = `${tempRoot}/gnupg`;
     const snapshotRoot = `${tempRoot}/snapshot`;
-    yield* fileSystem.makeDirectory(gpgHome);
     yield* fileSystem.makeDirectory(snapshotRoot);
     yield* fileSystem.chmod(tempRoot, 0o700);
-    yield* fileSystem.chmod(gpgHome, 0o700);
     yield* fileSystem.chmod(snapshotRoot, 0o700);
 
     const logPath = `${tempRoot}/runtime.log`;
@@ -50,7 +47,6 @@ export const readSignedRuntime = Effect.fn("contentRuntime.readSignedRuntime")(
       archivePath: `${tempRoot}/runtime.tar`,
       cacheKey: Redacted.value(config.cacheKey),
       encryptedPath,
-      gpgHome,
       listingPath: `${tempRoot}/archive.txt`,
       logPath,
       snapshotRoot,

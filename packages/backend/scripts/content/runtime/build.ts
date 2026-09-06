@@ -61,7 +61,6 @@ const compileApplication = Effect.fn("contentRuntime.compileApplication")(
       ["pnpm", "--filter", "www", "verify:featured-renderer"],
       local
     );
-    yield* runBuildCommand(root, ["pnpm", "--filter", "www", "typecheck"], app);
     yield* runBuildCommand(
       root,
       [
@@ -291,7 +290,6 @@ export const buildApplication = Effect.fn("contentRuntime.buildApplication")(
           CONTENT_RUNTIME_TOKEN: LOCAL_RUNTIME_TOKEN,
           NEXT_PUBLIC_CONVEX_URL: env.NEXT_PUBLIC_CONVEX_URL,
           NEXT_PUBLIC_CONVEX_SITE_URL: env.VITE_CONVEX_SITE_URL,
-          TURBO_CONCURRENCY: env.TURBO_CONCURRENCY ?? "2",
         });
       }
       const runtime = yield* initializeLocalRuntime(root, source.config);

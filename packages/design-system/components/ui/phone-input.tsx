@@ -26,7 +26,11 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import { useMemo, useState } from "react";
-import * as RpnInput from "react-phone-number-input";
+import {
+  type Country,
+  type FlagProps,
+  default as PhoneInputPrimitive,
+} from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import { VList } from "virtua";
 
@@ -34,12 +38,12 @@ const countrySearchIcon = <HugeIcons className="size-4" icon={Search02Icon} />;
 
 type PhoneInputProps = {
   className?: string;
-} & React.ComponentProps<typeof RpnInput.default>;
+} & React.ComponentProps<typeof PhoneInputPrimitive>;
 
 export default function PhoneInput({ className, ...props }: PhoneInputProps) {
   return (
     <div className={cn("*:not-first:mt-2", className)} dir="ltr">
-      <RpnInput.default
+      <PhoneInputPrimitive
         className="flex shadow-xs"
         countrySelectComponent={CountrySelect}
         defaultCountry="ID"
@@ -67,14 +71,14 @@ function Phone({ className, ...props }: React.ComponentProps<"input">) {
 
 interface CountrySelectProps {
   disabled?: boolean;
-  onChange: (value: RpnInput.Country) => void;
-  options: { label: string; value: RpnInput.Country | undefined }[];
-  value: RpnInput.Country;
+  onChange: (value: Country) => void;
+  options: { label: string; value: Country | undefined }[];
+  value: Country;
 }
 
 interface CountryOption {
   label: string;
-  value: RpnInput.Country;
+  value: Country;
 }
 
 function hasCountryValue(
@@ -196,7 +200,7 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
   );
 }
 
-function FlagComponent({ country, countryName }: RpnInput.FlagProps) {
+function FlagComponent({ country, countryName }: FlagProps) {
   const Flag = flags[country];
 
   return (

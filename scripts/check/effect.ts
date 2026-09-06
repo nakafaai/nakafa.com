@@ -1,6 +1,25 @@
-import getEffectPath from "@effect/tsgo/lib/getExePath";
 import { Effect, Schema } from "effect";
-import * as ts from "typescript/unstable/ast";
+import {
+  type Expression,
+  isAwaitExpression,
+  isCallExpression,
+  isElementAccessExpression,
+  isIdentifier,
+  isImportDeclaration,
+  isNamespaceImport,
+  isNumericLiteral,
+  isObjectBindingPattern,
+  isPropertyAccessExpression,
+  isStringLiteral,
+  isStringLiteralLikeNode,
+  isTypeNode,
+  isVariableDeclaration,
+  type Node,
+  type ObjectBindingPattern,
+  type SourceFile,
+  SyntaxKind,
+  type VariableDeclaration,
+} from "typescript/unstable/ast";
 import { createVirtualFileSystem } from "typescript/unstable/fs";
 import { API, type Symbol as NativeSymbol } from "typescript/unstable/sync";
 
@@ -34,14 +53,14 @@ type RuntimeKind =
 interface RuntimeImports {
   readonly bindings: Map<NativeSymbol, RuntimeKind>;
   readonly directRunner: boolean;
-  readonly symbols: ReadonlyMap<ts.Node, NativeSymbol | undefined>;
+  readonly symbols: ReadonlyMap<Node, NativeSymbol | undefined>;
 }
 
 /** Returns value-position descendants while excluding type-only subtrees. */
-function descendants(sourceFile: ts.SourceFile) {
-  const nodes: ts.Node[] = [sourceFile];
+function descendants(sourceFile: SourceFile) {
+  const nodes: Node[] = [sourceFile];
   for (const node of nodes) {
-    if (ts.isTypeNode(node)) {
+    if (isTypeNode(node)) {
       continue;
     }
     node.forEachChild((child) => {
@@ -51,38 +70,35 @@ function descendants(sourceFile: ts.SourceFile) {
   return nodes;
 }
 
-function importedModule(node: ts.Node) {
-  if (
-    ts.isImportDeclaration(node) &&
-    ts.isStringLiteral(node.moduleSpecifier)
-  ) {
+function importedModule(node: Node) {
+  if (isImportDeclaration(node) && isStringLiteral(node.moduleSpecifier)) {
     return node.moduleSpecifier.text;
   }
   if (
-    ts.isCallExpression(node) &&
-    node.expression.kind === ts.SyntaxKind.ImportKeyword
+    isCallExpression(node) &&
+    node.expression.kind === SyntaxKind.ImportKeyword
   ) {
     const [specifier] = node.arguments;
-    return specifier !== undefined && ts.isStringLiteralLikeNode(specifier)
+    return specifier !== undefined && isStringLiteralLikeNode(specifier)
       ? specifier.text
       : undefined;
   }
 }
 
-function staticProperty(node: ts.Node | undefined) {
+function staticProperty(node: Node | undefined) {
   return node !== undefined &&
-    (ts.isIdentifier(node) || ts.isStringLiteralLikeNode(node))
+    (isIdentifier(node) || isStringLiteralLikeNode(node))
     ? node.text
     : undefined;
 }
 
-function staticElement(node: ts.Expression) {
-  return ts.isStringLiteralLikeNode(node) || ts.isNumericLiteral(node)
+function staticElement(node: Expression) {
+  return isStringLiteralLikeNode(node) || isNumericLiteral(node)
     ? node.text
     : undefined;
 }
 
-function importedRuntimeKind(node: ts.Node): RuntimeKind | undefined {
+function importedRuntimeKind(node: Node): RuntimeKind | undefined {
   switch (importedModule(node)) {
     case "effect":
       return "root";
@@ -97,14 +113,14 @@ function importedRuntimeKind(node: ts.Node): RuntimeKind | undefined {
 
 /** Collects local bindings that expose Effect runtime modules. */
 function runtimeImports(
-  nodes: readonly ts.Node[],
+  nodes: readonly Node[],
   symbols: RuntimeImports["symbols"]
 ): RuntimeImports {
   const bindings = new Map<NativeSymbol, RuntimeKind>();
   let directRunner = false;
 
   for (const node of nodes) {
-    if (!ts.isImportDeclaration(node)) {
+    if (!isImportDeclaration(node)) {
       continue;
     }
     const kind = importedRuntimeKind(node);
@@ -113,12 +129,12 @@ function runtimeImports(
     if (
       kind === undefined ||
       clause === undefined ||
-      clause.phaseModifier === ts.SyntaxKind.TypeKeyword ||
+      clause.phaseModifier === SyntaxKind.TypeKeyword ||
       namedBindings === undefined
     ) {
       continue;
     }
-    const candidates = ts.isNamespaceImport(namedBindings)
+    const candidates = isNamespaceImport(namedBindings)
       ? [{ name: namedBindings.name, kind, runner: false }]
       : namedBindings.elements
           .filter((binding) => !binding.isTypeOnly)
@@ -147,29 +163,26 @@ function runtimeImports(
 
 /** Resolves an imported Effect module, factory, or runtime expression. */
 function runtimeKind(
-  node: ts.Node,
+  node: Node,
   imports: RuntimeImports
 ): RuntimeKind | undefined {
-  if (ts.isAwaitExpression(node)) {
+  if (isAwaitExpression(node)) {
     return runtimeKind(node.expression, imports);
   }
-  if (ts.isIdentifier(node)) {
+  if (isIdentifier(node)) {
     const symbol = imports.symbols.get(node);
     return symbol === undefined ? undefined : imports.bindings.get(symbol);
   }
-  if (
-    ts.isPropertyAccessExpression(node) ||
-    ts.isElementAccessExpression(node)
-  ) {
-    const member = ts.isPropertyAccessExpression(node)
+  if (isPropertyAccessExpression(node) || isElementAccessExpression(node)) {
+    const member = isPropertyAccessExpression(node)
       ? node.name.text
       : staticElement(node.argumentExpression);
     return runtimeMemberKind(runtimeKind(node.expression, imports), member);
   }
-  if (!ts.isCallExpression(node)) {
+  if (!isCallExpression(node)) {
     return undefined;
   }
-  if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+  if (node.expression.kind === SyntaxKind.ImportKeyword) {
     return importedRuntimeKind(node);
   }
   return runtimeKind(node.expression, imports) === "managed-make"
@@ -193,13 +206,13 @@ function runtimeMemberKind(
 }
 
 function collectMemberBindings(
-  pattern: ts.ObjectBindingPattern,
+  pattern: ObjectBindingPattern,
   owner: RuntimeKind,
   imports: RuntimeImports
 ) {
   let changed = false;
   for (const element of pattern.elements) {
-    if (element.name === undefined || !ts.isIdentifier(element.name)) {
+    if (element.name === undefined || !isIdentifier(element.name)) {
       continue;
     }
     const member = staticProperty(element.propertyName ?? element.name);
@@ -218,20 +231,20 @@ function collectMemberBindings(
 }
 
 function collectVariableAlias(
-  declaration: ts.VariableDeclaration,
+  declaration: VariableDeclaration,
   imports: RuntimeImports
 ) {
   if (declaration.initializer === undefined) {
     return false;
   }
   const kind = runtimeKind(declaration.initializer, imports);
-  if (ts.isObjectBindingPattern(declaration.name)) {
+  if (isObjectBindingPattern(declaration.name)) {
     return (
       kind !== undefined &&
       collectMemberBindings(declaration.name, kind, imports)
     );
   }
-  const symbol = ts.isIdentifier(declaration.name)
+  const symbol = isIdentifier(declaration.name)
     ? imports.symbols.get(declaration.name)
     : undefined;
   if (
@@ -246,17 +259,17 @@ function collectVariableAlias(
 }
 
 /** Extends imported runtime bindings through direct local aliases. */
-function collectAliases(nodes: readonly ts.Node[], imports: RuntimeImports) {
+function collectAliases(nodes: readonly Node[], imports: RuntimeImports) {
   let changed = true;
   while (changed) {
     changed = nodes.some(
       (node) =>
-        ts.isVariableDeclaration(node) && collectVariableAlias(node, imports)
+        isVariableDeclaration(node) && collectVariableAlias(node, imports)
     );
   }
 }
 
-function runtimeRunners(node: ts.Node, imports: RuntimeImports) {
+function runtimeRunners(node: Node, imports: RuntimeImports) {
   const kind = runtimeKind(node, imports);
   if (kind === "effect") {
     return EFFECT_RUNNERS;
@@ -264,26 +277,24 @@ function runtimeRunners(node: ts.Node, imports: RuntimeImports) {
   return kind === "managed-runtime" ? MANAGED_RUNTIME_RUNNERS : undefined;
 }
 
-function isRunnerMember(node: ts.Node, imports: RuntimeImports) {
-  if (
-    !(ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node))
-  ) {
+function isRunnerMember(node: Node, imports: RuntimeImports) {
+  if (!(isPropertyAccessExpression(node) || isElementAccessExpression(node))) {
     return false;
   }
   const runners = runtimeRunners(node.expression, imports);
   if (runners === undefined) {
     return false;
   }
-  const member = ts.isPropertyAccessExpression(node)
+  const member = isPropertyAccessExpression(node)
     ? node.name.text
     : staticElement(node.argumentExpression);
   return member === undefined || runners.has(member);
 }
 
 /** Tests whether one destructuring pattern extracts a runtime runner. */
-function destructuresRunner(node: ts.Node, imports: RuntimeImports) {
+function destructuresRunner(node: Node, imports: RuntimeImports) {
   if (
-    !(ts.isVariableDeclaration(node) && ts.isObjectBindingPattern(node.name)) ||
+    !(isVariableDeclaration(node) && isObjectBindingPattern(node.name)) ||
     node.initializer === undefined
   ) {
     return false;
@@ -336,7 +347,7 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
   return yield* Effect.try({
     try: () => {
       const nodes = descendants(sourceFile);
-      const identifiers = nodes.filter(ts.isIdentifier);
+      const identifiers = nodes.filter(isIdentifier);
       const symbols = project.checker.getSymbolAtLocation(identifiers);
       const imports = runtimeImports(
         nodes,
@@ -384,7 +395,6 @@ export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
           new API({
             cwd: "/",
             fs: createVirtualFileSystem(files),
-            tsserverPath: getEffectPath(),
           }),
         catch: (cause) =>
           new TestCompilerError({

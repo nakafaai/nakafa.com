@@ -1,4 +1,5 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
@@ -10,7 +11,6 @@ import {
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
 import {
   type CurriculumRouteModel,
-  listRuntimeCurriculumStaticParams,
   readRuntimeCurriculumBreadcrumbs,
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,
@@ -27,7 +27,9 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
+import { readPublishedProgramPrerenderRoute } from "@/lib/content/program/catalog";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/artwork";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
@@ -45,7 +47,7 @@ const CurriculumNestedHeader = dynamic(
 );
 
 /**
- * Builds a bounded prerender subset from the exclusive curriculum owner.
+ * Supplies one real curriculum root per locale for Cache Components.
  *
  * Curriculum paths are navigation context only; material bodies remain linked
  * through canonical material paths carried by the projection.
@@ -55,7 +57,12 @@ export async function generateStaticParams({
 }: {
   params: { locale: string };
 }) {
-  return listRuntimeCurriculumStaticParams(params.locale);
+  const locale = getLocaleOrThrow(params.locale);
+  const route = await Effect.runPromise(
+    readPublishedProgramPrerenderRoute(locale)
+  );
+  const [, curriculum, ...path] = route.publicPath.split("/");
+  return [{ curriculum, path }];
 }
 
 /** Generates metadata from the exclusive published or source route owner. */

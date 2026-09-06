@@ -1,6 +1,6 @@
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   cleanLocalRuntime,
@@ -99,7 +99,7 @@ describe("owned signed runtime", () => {
         expect(yield* fs.exists(`${root}/packages/backend/.convex`)).toBe(true);
         expect(yield* readLocalRuntime(root)).toBeUndefined();
         yield* cleanLocalRuntime(root);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.live(
@@ -123,7 +123,7 @@ describe("owned signed runtime", () => {
           });
         }).pipe(Effect.scoped);
         yield* cleanLocalRuntime(root);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   for (const occupied of ["query", "site"]) {
@@ -164,7 +164,7 @@ describe("owned signed runtime", () => {
           expect(listener.listening).toBe(true);
           expect(yield* readLocalRuntime(root)).toEqual(runtime);
           expect(yield* fs.exists(`${runtime.directory}/using`)).toBe(false);
-        }).pipe(Effect.provide(NodeServices.layer))
+        }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -177,7 +177,7 @@ describe("owned signed runtime", () => {
         _tag: "ContentSnapshotError",
       });
       expect(yield* fs.exists(`${root}/shared/runtime`)).toBe(false);
-    }).pipe(Effect.provide(NodeServices.layer))
+    }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.live("preserves a replaced reservation before cleanup", () =>
@@ -190,7 +190,7 @@ describe("owned signed runtime", () => {
         yield* releaseLocalRuntime(reserved).pipe(Effect.flip)
       ).toMatchObject({ _tag: "ContentSnapshotError" });
       expect(yield* fs.exists(reserved.directory)).toBe(true);
-    }).pipe(Effect.provide(NodeServices.layer))
+    }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   for (const change of ["file", "symlink", "missing-identity"]) {
@@ -229,7 +229,7 @@ describe("owned signed runtime", () => {
         ).toMatchObject({ _tag: "ContentSnapshotError" });
         expect(yield* fs.exists(reserved.directory)).toBe(true);
         expect(yield* fs.exists(`${root}/original`)).toBe(true);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -268,7 +268,7 @@ describe("owned signed runtime", () => {
             )
           ).toMatchObject({ _tag: "ContentSnapshotError" });
           yield* releaseLocalRuntime(reserved);
-        }).pipe(Effect.provide(NodeServices.layer))
+        }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -341,7 +341,7 @@ describe("owned signed runtime", () => {
           _tag: "ContentSnapshotError",
         });
         expect(yield* fs.exists(runtime.directory)).toBe(true);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -365,7 +365,7 @@ describe("owned signed runtime", () => {
             yield* initializeLocalRuntime(root, identity).pipe(Effect.flip)
           ).toMatchObject({ _tag: "ContentSnapshotError" });
           yield* releaseLocalRuntime(reserved);
-        }).pipe(Effect.provide(NodeServices.layer))
+        }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 });

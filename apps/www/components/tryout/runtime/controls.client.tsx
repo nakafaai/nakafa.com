@@ -18,6 +18,7 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { domAnimation, LazyMotion } from "motion/react";
+// biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
 import * as m from "motion/react-m";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";

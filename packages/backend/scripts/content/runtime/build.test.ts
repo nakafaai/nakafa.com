@@ -1,5 +1,5 @@
 import { tmpdir } from "node:os";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
 import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
@@ -189,7 +189,7 @@ describe("shared application build lifecycle", () => {
           ).toMatchObject({ _tag: "ContentSnapshotError" });
           expect(mocks.reserve).not.toHaveBeenCalled();
           expect(mocks.generations).not.toHaveBeenCalled();
-        }).pipe(Effect.provide(NodeServices.layer))
+        }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -206,7 +206,7 @@ describe("shared application build lifecycle", () => {
           "--filter=www",
         ]);
         expect(mocks.reserve).not.toHaveBeenCalled();
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.live(
@@ -233,7 +233,7 @@ describe("shared application build lifecycle", () => {
         expect(yield* fs.exists(`${runtime.directory}/runtime-cache`)).toBe(
           false
         );
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.live(
@@ -243,7 +243,7 @@ describe("shared application build lifecycle", () => {
         const { root, runtime } = yield* fixture;
         mocks.read.mockReturnValue(Effect.succeed(runtime));
         yield* buildApplication(root, [], {});
-        expect(mocks.compile).toHaveBeenCalledTimes(3);
+        expect(mocks.compile).toHaveBeenCalledTimes(2);
         expect(mocks.compile).toHaveBeenLastCalledWith(
           root,
           [
@@ -270,7 +270,7 @@ describe("shared application build lifecycle", () => {
         );
         expect(mocks.lease).toHaveBeenCalledTimes(2);
         expect(mocks.reserve).not.toHaveBeenCalled();
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.effect(
@@ -285,7 +285,7 @@ describe("shared application build lifecycle", () => {
           "start",
         ]);
         expect(mocks.backend).not.toHaveBeenCalled();
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   for (const source of ["download", "missing", "empty"]) {
@@ -312,12 +312,12 @@ describe("shared application build lifecycle", () => {
             source === "download" ? 0 : 1
           );
           expect(mocks.generationRead).toHaveBeenCalledTimes(3);
-          expect(mocks.compile).toHaveBeenCalledTimes(3);
+          expect(mocks.compile).toHaveBeenCalledTimes(2);
           expect(yield* fs.readFileString(output)).toBe(
             `CONTENT_RUNTIME_SELECTION_HASH=${runtime.runtimeSelectionHash}\n`
           );
           expect(mocks.release).not.toHaveBeenCalled();
-        }).pipe(Effect.provide(NodeServices.layer))
+        }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -345,14 +345,13 @@ describe("shared application build lifecycle", () => {
             CONTENT_RUNTIME_SCHEMA_HASH: runtime.runtimeSchemaFingerprint,
             NEXT_PUBLIC_CONVEX_URL: host.NEXT_PUBLIC_CONVEX_URL,
             NEXT_PUBLIC_CONVEX_SITE_URL: host.VITE_CONVEX_SITE_URL,
-            TURBO_CONCURRENCY: "2",
           })
         );
         expect(mocks.initialize).not.toHaveBeenCalled();
         expect(mocks.backend).not.toHaveBeenCalled();
         expect(mocks.import).not.toHaveBeenCalled();
         expect(mocks.release).toHaveBeenCalledOnce();
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.effect("rejects a stale supplied snapshot on protected Vercel", () =>
@@ -364,7 +363,7 @@ describe("shared application build lifecycle", () => {
         }).pipe(Effect.flip)
       ).toMatchObject({ _tag: "ContentSnapshotError" });
       expect(mocks.reserve).not.toHaveBeenCalled();
-    }).pipe(Effect.provide(NodeServices.layer))
+    }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.live(
@@ -385,6 +384,6 @@ describe("shared application build lifecycle", () => {
         expect(mocks.initialize).not.toHaveBeenCalled();
         expect(mocks.import).not.toHaveBeenCalled();
         expect(mocks.release).toHaveBeenCalledOnce();
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 });

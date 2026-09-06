@@ -35,10 +35,10 @@ const UPLOAD_ACTION =
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a";
 /** Digest of the decoded publish job after a complete OIDC boundary review. */
 const TRUSTED_PUBLISH_SHA256 =
-  "f6498b7967e2631f6a5c413e301c32308f496505e451b95504fb486f0558554d";
+  "1e72f0579e34d12a8a6bdc5b7fa821403947e03f39a207156bc669b73f2cff6f";
 /** Digest of the decoded verification job after a complete execution review. */
 const TRUSTED_VERIFY_SHA256 =
-  "afbae931e9df2cded2af3a67e81f81e1b7a81c1b21eff86ea18480a7d0008509";
+  "d62e30f492daadf91bee09ca4fdf729c9dc1b6763a5206cc441775430be224be";
 const REQUIRED_BUILD_SOURCE = [
   "pnpm test:scripts",
   "pnpm --filter @nakafa/cli typecheck",
@@ -255,7 +255,7 @@ function executionBoundaryProblems(
     ["verification", verify],
   ] as const) {
     const setup = job.steps.find(({ uses }) => uses === SETUP_NODE_ACTION);
-    if (setup?.with?.["node-version"] !== "24.19.0") {
+    if (setup?.with?.["node-version"] !== "24.20.0") {
       problems.push(`CLI ${owner} must use the repository Node runtime.`);
     }
     if (setup?.with?.["package-manager-cache"] !== false) {

@@ -17,11 +17,11 @@ type SendWelcomeEmail = FunctionReference<
 >;
 
 interface WelcomeEmailWorkflowStep {
-  runAction(
+  readonly runAction: (
     action: SendWelcomeEmail,
     args: WelcomeEmailWorkflowArgs,
     options: { readonly retry: typeof WELCOME_EMAIL_RETRY }
-  ): Promise<null>;
+  ) => Promise<null>;
 }
 
 /** Runs the durable provider action with the deletion-aware retry policy. */

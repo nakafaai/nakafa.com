@@ -4,14 +4,19 @@ import { DragDropVerticalIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
-import * as ResizablePrimitive from "react-resizable-panels";
+import {
+  Group,
+  Panel,
+  Separator,
+  useDefaultLayout,
+} from "react-resizable-panels";
 
 function ResizablePanelGroup({
   className,
   ...props
-}: React.ComponentProps<typeof ResizablePrimitive.Group>) {
+}: React.ComponentProps<typeof Group>) {
   return (
-    <ResizablePrimitive.Group
+    <Group
       className={cn(
         "flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
         className
@@ -22,21 +27,19 @@ function ResizablePanelGroup({
   );
 }
 
-function ResizablePanel({
-  ...props
-}: React.ComponentProps<typeof ResizablePrimitive.Panel>) {
-  return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />;
+function ResizablePanel({ ...props }: React.ComponentProps<typeof Panel>) {
+  return <Panel data-slot="resizable-panel" {...props} />;
 }
 
 function ResizableHandle({
   withHandle,
   className,
   ...props
-}: React.ComponentProps<typeof ResizablePrimitive.Separator> & {
+}: React.ComponentProps<typeof Separator> & {
   withHandle?: boolean;
 }) {
   return (
-    <ResizablePrimitive.Separator
+    <Separator
       className={cn(
         "relative z-999 flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:translate-x-0 data-[panel-group-direction=vertical]:after:-translate-y-1/2 [&[data-panel-group-direction=vertical]>div]:rotate-90",
         className
@@ -49,11 +52,11 @@ function ResizableHandle({
           <HugeIcons className="size-2.5" icon={DragDropVerticalIcon} />
         </div>
       )}
-    </ResizablePrimitive.Separator>
+    </Separator>
   );
 }
 
-const useResizableDefaultLayout = ResizablePrimitive.useDefaultLayout;
+const useResizableDefaultLayout = useDefaultLayout;
 
 export {
   ResizableHandle,

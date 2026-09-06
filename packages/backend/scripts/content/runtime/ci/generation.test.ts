@@ -1,4 +1,3 @@
-import * as NodeServices from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { decodeJsonRows } from "@repo/backend/content/snapshot/json";
 import {
@@ -9,12 +8,12 @@ import {
   formatGenerationEnvironment,
   readProductionGenerations,
 } from "@repo/backend/scripts/content/runtime/ci/generation";
-import { Effect, FileSystem, Redacted } from "effect";
+import { Effect, Redacted } from "effect";
 
 const runDataMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@repo/backend/scripts/content/runtime/ci/command", () => ({
-  runConvexData: runDataMock,
+  readProductionTable: runDataMock,
 }));
 
 const ACTIVE_HASH = `sha256:${"a".repeat(64)}`;
@@ -230,35 +229,24 @@ describe("content runtime generations", () => {
   );
 
   it.live("reads only the production content pointer", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fileSystem = yield* FileSystem.FileSystem;
-        const runnerTemp = yield* fileSystem.makeTempDirectoryScoped({
-          directory: "/tmp",
-          prefix: "runtime-selection-test-",
-        });
-        runDataMock.mockImplementationOnce(
-          ({ outputPath }: { readonly outputPath: string }) =>
-            fileSystem.writeFileString(outputPath, JSON.stringify(contentState))
-        );
+    Effect.gen(function* () {
+      runDataMock.mockReturnValueOnce(Effect.succeed(contentState));
 
-        expect(
-          yield* readProductionGenerations({
-            deployKey: Redacted.make("production-key"),
-            runnerTemp,
-          })
-        ).toEqual({
-          runtimeSelectionHash:
-            "090771304ab66d29dfd1d9660608ca50541419a77873def422d9a6696c7d8433",
-        });
-        expect(runDataMock).toHaveBeenCalledWith(
-          expect.objectContaining({
-            deployKey: "production-key",
-            limit: 2,
-            table: "contentState",
-          })
-        );
-      }).pipe(Effect.provide(NodeServices.layer))
-    )
+      expect(
+        yield* readProductionGenerations({
+          deployKey: Redacted.make("production-key"),
+        })
+      ).toEqual({
+        runtimeSelectionHash:
+          "090771304ab66d29dfd1d9660608ca50541419a77873def422d9a6696c7d8433",
+      });
+      expect(runDataMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          deployKey: "production-key",
+          limit: 2,
+          table: "contentState",
+        })
+      );
+    })
   );
 });

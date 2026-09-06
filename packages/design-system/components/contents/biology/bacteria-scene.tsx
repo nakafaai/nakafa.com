@@ -30,54 +30,12 @@ export interface BacteriaLabItem extends BiologyLabItem {
   scene: BacteriaScene;
 }
 
-const LEGACY_SHAPE_SCENE = {
-  bacillusLabel: "Basilus",
-  coccusLabel: "Kokus",
-  kind: "shape",
-  spiralLabel: "Spiral",
-} satisfies BacteriaScene;
-
-const LEGACY_STRUCTURE_SCENE = {
-  kind: "structure",
-  nucleoidDnaLabel: "Nukleoid DNA",
-} satisfies BacteriaScene;
-
-const LEGACY_WALL_SCENE = {
-  gramNegativeLabel: "Gram negatif",
-  gramPositiveLabel: "Gram positif",
-  kind: "wall",
-} satisfies BacteriaScene;
-
-/**
- * Keeps already signed content renderable while new authoring supplies the
- * required locale-owned scene labels.
- */
-function resolveBacteriaScene(
-  item: BacteriaLabItem,
-  selectedIndex: number
-): BacteriaScene {
-  if ("scene" in item) {
-    return item.scene;
-  }
-
-  if (selectedIndex === 1) {
-    return LEGACY_STRUCTURE_SCENE;
-  }
-
-  if (selectedIndex === 2) {
-    return LEGACY_WALL_SCENE;
-  }
-
-  return LEGACY_SHAPE_SCENE;
-}
-
 /** Uses distinct scenes for morphology, inner anatomy, and Gram wall logic. */
 export function BacteriaStructureScene({
   colors,
   item,
-  selectedIndex,
 }: BiologySceneProps<BacteriaLabItem>) {
-  const scene = resolveBacteriaScene(item, selectedIndex);
+  const scene = item.scene;
 
   if (scene.kind === "structure") {
     return (

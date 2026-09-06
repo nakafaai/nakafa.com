@@ -1,5 +1,5 @@
 import { tmpdir } from "node:os";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
 import { CONTENT_RUNTIME_TABLES } from "@repo/backend/content/snapshot/tables";
@@ -65,7 +65,7 @@ describe("native serving-table import", () => {
           );
           expect(imported).toEqual(CONTENT_RUNTIME_TABLES);
           expect(yield* fileSystem.readDirectory(runnerTemp)).toEqual([]);
-        }).pipe(Effect.provide(NodeServices.layer))
+        }).pipe(Effect.provide(nodeServicesLayer))
       )
   );
 });

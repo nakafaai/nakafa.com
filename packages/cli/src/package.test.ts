@@ -1,4 +1,4 @@
-import * as NodeHttp from "node:http";
+import { createServer } from "node:http";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { NodeHttpServer, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -214,7 +214,7 @@ describe("Nakafa CLI package", () => {
             };
           }).pipe(
             Effect.provide(
-              NodeHttpServer.layer(NodeHttp.createServer, {
+              NodeHttpServer.layer(createServer, {
                 host: "127.0.0.1",
                 port: 0,
               })
