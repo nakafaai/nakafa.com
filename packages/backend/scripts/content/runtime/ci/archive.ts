@@ -3,6 +3,16 @@ import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
 import { runRuntimeCommand } from "@repo/backend/scripts/content/runtime/ci/command";
 import { Effect, FileSystem } from "effect";
 
+/** Keeps agent sockets independent of deeply nested snapshot directories. */
+const acquireGpgHome = Effect.fn("contentRuntime.acquireGpgHome")(function* () {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const home = yield* fileSystem.makeTempDirectoryScoped({
+    prefix: "nakafa-gpg-",
+  });
+  yield* fileSystem.chmod(home, 0o700);
+  return home;
+});
+
 const runGpg = (options: {
   readonly args: readonly string[];
   readonly input: string;
@@ -40,11 +50,11 @@ export const createEncryptedArchive = Effect.fn(
   readonly archivePath: string;
   readonly cacheKey: string;
   readonly encryptedPath: string;
-  readonly gpgHome: string;
   readonly logPath: string;
   readonly snapshotRoot: string;
 }) {
   const fileSystem = yield* FileSystem.FileSystem;
+  const gpgHome = yield* acquireGpgHome();
 
   yield* runTar({
     args: [
@@ -63,7 +73,7 @@ export const createEncryptedArchive = Effect.fn(
   yield* runGpg({
     args: [
       "--homedir",
-      options.gpgHome,
+      gpgHome,
       "--batch",
       "--yes",
       "--no-symkey-cache",
@@ -96,7 +106,7 @@ export const createEncryptedArchive = Effect.fn(
   yield* runGpg({
     args: [
       "--homedir",
-      options.gpgHome,
+      gpgHome,
       "--batch",
       "--yes",
       "--no-symkey-cache",
@@ -124,7 +134,7 @@ export const createEncryptedArchive = Effect.fn(
       "Signed runtime encrypted archive is empty."
     );
   }
-});
+}, Effect.scoped);
 
 export const decryptAndExtractArchive = Effect.fn(
   "contentRuntime.decryptAndExtractArchive"
@@ -132,18 +142,18 @@ export const decryptAndExtractArchive = Effect.fn(
   readonly archivePath: string;
   readonly cacheKey: string;
   readonly encryptedPath: string;
-  readonly gpgHome: string;
   readonly listingPath: string;
   readonly logPath: string;
   readonly snapshotRoot: string;
   readonly verboseListingPath: string;
 }) {
   const fileSystem = yield* FileSystem.FileSystem;
+  const gpgHome = yield* acquireGpgHome();
 
   yield* runGpg({
     args: [
       "--homedir",
-      options.gpgHome,
+      gpgHome,
       "--batch",
       "--yes",
       "--no-symkey-cache",
@@ -192,4 +202,4 @@ export const decryptAndExtractArchive = Effect.fn(
     logPath: options.logPath,
     operation: "Signed runtime archive extraction",
   });
-});
+}, Effect.scoped);

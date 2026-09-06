@@ -54,12 +54,9 @@ export const exportSignedRuntime = Effect.fn(
       directory: config.runnerTemp,
       prefix: "runtime-export-",
     });
-    const gpgHome = `${tempRoot}/gnupg`;
     const snapshotRoot = `${tempRoot}/snapshot`;
-    yield* fileSystem.makeDirectory(gpgHome);
     yield* fileSystem.makeDirectory(snapshotRoot);
     yield* fileSystem.chmod(tempRoot, 0o700);
-    yield* fileSystem.chmod(gpgHome, 0o700);
     yield* fileSystem.chmod(snapshotRoot, 0o700);
 
     const deployKey = Redacted.value(config.deployKey);
@@ -127,7 +124,6 @@ export const exportSignedRuntime = Effect.fn(
       archivePath: `${tempRoot}/runtime.tar`,
       cacheKey: Redacted.value(config.cacheKey),
       encryptedPath,
-      gpgHome,
       logPath,
       snapshotRoot,
     });
