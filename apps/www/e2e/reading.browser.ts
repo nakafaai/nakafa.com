@@ -5,6 +5,7 @@ import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const NINA_DIALOG_NAME = /^Nina/;
+const NEWSREADER_FONT = /Newsreader/;
 
 const routes = [
   "/en/subjects/mathematics/analytic-geometry/hyperbola",
@@ -19,6 +20,27 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* waitForCommittedAppRouter(page, href, href, 15_000);
     const title = page.getByRole("heading", { level: 1 });
     yield* Effect.promise(() => expect(title).toHaveCount(1));
+    yield* Effect.promise(() =>
+      expect(title).toHaveCSS("text-align", "center")
+    );
+    yield* Effect.promise(() =>
+      expect(title).toHaveCSS("font-family", NEWSREADER_FONT)
+    );
+    yield* Effect.promise(() =>
+      expect(title).toHaveCSS("text-wrap-style", "balance")
+    );
+    const newsreaderLoaded = yield* Effect.promise(() =>
+      page.evaluate(async () => {
+        await document.fonts.ready;
+        return [...document.fonts].some(
+          (font) =>
+            font.family.includes("Newsreader") &&
+            !font.family.includes("Fallback") &&
+            font.status === "loaded"
+        );
+      })
+    );
+    yield* Effect.sync(() => expect(newsreaderLoaded).toBe(true));
     const titleText = yield* Effect.promise(() => title.innerText());
     const more = page.getByRole("button", {
       name: "More actions",
@@ -27,6 +49,11 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     const header = page.locator("header").filter({ has: more });
     yield* Effect.promise(() => expect(header).toBeVisible());
     yield* Effect.promise(() => expect(header).not.toContainText(titleText));
+    yield* Effect.promise(() =>
+      expect(
+        header.getByRole("group", { name: "Content actions", exact: true })
+      ).toBeVisible()
+    );
     yield* Effect.promise(() =>
       expect(
         page.getByRole("button", { name: "Ask Nina", exact: true })
@@ -41,15 +68,18 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       name: "On this page",
       exact: true,
     });
+    yield* Effect.promise(() => expect(outline).toBeVisible());
+    const bounds = yield* Effect.promise(() =>
+      Promise.all([more.boundingBox(), outline.boundingBox()])
+    );
+    yield* Effect.sync(() => {
+      expect(bounds[0]?.y).toBe(bounds[1]?.y);
+      expect(bounds[0]?.x).toBeLessThan(bounds[1]?.x ?? 0);
+    });
     if (width < 1280) {
-      yield* Effect.promise(() => expect(outline).toBeVisible());
-      const bounds = yield* Effect.promise(() =>
-        Promise.all([more.boundingBox(), outline.boundingBox()])
+      yield* Effect.promise(() =>
+        expect(outline).toHaveAttribute("aria-expanded", "false")
       );
-      yield* Effect.sync(() => {
-        expect(bounds[0]?.y).toBe(bounds[1]?.y);
-        expect(bounds[0]?.x).toBeLessThan(bounds[1]?.x ?? 0);
-      });
       yield* Effect.promise(() => outline.click());
       const sidebar = page.locator('[role="dialog"][data-sidebar="sidebar"]');
       yield* Effect.promise(() => expect(sidebar).toBeVisible());
@@ -57,11 +87,28 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       yield* Effect.promise(() => expect(sidebar).toHaveCount(0));
       yield* Effect.promise(() => expect(outline).toBeFocused());
     } else {
-      yield* Effect.promise(() => expect(outline).toBeHidden());
+      const sidebar = page.locator('[data-side="right"][data-slot="sidebar"]');
+      const panel = sidebar.locator('[data-slot="sidebar-container"]');
+      yield* Effect.promise(() =>
+        expect(outline).toHaveAttribute("aria-expanded", "true")
+      );
+      yield* Effect.promise(() => outline.click());
+      yield* Effect.promise(() =>
+        expect(outline).toHaveAttribute("aria-expanded", "false")
+      );
+      yield* Effect.promise(() => expect(panel).not.toBeInViewport());
+      yield* Effect.promise(() => outline.click());
+      yield* Effect.promise(() =>
+        expect(outline).toHaveAttribute("aria-expanded", "true")
+      );
+      yield* Effect.promise(() => expect(panel).toBeInViewport());
     }
     yield* Effect.promise(() => more.focus());
     yield* Effect.promise(() => page.keyboard.press("Enter"));
     const menu = page.getByRole("menu");
+    yield* Effect.promise(() =>
+      expect(menu.getByText("Content actions", { exact: true })).toBeVisible()
+    );
     yield* Effect.promise(() =>
       expect(menu.getByRole("menuitem")).toHaveCount(3)
     );

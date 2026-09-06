@@ -1,5 +1,4 @@
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
-import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import type { ContentPagination } from "@repo/contents/_types/content";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
@@ -25,9 +24,9 @@ import { AiMenuItem } from "@/components/ai/menu";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ContentDates } from "@/components/content/dates";
 import { ContentHeader } from "@/components/content/header";
+import { ContentTitle } from "@/components/content/title";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
@@ -158,7 +157,6 @@ async function MaterialRouteContent({
           allowsInteractions ? <DeferredComments slug={contentKey} /> : null
         }
         headerLink={navigation.link}
-        icon={getMaterialIcon(page.rendererDomain)}
         locale={appLocale}
         pagination={navigation.pagination}
         parentTitle={page.route.topicTitle}
@@ -191,7 +189,6 @@ async function MaterialLessonPage({
   currentHref,
   footer,
   headerLink,
-  icon,
   locale,
   pagination,
   parentTitle,
@@ -210,7 +207,6 @@ async function MaterialLessonPage({
     href: string;
     label: string;
   };
-  icon: ReturnType<typeof getMaterialIcon>;
   locale: Locale;
   pagination: ContentPagination;
   parentTitle: string;
@@ -270,7 +266,7 @@ async function MaterialLessonPage({
               {showComments && <AiMenuItem contextTitle={metadata.title} />}
             </OpenContent>
           </ContentHeader>
-          <HeaderContent icon={icon} title={metadata.title} />
+          <ContentTitle title={metadata.title} />
           <ContentDates
             {...(metadata.dateModified === undefined
               ? {}

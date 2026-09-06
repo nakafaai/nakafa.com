@@ -36,12 +36,11 @@ export const REQUIRED_THEME_TOKENS = [
   "--shadow-2xl",
 ];
 
-/** Theme-local properties allowed alongside the 47 required core declarations. */
+/** Allowed theme metadata; serif typography stays with the shared font token. */
 export const THEME_METADATA_PROPERTIES = [
   "color-scheme",
   "--font-mono",
   "--font-sans",
-  "--font-serif",
   "--shadow-color",
 ];
 

@@ -17,6 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -156,6 +157,7 @@ export function OpenContent({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("content-actions")}</DropdownMenuLabel>
           {children}
           <DropdownMenuItem
             disabled={isCopying || !(content || copySourceUrl)}

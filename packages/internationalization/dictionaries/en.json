@@ -90,6 +90,7 @@
     "report": "Report",
     "copy-markdown": "Copy Markdown",
     "copy-content": "Copy Content",
+    "content-actions": "Content actions",
     "copy": "Copy",
     "copy-success": "Copied!",
     "copy-error": "Couldn't copy",

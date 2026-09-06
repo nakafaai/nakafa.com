@@ -1,4 +1,5 @@
 import { Menu02Icon } from "@hugeicons/core-free-icons";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -24,16 +25,16 @@ export async function ContentHeader({
         items={items}
         menuLabel={t("more")}
       />
-      <div className="flex shrink-0 items-center gap-2">
+      <ButtonGroup aria-label={t("content-actions")} className="shrink-0">
         {children}
         <SidebarTrigger
           aria-label={t("on-this-page")}
-          className="size-9 xl:hidden"
+          className="size-9"
           icon={Menu02Icon}
           size="icon"
           variant="outline"
         />
-      </div>
+      </ButtonGroup>
     </BreadcrumbHeaderFrame>
   );
 }

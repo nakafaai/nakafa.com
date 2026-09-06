@@ -7,9 +7,9 @@ import type { ArticlePageContent } from "@/app/[locale]/(app)/(shared)/(main)/(l
 import { AiMenuItem } from "@/components/ai/menu";
 import { ContentDates } from "@/components/content/dates";
 import { ContentHeader } from "@/components/content/header";
+import { ContentTitle } from "@/components/content/title";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { MaterialOutline } from "@/components/shared/material/toc";
@@ -61,7 +61,7 @@ export async function ArticleShell({
             )}
           </OpenContent>
         </ContentHeader>
-        <HeaderContent
+        <ContentTitle
           description={metadata.description}
           title={metadata.title}
         />
