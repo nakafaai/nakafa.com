@@ -229,18 +229,16 @@ const nextConfig = {
       validationLevel: "warning",
     },
     // Anonymous Convex and Vercel builds run with bounded memory. Limit page
-    // analysis and generation to two isolated worker heaps instead of deriving
-    // the worker count from the build host.
+    // analysis and generation to two isolated workers, with one export per
+    // worker. Next otherwise batches eight exports into each worker heap.
     // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
     ...(runtime.agent === "anonymous" || runtime.vercel === "1"
-      ? { cpus: 2 }
+      ? { cpus: 2, staticGenerationMaxConcurrency: 1 }
       : {}),
-    // The anonymous runner also shares one local backend. Let each worker
-    // process one page at a time and retry one complete page after an
-    // intermittent response. Repeated or deterministic failures still fail.
+    // The anonymous runner also shares one local backend. Retry one complete
+    // page after an intermittent response. Repeated failures still fail.
     ...(runtime.agent === "anonymous"
       ? {
-          staticGenerationMaxConcurrency: 1,
           staticGenerationRetryCount: 2,
         }
       : {}),
