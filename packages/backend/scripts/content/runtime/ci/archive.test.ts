@@ -1,10 +1,11 @@
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_TABLES } from "@repo/backend/content/snapshot/tables";
 import {
   createEncryptedArchive,
   decryptAndExtractArchive,
 } from "@repo/backend/scripts/content/runtime/ci/archive";
+// biome-ignore lint/performance/noNamespaceImport: Vitest spies on this module namespace to control the owning failure boundary.
 import * as commands from "@repo/backend/scripts/content/runtime/ci/command";
 import { Effect, FileSystem } from "effect";
 
@@ -57,7 +58,7 @@ describe("content runtime archive", () => {
         message:
           "Signed runtime archive is not AES256 OCB authenticated encryption.",
       });
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
   for (const replacement of ["empty", "directory"]) {
@@ -98,7 +99,7 @@ describe("content runtime archive", () => {
             _tag: "ContentSnapshotError",
             message: "Signed runtime encrypted archive is empty.",
           });
-        }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+        }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -131,7 +132,7 @@ describe("content runtime archive", () => {
           "Signed runtime authenticated encryption failed: unsupported encryption: [redacted]",
       });
       expect(JSON.stringify(failure)).not.toContain(CACHE_KEY);
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
   it.live(
@@ -216,7 +217,7 @@ describe("content runtime archive", () => {
               verboseListingPath: `${root}/tampered-verbose-listing.txt`,
             }).pipe(Effect.flip);
           })
-        ).pipe(Effect.provide(NodeServices.layer));
+        ).pipe(Effect.provide(nodeServicesLayer));
         expect(failure).toMatchObject({ _tag: "ContentSnapshotError" });
       }),
     20_000

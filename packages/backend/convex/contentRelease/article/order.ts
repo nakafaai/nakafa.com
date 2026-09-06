@@ -13,7 +13,7 @@ import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot"
 import schema from "@repo/backend/convex/schema";
 import type { PaginationOptions } from "convex/server";
 import { type QueryStream, stream } from "convex-helpers/server/stream";
-import { Effect } from "effect";
+import { Effect, Predicate } from "effect";
 
 type ReadCtx = MutationCtx | QueryCtx;
 type AppLocale = Doc<"articleCatalog">["appLocale"];
@@ -78,7 +78,7 @@ const paginatePublicationStream = Effect.fn(
     return {
       ...scanned,
       continueCursor: yield* portablePublicationCursor(scanned.continueCursor),
-      ...(scanned.splitCursor == null
+      ...(Predicate.isNullish(scanned.splitCursor)
         ? {}
         : {
             splitCursor: yield* portablePublicationCursor(scanned.splitCursor),
@@ -91,7 +91,7 @@ const paginatePublicationStream = Effect.fn(
     continueCursor: articlePublicationCursor(last),
     isDone: false,
     page,
-    ...(scanned.splitCursor == null
+    ...(Predicate.isNullish(scanned.splitCursor)
       ? {}
       : {
           splitCursor: yield* portablePublicationCursor(scanned.splitCursor),

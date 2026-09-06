@@ -1,6 +1,7 @@
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { compactSnapshots } from "@repo/backend/convex/contentRelease/snapshot/cleanup";
+// biome-ignore lint/performance/noNamespaceImport: Vitest spies on this module namespace to control the owning failure boundary.
 import * as snapshotRows from "@repo/backend/convex/contentRelease/snapshot/rows";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";

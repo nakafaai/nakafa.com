@@ -1,5 +1,5 @@
 import { dirname } from "node:path";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
@@ -141,7 +141,7 @@ describe("signed runtime export", () => {
             `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`
           )
         ).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -173,7 +173,7 @@ describe("signed runtime export", () => {
         expect(
           yield* fileSystem.exists(`${cacheRoot}/${CONTENT_RUNTIME_CACHE_FILE}`)
         ).toBe(true);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -199,7 +199,7 @@ describe("signed runtime export", () => {
             `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`
           )
         ).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -223,7 +223,7 @@ describe("signed runtime export", () => {
         });
         expect(mocks.readGenerations).not.toHaveBeenCalled();
         expect(yield* fileSystem.exists(cacheRoot)).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -249,7 +249,7 @@ describe("signed runtime export", () => {
             `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`
           )
         ).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -283,7 +283,7 @@ describe("signed runtime export", () => {
             )
           ).toBe(false);
         }
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -311,7 +311,7 @@ describe("signed runtime export", () => {
             `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`
           )
         ).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 });

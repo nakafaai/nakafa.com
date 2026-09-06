@@ -1,6 +1,6 @@
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import {
@@ -138,7 +138,7 @@ describe("content runtime command diagnostics", () => {
             stdout: yield* fileSystem.readFileString(stdoutPath),
           };
         })
-      ).pipe(Effect.provide(NodeServices.layer));
+      ).pipe(Effect.provide(nodeServicesLayer));
 
       expect(result.failure).toMatchObject({
         _tag: "ContentSnapshotError",
@@ -183,7 +183,7 @@ describe("content runtime command diagnostics", () => {
             stdout: yield* fileSystem.readFileString(stdoutPath),
           };
         })
-      ).pipe(Effect.provide(NodeServices.layer));
+      ).pipe(Effect.provide(nodeServicesLayer));
 
       expect(result.stderr).toBe("");
       expect(result.stdout).toBe("|||true");
@@ -229,7 +229,7 @@ describe("content runtime command diagnostics", () => {
             })
           );
         })
-      ).pipe(Effect.provide(NodeServices.layer));
+      ).pipe(Effect.provide(nodeServicesLayer));
 
       expect(results).toEqual(
         Array.from({ length: 20 }, () => ({
@@ -265,7 +265,7 @@ describe("content runtime command diagnostics", () => {
 
           return yield* fileSystem.readFileString(outputPath);
         })
-      ).pipe(Effect.provide(NodeServices.layer));
+      ).pipe(Effect.provide(nodeServicesLayer));
 
       expect(result).toBe("private input\nstderr");
     })
@@ -302,7 +302,7 @@ describe("content runtime command diagnostics", () => {
                 }).pipe(Effect.flip)
             );
           })
-        ).pipe(Effect.provide(NodeServices.layer));
+        ).pipe(Effect.provide(nodeServicesLayer));
 
         expect(failures).toHaveLength(2);
         for (const failure of failures) {
@@ -425,7 +425,7 @@ describe("content runtime command diagnostics", () => {
             log: yield* fileSystem.readFileString(logPath),
           };
         })
-      ).pipe(Effect.provide(NodeServices.layer));
+      ).pipe(Effect.provide(nodeServicesLayer));
 
       expect(result.log).toBe(
         [
@@ -475,7 +475,7 @@ describe("content runtime command diagnostics", () => {
               stdout: yield* fileSystem.readFileString(stdoutPath),
             };
           })
-        ).pipe(Effect.provide(NodeServices.layer));
+        ).pipe(Effect.provide(nodeServicesLayer));
 
         expect(result.failure.message).toContain(
           "Usage: runtime:ci <build|prepare|start|clean|fingerprint|generations|verify-generations|export|import>"

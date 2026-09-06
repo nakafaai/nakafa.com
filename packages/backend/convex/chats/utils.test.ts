@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { chatResponseFailureCode } from "@repo/ai/config/generation";
+import { defaultModel } from "@repo/ai/config/model";
 import type {
   NinaContextSnapshot,
   NinaContextTransition,
@@ -33,6 +34,67 @@ const ninaContextTransition = {
 } satisfies NinaContextTransition;
 
 describe("mapDBMessagesToUIMessages", () => {
+  it("preserves zero usage and text when stored context and model metadata are absent", async () => {
+    const t = convexTest(schema, convexModules);
+    const messages = await t.mutation(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "chat_usage_auth",
+        credits: 10,
+        creditsResetAt: now,
+        email: "chat-usage@example.com",
+        name: "Chat Usage",
+        plan: "free",
+      });
+      const chatId = await ctx.db.insert("chats", {
+        title: "Partial usage",
+        type: "study",
+        updatedAt: now,
+        userId,
+        visibility: "private",
+      });
+      for (const usage of [
+        { identifier: "input-only", inputTokens: 0 },
+        { identifier: "output-only", outputTokens: 0 },
+        { identifier: "total-only", totalTokens: 0 },
+        { identifier: "no-usage" },
+      ]) {
+        const messageId = await ctx.db.insert("messages", {
+          chatId,
+          role: "assistant",
+          ...usage,
+        });
+        await ctx.db.insert("messageParts", {
+          messageId,
+          order: 0,
+          textText: usage.identifier,
+          type: "text",
+        });
+      }
+      const storedMessages = await ctx.db.query("messages").collect();
+      const parts = await ctx.db.query("messageParts").collect();
+      return storedMessages.map((message) => ({
+        ...message,
+        parts: parts.filter((part) => part.messageId === message._id),
+      }));
+    });
+
+    const hydrated = mapDBMessagesToUIMessages(messages);
+    expect(hydrated.map(({ metadata }) => metadata?.tokens)).toEqual([
+      { input: 0, output: undefined, total: undefined },
+      { input: undefined, output: 0, total: undefined },
+      { input: undefined, output: undefined, total: 0 },
+      undefined,
+    ]);
+    for (const message of hydrated) {
+      expect(message.metadata).toMatchObject({
+        model: defaultModel,
+        ninaContextSnapshot: undefined,
+        ninaContextTransition: undefined,
+      });
+      expect(message.parts).toMatchObject([{ text: message.id, type: "text" }]);
+    }
+  });
+
   it("preserves persisted assistant generation failure metadata", async () => {
     const t = convexTest(schema, convexModules);
 

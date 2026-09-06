@@ -256,13 +256,15 @@ describe("contents/metrics/refresh", () => {
     expect(await readBoundedState(expiry)).toEqual(
       await readBoundedState(repair)
     );
+    // Aggregate 0.3 checks its async queue once per synchronous counter write.
+    // These seven writes add seven queries without reading queue documents.
     expect(expiryMetrics).toEqual({
-      databaseQueries: 126,
+      databaseQueries: 133,
       documentsRead: 153,
       documentsWritten: 28,
     });
     expect(repairMetrics).toEqual({
-      databaseQueries: 133,
+      databaseQueries: 140,
       documentsRead: 840,
       documentsWritten: 28,
     });

@@ -5,6 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Effect } from "effect";
 import { domAnimation, LazyMotion } from "motion/react";
+// biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
 import * as m from "motion/react-m";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context/use-ai";

@@ -55,7 +55,7 @@ import {
   tool,
   wrapLanguageModel,
 } from "ai";
-import { Effect } from "effect";
+import { Effect, Predicate } from "effect";
 
 // Keep exact user source scraping parallel without allowing unlimited fan-out.
 const exactSourceScrapeConcurrency = 3;
@@ -253,7 +253,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 
     const output = synthesisResult.output;
 
-    if (output == null) {
+    if (Predicate.isNullish(output)) {
       return yield* new ResearchGenerationError({
         message: "Research agent did not return structured output.",
         phase: "synthesis",

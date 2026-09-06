@@ -13,7 +13,7 @@
     "effect": "catalog:",
     "lodash.merge": "^4.6.2",
     "next": "16.3.4",
-    "next-intl": "^4.13.7",
+    "next-intl": "^4.14.2",
     "react": "^19.2.8",
     "schema-dts": "^2.0.0"
   },
@@ -22,7 +22,7 @@
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/lodash.merge": "^4.6.9",
-    "@vitest/coverage-istanbul": "^4.1.11",
-    "vitest": "^4.1.11"
+    "@vitest/coverage-istanbul": "catalog:",
+    "vitest": "catalog:"
   }
 }

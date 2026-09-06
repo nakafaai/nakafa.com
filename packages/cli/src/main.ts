@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
-import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layerFetch as nodeHttpClientLayer } from "@effect/platform-node/NodeHttpClient";
+import { runMain } from "@effect/platform-node/NodeRuntime";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { Cause, Effect, Layer } from "effect";
 import { writeJson } from "#cli/output";
 import { readPackageVersion } from "#cli/package";
@@ -39,7 +39,7 @@ const program = Effect.gen(function* () {
       process.exitCode = exitCode;
     })
   ),
-  Effect.provide(Layer.mergeAll(NodeServices.layer, NodeHttpClient.layerFetch))
+  Effect.provide(Layer.mergeAll(nodeServicesLayer, nodeHttpClientLayer))
 );
 
-NodeRuntime.runMain(program, { disableErrorReporting: true });
+runMain(program, { disableErrorReporting: true });

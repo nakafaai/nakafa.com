@@ -1,5 +1,14 @@
 import { ConvexError } from "convex/values";
-import { Cause, Clock, Effect, Exit, Option, Result, Scheduler } from "effect";
+import {
+  Cause,
+  Clock,
+  ConfigProvider,
+  Effect,
+  Exit,
+  Option,
+  Result,
+  Scheduler,
+} from "effect";
 
 /** The stable error shape every Convex-facing Effect failure must provide. */
 export interface ConvexTaggedError {
@@ -44,6 +53,25 @@ const convexClock: Clock.Clock = {
       new Error("Effect.sleep is not supported inside native Convex handlers.")
     ),
 };
+
+/** Reads named values because native Convex exposes no environment key list. */
+const nativeConvexConfigProvider = ConfigProvider.make((path) => {
+  if (path.length === 0) {
+    return Effect.fail(
+      new ConfigProvider.SourceError({
+        message:
+          "Native Convex configuration requires named values; record and array discovery is unavailable.",
+      })
+    );
+  }
+
+  return Effect.sync(() => {
+    const value = process.env[path.join("_")];
+    return value === undefined || value === ""
+      ? undefined
+      : ConfigProvider.makeValue(value);
+  });
+});
 
 /** Dispatches Effect fiber yields without forbidden native Convex timers. */
 function scheduleNativeConvexMicrotask(task: () => void) {
@@ -101,6 +129,10 @@ function resolveConvexExit<A, E extends ConvexTaggedError>(
  * The native runtime also omits setImmediate and rejects setTimeout. Effect's
  * async scheduler falls back to those timers for cooperative fiber yields, so
  * this boundary preserves async execution with cancellable microtask dispatch.
+ * Native Convex rejects import.meta and exposes process.env through a get-only
+ * proxy. Named scalar lookups use that proxy directly, with Effect's underscore
+ * path naming and empty-string semantics. Record and array discovery require
+ * enumeration, which the native environment does not expose.
  *
  * References:
  * - Effect running guide: https://effect.website/docs/getting-started/running-effects/
@@ -108,12 +140,19 @@ function resolveConvexExit<A, E extends ConvexTaggedError>(
  * - Convex error handling: https://docs.convex.dev/functions/error-handling/
  * - Convex action runtime note: https://docs.convex.dev/functions/actions
  * - Convex deterministic runtime: https://docs.convex.dev/functions/runtimes
+ * - Convex environment proxy: https://github.com/get-convex/convex-backend/blob/main/npm-packages/udf-runtime/src/setup.ts
  */
 export async function runConvexProgram<A, E extends ConvexTaggedError>(
   program: Effect.Effect<A, E, never>
 ) {
   const exit = await Effect.runPromiseExit(
-    program.pipe(Effect.provideService(Clock.Clock, convexClock)),
+    program.pipe(
+      Effect.provideService(Clock.Clock, convexClock),
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        nativeConvexConfigProvider
+      )
+    ),
     { scheduler: nativeConvexScheduler }
   );
 

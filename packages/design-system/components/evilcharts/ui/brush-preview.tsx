@@ -6,12 +6,12 @@ import {
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import type { EvilBrushVariant } from "@repo/design-system/components/evilcharts/ui/evil-brush";
-import * as React from "react";
+import { type ComponentProps, lazy } from "react";
 
 type RechartsModule = typeof import("recharts");
 
 /** Recharts interpolation supported by the miniature brush preview. */
-type EvilBrushCurveType = React.ComponentProps<RechartsModule["Area"]>["type"];
+type EvilBrushCurveType = ComponentProps<RechartsModule["Area"]>["type"];
 
 interface EvilBrushPreviewProps {
   barRadius?: number;
@@ -170,7 +170,7 @@ function renderEvilBrushPreview(
 }
 
 /** Renders the complete dataset behind the brush selection controls. */
-const EvilBrushPreview = React.lazy(() =>
+const EvilBrushPreview = lazy(() =>
   import("recharts").then((recharts) => ({
     default: (props: EvilBrushPreviewProps) =>
       renderEvilBrushPreview(props, recharts),

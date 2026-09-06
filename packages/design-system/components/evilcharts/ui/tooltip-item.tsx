@@ -6,6 +6,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import { cn } from "@repo/design-system/lib/utils";
+import { Predicate } from "effect";
 import type * as React from "react";
 import type * as RechartsPrimitive from "recharts";
 import type {
@@ -118,7 +119,8 @@ function TooltipItem({
   const dataKey = configEntry?.dataKey ?? key;
   const payloadFill = getChartPayloadStringValue(item.payload, "fill");
   const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
-  const isDeemphasized = selected != null && selected !== dataKey;
+  const isDeemphasized =
+    Predicate.isNotNullish(selected) && selected !== dataKey;
 
   return (
     <div
@@ -169,7 +171,7 @@ function TooltipValue({
   isDeemphasized: boolean;
   value: TooltipPayloadItem["value"];
 }) {
-  if (value == null) {
+  if (Predicate.isNullish(value)) {
     return null;
   }
   return (

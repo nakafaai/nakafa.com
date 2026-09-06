@@ -23,10 +23,14 @@ const configEnv = createEnv({
     NEXT_EXPOSE_TESTING_API: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.Literal("true"))
     ),
+    PORTLESS_URL: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.URLFromString)
+    ),
   },
   client: {},
   runtimeEnv: {
     NEXT_EXPOSE_TESTING_API: process.env.NEXT_EXPOSE_TESTING_API,
+    PORTLESS_URL: process.env.PORTLESS_URL,
   },
 });
 const localConvexConnectSources = createLoopbackConnectSources(
@@ -164,6 +168,11 @@ function createAppHeaders() {
 }
 const nextConfig = {
   ...config,
+  // Permit HMR only from the exact origin assigned by this Portless process.
+  // https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+  allowedDevOrigins: configEnv.PORTLESS_URL
+    ? [configEnv.PORTLESS_URL.hostname]
+    : undefined,
   cacheComponents: true,
   partialPrefetching: true,
   env: {

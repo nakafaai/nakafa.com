@@ -11,10 +11,10 @@ const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
 });
 
 interface AnalyticsIdentityClient {
-  has_opted_out_capturing(): boolean;
-  opt_in_capturing(options: { readonly captureEventName: false }): void;
-  opt_out_capturing(): void;
-  reset(resetDeviceId?: boolean): void;
+  has_opted_out_capturing: () => boolean;
+  opt_in_capturing: (options: { readonly captureEventName: false }) => void;
+  opt_out_capturing: () => void;
+  reset: (resetDeviceId?: boolean) => void;
 }
 
 /** Starts one browser analytics lifecycle without stale authorization state. */

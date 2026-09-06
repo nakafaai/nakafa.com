@@ -4,7 +4,7 @@ import { Line } from "@react-three/drei";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { useMemo } from "react";
-import * as THREE from "three";
+import { CatmullRomCurve3, Vector3 } from "three";
 
 const NUCLEIC_ACID_STEP_COUNT = 36;
 const NUCLEIC_ACID_BASE_PAIR_COUNT = 12;
@@ -226,10 +226,7 @@ export function BiologyTube({
   segments?: number;
 }) {
   const curve = useMemo(
-    () =>
-      new THREE.CatmullRomCurve3(
-        points.map((point) => new THREE.Vector3(...point))
-      ),
+    () => new CatmullRomCurve3(points.map((point) => new Vector3(...point))),
     [points]
   );
 

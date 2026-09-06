@@ -2,7 +2,7 @@ import { getChartSeriesId } from "@repo/design-system/components/evilcharts/ui/c
 import { GeometricDot } from "@repo/design-system/components/evilcharts/ui/geometric-dot";
 import type { ChartDotVariant } from "@repo/design-system/lib/charts/series-cue";
 import { cn } from "@repo/design-system/lib/utils";
-import * as React from "react";
+import { memo, useId } from "react";
 
 export type DotVariant = ChartDotVariant;
 
@@ -18,7 +18,7 @@ interface ChartDotProps {
   type?: DotVariant;
 }
 
-const ChartDot = React.memo(function ChartDot({
+const ChartDot = memo(function ChartDot({
   cx,
   cy,
   dataKey,
@@ -28,7 +28,7 @@ const ChartDot = React.memo(function ChartDot({
   type = "default",
   maskId,
 }: ChartDotProps) {
-  const dotId = React.useId().replace(/:/g, "");
+  const dotId = useId().replace(/:/g, "");
   const gradientUrl = `url(#${getChartSeriesId(chartId, "colors", dataKey)})`;
 
   if (cx === undefined || cy === undefined) {
@@ -102,7 +102,7 @@ interface DotVariantProps {
   maskId?: string;
 }
 
-const DefaultDot = React.memo(
+const DefaultDot = memo(
   ({
     cx,
     cy,
@@ -137,7 +137,7 @@ const DefaultDot = React.memo(
 
 DefaultDot.displayName = "DefaultDot";
 
-const PrimaryBorderDot = React.memo(
+const PrimaryBorderDot = memo(
   ({
     cx,
     cy,
@@ -183,7 +183,7 @@ const PrimaryBorderDot = React.memo(
 
 PrimaryBorderDot.displayName = "PrimaryBorderDot";
 
-const ColoredBorderDot = React.memo(
+const ColoredBorderDot = memo(
   ({
     cx,
     cy,

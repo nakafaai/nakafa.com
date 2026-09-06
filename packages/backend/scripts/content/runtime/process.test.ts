@@ -1,6 +1,6 @@
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/runtime/local";
@@ -120,7 +120,7 @@ describe("application process ownership", () => {
             }),
           }),
         ]);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -145,7 +145,7 @@ describe("application process ownership", () => {
           message: expect.stringContaining("schema changed"),
         });
         expect(child.commands).toHaveLength(0);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.live(
@@ -177,7 +177,7 @@ describe("application process ownership", () => {
         });
         expect(listener.listening).toBe(true);
         expect(child.commands).toHaveLength(0);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   for (const failure of ["exited", "request", "during"] as const) {
@@ -210,7 +210,7 @@ describe("application process ownership", () => {
           message: expect.stringContaining(messages[failure]),
         });
         expect(child.release).toHaveBeenCalledOnce();
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -237,7 +237,7 @@ describe("application process ownership", () => {
         message: expect.stringContaining("did not become ready"),
       });
       expect(child.release).toHaveBeenCalledOnce();
-    }).pipe(Effect.provide(NodeServices.layer))
+    }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.live("waits for an interrupted command to finish its cleanup", () =>
@@ -269,7 +269,7 @@ writeFileSync("ready", "ready");`
       expect(yield* fs.readFileString(`${runtime.directory}/stopped`)).toBe(
         "SIGINT"
       );
-    }).pipe(Effect.provide(NodeServices.layer))
+    }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   for (const code of [0, 7]) {

@@ -1,5 +1,6 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
+import { GoogleAuthConfigError } from "@repo/backend/convex/auth/config";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
@@ -8,10 +9,13 @@ import {
 } from "@repo/backend/convex/auth/deletion/constants";
 import { accountDeletionPreparationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import {
+  createAuth,
   createAuthOptions,
   sanitizeProviderErrorRedirectResponse,
   verifyAccountDeletionPreparation,
 } from "@repo/backend/convex/auth/runtime";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { SiteConfigError } from "@repo/backend/convex/site/config";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -21,6 +25,12 @@ import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
+const SITE_URL = new URL("http://localhost:3000");
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+});
 
 const authUser = (id: string): User => ({
   createdAt: new Date(NOW),
@@ -53,7 +63,7 @@ describe("auth/runtime", () => {
     );
     const original = new Response(null, { headers, status: 302 });
 
-    const sanitized = sanitizeProviderErrorRedirectResponse(original);
+    const sanitized = sanitizeProviderErrorRedirectResponse(original, SITE_URL);
 
     expect(sanitized?.headers.getSetCookie()).toEqual(
       original.headers.getSetCookie()
@@ -73,7 +83,9 @@ describe("auth/runtime", () => {
       status: 302,
     });
 
-    expect(sanitizeProviderErrorRedirectResponse(response)).toBeUndefined();
+    expect(
+      sanitizeProviderErrorRedirectResponse(response, SITE_URL)
+    ).toBeUndefined();
     expect(response.headers.get("location")).toBe(location);
   });
 
@@ -83,7 +95,7 @@ describe("auth/runtime", () => {
       302
     );
 
-    const sanitized = sanitizeProviderErrorRedirectResponse(response);
+    const sanitized = sanitizeProviderErrorRedirectResponse(response, SITE_URL);
 
     expect(sanitized?.headers.get("location")).toBe(
       "http://localhost:3000/de/auth/error"
@@ -91,9 +103,82 @@ describe("auth/runtime", () => {
   });
 
   it.effect(
-    "removes provider diagnostics before redirecting to the app error landing",
+    "registers auth schema and adapters without request credentials",
     () =>
       Effect.gen(function* () {
+        vi.stubEnv("SITE_URL", undefined);
+        vi.stubEnv("AUTH_GOOGLE_ID", undefined);
+        vi.stubEnv("AUTH_GOOGLE_SECRET", undefined);
+        const test = createConvexTestWithBetterAuth();
+        const user = yield* Effect.promise(() =>
+          test.run((ctx) => seedAuthenticatedUser(ctx, { now: NOW }))
+        );
+
+        expect(user.authUserId).toBeTruthy();
+        expect(user.sessionId).toBeTruthy();
+      })
+  );
+
+  it.effect.each(["SITE_URL", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET"] as const)(
+    "fails auth creation with a typed error when %s is absent",
+    (environment) =>
+      Effect.gen(function* () {
+        vi.stubEnv(environment, undefined);
+        const test = createConvexTestWithBetterAuth();
+        yield* Effect.promise(() =>
+          test.run((ctx) =>
+            runConvexProgram(
+              Effect.gen(function* () {
+                const failure = yield* createAuth(ctx).pipe(
+                  Effect.flip,
+                  Effect.orDie
+                );
+                expect(failure).toBeInstanceOf(
+                  environment === "SITE_URL"
+                    ? SiteConfigError
+                    : GoogleAuthConfigError
+                );
+                return null;
+              })
+            )
+          )
+        );
+      })
+  );
+
+  it.effect("fails auth HTTP requests without blocking unrelated routes", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("SITE_URL", "not-a-url");
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const test = createConvexTestWithBetterAuth();
+      const discovery = yield* Effect.promise(() =>
+        test.fetch("/.well-known/openid-configuration")
+      );
+      const auth = yield* Effect.promise(() =>
+        test.fetch("/api/auth/sign-in/social", {
+          body: JSON.stringify({
+            callbackURL: "/en/home",
+            provider: "google",
+          }),
+          headers: {
+            "content-type": "application/json",
+            origin: "http://localhost:3000",
+          },
+          method: "POST",
+        })
+      );
+
+      expect(discovery.status).toBe(302);
+      expect(auth.status).toBe(500);
+      expect(auth.headers.get("location")).toBeNull();
+    })
+  );
+
+  it.effect.each(["http://localhost:3000", "https://local.nakafa.com"])(
+    "removes provider diagnostics before redirecting to the configured site %s",
+    (siteOrigin) =>
+      Effect.gen(function* () {
+        vi.stubEnv("SITE_URL", siteOrigin);
         vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
         vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
         const test = createConvexTestWithBetterAuth();
@@ -110,7 +195,7 @@ describe("auth/runtime", () => {
             }),
             headers: {
               "content-type": "application/json",
-              origin: "http://localhost:3000",
+              origin: siteOrigin,
             },
             method: "POST",
           })
@@ -142,7 +227,7 @@ describe("auth/runtime", () => {
         const providerUrl = new URL(providerLocation);
 
         expect(providerResponse.status).toBe(302);
-        expect(providerUrl.origin).toBe("http://localhost:3000");
+        expect(providerUrl.origin).toBe(siteOrigin);
         expect(providerUrl.pathname).toBe("/en/auth/error");
         expect([...providerUrl.searchParams]).toEqual([["intent", intent]]);
         expect(providerLocation).not.toContain("access_denied");

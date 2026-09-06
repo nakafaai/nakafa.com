@@ -1,4 +1,4 @@
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
@@ -118,7 +118,7 @@ describe("authenticated serving snapshot reader", () => {
             message:
               "Signed runtime archive contains rows outside the active serving projection.",
           });
-        }).pipe(Effect.provide(NodeServices.layer))
+        }).pipe(Effect.provide(nodeServicesLayer))
       )
   );
 
@@ -149,7 +149,7 @@ describe("authenticated serving snapshot reader", () => {
           expect(yield* fileSystem.readDirectory(runnerTemp)).toEqual([
             CONTENT_RUNTIME_CACHE_DIRECTORY,
           ]);
-        }).pipe(Effect.provide(NodeServices.layer))
+        }).pipe(Effect.provide(nodeServicesLayer))
       )
   );
 
@@ -178,7 +178,7 @@ describe("authenticated serving snapshot reader", () => {
           });
           expect(mocks.decrypt).not.toHaveBeenCalled();
         }
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -207,7 +207,7 @@ describe("authenticated serving snapshot reader", () => {
           message:
             "Signed runtime table set does not match the runtime contract.",
         });
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 });

@@ -12,7 +12,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 
 ## Stack And Ownership
 
-- Package manager: `pnpm@11.23.0`
+- Package manager: `pnpm@11.25.0`
 - Runtime: Node `24.x` through pnpm `devEngines.runtime`
 - Monorepo: Turborepo
 - Frontend: Next.js 16, React 19, native TypeScript 7

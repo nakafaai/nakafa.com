@@ -1,5 +1,5 @@
 import { tmpdir } from "node:os";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem } from "effect";
 
@@ -171,7 +171,7 @@ describe("runtime CLI", () => {
           expect(yield* fs.readFileString(path)).toBe(value);
           expect((yield* fs.stat(path)).mode % 0o1000).toBe(0o600);
         }
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -187,7 +187,7 @@ describe("runtime CLI", () => {
           expect.stringContaining("Usage: runtime:ci")
         );
         expect(process.env.CONTENT_RUNTIME_CACHE_KEY).toBeUndefined();
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -223,7 +223,7 @@ describe("runtime CLI", () => {
           );
           expect(mocks.build).not.toHaveBeenCalled();
           expect(process.env.CONTENT_RUNTIME_CACHE_KEY).toBeUndefined();
-        }).pipe(Effect.provide(NodeServices.layer))
+        }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 
@@ -252,6 +252,6 @@ describe("runtime CLI", () => {
         expect(stderr).toHaveBeenCalledWith(
           "ERROR: signed selection changed\n"
         );
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 });

@@ -6,7 +6,7 @@ import {
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
-import { Option, Schema } from "effect";
+import { Option, Predicate, Schema } from "effect";
 
 /** Decodes stored Nina snapshots from Convex JSON into branded AI metadata. */
 function readStoredNinaSnapshot(
@@ -61,9 +61,9 @@ export function mapDBMessagesToUIMessages(
         message.ninaContextTransition
       ),
       tokens:
-        message.inputTokens != null ||
-        message.outputTokens != null ||
-        message.totalTokens != null
+        Predicate.isNotNullish(message.inputTokens) ||
+        Predicate.isNotNullish(message.outputTokens) ||
+        Predicate.isNotNullish(message.totalTokens)
           ? {
               input: message.inputTokens,
               output: message.outputTokens,

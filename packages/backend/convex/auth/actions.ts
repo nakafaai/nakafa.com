@@ -1,5 +1,6 @@
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { createAuth } from "@repo/backend/convex/auth/runtime";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
 /**
  * Returns the latest Better Auth static JWKS payload for Convex env updates.
@@ -11,8 +12,8 @@ import { createAuth } from "@repo/backend/convex/auth/runtime";
  */
 export const getLatestJwks = internalAction({
   args: {},
-  handler: (ctx) => {
-    const auth = createAuth(ctx);
+  handler: async (ctx) => {
+    const auth = await runConvexProgram(createAuth(ctx));
 
     return auth.api.getLatestJwks();
   },
