@@ -110,6 +110,38 @@
           }
         }
       }
+    },
+    {
+      // Three Fiber uses renderer attributes that the DOM-only rule cannot recognize.
+      "includes": [
+        "apps/www/components/marketing/about/projectile/scene.tsx",
+        "packages/design-system/components/three/**/*.tsx",
+        "packages/design-system/components/contents/{biology,chemistry,physics}/**/*.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAttribute": "off"
+          }
+        }
+      }
+    },
+    {
+      // Existing Convex module filenames are deployed function-path contracts.
+      "includes": ["packages/backend/convex/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "filenameCases": ["camelCase", "kebab-case"],
+                "requireAscii": true
+              }
+            }
+          }
+        }
+      }
     }
   ],
   "linter": {
@@ -121,7 +153,6 @@
         "noEqualsToNull": "off",
         "noLeakedRender": "off",
         "noShadow": "off",
-        "noUnknownAttribute": "off",
         "noUnnecessaryConditions": "off"
       },
       "performance": {
@@ -132,8 +163,7 @@
       "style": {
         "noIncrementDecrement": "off",
         "useConsistentMethodSignatures": "off",
-        "useDestructuring": "off",
-        "useFilenamingConvention": "off"
+        "useDestructuring": "off"
       }
     }
   },
