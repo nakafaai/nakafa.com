@@ -94,8 +94,8 @@ vi.mock("@/lib/content/preview/route", () => ({
   matchesPreviewRoute: previewMocks.route,
 }));
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeMocks.readTryout,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeMocks.readTryout,
 }));
 vi.mock("@/lib/llms/content/markdown", () => ({
   hasLlmsMarkdownSource: (input: Parameters<typeof hasLlmsMarkdownSource>[0]) =>
@@ -491,3 +491,7 @@ describe("proxy", () => {
     });
   });
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

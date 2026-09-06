@@ -4,11 +4,11 @@ import {
   type ProtectedContentRuntimeSelector,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
+import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
 import {
   type PublicationRow,
   PublicationSource,
 } from "@repo/backend/content/publication/source";
-import { loadVerifiedSnapshot } from "@repo/backend/content/snapshot/read";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import {
   ReleaseError,

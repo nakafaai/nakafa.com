@@ -60,6 +60,28 @@ function decodeProjection(source: string) {
 }
 
 describe("contentRelease/article/model", () => {
+  it("delivers one bounded coherent article shell and body through a single query", async () => {
+    const target = convexTest(schema, convexModules);
+    await target.mutation((ctx) =>
+      insertRuntimeArticles(ctx, localizedRoutes.length, localizedArticle)
+    );
+    const result = await target.query(api.contentRelease.article.delivery, {
+      appLocale: "en",
+      publicPath: localizedArticle(0).publicPath,
+    });
+    const runtime = JSON.parse(result.runtimeJson ?? "");
+    expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
+    expect(runtime.projection).toEqual(
+      JSON.parse(result.model.projectionJson ?? "")
+    );
+    expect(runtime.delivery).toBe("public");
+    const missing = await target.query(api.contentRelease.article.delivery, {
+      appLocale: "en",
+      publicPath: "articles/missing",
+    });
+    expect(missing.model.projectionJson).toBeNull();
+    expect(missing.runtimeJson).toBeNull();
+  });
   it.effect(
     "rejects a published article whose active catalog row disappeared",
     () =>

@@ -5,13 +5,13 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect } from "effect";
 import {
   getPublishedMaterialRoute,
   readPublishedMaterialRoute,
 } from "@/lib/content/material/route";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
   previewDeProjection,
   previewIdProjection,
@@ -20,8 +20,8 @@ import {
   previewSourcePath,
 } from "@/test/content-preview";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
@@ -32,10 +32,10 @@ const activeReleaseId = ReleaseIdSchema.make("release-material");
 const sourceRevision = "a".repeat(40);
 
 vi.mock("@/lib/content/cache", () => ({
-  applyContentRuntimeCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 /** Builds one complete backend-verified material model response. */
@@ -102,8 +102,8 @@ describe("published material route", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeMaterialRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
         const projection = makeMaterialProjection("en", 1);
 
         const route = yield* readPublishedMaterialRoute(
@@ -281,3 +281,7 @@ describe("published material route", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

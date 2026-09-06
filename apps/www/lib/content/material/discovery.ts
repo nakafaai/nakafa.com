@@ -1,3 +1,5 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import {
@@ -5,10 +7,6 @@ import {
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import {
-  readLatestMaterials,
-  readMaterialBucket,
-} from "@repo/backend/content/material/discovery";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -18,7 +16,6 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type MaterialSummary = FunctionReturnType<
   typeof api.contentRelease.material.latest
@@ -81,13 +78,13 @@ export const readPublishedMaterialBucket = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.material.bucket,
     {
       appLocale,
       bucket,
-    },
-    (queryArgs) => readMaterialBucket(queryArgs.appLocale, queryArgs.bucket)
+    }
   );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
@@ -117,13 +114,13 @@ export const readPublishedLatestMaterials = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.material.latest,
     {
       appLocale,
       limit,
-    },
-    (queryArgs) => readLatestMaterials(queryArgs.appLocale, queryArgs.limit)
+    }
   );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,

@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@nakafa/aksara-contracts": "0.36.0",
+    "@nakafa/aksara-contracts": "0.37.0",
     "@react-email/render": "2.1.0",
     "@repo/design-system": "workspace:*",
     "@repo/seo": "workspace:*",

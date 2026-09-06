@@ -8,6 +8,7 @@ import {
   readProgramBuckets,
   readProgramSitemap,
 } from "@repo/backend/content/program/sitemap";
+import { readProgramSubjects } from "@repo/backend/content/program/subjects";
 import { query } from "@repo/backend/convex/_generated/server";
 import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -87,6 +88,18 @@ export const catalog = query({
   handler: (ctx, { appLocale }) =>
     runConvexProgram(
       readProgramCatalog(appLocale).pipe(
+        Effect.provide(convexProgramLayer(ctx))
+      )
+    ),
+});
+
+/** Returns at most four authenticated public subjects for the About feature list. */
+export const subjects = query({
+  args: { appLocale: appLocaleValidator },
+  returns: v.object({ managed: v.boolean(), routeJson: v.array(v.string()) }),
+  handler: (ctx, { appLocale }) =>
+    runConvexProgram(
+      readProgramSubjects(appLocale).pipe(
         Effect.provide(convexProgramLayer(ctx))
       )
     ),

@@ -2,24 +2,24 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect } from "effect";
 import {
   readPublishedArticleBuckets,
   readPublishedArticleSitemap,
 } from "@/lib/content/article/sitemap";
 import { makeArticleRuntimeSource } from "@/test/content/article";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const runtimeReadMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 describe("published article sitemap", () => {
@@ -28,8 +28,8 @@ describe("published article sitemap", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeArticleRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
 
         const inventory = yield* readPublishedArticleBuckets("de");
         const pages = yield* Effect.forEach(inventory.buckets, (bucket) =>
@@ -127,8 +127,8 @@ describe("published article sitemap", () => {
           Effect.flip
         );
         expect(error).toMatchObject({
-          _tag: "TestRuntimeQueryError",
-          message: "Error: sitemap unavailable",
+          _tag: "NakafaAgentDataReadError",
+          cause: "Error: sitemap unavailable",
         });
       })
   );
@@ -150,3 +150,7 @@ describe("published article sitemap", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

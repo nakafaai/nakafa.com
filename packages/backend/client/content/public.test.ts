@@ -15,7 +15,7 @@ import {
   readPublicContent,
   readPublicContentEvidence,
   readPublicContentEvidenceBatch,
-  readSnapshotPublicContent,
+  verifyPublicContentDelivery,
 } from "@repo/backend/client/content/public";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -23,11 +23,8 @@ import {
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
-import { snapshotPublicationLayer } from "@repo/backend/content/publication/snapshot";
-import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
-import { TEST_PROOF_RENDERER } from "@repo/backend/test/content/proof";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -35,7 +32,6 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
-import { makePageRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { Effect } from "effect";
 
 const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
@@ -107,53 +103,81 @@ afterEach(() => {
 
 describe("public content runtime client", () => {
   it.effect(
-    "reads the exact signed snapshot body and preserves explicit absence without network access",
+    "verifies a coherent query envelope with the same live signature policy",
     () =>
       Effect.gen(function* () {
-        const fixture = makePageRuntimeSource();
-        const tables = yield* projectActiveRuntime(fixture.source);
-        yield* Effect.gen(function* () {
-          const selected = {
-            appLocale: fixture.projection.appLocale,
-            publicPath: fixture.projection.publicPath,
-          };
-          const result = yield* readSnapshotPublicContent(
-            selected,
-            TEST_PROOF_RENDERER
-          );
-          expect(result.artifact).toEqual(fixture.artifact);
-          expect(result.sourcePath).toEqual(fixture.projection.sourcePath);
-          expect(result.activeReleaseId).toEqual(fixture.state.activeReleaseId);
-          expect(
-            yield* readSnapshotPublicContent(
-              { ...selected, publicPath: "missing/page" },
-              TEST_PROOF_RENDERER
-            ).pipe(Effect.flip)
-          ).toMatchObject({ _tag: "ContentRuntimeMissingError" });
-          expect(
-            yield* readSnapshotPublicContent(
-              { ...selected, publicPath: "" },
-              TEST_PROOF_RENDERER
-            ).pipe(Effect.flip)
-          ).toEqual(new ContentTransportError({ reason: "request" }));
-        }).pipe(Effect.provide(snapshotPublicationLayer(tables)));
+        const response = foundResponse();
+        const renderer = JSON.parse(testRendererJson());
+        expect(
+          yield* verifyPublicContentDelivery(
+            input,
+            JSON.stringify(response),
+            renderer
+          )
+        ).toEqual(response);
+        expect(verifyContentRuntimeExchange).toHaveBeenCalledWith({
+          request: { ...input, delivery: "public" },
+          response,
+          rendererManifest: renderer,
+        });
         expect(fetchMock).not.toHaveBeenCalled();
       })
   );
 
-  it.effect("rejects invalid single and batch routes before transport", () =>
+  it.effect.each([
+    ["{", "json-syntax"],
+    ["{}", "response-contract"],
+    ["x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES + 1), "response-size"],
+  ] as const)(
+    "rejects a malformed coherent query envelope",
+    ([source, reason]) =>
+      Effect.gen(function* () {
+        expect(
+          yield* verifyPublicContentDelivery(input, source, {}).pipe(
+            Effect.flip
+          )
+        ).toEqual(new ContentTransportError({ reason }));
+        expect(verifyMock).not.toHaveBeenCalled();
+        expect(fetchMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect("preserves signature failure from coherent query delivery", () =>
     Effect.gen(function* () {
-      const invalid = { ...input, publicPath: "" };
+      verifyMock.mockReturnValueOnce(Effect.fail("invalid-signature"));
       expect(
-        yield* readPublicContentEvidence(target, invalid).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "request" }));
-      expect(
-        yield* readPublicContentEvidenceBatch(target, [invalid]).pipe(
-          Effect.flip
-        )
-      ).toEqual(new ContentTransportError({ reason: "request" }));
+        yield* verifyPublicContentDelivery(
+          input,
+          JSON.stringify(foundResponse()),
+          {}
+        ).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "ContentRuntimeVerificationError",
+      });
       expect(fetchMock).not.toHaveBeenCalled();
     })
+  );
+  it.effect(
+    "rejects invalid public routes before transport or verification",
+    () =>
+      Effect.gen(function* () {
+        const invalid = { ...input, publicPath: "" };
+        expect(
+          yield* verifyPublicContentDelivery(invalid, "{}", {}).pipe(
+            Effect.flip
+          )
+        ).toEqual(new ContentTransportError({ reason: "request" }));
+        expect(
+          yield* readPublicContentEvidence(target, invalid).pipe(Effect.flip)
+        ).toEqual(new ContentTransportError({ reason: "request" }));
+        expect(
+          yield* readPublicContentEvidenceBatch(target, [invalid]).pipe(
+            Effect.flip
+          )
+        ).toEqual(new ContentTransportError({ reason: "request" }));
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(verifyMock).not.toHaveBeenCalled();
+      })
   );
 
   it.effect(

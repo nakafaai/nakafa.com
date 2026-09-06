@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { Effect } from "effect";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
-import { createTestSnapshotQuery } from "@/test/runtime-query";
+import { createTestNativeQuery } from "@/test/runtime-query";
 
 const mockReadRuntimeContentReference = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
@@ -16,8 +16,8 @@ const activeReleaseId = "release-active";
 vi.mock("@/lib/content/preview/route", () => ({
   matchesPreviewRoute: mockMatchesPreviewRoute,
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: mockReadRuntimeContentReference,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: mockReadRuntimeContentReference,
 }));
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: mockReadActiveContentRoute,
@@ -73,9 +73,9 @@ describe("projected public html route rejection", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
+        const context = yield* createTestPublication(fixture.source);
         mockReadRuntimeContentReference.mockImplementation(
-          createTestSnapshotQuery(context)
+          createTestNativeQuery(context)
         );
 
         expect(yield* readRejection("/en/try-out/indonesia")).toBeNull();
@@ -122,6 +122,7 @@ describe("projected public html route rejection", () => {
         const tombstone = yield* readRejection(pathname);
         expect(tombstone).toBe("en");
         expect(mockReadRuntimeContentReference).toHaveBeenCalledWith(
+          "https://test.convex.cloud",
           expect.anything(),
           {
             input: {
@@ -129,8 +130,7 @@ describe("projected public html route rejection", () => {
               kind: "route",
               publicPath: "try-out/indonesia/snbt/2027",
             },
-          },
-          expect.any(Function)
+          }
         );
       })
   );
@@ -316,3 +316,7 @@ describe("projected public html route rejection", () => {
       })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

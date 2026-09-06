@@ -124,4 +124,41 @@ describe("contentRelease/program/page", () => {
         );
       })
   );
+
+  it.live(
+    "resumes an issued native Convex cursor without repeating the preceding route",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        const issued = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            ctx.db
+              .query("curriculumRoutes")
+              .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
+                index.eq("snapshotId", data.snapshotId).eq("appLocale", "en")
+              )
+              .paginate({ cursor: null, numItems: 1 })
+          )
+        );
+        expect(issued.isDone).toBe(false);
+        const next = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            runConvexProgram(
+              readProgramPage("en", TEST_MANIFEST_HASH, TEST_RELEASE_ID, {
+                cursor: issued.continueCursor,
+                numItems: 1,
+              }).pipe(Effect.provide(convexProgramLayer(ctx)))
+            )
+          )
+        );
+        expect(next).toMatchObject({
+          managed: true,
+          stale: false,
+          result: { isDone: true, page: [expect.any(String)] },
+        });
+        expect(next.result.page[0]).not.toBe(issued.page[0]?.rowJson);
+      })
+  );
 });

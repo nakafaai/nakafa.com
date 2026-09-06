@@ -29,7 +29,7 @@ function cacheRequestStatus(error: CacheRequestError) {
   }
   return 400;
 }
-/** Reads one exact release-bound content-family invalidation request. */
+/** Reads one exact release-bound publication dependency invalidation request. */
 const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
   request: NextRequest
 ) {
@@ -106,7 +106,7 @@ export const POST = (request: NextRequest) =>
         );
       }
       const invalidation = yield* invalidateContentCache(
-        decoded.success.tags
+        decoded.success.scope
       ).pipe(Effect.result);
       if (invalidation._tag === "Failure") {
         return NextResponse.json(
@@ -116,10 +116,9 @@ export const POST = (request: NextRequest) =>
       }
       return NextResponse.json(
         ContentCacheReceiptSchema.make({
-          family: decoded.success.family,
+          scope: decoded.success.scope,
           releaseId: decoded.success.releaseId,
           revalidated: true,
-          tags: invalidation.success,
         }),
         { headers: PRIVATE_RESPONSE_HEADERS }
       );

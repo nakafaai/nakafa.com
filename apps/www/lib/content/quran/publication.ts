@@ -1,7 +1,5 @@
-import { readQuranAttribution } from "@repo/backend/content/quran/attribution";
-import { readQuranSurahs } from "@repo/backend/content/quran/catalog";
-import { readQuranMarkdown } from "@repo/backend/content/quran/markdown";
-import { readQuranView } from "@repo/backend/content/quran/view";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
@@ -12,17 +10,19 @@ import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { applyPublishedSnapshotCache } from "@/lib/content/cache";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
+import {
+  applyContentCache,
+  applyImmutableContentCache,
+} from "@/lib/content/cache";
 
 /** Reads and validates the active signed Quran identity without a catalog payload. */
 export const readPublishedQuranIdentity = Effect.fn(
   "NakafaQuran.readPublishedIdentity"
 )(function* () {
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.quran.attribution,
-    {},
-    () => readQuranAttribution()
+    {}
   );
   return yield* decodePublishedQuranSource(result, "attribution");
 });
@@ -31,10 +31,10 @@ export const readPublishedQuranIdentity = Effect.fn(
 export const readPublishedQuranCatalog = Effect.fn(
   "NakafaQuran.readPublishedCatalog"
 )(function* () {
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.quran.surahs,
-    {},
-    () => readQuranSurahs()
+    {}
   );
   return yield* decodePublishedQuranCatalog(result);
 });
@@ -44,13 +44,12 @@ export const readPublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.readPublishedMarkdown"
 )(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.quran.prose,
     verseLimit === undefined
       ? { appLocale, surahNumber }
-      : { appLocale, surahNumber, verseLimit },
-    ({ appLocale, surahNumber, verseLimit }) =>
-      readQuranMarkdown(appLocale, surahNumber, verseLimit)
+      : { appLocale, surahNumber, verseLimit }
   );
   return yield* decodePublishedQuranMarkdown(result, {
     appLocale,
@@ -63,13 +62,13 @@ export const readPublishedQuranMarkdown = Effect.fn(
 const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
   function* (locale: Locale, surahNumber: number) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readRuntimeQuery(
+    const result = yield* readNakafaRuntimeQuery(
+      env.NEXT_PUBLIC_CONVEX_URL,
       api.contentRelease.quran.page,
       {
         appLocale,
         surahNumber,
-      },
-      ({ appLocale, surahNumber }) => readQuranView(appLocale, surahNumber)
+      }
     );
     return yield* decodePublishedQuranView(result, {
       appLocale,
@@ -83,7 +82,8 @@ export async function getPublishedQuranCatalog() {
   "use cache";
 
   const catalog = await Effect.runPromise(readPublishedQuranCatalog());
-  applyPublishedSnapshotCache(catalog.snapshotId);
+  applyContentCache("quran");
+  applyImmutableContentCache([catalog.snapshotId]);
   return catalog;
 }
 
@@ -97,6 +97,7 @@ export async function getPublishedQuranView(
   const view = await Effect.runPromise(
     readPublishedQuranView(locale, surahNumber)
   );
-  applyPublishedSnapshotCache(view.snapshotId);
+  applyContentCache("quran");
+  applyImmutableContentCache([view.snapshotId]);
   return view;
 }

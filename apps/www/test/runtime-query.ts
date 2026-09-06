@@ -1,18 +1,7 @@
-import type {
-  ContentSources,
-  SnapshotContext,
-} from "@repo/backend/content/snapshot/context";
-import type {
-  FunctionArgs,
-  FunctionReference,
-  FunctionReturnType,
-} from "convex/server";
-import { Data, Effect } from "effect";
-
-/** Test-only typed failure for mocked runtime query Promise rejections. */
-class TestRuntimeQueryError extends Data.TaggedError("TestRuntimeQueryError")<{
-  readonly message: string;
-}> {}
+import type { createTestPublication } from "@repo/backend/test/content/publication";
+import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
+import { Effect } from "effect";
 
 type TestRuntimeQueryClient = (
   query: unknown,
@@ -21,34 +10,38 @@ type TestRuntimeQueryClient = (
 
 /** Adapts one mocked client to the Effect-native runtime query interface. */
 export function createTestRuntimeQuery(read: TestRuntimeQueryClient) {
-  return (query: unknown, args: unknown) =>
+  return (_convexUrl: string, query: unknown, args: unknown) =>
     Effect.tryPromise({
       try: () => read(query, args),
       catch: (cause) =>
-        new TestRuntimeQueryError({
-          message: String(cause),
+        new NakafaAgentDataReadError({
+          message: "Unable to read test Convex query.",
+          cause: String(cause),
         }),
     });
 }
 
-/** Executes an application's real query program against authenticated serving rows. */
-export function createTestSnapshotQuery(context: SnapshotContext) {
-  return <Query extends FunctionReference<"query">>(
-    _query: Query,
-    args: FunctionArgs<Query>,
-    read: (
-      args: FunctionArgs<Query>
-    ) => Effect.Effect<FunctionReturnType<Query>, unknown, ContentSources>
-  ) => read(args).pipe(Effect.provideContext(context));
-}
+type TestPublication = Effect.Success<ReturnType<typeof createTestPublication>>;
+type PublicTestQuery = FunctionReference<
+  "query",
+  "public",
+  DefaultFunctionArgs,
+  unknown
+>;
 
-/** Runs the same authenticated query at a Promise-based application test boundary. */
-export function createTestSnapshotFetch(context: SnapshotContext) {
-  return <Query extends FunctionReference<"query">>(
-    _query: Query,
-    args: FunctionArgs<Query>,
-    read: (
-      args: FunctionArgs<Query>
-    ) => Effect.Effect<FunctionReturnType<Query>, unknown, ContentSources>
-  ) => Effect.runPromise(read(args).pipe(Effect.provideContext(context)));
+/** Executes generated query references against the actual Convex schema and modules. */
+export function createTestNativeQuery(runtime: TestPublication) {
+  return (
+    _convexUrl: string,
+    query: PublicTestQuery,
+    args: DefaultFunctionArgs
+  ) =>
+    Effect.tryPromise({
+      try: () => runtime.query(query, args),
+      catch: (cause) =>
+        new NakafaAgentDataReadError({
+          message: "Unable to read test Convex query.",
+          cause: String(cause),
+        }),
+    });
 }

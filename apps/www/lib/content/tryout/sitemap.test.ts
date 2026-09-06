@@ -2,19 +2,21 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
+import {
+  createTestPublication,
+  makeRuntimeSource,
+} from "@repo/backend/test/content/publication";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { Effect } from "effect";
 import {
   readPublishedTryoutSitemap,
   readPublishedTryoutSitemapCount,
 } from "@/lib/content/tryout/sitemap";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
-import { createTestSnapshotQuery } from "@/test/runtime-query";
+import { createTestNativeQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeQueryMock,
 }));
 
 describe("published try-out sitemap", () => {
@@ -27,8 +29,8 @@ describe("published try-out sitemap", () => {
     (locale) =>
       Effect.gen(function* () {
         const fixture = yield* makeTryoutRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeQueryMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeQueryMock.mockImplementation(createTestNativeQuery(context));
         expect(yield* readPublishedTryoutSitemapCount(locale)).toEqual({
           pageCount: 1,
           routeCount: 5,
@@ -51,16 +53,20 @@ describe("published try-out sitemap", () => {
     "fails closed when the authenticated release has no try-out snapshot",
     () =>
       Effect.gen(function* () {
-        const inactive = yield* createTestSnapshotContext(
+        const inactive = yield* createTestPublication(
           makeRuntimeSource().source
         );
-        runtimeQueryMock.mockImplementation(createTestSnapshotQuery(inactive));
+        runtimeQueryMock.mockImplementation(createTestNativeQuery(inactive));
         expect(
           yield* readPublishedTryoutSitemapCount("id").pipe(Effect.flip)
         ).toMatchObject({
-          _tag: "ReleaseError",
-          code: "CONTENT_RELEASE_MISSING",
+          _tag: "NakafaAgentDataReadError",
+          cause: expect.stringContaining("CONTENT_RELEASE_MISSING"),
         });
       })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

@@ -2,13 +2,13 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Effect } from "effect";
 import {
   getPublishedProgramRoute,
   readPublishedProgramRoute,
 } from "@/lib/content/program/route";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 import {
   readTestPublishedRoute,
@@ -20,8 +20,8 @@ import {
   testProgramSubject,
 } from "@/test/content-program";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -73,10 +73,10 @@ function routeResponse(overrides?: {
 }
 
 vi.mock("@/lib/content/cache", () => ({
-  applyContentRuntimeCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: readQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: readQueryMock,
 }));
 
 describe("published program route", () => {
@@ -93,8 +93,8 @@ describe("published program route", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeProgramRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        readQueryMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        readQueryMock.mockImplementation(createTestNativeQuery(context));
 
         const model = yield* readPublishedProgramRoute(
           "en",
@@ -235,3 +235,7 @@ describe("published program route", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

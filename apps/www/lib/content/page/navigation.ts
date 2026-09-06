@@ -7,7 +7,7 @@ import type {
 import { PageKeySchema } from "@nakafa/aksara-contracts/projection/page";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { applyPublishedCatalogCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
@@ -106,7 +106,7 @@ export async function getPageNavigation(locale: Locale) {
   "use cache";
 
   const navigation = await Effect.runPromise(readPageNavigation(locale));
-  applyPublishedCatalogCache("page");
+  applyContentCache("page");
   return navigation;
 }
 

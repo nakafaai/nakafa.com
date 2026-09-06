@@ -2,6 +2,8 @@ import type { ActiveAppLocaleList } from "@nakafa/aksara-contracts/locale";
 import { resolveMaterialRoute } from "@repo/backend/content/material/route";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
+import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
+import { resolvePublicRoute } from "@repo/backend/content/publication/public";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { MATERIAL_GROUP_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
@@ -159,3 +161,18 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     };
   }
 );
+
+/** Reads the material shell and signed body in one Convex snapshot. */
+export const readMaterialDelivery = Effect.fn(
+  "contentRelease.readMaterialDelivery"
+)(function* (
+  appLocale: Doc<"materialCatalog">["appLocale"],
+  publicPath: string
+) {
+  const [model, row] = yield* Effect.all([
+    readMaterialModel(appLocale, publicPath),
+    resolvePublicRoute(appLocale, publicPath),
+  ]);
+  const runtimeJson = yield* encodePublicDelivery(row, model);
+  return { model, runtimeJson };
+});

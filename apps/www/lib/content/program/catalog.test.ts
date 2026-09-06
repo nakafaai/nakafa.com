@@ -1,27 +1,27 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Effect } from "effect";
 import {
   getPublishedProgramCatalog,
-  getPublishedProgramRoutes,
+  getPublishedProgramSubjects,
   readPublishedProgramCatalog,
-  readPublishedProgramPage,
   readPublishedProgramPrerenderRoute,
-  readPublishedProgramRoutes,
+  readPublishedProgramSubjects,
 } from "@/lib/content/program/catalog";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
   testCurriculumRowJson,
   testProgramClass,
   testProgramRoot,
   testProgramRowJson,
+  testProgramSubject,
 } from "@/test/content-program";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -50,33 +50,11 @@ function catalogResponse(overrides?: {
   };
 }
 
-/** Builds one release-bound curriculum route page response. */
-function pageResponse(overrides?: {
-  readonly isDone?: boolean;
-  readonly managed?: boolean;
-  readonly page?: readonly string[];
-  readonly stale?: boolean;
-}) {
-  return {
-    activeManifestHash: `sha256:${"b".repeat(64)}`,
-    activeReleaseId: "program-release",
-    managed: overrides?.managed ?? true,
-    result: {
-      continueCursor: "next",
-      isDone: overrides?.isDone ?? true,
-      page: overrides?.page ?? [testCurriculumRowJson(testProgramRoot)],
-    },
-    snapshotId: `sha256:${"c".repeat(64)}`,
-    sourceRevision: revision,
-    stale: overrides?.stale ?? false,
-  };
-}
-
 vi.mock("@/lib/content/cache", () => ({
-  applyContentRuntimeCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: readQueryMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: readQueryMock,
 }));
 
 describe("published program catalog", () => {
@@ -135,12 +113,12 @@ describe("published program catalog", () => {
   );
 
   it.effect(
-    "reads curriculum roots and release-bound pages from the signed snapshot",
+    "reads curriculum roots through the native Convex program query",
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeProgramRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        readQueryMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        readQueryMock.mockImplementation(createTestNativeQuery(context));
 
         const catalog = yield* readPublishedProgramCatalog("en");
         expect(
@@ -149,23 +127,6 @@ describe("published program catalog", () => {
         expect(yield* readPublishedProgramPrerenderRoute("en")).toEqual(
           catalog.entries[0].route
         );
-        const page = yield* readPublishedProgramPage({
-          cursor: null,
-          expectedManifestHash: null,
-          expectedReleaseId: null,
-          locale: "en",
-        });
-        expect(page).toMatchObject({
-          activeManifestHash: fixture.state.activeManifestHash,
-          activeReleaseId: fixture.state.activeReleaseId,
-          done: true,
-          managed: true,
-          stale: false,
-        });
-        expect(page.routes.map(({ publicPath }) => publicPath)).toEqual([
-          "curriculum/technical-program-1",
-          "curriculum/technical-program-2",
-        ]);
       })
   );
 
@@ -233,95 +194,64 @@ describe("published program catalog", () => {
     })
   );
 
-  it.effect("reads every route page under one immutable release identity", () =>
+  it.effect("reads the bounded subject query and caches the result", () =>
     Effect.gen(function* () {
-      runtimeQueryMock
-        .mockResolvedValueOnce(pageResponse({ isDone: false }))
-        .mockResolvedValueOnce(
-          pageResponse({
-            page: [testCurriculumRowJson(testProgramClass)],
-          })
-        );
-
-      const catalog = yield* Effect.tryPromise(() =>
-        getPublishedProgramRoutes("en")
+      runtimeQueryMock.mockResolvedValueOnce({
+        managed: true,
+        routeJson: [testCurriculumRowJson(testProgramSubject)],
+      });
+      expect(
+        yield* Effect.promise(() => getPublishedProgramSubjects("en"))
+      ).toEqual([testProgramSubject]);
+      expect(runtimeQueryMock).toHaveBeenCalledExactlyOnceWith(
+        expect.anything(),
+        { appLocale: "en" }
       );
-
-      expect(catalog).toMatchObject({
-        routes: [
-          { publicPath: "curriculum/merdeka" },
-          { publicPath: "curriculum/merdeka/class-11" },
-        ],
-        sourceRevision: revision,
-      });
-      expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
-        appLocale: "en",
-        expectedManifestHash: `sha256:${"b".repeat(64)}`,
-        expectedReleaseId: "program-release",
-        paginationOpts: { cursor: "next", numItems: PROJECTION_PAGE_LIMIT },
-      });
       expect(cacheMock).toHaveBeenCalledOnce();
     })
   );
 
-  it.effect("preserves both terminal page cursor states", () =>
+  it.effect("rejects subject reads before Aksara owns the program family", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(pageResponse({ isDone: false }));
-
-      const page = yield* readPublishedProgramPage({
-        cursor: null,
-        expectedManifestHash: null,
-        expectedReleaseId: null,
-        locale: "en",
-      });
-      expect(page).toMatchObject({
-        done: false,
-        nextCursor: "next",
-      });
-    })
-  );
-
-  it.effect("rejects routes before Aksara owns the program family", () =>
-    Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(
-        pageResponse({ managed: false, page: [] })
-      );
-
-      const failure = yield* readPublishedProgramRoutes("id").pipe(Effect.flip);
-      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+      runtimeQueryMock.mockResolvedValueOnce({ managed: false, routeJson: [] });
+      expect(
+        yield* readPublishedProgramSubjects("en").pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
     })
   );
 
   it.effect.each([
-    ["stale page", pageResponse({ stale: true })],
     [
-      "missing continuation identity",
-      { ...pageResponse({ isDone: false }), activeReleaseId: null },
+      "too many subjects",
+      Array.from({ length: 5 }, () =>
+        testCurriculumRowJson(testProgramSubject)
+      ),
     ],
-  ] as const)("rejects a %s", ([_name, response]) =>
+    [
+      "another locale",
+      [
+        testCurriculumRowJson({
+          ...testProgramSubject,
+          appLocale: AppLocaleSchema.make("id"),
+        }),
+      ],
+    ],
+    ["a program root", [testCurriculumRowJson(testProgramRoot)]],
+    [
+      "a hidden subject",
+      [testCurriculumRowJson({ ...testProgramSubject, sitemap: false })],
+    ],
+    ["malformed signed rows", ["{}"]],
+  ])("rejects featured subjects containing %s", ([_name, routeJson]) =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(response);
-
-      const failure = yield* readPublishedProgramRoutes("en").pipe(Effect.flip);
-      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+      runtimeQueryMock.mockResolvedValueOnce({ managed: true, routeJson });
+      expect(
+        yield* readPublishedProgramSubjects("en").pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
     })
   );
-
-  it.effect(
-    "preserves runtime query failures in the Effect error channel",
-    () =>
-      Effect.gen(function* () {
-        runtimeQueryMock.mockRejectedValueOnce(
-          new Error("program unavailable")
-        );
-
-        const failure = yield* readPublishedProgramCatalog("en").pipe(
-          Effect.flip
-        );
-        expect(failure).toMatchObject({
-          _tag: "TestRuntimeQueryError",
-          message: "Error: program unavailable",
-        });
-      })
-  );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

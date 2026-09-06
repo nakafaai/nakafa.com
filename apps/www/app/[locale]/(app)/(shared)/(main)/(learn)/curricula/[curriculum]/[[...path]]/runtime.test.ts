@@ -29,7 +29,7 @@ vi.mock("@/lib/content/program/catalog", () => ({
   getPublishedProgramCatalog: catalogMock,
 }));
 vi.mock("@/lib/content/cache", () => ({
-  applyContentRuntimeCache: vi.fn(),
+  applyContentCache: vi.fn(),
 }));
 vi.mock("@/lib/content/program/route", () => ({
   getPublishedProgramRoute: routeMock,

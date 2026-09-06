@@ -34,8 +34,6 @@ import {
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
-import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
-import { resolvePublicRoute } from "@repo/backend/content/publication/public";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect, Array as ReadonlyArray, Schema } from "effect";
 /** Server-owned connection values for the private content runtime endpoint. */
@@ -233,22 +231,39 @@ export const readPublicContent = Effect.fn("NakafaContent.readPublicContent")(
   }
 );
 
-/** Reads the same verified public exchange from an authenticated build snapshot. */
-export const readSnapshotPublicContent = Effect.fn(
-  "NakafaContent.readSnapshotPublicContent"
-)(function* (input: PublicContentRuntimeInput, rendererManifest: unknown) {
+/** Authenticates the signed public envelope returned by a coherent domain query. */
+export const verifyPublicContentDelivery = Effect.fn(
+  "NakafaContent.verifyPublicContentDelivery"
+)(function* (
+  input: PublicContentRuntimeInput,
+  source: string,
+  rendererManifest: unknown
+) {
   const request = yield* decodePublicContentRuntimeRequest({
     delivery: "public",
     ...input,
   }).pipe(
     Effect.mapError(() => new ContentTransportError({ reason: "request" }))
   );
-  const row = yield* resolvePublicRoute(request.appLocale, request.publicPath);
-  const response = yield* decodePublicRuntimeRow(row);
+  if (
+    new TextEncoder().encode(source).byteLength >
+    MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
+  ) {
+    return yield* new ContentTransportError({ reason: "response-size" });
+  }
+  const value = yield* Effect.try({
+    catch: () => new ContentTransportError({ reason: "json-syntax" }),
+    try: (): unknown => JSON.parse(source),
+  });
+  const response = yield* decodePublicContentRuntimeResponse(value).pipe(
+    Effect.mapError(
+      () => new ContentTransportError({ reason: "response-contract" })
+    )
+  );
   return yield* verifyPublicContentResponse(
     request,
-    response ?? { kind: "missing" },
+    response,
     { kind: "live", rendererManifest },
-    response ? 200 : 404
+    200
   );
 });

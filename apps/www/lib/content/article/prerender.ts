@@ -41,6 +41,8 @@ export const readPublishedArticlePrerenderRoute = Effect.fn(
   const article = page.articles[0];
   if (
     page.stale ||
+    page.activeManifestHash !== categories.activeManifestHash ||
+    page.activeReleaseId !== categories.activeReleaseId ||
     page.sourceRevision !== categories.sourceRevision ||
     !article
   ) {

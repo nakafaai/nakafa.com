@@ -3,11 +3,8 @@ import "server-only";
 import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { Effect, Option } from "effect";
 import type { ReactNode } from "react";
-import {
-  applyPublishedCatalogCache,
-  applyPublishedContentCache,
-} from "@/lib/content/cache";
-import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
+import { applyContentCache } from "@/lib/content/cache";
+import { readRenderedBody } from "@/lib/content/published/body";
 import {
   type PublishedContentData,
   type PublishedContentInput,
@@ -74,14 +71,12 @@ export const readCurrentPublishedPage = Effect.fn(
 /** Evaluates one Page artifact already authenticated by its runtime exchange. */
 const renderPageArtifact = Effect.fn("NakafaContent.renderPageArtifact")(
   function* (data: PublishedPageData) {
-    const rendered = yield* evaluateVerifiedArtifact({
-      artifact: data.artifact,
-    });
+    const body = yield* readRenderedBody(data.artifact);
     return {
       artifactHash: data.artifact.artifactHash,
-      body: <rendered.Content />,
+      body,
       projection: data.projection,
-      rawMdx: rendered.artifact.payload.rawMdx,
+      rawMdx: data.artifact.payload.rawMdx,
       sourcePath: data.sourcePath,
       sourceRevision: data.sourceRevision,
     } satisfies PublishedPageContent;
@@ -103,10 +98,10 @@ export async function getCurrentPublishedPage(
     )
   );
   if (Option.isNone(result)) {
-    applyPublishedCatalogCache("page");
+    applyContentCache("page");
     return null;
   }
-  applyPublishedContentCache("page", result.value.artifact.artifactHash);
+  applyContentCache("page");
   return result.value;
 }
 
@@ -118,10 +113,10 @@ export async function renderCurrentPublishedPage(
 
   const data = await getCurrentPublishedPage(input);
   if (!data) {
-    applyPublishedCatalogCache("page");
+    applyContentCache("page");
     return null;
   }
   const rendered = await Effect.runPromise(renderPageArtifact(data));
-  applyPublishedContentCache("page", data.artifact.artifactHash);
+  applyContentCache("page");
   return rendered;
 }

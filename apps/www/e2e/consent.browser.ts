@@ -101,6 +101,10 @@ const expectClosedWithFocusReturned = Effect.fn(
 
 const swipeDrawerClosed = Effect.fn("NakafaE2E.swipeConsentDrawerClosed")(
   function* (page: Page, popup: Locator) {
+    // Raw touch coordinates need the opening drawer to finish moving first.
+    yield* Effect.promise(() =>
+      popup.locator('[data-slot="drawer-bar"]').click({ trial: true })
+    );
     const bounds = yield* Effect.promise(() => popup.boundingBox());
     if (!bounds) {
       return yield* new ConsentDrawerBoundsMissing();

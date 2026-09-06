@@ -5,6 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import { convexMaterialLayer } from "@repo/backend/content/material/convex";
 import { readMaterialModel } from "@repo/backend/content/material/read";
+import { api } from "@repo/backend/convex/_generated/api";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -22,6 +23,27 @@ function decodeProjection(source: string) {
 }
 
 describe("contentRelease/material/model", () => {
+  it("delivers one bounded coherent shell and public body through a single query", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target);
+    const projection = makeMaterialProjection("en", 1);
+    const result = await target.query(api.contentRelease.material.delivery, {
+      appLocale: projection.appLocale,
+      publicPath: projection.publicPath,
+    });
+    const runtime = JSON.parse(result.runtimeJson ?? "");
+    expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
+    expect(runtime.projection).toEqual(
+      JSON.parse(result.model.projectionJson ?? "")
+    );
+    expect(runtime.delivery).toBe("public");
+    const missing = await target.query(api.contentRelease.material.delivery, {
+      appLocale: "en",
+      publicPath: "materials/missing",
+    });
+    expect(missing.model.projectionJson).toBeNull();
+    expect(missing.runtimeJson).toBeNull();
+  });
   it("fails closed before signed material publication", async () => {
     const target = convexTest(schema, convexModules);
 

@@ -191,6 +191,7 @@ import type * as contentRelease_models_items from "../contentRelease/models/item
 import type * as contentRelease_models_material from "../contentRelease/models/material.js";
 import type * as contentRelease_models_page from "../contentRelease/models/page.js";
 import type * as contentRelease_models_phase from "../contentRelease/models/phase.js";
+import type * as contentRelease_models_reconcile from "../contentRelease/models/reconcile.js";
 import type * as contentRelease_models_search from "../contentRelease/models/search.js";
 import type * as contentRelease_models_slot from "../contentRelease/models/slot.js";
 import type * as contentRelease_models_spec from "../contentRelease/models/spec.js";
@@ -737,6 +738,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/models/material": typeof contentRelease_models_material;
   "contentRelease/models/page": typeof contentRelease_models_page;
   "contentRelease/models/phase": typeof contentRelease_models_phase;
+  "contentRelease/models/reconcile": typeof contentRelease_models_reconcile;
   "contentRelease/models/search": typeof contentRelease_models_search;
   "contentRelease/models/slot": typeof contentRelease_models_slot;
   "contentRelease/models/spec": typeof contentRelease_models_spec;

@@ -138,10 +138,8 @@ describe("published llms markdown", () => {
           publicPath: previewProjection.publicPath,
         });
         expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
-        expect(cacheTagMock).toHaveBeenCalledWith(
-          "content-runtime",
-          "content-family:material",
-          `content-artifact:${materialData.artifact.artifactHash}`
+        expect(cacheTagMock).toHaveBeenCalledExactlyOnceWith(
+          "content-scope:material"
         );
       })
   );
@@ -168,10 +166,8 @@ describe("published llms markdown", () => {
           family: "article",
           publicPath: testArticleProjection.publicPath,
         });
-        expect(cacheTagMock).toHaveBeenCalledWith(
-          "content-runtime",
-          "content-family:article",
-          `content-artifact:${testArticleArtifact.artifactHash}`
+        expect(cacheTagMock).toHaveBeenCalledExactlyOnceWith(
+          "content-scope:article"
         );
       })
   );
@@ -198,10 +194,8 @@ describe("published llms markdown", () => {
           family: "page",
           publicPath: testPageProjection.publicPath,
         });
-        expect(cacheTagMock).toHaveBeenCalledWith(
-          "content-runtime",
-          "content-family:page",
-          `content-artifact:${testPageArtifact.artifactHash}`
+        expect(cacheTagMock).toHaveBeenCalledExactlyOnceWith(
+          "content-scope:page"
         );
       })
   );

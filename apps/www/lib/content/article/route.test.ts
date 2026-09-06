@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
 import { Effect } from "effect";
 import {
@@ -11,7 +12,6 @@ import {
   readPublishedArticleRoute,
 } from "@/lib/content/article/route";
 import { makeArticleRuntimeSource } from "@/test/content/article";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
   makeTestArticleProjection,
   testArticleDeProjection,
@@ -19,8 +19,8 @@ import {
   testArticleProjection,
 } from "@/test/content-article";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
@@ -29,10 +29,10 @@ const cacheMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
 
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedCatalogCache: cacheMock,
+  applyContentCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 /** Builds one complete backend-verified article model response. */
@@ -74,8 +74,8 @@ describe("published article route", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeArticleRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
         const projection = testLocalizedArticleProjection(1, "de");
 
         const route = yield* readPublishedArticleRoute(
@@ -231,3 +231,7 @@ describe("published article route", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

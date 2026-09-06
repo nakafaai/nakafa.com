@@ -113,10 +113,7 @@ jobs:
     if: always() && needs.scope.result == 'success' && needs.scope.outputs.required == 'true' && needs.scope.outputs.trusted == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
-    outputs:
-      runtime-selection: ${{ steps.production_build.outputs.CONTENT_RUNTIME_SELECTION_HASH }}
     env:
-      CONTENT_RUNTIME_BUILD: local-static
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_POSTHOG_KEY: phc_ci_disabled
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
@@ -148,12 +145,13 @@ jobs:
           app_version="$(node -p 'require("./package.json").version')"
           echo "NEXT_PUBLIC_VERSION=$app_version" >> "$GITHUB_ENV"
 
+      - name: Prepare signed acceptance publication
+        run: pnpm acceptance:prepare
+
       - name: Build production app
         id: production_build
-        run: pnpm build
+        run: pnpm acceptance:build
         env:
-          CONTENT_RUNTIME_CACHE_KEY: ${{ secrets.CONTENT_RUNTIME_CACHE_KEY }}
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
           NEXT_EXPOSE_TESTING_API: "true"
           NODE_ENV: production
           TURBO_CONCURRENCY: "2"
@@ -167,7 +165,7 @@ jobs:
           web_pid="$RUNNER_TEMP/runtime-www.pid"
           : > "$web_log"
           chmod 600 "$web_log"
-          setsid pnpm start > "$web_log" 2>&1 &
+          setsid pnpm acceptance:start > "$web_log" 2>&1 &
           echo "$!" > "$web_pid"
 
       - name: Wait for web app
@@ -203,12 +201,6 @@ jobs:
       - name: Run site checks
         run: pnpm check:site
 
-      - name: Verify final production runtime generation
-        env:
-          CONTENT_RUNTIME_SELECTION_HASH: ${{ steps.production_build.outputs.CONTENT_RUNTIME_SELECTION_HASH }}
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
-
       - name: Stop local services and erase temporary state
         if: always()
         run: |
@@ -228,7 +220,8 @@ jobs:
             esac
 
             kill -- "-$pid" 2> /dev/null || true
-            for _attempt in {1..20}; do
+            # Allow the scoped 15-second app and 5-second backend shutdowns.
+            for _attempt in {1..100}; do
               if ! kill -0 -- "-$pid" 2> /dev/null; then
                 return
               fi
@@ -239,7 +232,7 @@ jobs:
 
           test -n "${RUNNER_TEMP:-}"
           stop_process_group "$RUNNER_TEMP/runtime-www.pid"
-          pnpm runtime:clean
+          pnpm acceptance:clean
           rm -f -- "$RUNNER_TEMP/runtime-www.log" "$RUNNER_TEMP/runtime-www.pid"
 
   doctor:
@@ -302,13 +295,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Verify production selection before final acceptance
-        if: needs.scope.result == 'success' && needs.scope.outputs.trusted == 'true' && needs.scope.outputs.required == 'true' && needs.production.result == 'success'
-        env:
-          CONTENT_RUNTIME_SELECTION_HASH: ${{ needs.production.outputs.runtime-selection }}
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
 
       - name: Verify required result
         if: always()

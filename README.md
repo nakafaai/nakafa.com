@@ -72,38 +72,31 @@ JavaScript origins and `<web-origin>/api/auth/callback/google` under authorized
 redirect URIs. A worktree needs its exact callback registered separately;
 Google does not accept wildcard callbacks. See the
 [Portless OAuth guidance](https://github.com/vercel-labs/portless/blob/main/skills/oauth/SKILL.md).
-Signed snapshot runtimes contain inert authentication credentials and verify
-content and renderers. Real sign-in requires a development backend configured
-with the Google client credentials.
+Acceptance databases use inert authentication credentials. Real sign-in requires
+a development backend configured with the Google client credentials.
 
-For production-mode verification, use your configured nonproduction backend
-or prepare a local signed snapshot once. Obtain the current encrypted snapshot,
-its selection hash, and the cache key through the authorized project workflow.
-Keep `CONTENT_RUNTIME_CACHE_KEY` in your shell's secret environment, then run:
+Ordinary `pnpm build` and `pnpm start` use your configured nonproduction backend.
+For a reproducible production-mode acceptance run, use:
 
 ```sh
-CONTENT_RUNTIME_SNAPSHOT=/absolute/path/runtime.tar.gpg \
-CONTENT_RUNTIME_SELECTION_HASH=<snapshot-selection-hash> \
-pnpm runtime:prepare
+pnpm acceptance:prepare
+pnpm acceptance:build
+pnpm acceptance:start
 ```
 
-Preparation verifies and imports the snapshot into an isolated database under
-`.cache/runtime`. It preserves your existing Convex selection and stops the
-temporary backend when preparation finishes. Then use the ordinary commands:
+Preparation creates a private native Convex database under `.cache/acceptance`,
+checks out the reviewed Aksara revision pinned in
+`packages/backend/scripts/content/acceptance/source.json`, and publishes its
+fixed acceptance selection through Aksara's normal signed publication protocol.
+It uses an ephemeral local signer and needs no production deployment or signing
+credentials. Aksara owns every authored source and validates complete lesson
+groups, exam sets, locales, and structured snapshots before activation.
 
-```sh
-pnpm build
-pnpm start
-```
-
-`pnpm build` checks the prepared runtime identity, starts its isolated backend,
-and builds against its verified content. Protected Vercel builds read the signed
-snapshot directly through the same domain readers. `pnpm start` reopens the
-isolated database and serves the existing build through Portless without
-rebuilding. Use the printed HTTPS
-URL for browser verification. Portless assigns internal application ports;
-`PORTLESS_APP_PORT` selects a fixed port when needed. Set `PORTLESS=0` to bypass
-the proxy explicitly.
+The acceptance build and start commands run ordinary app commands with that
+isolated backend. They preserve your normal Convex selection and stop the owned
+backend when the operation ends. Use the printed Portless HTTPS URL for browser
+verification. `PORTLESS_APP_PORT` selects an internal port; `PORTLESS=0` uses the
+app port directly.
 
 Run the browser suite from the repository root in a second terminal. Point
 Playwright at this checkout's URL and let its Node HTTP client trust the same
@@ -118,14 +111,18 @@ pnpm --filter www test:browser --workers=1
 If the proxy uses a custom state directory, set `PORTLESS_STATE_DIR` to that
 directory in both terminals.
 
-Stop it before `pnpm runtime:clean` removes the prepared runtime. To refresh
-the snapshot, clean it and repeat preparation.
+Stop acceptance services before `pnpm acceptance:clean` removes their database,
+source checkout, signer, and logs. Cleanup verifies filesystem ownership and
+refuses a database whose identity changed. To refresh the fixture, clean it and
+repeat preparation. Update the pinned Aksara revision deliberately when the
+acceptance contract needs new reviewed examples.
 
-CI uses the same build lifecycle with the current production selection and
-`PORTLESS=0` for its fixed-port browser checks. The
-protected Vercel integration invokes it through `convex deploy --cmd`; Vercel
-keeps public production client URLs, reads build content from the isolated
-snapshot, and removes all temporary state when the build ends.
+CI runs the same isolated acceptance commands with `PORTLESS=0`. Protected
+Vercel builds run only after a protected main merge through `convex deploy
+--cmd`. They query bounded real published samples from the production backend
+and verify the signed content with the current renderer. App builds do not
+export or import production tables or release history. Full corpus validation
+remains in Aksara's publication and renderer compatibility checks.
 
 ## Repository layout
 

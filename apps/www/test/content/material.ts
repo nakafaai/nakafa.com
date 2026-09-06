@@ -8,7 +8,7 @@ import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
-import type { RuntimeRow } from "@repo/backend/content/snapshot/tables";
+import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
@@ -17,12 +17,12 @@ import {
   testSignedArtifact,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
+import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import {
   testPublicationScope,
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { Array as Arr, Effect, Struct } from "effect";
 
 const defaultProjections = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
@@ -41,11 +41,11 @@ export const makeMaterialRuntimeSource = Effect.fn(
     scope: testPublicationScope({ families: ["material"] }),
   });
   const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
-  const heads: RuntimeRow<"contentHeads">[] = [];
-  const bindings: RuntimeRow<"contentBindings">[] = [];
-  const artifacts: RuntimeRow<"contentArtifacts">[] = [];
-  const catalog: RuntimeRow<"materialCatalog">[] = [];
-  const search: RuntimeRow<"contentIndex">[] = [];
+  const heads: PublicationRow<"contentHeads">[] = [];
+  const bindings: PublicationRow<"contentBindings">[] = [];
+  const artifacts: PublicationRow<"contentArtifacts">[] = [];
+  const catalog: PublicationRow<"materialCatalog">[] = [];
+  const search: PublicationRow<"contentIndex">[] = [];
   for (const [index, projection] of projections.entries()) {
     const artifact = testSignedArtifact("mathematics", {
       artifactLocale: activeAppLocaleCode(projection.appLocale),

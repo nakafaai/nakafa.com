@@ -2,6 +2,8 @@ import type { ActiveAppLocaleList } from "@nakafa/aksara-contracts/locale";
 import { resolveArticleRoute } from "@repo/backend/content/article/route";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";
+import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
+import { resolvePublicRoute } from "@repo/backend/content/publication/public";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
@@ -75,3 +77,18 @@ export const readArticleModel = Effect.fn("contentRelease.readArticleModel")(
     };
   }
 );
+
+/** Reads the article shell and signed body in one Convex snapshot. */
+export const readArticleDelivery = Effect.fn(
+  "contentRelease.readArticleDelivery"
+)(function* (
+  appLocale: PublicationRow<"articleCatalog">["appLocale"],
+  publicPath: string
+) {
+  const [model, row] = yield* Effect.all([
+    readArticleModel(appLocale, publicPath),
+    resolvePublicRoute(appLocale, publicPath),
+  ]);
+  const runtimeJson = yield* encodePublicDelivery(row, model);
+  return { model, runtimeJson };
+});

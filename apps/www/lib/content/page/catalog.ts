@@ -1,3 +1,5 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 
 import {
@@ -8,19 +10,14 @@ import {
   canonicalizePublicPageProjection,
   type PublicPageProjection,
 } from "@nakafa/aksara-contracts/projection/page";
-import { readPageCatalog } from "@repo/backend/content/publication/page";
 import { api } from "@repo/backend/convex/_generated/api";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
-import { applyPublishedCatalogCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
-import {
-  PublishedProjectionError,
-  PublishedReleaseMismatchError,
-} from "@/lib/content/published/errors";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
 import { decodeContentReleasePin } from "@/lib/content/published/release";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 import { isReservedPagePath } from "@/lib/routing/public/ownership";
 
 /** Complete signed Page catalog selected from one active release. */
@@ -30,7 +27,6 @@ export interface PublishedPageCatalog {
 }
 
 interface PublishedPageRead {
-  readonly activeReleaseId: ActiveContentReleaseId;
   readonly projection: PublicPageProjection;
 }
 
@@ -48,10 +44,10 @@ export const readPublishedPageCatalog = Effect.fn(
     appLocale: AppLocaleSchema.make(routing.defaultLocale),
     publicPath: "pages",
   };
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.page.catalog,
-    {},
-    () => readPageCatalog()
+    {}
   );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
@@ -81,20 +77,14 @@ export async function getPublishedPageCatalog() {
   "use cache";
 
   const catalog = await Effect.runPromise(readPublishedPageCatalog());
-  applyPublishedCatalogCache("page");
+  applyContentCache("page");
   return catalog;
 }
 
-/** Proves one runtime Page and its localized counterparts share a release. */
+/** Proves a cached Page still matches its current signed catalog projection. */
 export const verifyPublishedPageCatalog = Effect.fn(
   "NakafaContent.verifyPublishedPageCatalog"
 )(function* (catalog: PublishedPageCatalog, page: PublishedPageRead) {
-  if (catalog.activeReleaseId !== page.activeReleaseId) {
-    return yield* new PublishedReleaseMismatchError({
-      actualReleaseId: page.activeReleaseId,
-      expectedReleaseId: catalog.activeReleaseId,
-    });
-  }
   const counterparts = catalog.projections.filter(
     ({ pageKey }) => pageKey === page.projection.pageKey
   );

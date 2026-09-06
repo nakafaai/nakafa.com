@@ -114,6 +114,13 @@ const tables = {
       "appLocale",
       "path",
     ])
+    .index("by_snapshotId_and_appLocale_and_level_and_bucket_and_path", [
+      "snapshotId",
+      "appLocale",
+      "level",
+      "bucket",
+      "path",
+    ])
     .index("by_snapshotId_and_appLocale_and_bucket_and_path", [
       "snapshotId",
       "appLocale",

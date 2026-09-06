@@ -19,13 +19,6 @@ const NEXT_CLI = fileURLToPath(
 const TASK_QUERY = "https://helpful-capybara-123.convex.cloud";
 const TASK_SITE = "https://helpful-capybara-123.convex.site";
 const OTHER_SITE = "https://different-capybara-456.convex.site";
-const emptyBuild = {
-  snapshot: undefined,
-} satisfies RuntimeTarget["build"];
-const localBuild = {
-  snapshot: "/tmp/runtime/serving/snapshot.json",
-} satisfies RuntimeTarget["build"];
-
 const emptyIdentity = {
   deployment: undefined,
   environment: undefined,
@@ -58,7 +51,6 @@ const productionIdentity = {
 
 const productionTarget = {
   agent: undefined,
-  build: emptyBuild,
   query: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`,
   site: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.site`,
   vercel: emptyIdentity,
@@ -173,33 +165,7 @@ describe("content runtime target", () => {
     { name: "query and HTTP", site: productionTarget.site },
     { name: "query only", site: undefined },
   ])("accepts protected production with $name", ({ site }) =>
-    expectSuccess(
-      target({ build: localBuild, site, vercel: productionIdentity })
-    )
-  );
-
-  it.effect("rejects a production build without an isolated snapshot", () =>
-    expectFailure(
-      target({ vercel: productionIdentity }),
-      "unisolated-production"
-    )
-  );
-
-  it.effect.each([
-    { snapshot: "snapshot.json", name: "a relative descriptor path" },
-    {
-      snapshot: "https://example.com/snapshot.json",
-      name: "a remote descriptor",
-    },
-    {
-      snapshot: "/tmp/runtime/data.json",
-      name: "a data file instead of its descriptor",
-    },
-  ])("rejects protected production with $name", ({ snapshot }) =>
-    expectFailure(
-      target({ build: { snapshot }, vercel: productionIdentity }),
-      "unisolated-production"
-    )
+    expectSuccess(target({ site, vercel: productionIdentity }))
   );
 
   it.effect.each([

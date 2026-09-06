@@ -1,4 +1,5 @@
-import { readRouteOwnership } from "@repo/backend/content/publication/route";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
@@ -18,7 +19,6 @@ import {
   PublishedProjectionError,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type ContentRouteArgs = FunctionArgs<
   typeof api.contentRelease.ownership.resolve
@@ -95,11 +95,10 @@ export const readActiveContentRoute = Effect.fn(
     family: input.family,
     publicPath: input.publicPath,
   };
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.ownership.resolve,
-    args,
-    ({ family, appLocale, publicPath }) =>
-      readRouteOwnership(family, appLocale, publicPath)
+    args
   );
   if (result.kind === "unmanaged") {
     const activeReleaseId = yield* Schema.decodeEffect(

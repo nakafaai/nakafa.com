@@ -17,8 +17,8 @@ import {
   testSignedRelease,
   testSignedTryoutRuntimeBundle,
 } from "@repo/backend/test/content/proof";
+import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
-import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   makeTryoutStartHierarchy,
@@ -124,18 +124,17 @@ export const makeTryoutRuntimeSource = Effect.fn(
     rendererManifest: TEST_PROOF_RENDERER,
     snapshot: snapshot.manifest,
   });
-  fixture.source.set(
-    "contentReleases",
-    (fixture.source.get("contentReleases") ?? []).map((row) => ({
-      ...row,
+  fixture.source.set("contentReleases", [
+    {
+      ...fixture.release,
       baseFamilies: [...origin.manifest.scope.families],
       resultFamilies: mergeManagedFamilies(
         origin.manifest.scope.families,
         signed.manifest.scope.families
       ),
       tryoutRuntimeBundleHash: bundle.bundleHash,
-    }))
-  );
+    },
+  ]);
   fixture.source.set(
     "contentArtifacts",
     artifacts.map((artifact) => ({

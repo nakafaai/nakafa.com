@@ -5,7 +5,7 @@ import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
 import { Effect } from "effect";
-import { applyPublishedContentCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import { readPublishedPage } from "@/lib/content/page/published";
 import { readPublishedArticle } from "@/lib/content/published/article";
 import { readPublishedMaterial } from "@/lib/content/published/material";
@@ -112,7 +112,7 @@ export async function getCachedPublishedText(input: PublishedMarkdownInput) {
   "use cache";
 
   const data = await Effect.runPromise(readPublishedTextData(input));
-  applyPublishedContentCache(input.family, data.artifactHash);
+  applyContentCache(input.family);
 
   return await Effect.runPromise(
     buildPublishedText({

@@ -5,16 +5,16 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Data, Effect } from "effect";
 import {
   readPublishedLatestMaterials,
   readPublishedMaterialBucket,
 } from "@/lib/content/material/discovery";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
@@ -31,8 +31,8 @@ class TestMaterialRuntimeUnavailable extends Data.TaggedError(
   readonly operation: "query";
 }> {}
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 const summary = {
@@ -52,8 +52,8 @@ describe("published material discovery", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeMaterialRuntimeSource();
-        const context = yield* createTestSnapshotContext(fixture.source);
-        runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+        const context = yield* createTestPublication(fixture.source);
+        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
         const projection = makeMaterialProjection("en", 1);
         const bucket = getHashBucket(hashContentProjection(projection));
 
@@ -194,7 +194,7 @@ describe("published material discovery", () => {
 
         expect(malformed).toMatchObject({ _tag: "PublishedProjectionError" });
         expect(unmanaged).toMatchObject({ _tag: "PublishedProjectionError" });
-        expect(unavailable).toMatchObject({ _tag: "TestRuntimeQueryError" });
+        expect(unavailable).toMatchObject({ _tag: "NakafaAgentDataReadError" });
       })
   );
 
@@ -220,3 +220,7 @@ describe("published material discovery", () => {
       })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));

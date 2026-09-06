@@ -1,215 +1,156 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-  PublicPathSchema,
-  ReleaseIdSchema,
-  Sha256HashSchema,
-} from "@nakafa/aksara-contracts/ids";
-import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
+import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import { getMaterialPublication } from "@/lib/content/material/publication";
-import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
-  previewArtifactHash,
-  previewDeProjection,
-  previewIdProjection,
-  previewNextProjection,
-  previewProjection,
-  previewSourcePath,
+  previewWireArtifact as artifact,
+  previewDeProjection as deProjection,
+  previewIdProjection as idProjection,
+  previewProjection as projection,
+  previewSourcePath as sourcePath,
 } from "@/test/content-preview";
 
-const catalogCacheMock = vi.hoisted(() => vi.fn());
-const contentCacheMock = vi.hoisted(() => vi.fn());
-const routeMock = vi.hoisted(() => vi.fn());
+const queryMock = vi.hoisted(() => vi.fn());
+const cacheMock = vi.hoisted(() => vi.fn());
+const deliveryMock = vi.hoisted(() => vi.fn());
 const renderMock = vi.hoisted(() => vi.fn());
-const activeManifestHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const activeReleaseId = ReleaseIdSchema.make("release-material");
 const model = {
-  activeManifestHash,
   activeReleaseId,
-  alternates: [previewProjection, previewIdProjection, previewDeProjection],
-  projection: previewProjection,
+  activeAppLocales: ["en", "id", "de"],
+  alternateJson: [projection, idProjection, deProjection].map((value) =>
+    JSON.stringify(value)
+  ),
+  projectionJson: JSON.stringify(projection),
+  activeManifestHash: `sha256:${"a".repeat(64)}`,
   rendererDomain: "mathematics",
-  siblings: [previewProjection, previewNextProjection],
-  sourcePath: previewSourcePath,
+  siblingJson: [JSON.stringify(projection)],
+  sourcePath,
   sourceRevision: "a".repeat(40),
+};
+const data = {
+  activeReleaseId,
+  artifact,
+  projection,
+  sourcePath,
+  sourceRevision: "a".repeat(40),
+  rendererManifest: {},
 };
 const published = {
   activeReleaseId,
-  artifactHash: previewArtifactHash,
-  projection: previewProjection,
-  rendererDomain: "mathematics",
+  artifactHash: artifact.artifactHash,
+  projection,
+  body: "rendered",
 };
 
-vi.mock("@/lib/content/cache", () => ({
-  applyPublishedCatalogCache: catalogCacheMock,
-  applyPublishedContentCache: contentCacheMock,
+vi.mock("@/lib/content/published/body", () => ({ readRenderedBody: vi.fn() }));
+vi.mock("convex/nextjs", () => ({ fetchQuery: queryMock }));
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
 }));
-vi.mock("@/lib/content/material/route", () => ({
-  getPublishedMaterialRoute: routeMock,
+vi.mock("@/lib/content/cache", () => ({ applyContentCache: cacheMock }));
+vi.mock("@/lib/content/published/exchange", () => ({
+  decodePublishedDelivery: deliveryMock,
 }));
-vi.mock("@/lib/content/published/material", () => ({
-  readRenderedMaterial: renderMock,
+vi.mock("@/lib/content/published/material", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@/lib/content/published/material")
+  >()),
+  renderMaterialArtifact: renderMock,
 }));
-
-function missingRuntime(publicPath: typeof PublicPathSchema.Type) {
-  return new ContentRuntimeMissingError({
-    request: {
-      appLocale: previewProjection.appLocale,
-      delivery: "public",
-      publicPath,
-    },
-  });
-}
 
 beforeEach(() => {
-  catalogCacheMock.mockReset();
-  contentCacheMock.mockReset();
-  routeMock.mockReset();
-  renderMock.mockReset();
-  routeMock.mockResolvedValue(model);
-  renderMock.mockReturnValue(Effect.succeed(published));
+  queryMock
+    .mockReset()
+    .mockResolvedValue({ model, runtimeJson: "signed-envelope" });
+  cacheMock.mockReset();
+  deliveryMock.mockReset().mockReturnValue(Effect.succeed(data));
+  renderMock.mockReset().mockReturnValue(Effect.succeed(published));
 });
 
-describe("material publication", () => {
-  it("starts one bounded route and one signed body before either settles", async () => {
-    let releaseRoute: () => void = () => undefined;
-    let releasePublished: () => void = () => undefined;
-    routeMock.mockReturnValueOnce(
-      new Promise((resolve) => {
-        releaseRoute = () => resolve(model);
+describe("coherent material publication", () => {
+  it("reads the shell and body once and verifies them before rendering", async () => {
+    await expect(
+      getMaterialPublication("en", projection.publicPath)
+    ).resolves.toMatchObject({
+      model: { activeReleaseId, projection },
+      published,
+    });
+    expect(queryMock).toHaveBeenCalledExactlyOnceWith(
+      api.contentRelease.material.delivery,
+      { appLocale: "en", publicPath: projection.publicPath },
+      { url: "https://test.convex.cloud" }
+    );
+    expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
+      { appLocale: "en", publicPath: projection.publicPath },
+      "signed-envelope"
+    );
+    expect(cacheMock).toHaveBeenCalledExactlyOnceWith("material");
+    expect(renderMock).toHaveBeenCalledOnce();
+  });
+
+  it("caches an authenticated withdrawal without rendering", async () => {
+    queryMock.mockResolvedValueOnce({
+      model: { ...model, alternateJson: [], projectionJson: null },
+      runtimeJson: null,
+    });
+    await expect(
+      getMaterialPublication("en", projection.publicPath)
+    ).resolves.toBeNull();
+    expect(cacheMock).toHaveBeenCalledWith("material");
+    expect(deliveryMock).not.toHaveBeenCalled();
+    expect(renderMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["missing-body", "orphan-body"])(
+    "rejects %s before rendering",
+    async (kind) => {
+      queryMock.mockResolvedValueOnce({
+        model:
+          kind === "orphan-body"
+            ? { ...model, alternateJson: [], projectionJson: null }
+            : model,
+        runtimeJson: kind === "missing-body" ? null : "signed-envelope",
+      });
+      await expect(
+        getMaterialPublication("en", projection.publicPath)
+      ).rejects.toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
+      expect(renderMock).not.toHaveBeenCalled();
+    }
+  );
+
+  it("rejects mismatched publication generations before rendering", async () => {
+    deliveryMock.mockReturnValueOnce(
+      Effect.succeed({
+        ...data,
+        activeReleaseId: ReleaseIdSchema.make("release-other"),
       })
     );
-    renderMock.mockReturnValueOnce(
-      Effect.promise(
-        () =>
-          new Promise((resolve) => {
-            releasePublished = () => resolve(published);
-          })
+    await expect(
+      getMaterialPublication("en", projection.publicPath)
+    ).rejects.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+    });
+    expect(renderMock).not.toHaveBeenCalled();
+  });
+
+  it("preserves signed verification failures and never evaluates their body", async () => {
+    deliveryMock.mockReturnValueOnce(
+      Effect.fail(
+        new ContentRuntimeVerificationError({ cause: "invalid-signature" })
       )
     );
-
-    const publication = getMaterialPublication(
-      "en",
-      previewProjection.publicPath
-    );
-    await vi.waitFor(() => {
-      expect(routeMock).toHaveBeenCalledOnce();
-      expect(routeMock).toHaveBeenCalledWith(
-        "en",
-        previewProjection.publicPath
-      );
-      expect(renderMock).toHaveBeenCalledOnce();
-    });
-    releaseRoute();
-    releasePublished();
-
-    await expect(publication).resolves.toMatchObject({ model, published });
-  });
-
-  it("returns null only when both authenticated owners report a missing route", async () => {
-    const publicPath = PublicPathSchema.make(
-      `${previewProjection.publicPath}-missing`
-    );
-    routeMock.mockResolvedValueOnce({
-      ...model,
-      alternates: [],
-      projection: null,
-      rendererDomain: null,
-      siblings: [],
-      sourcePath: null,
-    });
-    renderMock.mockReturnValueOnce(Effect.fail(missingRuntime(publicPath)));
-
-    await expect(getMaterialPublication("en", publicPath)).resolves.toBeNull();
-    expect(routeMock).toHaveBeenCalledOnce();
-    expect(catalogCacheMock).toHaveBeenCalledWith("material");
-    expect(contentCacheMock).not.toHaveBeenCalled();
-  });
-
-  it("rejects a missing body when the bounded route still exists", async () => {
-    renderMock.mockReturnValueOnce(
-      Effect.fail(missingRuntime(previewProjection.publicPath))
-    );
-
     await expect(
-      getMaterialPublication("en", previewProjection.publicPath)
+      getMaterialPublication("en", projection.publicPath)
     ).rejects.toMatchObject({
-      _tag: "PublishedProjectionError",
-      appLocale: previewProjection.appLocale,
-      publicPath: previewProjection.publicPath,
+      _tag: "ContentRuntimeVerificationError",
     });
-  });
-
-  it("rejects a signed body when the bounded route is missing", async () => {
-    const publicPath = PublicPathSchema.make(
-      `${previewProjection.publicPath}-missing`
-    );
-    routeMock.mockResolvedValueOnce({
-      ...model,
-      alternates: [],
-      projection: null,
-      rendererDomain: null,
-      siblings: [],
-      sourcePath: null,
-    });
-
-    await expect(
-      getMaterialPublication("en", publicPath)
-    ).rejects.toMatchObject({
-      _tag: "PublishedProjectionError",
-      appLocale: previewProjection.appLocale,
-      publicPath,
-    });
-  });
-
-  it("verifies and caches one coherent material publication", async () => {
-    await expect(
-      getMaterialPublication("en", previewProjection.publicPath)
-    ).resolves.toEqual({ model, published });
-    expect(routeMock).toHaveBeenCalledOnce();
-    expect(catalogCacheMock).toHaveBeenCalledWith("material");
-    expect(contentCacheMock).toHaveBeenCalledWith(
-      "material",
-      previewArtifactHash
-    );
-  });
-
-  it("preserves route failure provenance across the cache boundary", async () => {
-    const failure = new PublishedProjectionError({
-      appLocale: previewProjection.appLocale,
-      publicPath: previewProjection.publicPath,
-    });
-    routeMock.mockRejectedValueOnce(failure);
-
-    await expect(
-      getMaterialPublication("en", previewProjection.publicPath)
-    ).rejects.toMatchObject({
-      _tag: "MaterialRouteReadError",
-      appLocale: previewProjection.appLocale,
-      cause: failure,
-      publicPath: previewProjection.publicPath,
-    });
-  });
-
-  it("interrupts the signed body read when the bounded route fails", async () => {
-    const interrupted = vi.fn();
-    const failure = new PublishedProjectionError({
-      appLocale: previewProjection.appLocale,
-      publicPath: previewProjection.publicPath,
-    });
-    routeMock.mockRejectedValueOnce(failure);
-    renderMock.mockReturnValueOnce(
-      Effect.never.pipe(Effect.onInterrupt(() => Effect.sync(interrupted)))
-    );
-
-    await expect(
-      getMaterialPublication("en", previewProjection.publicPath)
-    ).rejects.toMatchObject({
-      _tag: "MaterialRouteReadError",
-      cause: failure,
-    });
-    expect(interrupted).toHaveBeenCalledOnce();
+    expect(renderMock).not.toHaveBeenCalled();
   });
 });

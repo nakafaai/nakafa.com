@@ -1,3 +1,4 @@
+import type { ContentCacheScope } from "@nakafa/aksara-contracts/cache/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale, type Locale } from "next-intl";
@@ -24,6 +25,33 @@ import {
 import { readSiteLlmsEntries } from "@/lib/llms/site";
 
 const LOCALE_INDEX_ENTRY_LIMIT = 60;
+const SECTION_CACHE_SCOPE = {
+  articles: "article",
+  material: "material",
+  quran: "quran",
+  site: "page",
+} satisfies Record<LlmsSection, ContentCacheScope>;
+
+/** Resolves only the mutable publication sources read by one LLMS index. */
+export const readLlmsIndexCacheScopes = Effect.fn("www.llms.index.cacheScopes")(
+  (cleanSlug: string) =>
+    Effect.sync(
+      (): readonly [ContentCacheScope, ...ContentCacheScope[]] | null => {
+        const parsed = parseLlmsIndexSlug(cleanSlug);
+        if (!parsed) {
+          return null;
+        }
+        if (parsed.prefixParts.length === 0) {
+          return ["article", "material", "page", "quran"];
+        }
+        const section = parsed.prefixParts[0];
+        if (!isLlmsSection(section)) {
+          return null;
+        }
+        return [SECTION_CACHE_SCOPE[section]];
+      }
+    )
+);
 
 /** Builds a locale or section llms index from a cleaned llms route. */
 export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(

@@ -6,6 +6,7 @@ import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projecti
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
 import type { PublicRuntimeRow } from "@repo/backend/content/publication/public";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   decodeArtifactJson,
   decodeProjectionJson,
@@ -63,4 +64,36 @@ export const decodePublicRuntimeRow = Effect.fn(
     sourcePath,
   };
   return response;
+});
+
+/** Binds one public body to the route model read in the same query transaction. */
+export const encodePublicDelivery = Effect.fn(
+  "contentRelease.encodePublicDelivery"
+)(function* (
+  row: PublicRuntimeRow,
+  model: {
+    readonly activeReleaseId: string;
+    readonly projectionJson: string | null;
+  }
+) {
+  if (
+    (model.projectionJson === null) !== (row === null) ||
+    (row !== null &&
+      (row.activeReleaseId !== model.activeReleaseId ||
+        row.projectionJson !== model.projectionJson))
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "The public body and route model do not share one publication."
+    );
+  }
+  const response = yield* decodePublicRuntimeRow(row).pipe(
+    Effect.catchTag("PublicRuntimeReadError", () =>
+      releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "The stored public delivery envelope is invalid."
+      )
+    )
+  );
+  return response === null ? null : JSON.stringify(response);
 });

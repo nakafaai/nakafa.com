@@ -1,22 +1,26 @@
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import {
   decodePublicRuntimeRow,
+  encodePublicDelivery,
   PublicRuntimeReadError,
 } from "@repo/backend/content/publication/exchange";
-import { resolvePublicRoute } from "@repo/backend/content/publication/public";
-import { snapshotPublicationLayer } from "@repo/backend/content/publication/snapshot";
-import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
+import { internal } from "@repo/backend/convex/_generated/api";
+import {
+  createTestPublication,
+  makePageRuntimeSource,
+} from "@repo/backend/test/content/publication";
 import { TEST_QUESTION_PROJECTION_JSON } from "@repo/backend/test/content/question";
-import { makePageRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { Effect } from "effect";
 
 const readFixture = Effect.fn("test.publicationExchange")(function* () {
   const fixture = makePageRuntimeSource();
-  const tables = yield* projectActiveRuntime(fixture.source);
-  const row = yield* resolvePublicRoute(
-    fixture.projection.appLocale,
-    fixture.projection.publicPath
-  ).pipe(Effect.provide(snapshotPublicationLayer(tables)));
+  const runtime = yield* createTestPublication(fixture.source);
+  const row = yield* Effect.promise(() =>
+    runtime.query(internal.contentRelease.runtime.public.internal.read, {
+      appLocale: fixture.projection.appLocale,
+      publicPath: fixture.projection.publicPath,
+    })
+  );
   assert(row, "Expected one signed public page.");
   return row;
 });
@@ -26,6 +30,47 @@ afterEach(() => {
 });
 
 describe("stored public exchange", () => {
+  it.effect(
+    "binds one body to its exact shell and preserves a withdrawal",
+    () =>
+      Effect.gen(function* () {
+        const row = yield* readFixture();
+        const source = yield* encodePublicDelivery(row, row);
+        expect(JSON.parse(source ?? "")).toMatchObject({
+          activeReleaseId: row.activeReleaseId,
+          projectionHash: row.projectionHash,
+        });
+        expect(
+          yield* encodePublicDelivery(null, {
+            activeReleaseId: row.activeReleaseId,
+            projectionJson: null,
+          })
+        ).toBeNull();
+        for (const model of [
+          {
+            activeReleaseId: "different-release",
+            projectionJson: row.projectionJson,
+          },
+          {
+            activeReleaseId: row.activeReleaseId,
+            projectionJson: "different-projection",
+          },
+          { activeReleaseId: row.activeReleaseId, projectionJson: null },
+        ]) {
+          expect(
+            yield* encodePublicDelivery(row, model).pipe(Effect.flip)
+          ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+        }
+        expect(
+          yield* encodePublicDelivery(null, row).pipe(Effect.flip)
+        ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+        expect(
+          yield* encodePublicDelivery({ ...row, artifactJson: "{" }, row).pipe(
+            Effect.flip
+          )
+        ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+      })
+  );
   it.effect(
     "decodes exact signed body and provenance, preserving absence",
     () =>

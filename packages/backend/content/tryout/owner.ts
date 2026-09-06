@@ -1,4 +1,4 @@
-import { loadActiveSnapshot } from "@repo/backend/content/snapshot/read";
+import { loadActiveSnapshot } from "@repo/backend/content/publication/snapshot";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import { Effect, Option } from "effect";

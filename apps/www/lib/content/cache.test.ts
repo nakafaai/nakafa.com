@@ -1,17 +1,14 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-  ArtifactCacheTagSchema,
-  ContentCacheTagsSchema,
+  ContentCacheScopeSchema,
   makeArtifactCacheTag,
+  makeContentCacheTag,
 } from "@nakafa/aksara-contracts/cache/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { Data, Effect, Schema } from "effect";
+import { Data, Effect } from "effect";
 import {
-  applyContentRuntimeCache,
-  applyPublishedCatalogCache,
-  applyPublishedContentBatchCache,
-  applyPublishedContentCache,
-  applyPublishedSnapshotCache,
+  applyContentCache,
+  applyImmutableContentCache,
   ContentCacheInvalidationError,
   invalidateContentCache,
 } from "@/lib/content/cache";
@@ -20,14 +17,6 @@ const artifactHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const artifactTag = makeArtifactCacheTag(artifactHash);
 const otherArtifactHash = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
 const otherArtifactTag = makeArtifactCacheTag(otherArtifactHash);
-const familyCacheTags = Schema.decodeSync(ContentCacheTagsSchema)([
-  "content-runtime",
-  "content-family:material",
-]);
-const artifactCacheTags = Schema.decodeSync(ContentCacheTagsSchema)([
-  ...familyCacheTags,
-  artifactTag,
-]);
 const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
 const revalidateTagMock = vi.hoisted(() => vi.fn());
@@ -56,61 +45,32 @@ describe("content runtime cache", () => {
     revalidateTagMock.mockClear();
     dangerouslyDeleteByTagMock.mockReset().mockResolvedValue(undefined);
   });
-  it("applies the shared tag and cache profile", () => {
-    applyContentRuntimeCache();
-    expect(cacheTagMock).toHaveBeenCalledWith("content-runtime");
-    expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
-  });
-  it("applies global and exact immutable snapshot tags", () => {
-    applyPublishedSnapshotCache(artifactHash);
-    expect(cacheTagMock).toHaveBeenCalledWith("content-runtime", artifactTag);
-    expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
-  });
-  it("applies global, family, and exact artifact tags", () => {
-    applyPublishedContentCache("material", artifactHash);
+  it("keeps combined mutable dependencies explicit", () => {
+    applyContentCache("material", "program");
     expect(cacheTagMock).toHaveBeenCalledWith(
-      "content-runtime",
-      "content-family:material",
-      artifactTag
+      "content-scope:material",
+      "content-scope:program"
     );
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
-  it("applies every immutable artifact tag in a bounded batch", () => {
-    applyPublishedContentBatchCache("question", [
-      artifactHash,
-      otherArtifactHash,
-    ]);
-    expect(cacheTagMock).toHaveBeenCalledWith(
-      "content-runtime",
-      "content-family:question",
-      artifactTag,
-      otherArtifactTag
-    );
+  it("gives immutable bodies no mutable or global dependency", () => {
+    applyImmutableContentCache([artifactHash, otherArtifactHash]);
+    expect(cacheTagMock).toHaveBeenCalledWith(artifactTag, otherArtifactTag);
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
-  it("applies global and family tags to published catalogs", () => {
-    applyPublishedCatalogCache("article");
-    expect(cacheTagMock).toHaveBeenCalledWith(
-      "content-runtime",
-      "content-family:article"
-    );
-    expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
-  });
-  it.effect("invalidates exact Next tags and the sitemap CDN tag", () =>
-    Effect.gen(function* () {
-      expect(yield* invalidateContentCache(artifactCacheTags)).toEqual(
-        artifactCacheTags
-      );
-      expect(revalidateTagMock.mock.calls).toEqual([
-        ["content-runtime", { expire: 0 }],
-        ["content-family:material", { expire: 0 }],
-        [artifactTag, { expire: 0 }],
-      ]);
-      expect(dangerouslyDeleteByTagMock).toHaveBeenCalledWith(
-        "content-sitemap",
-        { revalidationDeadlineSeconds: 0 }
-      );
-    })
+  it.effect.each(ContentCacheScopeSchema.literals)(
+    "invalidates only the changed %s dependency",
+    (scope) =>
+      Effect.gen(function* () {
+        expect(yield* invalidateContentCache(scope)).toBe(scope);
+        expect(revalidateTagMock.mock.calls).toEqual([
+          [makeContentCacheTag(scope), { expire: 0 }],
+        ]);
+        expect(dangerouslyDeleteByTagMock).toHaveBeenCalledWith(
+          "content-sitemap",
+          { revalidationDeadlineSeconds: 0 }
+        );
+      })
   );
   it.effect("keeps a failed CDN purge in the typed error channel", () =>
     Effect.gen(function* () {
@@ -119,7 +79,7 @@ describe("content runtime cache", () => {
       );
 
       expect(
-        yield* invalidateContentCache(familyCacheTags).pipe(Effect.flip)
+        yield* invalidateContentCache("material").pipe(Effect.flip)
       ).toEqual(new ContentCacheInvalidationError({ layer: "sitemap" }));
     })
   );
@@ -130,16 +90,9 @@ describe("content runtime cache", () => {
       });
 
       expect(
-        yield* invalidateContentCache(familyCacheTags).pipe(Effect.flip)
+        yield* invalidateContentCache("material").pipe(Effect.flip)
       ).toEqual(new ContentCacheInvalidationError({ layer: "next" }));
       expect(dangerouslyDeleteByTagMock).not.toHaveBeenCalled();
     })
   );
-  it("rejects an artifact tag without a canonical signed hash", () => {
-    expect(() =>
-      Schema.decodeSync(ArtifactCacheTagSchema)("content-artifact:unknown")
-    ).toThrow(
-      "Expected content-artifact followed by one canonical SHA-256 hash."
-    );
-  });
 });

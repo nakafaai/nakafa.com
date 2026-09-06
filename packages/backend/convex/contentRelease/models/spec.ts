@@ -12,22 +12,16 @@ export interface ModelBuildPage {
 }
 
 export const modelBuildPhaseValidator = v.union(
-  v.literal("articleClearCatalog"),
-  v.literal("articleClearCategories"),
-  v.literal("articleClearBuckets"),
-  v.literal("articleCopyCatalog"),
-  v.literal("articleCopyCategories"),
-  v.literal("articleCopyBuckets"),
+  v.literal("articleCatalog"),
+  v.literal("articleCategories"),
+  v.literal("articleBuckets"),
   v.literal("articleApply"),
   v.literal("articleVerify"),
-  v.literal("materialClearCatalog"),
-  v.literal("materialClearBuckets"),
-  v.literal("materialCopyCatalog"),
-  v.literal("materialCopyBuckets"),
+  v.literal("materialCatalog"),
+  v.literal("materialBuckets"),
   v.literal("materialApply"),
   v.literal("materialVerify"),
-  v.literal("searchClear"),
-  v.literal("searchCopy"),
+  v.literal("search"),
   v.literal("searchApply"),
   v.literal("searchVerify"),
   v.literal("ready")

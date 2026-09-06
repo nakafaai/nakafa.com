@@ -1,13 +1,4 @@
-import { readFeaturedTryout as readSignedFeaturedTryout } from "@repo/backend/content/tryout/featured";
-import { readTryoutMetadata as readSignedTryoutMetadata } from "@repo/backend/content/tryout/metadata";
-import {
-  readTryoutCountryPage as readSignedTryoutCountryPage,
-  readTryoutExamPage as readSignedTryoutExamPage,
-  readTryoutHubPage as readSignedTryoutHubPage,
-  readTryoutSectionPage as readSignedTryoutSectionPage,
-  readTryoutSetPage as readSignedTryoutSetPage,
-  readTryoutTrackPage as readSignedTryoutTrackPage,
-} from "@repo/backend/content/tryout/page";
+import { env } from "@/env";
 import "server-only";
 
 import {
@@ -20,9 +11,8 @@ import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import { fetchRuntimeQuery } from "@/lib/content/runtime/query";
 
 type TryoutMetadataKind = FunctionArgs<
   typeof api.tryouts.queries.catalog.getMetadata
@@ -43,12 +33,12 @@ class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>(
 /** Reads and renders the signed question selected for the marketing page. */
 export async function readFeaturedTryout(locale: Locale) {
   "use cache";
-  applyContentRuntimeCache();
+  applyContentCache("tryout");
 
-  const featured = await fetchRuntimeQuery(
+  const featured = await fetchQuery(
     api.tryouts.queries.catalog.getFeaturedQuestion,
     { appLocale: AppLocaleSchema.make(locale) },
-    ({ appLocale }) => readSignedFeaturedTryout(appLocale)
+    { url: env.NEXT_PUBLIC_CONVEX_URL }
   );
 
   return await Effect.runPromise(
@@ -66,31 +56,29 @@ export async function readFeaturedTryout(locale: Locale) {
 /** Reads exact signed route metadata from the tagged content cache. */
 export async function readTryoutMetadata(args: TryoutMetadataArgs) {
   "use cache";
-  applyContentRuntimeCache();
+  applyContentCache("tryout");
 
-  return await fetchRuntimeQuery(
-    api.tryouts.queries.catalog.getMetadata,
-    args,
-    readSignedTryoutMetadata
-  );
+  return await fetchQuery(api.tryouts.queries.catalog.getMetadata, args, {
+    url: env.NEXT_PUBLIC_CONVEX_URL,
+  });
 }
 
 /** Reads the public country-first try-out catalog from the tagged content cache. */
 export async function readTryoutHubPage(locale: Locale) {
   "use cache";
-  applyContentRuntimeCache();
+  applyContentCache("tryout");
 
   const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
     Effect.tryPromise({
       catch: (cause) => new TryoutCatalogReadError({ cause }),
       try: () =>
-        fetchRuntimeQuery(
+        fetchQuery(
           api.tryouts.queries.catalog.getHubPage,
           {
             appLocale,
           },
-          readSignedTryoutHubPage
+          { url: env.NEXT_PUBLIC_CONVEX_URL }
         ),
     }).pipe(
       Effect.flatMap((page) =>
@@ -109,20 +97,20 @@ export async function readTryoutCountryPage(
   publicPath: string
 ) {
   "use cache";
-  applyContentRuntimeCache();
+  applyContentCache("tryout");
 
   const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
     Effect.tryPromise({
       catch: (cause) => new TryoutCatalogReadError({ cause }),
       try: () =>
-        fetchRuntimeQuery(
+        fetchQuery(
           api.tryouts.queries.catalog.getCountryPage,
           {
             appLocale,
             publicPath,
           },
-          readSignedTryoutCountryPage
+          { url: env.NEXT_PUBLIC_CONVEX_URL }
         ),
     }).pipe(
       Effect.flatMap((page) => {
@@ -141,45 +129,45 @@ export async function readTryoutCountryPage(
 /** Reads one public exam page from the tagged content cache. */
 export async function readTryoutExamPage(locale: Locale, publicPath: string) {
   "use cache";
-  applyContentRuntimeCache();
+  applyContentCache("tryout");
 
-  return await fetchRuntimeQuery(
+  return await fetchQuery(
     api.tryouts.queries.catalog.getExamPage,
     {
       appLocale: AppLocaleSchema.make(locale),
       publicPath,
     },
-    readSignedTryoutExamPage
+    { url: env.NEXT_PUBLIC_CONVEX_URL }
   );
 }
 
 /** Reads one public track shell from the tagged content cache. */
 export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
   "use cache";
-  applyContentRuntimeCache();
+  applyContentCache("tryout");
 
-  return await fetchRuntimeQuery(
+  return await fetchQuery(
     api.tryouts.queries.catalog.getTrackPage,
     {
       appLocale: AppLocaleSchema.make(locale),
       publicPath,
     },
-    readSignedTryoutTrackPage
+    { url: env.NEXT_PUBLIC_CONVEX_URL }
   );
 }
 
 /** Reads one public set page from the tagged content cache. */
 export async function readTryoutSetPage(locale: Locale, publicPath: string) {
   "use cache";
-  applyContentRuntimeCache();
+  applyContentCache("tryout");
 
-  return await fetchRuntimeQuery(
+  return await fetchQuery(
     api.tryouts.queries.catalog.getSetPage,
     {
       appLocale: AppLocaleSchema.make(locale),
       publicPath,
     },
-    readSignedTryoutSetPage
+    { url: env.NEXT_PUBLIC_CONVEX_URL }
   );
 }
 
@@ -209,15 +197,15 @@ export async function readTryoutSectionPage(
   publicPath: string
 ) {
   "use cache";
-  applyContentRuntimeCache();
+  applyContentCache("tryout");
 
-  return await fetchRuntimeQuery(
+  return await fetchQuery(
     api.tryouts.queries.catalog.getSectionPage,
     {
       appLocale: AppLocaleSchema.make(locale),
       publicPath,
     },
-    readSignedTryoutSectionPage
+    { url: env.NEXT_PUBLIC_CONVEX_URL }
   );
 }
 

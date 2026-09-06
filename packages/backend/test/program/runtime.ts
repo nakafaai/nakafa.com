@@ -7,8 +7,8 @@ import {
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
+import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
-import { makeRuntimeSource } from "@repo/backend/test/content/snapshot";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";

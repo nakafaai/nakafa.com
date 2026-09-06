@@ -135,12 +135,7 @@ async function MaterialRouteContent({
   const materialContext = readMaterialContextQuery(query ?? {});
   const publishedContext =
     materialContext && page.kind === "published"
-      ? await getPublishedMaterialContext(
-          appLocale,
-          route,
-          materialContext,
-          page.activeReleaseId
-        )
+      ? await getPublishedMaterialContext(appLocale, route, materialContext)
       : null;
   const navigation = readMaterialNavigation(page, publishedContext);
   const trackerContext: LearningContextInput | undefined = navigation.context

@@ -6,7 +6,7 @@ import {
   GRAPH_ANGLE_ARC_SEGMENTS,
   GRAPH_FULL_CIRCLE_SEGMENTS,
 } from "@repo/design-system/components/three/helpers/quality";
-import { getRadians } from "@repo/design-system/lib/geometry/angles";
+import { getRadians } from "@repo/math/angles";
 
 type CircleLineLabel = Omit<ResolvedLineLabel, "at"> & {
   progress?: number;

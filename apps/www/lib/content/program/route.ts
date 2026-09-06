@@ -1,3 +1,5 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 import {
   type GitCommitShaSchema,
@@ -5,11 +7,10 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import { readProgramRoute } from "@repo/backend/content/program/route";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
 import {
   decodeCurriculumJson,
@@ -19,7 +20,6 @@ import {
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 /** Complete immutable data needed by one curriculum route page. */
 export interface PublishedProgramRoute {
   readonly activeReleaseId: null | typeof ReleaseIdSchema.Type;
@@ -48,13 +48,13 @@ export const readPublishedProgramRoute = Effect.fn(
   "NakafaProgram.readPublishedRoute"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.program.route,
     {
       appLocale,
       publicPath,
-    },
-    (queryArgs) => readProgramRoute(queryArgs.appLocale, queryArgs.publicPath)
+    }
   );
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
@@ -132,7 +132,7 @@ export const readPublishedProgramRoute = Effect.fn(
     sourceRevision,
   } satisfies PublishedProgramRoute;
 });
-/** Caches one complete curriculum route under global release invalidation. */
+/** Caches one complete curriculum route under program publication invalidation. */
 export async function getPublishedProgramRoute(
   locale: Locale,
   publicPath: string
@@ -141,6 +141,6 @@ export async function getPublishedProgramRoute(
   const result = await Effect.runPromise(
     readPublishedProgramRoute(locale, publicPath)
   );
-  applyContentRuntimeCache();
+  applyContentCache("program", "material");
   return result;
 }

@@ -14,12 +14,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import {
-  getCos,
-  getRadians,
-  getSin,
-  getTan,
-} from "@repo/design-system/lib/geometry/angles";
+import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
 import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {

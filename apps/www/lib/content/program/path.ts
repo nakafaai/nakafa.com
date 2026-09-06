@@ -1,25 +1,25 @@
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { readProgramPath } from "@repo/backend/content/program/path";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Resolves one exact curriculum path without loading its full page model. */
 export const readPublishedProgramPath = Effect.fn(
   "NakafaProgram.readPublishedPath"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
+  const result = yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.contentRelease.program.path,
     {
       appLocale,
       publicPath,
-    },
-    (queryArgs) => readProgramPath(queryArgs.appLocale, queryArgs.publicPath)
+    }
   );
   if (!(result.managed && result.routeJson)) {
     return {

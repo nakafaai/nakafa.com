@@ -1,10 +1,10 @@
-import { readTryoutLocalizedPath } from "@repo/backend/content/tryout/metadata";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { env } from "@/env";
 import "server-only";
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
-import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type TryoutLocalizedPathArgs = FunctionArgs<
   typeof api.tryouts.queries.catalog.getLocalizedPath
@@ -14,9 +14,9 @@ type TryoutLocalizedPathArgs = FunctionArgs<
 export const readPublishedTryoutLocalizedPath = Effect.fn(
   "www.tryouts.readLocalizedPath"
 )(function* (args: TryoutLocalizedPathArgs) {
-  return yield* readRuntimeQuery(
+  return yield* readNakafaRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
     api.tryouts.queries.catalog.getLocalizedPath,
-    args,
-    readTryoutLocalizedPath
+    args
   );
 });

@@ -8,18 +8,9 @@ import {
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { syncMaterials } from "@repo/backend/convex/contentRelease/material/sync";
 import { validateMaterialModel } from "@repo/backend/convex/contentRelease/material/validation";
-import {
-  clearArticleModel,
-  copyArticleModel,
-} from "@repo/backend/convex/contentRelease/models/article";
-import {
-  clearMaterialModel,
-  copyMaterialModel,
-} from "@repo/backend/convex/contentRelease/models/material";
-import {
-  clearSearchModel,
-  copySearchModel,
-} from "@repo/backend/convex/contentRelease/models/search";
+import { reconcileArticleModel } from "@repo/backend/convex/contentRelease/models/article";
+import { reconcileMaterialModel } from "@repo/backend/convex/contentRelease/models/material";
+import { reconcileSearchModel } from "@repo/backend/convex/contentRelease/models/search";
 import { syncSearch } from "@repo/backend/convex/contentRelease/search/sync";
 import { validateSearchModel } from "@repo/backend/convex/contentRelease/search/validation";
 import { Effect } from "effect";
@@ -34,11 +25,12 @@ export const advanceModelPage = Effect.fn("contentRelease.advanceModelPage")(
     release: Doc<"contentReleases">,
     signed: SignedContentRelease
   ) {
-    if (build.phase.startsWith("articleClear")) {
-      return yield* clearArticleModel(ctx, build);
-    }
-    if (build.phase.startsWith("articleCopy")) {
-      return yield* copyArticleModel(ctx, build);
+    if (
+      build.phase === "articleCatalog" ||
+      build.phase === "articleCategories" ||
+      build.phase === "articleBuckets"
+    ) {
+      return yield* reconcileArticleModel(ctx, build);
     }
     if (build.phase === "articleApply") {
       return yield* syncArticles(ctx, build, release, signed);
@@ -46,11 +38,11 @@ export const advanceModelPage = Effect.fn("contentRelease.advanceModelPage")(
     if (build.phase === "articleVerify") {
       return yield* verifyArticleBuild(ctx, build);
     }
-    if (build.phase.startsWith("materialClear")) {
-      return yield* clearMaterialModel(ctx, build);
-    }
-    if (build.phase.startsWith("materialCopy")) {
-      return yield* copyMaterialModel(ctx, build);
+    if (
+      build.phase === "materialCatalog" ||
+      build.phase === "materialBuckets"
+    ) {
+      return yield* reconcileMaterialModel(ctx, build);
     }
     if (build.phase === "materialApply") {
       return yield* syncMaterials(ctx, build, release, signed);
@@ -58,11 +50,8 @@ export const advanceModelPage = Effect.fn("contentRelease.advanceModelPage")(
     if (build.phase === "materialVerify") {
       return yield* validateMaterialModel(ctx, build);
     }
-    if (build.phase === "searchClear") {
-      return yield* clearSearchModel(ctx, build);
-    }
-    if (build.phase === "searchCopy") {
-      return yield* copySearchModel(ctx, build);
+    if (build.phase === "search") {
+      return yield* reconcileSearchModel(ctx, build);
     }
     if (build.phase === "searchApply") {
       return yield* syncSearch(ctx, build, release, signed);

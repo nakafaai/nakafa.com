@@ -4,22 +4,22 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { api } from "@repo/backend/convex/_generated/api";
+import { createTestPublication } from "@repo/backend/test/content/publication";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { readPublishedMaterialPrerenderRoute } from "@/lib/content/material/prerender";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
-import { createTestSnapshotContext } from "@/test/content/snapshot";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 import {
+  createTestNativeQuery,
   createTestRuntimeQuery,
-  createTestSnapshotQuery,
 } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const runtimeReadMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/content/runtime/query", () => ({
-  readRuntimeQuery: runtimeReadMock,
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: runtimeReadMock,
 }));
 
 /** Supplies the first real lesson while retaining a continuation cursor. */
@@ -51,8 +51,8 @@ describe("published material prerender selection", () => {
   it.effect("reads one real lesson through the authenticated snapshot", () =>
     Effect.gen(function* () {
       const fixture = yield* makeMaterialRuntimeSource();
-      const context = yield* createTestSnapshotContext(fixture.source);
-      runtimeReadMock.mockImplementation(createTestSnapshotQuery(context));
+      const context = yield* createTestPublication(fixture.source);
+      runtimeReadMock.mockImplementation(createTestNativeQuery(context));
 
       const route = yield* readPublishedMaterialPrerenderRoute("en");
       expect(route.appLocale).toBe("en");
@@ -129,3 +129,7 @@ describe("published material prerender selection", () => {
     })
   );
 });
+
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));
