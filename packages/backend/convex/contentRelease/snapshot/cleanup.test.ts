@@ -1,6 +1,7 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { compactSnapshots } from "@repo/backend/convex/contentRelease/snapshot/cleanup";
+import * as snapshotRows from "@repo/backend/convex/contentRelease/snapshot/rows";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -37,6 +38,72 @@ async function insertExpiredProgram(
 }
 
 describe("contentRelease/snapshot/cleanup", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("rejects an incomplete empty page instead of committing a lost cleanup cursor", async () => {
+    const snapshotId = `sha256:${"c".repeat(64)}`;
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => insertExpiredProgram(ctx, snapshotId, 0));
+    vi.spyOn(snapshotRows, "loadSnapshotChildren").mockReturnValueOnce(
+      Effect.succeed({
+        children: [],
+        done: false,
+        part: "program",
+      })
+    );
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Snapshot program/${snapshotId} lost its cleanup page.`,
+      },
+    });
+    const snapshot = await t.query((ctx) =>
+      ctx.db.query("contentSnapshots").unique()
+    );
+    expect(snapshot?.cleanupAt).toBeUndefined();
+  });
+
+  it("rolls back child deletion when an incomplete page has no valid position", async () => {
+    const snapshotId = `sha256:${"d".repeat(64)}`;
+    const t = convexTest(schema, convexModules);
+    const bundle = await t.mutation(async (ctx) => {
+      await insertExpiredProgram(ctx, snapshotId, 0);
+      const id = await ctx.db.insert("tryoutRuntimeBundles", {
+        bundleHash: snapshotId,
+        bundleJson: "{}",
+        createdAt: 0,
+        rendererJson: "{}",
+        rendererManifestHash: snapshotId,
+        snapshotId,
+        sourceGitSha: "a".repeat(40),
+        sourceManifestHash: snapshotId,
+        sourceReleaseId: "cleanup-position",
+      });
+      return ctx.db.get("tryoutRuntimeBundles", id);
+    });
+    assert(bundle);
+    vi.spyOn(snapshotRows, "loadSnapshotChildren").mockReturnValueOnce(
+      Effect.succeed({
+        children: [{ row: bundle, table: "tryoutRuntimeBundles" }],
+        done: false,
+        part: "program",
+      })
+    );
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Snapshot program/${snapshotId} lost its cleanup position.`,
+      },
+    });
+    await expect(
+      t.query((ctx) => ctx.db.get("tryoutRuntimeBundles", bundle._id))
+    ).resolves.toEqual(bundle);
+  });
+
   it("ignores unexpired snapshots without a cleanup retry", async () => {
     const snapshotId = `sha256:${"6".repeat(64)}`;
     const t = convexTest(schema, convexModules);

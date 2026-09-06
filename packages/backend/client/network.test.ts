@@ -54,6 +54,7 @@ describe("network request classification", () => {
         "partially classified network failure"
       ),
       { cause: "unclassified network failure", code: "EPIPE" },
+      new AggregateError([{ code: "EPIPE" }, null], "unclassified leaf"),
     ];
 
     for (const failure of failures) {

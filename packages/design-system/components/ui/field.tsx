@@ -201,11 +201,8 @@ function FieldErrorList({
   return (
     <ul className="ml-4 flex list-disc flex-col gap-1">
       {errors.map(
-        (error, index) =>
-          !!error?.message && (
-            // biome-ignore lint/suspicious/noArrayIndexKey: Error message may repeat, need index for uniqueness
-            <li key={`${error.message}-${index}`}>{error.message}</li>
-          )
+        (error) =>
+          !!error?.message && <li key={error.message}>{error.message}</li>
       )}
     </ul>
   );

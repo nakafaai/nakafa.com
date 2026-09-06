@@ -325,7 +325,7 @@ describe("prompt input attachment conversion", () => {
 
           /** Keeps the read pending until the Effect fiber is interrupted. */
           readAsDataURL() {
-            return;
+            // Intentionally remains pending until the fiber cancels the read.
           }
         }
 

@@ -15,26 +15,11 @@ import type {
   SchoolClassTeacherRole,
 } from "@repo/backend/convex/classes/schema";
 import type { SchoolMemberRole } from "@repo/backend/convex/schools/schema";
-import { ConvexError } from "convex/values";
+import { Effect, Schema } from "effect";
 
 type SchoolRole = SchoolMemberRole;
 type ClassRole = SchoolClassMemberRole;
 type TeacherRole = SchoolClassTeacherRole;
-
-export type Permission =
-  | "class:create"
-  | "class:read"
-  | "class:write"
-  | "class:delete"
-  | "member:add"
-  | "member:remove"
-  | "content:create"
-  | "content:read"
-  | "content:edit"
-  | "content:delete"
-  | "forum:read"
-  | "forum:write"
-  | "forum:moderate";
 
 export const PERMISSIONS = {
   CLASS_CREATE: "class:create",
@@ -51,6 +36,24 @@ export const PERMISSIONS = {
   FORUM_WRITE: "forum:write",
   FORUM_MODERATE: "forum:moderate",
 } as const;
+
+const PermissionSchema = Schema.Literals(Object.values(PERMISSIONS));
+export type Permission = Schema.Schema.Type<typeof PermissionSchema>;
+
+/** The stable access-control failure returned by school and class mutations. */
+export class PermissionDenied extends Schema.TaggedError<PermissionDenied>()(
+  "PermissionDenied",
+  {
+    code: Schema.Literal("FORBIDDEN"),
+    message: Schema.String,
+  }
+) {}
+
+interface PermissionTarget {
+  readonly classId?: Id<"schoolClasses">;
+  readonly schoolId?: Id<"schools">;
+  readonly userId: Id<"users">;
+}
 
 export const ROLE_PERMISSIONS: Record<
   SchoolRole | ClassRole | TeacherRole,
@@ -108,82 +111,64 @@ export const ROLE_PERMISSIONS: Record<
   ],
 };
 
-/**
- * Check if user has a specific permission.
- * Checks both school-level and class-level roles.
- * Internal helper - use requirePermission for public API.
- */
-async function checkPermission(
+/** Checks school grants before class grants and teacher-specific additions. */
+const checkPermission = Effect.fn("permissions.check")(function* (
   ctx: QueryCtx | MutationCtx,
   permission: Permission,
-  options: {
-    userId: Id<"users">;
-    schoolId?: Id<"schools">;
-    classId?: Id<"schoolClasses">;
-  }
-): Promise<boolean> {
-  const { userId, schoolId, classId } = options;
-
+  { userId, schoolId, classId }: PermissionTarget
+) {
   if (schoolId) {
-    const schoolMember = await ctx.db
-      .query("schoolMembers")
-      .withIndex("by_schoolId_and_userId_and_status", (q) =>
-        q.eq("schoolId", schoolId).eq("userId", userId).eq("status", "active")
-      )
-      .unique();
-
-    if (schoolMember) {
-      const schoolPerms = ROLE_PERMISSIONS[schoolMember.role] ?? [];
-      if (schoolPerms.includes(permission)) {
-        return true;
-      }
+    const schoolMember = yield* Effect.promise(() =>
+      ctx.db
+        .query("schoolMembers")
+        .withIndex("by_schoolId_and_userId_and_status", (query) =>
+          query
+            .eq("schoolId", schoolId)
+            .eq("userId", userId)
+            .eq("status", "active")
+        )
+        .unique()
+    );
+    if (
+      schoolMember &&
+      ROLE_PERMISSIONS[schoolMember.role].includes(permission)
+    ) {
+      return true;
     }
   }
-
-  if (classId) {
-    const classMember = await ctx.db
+  if (!classId) {
+    return false;
+  }
+  const classMember = yield* Effect.promise(() =>
+    ctx.db
       .query("schoolClassMembers")
-      .withIndex("by_classId_and_userId", (q) =>
-        q.eq("classId", classId).eq("userId", userId)
+      .withIndex("by_classId_and_userId", (query) =>
+        query.eq("classId", classId).eq("userId", userId)
       )
-      .unique();
-
-    if (classMember) {
-      const classPerms = ROLE_PERMISSIONS[classMember.role] ?? [];
-      if (classPerms.includes(permission)) {
-        return true;
-      }
-
-      if (classMember.role === "teacher" && classMember.teacherRole) {
-        const teacherPerms = ROLE_PERMISSIONS[classMember.teacherRole] ?? [];
-        if (teacherPerms.includes(permission)) {
-          return true;
-        }
-      }
-    }
+      .unique()
+  );
+  if (!classMember) {
+    return false;
   }
+  if (ROLE_PERMISSIONS[classMember.role].includes(permission)) {
+    return true;
+  }
+  if (classMember.role !== "teacher" || !classMember.teacherRole) {
+    return false;
+  }
+  return ROLE_PERMISSIONS[classMember.teacherRole].includes(permission);
+});
 
-  return false;
-}
-
-/**
- * Require permission or throw.
- * Throws FORBIDDEN if user lacks the required permission.
- */
-export async function requirePermission(
+/** Requires an explicit school or class grant using the existing FORBIDDEN contract. */
+export const requirePermission = Effect.fn("permissions.require")(function* (
   ctx: QueryCtx | MutationCtx,
   permission: Permission,
-  options: {
-    userId: Id<"users">;
-    schoolId?: Id<"schools">;
-    classId?: Id<"schoolClasses">;
-  }
-): Promise<void> {
-  const hasPerms = await checkPermission(ctx, permission, options);
-  if (!hasPerms) {
-    throw new ConvexError({
+  target: PermissionTarget
+) {
+  if (!(yield* checkPermission(ctx, permission, target))) {
+    return yield* new PermissionDenied({
       code: "FORBIDDEN",
       message: `Permission '${permission}' required`,
     });
   }
-}
+});

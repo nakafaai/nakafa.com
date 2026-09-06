@@ -13,8 +13,6 @@ export function getLatestUserText(messages: ModelMessage[]) {
 
     return getUserMessageText(message);
   }
-
-  return;
 }
 
 /**

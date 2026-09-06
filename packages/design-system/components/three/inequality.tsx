@@ -5,7 +5,6 @@ import {
   resolveThreeFontSize,
   THREE_FONT_SIZE,
 } from "@repo/design-system/components/three/data/constants";
-import { GRAPH_BOUNDARY_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
 import {
   DEFAULT_INEQUALITY_RANGE_MAX,
   DEFAULT_INEQUALITY_RANGE_MIN,
@@ -14,34 +13,12 @@ import {
 } from "@repo/design-system/components/three/inequality-data";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
+import { sampleInequalityBoundary } from "@repo/design-system/lib/geometry/inequality/boundary";
+import { createInequalityGeometry } from "@repo/design-system/lib/geometry/inequality/region";
 import { useMemo } from "react";
-import {
-  BufferAttribute,
-  BufferGeometry,
-  Color,
-  DoubleSide,
-  Float32BufferAttribute,
-  MeshBasicMaterial,
-} from "three";
+import { Color, DoubleSide, MeshBasicMaterial } from "three";
 
-// Geometry calculation constants
-const COMPONENTS_PER_VERTEX = 3;
-const VERTICES_PER_CELL = 36;
-const INDICES_PER_CELL = 36;
-const LAST_VERTEX_OFFSET_IN_QUAD = 3;
-
-// 2D inequality cell check thresholds
-const SATISFIED_CORNERS_THRESHOLD_HIGH = 3;
-const SATISFIED_CORNERS_THRESHOLD_LOW = 2;
-const RESOLUTION_THRESHOLD_FOR_CORNERS = 80;
-
-const EPSILON = 1e-10;
-const VERTICAL_CONNECTOR_DENSITY_FACTOR = 4;
-
-// Label constants
 const DEFAULT_LABEL_FONT_SIZE = THREE_FONT_SIZE.diagram;
-
-type Point = [number, number, number];
 
 /**
  * Renders 2D or 3D inequality regions with a wide boundary guide line.
@@ -64,212 +41,27 @@ export function Inequality({
   // Adaptive resolution for performance
   const adaptiveResolution = getAdaptiveInequalityResolution(resolution);
 
-  // Create optimized buffer geometry for the inequality region
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function, but it's necessary for the inequality visualization
-  const geometry = useMemo(() => {
-    const geo = new BufferGeometry();
-    const vertices: Float32Array = new Float32Array(
-      adaptiveResolution *
-        adaptiveResolution *
-        VERTICES_PER_CELL *
-        COMPONENTS_PER_VERTEX
-    ); // Pre-allocate
-    const indices: Uint32Array = new Uint32Array(
-      adaptiveResolution * adaptiveResolution * INDICES_PER_CELL
-    ); // Pre-allocate
-    let vertexIndex = 0;
-    let indexOffset = 0;
-
-    // Define the step size based on resolution
-    const xStep = (xRange[1] - xRange[0]) / adaptiveResolution;
-    const yStep = (yRange[1] - yRange[0]) / adaptiveResolution;
-
-    // Helper function to add a quad (two triangles) to the geometry - optimized
-    function addQuad(p1: Point, p2: Point, p3: Point, p4: Point) {
-      const index = vertexIndex / COMPONENTS_PER_VERTEX;
-
-      // Add vertices directly to array
-      vertices[vertexIndex] = p1[0];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p1[1];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p1[2];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p2[0];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p2[1];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p2[2];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p3[0];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p3[1];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p3[2];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p4[0];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p4[1];
-      vertexIndex += 1;
-      vertices[vertexIndex] = p4[2];
-      vertexIndex += 1;
-
-      // Add indices for two triangles
-      indices[indexOffset] = index;
-      indexOffset += 1;
-      indices[indexOffset] = index + 1;
-      indexOffset += 1;
-      indices[indexOffset] = index + 2;
-      indexOffset += 1;
-      indices[indexOffset] = index;
-      indexOffset += 1;
-      indices[indexOffset] = index + 2;
-      indexOffset += 1;
-      indices[indexOffset] = index + LAST_VERTEX_OFFSET_IN_QUAD;
-      indexOffset += 1;
-    }
-
-    // Helper function to create all faces of a complete cell - optimized
-    function addCompleteCell({
-      x1,
-      y1,
-      x2,
-      y2,
-      z1,
-      z2,
-    }: {
-      x1: number;
-      y1: number;
-      x2: number;
-      y2: number;
-      z1: number;
-      z2: number;
-    }) {
-      // Only add visible faces for performance (basic culling)
-      // Bottom face (at minimum z)
-      addQuad([x1, y1, z1], [x2, y1, z1], [x2, y2, z1], [x1, y2, z1]);
-
-      // Top face (at maximum z)
-      addQuad([x1, y1, z2], [x1, y2, z2], [x2, y2, z2], [x2, y1, z2]);
-
-      // Side faces - only if on boundary
-      if (Math.abs(x1 - xRange[0]) < xStep) {
-        // Left face
-        addQuad([x1, y1, z1], [x1, y1, z2], [x1, y2, z2], [x1, y2, z1]);
-      }
-      if (Math.abs(x2 - xRange[1]) < xStep) {
-        // Right face
-        addQuad([x2, y1, z1], [x2, y2, z1], [x2, y2, z2], [x2, y1, z2]);
-      }
-      if (Math.abs(y1 - yRange[0]) < yStep) {
-        // Front face
-        addQuad([x1, y1, z1], [x2, y1, z1], [x2, y1, z2], [x1, y1, z2]);
-      }
-      if (Math.abs(y2 - yRange[1]) < yStep) {
-        // Back face
-        addQuad([x1, y2, z1], [x1, y2, z2], [x2, y2, z2], [x2, y2, z1]);
-      }
-    }
-
-    if (is2D && boundaryLine2D) {
-      // Handle 2D inequality (like x + y <= 10) visualized as extruded along z-axis
-      const [a, b, c] = boundaryLine2D;
-
-      // Optimized grid traversal with early termination
-      for (let ix = 0; ix < adaptiveResolution; ix += 1) {
-        for (let iy = 0; iy < adaptiveResolution; iy += 1) {
-          const x1 = xRange[0] + ix * xStep;
-          const x2 = xRange[0] + (ix + 1) * xStep;
-          const y1 = yRange[0] + iy * yStep;
-          const y2 = yRange[0] + (iy + 1) * yStep;
-
-          // Quick check using center point for better performance
-          const centerX = (x1 + x2) / 2;
-          const centerY = (y1 + y2) / 2;
-          const centerValue = a * centerX + b * centerY + c;
-
-          // If center is far from boundary, we can make a quick decision
-          const cellDiagonal = Math.sqrt(
-            (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)
-          );
-          const distanceToLine =
-            Math.abs(centerValue) / Math.sqrt(a * a + b * b);
-
-          if (centerValue <= 0 && distanceToLine > cellDiagonal) {
-            // Fully inside - add cell
-            addCompleteCell({ x1, y1, x2, y2, z1: zRange[0], z2: zRange[1] });
-          } else if (centerValue <= 0 || distanceToLine < cellDiagonal * 2) {
-            // Near boundary - check corners
-            const corner1Satisfies = a * x1 + b * y1 + c <= 0;
-            const corner2Satisfies = a * x2 + b * y1 + c <= 0;
-            const corner3Satisfies = a * x2 + b * y2 + c <= 0;
-            const corner4Satisfies = a * x1 + b * y2 + c <= 0;
-
-            const satisfiedCorners =
-              (corner1Satisfies ? 1 : 0) +
-              (corner2Satisfies ? 1 : 0) +
-              (corner3Satisfies ? 1 : 0) +
-              (corner4Satisfies ? 1 : 0);
-
-            if (
-              satisfiedCorners >= SATISFIED_CORNERS_THRESHOLD_HIGH ||
-              (satisfiedCorners >= SATISFIED_CORNERS_THRESHOLD_LOW &&
-                adaptiveResolution < RESOLUTION_THRESHOLD_FOR_CORNERS)
-            ) {
-              addCompleteCell({ x1, y1, x2, y2, z1: zRange[0], z2: zRange[1] });
-            }
-          }
-        }
-      }
-    } else if (boundaryFunction) {
-      // Handle 3D inequality (like z > f(x,y)) - simplified for performance
-      for (let ix = 0; ix < adaptiveResolution; ix += 2) {
-        // Skip every other cell for performance
-        for (let iy = 0; iy < adaptiveResolution; iy += 2) {
-          const x1 = xRange[0] + ix * xStep;
-          const x2 = xRange[0] + (ix + 2) * xStep;
-          const y1 = yRange[0] + iy * yStep;
-          const y2 = yRange[0] + (iy + 2) * yStep;
-
-          // Sample the center point
-          const centerX = (x1 + x2) / 2;
-          const centerY = (y1 + y2) / 2;
-          const zBoundary = boundaryFunction(centerX, centerY);
-
-          if (zBoundary >= zRange[0] && zBoundary <= zRange[1]) {
-            // Create a quad at the boundary
-            addQuad(
-              [x1, y1, zBoundary],
-              [x2, y1, zBoundary],
-              [x2, y2, zBoundary],
-              [x1, y2, zBoundary]
-            );
-          }
-        }
-      }
-    }
-
-    // Trim arrays to actual size used
-    const finalVertices = new Float32Array(vertices.buffer, 0, vertexIndex);
-    const finalIndices = new Uint32Array(indices.buffer, 0, indexOffset);
-
-    geo.setAttribute(
-      "position",
-      new Float32BufferAttribute(finalVertices, COMPONENTS_PER_VERTEX)
-    );
-    geo.setIndex(new BufferAttribute(finalIndices, 1));
-    geo.computeVertexNormals();
-
-    return geo;
-  }, [
-    is2D,
-    boundaryLine2D,
-    boundaryFunction,
-    xRange,
-    yRange,
-    zRange,
-    adaptiveResolution,
-  ]);
+  const geometry = useMemo(
+    () =>
+      createInequalityGeometry({
+        is2D,
+        boundaryLine2D,
+        boundaryFunction,
+        xRange,
+        yRange,
+        zRange,
+        resolution: adaptiveResolution,
+      }),
+    [
+      is2D,
+      boundaryLine2D,
+      boundaryFunction,
+      xRange,
+      yRange,
+      zRange,
+      adaptiveResolution,
+    ]
+  );
 
   // Material for the inequality region with performance optimizations
   const material = useMemo(() => {
@@ -282,135 +74,30 @@ export function Inequality({
     });
   }, [color, opacity]);
 
-  // Generate boundary lines for rendering - optimized
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function, but it's necessary for the inequality visualization
-  const boundaryPoints = useMemo(() => {
-    if (!((boundaryFunction || boundaryLine2D) && showBoundary)) {
-      return;
-    }
-
-    const points: Point[] = [];
-    const lineResolution = Math.min(
+  const boundaryPoints = useMemo(
+    () =>
+      showBoundary
+        ? sampleInequalityBoundary({
+            is2D,
+            boundaryLine2D,
+            boundaryFunction,
+            xRange,
+            yRange,
+            zRange,
+            resolution: adaptiveResolution,
+          })
+        : [],
+    [
+      showBoundary,
       adaptiveResolution,
-      GRAPH_BOUNDARY_SEGMENTS
-    );
-    const xStep = (xRange[1] - xRange[0]) / lineResolution;
-    const yStep = (yRange[1] - yRange[0]) / lineResolution;
-
-    if (is2D && boundaryLine2D) {
-      // For 2D inequalities, create a vertical boundary plane
-      const [a, b, c] = boundaryLine2D;
-
-      // Create boundary lines more efficiently
-      if (Math.abs(b) > EPSILON) {
-        // Express y as a function of x
-        for (let ix = 0; ix <= lineResolution; ix += 1) {
-          const x = xRange[0] + ix * xStep;
-          const y = (-a * x - c) / b;
-
-          if (y >= yRange[0] && y <= yRange[1] && ix > 0) {
-            const prevX = xRange[0] + (ix - 1) * xStep;
-            const prevY = (-a * prevX - c) / b;
-            if (prevY >= yRange[0] && prevY <= yRange[1]) {
-              // Bottom edge
-              points.push([prevX, prevY, zRange[0]], [x, y, zRange[0]]);
-              // Top edge
-              points.push([prevX, prevY, zRange[1]], [x, y, zRange[1]]);
-            }
-          }
-        }
-
-        // Add vertical connectors
-        for (
-          let i = 0;
-          i <= lineResolution;
-          i += Math.max(
-            1,
-            Math.floor(lineResolution / VERTICAL_CONNECTOR_DENSITY_FACTOR)
-          )
-        ) {
-          const x = xRange[0] + i * xStep;
-          const y = (-a * x - c) / b;
-          if (y >= yRange[0] && y <= yRange[1]) {
-            points.push([x, y, zRange[0]], [x, y, zRange[1]]);
-          }
-        }
-      } else if (Math.abs(a) > EPSILON) {
-        // Express x as a function of y
-        for (let iy = 0; iy <= lineResolution; iy += 1) {
-          const y = yRange[0] + iy * yStep;
-          const x = (-b * y - c) / a;
-
-          if (x >= xRange[0] && x <= xRange[1] && iy > 0) {
-            const prevY = yRange[0] + (iy - 1) * yStep;
-            const prevX = (-b * prevY - c) / a;
-            if (prevX >= xRange[0] && prevX <= xRange[1]) {
-              points.push([prevX, prevY, zRange[0]], [x, y, zRange[0]]);
-              points.push([prevX, prevY, zRange[1]], [x, y, zRange[1]]);
-            }
-          }
-        }
-      }
-    } else if (boundaryFunction) {
-      // For 3D inequalities - create a wireframe grid
-      const gridStep = Math.max(1, Math.floor(lineResolution / 10));
-
-      // Lines along x-axis
-      for (let iy = 0; iy <= lineResolution; iy += gridStep) {
-        const y = yRange[0] + iy * yStep;
-        for (let ix = 1; ix <= lineResolution; ix += 1) {
-          const x = xRange[0] + ix * xStep;
-          const prevX = xRange[0] + (ix - 1) * xStep;
-          const z = boundaryFunction(x, y);
-          const prevZ = boundaryFunction(prevX, y);
-
-          if (
-            z >= zRange[0] &&
-            z <= zRange[1] &&
-            prevZ >= zRange[0] &&
-            prevZ <= zRange[1]
-          ) {
-            points.push([prevX, y, prevZ], [x, y, z]);
-          }
-        }
-      }
-
-      // Lines along y-axis
-      for (let ix = 0; ix <= lineResolution; ix += gridStep) {
-        const x = xRange[0] + ix * xStep;
-        for (let iy = 1; iy <= lineResolution; iy += 1) {
-          const y = yRange[0] + iy * yStep;
-          const prevY = yRange[0] + (iy - 1) * yStep;
-          const z = boundaryFunction(x, y);
-          const prevZ = boundaryFunction(x, prevY);
-
-          if (
-            z >= zRange[0] &&
-            z <= zRange[1] &&
-            prevZ >= zRange[0] &&
-            prevZ <= zRange[1]
-          ) {
-            points.push([x, prevY, prevZ], [x, y, z]);
-          }
-        }
-      }
-    }
-
-    if (points.length === 0) {
-      return;
-    }
-
-    return points;
-  }, [
-    showBoundary,
-    adaptiveResolution,
-    boundaryFunction,
-    boundaryLine2D,
-    is2D,
-    xRange,
-    yRange,
-    zRange,
-  ]);
+      boundaryFunction,
+      boundaryLine2D,
+      is2D,
+      xRange,
+      yRange,
+      zRange,
+    ]
+  );
 
   // Default boundary color is the same as the region color but more opaque
   const finalBoundaryColor = boundaryColor || color;
@@ -421,7 +108,7 @@ export function Inequality({
       <mesh frustumCulled geometry={geometry} material={material} />
 
       {/* Drei Line uses Line2, unlike LineBasicMaterial linewidth in WebGL. */}
-      {!!showBoundary && !!boundaryPoints && (
+      {boundaryPoints.length > 0 && (
         <Line
           color={finalBoundaryColor}
           frustumCulled

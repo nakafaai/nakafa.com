@@ -27,6 +27,10 @@ describe("Nakafa OpenAPI response", () => {
     NAKAFA_OPENAPI_ETAG.replace(WEAK_ETAG_PREFIX, ""),
     `"different", ${NAKAFA_OPENAPI_ETAG}`,
     "*",
+    " \t*\t ",
+    `,, ${NAKAFA_OPENAPI_ETAG}, \t`,
+    `"quoted,comma", ${NAKAFA_OPENAPI_ETAG}`,
+    `${",".repeat(31)}${NAKAFA_OPENAPI_ETAG}`,
   ])("uses weak entity-tag matching for %s", (ifNoneMatch) => {
     const response = createOpenApiResponse(ifNoneMatch);
 
@@ -38,6 +42,10 @@ describe("Nakafa OpenAPI response", () => {
     "malformed",
     'W/"unterminated',
     `${NAKAFA_OPENAPI_ETAG} trailing`,
+    " \t",
+    `* , ${NAKAFA_OPENAPI_ETAG}`,
+    `${NAKAFA_OPENAPI_ETAG}, "invalid\u0000tag"`,
+    `${",".repeat(32)}${NAKAFA_OPENAPI_ETAG}`,
     Array.from({ length: 33 }, (_, index) => `"tag-${index}"`).join(","),
   ])("ignores invalid or excessive validators", (ifNoneMatch) => {
     expect(createOpenApiResponse(ifNoneMatch).status).toBe(200);

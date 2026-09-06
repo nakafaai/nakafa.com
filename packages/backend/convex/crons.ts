@@ -6,7 +6,7 @@ import {
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
-const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
+const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
@@ -62,12 +62,10 @@ crons.interval(
   {}
 );
 
-/**
- * Backstops content analytics scheduling in case a per-view trigger is missed.
- */
+/** Recovers queued views whose immediate partition schedule was missed. */
 crons.interval(
   "schedule content analytics partitions",
-  { minutes: CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES },
+  { hours: CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS },
   internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
   {}
 );
@@ -90,12 +88,18 @@ crons.interval(
   {}
 );
 
-/**
- * Rebuilds finite popularity windows from audited daily signals.
- */
+/** Expires the one outgoing day from each finite popularity window. */
 crons.cron(
-  "refresh learning popularity windows",
-  "15 0 * * *",
+  "expire learning popularity windows",
+  "15 0 * * 1-6",
+  internal.contents.mutations.popularity.scheduleLearningPopularityExpiries,
+  {}
+);
+
+/** Rebuilds every finite window weekly from audited daily signals. */
+crons.cron(
+  "repair learning popularity windows",
+  "15 0 * * 0",
   internal.contents.mutations.popularity.scheduleLearningPopularityRefreshes,
   {}
 );

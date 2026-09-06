@@ -54,6 +54,29 @@ const persistCleanup = Effect.fn("contentRelease.persistSnapshotCleanup")(
   }
 );
 
+/** Advances the physical table sequence only after its current page is complete. */
+function nextCleanupPart(
+  family: Doc<"contentSnapshots">["family"],
+  part: Doc<"contentSnapshots">["cleanupPart"]
+): Doc<"contentSnapshots">["cleanupPart"] {
+  if (family === "program" && part === "program") {
+    return "curriculum";
+  }
+  if (family === "program" && part === "curriculum") {
+    return "bucket";
+  }
+  if (family === "quran" && part === "quran") {
+    return "quran-search";
+  }
+  if (family === "tryout" && part === "catalog") {
+    return "placement";
+  }
+  if (family === "tryout" && part === "placement") {
+    return "runtime";
+  }
+  return undefined;
+}
+
 /** Deletes one bounded snapshot page without exposing partial data. */
 export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
   function* (ctx: MutationCtx, cutoff: number) {
@@ -112,40 +135,9 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
         done: false,
       };
     }
-    if (snapshot.family === "program" && children.part === "program") {
-      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "curriculum");
-      return {
-        cursor: null,
-        deleted: children.children.length,
-        done: false,
-      };
-    }
-    if (snapshot.family === "program" && children.part === "curriculum") {
-      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "bucket");
-      return {
-        cursor: null,
-        deleted: children.children.length,
-        done: false,
-      };
-    }
-    if (snapshot.family === "quran" && children.part === "quran") {
-      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "quran-search");
-      return {
-        cursor: null,
-        deleted: children.children.length,
-        done: false,
-      };
-    }
-    if (snapshot.family === "tryout" && children.part === "catalog") {
-      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "placement");
-      return {
-        cursor: null,
-        deleted: children.children.length,
-        done: false,
-      };
-    }
-    if (snapshot.family === "tryout" && children.part === "placement") {
-      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "runtime");
+    const nextPart = nextCleanupPart(snapshot.family, children.part);
+    if (nextPart !== undefined) {
+      yield* persistCleanup(ctx, snapshot, cutoff, undefined, nextPart);
       return {
         cursor: null,
         deleted: children.children.length,

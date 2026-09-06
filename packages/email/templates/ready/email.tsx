@@ -56,7 +56,7 @@ const accountReadyEmailPreviewInput = {
 } satisfies AccountReadyEmailInput;
 
 /** Renders the privacy-safe account-ready message for one supported locale. */
-export function AccountReadyEmail(
+function AccountReadyEmail(
   input: AccountReadyEmailInput = accountReadyEmailPreviewInput
 ) {
   const { continueUrl, locale, privacyPolicyUrl, termsOfServiceUrl } = {

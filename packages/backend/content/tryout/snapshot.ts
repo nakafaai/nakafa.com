@@ -20,6 +20,107 @@ const registerIdentity = Effect.fn("tryout.snapshot.registerIdentity")(
   }
 );
 
+/** Indexes immutable catalog identities, routes, assets, and ordered sections. */
+const indexCatalog = Effect.fn("tryout.snapshot.indexCatalog")(function* (
+  rows: readonly CatalogRow[]
+) {
+  const identities = new Map<string, CatalogRow>();
+  const paths = new Map<string, CatalogRow>();
+  const catalogs = new Map<string, CatalogRow[]>();
+  const sections = new Map<string, CatalogRow[]>();
+  const assets = new Map<string, CatalogRow[]>();
+  for (const row of rows) {
+    yield* registerIdentity(
+      identities,
+      JSON.stringify([row.snapshotId, row.identity]),
+      row
+    );
+    if (row.publicPath !== undefined) {
+      yield* registerIdentity(
+        paths,
+        JSON.stringify([row.snapshotId, row.appLocale, row.publicPath]),
+        row
+      );
+    }
+    const catalogKey = JSON.stringify([row.snapshotId, row.appLocale]);
+    const catalog = catalogs.get(catalogKey) ?? [];
+    catalog.push(row);
+    catalogs.set(catalogKey, catalog);
+    const assetKey = JSON.stringify([
+      row.snapshotId,
+      row.appLocale,
+      row.assetId,
+    ]);
+    const asset = assets.get(assetKey) ?? [];
+    asset.push(row);
+    assets.set(assetKey, asset);
+    if (row.kind === "section") {
+      const key = JSON.stringify([row.snapshotId, row.setIdentity]);
+      const group = sections.get(key) ?? [];
+      group.push(row);
+      sections.set(key, group);
+    }
+  }
+  for (const catalog of catalogs.values()) {
+    catalog.sort(
+      (a, b) =>
+        compareCodeUnits(a.publicPath ?? "", b.publicPath ?? "") ||
+        compareCodeUnits(a.identity, b.identity)
+    );
+  }
+  for (const group of sections.values()) {
+    group.sort((a, b) => a.order - b.order);
+  }
+  return { identities, paths, catalogs, sections, assets };
+});
+
+/** Indexes ordered placements and their first immutable question and answer bodies. */
+const indexPlacements = Effect.fn("tryout.snapshot.indexPlacements")(function* (
+  rows: readonly PlacementRow[]
+) {
+  const placements = new Map<string, PlacementRow[]>();
+  const questions = new Map<string, PlacementRow>();
+  const answers = new Map<string, PlacementRow>();
+  const placementIdentities = new Set<string>();
+  for (const row of rows) {
+    const identity = JSON.stringify([row.snapshotId, row.identity]);
+    if (placementIdentities.has(identity)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Signed try-out snapshot has duplicate placements."
+      );
+    }
+    placementIdentities.add(identity);
+    const key = JSON.stringify([
+      row.snapshotId,
+      row.appLocale,
+      row.countryKey,
+      row.examKey,
+      row.trackKey,
+      row.setKey,
+      row.sectionKey,
+    ]);
+    const group = placements.get(key) ?? [];
+    group.push(row);
+    placements.set(key, group);
+    const questionKey = JSON.stringify([
+      row.snapshotId,
+      row.questionArtifactHash,
+    ]);
+    const answerKey = JSON.stringify([row.snapshotId, row.answerArtifactHash]);
+    if (!questions.has(questionKey)) {
+      questions.set(questionKey, row);
+    }
+    if (!answers.has(answerKey)) {
+      answers.set(answerKey, row);
+    }
+  }
+  for (const group of placements.values()) {
+    group.sort((a, b) => a.questionOrder - b.questionOrder);
+  }
+  return { placements, questions, answers };
+});
+
 /** Builds bounded hierarchy indexes once for an authenticated serving snapshot. */
 export const snapshotTryoutLayer = (tables: {
   readonly tryoutCatalog: readonly CatalogRow[];
@@ -29,96 +130,11 @@ export const snapshotTryoutLayer = (tables: {
   Layer.effect(
     TryoutSource,
     Effect.gen(function* () {
-      const identities = new Map<string, CatalogRow>();
-      const paths = new Map<string, CatalogRow>();
-      const catalogs = new Map<string, CatalogRow[]>();
-      const sections = new Map<string, CatalogRow[]>();
-      const assets = new Map<string, CatalogRow[]>();
-      for (const row of tables.tryoutCatalog) {
-        yield* registerIdentity(
-          identities,
-          JSON.stringify([row.snapshotId, row.identity]),
-          row
-        );
-        if (row.publicPath !== undefined) {
-          yield* registerIdentity(
-            paths,
-            JSON.stringify([row.snapshotId, row.appLocale, row.publicPath]),
-            row
-          );
-        }
-        const catalogKey = JSON.stringify([row.snapshotId, row.appLocale]);
-        const catalog = catalogs.get(catalogKey) ?? [];
-        catalog.push(row);
-        catalogs.set(catalogKey, catalog);
-        const assetKey = JSON.stringify([
-          row.snapshotId,
-          row.appLocale,
-          row.assetId,
-        ]);
-        const asset = assets.get(assetKey) ?? [];
-        asset.push(row);
-        assets.set(assetKey, asset);
-        if (row.kind === "section") {
-          const key = JSON.stringify([row.snapshotId, row.setIdentity]);
-          const group = sections.get(key) ?? [];
-          group.push(row);
-          sections.set(key, group);
-        }
-      }
-      for (const catalog of catalogs.values()) {
-        catalog.sort(
-          (a, b) =>
-            compareCodeUnits(a.publicPath ?? "", b.publicPath ?? "") ||
-            compareCodeUnits(a.identity, b.identity)
-        );
-      }
-      for (const group of sections.values()) {
-        group.sort((a, b) => a.order - b.order);
-      }
-      const placements = new Map<string, PlacementRow[]>();
-      const questions = new Map<string, PlacementRow>();
-      const answers = new Map<string, PlacementRow>();
-      const placementIdentities = new Set<string>();
-      for (const row of tables.tryoutPlacements) {
-        const identity = JSON.stringify([row.snapshotId, row.identity]);
-        if (placementIdentities.has(identity)) {
-          return yield* releaseFail(
-            "CONTENT_RELEASE_INTEGRITY",
-            "Signed try-out snapshot has duplicate placements."
-          );
-        }
-        placementIdentities.add(identity);
-        const key = JSON.stringify([
-          row.snapshotId,
-          row.appLocale,
-          row.countryKey,
-          row.examKey,
-          row.trackKey,
-          row.setKey,
-          row.sectionKey,
-        ]);
-        const group = placements.get(key) ?? [];
-        group.push(row);
-        placements.set(key, group);
-        const questionKey = JSON.stringify([
-          row.snapshotId,
-          row.questionArtifactHash,
-        ]);
-        const answerKey = JSON.stringify([
-          row.snapshotId,
-          row.answerArtifactHash,
-        ]);
-        if (!questions.has(questionKey)) {
-          questions.set(questionKey, row);
-        }
-        if (!answers.has(answerKey)) {
-          answers.set(answerKey, row);
-        }
-      }
-      for (const group of placements.values()) {
-        group.sort((a, b) => a.questionOrder - b.questionOrder);
-      }
+      const { identities, paths, catalogs, sections, assets } =
+        yield* indexCatalog(tables.tryoutCatalog);
+      const { placements, questions, answers } = yield* indexPlacements(
+        tables.tryoutPlacements
+      );
       const bundles = new Map<string, BundleRow>();
       for (const row of tables.tryoutRuntimeBundles) {
         yield* registerIdentity(bundles, row.bundleHash, row);

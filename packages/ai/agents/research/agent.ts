@@ -8,6 +8,7 @@ import {
   nakafaScrape,
   nakafaWebSearch,
 } from "@repo/ai/agents/research/descriptions";
+import { makeResearchGenerationError } from "@repo/ai/agents/research/error";
 import {
   createGroundingEvidence,
   createGroundingWebSearchData,
@@ -50,7 +51,6 @@ import {
   extractJsonMiddleware,
   generateText,
   isStepCount,
-  NoObjectGeneratedError,
   Output,
   tool,
   wrapLanguageModel,
@@ -194,21 +194,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           stopWhen: isStepCount(5),
           timeout: subAgentGenerationTimeout,
         }),
-      catch: (error) => {
-        let cause = JSON.stringify(error);
-
-        if (error instanceof Error) {
-          cause = error.message;
-        } else if (typeof error === "string") {
-          cause = error;
-        }
-
-        return new ResearchGenerationError({
-          cause,
-          message: "Research evidence generation failed.",
-          phase: "evidence",
-        });
-      },
+      catch: (error) => makeResearchGenerationError(error, "evidence"),
     });
 
     const groundedSearchData = createGroundingWebSearchData({
@@ -262,38 +248,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           },
           timeout: subAgentGenerationTimeout,
         }),
-      catch: (error) => {
-        if (NoObjectGeneratedError.isInstance(error)) {
-          let cause = JSON.stringify(error.cause);
-
-          if (error.cause instanceof Error) {
-            cause = error.cause.message;
-          } else if (typeof error.cause === "string") {
-            cause = error.cause;
-          }
-
-          return new ResearchGenerationError({
-            cause,
-            message: `Research synthesis generation failed: ${error.message}`,
-            phase: "synthesis",
-            text: error.text,
-          });
-        }
-
-        let cause = JSON.stringify(error);
-
-        if (error instanceof Error) {
-          cause = error.message;
-        } else if (typeof error === "string") {
-          cause = error;
-        }
-
-        return new ResearchGenerationError({
-          cause,
-          message: "Research synthesis generation failed.",
-          phase: "synthesis",
-        });
-      },
+      catch: (error) => makeResearchGenerationError(error, "synthesis"),
     }).pipe(Effect.retry({ times: synthesisRetryAttempts }));
 
     const output = synthesisResult.output;
@@ -317,32 +272,42 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       sourceBacked,
       text: formatResearchOutput(filteredOutput),
       usage: {
-        inputTokens:
-          (evidenceUsage.inputTokens ?? 0) + (synthesisUsage.inputTokens ?? 0),
+        inputTokens: sumTokens(
+          evidenceUsage.inputTokens,
+          synthesisUsage.inputTokens
+        ),
         inputTokenDetails: {
-          cacheReadTokens:
-            (evidenceUsage.inputTokenDetails?.cacheReadTokens ?? 0) +
-            (synthesisUsage.inputTokenDetails?.cacheReadTokens ?? 0),
-          cacheWriteTokens:
-            (evidenceUsage.inputTokenDetails?.cacheWriteTokens ?? 0) +
-            (synthesisUsage.inputTokenDetails?.cacheWriteTokens ?? 0),
-          noCacheTokens:
-            (evidenceUsage.inputTokenDetails?.noCacheTokens ?? 0) +
-            (synthesisUsage.inputTokenDetails?.noCacheTokens ?? 0),
+          cacheReadTokens: sumTokens(
+            evidenceUsage.inputTokenDetails?.cacheReadTokens,
+            synthesisUsage.inputTokenDetails?.cacheReadTokens
+          ),
+          cacheWriteTokens: sumTokens(
+            evidenceUsage.inputTokenDetails?.cacheWriteTokens,
+            synthesisUsage.inputTokenDetails?.cacheWriteTokens
+          ),
+          noCacheTokens: sumTokens(
+            evidenceUsage.inputTokenDetails?.noCacheTokens,
+            synthesisUsage.inputTokenDetails?.noCacheTokens
+          ),
         },
-        outputTokens:
-          (evidenceUsage.outputTokens ?? 0) +
-          (synthesisUsage.outputTokens ?? 0),
+        outputTokens: sumTokens(
+          evidenceUsage.outputTokens,
+          synthesisUsage.outputTokens
+        ),
         outputTokenDetails: {
-          reasoningTokens:
-            (evidenceUsage.outputTokenDetails?.reasoningTokens ?? 0) +
-            (synthesisUsage.outputTokenDetails?.reasoningTokens ?? 0),
-          textTokens:
-            (evidenceUsage.outputTokenDetails?.textTokens ?? 0) +
-            (synthesisUsage.outputTokenDetails?.textTokens ?? 0),
+          reasoningTokens: sumTokens(
+            evidenceUsage.outputTokenDetails?.reasoningTokens,
+            synthesisUsage.outputTokenDetails?.reasoningTokens
+          ),
+          textTokens: sumTokens(
+            evidenceUsage.outputTokenDetails?.textTokens,
+            synthesisUsage.outputTokenDetails?.textTokens
+          ),
         },
-        totalTokens:
-          (evidenceUsage.totalTokens ?? 0) + (synthesisUsage.totalTokens ?? 0),
+        totalTokens: sumTokens(
+          evidenceUsage.totalTokens,
+          synthesisUsage.totalTokens
+        ),
       },
     };
   }
@@ -399,4 +364,9 @@ function getUniqueSourceReferences(
     seen.add(source.href);
     return [source];
   });
+}
+
+/** Adds reported phase usage while preserving the existing zero for missing counts. */
+function sumTokens(first: number | undefined, second: number | undefined) {
+  return (first ?? 0) + (second ?? 0);
 }

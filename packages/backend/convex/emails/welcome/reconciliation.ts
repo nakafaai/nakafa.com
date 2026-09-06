@@ -1,3 +1,4 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { resend } from "@repo/backend/convex/emails/client";
@@ -65,33 +66,16 @@ function scheduleNextReconciliationPage(
   return Effect.void;
 }
 
-const reconcileWelcomeIntentLifecycleProgram = Effect.fn(
-  "emails.welcome.reconcileLifecycle"
-)(function* (
-  ctx: MutationCtx,
-  phase: WelcomeIntentReconciliationPhase,
-  cursor: string | null
-) {
-  const page = yield* tryWelcomeIntent(() =>
-    ctx.db
-      .query("welcomeEmailIntents")
-      .withIndex("by_phase", (query) => query.eq("phase", phase))
-      .paginate({
-        cursor,
-        maximumBytesRead: welcomeIntentReconciliationPageBytes,
-        maximumRowsRead: welcomeIntentReconciliationPageSize,
-        numItems: welcomeIntentReconciliationPageSize,
-      })
-  );
-
-  for (const intent of page.page) {
+/** Finalizes one intent only after its workflow and email component are terminal. */
+const reconcileWelcomeIntent = Effect.fn("emails.welcome.reconcileIntent")(
+  function* (ctx: MutationCtx, intent: Doc<"welcomeEmailIntents">) {
     const workflowId = "workflowId" in intent ? intent.workflowId : undefined;
     if (workflowId !== undefined) {
       const status = yield* tryWelcomeIntent(() =>
         workflow.status(ctx, workflowId)
       );
       if (status.type === "inProgress") {
-        continue;
+        return;
       }
 
       const cleaned = yield* tryWelcomeIntent(() =>
@@ -121,17 +105,41 @@ const reconcileWelcomeIntentLifecycleProgram = Effect.fn(
         yield* Effect.logWarning(
           "Welcome intent retained after component status inspection failed."
         );
-        continue;
+        return;
       }
       if (
         status.success?.status === "waiting" ||
         status.success?.status === "queued"
       ) {
-        continue;
+        return;
       }
 
       yield* tryWelcomeIntent(() => ctx.db.delete(intent._id));
     }
+  }
+);
+
+const reconcileWelcomeIntentLifecycleProgram = Effect.fn(
+  "emails.welcome.reconcileLifecycle"
+)(function* (
+  ctx: MutationCtx,
+  phase: WelcomeIntentReconciliationPhase,
+  cursor: string | null
+) {
+  const page = yield* tryWelcomeIntent(() =>
+    ctx.db
+      .query("welcomeEmailIntents")
+      .withIndex("by_phase", (query) => query.eq("phase", phase))
+      .paginate({
+        cursor,
+        maximumBytesRead: welcomeIntentReconciliationPageBytes,
+        maximumRowsRead: welcomeIntentReconciliationPageSize,
+        numItems: welcomeIntentReconciliationPageSize,
+      })
+  );
+
+  for (const intent of page.page) {
+    yield* reconcileWelcomeIntent(ctx, intent);
   }
 
   yield* scheduleNextReconciliationPage(ctx, phase, page);

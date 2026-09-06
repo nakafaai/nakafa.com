@@ -3,10 +3,10 @@ import {
   type AccelerationLabels,
   getMotionPoints,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
+import { Line } from "@repo/design-system/components/evilcharts/charts/line/series";
 import {
   EvilLineChart,
   Grid,
-  Line,
   XAxis,
   YAxis,
 } from "@repo/design-system/components/evilcharts/charts/line-chart";

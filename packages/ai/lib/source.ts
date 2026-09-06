@@ -114,7 +114,6 @@ function findSourceSeparator(token: string) {
       return index;
     }
   }
-  return;
 }
 /**
  * Checks whether the next separator-delimited segment is a web source.

@@ -1,13 +1,59 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { commentVotesHandler } from "@repo/backend/convex/triggers/comments/commentVotes";
 
 const NOW = Date.UTC(2026, 4, 29, 18, 0, 0);
 
 describe("triggers/comments/commentVotes", () => {
+  it("ignores in-place updates and missing comments while clamping deleted votes at zero", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(async (ctx) => {
+      const { userId } = await seedAuthenticatedUser(ctx, { now: NOW });
+      const commentId = await ctx.db.insert("comments", {
+        slug: "/en/articles/politics/votes",
+        userId,
+        text: "Comment without counted votes",
+        upvoteCount: 0,
+        downvoteCount: 0,
+        replyCount: 0,
+      });
+      const id = await ctx.db.insert("commentVotes", {
+        commentId,
+        userId,
+        vote: 1,
+      });
+      const vote = await ctx.db.get("commentVotes", id);
+      assert(vote);
+      await commentVotesHandler(ctx, {
+        id,
+        operation: "update",
+        oldDoc: vote,
+        newDoc: { ...vote, vote: -1 },
+      });
+      await commentVotesHandler(ctx, {
+        id,
+        operation: "delete",
+        oldDoc: vote,
+        newDoc: null,
+      });
+      expect(await ctx.db.get("comments", commentId)).toMatchObject({
+        upvoteCount: 0,
+        downvoteCount: 0,
+      });
+      await ctx.db.delete("comments", commentId);
+      await commentVotesHandler(ctx, {
+        id,
+        operation: "insert",
+        oldDoc: null,
+        newDoc: vote,
+      });
+    });
+  });
+
   it("keeps denormalized vote counts in sync through comment mutations", async () => {
     const t = createConvexTestWithBetterAuth();
     const users = await t.mutation(async (ctx) => ({

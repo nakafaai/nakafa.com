@@ -6,6 +6,7 @@ import {
 import { schoolClassMaterialStatusValidator } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   PERMISSIONS,
@@ -36,11 +37,13 @@ export const createMaterialGroup = mutation({
 
     const classData = await loadActiveClass(ctx, args.classId);
 
-    await requirePermission(ctx, PERMISSIONS.CONTENT_CREATE, {
-      userId,
-      classId: args.classId,
-      schoolId: classData.schoolId,
-    });
+    await runConvexProgram(
+      requirePermission(ctx, PERMISSIONS.CONTENT_CREATE, {
+        userId,
+        classId: args.classId,
+        schoolId: classData.schoolId,
+      })
+    );
 
     // Get next order using index (efficient: uses .first() not .collect())
     const lastGroup = await ctx.db
@@ -110,11 +113,13 @@ export const updateMaterialGroup = mutation({
 
     const classData = await loadActiveClass(ctx, group.classId);
 
-    await requirePermission(ctx, PERMISSIONS.CONTENT_EDIT, {
-      userId,
-      classId: group.classId,
-      schoolId: classData.schoolId,
-    });
+    await runConvexProgram(
+      requirePermission(ctx, PERMISSIONS.CONTENT_EDIT, {
+        userId,
+        classId: group.classId,
+        schoolId: classData.schoolId,
+      })
+    );
 
     const now = Date.now();
     const wasPublished = group.status === "published";
@@ -200,11 +205,13 @@ export const deleteMaterialGroup = mutation({
 
     const classData = await loadActiveClass(ctx, group.classId);
 
-    await requirePermission(ctx, PERMISSIONS.CONTENT_DELETE, {
-      userId,
-      classId: group.classId,
-      schoolId: classData.schoolId,
-    });
+    await runConvexProgram(
+      requirePermission(ctx, PERMISSIONS.CONTENT_DELETE, {
+        userId,
+        classId: group.classId,
+        schoolId: classData.schoolId,
+      })
+    );
 
     if (group.status === "scheduled" && group.scheduledJobId) {
       await ctx.scheduler.cancel(group.scheduledJobId);
@@ -228,11 +235,13 @@ export const reorderMaterialGroup = mutation({
 
     const classData = await loadActiveClass(ctx, group.classId);
 
-    await requirePermission(ctx, PERMISSIONS.CONTENT_EDIT, {
-      userId,
-      classId: group.classId,
-      schoolId: classData.schoolId,
-    });
+    await runConvexProgram(
+      requirePermission(ctx, PERMISSIONS.CONTENT_EDIT, {
+        userId,
+        classId: group.classId,
+        schoolId: classData.schoolId,
+      })
+    );
 
     // Find adjacent group to swap with using index range query
     const adjacentGroup =

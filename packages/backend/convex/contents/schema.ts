@@ -4,6 +4,8 @@ import {
   learningGraphIdentityValidator,
 } from "@repo/backend/convex/contents/graph";
 import {
+  learningPopularityFiniteWindowValues,
+  learningPopularityRetentionPhaseValues,
   learningPopularityScopeValues,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
@@ -19,8 +21,14 @@ import { literals } from "convex-helpers/validators";
 const learningPopularityWindowValidator = literals(
   ...learningPopularityWindowValues
 );
+const learningPopularityFiniteWindowValidator = literals(
+  ...learningPopularityFiniteWindowValues
+);
 const learningPopularityScopeValidator = literals(
   ...learningPopularityScopeValues
+);
+const learningPopularityRetentionPhaseValidator = literals(
+  ...learningPopularityRetentionPhaseValues
 );
 const tables = {
   /**
@@ -161,19 +169,21 @@ const tables = {
       "scopeMode",
       "contextKey",
     ])
-    .index("by_section_and_locale_and_scopeMode_and_signalDay", [
-      "section",
-      "locale",
-      "scopeMode",
-      "signalDay",
-    ]),
+    .index("by_signalDay", ["signalDay"]),
 
-  /**
-   * Daily verified popularity signals used for audited window rebuilds.
-   */
+  /** Daily verified popularity signals used for audited window rebuilds. */
   learningPopularitySignals: defineTable({
     ...learningGraphIdentityValidator.fields,
     ...learningContextStorageFields,
+    applied: v.object({
+      d1: v.number(),
+      d7: v.number(),
+      d14: v.number(),
+      d30: v.number(),
+      d90: v.number(),
+      d180: v.number(),
+      d365: v.number(),
+    }),
     content_id: graphContentIdValidator,
     description: v.optional(v.string()),
     locale: localeValidator,
@@ -199,21 +209,36 @@ const tables = {
       "contextKey",
       "signalDay",
     ])
-    .index("by_section_and_locale_and_scopeMode_and_signalDay", [
-      "section",
-      "locale",
-      "scopeMode",
-      "signalDay",
-    ]),
+    .index("by_signalDay", ["signalDay"]),
 
   /**
-   * Ranked popularity read model for bounded homepage and route queries.
+   * Completion watermark for each finite popularity maintenance cycle.
+   * A missing or stale day makes the next daily run repair instead of expire.
    */
+  learningPopularityCycles: defineTable({
+    completedDay: v.optional(v.number()),
+    cursor: v.optional(v.string()),
+    mode: v.union(v.literal("expiry"), v.literal("repair")),
+    scopeMode: learningPopularityScopeValidator,
+    startedDay: v.number(),
+    windowKey: learningPopularityFiniteWindowValidator,
+  }).index("by_scopeMode_and_windowKey", ["scopeMode", "windowKey"]),
+
+  /** Durable singleton for one idempotent popularity retention chain. */
+  learningPopularityRetention: defineTable({
+    completedDay: v.optional(v.number()),
+    day: v.number(),
+    key: v.literal("popularity"),
+    phase: learningPopularityRetentionPhaseValidator,
+  }).index("by_key", ["key"]),
+
+  /** Ranked popularity read model for bounded homepage and route queries. */
   learningPopularityCounters: defineTable({
     ...learningGraphIdentityValidator.fields,
     ...learningContextStorageFields,
     content_id: graphContentIdValidator,
     description: v.optional(v.string()),
+    latestDay: v.number(),
     locale: localeValidator,
     materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
@@ -224,21 +249,12 @@ const tables = {
     title: v.string(),
     updatedAt: v.number(),
     windowKey: learningPopularityWindowValidator,
-  })
-    .index("by_windowKey_and_scopeMode_and_content_id_and_contextKey", [
-      "windowKey",
-      "scopeMode",
-      "content_id",
-      "contextKey",
-    ])
-    .index("by_section_locale_scope_window_score_id", [
-      "section",
-      "locale",
-      "scopeMode",
-      "windowKey",
-      "score",
-      "content_id",
-    ]),
+  }).index("by_windowKey_and_scopeMode_and_content_id_and_contextKey", [
+    "windowKey",
+    "scopeMode",
+    "content_id",
+    "contextKey",
+  ]),
 };
 
 export default tables;

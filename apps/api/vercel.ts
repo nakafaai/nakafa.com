@@ -22,5 +22,3 @@ export const config: VercelConfig = {
     paths: NAKAFA_API_EDGE_PATHS,
   }),
 };
-
-export default config;

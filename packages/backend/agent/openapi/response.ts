@@ -2,6 +2,7 @@ import {
   NAKAFA_OPENAPI_ETAG,
   NAKAFA_OPENAPI_JSON,
 } from "@repo/backend/agent/openapi/document";
+import { Option } from "effect";
 
 const OPENAPI_CACHE_CONTROL = "public, max-age=3600, s-maxage=3600";
 const OPENAPI_VARY = "Accept, Accept-Encoding";
@@ -9,8 +10,31 @@ const ENTITY_TAG_CHARACTERS = /^[\x21\x23-\x7e\u0080-\u00ff]*$/u;
 const MAX_IF_NONE_MATCH_ELEMENTS = 32;
 const OPENAPI_OPAQUE_ENTITY_TAG = NAKAFA_OPENAPI_ETAG.replace(/^W\//, "");
 
-function isOptionalWhitespace(character: string) {
-  return character === " " || character === "\t";
+function skipOptionalWhitespace(value: string, start: number) {
+  let index = start;
+  while (value[index] === " " || value[index] === "\t") {
+    index += 1;
+  }
+  return index;
+}
+
+/** Reads one complete quoted entity tag without interpreting commas inside it. */
+function readEntityTag(value: string, start: number) {
+  const tagStart = value.startsWith("W/", start) ? start + 2 : start;
+  if (value[tagStart] !== '"') {
+    return Option.none();
+  }
+  const tagEnd = value.indexOf('"', tagStart + 1);
+  if (
+    tagEnd === -1 ||
+    !ENTITY_TAG_CHARACTERS.test(value.slice(tagStart + 1, tagEnd))
+  ) {
+    return Option.none();
+  }
+  return Option.some({
+    nextIndex: tagEnd + 1,
+    opaqueTag: value.slice(tagStart, tagEnd + 1),
+  });
 }
 
 /** Checks bounded If-None-Match values using weak entity-tag comparison. */
@@ -19,15 +43,11 @@ function hasWeakEntityTagMatch(ifNoneMatch: string | undefined) {
     return false;
   }
 
-  let firstIndex = 0;
-  let lastIndex = ifNoneMatch.length;
-  while (isOptionalWhitespace(ifNoneMatch[firstIndex] ?? "")) {
-    firstIndex += 1;
-  }
-  while (isOptionalWhitespace(ifNoneMatch[lastIndex - 1] ?? "")) {
-    lastIndex -= 1;
-  }
-  if (ifNoneMatch.slice(firstIndex, lastIndex) === "*") {
+  const firstIndex = skipOptionalWhitespace(ifNoneMatch, 0);
+  if (
+    ifNoneMatch[firstIndex] === "*" &&
+    skipOptionalWhitespace(ifNoneMatch, firstIndex + 1) === ifNoneMatch.length
+  ) {
     return true;
   }
 
@@ -35,9 +55,7 @@ function hasWeakEntityTagMatch(ifNoneMatch: string | undefined) {
   let hasMatch = false;
   let index = 0;
   while (index < ifNoneMatch.length) {
-    while (isOptionalWhitespace(ifNoneMatch[index] ?? "")) {
-      index += 1;
-    }
+    index = skipOptionalWhitespace(ifNoneMatch, index);
     if (index === ifNoneMatch.length) {
       break;
     }
@@ -49,27 +67,12 @@ function hasWeakEntityTagMatch(ifNoneMatch: string | undefined) {
       index += 1;
       continue;
     }
-    if (ifNoneMatch.startsWith("W/", index)) {
-      index += 2;
-    }
-    if (ifNoneMatch[index] !== '"') {
+    const tag = readEntityTag(ifNoneMatch, index);
+    if (Option.isNone(tag)) {
       return false;
     }
-    const opaqueTagStart = index;
-    const opaqueTagEnd = ifNoneMatch.indexOf('"', opaqueTagStart + 1);
-    if (opaqueTagEnd === -1) {
-      return false;
-    }
-    const opaqueValue = ifNoneMatch.slice(opaqueTagStart + 1, opaqueTagEnd);
-    if (!ENTITY_TAG_CHARACTERS.test(opaqueValue)) {
-      return false;
-    }
-    const opaqueTag = ifNoneMatch.slice(opaqueTagStart, opaqueTagEnd + 1);
-    hasMatch ||= opaqueTag === OPENAPI_OPAQUE_ENTITY_TAG;
-    index = opaqueTagEnd + 1;
-    while (isOptionalWhitespace(ifNoneMatch[index] ?? "")) {
-      index += 1;
-    }
+    hasMatch ||= tag.value.opaqueTag === OPENAPI_OPAQUE_ENTITY_TAG;
+    index = skipOptionalWhitespace(ifNoneMatch, tag.value.nextIndex);
     if (index === ifNoneMatch.length) {
       break;
     }

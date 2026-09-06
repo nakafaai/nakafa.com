@@ -1,4 +1,4 @@
-import { Result, Schema } from "effect";
+import { Predicate, Result, Schema } from "effect";
 export const NETWORK_RETRY_DELAYS_MILLISECONDS = [500, 1000] as const;
 export const NetworkRetryCodeSchema = Schema.Literals([
   "ECONNRESET",
@@ -64,59 +64,69 @@ function inspectNetworkCodes(cause: unknown): NetworkCodeInspection {
   let foundTerminalFailure = false;
   while (pending.length > 0 && visited.size < NETWORK_CAUSE_LIMIT) {
     const current = pending.pop();
-    if (typeof current !== "object" || current === null) {
+    if (!Predicate.isObjectOrArray(current)) {
       continue;
     }
     if (visited.has(current)) {
       continue;
     }
     visited.add(current);
-    const hasCodeProperty = "code" in current;
-    const code = hasCodeProperty ? current.code : undefined;
-    const hasNetworkCode =
-      typeof code === "string" && NETWORK_CODE_PATTERN.test(code);
-    if (hasNetworkCode) {
-      foundCode = true;
-      if (isNetworkRetryCode(code)) {
-        retryCodes.add(code);
-      } else {
-        foundTerminalFailure = true;
-      }
-    } else if (hasCodeProperty) {
-      foundTerminalFailure = true;
+    const inspection = inspectNetworkNode(
+      current,
+      NETWORK_CAUSE_LIMIT - pending.length - visited.size
+    );
+    foundCode ||= inspection.hasNetworkCode;
+    foundTerminalFailure ||= inspection.foundTerminalFailure;
+    if (inspection.retryCode !== undefined) {
+      retryCodes.add(inspection.retryCode);
     }
-    let hasObjectChild = false;
-    if ("cause" in current) {
-      const nestedCause = current.cause;
-      if (typeof nestedCause === "object" && nestedCause !== null) {
-        hasObjectChild = true;
-        pending.push(nestedCause);
-      } else {
-        foundTerminalFailure = true;
-      }
-    }
-    if (current instanceof AggregateError) {
-      for (const error of current.errors) {
-        if (typeof error !== "object" || error === null) {
-          foundTerminalFailure = true;
-          continue;
-        }
-        hasObjectChild = true;
-        if (pending.length + visited.size >= NETWORK_CAUSE_LIMIT) {
-          foundTerminalFailure = true;
-          break;
-        }
-        pending.push(error);
-      }
-    }
-    if (!(hasNetworkCode || hasObjectChild)) {
-      foundTerminalFailure = true;
-    }
+    pending.push(...inspection.children);
   }
   return {
     foundCode,
     foundTerminalFailure: foundTerminalFailure || pending.length > 0,
     retryCodes,
+  };
+}
+
+/** Inspects one failure and retains only the children allowed by the graph bound. */
+function inspectNetworkNode(current: object, remainingCapacity: number) {
+  const hasCodeProperty = "code" in current;
+  const code = hasCodeProperty ? current.code : undefined;
+  const hasNetworkCode =
+    Predicate.isString(code) && NETWORK_CODE_PATTERN.test(code);
+  const retryCode =
+    hasNetworkCode && isNetworkRetryCode(code) ? code : undefined;
+  const children: object[] = [];
+  let foundTerminalFailure = hasCodeProperty && retryCode === undefined;
+
+  if ("cause" in current) {
+    const nestedCause = current.cause;
+    if (Predicate.isObjectOrArray(nestedCause)) {
+      children.push(nestedCause);
+    } else {
+      foundTerminalFailure = true;
+    }
+  }
+  if (current instanceof AggregateError) {
+    for (const error of current.errors) {
+      if (!Predicate.isObjectOrArray(error)) {
+        foundTerminalFailure = true;
+        continue;
+      }
+      if (children.length >= remainingCapacity) {
+        foundTerminalFailure = true;
+        break;
+      }
+      children.push(error);
+    }
+  }
+  return {
+    children,
+    foundTerminalFailure:
+      foundTerminalFailure || !(hasNetworkCode || children.length > 0),
+    hasNetworkCode,
+    retryCode,
   };
 }
 /** Returns whether a rejected fetch is safe for a bounded retry. */

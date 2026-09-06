@@ -101,6 +101,4 @@ function getSectionStatus({
   if (completedSections.has(sectionKey)) {
     return "completed";
   }
-
-  return;
 }

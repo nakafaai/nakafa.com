@@ -59,3 +59,65 @@ export function seedDeletionMember(
     userId,
   });
 }
+
+/** Seeds one reserved school transfer for account-deletion finalization. */
+export async function seedPreparedDeletionSchool(
+  ctx: MutationCtx,
+  authId: string,
+  now: number,
+  attemptId: string
+) {
+  const ownerId = await seedDeletionUser(ctx, authId, {
+    deletionPreparedAt: now,
+  });
+  const successorId = await seedDeletionUser(ctx, `${authId}-successor`);
+  const schoolId = await ctx.db.insert("schools", {
+    city: "Jakarta",
+    createdBy: ownerId,
+    currentStudents: 1,
+    currentTeachers: 0,
+    email: `${authId}-school@example.com`,
+    name: "Prepared School",
+    province: "DKI Jakarta",
+    slug: `${authId}-school`,
+    type: "high-school",
+    updatedAt: now,
+  });
+  await ctx.db.insert("schoolMembers", {
+    joinedAt: now,
+    role: "admin",
+    schoolId,
+    status: "active",
+    updatedAt: now,
+    userId: ownerId,
+  });
+  const successorMembershipId = await ctx.db.insert("schoolMembers", {
+    joinedAt: now,
+    role: "student",
+    schoolId,
+    status: "active",
+    updatedAt: now,
+    userId: successorId,
+  });
+  const preparationId = await ctx.db.insert("accountDeletionPreparations", {
+    attemptId,
+    authId,
+    recoveryAt: now,
+    recoveryGeneration: 0,
+    userId: ownerId,
+  });
+  await ctx.db.insert("accountDeletionSchoolTransfers", {
+    preparationId,
+    schoolId,
+    successorMembershipId,
+    successorUserId: successorId,
+  });
+
+  return {
+    ownerId,
+    preparationId,
+    schoolId,
+    successorId,
+    successorMembershipId,
+  };
+}

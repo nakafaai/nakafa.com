@@ -1,7 +1,7 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { processClaimedContentAnalyticsPartition } from "@repo/backend/convex/contents/analytics/drain";
 import {
   claimContentAnalyticsPartition,
-  processClaimedContentAnalyticsPartition,
   scheduleAllContentAnalyticsPartitions,
 } from "@repo/backend/convex/contents/analytics/impl";
 import {

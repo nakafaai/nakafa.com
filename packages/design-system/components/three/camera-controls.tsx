@@ -16,6 +16,7 @@ import { measureCameraBounds } from "@repo/design-system/lib/geometry/camera/bou
 import {
   resolveCameraFit,
   resolveCameraPanOffset,
+  resolveCameraRefit,
 } from "@repo/design-system/lib/geometry/camera/fit";
 import { Effect, Option } from "effect";
 import {
@@ -241,35 +242,27 @@ export function CameraControls(props: CameraControlsProps) {
         Math.max(fitted.viewHeight, projectionHeight),
         viewportHeight
       );
-      const position = previous ? object.position.clone() : authoredPosition;
-      const target = previous ? controls.target.clone() : authoredTarget;
-      const distanceRatio = previous
-        ? position.distanceTo(target) / previous.distance
-        : 1;
-      const distance = Math.min(
-        limits.maxDistance,
-        Math.max(limits.minDistance, fitted.distance * distanceRatio)
-      );
-      const direction = position.sub(target).normalize();
-      const pan = previous
-        ? target
-            .sub(previous.target)
-            .multiplyScalar(fitted.distance / previous.distance)
-        : new Vector3();
-      controls.target.copy(fitted.target).add(pan);
-      object.position
-        .copy(controls.target)
-        .addScaledVector(direction, distance);
-      object.near = projectionNear ?? fitted.near;
-      object.far = Math.max(projectionFar ?? 0, fitted.far);
+      const refitted = resolveCameraRefit({
+        authoredPosition,
+        authoredTarget,
+        currentPosition: object.position,
+        currentTarget: controls.target,
+        currentZoom: object.zoom,
+        fitted,
+        initialZoom,
+        limits,
+        near: projectionNear,
+        far: projectionFar,
+        previous,
+      });
+      controls.target.copy(refitted.target);
+      object.position.copy(refitted.position);
+      object.near = refitted.near;
+      object.far = refitted.far;
       controls.minDistance = limits.minDistance;
       controls.maxDistance = limits.maxDistance;
       if (object instanceof ThreeOrthographicCamera) {
-        const zoomRatio = previous ? object.zoom / previous.zoom : 1;
-        object.zoom = Math.min(
-          initialZoom.maxZoom,
-          Math.max(initialZoom.minZoom, initialZoom.zoom * zoomRatio)
-        );
+        object.zoom = refitted.zoom;
         controls.maxZoom = initialZoom.maxZoom;
         controls.minZoom = initialZoom.minZoom;
       }

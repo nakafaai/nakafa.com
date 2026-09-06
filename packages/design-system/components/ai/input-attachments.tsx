@@ -23,8 +23,7 @@ import {
   Fragment,
   type HTMLAttributes,
   type ReactNode,
-  useLayoutEffect,
-  useRef,
+  useCallback,
   useState,
 } from "react";
 
@@ -115,14 +114,7 @@ export function PromptInputAttachments({
 }: PromptInputAttachmentsProps) {
   const attachments = usePromptInputAttachments();
   const [height, setHeight] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const element = contentRef.current;
-    if (!element) {
-      return;
-    }
-
+  const contentRef = useCallback((element: HTMLDivElement) => {
     const resizeObserver = new ResizeObserver(() => {
       setHeight(element.getBoundingClientRect().height);
     });
@@ -130,15 +122,6 @@ export function PromptInputAttachments({
     setHeight(element.getBoundingClientRect().height);
     return () => resizeObserver.disconnect();
   }, []);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Force height measurement when attachments change
-  useLayoutEffect(() => {
-    const element = contentRef.current;
-    if (!element) {
-      return;
-    }
-    setHeight(element.getBoundingClientRect().height);
-  }, [attachments.files.length]);
 
   if (attachments.files.length === 0) {
     return null;

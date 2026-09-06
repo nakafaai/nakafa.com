@@ -172,52 +172,38 @@ export function selectRelevantContent(
     })
   );
 
-  const selectedParts: string[] = [];
-  let currentLength = 0;
+  const intro = analyzedParagraphs[0];
+  const selectedParts = preserveStructure ? [intro.text] : [];
+  let currentLength = preserveStructure ? intro.length + 2 : 0;
   const targetLength = maxLength * TARGET_LENGTH_BUFFER;
+  const candidates = preserveStructure
+    ? analyzedParagraphs.slice(1, -1)
+    : analyzedParagraphs;
+  const paragraphLimit = preserveStructure
+    ? maxRelevantParagraphs
+    : Math.max(minRelevantParagraphs, maxRelevantParagraphs);
+  const selectedParagraphs = candidates
+    .filter((paragraph) => paragraph.score > 0)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, paragraphLimit);
 
   if (preserveStructure) {
-    const intro = analyzedParagraphs[0];
-    selectedParts.push(intro.text);
-    currentLength += intro.length + 2;
-
-    const middleParagraphs = analyzedParagraphs
-      .slice(1, -1)
-      .filter((p) => p.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, maxRelevantParagraphs);
-
-    const sortedMiddleParagraphs = middleParagraphs.sort(
-      (a, b) => a.index - b.index
-    );
-    for (const paragraph of sortedMiddleParagraphs) {
-      if (currentLength + paragraph.length + 2 < targetLength) {
-        selectedParts.push(paragraph.text);
-        currentLength += paragraph.length + 2;
-      }
+    selectedParagraphs.sort((left, right) => left.index - right.index);
+  }
+  for (const paragraph of selectedParagraphs) {
+    if (currentLength + paragraph.length + 2 < targetLength) {
+      selectedParts.push(paragraph.text);
+      currentLength += paragraph.length + 2;
     }
+  }
 
-    const conclusion = analyzedParagraphs.at(-1);
-    if (
-      conclusion &&
-      conclusion.index !== intro.index &&
-      currentLength + conclusion.length + 2 < targetLength
-    ) {
-      selectedParts.push(conclusion.text);
-      currentLength += conclusion.length + 2;
-    }
-  } else {
-    const relevantParagraphs = analyzedParagraphs
-      .filter((p) => p.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, Math.max(minRelevantParagraphs, maxRelevantParagraphs));
-
-    for (const paragraph of relevantParagraphs) {
-      if (currentLength + paragraph.length + 2 < targetLength) {
-        selectedParts.push(paragraph.text);
-        currentLength += paragraph.length + 2;
-      }
-    }
+  const conclusion = analyzedParagraphs.at(-1);
+  if (
+    preserveStructure &&
+    conclusion &&
+    currentLength + conclusion.length + 2 < targetLength
+  ) {
+    selectedParts.push(conclusion.text);
   }
 
   if (selectedParts.length === 0) {

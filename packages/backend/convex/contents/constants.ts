@@ -10,6 +10,9 @@ export const LEARNING_POPULARITY_REFRESH_BATCH_SIZE = 10;
 /** Number of independent analytics partitions. */
 export const CONTENT_ANALYTICS_PARTITION_COUNT = 16;
 
+/** Maximum expired popularity rows removed in one retention mutation. */
+export const POPULARITY_RETENTION_BATCH_SIZE = 128;
+
 /** Duration a partition lease stays active before recovery can reclaim it. */
 export const CONTENT_ANALYTICS_LEASE_DURATION_MS = 5 * 60 * 1000;
 

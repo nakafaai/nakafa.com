@@ -95,6 +95,28 @@ export const hasAbortResidue = Effect.fn("contentRelease.hasAbortResidue")(
   }
 );
 
+/** Stops a deletion page as soon as measured transaction headroom is exhausted. */
+const deleteMeasuredPage = Effect.fn("contentRelease.deleteMeasuredAbortPage")(
+  function* <Row>(
+    ctx: MutationCtx,
+    rows: readonly Row[],
+    deleteRow: (row: Row) => Effect.Effect<void>
+  ) {
+    let processed = 0;
+    for (const row of rows) {
+      yield* deleteRow(row);
+      processed += 1;
+      const metrics = yield* Effect.promise(() =>
+        ctx.meta.getTransactionMetrics()
+      );
+      if (!hasAbortTransactionHeadroom(metrics)) {
+        return processed;
+      }
+    }
+    return processed;
+  }
+);
+
 /** Deletes one measured release-owned page and its staged directory identities. */
 export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
   function* (ctx: MutationCtx, releaseId: string, sequence: number) {
@@ -120,21 +142,16 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
             numItems: ABORT_PAGE_LIMIT,
           })
       );
-      let processed = 0;
-      for (const row of heads.page) {
-        yield* Effect.promise(() => ctx.db.delete("contentHeads", row._id));
-        if (row.artifactHash) {
-          yield* retainOrphanedArtifacts(ctx, [row.artifactHash]);
-        }
-        processed += 1;
-        const metrics = yield* Effect.promise(() =>
-          ctx.meta.getTransactionMetrics()
-        );
-        if (!hasAbortTransactionHeadroom(metrics)) {
-          return processed;
-        }
-      }
-      return processed;
+      return yield* deleteMeasuredPage(
+        ctx,
+        heads.page,
+        Effect.fn("contentRelease.deleteAbortHead")(function* (row) {
+          yield* Effect.promise(() => ctx.db.delete("contentHeads", row._id));
+          if (row.artifactHash) {
+            yield* retainOrphanedArtifacts(ctx, [row.artifactHash]);
+          }
+        })
+      );
     }
 
     const binding = yield* Effect.promise(() =>
@@ -159,19 +176,16 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
             numItems: ABORT_PAGE_LIMIT,
           })
       );
-      let processed = 0;
-      for (const row of bindings.page) {
-        yield* deleteOwnedPath(ctx, row.appLocale, row.publicPath, sequence);
-        yield* Effect.promise(() => ctx.db.delete("contentBindings", row._id));
-        processed += 1;
-        const metrics = yield* Effect.promise(() =>
-          ctx.meta.getTransactionMetrics()
-        );
-        if (!hasAbortTransactionHeadroom(metrics)) {
-          return processed;
-        }
-      }
-      return processed;
+      return yield* deleteMeasuredPage(
+        ctx,
+        bindings.page,
+        Effect.fn("contentRelease.deleteAbortBinding")(function* (row) {
+          yield* deleteOwnedPath(ctx, row.appLocale, row.publicPath, sequence);
+          yield* Effect.promise(() =>
+            ctx.db.delete("contentBindings", row._id)
+          );
+        })
+      );
     }
 
     const item = yield* Effect.promise(() =>
@@ -196,27 +210,22 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
             numItems: ABORT_PAGE_LIMIT,
           })
       );
-      let processed = 0;
-      for (const row of items.page) {
-        yield* deleteOwnedKey(
-          ctx,
-          row.contentKey,
-          row.artifactLocale,
-          sequence
-        );
-        yield* Effect.promise(() => ctx.db.delete("contentItems", row._id));
-        if (row.artifactHash) {
-          yield* retainOrphanedArtifacts(ctx, [row.artifactHash]);
-        }
-        processed += 1;
-        const metrics = yield* Effect.promise(() =>
-          ctx.meta.getTransactionMetrics()
-        );
-        if (!hasAbortTransactionHeadroom(metrics)) {
-          return processed;
-        }
-      }
-      return processed;
+      return yield* deleteMeasuredPage(
+        ctx,
+        items.page,
+        Effect.fn("contentRelease.deleteAbortItem")(function* (row) {
+          yield* deleteOwnedKey(
+            ctx,
+            row.contentKey,
+            row.artifactLocale,
+            sequence
+          );
+          yield* Effect.promise(() => ctx.db.delete("contentItems", row._id));
+          if (row.artifactHash) {
+            yield* retainOrphanedArtifacts(ctx, [row.artifactHash]);
+          }
+        })
+      );
     }
 
     const batch = yield* Effect.promise(() =>
@@ -243,17 +252,12 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
           numItems: ABORT_PAGE_LIMIT,
         })
     );
-    let processed = 0;
-    for (const row of batches.page) {
-      yield* Effect.promise(() => ctx.db.delete("snapshotBatches", row._id));
-      processed += 1;
-      const metrics = yield* Effect.promise(() =>
-        ctx.meta.getTransactionMetrics()
-      );
-      if (!hasAbortTransactionHeadroom(metrics)) {
-        return processed;
-      }
-    }
-    return processed;
+    return yield* deleteMeasuredPage(
+      ctx,
+      batches.page,
+      Effect.fn("contentRelease.deleteAbortSnapshotBatch")(function* (row) {
+        yield* Effect.promise(() => ctx.db.delete("snapshotBatches", row._id));
+      })
+    );
   }
 );

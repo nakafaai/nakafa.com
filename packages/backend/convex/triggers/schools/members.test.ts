@@ -1,15 +1,138 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { schoolMembersHandler } from "@repo/backend/convex/triggers/schools/members";
+import { createClassFixture } from "@repo/backend/test/classes";
 
 const NOW = Date.UTC(2026, 4, 29, 20, 30, 0);
 
 describe("triggers/schools/members", () => {
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it.each([true, false])(
+    "records invitation and removal actors when an explicit actor is %s",
+    async (hasActor) => {
+      const { t, users, schoolId } = await createClassFixture();
+      const memberId = await t.mutation(async (ctx) => {
+        const id = await ctx.db.insert("schoolMembers", {
+          userId: users.student.userId,
+          schoolId,
+          role: "student",
+          status: "invited",
+          joinedAt: NOW,
+          updatedAt: NOW,
+          invitedAt: NOW,
+          invitedBy: hasActor ? users.admin.userId : undefined,
+        });
+        const invited = await ctx.db.get("schoolMembers", id);
+        assert(invited);
+        await schoolMembersHandler(ctx, {
+          id,
+          operation: "insert",
+          oldDoc: null,
+          newDoc: invited,
+        });
+        await ctx.db.patch("schoolMembers", id, {
+          role: "teacher",
+          status: "active",
+        });
+        const joined = await ctx.db.get("schoolMembers", id);
+        assert(joined);
+        await schoolMembersHandler(ctx, {
+          id,
+          operation: "update",
+          oldDoc: invited,
+          newDoc: joined,
+        });
+        await schoolMembersHandler(ctx, {
+          id,
+          operation: "update",
+          oldDoc: joined,
+          newDoc: joined,
+        });
+        await ctx.db.patch("schoolMembers", id, {
+          status: "removed",
+          removedAt: NOW,
+          removedBy: hasActor ? users.admin.userId : undefined,
+        });
+        const removed = await ctx.db.get("schoolMembers", id);
+        assert(removed);
+        await schoolMembersHandler(ctx, {
+          id,
+          operation: "update",
+          oldDoc: joined,
+          newDoc: removed,
+        });
+        await schoolMembersHandler(ctx, {
+          id,
+          operation: "update",
+          oldDoc: removed,
+          newDoc: removed,
+        });
+        await ctx.db.delete("schoolMembers", id);
+        await schoolMembersHandler(ctx, {
+          id,
+          operation: "delete",
+          oldDoc: removed,
+          newDoc: null,
+        });
+        return id;
+      });
+      const logs = await t.query((ctx) =>
+        ctx.db.query("schoolActivityLogs").collect()
+      );
+      const memberLogs = logs.filter((log) => log.entityId === memberId);
+      expect(memberLogs.map(({ action }) => action)).toEqual([
+        "member_invited",
+        "member_role_changed",
+        "member_joined",
+        "member_removed",
+        "member_removed",
+      ]);
+      expect(memberLogs[0].userId).toBe(
+        hasActor ? users.admin.userId : users.student.userId
+      );
+      expect(memberLogs[3].userId).toBe(
+        hasActor ? users.admin.userId : users.student.userId
+      );
+      expect(memberLogs[4].userId).toBe(users.student.userId);
+    }
+  );
+
+  it("does not log removed inserts and tolerates deleted invite codes", async () => {
+    const { t, users, schoolId } = await createClassFixture();
+    const memberId = await t.mutation(async (ctx) => {
+      const invite = await ctx.db.query("schoolInviteCodes").first();
+      assert(invite);
+      await ctx.db.delete("schoolInviteCodes", invite._id);
+      const id = await ctx.db.insert("schoolMembers", {
+        userId: users.student.userId,
+        schoolId,
+        role: "student",
+        status: "removed",
+        joinedAt: NOW,
+        updatedAt: NOW,
+        inviteCodeId: invite._id,
+      });
+      const member = await ctx.db.get("schoolMembers", id);
+      assert(member);
+      await schoolMembersHandler(ctx, {
+        id,
+        operation: "insert",
+        oldDoc: null,
+        newDoc: member,
+      });
+      return id;
+    });
+    const logs = await t.query((ctx) =>
+      ctx.db.query("schoolActivityLogs").collect()
+    );
+    expect(logs.some((log) => log.entityId === memberId)).toBe(false);
   });
 
   it("tracks school joins and invite usage through school mutations", async () => {

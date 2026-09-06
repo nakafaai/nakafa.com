@@ -3,12 +3,14 @@
 import {
   ActiveDot,
   Dot,
+  Line,
+} from "@repo/design-system/components/evilcharts/charts/composed/line";
+import { Scatter } from "@repo/design-system/components/evilcharts/charts/composed/scatter";
+import {
   EvilComposedChart,
   Grid,
   Legend,
-  Line,
   ReferenceLine,
-  Scatter,
   Tooltip,
   XAxis,
   YAxis,

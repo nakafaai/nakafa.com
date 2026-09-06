@@ -4,10 +4,12 @@ import { VectorChartTooltip } from "@repo/design-system/components/contents/math
 import {
   ActiveDot,
   Dot,
+  Line,
+} from "@repo/design-system/components/evilcharts/charts/line/series";
+import {
   EvilLineChart,
   Grid,
   Legend,
-  Line,
   XAxis,
   YAxis,
 } from "@repo/design-system/components/evilcharts/charts/line-chart";

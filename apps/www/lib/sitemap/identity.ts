@@ -78,18 +78,14 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
     return null;
   }
 
-  if (prefix === "quran") {
-    return segments.length === 2 ? { id, kind: "quran", locale } : null;
+  if (prefix === "quran" || prefix === "page") {
+    return segments.length === 2 ? { id, kind: prefix, locale } : null;
   }
 
-  if (prefix === "page") {
-    return segments.length === 2 ? { id, kind: "page", locale } : null;
+  if (segments.length !== 3) {
+    return null;
   }
-
   if (prefix === "tryout") {
-    if (segments.length !== 3) {
-      return null;
-    }
     const page = parsePageNumber(segments[2]);
     if (page === null) {
       return null;
@@ -97,29 +93,16 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
     return { id, kind: prefix, locale, page };
   }
 
-  if (prefix === "article") {
-    const bucket = segments[2];
-    if (segments.length !== 3 || !bucket || !isProjectionBucket(bucket)) {
-      return null;
-    }
-    return { bucket, id, kind: "article", locale };
+  if (
+    !(prefix === "article" || prefix === "material" || prefix === "program")
+  ) {
+    return null;
   }
-  if (prefix === "material") {
-    const bucket = segments[2];
-    if (segments.length !== 3 || !bucket || !isProjectionBucket(bucket)) {
-      return null;
-    }
-    return { bucket, id, kind: "material", locale };
+  const bucket = segments[2];
+  if (!(bucket && isProjectionBucket(bucket))) {
+    return null;
   }
-  if (prefix === "program") {
-    const bucket = segments[2];
-    if (segments.length !== 3 || !bucket || !isProjectionBucket(bucket)) {
-      return null;
-    }
-    return { bucket, id, kind: "program", locale };
-  }
-
-  return null;
+  return { bucket, id, kind: prefix, locale };
 }
 
 /** Checks whether one page targets published article rows. */

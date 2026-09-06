@@ -125,6 +125,28 @@ const validateBuildIdentity = Effect.fn("www.runtime.validateBuild")(function* (
   }
 });
 
+const validateProtectedTarget = Effect.fn(
+  "www.runtime.validateProtectedTarget"
+)(function* (
+  target: RuntimeTarget,
+  queryDeployment: string | undefined,
+  siteDeployment: string | undefined
+) {
+  if (target.agent === "anonymous") {
+    return yield* failure("anonymous-production");
+  }
+  if (
+    queryDeployment !== CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT ||
+    (target.site !== undefined &&
+      siteDeployment !== CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT)
+  ) {
+    return yield* failure("untrusted-production");
+  }
+  if (target.build.snapshot === undefined) {
+    return yield* failure("unisolated-production");
+  }
+});
+
 /** Blocks production-backed Next commands before route discovery begins. */
 export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
   function* (target: RuntimeTarget) {
@@ -140,20 +162,11 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
     yield* validateBuildIdentity(target.build);
 
     if (isProtectedProduction(target.vercel)) {
-      if (target.agent === "anonymous") {
-        return yield* failure("anonymous-production");
-      }
-      if (
-        queryDeployment !== CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT ||
-        (siteHost !== undefined &&
-          siteDeployment !== CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT)
-      ) {
-        return yield* failure("untrusted-production");
-      }
-      if (target.build.snapshot === undefined) {
-        return yield* failure("unisolated-production");
-      }
-      return;
+      return yield* validateProtectedTarget(
+        target,
+        queryDeployment,
+        siteDeployment
+      );
     }
 
     const queryIsProduction =

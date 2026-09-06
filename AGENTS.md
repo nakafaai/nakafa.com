@@ -15,7 +15,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Package manager: `pnpm@11.23.0`
 - Runtime: Node `24.x` through pnpm `devEngines.runtime`
 - Monorepo: Turborepo
-- Frontend: Next.js 16, React 19, TypeScript 7 CLI with TypeScript 6 API compatibility
+- Frontend: Next.js 16, React 19, native TypeScript 7
 - Backend: Convex
 - Lint and format: Biome through Ultracite
 - Tests: Vitest
@@ -37,7 +37,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Do not create new `index.ts` barrels, hand-written facade modules, pass-through re-exports, generic `utils` or `helpers`, or imports whose only purpose is re-exporting. Generated or externally mandated package entrypoints require an explicit exception.
 - TypeScript is strict. Prefer derived and inferred types, fix the source design when inference is unclear, avoid `any`, narrow real `unknown` values quickly, and avoid assertions or workaround casts.
 - Runtime contracts own public types. Derive from Effect Schema, Convex validators, and generated Convex types. Never duplicate domain unions, value sets, schemas, validators, constants, or UI options.
-- The root exposes the Effect-patched native TypeScript 7 compiler as `tsc`. The `typescript` package remains the TypeScript 6 compatibility API for Next.js, Ultracite, and language-service consumers. `packages/backend` owns its package-local native compiler because Convex resolves it directly. Verify with `pnpm exec tsc --version`; use `pnpm exec tsc6 --version` only for compatibility diagnostics.
+- The root `typescript` package exposes the Effect-patched native TypeScript 7 compiler as `tsc`. The test policy uses its pinned native API and scopes the compiler process to each policy run. `packages/backend` owns its package-local native compiler because Convex resolves it directly. Verify with `pnpm exec tsc --version` from the root and backend. React Doctor manages its own TypeScript dependency in its separate `pnpm dlx` environment.
 - Formatting is owned by Ultracite. Use spaces, double quotes, `import type`, and clear external, workspace, then app-local import groups. Run `pnpm format` instead of hand-formatting.
 - New or touched app TypeScript modules use direct `@/` imports for same-app modules, including colocated modules and tests. Across workspaces use `@repo/*`. Prefer direct owning-file imports over new barrels.
 - New hand-written filenames use one domain word plus conventional suffixes such as `.client` or `.test`. Do not introduce hyphenated compound basenames.

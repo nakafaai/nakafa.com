@@ -55,6 +55,7 @@ export function TextPrompt({
   };
 
   return (
+    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: Drag handlers only reject files; the form itself does not expose a pointer action.
     <form
       className="w-full"
       onDragOver={handleDragOver}

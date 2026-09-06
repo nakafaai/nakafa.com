@@ -39,7 +39,7 @@ export const CLASS_IMAGES = new Map(CLASS_IMAGE_ENTRIES);
  */
 export function getRandomClassImage(text: string): SchoolClassImage {
   let hash = 0;
-  for (let i = 0; i < text.length; i++) {
+  for (let i = 0; i < text.length; i += 1) {
     hash = (hash * 31 + text.charCodeAt(i)) % 1_000_000_007;
   }
 
@@ -47,14 +47,9 @@ export function getRandomClassImage(text: string): SchoolClassImage {
   return CLASS_IMAGE_ENTRIES[index][0];
 }
 
-/**
- * Get the URL for a class image
- *
- * @param image - The class image to get the URL for
- * @returns The URL for the class image, or an empty string if the image is invalid
- */
+/** Returns the public asset URL for a validated class image. */
 export function getClassImageUrl(image: SchoolClassImage): string {
-  return CLASS_IMAGES.get(image) || "";
+  return `/classes/${image}.png`;
 }
 
 /**

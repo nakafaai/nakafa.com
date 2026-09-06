@@ -1,5 +1,7 @@
 "use client";
 
+import { selectFileBatch } from "@repo/design-system/lib/upload/selection";
+import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import {
@@ -110,64 +112,6 @@ export const useFileUpload = (
     []
   );
 
-  const validateFile = useCallback(
-    (file: File | FileMetadata): string | null => {
-      if (file instanceof File) {
-        if (file.size > maxSize) {
-          return t("exceeds-max-size", {
-            fileName: file.name,
-            maxSizeFormatted: formatBytes(maxSize),
-          });
-        }
-      } else if (file.size > maxSize) {
-        return t("exceeds-max-size-multiple", {
-          fileName: file.name,
-          maxSizeFormatted: formatBytes(maxSize),
-        });
-      }
-
-      if (accept !== "*") {
-        const acceptedTypes = accept.split(",").map((type) => type.trim());
-        const fileType = file instanceof File ? file.type || "" : file.type;
-        const fileName = file.name;
-        const fileNameParts = fileName.split(".");
-        const lastPart = fileNameParts.at(-1);
-        const fileExtension =
-          fileNameParts.length > 1 && lastPart
-            ? `.${lastPart.toLowerCase()}`
-            : "";
-
-        const hasExtension = acceptedTypes.some(
-          (type) => type.startsWith(".") && fileExtension === type.toLowerCase()
-        );
-
-        const hasMimeType =
-          fileType &&
-          acceptedTypes.some((type) => {
-            if (type.startsWith(".")) {
-              return false;
-            }
-            if (type.endsWith("/*")) {
-              const baseType = type.split("/")[0];
-              return fileType.startsWith(`${baseType}/`);
-            }
-            return fileType === type;
-          });
-
-        const isAccepted = hasExtension || hasMimeType;
-
-        if (!isAccepted) {
-          return t("not-accepted-file-type", {
-            fileName,
-          });
-        }
-      }
-
-      return null;
-    },
-    [accept, maxSize, t]
-  );
-
   const createPreview = useCallback(
     (file: File | FileMetadata): string | undefined => {
       if (!(file instanceof File)) {
@@ -235,102 +179,70 @@ export const useFileUpload = (
 
   const addFiles = useCallback(
     (newFiles: FileList | File[]) => {
-      if (!newFiles || newFiles.length === 0) {
+      if (newFiles.length === 0) {
         return;
       }
 
-      const newFilesArray = Array.from(newFiles);
       const currentFiles = filesRef.current;
-      const errors: string[] = [];
-
-      setState((prev) => ({ ...prev, errors: [] }));
-
-      if (
-        multiple &&
-        maxFiles !== Number.POSITIVE_INFINITY &&
-        currentFiles.length + newFilesArray.length > maxFiles
-      ) {
-        errors.push(t("max-files-exceeded", { maxFiles: maxFiles.toString() }));
+      const selection = Effect.runSync(
+        Effect.result(
+          selectFileBatch({
+            accept,
+            currentFiles: currentFiles.map(({ file }) => file),
+            files: Array.from(newFiles),
+            maxFiles,
+            maxSize,
+            multiple,
+          })
+        )
+      );
+      if (Result.isFailure(selection)) {
+        const errors = [
+          t("max-files-exceeded", {
+            maxFiles: selection.failure.maxFiles.toString(),
+          }),
+        ];
         setState((prev) => ({ ...prev, errors }));
         onError?.(errors);
         resetInput();
         return;
       }
-
-      const validFiles: FileWithPreview[] = [];
-
-      for (const file of newFilesArray) {
-        if (multiple) {
-          const isDuplicate = currentFiles.some(
-            (existingFile) =>
-              existingFile.file.name === file.name &&
-              existingFile.file.size === file.size
-          );
-
-          if (isDuplicate) {
-            continue;
+      const errors = selection.success.errors.map((error) => {
+        if (error._tag === "FileTypeError") {
+          return t("not-accepted-file-type", { fileName: error.fileName });
+        }
+        return t(
+          multiple ? "some-files-exceed-max-size" : "file-exceeds-max-size",
+          {
+            maxSizeFormatted: formatBytes(error.maxSize),
           }
-        }
-
-        if (file.size > maxSize) {
-          errors.push(
-            multiple
-              ? t("some-files-exceed-max-size", {
-                  maxSizeFormatted: formatBytes(maxSize),
-                })
-              : t("file-exceeds-max-size", {
-                  maxSizeFormatted: formatBytes(maxSize),
-                })
-          );
-          continue;
-        }
-
-        const error = validateFile(file);
-        if (error) {
-          errors.push(error);
-        } else {
-          validFiles.push({
-            file,
-            id: generateUniqueId(file),
-            preview: createPreview(file),
-          });
-        }
-      }
+        );
+      });
+      const validFiles = selection.success.files.map((file) => ({
+        file,
+        id: generateUniqueId(file),
+        preview: createPreview(file),
+      }));
+      setState((prev) => ({ ...prev, errors }));
 
       if (!multiple) {
         for (const file of currentFiles) {
           revokePreview(file);
         }
+      }
 
-        updateFiles(validFiles, errors);
-
+      if (!multiple || validFiles.length > 0) {
+        const updatedFiles = multiple
+          ? [...currentFiles, ...validFiles]
+          : validFiles;
+        updateFiles(updatedFiles, errors);
         if (validFiles.length > 0) {
           onFilesAdded?.(validFiles);
         }
-        onFilesChange?.(validFiles);
-
-        if (errors.length > 0) {
-          onError?.(errors);
-        }
-
-        resetInput();
-        return;
+        onFilesChange?.(updatedFiles);
       }
 
-      if (validFiles.length > 0) {
-        const updatedFiles = [...currentFiles, ...validFiles];
-        updateFiles(updatedFiles, errors);
-        onFilesAdded?.(validFiles);
-        onFilesChange?.(updatedFiles);
-
-        if (errors.length > 0) {
-          onError?.(errors);
-        }
-      } else if (errors.length > 0) {
-        setState((prev) => ({
-          ...prev,
-          errors,
-        }));
+      if (errors.length > 0) {
         onError?.(errors);
       }
 
@@ -340,7 +252,7 @@ export const useFileUpload = (
       maxFiles,
       multiple,
       maxSize,
-      validateFile,
+      accept,
       createPreview,
       generateUniqueId,
       revokePreview,

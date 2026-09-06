@@ -1,4 +1,4 @@
-export const learningPopularityWindowValues = [
+export const learningPopularityFiniteWindowValues = [
   "1d",
   "7d",
   "14d",
@@ -6,6 +6,13 @@ export const learningPopularityWindowValues = [
   "90d",
   "180d",
   "365d",
+] as const;
+
+export type LearningPopularityFiniteWindow =
+  (typeof learningPopularityFiniteWindowValues)[number];
+
+export const learningPopularityWindowValues = [
+  ...learningPopularityFiniteWindowValues,
   "lifetime",
 ] as const;
 
@@ -14,11 +21,16 @@ export type LearningPopularityWindow =
 
 export const learningPopularityScopeValues = ["global", "placement"] as const;
 
+export const learningPopularityRetentionPhaseValues = [
+  "viewers",
+  "signals",
+] as const;
+
 export type LearningPopularityScope =
   (typeof learningPopularityScopeValues)[number];
 
 const popularityWindowDayCounts: {
-  readonly [windowKey in Exclude<LearningPopularityWindow, "lifetime">]: number;
+  readonly [windowKey in LearningPopularityFiniteWindow]: number;
 } = {
   "1d": 1,
   "7d": 7,
@@ -65,18 +77,18 @@ export function getLifetimePopularityWindow(): LearningPopularityWindow {
  */
 export function isFinitePopularityWindow(
   windowKey: LearningPopularityWindow
-): windowKey is Exclude<LearningPopularityWindow, "lifetime"> {
+): windowKey is LearningPopularityFiniteWindow {
   return windowKey !== "lifetime";
 }
 
 /** Returns the finite popularity windows maintained from daily signal rows. */
 export function getFinitePopularityWindows() {
-  return learningPopularityWindowValues.filter(isFinitePopularityWindow);
+  return learningPopularityFiniteWindowValues;
 }
 
 /** Returns how many UTC signal days belong to one finite popularity window. */
 export function getPopularityWindowDayCount(
-  windowKey: Exclude<LearningPopularityWindow, "lifetime">
+  windowKey: LearningPopularityFiniteWindow
 ) {
   return popularityWindowDayCounts[windowKey];
 }
@@ -86,7 +98,7 @@ export function getPopularityWindowDayCount(
  * given refresh time.
  */
 export function getPopularityWindowStartDay(
-  windowKey: Exclude<LearningPopularityWindow, "lifetime">,
+  windowKey: LearningPopularityFiniteWindow,
   timestamp: number
 ) {
   const currentDay = getPopularitySignalDay(timestamp);
@@ -103,7 +115,7 @@ export function isPopularitySignalInWindow({
 }: {
   readonly signalDay: number;
   readonly timestamp: number;
-  readonly windowKey: Exclude<LearningPopularityWindow, "lifetime">;
+  readonly windowKey: LearningPopularityFiniteWindow;
 }) {
   const currentDay = getPopularitySignalDay(timestamp);
   const startDay = getPopularityWindowStartDay(windowKey, timestamp);

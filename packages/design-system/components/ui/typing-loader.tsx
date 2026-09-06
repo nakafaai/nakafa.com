@@ -1,6 +1,6 @@
 import { cn } from "@repo/design-system/lib/utils";
 
-const DOT_DELAY = 250;
+const DOT_DELAYS = [0, 250, 500];
 const DOT_SIZES = {
   sm: "h-1 w-1",
   md: "h-1.5 w-1.5",
@@ -27,16 +27,15 @@ export function TypingLoader({
         className
       )}
     >
-      {Array.from({ length: 3 }).map((_, i) => (
+      {DOT_DELAYS.map((delay) => (
         <div
           className={cn(
             "animate-[typing_1s_infinite] rounded-full bg-primary",
             DOT_SIZES[size]
           )}
-          // biome-ignore lint/suspicious/noArrayIndexKey: Dots are static and ordered, index is stable
-          key={`dot-${i + 1}`}
+          key={delay}
           style={{
-            animationDelay: `${i * DOT_DELAY}ms`,
+            animationDelay: `${delay}ms`,
           }}
         />
       ))}

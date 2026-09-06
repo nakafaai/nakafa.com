@@ -18,7 +18,7 @@ export function AiChatMessageContent() {
     <div className="flex flex-col gap-6">
       {parts.map((part, i) => (
         <AiMessagePart
-          // biome-ignore lint/suspicious/noArrayIndexKey: AI SDK 7 appends parts in place and text/reasoning parts expose no id. https://github.com/vercel/ai/blob/ai%407.0.58/packages/ai/src/ui/process-ui-message-stream.ts#L415-L495
+          // biome-ignore lint/suspicious/noArrayIndexKey: AI SDK 7.0.77 appends parts in place; text parts expose no id. https://github.com/vercel/ai/blob/ai%407.0.77/packages/ai/src/ui/process-ui-message-stream.ts#L427-L438
           key={`part-${part.type}-${i}`}
           part={part}
           partIndex={i}

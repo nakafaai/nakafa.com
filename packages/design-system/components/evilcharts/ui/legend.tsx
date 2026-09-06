@@ -49,6 +49,18 @@ function ChartLegendContent({
     return null;
   }
 
+  const items = new Map<string, LegendPayloadItem>();
+  for (const item of payload) {
+    if (item.type === "none") {
+      continue;
+    }
+
+    const itemKey = getLegendItemKey(item, nameKey);
+    if (!items.has(itemKey)) {
+      items.set(itemKey, item);
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -60,26 +72,19 @@ function ChartLegendContent({
         className
       )}
     >
-      {payload.map((item) => {
-        if (item.type === "none") {
-          return null;
-        }
-
-        const itemKey = getLegendItemKey(item, nameKey);
-        return (
-          <LegendItem
-            config={config}
-            hideIcon={hideIcon}
-            isClickable={isClickable}
-            item={item}
-            itemKey={itemKey}
-            key={itemKey}
-            onSelectChange={onSelectChange}
-            selected={selected}
-            variant={variant}
-          />
-        );
-      })}
+      {Array.from(items, ([itemKey, item]) => (
+        <LegendItem
+          config={config}
+          hideIcon={hideIcon}
+          isClickable={isClickable}
+          item={item}
+          itemKey={itemKey}
+          key={itemKey}
+          onSelectChange={onSelectChange}
+          selected={selected}
+          variant={variant}
+        />
+      ))}
     </div>
   );
 }

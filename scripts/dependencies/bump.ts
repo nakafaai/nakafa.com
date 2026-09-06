@@ -89,28 +89,14 @@ function decodeOutdatedDependencies(source: string) {
   );
 }
 
-/** Updates routine dependencies only after every safety policy passes. */
-export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
-  function* ({
-    inspectPolicy = inspectRepositoryPolicy,
-    root,
-    run = runPnpm,
-    writeError: writeErrorMessage = writeError,
-    writeOutput: writeOutputMessage = writeOutput,
-  }: BumpDependenciesOptions) {
-    const preflightProblems = yield* inspectPolicy(root);
-    if (preflightProblems.length > 0) {
-      yield* writeErrorMessage(`${preflightProblems.join("\n")}\n`);
-      return 1;
-    }
-
-    const update = yield* run(root, ["update", "--recursive", "--latest"]);
-    if (update.exitCode !== 0) {
-      return update.exitCode;
-    }
-
-    const problems = [...(yield* inspectPolicy(root))];
-
+/** Reviews held package versions and reports registry or metadata failures. */
+const reviewRegistryDependencies = Effect.fn("RepositoryPolicy.reviewRegistry")(
+  function* (
+    root: string,
+    run: typeof runPnpm,
+    writeOutputMessage: typeof writeOutput
+  ) {
+    const problems: string[] = [];
     for (const [registry, reviewedLatest, reason] of REGISTRY_REVIEWS) {
       const result = yield* run(root, ["view", registry, "version", "--json"], {
         capture: true,
@@ -140,6 +126,35 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
         `${registry}: reviewed ${reviewedLatest}. ${reason}\n`
       );
     }
+    return problems;
+  }
+);
+
+/** Updates routine dependencies only after every safety policy passes. */
+export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
+  function* ({
+    inspectPolicy = inspectRepositoryPolicy,
+    root,
+    run = runPnpm,
+    writeError: writeErrorMessage = writeError,
+    writeOutput: writeOutputMessage = writeOutput,
+  }: BumpDependenciesOptions) {
+    const preflightProblems = yield* inspectPolicy(root);
+    if (preflightProblems.length > 0) {
+      yield* writeErrorMessage(`${preflightProblems.join("\n")}\n`);
+      return 1;
+    }
+
+    const update = yield* run(root, ["update", "--recursive", "--latest"]);
+    if (update.exitCode !== 0) {
+      return update.exitCode;
+    }
+
+    const problems = [...(yield* inspectPolicy(root))];
+
+    problems.push(
+      ...(yield* reviewRegistryDependencies(root, run, writeOutputMessage))
+    );
 
     const token = yield* Config.option(Config.redacted("GITHUB_TOKEN"));
     const actionReviews = yield* githubActionReleaseReviews();

@@ -117,7 +117,6 @@ function describeDroppedArrayMaximum(
   if (left.maxItems === undefined && typeof right.maxItems === "number") {
     return `an array of at most ${right.maxItems} item(s)`;
   }
-  return;
 }
 
 /** Merges shared property metadata from multiple object union branches. */

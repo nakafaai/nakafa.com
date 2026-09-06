@@ -35,6 +35,4 @@ export function firstText(...values: (string | undefined)[]) {
       return text;
     }
   }
-
-  return;
 }

@@ -4,8 +4,6 @@ import {
   createHeadingLabel,
 } from "@repo/design-system/lib/markdown/headings";
 
-const HEADING_LEVELS = 6;
-
 /**
  * Extracts heading hierarchy from markdown content.
  * Parses markdown headings (h1-h6) and builds a nested structure for TOC generation.
@@ -27,47 +25,26 @@ export function getHeadings(content: string): ParsedHeading[] {
     .replace(/~~~[\s\S]*?~~~/g, "");
 
   const markdownHeadingRegex = /^\s*(#{1,6})(?:\s+(.*))?$/gm;
-  const markdownMatches = Array.from(
-    cleanedContent.matchAll(markdownHeadingRegex)
-  );
+  const headings: ParsedHeading[] = [];
+  const ancestors: { level: number; heading: ParsedHeading }[] = [];
 
-  if (markdownMatches && markdownMatches.length > 0) {
-    const headings: ParsedHeading[] = [];
-    const lastHeadingAtLevel: ParsedHeading[] = new Array(HEADING_LEVELS + 1);
-
-    for (const match of markdownMatches) {
-      const level = match[1].length;
-      const text = match[2] ? match[2].trim() : "";
-      const slug = createHeadingId(text);
-
-      const heading: ParsedHeading = {
-        label: createHeadingLabel(text),
-        href: `#${slug}`,
-        children: [],
-      };
-
-      lastHeadingAtLevel[level] = heading;
-
-      if (level === 1) {
-        headings.push(heading);
-      } else {
-        let parentLevel = level - 1;
-        while (parentLevel > 0 && !lastHeadingAtLevel[parentLevel]) {
-          parentLevel -= 1;
-        }
-
-        if (parentLevel > 0 && lastHeadingAtLevel[parentLevel]) {
-          lastHeadingAtLevel[parentLevel].children.push(heading);
-        } else {
-          headings.push(heading);
-        }
-      }
+  for (const match of cleanedContent.matchAll(markdownHeadingRegex)) {
+    const level = match[1].length;
+    const text = match[2]?.trim() ?? "";
+    const heading: ParsedHeading = {
+      label: createHeadingLabel(text),
+      href: `#${createHeadingId(text)}`,
+      children: [],
+    };
+    const peerIndex = ancestors.findIndex((parent) => parent.level >= level);
+    if (peerIndex >= 0) {
+      ancestors.length = peerIndex;
     }
-
-    return headings;
+    const siblings = ancestors.at(-1)?.heading.children ?? headings;
+    siblings.push(heading);
+    ancestors.push({ level, heading });
   }
-
-  return [];
+  return headings;
 }
 
 /**

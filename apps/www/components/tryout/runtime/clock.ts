@@ -35,7 +35,7 @@ function emptySubscribe() {
 
 /** No-op unsubscribe for inactive timer subscribers. */
 function noop() {
-  return;
+  // An inactive clock has no timer to release.
 }
 
 /** Returns the current browser timestamp for active timer subscribers. */

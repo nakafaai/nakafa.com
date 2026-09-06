@@ -46,6 +46,42 @@ function getAnalyticsContext(item: QueuedLearningEngagement) {
   };
 }
 
+/** Encodes one metrics identity without delimiter collisions. */
+function encodeMetricsKey(parts: readonly (number | string)[]) {
+  return JSON.stringify(parts);
+}
+
+/**
+ * Groups one queue page by popularity identity while bounding each atomic unit.
+ * Map insertion order preserves the first queued occurrence of every identity.
+ */
+export function groupMetricsQueueItems(
+  queueItems: readonly QueuedLearningEngagement[],
+  groupSize: number
+) {
+  const identities = new Map<string, QueuedLearningEngagement[][]>();
+
+  for (const queueItem of queueItems) {
+    const key = encodeMetricsKey([
+      queueItem.partition,
+      queueItem.scopeMode,
+      queueItem.content_id,
+      queueItem.contextKey,
+    ]);
+    const groups = identities.get(key) ?? [];
+    const current = groups.at(-1);
+
+    if (current && current.length < groupSize) {
+      current.push(queueItem);
+    } else {
+      groups.push([queueItem]);
+    }
+    identities.set(key, groups);
+  }
+
+  return [...identities.values()].flat();
+}
+
 /** Creates the first aggregate row for one queued engagement item. */
 function createAnalyticsCount(item: QueuedLearningEngagement) {
   return {
@@ -78,6 +114,7 @@ function createPopularityCounterDelta(
 ) {
   return {
     ...createAnalyticsCount(item),
+    latestDay: getPopularitySignalDay(item.viewedAt),
     windowKey,
   };
 }
@@ -126,18 +163,25 @@ export function buildMetricsBatch({
 
   for (const queueItem of queueItems) {
     const signalDay = getPopularitySignalDay(queueItem.viewedAt);
-    const signalKey = [
+    const signalKey = encodeMetricsKey([
       queueItem.scopeMode,
       signalDay,
       queueItem.content_id,
       queueItem.contextKey,
-    ].join(":");
-    const signalCount = signals.get(signalKey);
+    ]);
+    if (
+      isPopularitySignalInWindow({
+        signalDay,
+        timestamp: updatedAt,
+        windowKey: "365d",
+      })
+    ) {
+      const signalCount = signals.get(signalKey);
 
-    if (signalCount) {
-      signalCount.viewCount += 1;
-    } else {
-      signals.set(signalKey, createPopularitySignalDelta(queueItem));
+      signals.set(signalKey, {
+        ...createPopularitySignalDelta(queueItem),
+        viewCount: (signalCount?.viewCount ?? 0) + 1,
+      });
     }
 
     for (const windowKey of learningPopularityWindowValues) {
@@ -151,16 +195,23 @@ export function buildMetricsBatch({
         continue;
       }
 
-      const counterKey = [
+      const counterKey = encodeMetricsKey([
         windowKey,
         queueItem.scopeMode,
         queueItem.content_id,
         queueItem.contextKey,
-      ].join(":");
+      ]);
       const counterCount = counters.get(counterKey);
 
       if (counterCount) {
-        counterCount.viewCount += 1;
+        const latest =
+          signalDay >= counterCount.latestDay
+            ? createPopularityCounterDelta(queueItem, windowKey)
+            : counterCount;
+        counters.set(counterKey, {
+          ...latest,
+          viewCount: counterCount.viewCount + 1,
+        });
       } else {
         counters.set(
           counterKey,
