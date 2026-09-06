@@ -31,7 +31,7 @@ export async function getUserMap(ctx: QueryCtx, userIds: Id<"users">[]) {
 
   const entries: [Id<"users">, UserData][] = [];
 
-  for (let i = 0; i < uniqueUserIds.length; i++) {
+  for (let i = 0; i < uniqueUserIds.length; i += 1) {
     const user = users[i];
     if (!user) {
       continue;

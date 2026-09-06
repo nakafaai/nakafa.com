@@ -51,8 +51,6 @@ function getErrorDigest(error: unknown) {
   ) {
     return error.digest;
   }
-
-  return;
 }
 
 /** Loads Node-only reporting and captures one Next.js request failure. */

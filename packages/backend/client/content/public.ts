@@ -64,7 +64,6 @@ function getVerificationRenderer(
   if (response.kind === "found") {
     return response.rendererManifest;
   }
-  return;
 }
 /** Reads one public response without trusting its advertised size or shape. */
 const readPublicRuntimeResponse = Effect.fn(

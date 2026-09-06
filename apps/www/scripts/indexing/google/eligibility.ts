@@ -81,7 +81,6 @@ const readEligibleGoogleIndexingUrl = Effect.fn(
       return url;
     }
   }
-  return;
 });
 /** Extracts JSON-LD script bodies from a live HTML document. */
 function readJsonLdScriptBodies(html: string) {

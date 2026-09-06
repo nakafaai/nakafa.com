@@ -51,8 +51,6 @@ export const fetchSourceMarkdown = Effect.fn("research.fetchSourceMarkdown")(
 
       return text;
     }
-
-    return;
   }
 );
 

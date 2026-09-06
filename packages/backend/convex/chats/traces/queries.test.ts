@@ -143,7 +143,7 @@ describe("chats/traces", () => {
         visibility: "private",
       });
 
-      for (let index = 0; index < CAPABILITY_TRACE_BATCH_SIZE + 1; index++) {
+      for (let index = 0; index < CAPABILITY_TRACE_BATCH_SIZE + 1; index += 1) {
         await ctx.db.insert("ninaCapabilityTraces", {
           capability: "nakafa",
           chatId,

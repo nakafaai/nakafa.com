@@ -146,9 +146,6 @@
   ],
   "linter": {
     "rules": {
-      "complexity": {
-        "noUselessReturn": "off"
-      },
       "suspicious": {
         "noEqualsToNull": "off",
         "noLeakedRender": "off",
@@ -161,7 +158,6 @@
         "noJsxPropsBind": "off"
       },
       "style": {
-        "noIncrementDecrement": "off",
         "useConsistentMethodSignatures": "off",
         "useDestructuring": "off"
       }

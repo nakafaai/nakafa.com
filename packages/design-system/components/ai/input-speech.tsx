@@ -85,7 +85,7 @@ function getServerSpeechRecognitionSnapshot() {
   return false;
 }
 function unsubscribeSpeechRecognitionAvailability() {
-  return;
+  // Availability is fixed for this document, so no subscription was created.
 }
 /** Browser support is stable for a document lifetime, so no change events exist. */
 function subscribeSpeechRecognitionAvailability(_listener: () => void) {

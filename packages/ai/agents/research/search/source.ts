@@ -110,6 +110,4 @@ function getSearchDescription(
   if ("snippet" in result && result.snippet) {
     return result.snippet;
   }
-
-  return;
 }

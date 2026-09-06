@@ -23,7 +23,7 @@ import { useUser } from "@/lib/context/use-user";
 
 /** Ignores submits while the active chat payload is loading. */
 function ignorePlaceholderSubmit() {
-  return;
+  // The loading placeholder has no chat data to submit.
 }
 
 /** Connects the selected chat document to the sheet chat UI. */

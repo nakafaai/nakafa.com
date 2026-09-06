@@ -35,7 +35,7 @@ export const estimateIrtScore = Effect.fn("tryouts.runtime.estimateIrtScore")(
 
     let theta = 0;
 
-    for (let index = 0; index < THETA_ITERATIONS; index++) {
+    for (let index = 0; index < THETA_ITERATIONS; index += 1) {
       const iteration = getThetaStep(itemAnswers, theta);
       if (
         !(
@@ -69,12 +69,6 @@ export const estimateIrtScore = Effect.fn("tryouts.runtime.estimateIrtScore")(
 
     const publishedScore = getPublishedIrtScore(theta);
     const thetaSE = 1 / Math.sqrt(information);
-    if (!(Number.isFinite(publishedScore) && Number.isFinite(thetaSE))) {
-      return yield* irtEstimationError(
-        "TRYOUT_IRT_ESTIMATE_INVALID",
-        "IRT scoring produced a non-finite estimate."
-      );
-    }
 
     return {
       publishedScore,

@@ -48,7 +48,6 @@ export default function NavigationLink({
     if (isActive) {
       return "page";
     }
-    return;
   }, [isActive]);
 
   return <Link aria-current={ariaCurrent} href={cleanHref} {...props} />;

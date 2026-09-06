@@ -9,8 +9,6 @@ function readTargetLocale(value: string | null) {
   if (value && hasLocale(routing.locales, value)) {
     return value;
   }
-
-  return;
 }
 
 /**

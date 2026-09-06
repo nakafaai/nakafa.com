@@ -77,10 +77,10 @@ function distributeColors(colorsArray: string[], maxCount: number): string[] {
 
   // First (availableCount - extraSlots) colors get baseSlots each.
   // Last extraSlots colors get (baseSlots + 1) each.
-  for (let colorIndex = 0; colorIndex < availableCount; colorIndex++) {
+  for (let colorIndex = 0; colorIndex < availableCount; colorIndex += 1) {
     const isExtraColor = colorIndex >= availableCount - extraSlots;
     const slotsForThisColor = baseSlots + (isExtraColor ? 1 : 0);
-    for (let slot = 0; slot < slotsForThisColor; slot++) {
+    for (let slot = 0; slot < slotsForThisColor; slot += 1) {
       result.push(colorsArray[colorIndex]);
     }
   }

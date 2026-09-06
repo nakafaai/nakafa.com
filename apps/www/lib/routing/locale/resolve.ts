@@ -36,8 +36,6 @@ function readLocale(value: string | undefined) {
   if (value && hasLocale(routing.locales, value)) {
     return value;
   }
-
-  return;
 }
 
 /**

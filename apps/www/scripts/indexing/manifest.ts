@@ -39,11 +39,11 @@ export function forEachSiteIndexUrlBatch<Success, Failure, Requirements>(
       const entries = yield* getSitemapEntries({ pageId: descriptor.id });
 
       for (const entry of entries) {
-        canonicalUrlCount++;
+        canonicalUrlCount += 1;
         currentBatch.push(entry.url);
 
         if (currentBatch.length >= batchSize) {
-          batchIndex++;
+          batchIndex += 1;
           yield* process({ batchIndex, urls: currentBatch });
           currentBatch = [];
         }
@@ -51,7 +51,7 @@ export function forEachSiteIndexUrlBatch<Success, Failure, Requirements>(
     }
 
     if (currentBatch.length > 0) {
-      batchIndex++;
+      batchIndex += 1;
       yield* process({ batchIndex, urls: currentBatch });
     }
 
