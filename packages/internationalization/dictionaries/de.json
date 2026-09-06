@@ -94,6 +94,7 @@
     "copy-success": "Kopiert!",
     "copy-error": "Kopieren nicht möglich",
     "open": "Öffnen",
+    "open-in": "Öffnen in",
     "open-in-github": "In GitHub öffnen",
     "open-in-chatgpt": "In ChatGPT öffnen",
     "open-in-claude": "In Claude öffnen",

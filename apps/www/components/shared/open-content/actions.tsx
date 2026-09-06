@@ -1,34 +1,32 @@
 "use client";
 
 import {
-  ArrowDown01Icon,
+  ArrowUpRight01Icon,
   Copy01Icon,
   LinkSquare02Icon,
-  Tick01Icon,
+  MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
-import { useDisclosure, useTimeout } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import {
   BrandLogo,
   type BrandLogoName,
 } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  ButtonGroup,
-  ButtonGroupSeparator,
-} from "@repo/design-system/components/ui/button-group";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { copyOpenContent } from "@/components/shared/open-content/copy";
 
@@ -49,18 +47,15 @@ export function OpenContent({
   content,
   copySourceUrl,
   sourceUrl,
+  children,
 }: {
+  children?: ReactNode;
   slug: string;
   content?: string;
   copySourceUrl?: null | string;
   sourceUrl?: null | string;
 }) {
   const t = useTranslations("Common");
-  const [copied, setCopied] = useState(false);
-  const { clear: clearCopiedTimeout, start: startCopiedTimeout } = useTimeout(
-    () => setCopied(false),
-    500
-  );
   const [open, { close, set }] = useDisclosure(false);
   const [isCopying, setIsCopying] = useState(false);
   const copyAbortController = useRef<AbortController | null>(null);
@@ -69,12 +64,10 @@ export function OpenContent({
     () => () => {
       copyAbortController.current?.abort();
       copyAbortController.current = null;
-      clearCopiedTimeout();
-      setCopied(false);
       setIsCopying(false);
       close();
     },
-    [clearCopiedTimeout, close]
+    [close]
   );
 
   /** Copies preview source directly or loads immutable published source. */
@@ -96,9 +89,6 @@ export function OpenContent({
           ),
         onSuccess: () =>
           Effect.sync(() => {
-            clearCopiedTimeout();
-            setCopied(true);
-            startCopiedTimeout();
             toast.success(t("copy-success"), { position: "bottom-center" });
           }),
       }),
@@ -152,52 +142,59 @@ export function OpenContent({
   );
 
   return (
-    <ButtonGroup>
-      <Button
-        disabled={isCopying || !(content || copySourceUrl)}
-        onClick={handleCopy}
-        variant="secondary"
-      >
-        <HugeIcons icon={copied ? Tick01Icon : Copy01Icon} />
-        {t("copy-content")}
-      </Button>
-
-      <ButtonGroupSeparator />
-
-      <DropdownMenu onOpenChange={set} open={open}>
-        <DropdownMenuTrigger
-          render={
-            <Button aria-label={t("open")} size="icon" variant="secondary" />
-          }
-        >
-          <span className="sr-only">{t("open")}</span>
-          <HugeIcons
-            className={cn("transition-transform", open && "rotate-180")}
-            icon={ArrowDown01Icon}
+    <DropdownMenu onOpenChange={set} open={open}>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label={t("more-actions")}
+            size="icon"
+            variant="outline"
           />
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent className="w-56">
-          <DropdownMenuGroup>
-            {links.map((item) => (
-              <DropdownMenuItem
-                key={item.title}
-                render={
-                  <Link
-                    href={item.href}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <BrandLogo name={item.logo} />
-                    {item.title}
-                    <HugeIcons className="ms-auto" icon={LinkSquare02Icon} />
-                  </Link>
-                }
-              />
-            ))}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </ButtonGroup>
+        }
+      >
+        <HugeIcons icon={MoreHorizontalIcon} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuGroup>
+          {children}
+          <DropdownMenuItem
+            disabled={isCopying || !(content || copySourceUrl)}
+            onClick={handleCopy}
+          >
+            <HugeIcons icon={Copy01Icon} />
+            {t("copy-content")}
+          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <HugeIcons icon={ArrowUpRight01Icon} />
+              {t("open-in")}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="w-56">
+              <DropdownMenuGroup>
+                {links.map((item) => (
+                  <DropdownMenuItem
+                    key={item.title}
+                    render={
+                      <Link
+                        href={item.href}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <BrandLogo name={item.logo} />
+                        {item.title}
+                        <HugeIcons
+                          className="ms-auto"
+                          icon={LinkSquare02Icon}
+                        />
+                      </Link>
+                    }
+                  />
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -1,13 +1,8 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { OpenContent } from "@/components/shared/open-content/actions";
 
 interface Props {
-  /** The raw content, used for copying */
-  content?: string;
-  /** Immutable raw content URL, fetched only when copying */
-  copySourceUrl?: null | string;
   /** The description of the content */
   description?: string;
   /** BCP 47 language of the description when it differs from the page */
@@ -19,25 +14,17 @@ interface Props {
     href: string;
     label: string;
   };
-  /** The slug of the content */
-  slug?: string;
-  /** Exact reviewed source URL, null when no immutable source exists */
-  sourceUrl?: null | string;
   /** The title of the content */
   title: string;
 }
 
-/** Renders one content heading with its metadata and reviewed source actions. */
+/** Renders the content title, optional parent link, and description. */
 export function HeaderContent({
   title,
   link,
   description,
   descriptionLanguage,
   icon: Icon,
-  slug,
-  sourceUrl,
-  content,
-  copySourceUrl,
 }: Props) {
   return (
     <header className="relative py-20">
@@ -72,15 +59,6 @@ export function HeaderContent({
               {description}
             </p>
           </div>
-        )}
-
-        {!!slug && (
-          <OpenContent
-            content={content}
-            copySourceUrl={copySourceUrl}
-            slug={slug}
-            sourceUrl={sourceUrl}
-          />
         )}
       </div>
     </header>

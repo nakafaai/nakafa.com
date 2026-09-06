@@ -21,16 +21,20 @@ import {
   toMaterialHref,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
+import { AiMenuItem } from "@/components/ai/menu";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ContentDates } from "@/components/content/dates";
+import { ContentHeader } from "@/components/content/header";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialToc } from "@/components/shared/material/toc";
+import { MaterialOutline } from "@/components/shared/material/toc";
+import { OpenContent } from "@/components/shared/open-content/actions";
 import { PaginationContent } from "@/components/shared/pagination-content";
+import { SidebarRightProvider } from "@/components/shared/sidebar-right";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getPublishedMaterialContext } from "@/lib/content/material/context";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
@@ -254,43 +258,47 @@ async function MaterialLessonPage({
         educationalLevel={parentTitle}
         name={metadata.title}
       />
-      <LayoutMaterialContent>
-        <HeaderContent
-          content={copyContent}
-          copySourceUrl={copySourceUrl}
-          icon={icon}
-          link={headerLink ?? { href: "/home", label: tCommon("home") }}
-          slug={toMaterialHref(route)}
-          sourceUrl={sourceUrl}
-          title={metadata.title}
+      <SidebarRightProvider>
+        <LayoutMaterialContent>
+          <ContentHeader items={headerLink ? [headerLink] : []}>
+            <OpenContent
+              content={copyContent}
+              copySourceUrl={copySourceUrl}
+              slug={toMaterialHref(route)}
+              sourceUrl={sourceUrl}
+            >
+              {showComments && <AiMenuItem contextTitle={metadata.title} />}
+            </OpenContent>
+          </ContentHeader>
+          <HeaderContent icon={icon} title={metadata.title} />
+          <ContentDates
+            {...(metadata.dateModified === undefined
+              ? {}
+              : { dateModified: metadata.dateModified })}
+            datePublished={metadata.datePublished}
+          />
+          <LayoutContent>
+            {headings.length === 0 && <ComingSoon />}
+            {headings.length > 0 ? children : null}
+          </LayoutContent>
+          <PaginationContent pagination={pagination} />
+          {footer ? <FooterContent>{footer}</FooterContent> : null}
+          {toolbar}
+        </LayoutMaterialContent>
+        <MaterialOutline
+          chapters={{
+            label: tCommon("on-this-page"),
+            data: headings,
+          }}
+          githubUrl={sourceUrl ?? undefined}
+          header={{
+            title: metadata.title,
+            href: currentHref,
+            description: metadata.description ?? metadata.subject,
+          }}
+          showComments={showComments}
         />
-        <ContentDates
-          {...(metadata.dateModified === undefined
-            ? {}
-            : { dateModified: metadata.dateModified })}
-          datePublished={metadata.datePublished}
-        />
-        <LayoutContent>
-          {headings.length === 0 && <ComingSoon />}
-          {headings.length > 0 ? children : null}
-        </LayoutContent>
-        <PaginationContent pagination={pagination} />
-        {footer ? <FooterContent>{footer}</FooterContent> : null}
-        {toolbar}
-      </LayoutMaterialContent>
-      <LayoutMaterialToc
-        chapters={{
-          label: tCommon("on-this-page"),
-          data: headings,
-        }}
-        githubUrl={sourceUrl ?? undefined}
-        header={{
-          title: metadata.title,
-          href: currentHref,
-          description: metadata.description ?? metadata.subject,
-        }}
-        showComments={showComments}
-      />
+      </SidebarRightProvider>
     </>
   );
 }

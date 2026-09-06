@@ -104,35 +104,62 @@ export function SidebarRight({
   ...props
 }: SidebarRightProps) {
   return (
-    <aside>
-      <SidebarProvider
-        cookieName="sidebar_state:right"
-        keyboardShortcut="x"
-        sidebarDesktop={1280}
-      >
-        {/* Mobile trigger button */}
+    <div className="shrink-0">
+      <SidebarRightProvider>
         <SidebarTrigger
           className="fixed top-20 right-6 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
           icon={Menu02Icon}
           size="icon"
           variant="outline"
         />
-
-        {/* Right sidebar */}
-        <Sidebar
-          containerClassName="lg:hidden xl:block"
-          side="right"
+        <SidebarRightPanel
+          githubUrl={githubUrl}
+          header={header}
+          references={references}
+          showComments={showComments}
           {...props}
         >
-          <SidebarRightHeader header={header} />
-          <SidebarContent>{children}</SidebarContent>
-          <SidebarRightFooter
-            githubUrl={githubUrl}
-            references={references}
-            showComments={showComments}
-          />
-        </Sidebar>
-      </SidebarProvider>
+          {children}
+        </SidebarRightPanel>
+      </SidebarRightProvider>
+    </div>
+  );
+}
+
+/** Shares outline state with controls composed anywhere within the page. */
+export function SidebarRightProvider({ children }: { children: ReactNode }) {
+  return (
+    <SidebarProvider
+      className="min-w-0"
+      cookieName="sidebar_state:right"
+      keyboardShortcut="x"
+      sidebarDesktop={1279.98}
+    >
+      {children}
+    </SidebarProvider>
+  );
+}
+
+/** Renders the outline panel using the page's nearest sidebar provider. */
+export function SidebarRightPanel({
+  children,
+  header,
+  references,
+  githubUrl,
+  showComments,
+  ...props
+}: SidebarRightProps) {
+  return (
+    <aside>
+      <Sidebar containerClassName="lg:hidden xl:block" side="right" {...props}>
+        <SidebarRightHeader header={header} />
+        <SidebarContent>{children}</SidebarContent>
+        <SidebarRightFooter
+          githubUrl={githubUrl}
+          references={references}
+          showComments={showComments}
+        />
+      </Sidebar>
     </aside>
   );
 }

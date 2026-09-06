@@ -17,6 +17,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { ReactNode } from "react";
+import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
 const VISIBLE_PATH_ITEM_COUNT = 2;
 
@@ -38,49 +39,49 @@ export interface BreadcrumbHeaderValue {
 /** Renders at most Home and the two nearest path items. */
 export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
   const { action, homeLabel, items, menuLabel, title } = value;
-  const hiddenItems = items.slice(0, -VISIBLE_PATH_ITEM_COUNT);
-  const visibleItems = items.slice(-VISIBLE_PATH_ITEM_COUNT);
-
   return (
-    <header className="sticky top-16 z-10 flex min-h-16 w-full shrink-0 border-b bg-background lg:top-0">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-6 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-0">
-        <h1 className="sr-only">{title}</h1>
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                render={<IntentLink href="/home">{homeLabel}</IntentLink>}
-              />
-            </BreadcrumbItem>
-            <HiddenBreadcrumbs items={hiddenItems} menuLabel={menuLabel} />
-            {visibleItems.map((item, index) => (
-              <BreadcrumbSegment
-                isCurrent={index === visibleItems.length - 1}
-                item={item}
-                key={`${item.label}:${item.href ?? "current"}`}
-              />
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
-        {action}
-      </div>
-    </header>
+    <BreadcrumbHeaderFrame>
+      <h1 className="sr-only">{title}</h1>
+      <BreadcrumbHeaderPath
+        homeLabel={homeLabel}
+        items={items.map((item, index) =>
+          index === items.length - 1 ? { ...item, href: undefined } : item
+        )}
+        menuLabel={menuLabel}
+      />
+      {action}
+    </BreadcrumbHeaderFrame>
   );
 }
 
-/** Renders the collapsed breadcrumb group only when the path exceeds its cap. */
-function HiddenBreadcrumbs({
+/** Bounded path navigation with linked parents and one collapsed middle group. */
+export function BreadcrumbHeaderPath({
+  homeLabel,
   items,
   menuLabel,
-}: {
-  items: readonly BreadcrumbHeaderItem[];
-  menuLabel: string;
-}) {
-  if (items.length === 0) {
-    return null;
-  }
-
-  return <BreadcrumbMenu items={items} menuLabel={menuLabel} />;
+}: Pick<BreadcrumbHeaderValue, "homeLabel" | "items" | "menuLabel">) {
+  const hiddenItems = items.slice(0, -VISIBLE_PATH_ITEM_COUNT);
+  const visibleItems = items.slice(-VISIBLE_PATH_ITEM_COUNT);
+  return (
+    <Breadcrumb className="min-w-0">
+      <BreadcrumbList className="flex-nowrap">
+        <BreadcrumbItem className="shrink-0">
+          <BreadcrumbLink
+            render={<IntentLink href="/home">{homeLabel}</IntentLink>}
+          />
+        </BreadcrumbItem>
+        {hiddenItems.length > 0 && (
+          <BreadcrumbMenu items={hiddenItems} menuLabel={menuLabel} />
+        )}
+        {visibleItems.map((item) => (
+          <BreadcrumbSegment
+            item={item}
+            key={`${item.label}:${item.href ?? "current"}`}
+          />
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
 }
 
 /** Renders collapsed middle breadcrumb items inside an ellipsis menu. */
@@ -93,8 +94,8 @@ function BreadcrumbMenu({
 }) {
   return (
     <>
-      <BreadcrumbSeparator />
-      <BreadcrumbItem>
+      <BreadcrumbSeparator className="shrink-0" />
+      <BreadcrumbItem className="min-w-0">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -140,19 +141,13 @@ function BreadcrumbMenuItem({ item }: { item: BreadcrumbHeaderItem }) {
 }
 
 /** Renders one visible current or linked breadcrumb segment. */
-function BreadcrumbSegment({
-  isCurrent,
-  item,
-}: {
-  isCurrent: boolean;
-  item: BreadcrumbHeaderItem;
-}) {
-  if (isCurrent || !item.href) {
+function BreadcrumbSegment({ item }: { item: BreadcrumbHeaderItem }) {
+  if (!item.href) {
     return (
       <>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage>{item.label}</BreadcrumbPage>
+        <BreadcrumbSeparator className="shrink-0" />
+        <BreadcrumbItem className="min-w-0">
+          <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
         </BreadcrumbItem>
       </>
     );
@@ -160,9 +155,10 @@ function BreadcrumbSegment({
 
   return (
     <>
-      <BreadcrumbSeparator />
-      <BreadcrumbItem>
+      <BreadcrumbSeparator className="shrink-0" />
+      <BreadcrumbItem className="min-w-0">
         <BreadcrumbLink
+          className="truncate"
           render={<IntentLink href={item.href}>{item.label}</IntentLink>}
         />
       </BreadcrumbItem>

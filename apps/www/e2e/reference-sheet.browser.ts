@@ -22,12 +22,9 @@ const verifyCompactReferenceSheet = Effect.fn(
     readinessTimeoutMilliseconds
   );
 
-  const rightSidebar = page.locator("aside").filter({
-    has: page.locator('[data-slot="sidebar"][data-side="right"]'),
-  });
-  const sidebarTrigger = rightSidebar.getByRole("button", {
+  const sidebarTrigger = page.getByRole("button", {
     exact: true,
-    name: "Toggle Sidebar",
+    name: "Pada halaman ini",
   });
   yield* Effect.promise(() => expect(sidebarTrigger).toBeVisible());
   yield* Effect.promise(() => sidebarTrigger.click());

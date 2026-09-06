@@ -94,6 +94,7 @@
     "copy-success": "Udah disalin!",
     "copy-error": "Gagal nyalin nih",
     "open": "Buka",
+    "open-in": "Buka di",
     "open-in-github": "Buka di GitHub",
     "open-in-chatgpt": "Buka di ChatGPT",
     "open-in-claude": "Buka di Claude",
