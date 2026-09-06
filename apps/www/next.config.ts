@@ -197,9 +197,6 @@ const nextConfig = {
   // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/output
   // `process.cwd()` resolves to the app directory (`apps/www`) during Next.js
   // config loading, so walking up two levels targets the monorepo root.
-  outputFileTracingExcludes: {
-    "/*": ["../../.cache/runtime/**"],
-  },
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
@@ -210,6 +207,10 @@ const nextConfig = {
   headers: createAppHeaders,
   experimental: {
     ...config.experimental,
+    // Cold builds must fit the 8 GB production builder without retaining the
+    // persistent compiler graph for disk-cache serialization.
+    // https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopackFileSystemCache
+    turbopackFileSystemCacheForBuild: false,
     ...(configEnv.NEXT_EXPOSE_TESTING_API === "true"
       ? { exposeTestingApiInProductionBuild: true }
       : {}),
