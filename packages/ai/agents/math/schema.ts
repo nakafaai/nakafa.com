@@ -1,7 +1,5 @@
-import {
-  createEffectSchema,
-  providerCompatibleObjectSchema,
-} from "@repo/ai/lib/effect-schema";
+import { createEffectSchema } from "@repo/ai/lib/effect-schema";
+import { providerCompatibleObjectSchema } from "@repo/ai/schema/provider";
 import { MathAlgebraInputSchema } from "@repo/math/schema/tool/algebra";
 import { MathArithmeticInputSchema } from "@repo/math/schema/tool/arithmetic";
 import { MathCalculusInputSchema } from "@repo/math/schema/tool/calculus";

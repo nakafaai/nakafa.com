@@ -8,8 +8,8 @@ import {
   InvalidCheckoutSuccessUrl,
   invalidCheckoutSuccessUrlCode,
 } from "@repo/backend/convex/customers/checkout/spec";
+import { readSiteUrl } from "@repo/backend/convex/site/config";
 import { products } from "@repo/backend/convex/utils/polar/products";
-import { siteOrigin } from "@repo/backend/convex/utils/site";
 import { Effect } from "effect";
 
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];
@@ -33,13 +33,14 @@ const invalidSuccessUrl = (message: string) =>
 export const validateCheckoutRequest = Effect.fn(
   "customers.checkout.validateCheckoutRequest"
 )(function* (input: CheckoutRequestInput) {
+  const siteUrl = yield* readSiteUrl();
   const successUrl = yield* Effect.try({
     try: () => new URL(input.successUrl),
     catch: () =>
       invalidSuccessUrl("Checkout success URL must be a valid absolute URL."),
   });
 
-  if (successUrl.origin !== siteOrigin) {
+  if (successUrl.origin !== siteUrl.origin) {
     return yield* invalidSuccessUrl(
       "Checkout success URL must stay on the primary site origin."
     );

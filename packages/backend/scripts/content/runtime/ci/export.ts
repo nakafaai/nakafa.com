@@ -7,10 +7,7 @@ import {
   type ManifestEntry,
 } from "@repo/backend/content/snapshot/codec";
 import { contentSnapshotError } from "@repo/backend/content/snapshot/error";
-import {
-  decodeJsonRows,
-  type JsonObject,
-} from "@repo/backend/content/snapshot/json";
+import type { JsonObject } from "@repo/backend/content/snapshot/json";
 import { projectActiveRuntime } from "@repo/backend/content/snapshot/projection";
 import {
   buildRuntimeGenerations,
@@ -22,7 +19,7 @@ import {
   readContentRuntimeSchemaFingerprint,
 } from "@repo/backend/content/snapshot/tables";
 import { createEncryptedArchive } from "@repo/backend/scripts/content/runtime/ci/archive";
-import { runConvexData } from "@repo/backend/scripts/content/runtime/ci/command";
+import { readProductionTable } from "@repo/backend/scripts/content/runtime/ci/command";
 import type { ExportConfig } from "@repo/backend/scripts/content/runtime/ci/config";
 import { readProductionGenerations } from "@repo/backend/scripts/content/runtime/ci/generation";
 import { Console, Effect, FileSystem, Redacted } from "effect";
@@ -57,12 +54,9 @@ export const exportSignedRuntime = Effect.fn(
       directory: config.runnerTemp,
       prefix: "runtime-export-",
     });
-    const gpgHome = `${tempRoot}/gnupg`;
     const snapshotRoot = `${tempRoot}/snapshot`;
-    yield* fileSystem.makeDirectory(gpgHome);
     yield* fileSystem.makeDirectory(snapshotRoot);
     yield* fileSystem.chmod(tempRoot, 0o700);
-    yield* fileSystem.chmod(gpgHome, 0o700);
     yield* fileSystem.chmod(snapshotRoot, 0o700);
 
     const deployKey = Redacted.value(config.deployKey);
@@ -71,18 +65,11 @@ export const exportSignedRuntime = Effect.fn(
     const source = new Map<RuntimeTable, readonly JsonObject[]>();
 
     for (const table of CONTENT_RUNTIME_TABLES) {
-      const sourcePath = `${tempRoot}/${table}.json`;
-      yield* runConvexData({
+      const rows = yield* readProductionTable({
         deployKey,
         limit: config.exportLimit,
-        logPath,
-        outputPath: sourcePath,
         table,
       });
-
-      const rows = yield* fileSystem
-        .readFileString(sourcePath)
-        .pipe(Effect.flatMap(decodeJsonRows));
       if (rows.length >= config.exportLimit) {
         return yield* contentSnapshotError(
           `Content runtime table ${table} reached the export limit.`
@@ -137,7 +124,6 @@ export const exportSignedRuntime = Effect.fn(
       archivePath: `${tempRoot}/runtime.tar`,
       cacheKey: Redacted.value(config.cacheKey),
       encryptedPath,
-      gpgHome,
       logPath,
       snapshotRoot,
     });

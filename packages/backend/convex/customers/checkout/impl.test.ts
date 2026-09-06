@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { validateCheckoutRequest } from "@repo/backend/convex/customers/checkout/impl";
 import { InvalidCheckoutSuccessUrl } from "@repo/backend/convex/customers/checkout/spec";
+import { SiteConfigError } from "@repo/backend/convex/site/config";
 import { products } from "@repo/backend/convex/utils/polar/products";
-import { siteOrigin } from "@repo/backend/convex/utils/site";
-import { Effect } from "effect";
+import { ConfigProvider, Effect } from "effect";
+
+const siteOrigin = "http://localhost:3000";
 
 describe("customers/checkout/impl", () => {
   it.effect("keeps allowed product IDs and same-origin success URLs", () =>
@@ -75,6 +77,38 @@ describe("customers/checkout/impl", () => {
         successUrl: "not-a-url",
       }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(InvalidCheckoutSuccessUrl);
+    })
+  );
+  it.effect("rejects a missing site even for a localhost success URL", () =>
+    Effect.gen(function* () {
+      const failure = yield* validateCheckoutRequest({
+        locale: "en",
+        successUrl: `${siteOrigin}/en/home`,
+      }).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({})
+        ),
+        Effect.flip
+      );
+
+      expect(failure).toBeInstanceOf(SiteConfigError);
+    })
+  );
+  it.effect("uses the current site configuration for checkout admission", () =>
+    Effect.gen(function* () {
+      const successUrl = "https://local.nakafa.com/en/home";
+      const request = yield* validateCheckoutRequest({
+        locale: "en",
+        successUrl,
+      }).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({ SITE_URL: "https://local.nakafa.com" })
+        )
+      );
+
+      expect(request.successUrl).toBe(successUrl);
     })
   );
 });

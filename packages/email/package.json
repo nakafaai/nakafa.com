@@ -10,22 +10,22 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@nakafa/aksara-contracts": "0.33.0",
+    "@nakafa/aksara-contracts": "0.36.0",
     "@react-email/render": "2.1.0",
     "@repo/design-system": "workspace:*",
     "@repo/seo": "workspace:*",
     "effect": "catalog:",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-email": "6.9.2"
+    "react-email": "6.9.3"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.5",
-    "@vitest/coverage-istanbul": "^4.1.11",
-    "vitest": "^4.1.11"
+    "@types/react-dom": "19.2.7",
+    "@vitest/coverage-istanbul": "catalog:",
+    "vitest": "catalog:"
   }
 }

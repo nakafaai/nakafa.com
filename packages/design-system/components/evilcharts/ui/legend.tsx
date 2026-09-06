@@ -3,7 +3,7 @@ import { getChartPayloadStringValue } from "@repo/design-system/components/evilc
 import { LegendItem } from "@repo/design-system/components/evilcharts/ui/legend-item";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
-import * as RechartsPrimitive from "recharts";
+import { type DefaultLegendContentProps, Legend } from "recharts";
 
 type ChartLegendVariant =
   | "square"
@@ -15,7 +15,7 @@ type ChartLegendVariant =
   | "horizontal-bar";
 
 type LegendPayloadItem = NonNullable<
-  RechartsPrimitive.DefaultLegendContentProps["payload"]
+  DefaultLegendContentProps["payload"]
 >[number];
 
 /** Resolves the stable key used by one Recharts legend payload item. */
@@ -42,7 +42,7 @@ function ChartLegendContent({
   isClickable?: boolean;
   onSelectChange?: (selected: string | null) => void;
   variant?: ChartLegendVariant;
-} & RechartsPrimitive.DefaultLegendContentProps) {
+} & DefaultLegendContentProps) {
   const { config } = useChart();
 
   if (!payload?.length) {
@@ -89,6 +89,6 @@ function ChartLegendContent({
   );
 }
 
-const ChartLegend = RechartsPrimitive.Legend;
+const ChartLegend = Legend;
 
 export { ChartLegend, ChartLegendContent, type ChartLegendVariant };

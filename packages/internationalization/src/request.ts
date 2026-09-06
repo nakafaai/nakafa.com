@@ -6,7 +6,7 @@ import {
   routing,
 } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
-import * as rootParams from "next/root-params";
+import { locale as getRootLocale } from "next/root-params";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
 
@@ -44,7 +44,7 @@ export default getRequestConfig(async ({ locale }) => {
     };
   }
 
-  const rootLocale = await rootParams.locale();
+  const rootLocale = await getRootLocale();
 
   if (!hasRequestLocale(rootLocale)) {
     notFound();

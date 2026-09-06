@@ -10,7 +10,7 @@ import {
   paginateArticles,
   readOrderedArticles,
 } from "@repo/backend/convex/contentRelease/article/order";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Predicate } from "effect";
 
 /** Preserves native article indexes and every deployed publication cursor. */
 export const convexArticleLayer = (ctx: QueryCtx) =>
@@ -98,10 +98,9 @@ export const convexArticleLayer = (ctx: QueryCtx) =>
               .paginate({ ...options, cursor: null })
           );
           const last = stored.page.at(-1);
-          const split =
-            stored.splitCursor == null
-              ? undefined
-              : stored.page[Math.floor((stored.page.length - 1) / 2)];
+          const split = Predicate.isNullish(stored.splitCursor)
+            ? undefined
+            : stored.page[Math.floor((stored.page.length - 1) / 2)];
           return {
             ...stored,
             continueCursor: last

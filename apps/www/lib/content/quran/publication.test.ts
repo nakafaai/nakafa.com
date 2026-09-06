@@ -82,6 +82,23 @@ describe("published Quran content", () => {
     })
   );
 
+  it.effect.each([
+    ["empty", []],
+    ["incomplete", catalogResult().rowJson.slice(0, 1)],
+    ["out of order", catalogResult().rowJson.reverse()],
+  ])("rejects an %s signed catalog", ([_label, rowJson]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce({ ...catalogResult(), rowJson });
+
+      expect(
+        yield* readPublishedQuranCatalog().pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "QuranPublicationError",
+        operation: "catalog",
+      });
+    })
+  );
+
   it.effect("reads the locale-specific signed markdown", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockResolvedValue(markdownResult());

@@ -9,7 +9,14 @@ import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-s
 import { EvilBrushControls } from "@repo/design-system/components/evilcharts/ui/evil-brush-controls";
 import { useBrushSelection } from "@repo/design-system/components/evilcharts/ui/evil-brush-selection";
 import { cn } from "@repo/design-system/lib/utils";
-import * as React from "react";
+import {
+  Suspense,
+  useDeferredValue,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -115,13 +122,13 @@ function EvilBrush({
   showLabels = true,
   skipStyle = false,
 }: EvilBrushProps) {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const keys = React.useMemo(
+  const containerRef = useRef<HTMLDivElement>(null);
+  const keys = useMemo(
     () => dataKeys ?? Object.keys(chartConfig),
     [dataKeys, chartConfig]
   );
   const totalPoints = data.length;
-  const chartId = React.useId().replace(/:/g, "");
+  const chartId = useId().replace(/:/g, "");
 
   const { bind, range } = useBrushSelection({
     containerRef,
@@ -151,7 +158,7 @@ function EvilBrush({
 
       {/* Mini chart – always shows all data */}
       <div className="absolute inset-0 overflow-hidden rounded-md">
-        <React.Suspense fallback={null}>
+        <Suspense fallback={null}>
           <EvilBrushPreview
             barRadius={barRadius}
             chartConfig={chartConfig}
@@ -166,7 +173,7 @@ function EvilBrush({
             }
             variant={variant}
           />
-        </React.Suspense>
+        </Suspense>
       </div>
 
       <EvilBrushControls
@@ -195,11 +202,11 @@ function useEvilBrush<TData extends Record<string, unknown>>({
   defaultStartIndex?: number;
   defaultEndIndex?: number;
 }) {
-  const [range, setRange] = React.useState<EvilBrushRange>({
+  const [range, setRange] = useState<EvilBrushRange>({
     startIndex: defaultStartIndex,
     endIndex: defaultEndIndex ?? Math.max(0, data.length - 1),
   });
-  const clampedRange = React.useMemo(
+  const clampedRange = useMemo(
     () => clampRangeToData(range, data.length),
     [range, data.length]
   );
@@ -207,9 +214,9 @@ function useEvilBrush<TData extends Record<string, unknown>>({
   // Defer the range used for data slicing because the brush handles move at the
   // immediate `range` cadence while the expensive chart re-render uses the
   // deferred value.  React can skip intermediate slices during fast drags.
-  const deferredRange = React.useDeferredValue(clampedRange);
+  const deferredRange = useDeferredValue(clampedRange);
 
-  const visibleData = React.useMemo(
+  const visibleData = useMemo(
     () => data.slice(deferredRange.startIndex, deferredRange.endIndex + 1),
     [data, deferredRange.startIndex, deferredRange.endIndex]
   );

@@ -1,5 +1,5 @@
 import { dirname } from "node:path";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
@@ -28,7 +28,7 @@ vi.mock("@repo/backend/scripts/content/runtime/ci/archive", () => ({
 }));
 
 vi.mock("@repo/backend/scripts/content/runtime/ci/command", () => ({
-  runConvexData: mocks.runData,
+  readProductionTable: mocks.runData,
 }));
 
 vi.mock(
@@ -55,7 +55,6 @@ const events: string[] = [];
 const rowsByTable = new Map<string, readonly Record<string, unknown>[]>();
 
 interface DataOptions {
-  readonly outputPath: string;
   readonly table: string;
 }
 
@@ -98,13 +97,9 @@ beforeEach(() => {
     })
   );
   mocks.runData.mockImplementation((options: DataOptions) =>
-    Effect.gen(function* () {
+    Effect.sync(() => {
       events.push(`data:${options.table}`);
-      const fileSystem = yield* FileSystem.FileSystem;
-      yield* fileSystem.writeFileString(
-        options.outputPath,
-        JSON.stringify(rowsByTable.get(options.table) ?? [])
-      );
+      return rowsByTable.get(options.table) ?? [];
     })
   );
   mocks.createArchive.mockImplementation((options: ArchiveOptions) =>
@@ -146,7 +141,7 @@ describe("signed runtime export", () => {
             `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`
           )
         ).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -178,7 +173,7 @@ describe("signed runtime export", () => {
         expect(
           yield* fileSystem.exists(`${cacheRoot}/${CONTENT_RUNTIME_CACHE_FILE}`)
         ).toBe(true);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -204,7 +199,7 @@ describe("signed runtime export", () => {
             `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`
           )
         ).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -228,7 +223,7 @@ describe("signed runtime export", () => {
         });
         expect(mocks.readGenerations).not.toHaveBeenCalled();
         expect(yield* fileSystem.exists(cacheRoot)).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -254,7 +249,7 @@ describe("signed runtime export", () => {
             `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`
           )
         ).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -288,7 +283,7 @@ describe("signed runtime export", () => {
             )
           ).toBe(false);
         }
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 
@@ -316,7 +311,7 @@ describe("signed runtime export", () => {
             `${runnerTemp}/${CONTENT_RUNTIME_CACHE_DIRECTORY}`
           )
         ).toBe(false);
-      }).pipe(Effect.provide(NodeServices.layer))
+      }).pipe(Effect.provide(nodeServicesLayer))
     )
   );
 });

@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
-import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { runMain } from "@effect/platform-node/NodeRuntime";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import {
   ContentSnapshotError,
   contentSnapshotError,
@@ -158,11 +158,11 @@ const main = Effect.gen(function* () {
   Effect.ensuring(clearContentRuntimeSecrets),
   Effect.tapError(reportFailure),
   Effect.scoped,
-  Effect.provide(NodeServices.layer),
+  Effect.provide(nodeServicesLayer),
   Effect.provideService(
     ConfigProvider.ConfigProvider,
     ConfigProvider.fromEnvRecord(process.env)
   )
 );
 
-NodeRuntime.runMain(main, { disableErrorReporting: true });
+runMain(main, { disableErrorReporting: true });

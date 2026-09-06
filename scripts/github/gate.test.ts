@@ -1,4 +1,4 @@
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Result } from "effect";
 import { type GateInput, runGate, validateGate } from "#scripts/github/gate";
@@ -108,7 +108,7 @@ describe("terminal CI gate", () => {
   );
 
   it.live("decodes the complete required-check environment", () =>
-    runGate("required").pipe(Effect.provide(NodeServices.layer), (program) =>
+    runGate("required").pipe(Effect.provide(nodeServicesLayer), (program) =>
       withEnvironment(program, validEnvironment)
     )
   );
@@ -137,7 +137,7 @@ describe("terminal CI gate", () => {
     Effect.gen(function* () {
       expect(
         yield* withEnvironment(
-          runGate(role).pipe(Effect.provide(NodeServices.layer)),
+          runGate(role).pipe(Effect.provide(nodeServicesLayer)),
           environment
         ).pipe(Effect.flip)
       ).toMatchObject({ message: expected });

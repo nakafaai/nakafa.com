@@ -19,7 +19,7 @@ authored content source or publication path.
 `package.json` is the toolchain source of truth:
 
 - Node.js 24
-- pnpm 11.23.0
+- pnpm 11.25.0
 - Turborepo
 - Next.js 16 and React 19
 - Native TypeScript 7
@@ -45,21 +45,36 @@ using [`packages/backend/AGENTS.md`](packages/backend/AGENTS.md). Content routes
 need a populated, verified Aksara signed runtime. An empty backend is not a
 complete content fixture.
 
-Run `pnpm dev` for hot reload. Portless starts its HTTPS proxy on port 443
-and prints the branch-specific Nakafa URL, such as `https://ci.nakafa.localhost`.
-The web, CAS, and email preview servers use the same proxy and receive separate
-names. Run `pnpm exec portless list` to inspect active routes or
-`pnpm exec portless get nakafa` from the checkout to obtain its web URL.
-It creates and trusts a local certificate authority on first use. Run
-`pnpm exec portless doctor` to check the proxy, DNS, and certificate trust. Configure
-authentication for that exact local origin in your own development deployment
-when testing sign-in. Google rejects `.localhost` subdomains as OAuth redirect
-URIs. For Google sign-in, configure Portless with a domain you own, then register
-the exact HTTPS callback URI in Google and set the development backend's
-`SITE_URL` to the matching origin. See the
+Nakafa uses Portless HTTPS URLs for local development. Google rejects
+`.localhost` subdomains as OAuth redirect URIs, so configure the proxy with
+Nakafa's owned development suffix before testing Google sign-in:
+
+```sh
+pnpm exec portless proxy start --tld local.nakafa.com
+```
+
+Stop an existing proxy before changing its suffix. This setting is shared by
+local projects. Portless listens on port 443, creates and trusts a local
+certificate authority, and registers local DNS entries for running apps.
+
+Run `pnpm dev` for hot reload. The canonical checkout serves
+`https://nakafa.local.nakafa.com`; worktrees receive their own prefix, such as
+`https://ci.nakafa.local.nakafa.com`. The web, CAS, and email preview servers
+receive separate names. Use `pnpm exec portless list` to inspect active routes,
+`pnpm exec portless get nakafa` to obtain this checkout's web URL, and
+`pnpm exec portless doctor` to check the proxy, DNS, and certificate trust.
+
+Set `SITE_URL` in `apps/www/.env.local` and the selected development backend
+to that exact web origin. Set `NEXT_PUBLIC_CONVEX_URL` and
+`NEXT_PUBLIC_CONVEX_SITE_URL` to the same isolated development deployment.
+Google's client configuration must include the web origin under authorized
+JavaScript origins and `<web-origin>/api/auth/callback/google` under authorized
+redirect URIs. A worktree needs its exact callback registered separately;
+Google does not accept wildcard callbacks. See the
 [Portless OAuth guidance](https://github.com/vercel-labs/portless/blob/main/skills/oauth/SKILL.md).
-Signed snapshot runtimes contain inert authentication credentials and are for
-content and renderer verification.
+Signed snapshot runtimes contain inert authentication credentials and verify
+content and renderers. Real sign-in requires a development backend configured
+with the Google client credentials.
 
 For production-mode verification, use your configured nonproduction backend
 or prepare a local signed snapshot once. Obtain the current encrypted snapshot,
@@ -114,11 +129,11 @@ snapshot, and removes all temporary state when the build ends.
 
 ## Repository layout
 
-- `apps/www`: main Next.js application at `https://nakafa.localhost`
+- `apps/www`: main Next.js application at `https://nakafa.local.nakafa.com`
 - `apps/mcp`: frameworkless Vercel ingress for the Convex MCP runtime
 - `apps/api`: frameworkless Vercel ingress for the Convex REST runtime
-- `apps/cas`: Python CAS service at `https://cas.nakafa.localhost`
-- `apps/email`: email preview application at `https://email.nakafa.localhost`
+- `apps/cas`: Python CAS service at `https://cas.nakafa.local.nakafa.com`
+- `apps/email`: email preview application at `https://email.nakafa.local.nakafa.com`
 - `packages/backend`: Convex schema, functions, workflows, and integrations
 - `packages/design-system`: shared React components and renderer implementations
 - `packages/ai`: Effect-native AI capabilities

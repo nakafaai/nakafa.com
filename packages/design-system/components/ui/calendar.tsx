@@ -10,7 +10,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day-key";
 import { cn } from "@repo/design-system/lib/utils";
-import * as React from "react";
+import { type ComponentProps, type Ref, useCallback } from "react";
 import {
   type DayButton,
   DayPicker,
@@ -21,7 +21,7 @@ function CalendarRoot({
   className,
   rootRef,
   ...props
-}: React.ComponentProps<"div"> & { rootRef?: React.Ref<HTMLDivElement> }) {
+}: ComponentProps<"div"> & { rootRef?: Ref<HTMLDivElement> }) {
   return (
     <div
       className={cn(className)}
@@ -69,10 +69,7 @@ function CalendarChevron({
   );
 }
 
-function CalendarWeekNumber({
-  children,
-  ...props
-}: React.ComponentProps<"td">) {
+function CalendarWeekNumber({ children, ...props }: ComponentProps<"td">) {
   return (
     <td {...props}>
       <div className="flex size-(--cell-size) items-center justify-center text-center">
@@ -91,8 +88,8 @@ function Calendar({
   formatters,
   components,
   ...props
-}: React.ComponentProps<typeof DayPicker> & {
-  buttonVariant?: React.ComponentProps<typeof Button>["variant"];
+}: ComponentProps<typeof DayPicker> & {
+  buttonVariant?: ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
 
@@ -215,10 +212,10 @@ function CalendarDayButton({
   day,
   modifiers,
   ...props
-}: React.ComponentProps<typeof DayButton>) {
+}: ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames();
 
-  const focusedButtonRef = React.useCallback(
+  const focusedButtonRef = useCallback(
     (button: HTMLButtonElement | null) => {
       if (modifiers.focused) {
         button?.focus();

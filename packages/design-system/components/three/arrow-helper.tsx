@@ -5,6 +5,7 @@ import type { ThreeFontSize } from "@repo/design-system/components/three/data/co
 import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
+import { Predicate } from "effect";
 import { type ReactNode, useMemo } from "react";
 import {
   Color,
@@ -250,7 +251,7 @@ export function ArrowHelper({
       )}
 
       {/* Label text */}
-      {label != null && (
+      {Predicate.isNotNullish(label) && (
         <ThreeLabel
           anchorX={labelAnchorX}
           color={color}

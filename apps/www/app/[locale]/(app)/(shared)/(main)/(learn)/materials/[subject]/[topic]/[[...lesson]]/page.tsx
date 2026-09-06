@@ -1,9 +1,11 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import type { ContentPagination } from "@repo/contents/_types/content";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -13,7 +15,6 @@ import {
   readMaterialMetadata,
   readMaterialPage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
-import { listMaterialStaticParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
 import {
   readMaterialNavigation,
@@ -36,6 +37,10 @@ import { PaginationContent } from "@/components/shared/pagination-content";
 import { SidebarRightProvider } from "@/components/shared/sidebar-right";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getPublishedMaterialContext } from "@/lib/content/material/context";
+import { readPublishedMaterialPrerenderRoute } from "@/lib/content/material/prerender";
+import { hasPreviewConfig } from "@/lib/content/preview/config";
+import { readMaterialPreviewStaticParams } from "@/lib/content/preview/route";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
@@ -49,13 +54,23 @@ type ArticleJsonLdAuthor = ArrayItem<
   Parameters<typeof ArticleJsonLd>[0]["author"]
 >;
 
-/** Builds material topic and lesson params from projected public route rows. */
-export function generateStaticParams({
+/** Supplies the one real lesson per locale required by Cache Components. */
+export async function generateStaticParams({
   params,
 }: {
   params: { locale: string };
 }) {
-  return listMaterialStaticParams(params.locale);
+  const locale = getLocaleOrThrow(params.locale);
+  if (hasPreviewConfig()) {
+    return [
+      await readMaterialPreviewStaticParams(AppLocaleSchema.make(locale)),
+    ];
+  }
+  const route = await Effect.runPromise(
+    readPublishedMaterialPrerenderRoute(locale)
+  );
+  const [, subject, topic, ...lesson] = route.publicPath.split("/");
+  return [{ lesson, subject, topic }];
 }
 
 /**

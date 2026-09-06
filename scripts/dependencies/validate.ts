@@ -125,30 +125,41 @@ export function validateDependencyPolicy({
     );
   }
 
-  if (workspace.catalog?.effect !== "4.0.0-rc.110") {
-    problems.push("The Effect catalog must be exactly 4.0.0-rc.110.");
+  if (workspace.catalog?.effect !== "4.0.0-rc.112") {
+    problems.push("The Effect catalog must be exactly 4.0.0-rc.112.");
   }
-  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.110") {
-    problems.push("The platform-node catalog must match Effect RC 110.");
+  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.112") {
+    problems.push("The platform-node catalog must match Effect RC 112.");
   }
-  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.110") {
-    problems.push("The Effect Vitest catalog must match Effect RC 110.");
+  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.112") {
+    problems.push("The Effect Vitest catalog must match Effect RC 112.");
   }
   if (
-    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.110"
+    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.112"
   ) {
     problems.push(
-      "The platform-node-shared override must match Effect RC 110."
+      "The platform-node-shared override must match Effect RC 112."
     );
   }
   if (workspace.catalog?.typescript !== "7.0.2") {
     problems.push("The native TypeScript catalog must be exactly 7.0.2.");
   }
-  if (rootManifest.packageManager !== "pnpm@11.23.0") {
-    problems.push("packageManager must be pnpm@11.23.0.");
+  for (const dependency of [
+    "vitest",
+    "@vitest/coverage-istanbul",
+    "@vitest/ui",
+  ]) {
+    if (workspace.catalog?.[dependency] !== "4.1.11") {
+      problems.push(
+        `${dependency} must match the supported Vitest 4.1.11 cohort.`
+      );
+    }
   }
-  if (rootManifest.devEngines?.runtime?.version !== "24.19.0") {
-    problems.push("The managed Node runtime must be 24.19.0.");
+  if (rootManifest.packageManager !== "pnpm@11.25.0") {
+    problems.push("packageManager must be pnpm@11.25.0.");
+  }
+  if (rootManifest.devEngines?.runtime?.version !== "24.20.0") {
+    problems.push("The managed Node runtime must be 24.20.0.");
   }
   return problems;
 }

@@ -16,7 +16,7 @@
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@vitest/coverage-istanbul": "^4.1.11",
-    "vitest": "^4.1.11"
+    "@vitest/coverage-istanbul": "catalog:",
+    "vitest": "catalog:"
   }
 }

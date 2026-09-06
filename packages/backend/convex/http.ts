@@ -9,6 +9,7 @@ import { registerPublicContentRuntimeBatchRoute } from "@repo/backend/convex/con
 import { registerProtectedContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/protected";
 import { registerPublicContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/public";
 import { registerContentReleaseRoutes } from "@repo/backend/convex/contentRelease/ingress/route";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { registerAgentApiRoutes } from "@repo/backend/convex/routes/agent/api";
 import { registerAgentMcpRoutes } from "@repo/backend/convex/routes/agent/mcp/route";
 import { createQueryFreeRequestLogger } from "@repo/backend/convex/routes/middleware/logger";
@@ -43,8 +44,8 @@ app.get("/.well-known/openid-configuration", (c) =>
 );
 
 // Register better-auth routes (internal - not exposed in API docs)
-app.on(["POST", "GET"], "/api/auth/*", (c) => {
-  const auth = createAuth(c.env);
+app.on(["POST", "GET"], "/api/auth/*", async (c) => {
+  const auth = await runConvexProgram(createAuth(c.env));
   return auth.handler(c.req.raw);
 });
 

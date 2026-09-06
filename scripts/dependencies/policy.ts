@@ -6,7 +6,7 @@ interface DependencyHold {
   readonly minimumDeclarations?: number;
 }
 
-export const CONTRACT_VERSION = "0.33.0";
+export const CONTRACT_VERSION = "0.36.0";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
@@ -24,8 +24,15 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@effect/vitest",
     minimumDeclarations: 1,
   },
+  { approved: "catalog:", dependency: "vitest", minimumDeclarations: 1 },
   {
-    approved: "0.36.5",
+    approved: "catalog:",
+    dependency: "@vitest/coverage-istanbul",
+    minimumDeclarations: 1,
+  },
+  { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
+  {
+    approved: "0.41.0",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -41,24 +48,24 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   { approved: "1.45.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.77", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "7.0.93", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.80",
+    approved: "4.0.96",
     dependency: "@ai-sdk/react",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.50",
+    approved: "4.0.64",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.62",
+    approved: "4.0.75",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
   {
-    approved: "1.0.12",
+    approved: "1.0.15",
     dependency: "@ai-sdk/devtools",
     minimumDeclarations: 1,
   },
@@ -86,7 +93,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@nakafa/aksara-contracts",
   },
   {
-    approved: "2.5.10",
+    approved: "2.5.12",
     dependency: "@biomejs/biome",
     minimumDeclarations: 1,
   },
@@ -95,33 +102,57 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "7.10.6", dependency: "ultracite", minimumDeclarations: 1 },
-  { approved: "2.10.11", dependency: "turbo", minimumDeclarations: 1 },
+  { approved: "7.11.0", dependency: "ultracite", minimumDeclarations: 1 },
+  { approved: "2.10.12", dependency: "turbo", minimumDeclarations: 1 },
   {
-    approved: "2.10.11",
+    approved: "2.10.12",
     dependency: "@turbo/gen",
     minimumDeclarations: 1,
   },
 ];
 
 export const REGISTRY_REVIEWS = [
-  ["effect@rc", "4.0.0-rc.111", "Effect is intentionally pinned to RC 110."],
+  [
+    "effect@rc",
+    "4.0.0-rc.112",
+    "Signed content contracts require the exact RC112 cohort.",
+  ],
   [
     "@effect/platform-node@rc",
-    "4.0.0-rc.111",
+    "4.0.0-rc.112",
     "The platform package must match the Effect cohort.",
   ],
   [
     "@effect/platform-node-shared@rc",
-    "4.0.0-rc.111",
+    "4.0.0-rc.112",
     "The transitive platform package must match the Effect cohort.",
   ],
   [
     "@effect/vitest@rc",
-    "4.0.0-rc.111",
+    "4.0.0-rc.112",
     "The test adapter must match the Effect cohort.",
   ],
-  ["@effect/tsgo@latest", "0.36.5", "Compiler patching moves with TypeScript."],
+  ["@effect/tsgo@latest", "0.41.0", "Compiler patching moves with TypeScript."],
+  [
+    "vitest@latest",
+    "5.0.0",
+    "The Effect RC112 adapter requires Vitest below version 5.",
+  ],
+  [
+    "@vitest/coverage-istanbul@latest",
+    "5.0.0",
+    "Coverage must match the supported Vitest 4.1.11 runner.",
+  ],
+  [
+    "@vitest/ui@latest",
+    "5.0.0",
+    "The test UI must match the supported Vitest 4.1.11 runner.",
+  ],
+  [
+    "@nakafa/aksara-contracts@latest",
+    "0.36.0",
+    "Signed content contracts move with the exact Effect peer cohort.",
+  ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "next@latest",
@@ -129,30 +160,30 @@ export const REGISTRY_REVIEWS = [
     "Stable 16.3.4 includes the AVIF security fix and native TypeScript CLI checks.",
   ],
   ["convex@latest", "1.45.0", "Convex acceptance uses an isolated deployment."],
-  ["ai@latest", "7.0.77", "AI SDK packages move as one reviewed cohort."],
+  ["ai@latest", "7.0.93", "AI SDK packages move as one reviewed cohort."],
   [
     "@ai-sdk/react@latest",
-    "4.0.80",
+    "4.0.96",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/google@latest",
-    "4.0.50",
+    "4.0.64",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.62",
+    "4.0.75",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/devtools@latest",
-    "1.0.12",
+    "1.0.15",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "better-auth@latest",
-    "1.7.1",
+    "1.7.3",
     "Better Auth remains on 1.6.30 because the Convex adapter rejects 1.7.",
   ],
   [
@@ -160,22 +191,26 @@ export const REGISTRY_REVIEWS = [
     "0.12.5",
     "The adapter defines the accepted Better Auth peer range.",
   ],
-  ["@biomejs/biome@latest", "2.5.10", "Formatting is reviewed with Ultracite."],
-  ["ultracite@latest", "7.10.6", "Formatting is reviewed with Biome."],
+  ["@biomejs/biome@latest", "2.5.12", "Formatting is reviewed with Ultracite."],
+  ["ultracite@latest", "7.11.0", "Formatting is reviewed with Biome."],
   ["@types/node@24", "24.13.3", "Declarations remain on the Node 24 line."],
-  ["node@24", "24.19.0", "The repository supports the Node 24 runtime line."],
-  ["pnpm@latest", "11.23.0", "pnpm owns workspace and lockfile semantics."],
+  ["node@24", "24.20.0", "The repository supports the Node 24 runtime line."],
+  [
+    "pnpm@latest",
+    "12.3.4",
+    "OSV Scanner 2.5.1 skips the application graph after pnpm 12 adds a package-manager YAML document.",
+  ],
   [
     "react-doctor@latest",
-    "0.9.12",
+    "0.9.13",
     "The local and CI scanners move as one reviewed cohort.",
   ],
-  ["turbo@latest", "2.10.11", "Turbo and its generator move together."],
+  ["turbo@latest", "2.10.12", "Turbo and its generator move together."],
 ];
 
 export const SCRIPT_DEPENDENCY_HOLDS = [
   {
-    approved: "pnpm dlx react-doctor@0.9.12",
+    approved: "pnpm dlx react-doctor@0.9.13",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },

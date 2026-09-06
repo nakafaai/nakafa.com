@@ -2,8 +2,9 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX } from "@repo/backend/convex/classes/forums/attachments/constants";
 import { MAX_FORUM_ATTACHMENT_BYTES } from "@repo/backend/convex/classes/forums/utils/constants";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { readSiteUrl } from "@repo/backend/convex/site/config";
 import { generateId } from "@repo/backend/convex/utils/id";
-import { siteOrigin } from "@repo/backend/convex/utils/site";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Effect, Result, Schema } from "effect";
@@ -185,7 +186,8 @@ export function registerForumAttachmentUploadRoute<
       allowHeaders: ["Content-Type"],
       allowMethods: ["POST", "OPTIONS"],
       maxAge: 3600,
-      origin: siteOrigin,
+      origin: () =>
+        runConvexProgram(readSiteUrl().pipe(Effect.map((url) => url.origin))),
     })
   );
   app.post(uploadPath, async (c) => {

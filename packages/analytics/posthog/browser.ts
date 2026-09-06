@@ -20,11 +20,11 @@ import { Effect, MutableRef, Option, Schema } from "effect";
 import type { Properties } from "posthog-js";
 
 interface BrowserAnalyticsClient {
-  captureException(error: unknown, properties?: Properties): unknown;
-  get_property(key: string): unknown;
-  has_opted_out_capturing(): boolean;
-  identify(userId: string, properties: Properties): void;
-  init(
+  captureException: (error: unknown, properties?: Properties) => unknown;
+  get_property: (key: string) => unknown;
+  has_opted_out_capturing: () => boolean;
+  identify: (userId: string, properties: Properties) => void;
+  init: (
     token: string,
     config: {
       readonly advanced_disable_flags: true;
@@ -60,12 +60,12 @@ interface BrowserAnalyticsClient {
       readonly save_referrer: false;
       readonly ui_host: string;
     }
-  ): unknown;
-  opt_in_capturing(options: { readonly captureEventName: false }): void;
-  opt_out_capturing(): void;
-  register(properties: Properties): void;
-  reset(resetDeviceId?: boolean): void;
-  setPersonProperties(properties: Properties): void;
+  ) => unknown;
+  opt_in_capturing: (options: { readonly captureEventName: false }) => void;
+  opt_out_capturing: () => void;
+  register: (properties: Properties) => void;
+  reset: (resetDeviceId?: boolean) => void;
+  setPersonProperties: (properties: Properties) => void;
 }
 
 interface BrowserAnalyticsLoader {

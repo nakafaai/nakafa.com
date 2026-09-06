@@ -27,8 +27,8 @@ interface SpeechRecognition extends EventTarget {
     | ((this: SpeechRecognition, event: SpeechRecognitionEvent) => void)
     | null;
   onstart: ((this: SpeechRecognition, event: Event) => void) | null;
-  start(): void;
-  stop(): void;
+  start: () => void;
+  stop: () => void;
 }
 interface SpeechRecognitionEvent extends Event {
   results: ArrayLike<SpeechRecognitionResult>;

@@ -5,6 +5,7 @@ import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { ensurePostHogErasureConfigured } from "@repo/backend/convex/analytics/erasure/action";
 import { authComponent } from "@repo/backend/convex/auth/client";
+import { readGoogleAuthConfig } from "@repo/backend/convex/auth/config";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
@@ -16,12 +17,12 @@ import {
   accountDeletionPreparationOutcome,
 } from "@repo/backend/convex/auth/deletion/spec";
 import authConfig from "@repo/backend/convex/auth.config";
-import { siteOrigin, siteUrl } from "@repo/backend/convex/utils/site";
+import { readSiteUrl } from "@repo/backend/convex/site/config";
 import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { openAPI } from "better-auth/plugins";
 import { makeFunctionReference } from "convex/server";
-import { Effect, Schema } from "effect";
+import { Effect, Redacted, Schema } from "effect";
 
 const claimAccountDeletion = makeFunctionReference<
   "mutation",
@@ -59,7 +60,10 @@ const trailingSlashPattern = /\/$/;
  * The app error landing needs only its validated continuation intent, so every
  * other query value and fragment is discarded at the auth response boundary.
  */
-export function sanitizeProviderErrorRedirectResponse(response: Response) {
+export function sanitizeProviderErrorRedirectResponse(
+  response: Response,
+  siteUrl: URL
+) {
   const rawLocation = response.headers.get("location");
   if (!(rawLocation && response.status >= 300 && response.status < 400)) {
     return;
@@ -70,7 +74,7 @@ export function sanitizeProviderErrorRedirectResponse(response: Response) {
   }
   const location = new URL(rawLocation, siteUrl);
   if (
-    location.origin !== siteOrigin ||
+    location.origin !== siteUrl.origin ||
     !providerErrorRoutePathnames.has(location.pathname)
   ) {
     return;
@@ -92,13 +96,6 @@ export function sanitizeProviderErrorRedirectResponse(response: Response) {
   });
 }
 
-const providerErrorRedirectPrivacy = {
-  id: "provider-error-redirect-privacy",
-  onResponse: (response: Response) => {
-    const sanitized = sanitizeProviderErrorRedirectResponse(response);
-    return Promise.resolve(sanitized ? { response: sanitized } : undefined);
-  },
-} satisfies NonNullable<BetterAuthOptions["plugins"]>[number];
 const credentialSurfaceDisabled = {
   id: "credential-surface-disabled",
   onRequest: (request: Request, context: { readonly baseURL: string }) => {
@@ -170,10 +167,12 @@ const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
     );
   }
 );
-/** Builds Better Auth options for HTTP auth routes and component adapters. */
+/**
+ * Supplies Better Auth's synchronous schema and adapter callback.
+ * The component calls this during registration without request credentials.
+ */
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
   ({
-    baseURL: siteUrl,
     database: authComponent.adapter(ctx),
     account: {
       accountLinking: {
@@ -184,14 +183,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     disabledPaths: [...disabledCredentialPaths],
     emailAndPassword: {
       enabled: false,
-    },
-    socialProviders: {
-      google: {
-        clientId: process.env.AUTH_GOOGLE_ID || "",
-        clientSecret: process.env.AUTH_GOOGLE_SECRET || "",
-        accessType: "offline",
-        prompt: "select_account consent",
-      },
     },
     user: {
       deleteUser: {
@@ -214,9 +205,43 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
         jwks: process.env.JWKS,
         jwksRotateOnTokenGenerationError: true,
       }),
-      providerErrorRedirectPrivacy,
     ],
   }) satisfies BetterAuthOptions;
-/** Creates one Better Auth instance for a Convex HTTP/action context. */
-export const createAuth = (ctx: GenericCtx<DataModel>) =>
-  betterAuth(createAuthOptions(ctx));
+/** Validates request configuration before creating a Better Auth instance. */
+export const createAuth = Effect.fn("auth.createAuth")(function* (
+  ctx: GenericCtx<DataModel>
+) {
+  const siteUrl = yield* readSiteUrl();
+  const google = yield* readGoogleAuthConfig();
+
+  return yield* Effect.sync(() => {
+    const options = createAuthOptions(ctx);
+    return betterAuth({
+      ...options,
+      baseURL: siteUrl.href,
+      socialProviders: {
+        google: {
+          clientId: google.clientId,
+          clientSecret: Redacted.value(google.clientSecret),
+          accessType: "offline",
+          prompt: "select_account consent",
+        },
+      },
+      plugins: [
+        ...options.plugins,
+        {
+          id: "provider-error-redirect-privacy",
+          onResponse: (response: Response) => {
+            const sanitized = sanitizeProviderErrorRedirectResponse(
+              response,
+              siteUrl
+            );
+            return Promise.resolve(
+              sanitized ? { response: sanitized } : undefined
+            );
+          },
+        },
+      ],
+    });
+  });
+});

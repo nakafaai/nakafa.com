@@ -7,6 +7,7 @@ import {
   useScroll,
   useTransform,
 } from "motion/react";
+// biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
 import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 
