@@ -157,7 +157,7 @@ export function OpenContent({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("content-actions")}</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("more")}</DropdownMenuLabel>
           {children}
           <DropdownMenuItem
             disabled={isCopying || !(content || copySourceUrl)}

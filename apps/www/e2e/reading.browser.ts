@@ -41,6 +41,15 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       })
     );
     yield* Effect.sync(() => expect(newsreaderLoaded).toBe(true));
+    const summary = page.locator("header").filter({ has: title }).locator("p");
+    yield* Effect.promise(() => expect(summary).toBeVisible());
+    yield* Effect.promise(() => expect(summary).not.toBeEmpty());
+    yield* Effect.promise(() =>
+      expect(summary).toHaveCSS("text-align", "center")
+    );
+    yield* Effect.promise(() =>
+      expect(summary).toHaveCSS("text-wrap-style", "pretty")
+    );
     const titleText = yield* Effect.promise(() => title.innerText());
     const more = page.getByRole("button", {
       name: "More actions",
@@ -107,7 +116,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() => page.keyboard.press("Enter"));
     const menu = page.getByRole("menu");
     yield* Effect.promise(() =>
-      expect(menu.getByText("Content actions", { exact: true })).toBeVisible()
+      expect(menu.getByText("More", { exact: true })).toBeVisible()
     );
     yield* Effect.promise(() =>
       expect(menu.getByRole("menuitem")).toHaveCount(3)
