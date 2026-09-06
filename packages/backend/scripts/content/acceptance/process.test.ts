@@ -263,13 +263,23 @@ describe("application process ownership", () => {
 
   it.effect("bounds backend readiness and releases the child on timeout", () =>
     Effect.gen(function* () {
-      const { runtime } = yield* fixture;
-      const entered = yield* Deferred.make<void>();
-      const child = spawner({
-        output: "",
-        running: Deferred.succeed(entered, undefined).pipe(Effect.as(true)),
-      });
-      const fiber = yield* withLocalBackend(runtime, Effect.void).pipe(
+      const { fs, runtime } = yield* fixture;
+      const readinessLog = yield* Deferred.make<string>();
+      const child = spawner({ output: "" });
+      const request = vi.fn();
+      const application = vi.fn();
+      vi.stubGlobal("fetch", request);
+      const fiber = yield* withLocalBackend(
+        runtime,
+        Effect.sync(application)
+      ).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          readFileString: (path) =>
+            fs
+              .readFileString(path)
+              .pipe(Effect.tap((log) => Deferred.succeed(readinessLog, log))),
+        }),
         Effect.provideService(
           ChildProcessSpawner.ChildProcessSpawner,
           child.service
@@ -277,12 +287,14 @@ describe("application process ownership", () => {
         Effect.flip,
         Effect.forkChild
       );
-      yield* Deferred.await(entered);
+      expect(yield* Deferred.await(readinessLog)).toBe("");
       yield* TestClock.adjust("4 minutes");
       expect(yield* Fiber.join(fiber)).toMatchObject({
         _tag: "AcceptanceRuntimeError",
         message: expect.stringContaining("did not become ready"),
       });
+      expect(request).not.toHaveBeenCalled();
+      expect(application).not.toHaveBeenCalled();
       expect(child.release).toHaveBeenCalledOnce();
     }).pipe(Effect.provide(nodeServicesLayer))
   );
