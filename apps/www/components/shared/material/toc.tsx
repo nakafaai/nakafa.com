@@ -1,6 +1,9 @@
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import type { ComponentProps } from "react";
-import { SidebarRight } from "@/components/shared/sidebar-right";
+import {
+  SidebarRight,
+  SidebarRightPanel,
+} from "@/components/shared/sidebar-right";
 import { SidebarTree } from "@/components/shared/sidebar-tree";
 
 interface LayoutMaterialTocProps {
@@ -33,5 +36,17 @@ export function LayoutMaterialToc({
     >
       <SidebarTree data={chapters.data} title={chapters.label} />
     </SidebarRight>
+  );
+}
+
+/** Outline panel for pages that compose their trigger in the content header. */
+export function MaterialOutline({
+  chapters,
+  ...props
+}: LayoutMaterialTocProps) {
+  return (
+    <SidebarRightPanel {...props}>
+      <SidebarTree data={chapters.data} title={chapters.label} />
+    </SidebarRightPanel>
   );
 }

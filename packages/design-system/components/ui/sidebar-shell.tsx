@@ -122,7 +122,7 @@ export function SidebarTrigger({
 }: ComponentProps<typeof Button> & {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
 }) {
-  const { isLocked, toggleSidebar } = useSidebar();
+  const { isLocked, isMobile, open, openMobile, toggleSidebar } = useSidebar();
 
   if (isLocked) {
     return null;
@@ -130,6 +130,7 @@ export function SidebarTrigger({
 
   return (
     <Button
+      aria-expanded={isMobile ? openMobile : open}
       aria-label="Toggle Sidebar"
       className={cn("size-7", className)}
       data-sidebar="trigger"

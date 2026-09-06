@@ -1,6 +1,5 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
-import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import type { ContentPagination } from "@repo/contents/_types/content";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
@@ -22,16 +21,20 @@ import {
   toMaterialHref,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
+import { AiMenuItem } from "@/components/ai/menu";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ContentDates } from "@/components/content/dates";
+import { ContentHeader } from "@/components/content/header";
+import { ContentTitle } from "@/components/content/title";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialToc } from "@/components/shared/material/toc";
+import { MaterialOutline } from "@/components/shared/material/toc";
+import { OpenContent } from "@/components/shared/open-content/actions";
 import { PaginationContent } from "@/components/shared/pagination-content";
+import { SidebarRightProvider } from "@/components/shared/sidebar-right";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getPublishedMaterialContext } from "@/lib/content/material/context";
 import { readPublishedMaterialPrerenderRoute } from "@/lib/content/material/prerender";
@@ -169,7 +172,6 @@ async function MaterialRouteContent({
           allowsInteractions ? <DeferredComments slug={contentKey} /> : null
         }
         headerLink={navigation.link}
-        icon={getMaterialIcon(page.rendererDomain)}
         locale={appLocale}
         pagination={navigation.pagination}
         parentTitle={page.route.topicTitle}
@@ -202,7 +204,6 @@ async function MaterialLessonPage({
   currentHref,
   footer,
   headerLink,
-  icon,
   locale,
   pagination,
   parentTitle,
@@ -221,7 +222,6 @@ async function MaterialLessonPage({
     href: string;
     label: string;
   };
-  icon: ReturnType<typeof getMaterialIcon>;
   locale: Locale;
   pagination: ContentPagination;
   parentTitle: string;
@@ -269,43 +269,50 @@ async function MaterialLessonPage({
         educationalLevel={parentTitle}
         name={metadata.title}
       />
-      <LayoutMaterialContent>
-        <HeaderContent
-          content={copyContent}
-          copySourceUrl={copySourceUrl}
-          icon={icon}
-          link={headerLink ?? { href: "/home", label: tCommon("home") }}
-          slug={toMaterialHref(route)}
-          sourceUrl={sourceUrl}
-          title={metadata.title}
+      <SidebarRightProvider>
+        <LayoutMaterialContent>
+          <ContentHeader items={headerLink ? [headerLink] : []}>
+            <OpenContent
+              content={copyContent}
+              copySourceUrl={copySourceUrl}
+              slug={toMaterialHref(route)}
+              sourceUrl={sourceUrl}
+            >
+              {showComments && <AiMenuItem contextTitle={metadata.title} />}
+            </OpenContent>
+          </ContentHeader>
+          <ContentTitle
+            description={metadata.description}
+            title={metadata.title}
+          />
+          <ContentDates
+            {...(metadata.dateModified === undefined
+              ? {}
+              : { dateModified: metadata.dateModified })}
+            datePublished={metadata.datePublished}
+          />
+          <LayoutContent>
+            {headings.length === 0 && <ComingSoon />}
+            {headings.length > 0 ? children : null}
+          </LayoutContent>
+          <PaginationContent pagination={pagination} />
+          {footer ? <FooterContent>{footer}</FooterContent> : null}
+          {toolbar}
+        </LayoutMaterialContent>
+        <MaterialOutline
+          chapters={{
+            label: tCommon("on-this-page"),
+            data: headings,
+          }}
+          githubUrl={sourceUrl ?? undefined}
+          header={{
+            title: metadata.title,
+            href: currentHref,
+            description: metadata.description ?? metadata.subject,
+          }}
+          showComments={showComments}
         />
-        <ContentDates
-          {...(metadata.dateModified === undefined
-            ? {}
-            : { dateModified: metadata.dateModified })}
-          datePublished={metadata.datePublished}
-        />
-        <LayoutContent>
-          {headings.length === 0 && <ComingSoon />}
-          {headings.length > 0 ? children : null}
-        </LayoutContent>
-        <PaginationContent pagination={pagination} />
-        {footer ? <FooterContent>{footer}</FooterContent> : null}
-        {toolbar}
-      </LayoutMaterialContent>
-      <LayoutMaterialToc
-        chapters={{
-          label: tCommon("on-this-page"),
-          data: headings,
-        }}
-        githubUrl={sourceUrl ?? undefined}
-        header={{
-          title: metadata.title,
-          href: currentHref,
-          description: metadata.description ?? metadata.subject,
-        }}
-        showComments={showComments}
-      />
+      </SidebarRightProvider>
     </>
   );
 }
