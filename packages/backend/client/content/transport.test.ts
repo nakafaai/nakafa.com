@@ -132,9 +132,11 @@ describe("content runtime transport", () => {
       );
       const cyclic: { self?: unknown } = {};
       cyclic.self = cyclic;
-      expect(
-        yield* encodeContentRequest(cyclic, 1024).pipe(Effect.flip)
-      ).toMatchObject({ reason: "request" });
+      for (const input of [cyclic, undefined]) {
+        expect(
+          yield* encodeContentRequest(input, 1024).pipe(Effect.flip)
+        ).toMatchObject({ reason: "request" });
+      }
       expect(
         yield* encodeContentRequest({ value: "x".repeat(1024) }, 10).pipe(
           Effect.flip
@@ -426,6 +428,7 @@ describe("content runtime transport", () => {
           "response-unmarked",
         ],
         [createResponse("{", 200), "json-syntax"],
+        [createResponse(new Uint8Array([0xc3, 0x28]), 200), "body"],
         [createResponse("x".repeat(20), 200), "response-size"],
       ];
       for (const [response, reason] of invalid) {
@@ -442,7 +445,9 @@ describe("content runtime transport", () => {
         [{ kind: "found" }, 200],
         [{ kind: "missing" }, 404],
         [{ code: "CONTENT_RUNTIME_UNAUTHORIZED", kind: "failure" }, 401],
+        [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 400],
         [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 413],
+        [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 415],
         [{ code: "CONTENT_RUNTIME_INTERNAL", kind: "failure" }, 500],
         [{ code: "CONTENT_RUNTIME_RESPONSE_TOO_LARGE", kind: "failure" }, 500],
       ] as const) {
@@ -450,11 +455,19 @@ describe("content runtime transport", () => {
           yield* validateContentRuntimeStatus(response, status)
         ).toBeUndefined();
       }
-      expect(
-        yield* validateContentRuntimeStatus({ kind: "missing" }, 200).pipe(
-          Effect.flip
-        )
-      ).toMatchObject({ reason: "status" });
+      for (const [response, status] of [
+        [{ kind: "missing" }, 200],
+        [{ code: "CONTENT_RUNTIME_UNAUTHORIZED", kind: "failure" }, 403],
+        [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 422],
+        [{ code: "CONTENT_RUNTIME_INTERNAL", kind: "failure" }, 503],
+        [{ code: "CONTENT_RUNTIME_RESPONSE_TOO_LARGE", kind: "failure" }, 413],
+      ] as const) {
+        expect(
+          yield* validateContentRuntimeStatus(response, status).pipe(
+            Effect.flip
+          )
+        ).toMatchObject({ reason: "status" });
+      }
     })
   );
 });

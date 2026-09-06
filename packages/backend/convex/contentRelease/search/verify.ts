@@ -21,9 +21,14 @@ export const resolveSearchProjection = Effect.fn(
     row.appLocale,
     owner.sequence
   ).pipe(Effect.provide(convexPublicationLayer(ctx)));
+  if (!resolved) {
+    return yield* staleSearchRow(row);
+  }
+  const projection = resolved.projection;
+  if (projection.kind !== "article" && projection.kind !== "subject-lesson") {
+    return yield* staleSearchRow(row);
+  }
   if (
-    !resolved ||
-    resolved.appLocale !== row.appLocale ||
     resolved.family !== row.family ||
     resolved.projectionHash !== row.projectionHash ||
     resolved.publicPath !== row.publicPath ||
@@ -32,7 +37,7 @@ export const resolveSearchProjection = Effect.fn(
   ) {
     return yield* staleSearchRow(row);
   }
-  return resolved;
+  return { ...resolved, projection };
 });
 /** Creates one typed integrity failure for a stale release-owned search row. */
 function staleSearchRow(

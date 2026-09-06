@@ -105,15 +105,13 @@ export const cancelAccountDeletionAttempt = mutation({
         async (authId) =>
           (await authReader.getAnyUserById(ctx, authId)) !== null
       ).pipe(
-        Effect.flatMap((outcome) =>
-          outcome === null
-            ? Effect.fail(
-                new AccountDeletionCancellationUnprovenError({
-                  code: ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
-                  message: "Account deletion cancellation could not be proven.",
-                })
-              )
-            : Effect.succeed(outcome)
+        Effect.filterOrFail(
+          (outcome) => outcome !== null,
+          () =>
+            new AccountDeletionCancellationUnprovenError({
+              code: ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
+              message: "Account deletion cancellation could not be proven.",
+            })
         )
       )
     ),

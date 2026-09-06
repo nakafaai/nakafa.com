@@ -83,10 +83,7 @@ function isRetryableContentResponse(response: Response, endpoint: string) {
  * @see https://github.com/nodejs/undici/blob/v7.29.0/README.md#garbage-collection
  */
 const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
-  function* (failure: ContentRequestFailure) {
-    if (failure._tag !== "RetryableContentResponse") {
-      return;
-    }
+  function* (failure: RetryableContentResponse) {
     const body = failure.response.body;
     if (body === null) {
       return;
@@ -269,12 +266,10 @@ export const requestContentResponse = Effect.fn(
           signal: AbortSignal.timeout(CONTENT_TIMEOUT_MILLISECONDS),
         }),
     }).pipe(
-      Effect.flatMap((response) => {
-        if (!isRetryableContentResponse(response, input.endpoint)) {
-          return Effect.succeed(response);
-        }
-        return Effect.fail(new RetryableContentResponse({ response }));
-      })
+      Effect.filterOrFail(
+        (response) => !isRetryableContentResponse(response, input.endpoint),
+        (response) => new RetryableContentResponse({ response })
+      )
     );
     const value = yield* read(response, input.endpoint).pipe(
       Effect.mapError(classifyContentBodyFailure)

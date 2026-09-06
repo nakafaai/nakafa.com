@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import {
+  ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
   ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
   ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
 } from "@repo/backend/convex/auth/deletion/constants";
@@ -88,7 +89,7 @@ describe("auth/deletion", () => {
     ).resolves.toBe(accountDeletionAttemptStatus.unknown);
   });
 
-  it("lets an opaque browser attempt cancel while its auth user exists", async () => {
+  it("cancels a live browser attempt and ignores its obsolete commit", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -96,11 +97,11 @@ describe("auth/deletion", () => {
         suffix: "cancel-current-deletion",
       })
     );
-    await t.mutation(async (ctx) => {
+    const preparationId = await t.mutation(async (ctx) => {
       await ctx.db.patch("users", identity.userId, {
         deletionPreparedAt: NOW,
       });
-      await ctx.db.insert("accountDeletionPreparations", {
+      return await ctx.db.insert("accountDeletionPreparations", {
         attemptId: ATTEMPT_ID,
         authId: identity.authUserId,
         recoveryGeneration: 0,
@@ -113,6 +114,16 @@ describe("auth/deletion", () => {
         attemptId: ATTEMPT_ID,
       })
     ).resolves.toBe(accountDeletionCancellationOutcome.complete);
+    await expect(
+      t.mutation(internal.auth.deletion.continueAccountDeletionCommit, {
+        authId: identity.authUserId,
+        expectedPreparation: {
+          attemptId: ATTEMPT_ID,
+          preparationId,
+          recoveryGeneration: 0,
+        },
+      })
+    ).resolves.toBe(false);
 
     const state = await t.query(async (ctx) => ({
       cancellation: await ctx.db
@@ -265,4 +276,67 @@ describe("auth/deletion", () => {
       }),
     ]);
   });
+
+  it.each(["cancellations", "receipts"])(
+    "continues expired %s cleanup until both retention tables are drained",
+    async (kind) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(NOW);
+      const t = createConvexTestWithBetterAuth();
+      await t.mutation(async (ctx) => {
+        for (
+          let index = 0;
+          index <= ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE;
+          index += 1
+        ) {
+          const attemptId = `expired-${index}`;
+          if (kind === "cancellations") {
+            await ctx.db.insert("accountDeletionAttemptCancellations", {
+              attemptId,
+              canceledAt: 0,
+            });
+          } else {
+            await ctx.db.insert("accountDeletionReceipts", {
+              attemptId,
+              committedAt: 0,
+            });
+          }
+        }
+        await ctx.db.insert("accountDeletionAttemptCancellations", {
+          attemptId: "retained-cancellation",
+          canceledAt: NOW,
+        });
+        await ctx.db.insert("accountDeletionReceipts", {
+          attemptId: "retained-receipt",
+          committedAt: NOW,
+        });
+      });
+
+      await expect(
+        t.mutation(internal.auth.deletion.sweepAccountDeletionRetention, {})
+      ).resolves.toBeNull();
+      const pending = await t.query((ctx) =>
+        ctx.db.system.query("_scheduled_functions").take(2)
+      );
+      expect(pending).toMatchObject([
+        {
+          args: [{}],
+          name: "auth/deletion:sweepAccountDeletionRetention",
+          state: { kind: "pending" },
+        },
+      ]);
+
+      await t.finishAllScheduledFunctions(vi.runAllTimers);
+      const remaining = await t.query(async (ctx) => ({
+        cancellations: await ctx.db
+          .query("accountDeletionAttemptCancellations")
+          .take(2),
+        receipts: await ctx.db.query("accountDeletionReceipts").take(2),
+      }));
+      expect(remaining).toMatchObject({
+        cancellations: [{ attemptId: "retained-cancellation" }],
+        receipts: [{ attemptId: "retained-receipt" }],
+      });
+    }
+  );
 });

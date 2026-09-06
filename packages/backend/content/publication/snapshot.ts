@@ -106,7 +106,7 @@ export const snapshotPublicationLayer = (tables: PublicationSnapshot) =>
         }
       );
       return PublicationSource.of({
-        state: Effect.succeed(Option.some(state)),
+        state: Effect.succeedSome(state),
         release: Effect.fn("publication.snapshot.release")(
           function* (releaseId) {
             const release = releases.get(releaseId);

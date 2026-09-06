@@ -157,7 +157,6 @@ const runScope = Effect.fn("VercelScopeTest.runScope")(function* (
         VERCEL_GIT_COMMIT_SHA: options.head,
         VERCEL_GIT_PREVIOUS_SHA: options.base,
       },
-      stderr: "ignore",
       stdout: "ignore",
     }
   ).pipe(
@@ -165,14 +164,33 @@ const runScope = Effect.fn("VercelScopeTest.runScope")(function* (
       () => new ScopeFixtureError({ message: "Unable to start scope script." })
     )
   );
-  return yield* command.exitCode.pipe(
+  const [exitCode, stderr] = yield* Effect.all(
+    [command.exitCode, Stream.mkString(Stream.decodeText(command.stderr))],
+    { concurrency: 2 }
+  ).pipe(
     Effect.mapError(
       () => new ScopeFixtureError({ message: "Unable to finish scope script." })
     )
   );
+  expect(stderr).toBe("");
+  return exitCode;
 });
 
 describe("Vercel production scope", () => {
+  it.effect("builds quietly when the previous Git commit is unavailable", () =>
+    Effect.gen(function* () {
+      const repository = yield* makeRepository();
+      const head = yield* readRevision(repository);
+      expect(
+        yield* runScope(repository, {
+          base: "0".repeat(40),
+          head,
+          turboExit: 0,
+        })
+      ).toBe(1);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
   it.effect("skips only verified non-production or test-only work", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
