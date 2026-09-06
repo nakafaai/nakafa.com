@@ -8,6 +8,9 @@ import {
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;
+const DOCUMENT_TITLE_PATTERN = /<h1[\s>]/;
+const DOCUMENT_SECTION_PATTERN = /<h2[\s>]/;
+const STORED_DEVICE_PATTERN = /^".+"$/;
 type DateLabels = Readonly<{ published: string; updated: string }>;
 type JsonLdType = "Article" | "LearningResource";
 const dateLabels = {
@@ -238,7 +241,15 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
   const response = yield* Effect.promise(() =>
     page.goto(route.href, { waitUntil: "domcontentloaded" })
   );
-  yield* Effect.sync(() => expect(response?.status()).toBe(200));
+  if (!response) {
+    return yield* contentDateError(route.href, "document response");
+  }
+  const html = yield* Effect.promise(() => response.text());
+  yield* Effect.sync(() => {
+    expect(response.status()).toBe(200);
+    expect(html).toMatch(DOCUMENT_TITLE_PATTERN);
+    expect(html).toMatch(DOCUMENT_SECTION_PATTERN);
+  });
   yield* expectCanonicalAlternates(page, route, group.routes);
   yield* expectTruthfulDates(page, route, group.jsonLdTypes);
 
@@ -277,11 +288,26 @@ for (const group of contentRouteGroups) {
             const page = yield* Effect.promise(() => context.newPage());
             yield* withObservedPageErrors(
               page,
-              Effect.forEach(
-                group.routes,
-                (route) => verifyContentRoute(page, route, group),
-                { concurrency: 1, discard: true }
-              )
+              Effect.gen(function* () {
+                let firstDeviceId: string | null = null;
+                for (const route of group.routes) {
+                  yield* verifyContentRoute(page, route, group);
+                  const readDeviceId = () =>
+                    page.evaluate(() =>
+                      localStorage.getItem("nakafa-device-id")
+                    );
+                  yield* Effect.promise(() =>
+                    expect.poll(readDeviceId).toMatch(STORED_DEVICE_PATTERN)
+                  );
+                  const deviceId = yield* Effect.promise(readDeviceId);
+                  if (firstDeviceId !== null) {
+                    yield* Effect.sync(() =>
+                      expect(deviceId).toBe(firstDeviceId)
+                    );
+                  }
+                  firstDeviceId = deviceId;
+                }
+              })
             );
           })
       )
