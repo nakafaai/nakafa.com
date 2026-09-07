@@ -9,7 +9,7 @@ export function ContentTitle({
   return (
     <header className="relative py-20">
       <div className="mx-auto max-w-3xl space-y-6 px-6 text-center">
-        <h1 className="text-balance font-normal font-serif text-5xl leading-tight tracking-tight">
+        <h1 className="wrap-anywhere hyphens-auto text-balance font-normal font-serif text-5xl leading-tight tracking-tight">
           {title}
         </h1>
         {description && (

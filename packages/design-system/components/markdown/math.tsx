@@ -176,7 +176,10 @@ export function BlockMath({
  */
 export function InlineMath(props: MathComponentProps) {
   return (
-    <span data-markdown-ignore="">
+    <span
+      className="inline-block max-w-full overflow-x-auto align-middle"
+      data-markdown-ignore=""
+    >
       <KatexMarkup displayMode={false} {...props} />
     </span>
   );
