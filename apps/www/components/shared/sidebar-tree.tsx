@@ -39,6 +39,11 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
   const id = slugify(heading.label);
   const virtualIndex = heading.index;
   const isActive = virtualIndex === undefined && activeHeadings.includes(id);
+  const label = (
+    <span className="truncate" title={heading.label}>
+      {heading.label}
+    </span>
+  );
 
   return (
     <SidebarMenuItem key={heading.href}>
@@ -52,7 +57,7 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
                   // In-page headings use native fragment navigation so an
                   // existing hash never enters the route prefetch cache.
                   <a href={heading.href} title={heading.label}>
-                    {heading.label}
+                    {label}
                   </a>
                 ) : (
                   <button
@@ -61,14 +66,12 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
                       scrollToIndex(virtualIndex);
                     }}
                     type="button"
-                  />
+                  >
+                    {label}
+                  </button>
                 )
               }
-            >
-              <span className="truncate" title={heading.label}>
-                {heading.label}
-              </span>
-            </SidebarMenuButton>
+            />
           }
         />
         <TooltipContent
