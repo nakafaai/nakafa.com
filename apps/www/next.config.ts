@@ -175,6 +175,12 @@ const nextConfig = {
     : undefined,
   cacheComponents: true,
   partialPrefetching: true,
+  typescript: {
+    // pnpm build runs next typegen and the full two-checker tsc gate first.
+    // Keep that check outside the resident web compiler's memory footprint.
+    // https://nextjs.org/docs/app/api-reference/config/next-config-js/typescript
+    ignoreBuildErrors: true,
+  },
   env: {
     NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: `${isAksaraPreviewChild}`,
   },
