@@ -188,3 +188,6 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
     return false;
   }
 );
+
+/** Temporary retirement seam; remove after predecessor history is absent. */
+export { cleanupAttemptRuntime };
