@@ -159,7 +159,7 @@ describe("contentRelease/compact/state", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
   });
 
-  it("retains a permanent runtime before a newer release retention boundary", async () => {
+  it("keeps the recent release boundary when a frozen runtime names an older release", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await seedCompactionHistory(ctx);
@@ -185,7 +185,7 @@ describe("contentRelease/compact/state", () => {
     });
     expect(
       await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).toMatchObject({ complete: false, cycle: { floor: 1 } });
+    ).toMatchObject({ complete: false, cycle: { floor: 2 } });
   });
 
   it("advances only through a bounded old-release window", async () => {
@@ -233,7 +233,7 @@ describe("contentRelease/compact/state", () => {
       expect(await ctx.db.query("contentReleases").collect()).toHaveLength(5);
       expect(await runConvexProgram(ensureCompaction(ctx))).toMatchObject({
         complete: false,
-        cycle: { floor: 4 },
+        cycle: { floor: 3 },
       });
     });
   });

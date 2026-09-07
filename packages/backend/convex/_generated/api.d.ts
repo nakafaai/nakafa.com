@@ -12001,24 +12001,6 @@ export declare const internal: {
       };
     };
     retire: {
-      attempt: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          plan: {
-            attemptId: Id<"tryoutAttempts">;
-            bundleHash: string;
-            runtimeId: Id<"tryoutRuntimeBundles">;
-            source: {
-              manifestHash: string;
-              releaseId: string;
-              sequence: number;
-            };
-            startedAt: number;
-          };
-        },
-        { complete: boolean }
-      >;
       history: FunctionReference<
         "mutation",
         "internal",
