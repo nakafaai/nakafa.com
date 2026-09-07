@@ -1,6 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { protectedRuntimeFloor } from "@repo/backend/convex/contentRelease/compact/runtime";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   ensureState,
@@ -65,41 +64,41 @@ const slotIdentity = Effect.fn("contentRelease.compactionSlot")(function* (
   return { manifestHash, releaseId, sequence } satisfies SlotIdentity;
 });
 
-/** Loads the exact slot and direct base sequences that must remain reachable. */
-const protectedSlot = Effect.fn("contentRelease.protectedSlot")(function* (
-  ctx: MutationCtx,
-  slot: null | SlotIdentity
-) {
-  if (!slot) {
-    return [];
-  }
-  const release = yield* loadRelease(ctx, slot.releaseId);
-  const signed = yield* decodeReleaseJson(release.releaseJson);
-  if (
-    release.sequence !== slot.sequence ||
-    !isSequence(release.sequence) ||
-    signed.manifestHash !== slot.manifestHash
+/** Loads the exact release and direct base sequences that must remain reachable. */
+const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
+  function* (
+    ctx: MutationCtx,
+    release: Doc<"contentReleases">,
+    identity?: SlotIdentity
   ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Content slot ${slot.releaseId} lost its exact release identity.`
-    );
+    const signed = yield* decodeReleaseJson(release.releaseJson);
+    if (
+      !isSequence(release.sequence) ||
+      (identity !== undefined &&
+        (release.sequence !== identity.sequence ||
+          signed.manifestHash !== identity.manifestHash))
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${release.releaseId} lost its exact protected identity.`
+      );
+    }
+    const baseId = signed.manifest.baseReleaseId;
+    const baseHash = signed.manifest.baseManifestHash;
+    if (baseId === null || baseHash === null) {
+      return [release.sequence];
+    }
+    const base = yield* loadRelease(ctx, baseId);
+    const baseSigned = yield* decodeReleaseJson(base.releaseJson);
+    if (!isSequence(base.sequence) || baseSigned.manifestHash !== baseHash) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${release.releaseId} lost its exact protected base.`
+      );
+    }
+    return [release.sequence, base.sequence];
   }
-  const baseId = signed.manifest.baseReleaseId;
-  const baseHash = signed.manifest.baseManifestHash;
-  if (baseId === null || baseHash === null) {
-    return [slot.sequence];
-  }
-  const base = yield* loadRelease(ctx, baseId);
-  const baseSigned = yield* decodeReleaseJson(base.releaseJson);
-  if (!isSequence(base.sequence) || baseSigned.manifestHash !== baseHash) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Content slot ${slot.releaseId} lost its exact base release.`
-    );
-  }
-  return [slot.sequence, base.sequence];
-});
+);
 
 /** Computes the earliest sequence protected by slots and known-good history. */
 const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
@@ -127,7 +126,11 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
     ),
   ]);
   const slotSequences = yield* Effect.forEach(slots, (slot) =>
-    protectedSlot(ctx, slot)
+    slot === null
+      ? Effect.succeed([])
+      : loadRelease(ctx, slot.releaseId).pipe(
+          Effect.flatMap((release) => protectedRelease(ctx, release, slot))
+        )
   );
   const completed = yield* Effect.promise(() =>
     ctx.db
@@ -138,16 +141,10 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
       .order("desc")
       .take(2)
   );
-  const sequences = [
-    ...slotSequences.flat(),
-    ...completed.map((release) => release.sequence),
-  ];
-  if (sequences.some((sequence) => !isSequence(sequence))) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Content compaction found an invalid protected sequence."
-    );
-  }
+  const completedSequences = yield* Effect.forEach(completed, (release) =>
+    protectedRelease(ctx, release)
+  );
+  const sequences = [...slotSequences.flat(), ...completedSequences.flat()];
   return sequences.length === 0 ? state.nextSequence : Math.min(...sequences);
 });
 
@@ -181,13 +178,6 @@ const retainedFloor = Effect.fn("contentRelease.retainedFloor")(function* (
   }
   const cutoff = Date.now() - ROLLBACK_RETENTION_MS;
   const retained = releases.find((release) => release.createdAt >= cutoff);
-  const runtimeFloor = yield* protectedRuntimeFloor(ctx, releases);
-  if (
-    runtimeFloor !== null &&
-    (retained === undefined || runtimeFloor < retained.sequence)
-  ) {
-    return runtimeFloor;
-  }
   if (retained) {
     return retained.sequence;
   }

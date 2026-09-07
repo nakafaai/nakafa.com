@@ -1,6 +1,7 @@
+import { canonicalizeContentReleaseManifest } from "@nakafa/aksara-contracts/release/signing";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { protectedRuntimeFloor } from "@repo/backend/convex/contentRelease/compact/runtime";
 import { protectedFloor } from "@repo/backend/convex/contentRelease/compact/state";
+import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   loadRelease,
@@ -14,7 +15,7 @@ import type {
 import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
-/** Proves the exact empty predecessor scope before its retirement is allowed. */
+/** Proves the exact terminal release identity before its retirement is allowed. */
 export const loadRetiredRelease = Effect.fn(
   "contentRelease.loadRetiredRelease"
 )(function* (
@@ -23,11 +24,15 @@ export const loadRetiredRelease = Effect.fn(
 ) {
   const row = yield* loadRelease(ctx, identity.releaseId);
   const signed = yield* decodeReleaseJson(row.releaseJson);
+  const manifestHash = yield* hashText(
+    "the reviewed retirement manifest",
+    canonicalizeContentReleaseManifest(signed.manifest)
+  );
   if (
     row.sequence !== identity.sequence ||
     signed.manifestHash !== identity.manifestHash ||
+    manifestHash !== identity.manifestHash ||
     signed.manifest.releaseId !== identity.releaseId ||
-    signed.manifest.scope.content?.length !== 0 ||
     (row.status !== "completed" && row.status !== "aborted") ||
     row.proofWorkflowId !== undefined
   ) {
@@ -39,7 +44,7 @@ export const loadRetiredRelease = Effect.fn(
   return row;
 });
 
-/** Starts only the reviewed predecessor range in the native durable compactor. */
+/** Starts only the reviewed obsolete range in the native durable compactor. */
 export const beginHistoryRetirement = Effect.fn(
   "contentRelease.beginHistoryRetirement"
 )(function* (ctx: MutationCtx, plan: Infer<typeof retirementHistoryValidator>) {
@@ -117,12 +122,6 @@ export const beginHistoryRetirement = Effect.fn(
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "The reviewed retirement range changed or contains duplicate sequences."
-    );
-  }
-  if ((yield* protectedRuntimeFloor(ctx, rows)) !== null) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_STATE",
-      "A permanent try-out runtime still owns the retirement range."
     );
   }
   const now = Date.now();
