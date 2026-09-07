@@ -36,18 +36,44 @@ describe("curriculum artwork", () => {
   it("maps signed grade and material identities to reviewed artwork", () => {
     expect(
       resolveCurriculumCatalogArtwork("de", {
+        nodeKey: "class-10",
         iconKey: "grade-10",
         kind: "route",
       })
     ).toBe("/open-graph/grade/de-10.png");
     expect(
       resolveCurriculumCatalogArtwork("de", {
+        nodeKey: "economics",
         iconKey: "mathematics",
         kind: "route",
         materialDomain: MaterialDomainSchema.make("economy"),
       })
     ).toBe("/open-graph/subject/de-economics.png");
   });
+
+  it.each(["en", "id", "de"] as const)(
+    "resolves stage artwork by identity in %s",
+    (locale) => {
+      for (const nodeKey of ["secondary", "upper-secondary"]) {
+        expect(
+          resolveCurriculumCatalogArtwork(locale, {
+            kind: "route",
+            nodeKey,
+            iconKey: "school",
+          })
+        ).toBe(
+          `/open-graph/grade/${locale === "id" ? "en" : locale}-${nodeKey}.png`
+        );
+      }
+      expect(
+        resolveCurriculumCatalogArtwork(locale, {
+          kind: "route",
+          nodeKey: "lower-secondary",
+          iconKey: "middle-school",
+        })
+      ).toBeUndefined();
+    }
+  );
 
   it("keeps unknown catalog identities on card gradients", () => {
     expect(
@@ -58,6 +84,7 @@ describe("curriculum artwork", () => {
     ).toBeUndefined();
     expect(
       resolveCurriculumCatalogArtwork("en", {
+        nodeKey: "future",
         iconKey: "science",
         kind: "route",
       })

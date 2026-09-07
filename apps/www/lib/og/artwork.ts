@@ -18,6 +18,8 @@ export const artworkSources = {
   "grade/11": ALL_ARTWORK_LOCALES,
   "grade/12": ALL_ARTWORK_LOCALES,
   "grade/bachelor": ["en", "id"],
+  "grade/secondary": ["en", "de"],
+  "grade/upper-secondary": ["en", "de"],
   "quran/index": ALL_ARTWORK_LOCALES,
   "subject/ai-ds": ALL_ARTWORK_LOCALES,
   "subject/arabic-language": ENGLISH_ARTWORK,
