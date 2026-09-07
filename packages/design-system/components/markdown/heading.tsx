@@ -62,7 +62,9 @@ export function Heading({
         id={id}
         {...props}
       >
-        <span className="text-pretty">{props.children}</span>
+        <span className="wrap-anywhere hyphens-auto text-pretty">
+          {props.children}
+        </span>
       </Tag>
     );
   }
@@ -78,12 +80,14 @@ export function Heading({
     >
       <a
         aria-label={`Link to ${props.children}`}
-        className="group/heading inline-flex items-center gap-4"
+        className="group/heading inline-flex min-w-0 items-center gap-4"
         href={`#${id}`}
         title={props.children?.toString()}
       >
-        <span className="text-pretty">{props.children}</span>
-        <div className="rounded-sm border p-2 opacity-0 transition-opacity ease-out group-hover/heading:opacity-100">
+        <span className="wrap-anywhere hyphens-auto text-pretty">
+          {props.children}
+        </span>
+        <div className="shrink-0 rounded-sm border p-2 opacity-0 transition-opacity ease-out group-hover/heading:opacity-100">
           <HugeIcons
             className="size-4 shrink-0 text-muted-foreground"
             icon={Link05Icon}
