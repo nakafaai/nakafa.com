@@ -6,10 +6,8 @@ import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
-import { RefContent } from "@/components/shared/ref-content";
 import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app-artwork";
@@ -117,9 +115,6 @@ function PageContent({
           })}
         </div>
       </LayoutContent>
-      <FooterContent>
-        <RefContent />
-      </FooterContent>
     </>
   );
 }

@@ -4,36 +4,32 @@ import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
-const articleHref = "/id/articles/politics/regional-elections-turmoil";
 const readinessTimeoutMilliseconds = 15_000;
 
 const verifyCompactReferenceSheet = Effect.fn(
   "NakafaE2E.verifyCompactReferenceSheet"
-)(function* (page: Page) {
+)(function* (page: Page, href: string, width: number) {
   yield* seedDeniedAnalyticsConsent(page);
   const response = yield* Effect.promise(() =>
-    page.goto(articleHref, { waitUntil: "domcontentloaded" })
+    page.goto(href, { waitUntil: "domcontentloaded" })
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
   yield* waitForCommittedAppRouter(
     page,
-    articleHref,
-    articleHref,
+    href,
+    href,
     readinessTimeoutMilliseconds
   );
 
-  const sidebarTrigger = page.getByRole("button", {
-    exact: true,
-    name: "Pada halaman ini",
-  });
-  yield* Effect.promise(() => expect(sidebarTrigger).toBeVisible());
-  yield* Effect.promise(() => sidebarTrigger.click());
-
-  const mobileSidebar = page
-    .locator('[role="dialog"][data-sidebar="sidebar"]')
+  const sidebarTrigger = page
+    .getByRole("button", { exact: true, name: "Pada halaman ini" })
+    .or(page.locator('button[data-slot="sidebar-trigger"].fixed'))
     .filter({ visible: true });
-  yield* Effect.promise(() => expect(mobileSidebar).toBeVisible());
-  const trigger = mobileSidebar.getByRole("button", {
+  if (width < 1280) {
+    yield* Effect.promise(() => sidebarTrigger.click());
+  }
+
+  const trigger = page.getByRole("button", {
     exact: true,
     name: "Daftar pustaka",
   });
@@ -76,7 +72,7 @@ const verifyCompactReferenceSheet = Effect.fn(
           ? `${contentStyle.paddingLeft} ${contentStyle.paddingRight}`
           : null,
         dividerWidth: separator?.getBoundingClientRect().width,
-        itemHeight: item.getBoundingClientRect().height,
+        hasOverflow: item.scrollWidth > item.clientWidth,
         itemPaddingTop: itemStyle.paddingTop,
         listWidth: list?.getBoundingClientRect().width,
         metadataGap: metadata ? getComputedStyle(metadata).gap : null,
@@ -88,6 +84,7 @@ const verifyCompactReferenceSheet = Effect.fn(
   );
   yield* Effect.sync(() => {
     expect(metrics).toMatchObject({
+      hasOverflow: false,
       contentGap: "16px",
       contentOverflowX: "hidden",
       contentPaddingInline: "16px 16px",
@@ -98,7 +95,6 @@ const verifyCompactReferenceSheet = Effect.fn(
       urlOverflowX: "hidden",
       urlTextOverflow: "ellipsis",
     });
-    expect(metrics.itemHeight).toBeLessThanOrEqual(232);
   });
 
   yield* Effect.promise(() => page.keyboard.press("Escape"));
@@ -106,12 +102,24 @@ const verifyCompactReferenceSheet = Effect.fn(
   yield* Effect.promise(() => expect(trigger).toBeFocused());
 });
 
-test.describe("article bibliography", () => {
-  test.use({ viewport: { height: 957, width: 665 } });
+for (const width of [390, 665, 1440]) {
+  test.describe(`bibliography at ${width}px`, () => {
+    test.use({ viewport: { height: 957, width } });
 
-  test("presents references as a compact divided list", async ({ page }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyCompactReferenceSheet(page))
-    );
+    for (const href of [
+      "/id/articles/politics/regional-elections-turmoil",
+      "/id/quran/1",
+    ]) {
+      test(`presents ${href} references as a divided list`, async ({
+        page,
+      }) => {
+        await Effect.runPromise(
+          withObservedPageErrors(
+            page,
+            verifyCompactReferenceSheet(page, href, width)
+          )
+        );
+      });
+    }
   });
-});
+}

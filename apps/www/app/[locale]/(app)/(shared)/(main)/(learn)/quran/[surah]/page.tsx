@@ -11,7 +11,6 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
-import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
@@ -25,7 +24,6 @@ import {
 } from "@/components/shared/quran/interpretation/button";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
-import { RefContent } from "@/components/shared/ref-content";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -284,9 +282,6 @@ async function CachedSurahShell({
             )}
           </LayoutContent>
           <PaginationContent pagination={pagination} />
-          <FooterContent>
-            <RefContent references={references} title={title} />
-          </FooterContent>
           {toolbar}
         </LayoutMaterialContent>
         <LayoutMaterialToc
@@ -300,6 +295,7 @@ async function CachedSurahShell({
             description,
             descriptionLanguage,
           }}
+          references={{ title, data: references }}
         />
       </VirtualProvider>
     </>

@@ -1,303 +1,125 @@
 "use client";
 
 import {
-  Book03Icon,
-  BookOpen02Icon,
-  Calendar03Icon,
   DiscordIcon,
   GithubIcon,
-  Globe02Icon,
-  LayerIcon,
-  QuillWrite01Icon,
   YoutubeIcon,
 } from "@hugeicons/core-free-icons";
-import { useDisclosure } from "@mantine/hooks";
-import type { Reference } from "@repo/contents/_types/content";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
-import { Separator } from "@repo/design-system/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@repo/design-system/components/ui/sheet";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { cleanupUrl, formatUrl } from "@repo/design-system/lib/routing/url";
 import { cn } from "@repo/design-system/lib/utils";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { useTranslations } from "next-intl";
-import { useLayoutEffect } from "react";
 
 interface Props {
-  /** The className of the references. */
   className?: string;
-  /** The URL of the GitHub repository. */
   githubUrl?: string;
-  /** The references to display (sheet content) */
-  references?: Reference[];
-  /** The title of the references (sheet title) */
-  title?: string;
 }
 
-/**
- * Renders reference actions for learn pages.
- *
- * The bibliography sheet is transient UI, so it resets closed when Next hides
- * the page through Cache Components state preservation.
- *
- * References:
- * - Next.js preserving UI state with Cache Components:
- *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
- * - Mantine `useDisclosure`:
- *   https://mantine.dev/hooks/use-disclosure/
- */
-export function RefContent({ title, references, githubUrl, className }: Props) {
+/** Renders source and community links for learn page catalogs. */
+export function RefContent({ githubUrl, className }: Props) {
   const t = useTranslations("Common");
-  const [open, { close, set, toggle }] = useDisclosure(false);
-  const referenceList = references ?? [];
-  const showSheet = Boolean(referenceList.length && title);
-
-  useLayoutEffect(() => close, [close]);
 
   return (
-    <>
-      <section
-        aria-labelledby={t("references")}
-        className={cn("space-y-4", className)}
+    <section
+      aria-labelledby={t("references")}
+      className={cn("space-y-4", className)}
+    >
+      <h2
+        className="scroll-mt-28 font-medium text-2xl leading-tight tracking-tight"
+        id={t("references")}
       >
-        <h2
-          className="scroll-mt-28 font-medium text-2xl leading-tight tracking-tight"
-          id={t("references")}
-        >
-          {t("references")}
-        </h2>
+        {t("references")}
+      </h2>
 
-        <nav
-          aria-label="Reference actions"
-          className="flex flex-wrap items-center gap-2"
-        >
-          {showSheet ? (
-            <Tooltip>
-              <TooltipTrigger
+      <nav
+        aria-label="Reference actions"
+        className="flex flex-wrap items-center gap-2"
+      >
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                aria-label={t("source-code")}
+                nativeButton={false}
                 render={
-                  <Button
-                    aria-label={t("bibliography")}
-                    onClick={toggle}
-                    size="icon"
-                    variant="outline"
+                  <a
+                    href={githubUrl ?? "https://github.com/nakafaai/nakafa.com"}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    title={t("source-code")}
                   >
-                    <span className="sr-only">{t("bibliography")}</span>
-                    <HugeIcons className="size-4" icon={LayerIcon} />
-                  </Button>
+                    <span className="sr-only">{t("source-code")}</span>
+                    <HugeIcons className="size-4" icon={GithubIcon} />
+                  </a>
                 }
+                size="icon"
+                variant="outline"
               />
-              <TooltipContent side="bottom">
-                <p>{t("bibliography")}</p>
-              </TooltipContent>
-            </Tooltip>
-          ) : null}
+            }
+          />
+          <TooltipContent side="bottom">
+            <p>{t("source-code")}</p>
+          </TooltipContent>
+        </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  aria-label={t("source-code")}
-                  nativeButton={false}
-                  render={
-                    <a
-                      href={
-                        githubUrl ?? "https://github.com/nakafaai/nakafa.com"
-                      }
-                      rel="noopener noreferrer"
-                      target="_blank"
-                      title={t("source-code")}
-                    >
-                      <span className="sr-only">{t("source-code")}</span>
-                      <HugeIcons className="size-4" icon={GithubIcon} />
-                    </a>
-                  }
-                  size="icon"
-                  variant="outline"
-                />
-              }
-            />
-            <TooltipContent side="bottom">
-              <p>{t("source-code")}</p>
-            </TooltipContent>
-          </Tooltip>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                nativeButton={false}
+                render={
+                  <a
+                    href={COMPANY_SOCIAL_PROFILES.youtube}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    title={t("videos")}
+                  >
+                    <span className="sr-only">{t("videos")}</span>
+                    <HugeIcons className="size-4" icon={YoutubeIcon} />
+                  </a>
+                }
+                size="icon"
+                variant="outline"
+              />
+            }
+          />
+          <TooltipContent side="bottom">
+            <p>{t("videos")}</p>
+          </TooltipContent>
+        </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  nativeButton={false}
-                  render={
-                    <a
-                      href={COMPANY_SOCIAL_PROFILES.youtube}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                      title={t("videos")}
-                    >
-                      <span className="sr-only">{t("videos")}</span>
-                      <HugeIcons className="size-4" icon={YoutubeIcon} />
-                    </a>
-                  }
-                  size="icon"
-                  variant="outline"
-                />
-              }
-            />
-            <TooltipContent side="bottom">
-              <p>{t("videos")}</p>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  nativeButton={false}
-                  render={
-                    <a
-                      href={COMPANY_SOCIAL_PROFILES.discord}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                      title={t("community")}
-                    >
-                      <span className="sr-only">{t("community")}</span>
-                      <HugeIcons className="size-4" icon={DiscordIcon} />
-                    </a>
-                  }
-                  size="icon"
-                  variant="outline"
-                />
-              }
-            />
-            <TooltipContent side="bottom">
-              <p>{t("community")}</p>
-            </TooltipContent>
-          </Tooltip>
-        </nav>
-      </section>
-
-      {showSheet ? (
-        <Sheet modal={false} onOpenChange={set} open={open}>
-          <SheetContent className="w-full sm:max-w-xl">
-            <div className="flex h-full flex-col">
-              <SheetHeader>
-                <SheetTitle className="text-xl">
-                  {referenceList.length} {t("references")}
-                </SheetTitle>
-                <SheetDescription>{title}</SheetDescription>
-              </SheetHeader>
-
-              <Separator />
-
-              <div className="flex flex-1 flex-col overflow-hidden">
-                <ScrollArea className="h-full px-4">
-                  <div className="flex flex-col gap-4 py-4">
-                    {referenceList.map((reference) => {
-                      const url = reference.url
-                        ? formatUrl(reference.url)
-                        : t("no-website");
-                      const cleanUrl = cleanupUrl(url).split("/")[0];
-
-                      return (
-                        <Card key={reference.title}>
-                          <CardHeader>
-                            <CardTitle
-                              className="line-clamp-1 capitalize"
-                              title={reference.title}
-                            >
-                              {reference.title.toLowerCase()}
-                            </CardTitle>
-                            <CardDescription className="flex items-center gap-1">
-                              <HugeIcons
-                                className="size-4 shrink-0"
-                                icon={Globe02Icon}
-                              />
-                              {reference.url ? (
-                                <a
-                                  className="underline-offset-4 hover:underline"
-                                  href={reference.url}
-                                  rel="noopener noreferrer"
-                                  target="_blank"
-                                >
-                                  {cleanUrl}
-                                </a>
-                              ) : (
-                                <span>{t("no-website")}</span>
-                              )}
-                            </CardDescription>
-                          </CardHeader>
-
-                          <CardContent className="space-y-2">
-                            <div className="flex items-center gap-1">
-                              <HugeIcons
-                                className="size-4 shrink-0"
-                                icon={QuillWrite01Icon}
-                              />
-                              <span className="line-clamp-1 text-sm">
-                                {reference.authors}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-1">
-                              <HugeIcons
-                                className="size-4 shrink-0"
-                                icon={Calendar03Icon}
-                              />
-                              <span className="text-sm">{reference.year}</span>
-                            </div>
-
-                            {!!reference.publication && (
-                              <div className="flex items-center gap-1">
-                                <HugeIcons
-                                  className="size-4 shrink-0"
-                                  icon={BookOpen02Icon}
-                                />
-                                <span className="line-clamp-1 text-sm">
-                                  {reference.publication}
-                                </span>
-                              </div>
-                            )}
-
-                            {!!reference.details && (
-                              <div className="flex items-center gap-1">
-                                <HugeIcons
-                                  className="size-4 shrink-0"
-                                  icon={Book03Icon}
-                                />
-                                <span className="text-sm">
-                                  {reference.details}
-                                </span>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      ) : null}
-    </>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                nativeButton={false}
+                render={
+                  <a
+                    href={COMPANY_SOCIAL_PROFILES.discord}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    title={t("community")}
+                  >
+                    <span className="sr-only">{t("community")}</span>
+                    <HugeIcons className="size-4" icon={DiscordIcon} />
+                  </a>
+                }
+                size="icon"
+                variant="outline"
+              />
+            }
+          />
+          <TooltipContent side="bottom">
+            <p>{t("community")}</p>
+          </TooltipContent>
+        </Tooltip>
+      </nav>
+    </section>
   );
 }
