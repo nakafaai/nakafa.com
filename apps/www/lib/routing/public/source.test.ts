@@ -123,10 +123,10 @@ describe("public HTML route rejection", () => {
           "/en/articles/public-affairs/deleted-article",
           "/en/articles/public-affairs/unmanaged-article",
         ];
-        const results = yield* Effect.all(
-          paths.map((pathname) =>
-            readSourceBackedHtmlRouteRejection({ method: "GET", pathname })
-          ),
+        const results = yield* Effect.forEach(
+          paths,
+          (pathname) =>
+            readSourceBackedHtmlRouteRejection({ method: "GET", pathname }),
           { concurrency: "unbounded" }
         );
 

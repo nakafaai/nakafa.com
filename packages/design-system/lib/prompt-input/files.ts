@@ -194,5 +194,5 @@ const convertFile = Effect.fn("designSystem.promptInput.convertFile")(
 export const convertPromptInputFiles = Effect.fn(
   "designSystem.promptInput.convertFiles"
 )((files: readonly PromptInputFile[]) =>
-  Effect.all(files.map(convertFile), { concurrency: "unbounded" })
+  Effect.forEach(files, convertFile, { concurrency: "unbounded" })
 );

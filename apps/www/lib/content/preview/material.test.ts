@@ -103,7 +103,7 @@ beforeEach(() => {
   configMock.mockReset();
   fetchMock.mockReset();
   executeMock.mockReset();
-  configMock.mockReturnValue(Effect.succeed(Option.some(config)));
+  configMock.mockReturnValue(Effect.succeedSome(config));
   executeMock.mockImplementation(() =>
     Effect.gen(function* () {
       const resolver = yield* ContentVerificationKeyResolver;
@@ -131,7 +131,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
     () =>
       Effect.gen(function* () {
         const manifest = yield* ReadyMaterialManifest;
-        configMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+        configMock.mockReturnValueOnce(Effect.succeedNone);
         expect(yield* runPreview()).toEqual(Option.none());
 
         fetchMock.mockReturnValueOnce(Effect.succeed(manifest));

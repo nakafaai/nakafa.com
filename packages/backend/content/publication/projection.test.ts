@@ -3,6 +3,7 @@ import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/proje
 import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
 import {
   contentHead,
+  resolveBoundPublicProjection,
   resolveContentHead,
   resolvePublicProjection,
 } from "@repo/backend/content/publication/projection";
@@ -27,6 +28,32 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("immutable publication projections", () => {
+  it.effect("rejects withdrawn or incomplete selected route bindings", () =>
+    Effect.gen(function* () {
+      const fixture = makePageRuntimeSource();
+      const runtime = yield* createTestPublication(fixture.source);
+      yield* Effect.promise(() =>
+        runtime.query((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              for (const patch of [
+                { operation: "delete" as const },
+                { contentKey: undefined },
+              ]) {
+                expect(
+                  yield* resolveBoundPublicProjection(
+                    { ...fixture.binding, ...patch },
+                    fixture.state.activeSequence
+                  ).pipe(Effect.flip, Effect.orDie)
+                ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+              }
+            }).pipe(Effect.provide(convexPublicationLayer(ctx)))
+          )
+        )
+      );
+    })
+  );
+
   it("preserves an unrouted protected head and excludes question bodies from public routing", async () => {
     const target = convexTest(schema, convexModules);
     await target.mutation(async (ctx) => {

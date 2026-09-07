@@ -35,7 +35,10 @@ describe("stored public exchange", () => {
     () =>
       Effect.gen(function* () {
         const row = yield* readFixture();
-        const source = yield* encodePublicDelivery(row, row);
+        const response = yield* decodePublicRuntimeRow(row);
+        assert(response);
+        const runtime = { projectionJson: row.projectionJson, response };
+        const source = yield* encodePublicDelivery(runtime, row);
         expect(JSON.parse(source ?? "")).toMatchObject({
           activeReleaseId: row.activeReleaseId,
           projectionHash: row.projectionHash,
@@ -58,16 +61,11 @@ describe("stored public exchange", () => {
           { activeReleaseId: row.activeReleaseId, projectionJson: null },
         ]) {
           expect(
-            yield* encodePublicDelivery(row, model).pipe(Effect.flip)
+            yield* encodePublicDelivery(runtime, model).pipe(Effect.flip)
           ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
         }
         expect(
           yield* encodePublicDelivery(null, row).pipe(Effect.flip)
-        ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-        expect(
-          yield* encodePublicDelivery({ ...row, artifactJson: "{" }, row).pipe(
-            Effect.flip
-          )
         ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
       })
   );

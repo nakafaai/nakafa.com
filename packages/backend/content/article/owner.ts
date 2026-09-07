@@ -15,16 +15,27 @@ export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
     if (!families.result.includes("article")) {
       return { active, managed: false, slot: null };
     }
-    if (
-      active.state.articleManifestHash !== active.manifestHash ||
-      active.state.articleReleaseId !== active.releaseId ||
-      active.state.articleSequence !== active.sequence
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_STATE",
-        `Articles for ${appLocale} in active release ${active.releaseId} are still synchronizing.`
-      );
-    }
-    return { active, managed: true, slot: active.state.articleSlot };
+    const slot = yield* requireArticleState(active, appLocale);
+    return { active, managed: true, slot };
   }
 );
+
+/** Requires article readiness from an already selected active publication. */
+export const requireArticleState = Effect.fn(
+  "contentRelease.requireArticleState"
+)(function* (
+  active: NonNullable<Effect.Success<ReturnType<typeof loadActiveIdentity>>>,
+  appLocale: PublicationRow<"contentPaths">["appLocale"]
+) {
+  if (
+    active.state.articleManifestHash !== active.manifestHash ||
+    active.state.articleReleaseId !== active.releaseId ||
+    active.state.articleSequence !== active.sequence
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      `Articles for ${appLocale} in active release ${active.releaseId} are still synchronizing.`
+    );
+  }
+  return active.state.articleSlot;
+});

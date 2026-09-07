@@ -91,10 +91,8 @@ export async function getCurrentPublishedPage(
 
   const result = await Effect.runPromise(
     readCurrentPublishedPage(input).pipe(
-      Effect.map(Option.some),
-      Effect.catchTag("ContentRuntimeMissingError", () =>
-        Effect.succeed(Option.none<PublishedPageData>())
-      )
+      Effect.asSome,
+      Effect.catchTag("ContentRuntimeMissingError", () => Effect.succeedNone)
     )
   );
   if (Option.isNone(result)) {

@@ -81,7 +81,7 @@ async function AuthenticatedSettings({
       },
       { concurrency: "unbounded" }
     ).pipe(
-      Effect.map(Option.some),
+      Effect.asSome,
       Effect.catchTag("UserSettingsCurriculumPreloadError", (error) =>
         scheduleCurrentServerExceptionCapture(error.cause, {
           source: "user-settings-curriculum-preload",

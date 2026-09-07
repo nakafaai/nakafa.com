@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { Data, Effect, Option } from "effect";
+import { Data, Effect } from "effect";
 import {
   PreviewConfigError,
   readPreviewConfig,
@@ -82,7 +82,7 @@ function streamFailure(source: string) {
 
 beforeEach(() => {
   configMock.mockReset();
-  configMock.mockReturnValue(Effect.succeed(Option.some(previewConfig)));
+  configMock.mockReturnValue(Effect.succeedSome(previewConfig));
 });
 
 afterEach(() => {
@@ -92,7 +92,7 @@ afterEach(() => {
 describe("local preview events", () => {
   it.effect("fails explicitly when no local provider is configured", () =>
     Effect.gen(function* () {
-      configMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+      configMock.mockReturnValueOnce(Effect.succeedNone);
 
       expect(yield* openFailure()).toMatchObject({
         _tag: "PreviewUnavailableError",

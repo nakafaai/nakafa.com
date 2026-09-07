@@ -1,15 +1,12 @@
 "use client";
 
-import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 
-export interface CurriculumPreferenceOption {
-  countryCode?: string;
-  key: LearningProgramKey;
-  publicSlug: string;
-  title: string;
-}
+type CurriculumPreferenceOption = FunctionReturnType<
+  typeof api.learningPreferences.queries.listCurriculumPrograms
+>[number];
 
 /** Return a curriculum mutation that updates the matching localized preference. */
 export function useSetPreferredCurriculumMutation(

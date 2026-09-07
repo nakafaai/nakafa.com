@@ -1,4 +1,4 @@
-import { loadArticleOwner } from "@repo/backend/content/article/owner";
+import { requireArticleState } from "@repo/backend/content/article/owner";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticleProjection } from "@repo/backend/content/article/verify";
 import { resolveActiveRoute } from "@repo/backend/content/publication/route";
@@ -13,35 +13,25 @@ export const resolveArticleRoute = Effect.fn(
   appLocale: PublicationRow<"articleCatalog">["appLocale"],
   publicPath: string
 ) {
-  const [owner, route] = yield* Effect.all([
-    loadArticleOwner(appLocale),
-    resolveActiveRoute("article", appLocale, publicPath),
-  ]);
-  if (
-    !(
-      owner.managed &&
-      owner.active &&
-      owner.slot &&
-      route.managed &&
-      route.active
-    )
-  ) {
+  const route = yield* resolveActiveRoute("article", appLocale, publicPath);
+  if (!(route.managed && route.active)) {
     return {
-      active: route.active,
+      ...route,
       article: null,
       managed: false,
     };
   }
+  const slot = yield* requireArticleState(route.active, appLocale);
   if (!route.projection) {
     return {
-      active: route.active,
+      ...route,
       article: null,
       managed: true,
     };
   }
   const source = yield* ArticleSource;
   const row = yield* source
-    .article(owner.slot, route.projection.contentKey, appLocale)
+    .article(slot, route.projection.contentKey, appLocale)
     .pipe(Effect.map(Option.getOrNull));
   if (!row) {
     return yield* releaseFail(
@@ -51,7 +41,7 @@ export const resolveArticleRoute = Effect.fn(
   }
   const verified = yield* verifyArticleProjection(row, route.projection);
   return {
-    active: route.active,
+    ...route,
     article: { ...verified, row },
     managed: true,
   };

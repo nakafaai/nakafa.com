@@ -3,12 +3,11 @@ import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { projectQuranVerse } from "@repo/backend/agent/quran/verse";
 import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
-import type { readQuranPassage } from "@repo/backend/content/quran/reference";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect } from "effect";
 
-type QuranReferenceResult = Effect.Success<ReturnType<typeof readQuranPassage>>;
+type QuranReferenceResult = PublishedQuranReference;
 type QuranEmbeddedProjection =
   | NonNullable<QuranReferenceResult["sources"]>["arabic" | "translation"]
   | Extract<

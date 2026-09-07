@@ -1,9 +1,6 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
-import {
-  AppLocaleSchema,
-  ArtifactLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
-import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { resolveBoundPublicProjection } from "@repo/backend/content/publication/projection";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { PublicationSource } from "@repo/backend/content/publication/source";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -21,7 +18,6 @@ export const resolveActiveRoute = Effect.fn(
   publicPath: string
 ) {
   const appLocale = AppLocaleSchema.make(rawAppLocale);
-  const artifactLocale = ArtifactLocaleSchema.make(rawAppLocale);
   const active = yield* loadActiveIdentity();
   if (!active) {
     return {
@@ -51,9 +47,8 @@ export const resolveActiveRoute = Effect.fn(
       `Route ${appLocale}/${publicPath} lost its content identity.`
     );
   }
-  const projection = yield* resolvePublicProjection(
-    binding.contentKey,
-    artifactLocale,
+  const projection = yield* resolveBoundPublicProjection(
+    binding,
     active.sequence
   );
   if (

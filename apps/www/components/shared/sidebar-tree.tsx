@@ -3,7 +3,6 @@
 import { Menu02Icon } from "@hugeicons/core-free-icons";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -50,7 +49,11 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
               isActive={isActive}
               render={
                 virtualIndex === undefined ? (
-                  <NavigationLink href={heading.href} title={heading.label} />
+                  // In-page headings use native fragment navigation so an
+                  // existing hash never enters the route prefetch cache.
+                  <a href={heading.href} title={heading.label}>
+                    {heading.label}
+                  </a>
                 ) : (
                   <button
                     aria-label={heading.label}

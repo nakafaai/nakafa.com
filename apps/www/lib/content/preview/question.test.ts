@@ -61,7 +61,7 @@ function provideManifest(
   manifest: ReturnType<typeof makeQuestionReadyManifest>
 ) {
   snapshotMock.mockReturnValueOnce(
-    Effect.succeed(Option.some({ config: previewConfig, manifest }))
+    Effect.succeedSome({ config: previewConfig, manifest })
   );
 }
 
@@ -84,16 +84,14 @@ describe("local question preview", () => {
     "leaves production and unrelated routes on their existing source",
     () =>
       Effect.gen(function* () {
-        snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+        snapshotMock.mockReturnValueOnce(Effect.succeedNone);
         expect(yield* runPreview()).toEqual(Option.none());
 
         snapshotMock.mockReturnValueOnce(
-          Effect.succeed(
-            Option.some({
-              config: previewConfig,
-              manifest: makeReadyManifest(previewManifestHash),
-            })
-          )
+          Effect.succeedSome({
+            config: previewConfig,
+            manifest: makeReadyManifest(previewManifestHash),
+          })
         );
         expect(yield* runPreview()).toEqual(Option.none());
 
@@ -112,20 +110,16 @@ describe("local question preview", () => {
     Effect.gen(function* () {
       snapshotMock
         .mockReturnValueOnce(
-          Effect.succeed(
-            Option.some({
-              config: previewConfig,
-              manifest: makeQuestionPendingManifest(),
-            })
-          )
+          Effect.succeedSome({
+            config: previewConfig,
+            manifest: makeQuestionPendingManifest(),
+          })
         )
         .mockReturnValueOnce(
-          Effect.succeed(
-            Option.some({
-              config: previewConfig,
-              manifest: makeQuestionFailedManifest(),
-            })
-          )
+          Effect.succeedSome({
+            config: previewConfig,
+            manifest: makeQuestionFailedManifest(),
+          })
         );
 
       expect(yield* runFailure()).toMatchObject({

@@ -5,10 +5,16 @@ import { loadClass } from "@repo/backend/convex/classes/utils";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
 import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
+import { userDataValidator } from "@repo/backend/convex/lib/validators/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import schema from "@repo/backend/convex/schema";
 import type { PaginationResult } from "convex/server";
-import { paginationOptsValidator } from "convex/server";
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 /**
  * Get paginated material groups for a class.
@@ -22,6 +28,12 @@ export const getMaterialGroups = query({
     q: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginationResultValidator(
+    schema.doc("schoolClassMaterialGroups").extend({
+      user: nullable(userDataValidator),
+      publishedByUser: nullable(userDataValidator),
+    })
+  ),
   handler: async (ctx, args) => {
     const { classId, parentId, q: searchQuery, paginationOpts } = args;
 

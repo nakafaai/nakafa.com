@@ -3,7 +3,7 @@ import { resolveMaterialRoute } from "@repo/backend/content/material/route";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
 import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
-import { resolvePublicRoute } from "@repo/backend/content/publication/public";
+import { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { MATERIAL_GROUP_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
@@ -51,7 +51,7 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
         );
       })
     );
-    return counterparts.filter((counterpart) => counterpart !== null);
+    return counterparts;
   }
 );
 
@@ -101,13 +101,12 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
 );
 
 /** Resolves the complete active shell model for one localized material lesson. */
-export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
+const assembleMaterialModel = Effect.fn("contentRelease.assembleMaterialModel")(
   function* (
     appLocale: Doc<"materialCatalog">["appLocale"],
-    publicPath: string,
+    route: Effect.Success<ReturnType<typeof resolveMaterialRoute>>,
     expectedActiveReleaseId?: string | null
   ) {
-    const route = yield* resolveMaterialRoute(appLocale, publicPath);
     yield* requireExpectedActiveRelease(
       route.active,
       expectedActiveReleaseId,
@@ -162,6 +161,22 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
   }
 );
 
+/** Resolves the complete active shell model for one localized material lesson. */
+export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
+  function* (
+    appLocale: Doc<"materialCatalog">["appLocale"],
+    publicPath: string,
+    expectedActiveReleaseId?: string | null
+  ) {
+    const route = yield* resolveMaterialRoute(appLocale, publicPath);
+    return yield* assembleMaterialModel(
+      appLocale,
+      route,
+      expectedActiveReleaseId
+    );
+  }
+);
+
 /** Reads the material shell and signed body in one Convex snapshot. */
 export const readMaterialDelivery = Effect.fn(
   "contentRelease.readMaterialDelivery"
@@ -169,10 +184,9 @@ export const readMaterialDelivery = Effect.fn(
   appLocale: Doc<"materialCatalog">["appLocale"],
   publicPath: string
 ) {
-  const [model, row] = yield* Effect.all([
-    readMaterialModel(appLocale, publicPath),
-    resolvePublicRoute(appLocale, publicPath),
-  ]);
-  const runtimeJson = yield* encodePublicDelivery(row, model);
+  const route = yield* resolveMaterialRoute(appLocale, publicPath);
+  const model = yield* assembleMaterialModel(appLocale, route);
+  const runtime = yield* readSelectedPublicRuntime(route);
+  const runtimeJson = yield* encodePublicDelivery(runtime, model);
   return { model, runtimeJson };
 });
