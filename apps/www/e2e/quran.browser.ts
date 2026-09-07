@@ -12,6 +12,7 @@ const quranTranslationNoteHrefPattern = /^#.+-translation-note-\d+$/u;
 const rawTranslationNotePattern = /\[\d+\]/u;
 
 interface QuranLocaleContract {
+  readonly bibliographyLabel: string;
   readonly hasEmbeddedTafsir: boolean;
   readonly hasTranslationNotes: boolean;
   readonly meanings: readonly [QuranMeaningContract, ...QuranMeaningContract[]];
@@ -31,6 +32,7 @@ type QuranLocaleContracts = {
 
 const quranLocaleContracts = {
   de: {
+    bibliographyLabel: "Literaturverzeichnis",
     hasEmbeddedTafsir: false,
     hasTranslationNotes: false,
     locale: "de",
@@ -41,6 +43,7 @@ const quranLocaleContracts = {
     translationNotesLabel: "Anmerkungen zur Übersetzung",
   },
   en: {
+    bibliographyLabel: "Bibliography",
     hasEmbeddedTafsir: false,
     hasTranslationNotes: true,
     locale: "en",
@@ -48,6 +51,7 @@ const quranLocaleContracts = {
     translationNotesLabel: "Translation notes",
   },
   id: {
+    bibliographyLabel: "Daftar pustaka",
     hasEmbeddedTafsir: true,
     hasTranslationNotes: true,
     locale: "id",
@@ -305,7 +309,15 @@ const verifyQuranLocaleCoverage = Effect.fn(
     readinessTimeoutMilliseconds
   );
 
-  const bibliography = page.locator("footer button").first();
+  yield* Effect.promise(() => expect(page.locator("footer")).toHaveCount(0));
+  const outline = page
+    .locator('button[data-slot="sidebar-trigger"].fixed')
+    .filter({ visible: true });
+  yield* Effect.promise(() => outline.click());
+  const bibliography = page.getByRole("button", {
+    exact: true,
+    name: contract.bibliographyLabel,
+  });
   yield* Effect.promise(() => expect(bibliography).toBeVisible());
   yield* Effect.promise(() => bibliography.click());
   const bibliographySheet = page.locator('[data-slot="sheet-popup"]');
