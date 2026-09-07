@@ -32,10 +32,6 @@ import {
 } from "react";
 import { Line as RechartsLine } from "recharts";
 
-type LineDotProp = ComponentProps<typeof RechartsLine>["dot"];
-
-type LineActiveDotProp = ComponentProps<typeof RechartsLine>["activeDot"];
-
 type StrokeVariant = "solid" | "dashed" | "animated-dashed";
 
 interface LineProps {
@@ -99,13 +95,7 @@ export function Line({
   const filter = glow ? `url(#${id}-glow)` : undefined;
   const colorsCount = getColorsCount(config[dataKey] ?? {});
 
-  const { dot, activeDot } = resolveDots(
-    children,
-    id,
-    dataKey,
-    opacity.dot,
-    maskId
-  );
+  const { dot, activeDot } = resolveDots(children);
 
   const isAnimatedDashed =
     !shouldReduceMotion && strokeVariant === "animated-dashed";
@@ -137,10 +127,33 @@ export function Line({
         />
       )}
       <RechartsLine
-        activeDot={activeDot}
+        activeDot={
+          activeDot ? (
+            <ChartDot
+              chartId={`${id}-line`}
+              dataKey={dataKey}
+              fillOpacity={opacity.dot}
+              type={activeDot.variant}
+            />
+          ) : (
+            false
+          )
+        }
         connectNulls={connectNulls}
         dataKey={dataKey}
-        dot={dot}
+        dot={
+          dot ? (
+            <ChartDot
+              chartId={`${id}-line`}
+              dataKey={dataKey}
+              fillOpacity={opacity.dot}
+              maskId={maskId}
+              type={dot.variant}
+            />
+          ) : (
+            false
+          )
+        }
         filter={filter}
         // Recharts' built-in line animation is permanently disabled, the
         // motion.dev reveal mask drives the intro, wiping stroke and dots in together.
@@ -184,19 +197,10 @@ export const Dot: FC<DotProps> = () => null;
  */
 export const ActiveDot: FC<DotProps> = () => null;
 
-// Pulls <Dot /> and <ActiveDot /> out of a line's children into Recharts dot slots.
-// When a `maskId` is given the resting dot is wired to the intro reveal mask so it
-// wipes in with the line; the active dot is always left unmasked since it only
-// appears on hover, after the intro has finished.
-const resolveDots = (
-  children: ReactNode,
-  id: string,
-  dataKey: string,
-  dotOpacity: number,
-  maskId: string | undefined
-): { dot: LineDotProp; activeDot: LineActiveDotProp } => {
-  let dot: LineDotProp = false;
-  let activeDot: LineActiveDotProp = false;
+// Reads marker configuration; the series owns the Recharts rendering slots.
+const resolveDots = (children: ReactNode) => {
+  let dot: DotProps | undefined;
+  let activeDot: DotProps | undefined;
 
   Children.forEach(children, (child) => {
     if (!isValidElement<DotProps>(child)) {
@@ -204,28 +208,11 @@ const resolveDots = (
     }
 
     if (child.type === Dot) {
-      const { variant } = child.props;
-      dot = (
-        <ChartDot
-          chartId={`${id}-line`}
-          dataKey={dataKey}
-          fillOpacity={dotOpacity}
-          maskId={maskId}
-          type={variant}
-        />
-      );
+      dot = child.props;
     }
 
     if (child.type === ActiveDot) {
-      const { variant } = child.props;
-      activeDot = (
-        <ChartDot
-          chartId={`${id}-line`}
-          dataKey={dataKey}
-          fillOpacity={dotOpacity}
-          type={variant}
-        />
-      );
+      activeDot = child.props;
     }
   });
 

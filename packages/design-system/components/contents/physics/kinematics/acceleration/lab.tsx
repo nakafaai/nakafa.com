@@ -45,33 +45,23 @@ export function AccelerationLab({
     {
       id: "initial-velocity",
       label: labels.factLabels.initialVelocity,
-      value: (
-        <InlineMath
-          math={`v_0=${formatMeterPerSecondMath(motion.scenario.v0)}`}
-        />
-      ),
+      math: `v_0=${formatMeterPerSecondMath(motion.scenario.v0)}`,
     },
     {
       id: "acceleration",
       indicatorColor: motion.scenario.color,
       label: labels.factLabels.acceleration,
-      value: (
-        <InlineMath math={`a=${formatAccelerationMath(motion.acceleration)}`} />
-      ),
+      math: `a=${formatAccelerationMath(motion.acceleration)}`,
     },
     {
       id: "final-velocity",
       label: labels.factLabels.finalVelocity,
-      value: (
-        <InlineMath
-          math={`v_t=${formatMeterPerSecondMath(motion.scenario.v1)}`}
-        />
-      ),
+      math: `v_t=${formatMeterPerSecondMath(motion.scenario.v1)}`,
     },
     {
       id: "time-step",
       label: labels.factLabels.timeStep,
-      value: <InlineMath math={`\\Delta t=${formatSecondMath(1)}`} />,
+      math: `\\Delta t=${formatSecondMath(1)}`,
     },
   ];
 
@@ -151,7 +141,7 @@ export function AccelerationLab({
               }
               key={fact.id}
               label={fact.label}
-              value={fact.value}
+              value={<InlineMath math={fact.math} />}
             />
           ))}
         </dl>

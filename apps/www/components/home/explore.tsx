@@ -11,6 +11,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useLocale, useTranslations } from "next-intl";
+import type { ComponentProps, ReactNode } from "react";
 import {
   getAppNavigationViewer,
   getForYouNavigationHref,
@@ -124,49 +125,47 @@ export function HomeExplore() {
         preferredTryoutHref,
       })
     : "/try-out";
-  const cards = [
-    {
-      href: subjectHref,
-      id: "subject",
-      title: tCommon("subject"),
-      visual: <SubjectIcon />,
-    },
-    {
-      href: tryoutHref,
-      id: "tryOut",
-      title: tCommon("try-out"),
-      visual: <TryoutIcon />,
-    },
-    {
-      href: "/chat",
-      id: "askNina",
-      title: tAi("ask-nina"),
-      visual: <NinaIcon />,
-    },
-  ] as const;
-
   return (
     <section className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
-        {cards.map((card) => {
-          if (!visibleCardIds.has(card.id)) {
-            return null;
-          }
-
-          return (
-            <NavigationLink
-              className="group flex flex-col items-center gap-2"
-              href={card.href}
-              key={card.id}
-            >
-              <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl border bg-card">
-                {card.visual}
-              </div>
-              <h2>{card.title}</h2>
-            </NavigationLink>
-          );
-        })}
+        {visibleCardIds.has("subject") && (
+          <ExploreCard href={subjectHref} title={tCommon("subject")}>
+            <SubjectIcon />
+          </ExploreCard>
+        )}
+        {visibleCardIds.has("tryOut") && (
+          <ExploreCard href={tryoutHref} title={tCommon("try-out")}>
+            <TryoutIcon />
+          </ExploreCard>
+        )}
+        {visibleCardIds.has("askNina") && (
+          <ExploreCard href="/chat" title={tAi("ask-nina")}>
+            <NinaIcon />
+          </ExploreCard>
+        )}
       </div>
     </section>
+  );
+}
+
+function ExploreCard({
+  children,
+  href,
+  title,
+}: {
+  children: ReactNode;
+  href: ComponentProps<typeof NavigationLink>["href"];
+  title: string;
+}) {
+  return (
+    <NavigationLink
+      className="group flex flex-col items-center gap-2"
+      href={href}
+    >
+      <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl border bg-card">
+        {children}
+      </div>
+      <h2>{title}</h2>
+    </NavigationLink>
   );
 }

@@ -54,23 +54,23 @@ export function UniformLinearMotionLab({
     {
       id: "speed",
       label: labels.speed,
-      value: <InlineMath math={formatSpeedMath(motion.speed)} />,
+      math: formatSpeedMath(motion.speed),
     },
     {
       id: "position-step",
       label: labels.positionStep,
-      value: <InlineMath math={formatSecondMath(motion.timeStep)} />,
+      math: formatSecondMath(motion.timeStep),
     },
     {
       id: "step-distance",
       indicatorColor: UNIFORM_LINEAR_MOTION_COLORS.positionMark,
       label: labels.stepDistance,
-      value: <InlineMath math={formatMeterMath(motion.stepDistance)} />,
+      math: formatMeterMath(motion.stepDistance),
     },
     {
       id: "duration",
       label: labels.duration,
-      value: <InlineMath math={formatSecondMath(motion.duration)} />,
+      math: formatSecondMath(motion.duration),
     },
   ];
 
@@ -162,7 +162,7 @@ export function UniformLinearMotionLab({
                 {fact.label}
               </dt>
               <dd className="wrap-break-word text-foreground tabular-nums">
-                {fact.value}
+                <InlineMath math={fact.math} />
               </dd>
             </div>
           ))}

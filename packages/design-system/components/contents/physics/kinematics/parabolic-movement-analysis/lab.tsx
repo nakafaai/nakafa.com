@@ -55,66 +55,42 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "horizontal-component",
       label: labels.factLabels.horizontalComponent,
-      value: (
-        <InlineMath
-          math={`v_{0x}=${formatSpeedMath(
-            motion.horizontalVelocity,
-            decimalSeparator
-          )}`}
-        />
-      ),
+      math: `v_{0x}=${formatSpeedMath(
+        motion.horizontalVelocity,
+        decimalSeparator
+      )}`,
     },
     {
       id: "vertical-component",
       label: labels.factLabels.verticalComponent,
-      value: (
-        <InlineMath
-          math={`v_{0y}=${formatSpeedMath(
-            motion.verticalVelocity,
-            decimalSeparator
-          )}`}
-        />
-      ),
+      math: `v_{0y}=${formatSpeedMath(
+        motion.verticalVelocity,
+        decimalSeparator
+      )}`,
     },
     {
       id: "peak-time",
       label: labels.factLabels.peakTime,
-      value: (
-        <InlineMath
-          math={`t=${formatSecondMath(motion.peakTime, decimalSeparator)}`}
-        />
-      ),
+      math: `t=${formatSecondMath(motion.peakTime, decimalSeparator)}`,
     },
     {
       id: "flight-time",
       label: labels.factLabels.flightTime,
-      value: (
-        <InlineMath
-          math={`T=${formatSecondMath(motion.flightTime, decimalSeparator)}`}
-        />
-      ),
+      math: `T=${formatSecondMath(motion.flightTime, decimalSeparator)}`,
     },
     {
       id: "range",
       label: labels.factLabels.range,
-      value: (
-        <InlineMath
-          math={`R=${formatMeterMath(motion.range, decimalSeparator)}`}
-        />
-      ),
+      math: `R=${formatMeterMath(motion.range, decimalSeparator)}`,
     },
     {
       id: "instantaneous-velocity",
       label: labels.factLabels.instantaneousVelocity,
-      value: (
-        <InlineMath
-          math={`\\vec{v}=${formatVelocityVectorMath(
-            instantVelocity.horizontalVelocity,
-            instantVelocity.verticalVelocity,
-            decimalSeparator
-          )}`}
-        />
-      ),
+      math: `\\vec{v}=${formatVelocityVectorMath(
+        instantVelocity.horizontalVelocity,
+        instantVelocity.verticalVelocity,
+        decimalSeparator
+      )}`,
     },
   ];
 
@@ -194,7 +170,11 @@ export function ParabolicMovementAnalysisLab({
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           {facts.map((fact) => (
-            <LabFact key={fact.id} label={fact.label} value={fact.value} />
+            <LabFact
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
           ))}
         </dl>
       </CardFooter>

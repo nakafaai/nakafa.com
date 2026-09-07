@@ -28,24 +28,26 @@ export function AppProviders({
   children: ReactNode;
   pageNavigation: PageNavigation | null;
 }) {
-  const content = pageNavigation ? (
-    <AnalyticsConsentProvider
-      isPreviewChild={env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true"}
-    >
-      {children}
-      <AnalyticsConsentControls />
-    </AnalyticsConsentProvider>
-  ) : (
-    <AnalyticsUnavailableProvider>{children}</AnalyticsUnavailableProvider>
-  );
-
   return (
     <NuqsAdapter>
       <ReactQueryProviders>
         <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
           <UserContextProvider>
             <PageNavigationProvider navigation={pageNavigation}>
-              {content}
+              {pageNavigation ? (
+                <AnalyticsConsentProvider
+                  isPreviewChild={
+                    env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true"
+                  }
+                >
+                  {children}
+                  <AnalyticsConsentControls />
+                </AnalyticsConsentProvider>
+              ) : (
+                <AnalyticsUnavailableProvider>
+                  {children}
+                </AnalyticsUnavailableProvider>
+              )}
             </PageNavigationProvider>
           </UserContextProvider>
         </ConvexProvider>
