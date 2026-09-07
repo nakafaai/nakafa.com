@@ -9,6 +9,14 @@ import {
 } from "@/lib/og/artwork";
 import { getOgUrl } from "@/lib/utils/metadata";
 
+const STAGE_ARTWORK_BY_NODE_KEY = new Map<
+  CurriculumRoute["nodeKey"],
+  ArtworkIdentity
+>([
+  ["secondary", "grade/secondary"],
+  ["upper-secondary", "grade/upper-secondary"],
+]);
+
 const GRADE_ARTWORK_BY_ICON_KEY = new Map<
   CurriculumRoute["iconKey"],
   ArtworkIdentity
@@ -64,7 +72,7 @@ type CurriculumCatalogArtworkSource =
     }
   | ({
       readonly kind: "route";
-    } & Pick<CurriculumRoute, "iconKey" | "materialDomain">);
+    } & Pick<CurriculumRoute, "nodeKey" | "iconKey" | "materialDomain">);
 
 /** Resolves reviewed card artwork from one signed curriculum identity. */
 export function resolveCurriculumCatalogArtwork(
@@ -74,7 +82,8 @@ export function resolveCurriculumCatalogArtwork(
   const identity =
     source.kind === "program"
       ? getCurriculumArtworkIdentity(source.programKey)
-      : (GRADE_ARTWORK_BY_ICON_KEY.get(source.iconKey) ??
+      : (STAGE_ARTWORK_BY_NODE_KEY.get(source.nodeKey) ??
+        GRADE_ARTWORK_BY_ICON_KEY.get(source.iconKey) ??
         (source.materialDomain
           ? SUBJECT_ARTWORK_BY_MATERIAL_DOMAIN.get(source.materialDomain)
           : undefined));

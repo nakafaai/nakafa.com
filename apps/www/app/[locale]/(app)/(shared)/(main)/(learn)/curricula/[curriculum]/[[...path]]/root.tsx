@@ -142,6 +142,7 @@ export function CurriculumChildCards({
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {routes.map((route, index) => {
         const imageSrc = resolveCurriculumCatalogArtwork(locale, {
+          nodeKey: route.nodeKey,
           iconKey: route.iconKey,
           kind: "route",
           materialDomain: route.materialDomain,

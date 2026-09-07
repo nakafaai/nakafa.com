@@ -90,6 +90,30 @@ describe("try-out artwork", () => {
     ).toBeUndefined();
   });
 
+  it.each(["en", "id", "de"] as const)(
+    "resolves both TKA language subjects in %s",
+    (locale) => {
+      for (const trackKey of ["english-language", "indonesian-language"]) {
+        expect(
+          getTryoutTrackCatalogArtwork(locale, {
+            countryKey: "indonesia",
+            examKey: "tka",
+            trackKey,
+            trackKind: "subject",
+          })
+        ).toBe(`/open-graph/subject/${locale}-${trackKey}.png`);
+        expect(
+          getTryoutTrackCatalogArtwork(locale, {
+            countryKey: "indonesia",
+            examKey: "snbt",
+            trackKey,
+            trackKind: "subject",
+          })
+        ).toBeUndefined();
+      }
+    }
+  );
+
   it("uses canonical TKA track keys instead of localized slugs", () => {
     expect(
       getTryoutTrackCatalogArtwork("de", {
