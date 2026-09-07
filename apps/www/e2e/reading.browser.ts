@@ -20,6 +20,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* waitForCommittedAppRouter(page, href, href, 15_000);
     const title = page.getByRole("heading", { level: 1 });
     yield* Effect.promise(() => expect(title).toHaveCount(1));
+    yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "48px"));
     yield* Effect.promise(() =>
       expect(title).toHaveCSS("text-align", "center")
     );
@@ -57,7 +58,15 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     });
     const header = page.locator("header").filter({ has: more });
     yield* Effect.promise(() => expect(header).toBeVisible());
-    yield* Effect.promise(() => expect(header).not.toContainText(titleText));
+    if (href === routes[0]) {
+      yield* Effect.promise(() =>
+        expect(
+          header.getByRole("navigation", { name: "breadcrumb" })
+        ).toContainText(titleText)
+      );
+    } else {
+      yield* Effect.promise(() => expect(header).not.toContainText(titleText));
+    }
     yield* Effect.promise(() =>
       expect(
         header.getByRole("group", { name: "Content actions", exact: true })
@@ -78,6 +87,19 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       exact: true,
     });
     yield* Effect.promise(() => expect(outline).toBeVisible());
+    // Base UI 1.8 keeps tooltips visual and labels their triggers with aria-label.
+    // https://base-ui.com/react/components/tooltip#usage-guidelines
+    const tooltip = page.locator('[data-slot="tooltip-content"]');
+    for (const [trigger, label] of [
+      [more, "More actions"],
+      [outline, "On this page"],
+    ] as const) {
+      yield* Effect.promise(() => trigger.hover());
+      yield* Effect.promise(() => expect(tooltip).toHaveText(label));
+      yield* Effect.promise(() => expect(tooltip).toBeVisible());
+      yield* Effect.promise(() => page.keyboard.press("Escape"));
+      yield* Effect.promise(() => expect(tooltip).toHaveCount(0));
+    }
     const bounds = yield* Effect.promise(() =>
       Promise.all([more.boundingBox(), outline.boundingBox()])
     );
@@ -115,6 +137,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() => more.focus());
     yield* Effect.promise(() => page.keyboard.press("Enter"));
     const menu = page.getByRole("menu");
+    yield* Effect.promise(() => expect(tooltip).toHaveCount(0));
     yield* Effect.promise(() =>
       expect(menu.getByText("More", { exact: true })).toBeVisible()
     );
@@ -141,8 +164,12 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() => expect(openIn).toBeFocused());
     yield* Effect.promise(() => page.keyboard.press("Escape"));
     yield* Effect.promise(() => expect(more).toBeFocused());
+    const clipboardPermissions =
+      page.context().browser()?.browserType().name() === "webkit"
+        ? ["clipboard-read"]
+        : ["clipboard-read", "clipboard-write"];
     yield* Effect.promise(() =>
-      page.context().grantPermissions(["clipboard-read", "clipboard-write"])
+      page.context().grantPermissions(clipboardPermissions)
     );
     yield* Effect.promise(() => more.click());
     yield* Effect.promise(() =>
@@ -187,7 +214,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
   }
 );
 
-for (const width of [390, 1440]) {
+for (const width of [320, 390, 1440]) {
   test.describe(`reading header at ${width}px`, () => {
     test.use({ viewport: { width, height: 900 } });
     for (const href of routes) {
@@ -199,3 +226,48 @@ for (const width of [390, 1440]) {
     }
   });
 }
+
+test("reading outline replaces an existing fragment", async ({ page }) => {
+  const href = routes[0];
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        yield* Effect.promise(() =>
+          page.setViewportSize({ width: 1440, height: 900 })
+        );
+        yield* Effect.promise(() => page.goto(`${href}#exercises`));
+        yield* waitForCommittedAppRouter(page, href, href, 15_000);
+        const exercises = page.getByRole("link", {
+          name: "Exercises",
+          exact: true,
+        });
+        yield* Effect.promise(() => exercises.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(`${href}#exercises`)
+        );
+        yield* Effect.promise(() => exercises.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(`${href}#exercises`)
+        );
+        yield* Effect.promise(() =>
+          page
+            .getByRole("link", { name: "Worked Solutions", exact: true })
+            .click()
+        );
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(`${href}#worked-solutions`)
+        );
+        yield* Effect.promise(() =>
+          expect(
+            page.getByRole("heading", {
+              name: "Link to Worked Solutions",
+              exact: true,
+            })
+          ).toBeInViewport()
+        );
+      })
+    )
+  );
+});

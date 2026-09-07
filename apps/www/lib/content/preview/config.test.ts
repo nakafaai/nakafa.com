@@ -209,10 +209,9 @@ describe("local preview configuration", () => {
     () =>
       Effect.gen(function* () {
         const artifactPath = `/v1/artifacts/sha256%3A${"a".repeat(64)}`;
-        const accepted = yield* Effect.all(
-          ["/v1/events", "/v1/manifest", artifactPath].map((path) =>
-            previewUrl(previewConfig, path)
-          )
+        const accepted = yield* Effect.forEach(
+          ["/v1/events", "/v1/manifest", artifactPath],
+          (path) => previewUrl(previewConfig, path)
         );
 
         expect(accepted.map((url) => url.pathname)).toEqual([

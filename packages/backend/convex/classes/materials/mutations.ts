@@ -29,6 +29,7 @@ export const createMaterialGroup = mutation({
     status: schoolClassMaterialStatusValidator,
     scheduledAt: v.optional(v.number()),
   },
+  returns: vv.id("schoolClassMaterialGroups"),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
@@ -100,6 +101,7 @@ export const updateMaterialGroup = mutation({
     status: v.optional(schoolClassMaterialStatusValidator),
     scheduledAt: v.optional(v.number()),
   },
+  returns: vv.id("schoolClassMaterialGroups"),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
@@ -173,11 +175,12 @@ export const publishMaterialGroup = internalMutation({
     groupId: vv.id("schoolClassMaterialGroups"),
     publishedBy: vv.id("users"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
 
     if (group?.status !== "scheduled") {
-      return;
+      return null;
     }
 
     const now = Date.now();
@@ -190,6 +193,7 @@ export const publishMaterialGroup = internalMutation({
       publishedBy: args.publishedBy,
       updatedAt: now,
     });
+    return null;
   },
 });
 
@@ -197,6 +201,7 @@ export const deleteMaterialGroup = mutation({
   args: {
     groupId: vv.id("schoolClassMaterialGroups"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
@@ -219,6 +224,7 @@ export const deleteMaterialGroup = mutation({
 
     // Delete triggers cascade: children, materials, attachments, views, parent count
     await ctx.db.delete("schoolClassMaterialGroups", args.groupId);
+    return null;
   },
 });
 
@@ -227,6 +233,7 @@ export const reorderMaterialGroup = mutation({
     groupId: vv.id("schoolClassMaterialGroups"),
     direction: reorderDirectionValidator,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
@@ -269,7 +276,7 @@ export const reorderMaterialGroup = mutation({
 
     if (!adjacentGroup) {
       // Already at the edge, nothing to do
-      return;
+      return null;
     }
 
     // Swap orders
@@ -284,5 +291,6 @@ export const reorderMaterialGroup = mutation({
         updatedAt: now,
       }),
     ]);
+    return null;
   },
 });

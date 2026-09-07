@@ -7,7 +7,7 @@ import {
   LocalPreviewManifestSchema,
 } from "@nakafa/aksara-contracts/preview/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
-import { Data, Effect, Option, Schema } from "effect";
+import { Data, Effect, Schema } from "effect";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import {
   readPreviewManifestForPrerender,
@@ -123,9 +123,10 @@ beforeEach(() => {
   prerenderManifestMock.mockResolvedValue(makePendingManifest());
   snapshotMock.mockReset();
   snapshotMock.mockReturnValue(
-    Effect.succeed(
-      Option.some({ config: previewConfig, manifest: makePendingManifest() })
-    )
+    Effect.succeedSome({
+      config: previewConfig,
+      manifest: makePendingManifest(),
+    })
   );
 });
 
@@ -152,7 +153,7 @@ describe("local preview route matching", () => {
 
   it.effect("leaves every route unchanged when preview is disabled", () =>
     Effect.gen(function* () {
-      snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+      snapshotMock.mockReturnValueOnce(Effect.succeedNone);
 
       expect(yield* matchPublic()).toBe(false);
     })

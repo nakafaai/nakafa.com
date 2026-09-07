@@ -154,7 +154,7 @@ describe("learningPreferences", () => {
             locale: "id",
           })
         );
-        expect(current).toMatchObject(saved);
+        expect(current).toEqual(saved);
       })
   );
 
@@ -200,7 +200,7 @@ describe("learningPreferences", () => {
             locale: "id",
           })
         );
-        expect(currentTryout).toMatchObject(saved);
+        expect(currentTryout).toEqual(saved);
         const currentCurriculum = yield* Effect.promise(() =>
           authed.query(api.learningPreferences.queries.getCurrent, {
             locale: "id",

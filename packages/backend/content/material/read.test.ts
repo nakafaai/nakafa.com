@@ -91,7 +91,7 @@ describe("contentRelease/material/model", () => {
     ]);
   });
 
-  it("uses 13 queries for three alternates and one sibling", async () => {
+  it("uses 12 queries for three alternates and one sibling", async () => {
     const target = convexTest(schema, convexModules);
     const projections = (["en", "id", "de"] as const).map((appLocale) =>
       makeMaterialProjection(appLocale, 1)
@@ -113,7 +113,7 @@ describe("contentRelease/material/model", () => {
 
     expect(result.alternateJson).toHaveLength(3);
     expect(result.siblingJson).toHaveLength(1);
-    expect(metrics.databaseQueries.used).toBe(13);
+    expect(metrics.databaseQueries.used).toBe(12);
   });
 
   it.each([

@@ -209,14 +209,12 @@ const getLocaleIndexEntries = Effect.fn("www.llms.locale.entries")(function* (
   const sections = getLlmsSections().filter(isContentLlmsSection);
   const siteEntries = yield* readSiteLlmsEntries(locale);
 
-  const sectionEntries = yield* Effect.all(
-    sections.map((section) =>
-      getContentPageLlmsEntries({
-        locale,
-        page: 0,
-        section,
-      })
-    )
+  const sectionEntries = yield* Effect.forEach(sections, (section) =>
+    getContentPageLlmsEntries({
+      locale,
+      page: 0,
+      section,
+    })
   );
   const entries = [...siteEntries];
 

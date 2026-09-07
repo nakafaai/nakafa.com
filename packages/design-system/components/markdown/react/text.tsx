@@ -86,7 +86,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
   ),
   ol: ({ node: _node, ...props }) => (
     <ol
-      className="my-4 list-decimal space-y-4 pl-4.5 last:mb-0"
+      className="my-4 list-decimal space-y-4 ps-8 last:mb-0"
       data-nakafa="ordered-list"
       {...props}
     />
@@ -117,7 +117,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
   ),
   ul: ({ node: _node, ...props }) => (
     <ul
-      className="my-4 list-disc space-y-4 pl-4.5 last:mb-0"
+      className="my-4 list-disc space-y-4 ps-8 last:mb-0"
       data-nakafa="unordered-list"
       {...props}
     />

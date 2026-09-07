@@ -4,6 +4,9 @@
       "agents": []
     }
   },
+  "codegen": {
+    "staticApi": true
+  },
   "node": {
     "nodeVersion": "24"
   }

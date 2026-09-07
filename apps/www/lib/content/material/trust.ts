@@ -66,7 +66,9 @@ export const readPublishedTrustLesson = Effect.fn(
       publicPath: "marketing/trust",
     });
   }
-  const identity = yield* Schema.decodeEffect(TrustIdentitySchema)(result).pipe(
+  const identity = yield* Schema.decodeUnknownEffect(TrustIdentitySchema)(
+    result
+  ).pipe(
     Effect.mapError(
       () =>
         new PublishedProjectionError({

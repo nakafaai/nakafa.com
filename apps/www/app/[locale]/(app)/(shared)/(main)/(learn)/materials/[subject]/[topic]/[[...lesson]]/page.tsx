@@ -266,7 +266,9 @@ async function MaterialLessonPage({
       />
       <SidebarRightProvider>
         <LayoutMaterialContent>
-          <ContentHeader items={headerLink ? [headerLink] : []}>
+          <ContentHeader
+            items={headerLink ? [headerLink] : [{ label: metadata.title }]}
+          >
             <OpenContent
               content={copyContent}
               copySourceUrl={copySourceUrl}

@@ -24,6 +24,11 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { Link } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
@@ -144,17 +149,24 @@ export function OpenContent({
 
   return (
     <DropdownMenu onOpenChange={set} open={open}>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            aria-label={t("more-actions")}
-            size="icon"
-            variant="outline"
-          />
-        }
-      >
-        <HugeIcons icon={MoreHorizontalIcon} />
-      </DropdownMenuTrigger>
+      <Tooltip disabled={open}>
+        <TooltipTrigger
+          render={
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label={t("more-actions")}
+                  size="icon"
+                  variant="outline"
+                />
+              }
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </DropdownMenuTrigger>
+          }
+        />
+        <TooltipContent side="bottom">{t("more-actions")}</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuGroup>
           <DropdownMenuLabel>{t("more")}</DropdownMenuLabel>

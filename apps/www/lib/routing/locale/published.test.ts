@@ -183,9 +183,7 @@ describe("published localized route ownership", () => {
       const unmanaged = yield* read("articles");
       expect(unmanaged).toBeNull();
 
-      publishedMocks.articleCategory.mockReturnValueOnce(
-        Effect.succeed(Option.none())
-      );
+      publishedMocks.articleCategory.mockReturnValueOnce(Effect.succeedNone);
       const missingCategory = yield* read("articles/missing").pipe(Effect.flip);
       expect(missingCategory).toMatchObject({
         _tag: "MissingLocalizedRouteProjectionError",

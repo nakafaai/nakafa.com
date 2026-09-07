@@ -107,15 +107,13 @@ export function MdxHeading6(props: HeadingProps) {
 /** Renders an ordered MDX list with readable vertical rhythm. */
 export function MdxOrderedList(props: ListProps) {
   return (
-    <ol className="my-4 list-decimal space-y-4 pl-4.5 last:mb-0" {...props} />
+    <ol className="my-4 list-decimal space-y-4 ps-8 last:mb-0" {...props} />
   );
 }
 
 /** Renders an unordered MDX list with readable vertical rhythm. */
 export function MdxUnorderedList(props: ListProps) {
-  return (
-    <ul className="my-4 list-disc space-y-4 pl-4.5 last:mb-0" {...props} />
-  );
+  return <ul className="my-4 list-disc space-y-4 ps-8 last:mb-0" {...props} />;
 }
 
 /** Renders one MDX list item with consistent prose spacing. */

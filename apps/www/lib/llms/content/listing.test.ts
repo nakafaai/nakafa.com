@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { getContentListingLlmsEntries } from "@/lib/llms/content/listing";
 
 const mockReadPublishedCategoryArticles = vi.hoisted(() => vi.fn());
@@ -19,7 +19,7 @@ beforeEach(() => {
   mockReadPublishedCategoryArticles.mockReset();
   mockReadPublishedArticleCategory.mockReset();
   mockReadPublishedArticleCategory.mockReturnValue(
-    Effect.succeed(Option.some({ activeReleaseId, category: "politics" }))
+    Effect.succeedSome({ activeReleaseId, category: "politics" })
   );
   mockReadPublishedCategoryArticles.mockReturnValue(
     Effect.succeed({
@@ -153,9 +153,7 @@ describe("llms content listing", () => {
     "rejects a valid route segment absent from the signed catalog",
     () =>
       Effect.gen(function* () {
-        mockReadPublishedArticleCategory.mockReturnValue(
-          Effect.succeed(Option.none())
-        );
+        mockReadPublishedArticleCategory.mockReturnValue(Effect.succeedNone);
 
         const entries = yield* getContentListingLlmsEntries({
           locale: "de",

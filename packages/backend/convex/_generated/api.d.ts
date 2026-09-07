@@ -8,1093 +8,8 @@
  * @module
  */
 
-import type * as analytics_capture from "../analytics/capture.js";
-import type * as analytics_erasure_action from "../analytics/erasure/action.js";
-import type * as analytics_erasure_policy from "../analytics/erasure/policy.js";
-import type * as analytics_erasure_request from "../analytics/erasure/request.js";
-import type * as analytics_erasure_workflow from "../analytics/erasure/workflow.js";
-import type * as analytics_events from "../analytics/events.js";
-import type * as auth_actions from "../auth/actions.js";
-import type * as auth_cleanup from "../auth/cleanup.js";
-import type * as auth_cleanup_consents from "../auth/cleanup/consents.js";
-import type * as auth_cleanup_impl from "../auth/cleanup/impl.js";
-import type * as auth_cleanup_learning from "../auth/cleanup/learning.js";
-import type * as auth_cleanup_notifications from "../auth/cleanup/notifications.js";
-import type * as auth_cleanup_schoolCommunity from "../auth/cleanup/schoolCommunity.js";
-import type * as auth_cleanup_schools from "../auth/cleanup/schools.js";
-import type * as auth_cleanup_social from "../auth/cleanup/social.js";
-import type * as auth_cleanup_spec from "../auth/cleanup/spec.js";
-import type * as auth_cleanup_tryouts from "../auth/cleanup/tryouts.js";
-import type * as auth_client from "../auth/client.js";
-import type * as auth_config from "../auth/config.js";
-import type * as auth_deletion from "../auth/deletion.js";
-import type * as auth_deletion_attemptCancellation from "../auth/deletion/attemptCancellation.js";
-import type * as auth_deletion_cancel from "../auth/deletion/cancel.js";
-import type * as auth_deletion_claim from "../auth/deletion/claim.js";
-import type * as auth_deletion_commit from "../auth/deletion/commit.js";
-import type * as auth_deletion_constants from "../auth/deletion/constants.js";
-import type * as auth_deletion_finalize from "../auth/deletion/finalize.js";
-import type * as auth_deletion_prepare from "../auth/deletion/prepare.js";
-import type * as auth_deletion_receipt from "../auth/deletion/receipt.js";
-import type * as auth_deletion_recovery from "../auth/deletion/recovery.js";
-import type * as auth_deletion_spec from "../auth/deletion/spec.js";
-import type * as auth_deletion_state from "../auth/deletion/state.js";
-import type * as auth_deletion_successor from "../auth/deletion/successor.js";
-import type * as auth_deletion_tombstone from "../auth/deletion/tombstone.js";
-import type * as auth_deletion_transfers from "../auth/deletion/transfers.js";
-import type * as auth_deletion_verification from "../auth/deletion/verification.js";
-import type * as auth_lifecycle from "../auth/lifecycle.js";
-import type * as auth_queries from "../auth/queries.js";
-import type * as auth_reader from "../auth/reader.js";
-import type * as auth_runtime from "../auth/runtime.js";
-import type * as auth_username_availability from "../auth/username/availability.js";
-import type * as auth_username_plugin from "../auth/username/plugin.js";
-import type * as auth_username_policy from "../auth/username/policy.js";
-import type * as auth_username_request from "../auth/username/request.js";
-import type * as chats_actions from "../chats/actions.js";
-import type * as chats_assistantResponses from "../chats/assistantResponses.js";
-import type * as chats_assistantResponses_impl from "../chats/assistantResponses/impl.js";
-import type * as chats_constants from "../chats/constants.js";
-import type * as chats_context from "../chats/context.js";
-import type * as chats_helpers from "../chats/helpers.js";
-import type * as chats_messageParts_dbToUi from "../chats/messageParts/dbToUi.js";
-import type * as chats_messageParts_providerMetadata from "../chats/messageParts/providerMetadata.js";
-import type * as chats_messageParts_shared from "../chats/messageParts/shared.js";
-import type * as chats_messageParts_uiToDb from "../chats/messageParts/uiToDb.js";
-import type * as chats_mutations from "../chats/mutations.js";
-import type * as chats_nakafa from "../chats/nakafa.js";
-import type * as chats_queries from "../chats/queries.js";
-import type * as chats_read from "../chats/read.js";
-import type * as chats_traces_impl from "../chats/traces/impl.js";
-import type * as chats_traces_mutations from "../chats/traces/mutations.js";
-import type * as chats_traces_queries from "../chats/traces/queries.js";
-import type * as chats_traces_spec from "../chats/traces/spec.js";
-import type * as chats_utils from "../chats/utils.js";
-import type * as classes_constants from "../classes/constants.js";
-import type * as classes_forums_aggregate from "../classes/forums/aggregate.js";
-import type * as classes_forums_attachments_constants from "../classes/forums/attachments/constants.js";
-import type * as classes_forums_attachments_impl from "../classes/forums/attachments/impl.js";
-import type * as classes_forums_attachments_route from "../classes/forums/attachments/route.js";
-import type * as classes_forums_attachments_spec from "../classes/forums/attachments/spec.js";
-import type * as classes_forums_attachments_upload from "../classes/forums/attachments/upload.js";
-import type * as classes_forums_cleanup from "../classes/forums/cleanup.js";
-import type * as classes_forums_internalMutations from "../classes/forums/internalMutations.js";
-import type * as classes_forums_mutations_forums from "../classes/forums/mutations/forums.js";
-import type * as classes_forums_mutations_posts from "../classes/forums/mutations/posts.js";
-import type * as classes_forums_mutations_reactions from "../classes/forums/mutations/reactions.js";
-import type * as classes_forums_mutations_readState from "../classes/forums/mutations/readState.js";
-import type * as classes_forums_mutations_uploads from "../classes/forums/mutations/uploads.js";
-import type * as classes_forums_queries_forums from "../classes/forums/queries/forums.js";
-import type * as classes_forums_queries_pages from "../classes/forums/queries/pages.js";
-import type * as classes_forums_utils_access from "../classes/forums/utils/access.js";
-import type * as classes_forums_utils_constants from "../classes/forums/utils/constants.js";
-import type * as classes_forums_utils_mentions from "../classes/forums/utils/mentions.js";
-import type * as classes_forums_utils_postReactions from "../classes/forums/utils/postReactions.js";
-import type * as classes_forums_utils_posts from "../classes/forums/utils/posts.js";
-import type * as classes_forums_utils_reactions from "../classes/forums/utils/reactions.js";
-import type * as classes_forums_utils_readStateWrite from "../classes/forums/utils/readStateWrite.js";
-import type * as classes_forums_utils_unreadCounts from "../classes/forums/utils/unreadCounts.js";
-import type * as classes_forums_validators from "../classes/forums/validators.js";
-import type * as classes_materials_mutations from "../classes/materials/mutations.js";
-import type * as classes_materials_queries from "../classes/materials/queries.js";
-import type * as classes_materials_utils from "../classes/materials/utils.js";
-import type * as classes_mutations from "../classes/mutations.js";
-import type * as classes_queries from "../classes/queries.js";
-import type * as classes_utils from "../classes/utils.js";
-import type * as classes_validators from "../classes/validators.js";
-import type * as comments_mutations from "../comments/mutations.js";
-import type * as comments_queries from "../comments/queries.js";
-import type * as consents_current from "../consents/current.js";
-import type * as consents_impl from "../consents/impl.js";
-import type * as contentRelease_abort from "../contentRelease/abort.js";
-import type * as contentRelease_abort_budget from "../contentRelease/abort/budget.js";
-import type * as contentRelease_abort_rows from "../contentRelease/abort/rows.js";
-import type * as contentRelease_abort_runtime from "../contentRelease/abort/runtime.js";
-import type * as contentRelease_accept from "../contentRelease/accept.js";
-import type * as contentRelease_activate from "../contentRelease/activate.js";
-import type * as contentRelease_activation_candidate from "../contentRelease/activation/candidate.js";
-import type * as contentRelease_activation_complete from "../contentRelease/activation/complete.js";
-import type * as contentRelease_activation_model from "../contentRelease/activation/model.js";
-import type * as contentRelease_activation_recovery from "../contentRelease/activation/recovery.js";
-import type * as contentRelease_activation_spec from "../contentRelease/activation/spec.js";
-import type * as contentRelease_activation_validate from "../contentRelease/activation/validate.js";
-import type * as contentRelease_article from "../contentRelease/article.js";
-import type * as contentRelease_article_agent from "../contentRelease/article/agent.js";
-import type * as contentRelease_article_bucket from "../contentRelease/article/bucket.js";
-import type * as contentRelease_article_internal from "../contentRelease/article/internal.js";
-import type * as contentRelease_article_limits from "../contentRelease/article/limits.js";
-import type * as contentRelease_article_order from "../contentRelease/article/order.js";
-import type * as contentRelease_article_ownership from "../contentRelease/article/ownership.js";
-import type * as contentRelease_article_spec from "../contentRelease/article/spec.js";
-import type * as contentRelease_article_sync from "../contentRelease/article/sync.js";
-import type * as contentRelease_article_validation from "../contentRelease/article/validation.js";
-import type * as contentRelease_article_write from "../contentRelease/article/write.js";
-import type * as contentRelease_artifact_store from "../contentRelease/artifact/store.js";
-import type * as contentRelease_artifacts from "../contentRelease/artifacts.js";
-import type * as contentRelease_base from "../contentRelease/base.js";
-import type * as contentRelease_batch from "../contentRelease/batch.js";
-import type * as contentRelease_bucket from "../contentRelease/bucket.js";
-import type * as contentRelease_cleanup from "../contentRelease/cleanup.js";
-import type * as contentRelease_compact from "../contentRelease/compact.js";
-import type * as contentRelease_compact_artifacts from "../contentRelease/compact/artifacts.js";
-import type * as contentRelease_compact_rows from "../contentRelease/compact/rows.js";
-import type * as contentRelease_compact_runtime from "../contentRelease/compact/runtime.js";
-import type * as contentRelease_compact_state from "../contentRelease/compact/state.js";
-import type * as contentRelease_cursor from "../contentRelease/cursor.js";
-import type * as contentRelease_digest from "../contentRelease/digest.js";
-import type * as contentRelease_document from "../contentRelease/document.js";
-import type * as contentRelease_envelope from "../contentRelease/envelope.js";
-import type * as contentRelease_error from "../contentRelease/error.js";
-import type * as contentRelease_heads from "../contentRelease/heads.js";
-import type * as contentRelease_http_body from "../contentRelease/http/body.js";
-import type * as contentRelease_http_runtime_batch from "../contentRelease/http/runtime/batch.js";
-import type * as contentRelease_http_runtime_protected from "../contentRelease/http/runtime/protected.js";
-import type * as contentRelease_http_runtime_public from "../contentRelease/http/runtime/public.js";
-import type * as contentRelease_http_runtime_request from "../contentRelease/http/runtime/request.js";
-import type * as contentRelease_http_runtime_response from "../contentRelease/http/runtime/response.js";
-import type * as contentRelease_http_secret from "../contentRelease/http/secret.js";
-import type * as contentRelease_ingress_call from "../contentRelease/ingress/call.js";
-import type * as contentRelease_ingress_current from "../contentRelease/ingress/current.js";
-import type * as contentRelease_ingress_decode from "../contentRelease/ingress/decode.js";
-import type * as contentRelease_ingress_dispatch from "../contentRelease/ingress/dispatch.js";
-import type * as contentRelease_ingress_envelope from "../contentRelease/ingress/envelope.js";
-import type * as contentRelease_ingress_failure from "../contentRelease/ingress/failure.js";
-import type * as contentRelease_ingress_group from "../contentRelease/ingress/group.js";
-import type * as contentRelease_ingress_key from "../contentRelease/ingress/key.js";
-import type * as contentRelease_ingress_lifecycle from "../contentRelease/ingress/lifecycle.js";
-import type * as contentRelease_ingress_models from "../contentRelease/ingress/models.js";
-import type * as contentRelease_ingress_read from "../contentRelease/ingress/read.js";
-import type * as contentRelease_ingress_response from "../contentRelease/ingress/response.js";
-import type * as contentRelease_ingress_rollback from "../contentRelease/ingress/rollback.js";
-import type * as contentRelease_ingress_route from "../contentRelease/ingress/route.js";
-import type * as contentRelease_ingress_runtime_bundle from "../contentRelease/ingress/runtime/bundle.js";
-import type * as contentRelease_ingress_snapshot from "../contentRelease/ingress/snapshot.js";
-import type * as contentRelease_ingress_stage from "../contentRelease/ingress/stage.js";
-import type * as contentRelease_item from "../contentRelease/item.js";
-import type * as contentRelease_items from "../contentRelease/items.js";
-import type * as contentRelease_manifest from "../contentRelease/manifest.js";
-import type * as contentRelease_material from "../contentRelease/material.js";
-import type * as contentRelease_material_bucket from "../contentRelease/material/bucket.js";
-import type * as contentRelease_material_limits from "../contentRelease/material/limits.js";
-import type * as contentRelease_material_spec from "../contentRelease/material/spec.js";
-import type * as contentRelease_material_state from "../contentRelease/material/state.js";
-import type * as contentRelease_material_sync from "../contentRelease/material/sync.js";
-import type * as contentRelease_material_topic from "../contentRelease/material/topic.js";
-import type * as contentRelease_material_validation from "../contentRelease/material/validation.js";
-import type * as contentRelease_material_write from "../contentRelease/material/write.js";
-import type * as contentRelease_model from "../contentRelease/model.js";
-import type * as contentRelease_models from "../contentRelease/models.js";
-import type * as contentRelease_models_article from "../contentRelease/models/article.js";
-import type * as contentRelease_models_build from "../contentRelease/models/build.js";
-import type * as contentRelease_models_impact from "../contentRelease/models/impact.js";
-import type * as contentRelease_models_items from "../contentRelease/models/items.js";
-import type * as contentRelease_models_material from "../contentRelease/models/material.js";
-import type * as contentRelease_models_page from "../contentRelease/models/page.js";
-import type * as contentRelease_models_phase from "../contentRelease/models/phase.js";
-import type * as contentRelease_models_reconcile from "../contentRelease/models/reconcile.js";
-import type * as contentRelease_models_search from "../contentRelease/models/search.js";
-import type * as contentRelease_models_slot from "../contentRelease/models/slot.js";
-import type * as contentRelease_models_spec from "../contentRelease/models/spec.js";
-import type * as contentRelease_ownership from "../contentRelease/ownership.js";
-import type * as contentRelease_page from "../contentRelease/page.js";
-import type * as contentRelease_page_limits from "../contentRelease/page/limits.js";
-import type * as contentRelease_paging from "../contentRelease/paging.js";
-import type * as contentRelease_parse from "../contentRelease/parse.js";
-import type * as contentRelease_partner_cursor from "../contentRelease/partner/cursor.js";
-import type * as contentRelease_partner_page from "../contentRelease/partner/page.js";
-import type * as contentRelease_program from "../contentRelease/program.js";
-import type * as contentRelease_program_bucket from "../contentRelease/program/bucket.js";
-import type * as contentRelease_program_limits from "../contentRelease/program/limits.js";
-import type * as contentRelease_projection from "../contentRelease/projection.js";
-import type * as contentRelease_proof_artifact from "../contentRelease/proof/artifact.js";
-import type * as contentRelease_proof_budget from "../contentRelease/proof/budget.js";
-import type * as contentRelease_proof_catalog from "../contentRelease/proof/catalog.js";
-import type * as contentRelease_proof_commit from "../contentRelease/proof/commit.js";
-import type * as contentRelease_proof_content from "../contentRelease/proof/content.js";
-import type * as contentRelease_proof_coordinator from "../contentRelease/proof/coordinator.js";
-import type * as contentRelease_proof_failure from "../contentRelease/proof/failure.js";
-import type * as contentRelease_proof_poll from "../contentRelease/proof/poll.js";
-import type * as contentRelease_proof_read from "../contentRelease/proof/read.js";
-import type * as contentRelease_proof_routes from "../contentRelease/proof/routes.js";
-import type * as contentRelease_proof_snapshot from "../contentRelease/proof/snapshot.js";
-import type * as contentRelease_proof_spec from "../contentRelease/proof/spec.js";
-import type * as contentRelease_proof_stream from "../contentRelease/proof/stream.js";
-import type * as contentRelease_proof_verify from "../contentRelease/proof/verify.js";
-import type * as contentRelease_proof_workflow from "../contentRelease/proof/workflow.js";
-import type * as contentRelease_quran from "../contentRelease/quran.js";
-import type * as contentRelease_quran_facts from "../contentRelease/quran/facts.js";
-import type * as contentRelease_quran_input from "../contentRelease/quran/input.js";
-import type * as contentRelease_quran_limits from "../contentRelease/quran/limits.js";
-import type * as contentRelease_quran_spec from "../contentRelease/quran/spec.js";
-import type * as contentRelease_quran_translation from "../contentRelease/quran/translation.js";
-import type * as contentRelease_quran_verify from "../contentRelease/quran/verify.js";
-import type * as contentRelease_receipt from "../contentRelease/receipt.js";
-import type * as contentRelease_recovery from "../contentRelease/recovery.js";
-import type * as contentRelease_reference from "../contentRelease/reference.js";
-import type * as contentRelease_reference_agent from "../contentRelease/reference/agent.js";
-import type * as contentRelease_reference_input from "../contentRelease/reference/input.js";
-import type * as contentRelease_reference_internal from "../contentRelease/reference/internal.js";
-import type * as contentRelease_reference_spec from "../contentRelease/reference/spec.js";
-import type * as contentRelease_renderer from "../contentRelease/renderer.js";
-import type * as contentRelease_retention from "../contentRelease/retention.js";
-import type * as contentRelease_rollback from "../contentRelease/rollback.js";
-import type * as contentRelease_rollback_state from "../contentRelease/rollback/state.js";
-import type * as contentRelease_route from "../contentRelease/route.js";
-import type * as contentRelease_routes from "../contentRelease/routes.js";
-import type * as contentRelease_runtime_active from "../contentRelease/runtime/active.js";
-import type * as contentRelease_runtime_origin from "../contentRelease/runtime/origin.js";
-import type * as contentRelease_runtime_pin from "../contentRelease/runtime/pin.js";
-import type * as contentRelease_runtime_protected_dispatch from "../contentRelease/runtime/protected/dispatch.js";
-import type * as contentRelease_runtime_protected_internal from "../contentRelease/runtime/protected/internal.js";
-import type * as contentRelease_runtime_public_batch from "../contentRelease/runtime/public/batch.js";
-import type * as contentRelease_runtime_public_dispatch from "../contentRelease/runtime/public/dispatch.js";
-import type * as contentRelease_runtime_public_internal from "../contentRelease/runtime/public/internal.js";
-import type * as contentRelease_runtime_result from "../contentRelease/runtime/result.js";
-import type * as contentRelease_scope_family from "../contentRelease/scope/family.js";
-import type * as contentRelease_search_input from "../contentRelease/search/input.js";
-import type * as contentRelease_search_owner from "../contentRelease/search/owner.js";
-import type * as contentRelease_search_spec from "../contentRelease/search/spec.js";
-import type * as contentRelease_search_sync from "../contentRelease/search/sync.js";
-import type * as contentRelease_search_validation from "../contentRelease/search/validation.js";
-import type * as contentRelease_search_verify from "../contentRelease/search/verify.js";
-import type * as contentRelease_search_write from "../contentRelease/search/write.js";
-import type * as contentRelease_sitemap from "../contentRelease/sitemap.js";
-import type * as contentRelease_snapshot from "../contentRelease/snapshot.js";
-import type * as contentRelease_snapshot_batch from "../contentRelease/snapshot/batch.js";
-import type * as contentRelease_snapshot_cleanup from "../contentRelease/snapshot/cleanup.js";
-import type * as contentRelease_snapshot_manifest from "../contentRelease/snapshot/manifest.js";
-import type * as contentRelease_snapshot_program from "../contentRelease/snapshot/program.js";
-import type * as contentRelease_snapshot_quran from "../contentRelease/snapshot/quran.js";
-import type * as contentRelease_snapshot_read from "../contentRelease/snapshot/read.js";
-import type * as contentRelease_snapshot_request from "../contentRelease/snapshot/request.js";
-import type * as contentRelease_snapshot_retention from "../contentRelease/snapshot/retention.js";
-import type * as contentRelease_snapshot_rows from "../contentRelease/snapshot/rows.js";
-import type * as contentRelease_snapshot_tryout from "../contentRelease/snapshot/tryout.js";
-import type * as contentRelease_spec from "../contentRelease/spec.js";
-import type * as contentRelease_status from "../contentRelease/status.js";
-import type * as contentRelease_sync from "../contentRelease/sync.js";
-import type * as contentRelease_tryout from "../contentRelease/tryout.js";
-import type * as contentRelease_tryout_binding from "../contentRelease/tryout/binding.js";
-import type * as contentRelease_tryout_facts from "../contentRelease/tryout/facts.js";
-import type * as contentRelease_tryout_limits from "../contentRelease/tryout/limits.js";
-import type * as contentRelease_tryout_row from "../contentRelease/tryout/row.js";
-import type * as contentRelease_tryout_runtime from "../contentRelease/tryout/runtime.js";
-import type * as contentRelease_tryout_taxonomy from "../contentRelease/tryout/taxonomy.js";
-import type * as contentRelease_tryout_verify from "../contentRelease/tryout/verify.js";
-import type * as contentRelease_verify from "../contentRelease/verify.js";
-import type * as contentRelease_verify_delete from "../contentRelease/verify/delete.js";
-import type * as contentRelease_verify_item from "../contentRelease/verify/item.js";
-import type * as contentRelease_verify_upsert from "../contentRelease/verify/upsert.js";
-import type * as contentRelease_wire from "../contentRelease/wire.js";
-import type * as contents_analytics_budget from "../contents/analytics/budget.js";
-import type * as contents_analytics_drain from "../contents/analytics/drain.js";
-import type * as contents_analytics_impl from "../contents/analytics/impl.js";
-import type * as contents_analytics_spec from "../contents/analytics/spec.js";
-import type * as contents_constants from "../contents/constants.js";
-import type * as contents_context from "../contents/context.js";
-import type * as contents_graph from "../contents/graph.js";
-import type * as contents_helpers_partitions from "../contents/helpers/partitions.js";
-import type * as contents_helpers_search_documents from "../contents/helpers/search/documents.js";
-import type * as contents_helpers_search_excerpt from "../contents/helpers/search/excerpt.js";
-import type * as contents_helpers_search_groups from "../contents/helpers/search/groups.js";
-import type * as contents_helpers_search_input from "../contents/helpers/search/input.js";
-import type * as contents_helpers_search_published from "../contents/helpers/search/published.js";
-import type * as contents_helpers_search_quran_candidates from "../contents/helpers/search/quran/candidates.js";
-import type * as contents_helpers_search_quran_read from "../contents/helpers/search/quran/read.js";
-import type * as contents_helpers_search_rank from "../contents/helpers/search/rank.js";
-import type * as contents_helpers_search_read from "../contents/helpers/search/read.js";
-import type * as contents_helpers_search_result from "../contents/helpers/search/result.js";
-import type * as contents_helpers_search_terms from "../contents/helpers/search/terms.js";
-import type * as contents_helpers_search_tryout from "../contents/helpers/search/tryout.js";
-import type * as contents_metrics_apply from "../contents/metrics/apply.js";
-import type * as contents_metrics_batch from "../contents/metrics/batch.js";
-import type * as contents_metrics_counter from "../contents/metrics/counter.js";
-import type * as contents_metrics_cycle from "../contents/metrics/cycle.js";
-import type * as contents_metrics_expiry from "../contents/metrics/expiry.js";
-import type * as contents_metrics_refresh from "../contents/metrics/refresh.js";
-import type * as contents_metrics_repair from "../contents/metrics/repair.js";
-import type * as contents_metrics_retention from "../contents/metrics/retention.js";
-import type * as contents_metrics_signal from "../contents/metrics/signal.js";
-import type * as contents_mutations_analytics from "../contents/mutations/analytics.js";
-import type * as contents_mutations_popularity from "../contents/mutations/popularity.js";
-import type * as contents_mutations_views from "../contents/mutations/views.js";
-import type * as contents_popularity from "../contents/popularity.js";
-import type * as contents_queries_recent from "../contents/queries/recent.js";
-import type * as contents_queries_search from "../contents/queries/search.js";
-import type * as contents_queries_trending from "../contents/queries/trending.js";
-import type * as contents_rankings from "../contents/rankings.js";
-import type * as contents_trending_impl from "../contents/trending/impl.js";
-import type * as contents_trending_spec from "../contents/trending/spec.js";
-import type * as contents_views_context from "../contents/views/context.js";
-import type * as contents_views_impl from "../contents/views/impl.js";
-import type * as contents_views_recent from "../contents/views/recent.js";
-import type * as contents_views_signals from "../contents/views/signals.js";
-import type * as contents_views_spec from "../contents/views/spec.js";
-import type * as contents_views_target from "../contents/views/target.js";
-import type * as credits_constants from "../credits/constants.js";
-import type * as credits_helpers_state from "../credits/helpers/state.js";
-import type * as credits_mutations from "../credits/mutations.js";
-import type * as crons from "../crons.js";
-import type * as customers_actions_internal from "../customers/actions/internal.js";
-import type * as customers_actions_public from "../customers/actions/public.js";
-import type * as customers_checkout_admission from "../customers/checkout/admission.js";
-import type * as customers_checkout_impl from "../customers/checkout/impl.js";
-import type * as customers_checkout_localization from "../customers/checkout/localization.js";
-import type * as customers_checkout_session from "../customers/checkout/session.js";
-import type * as customers_checkout_spec from "../customers/checkout/spec.js";
-import type * as customers_deletion_billing from "../customers/deletion/billing.js";
-import type * as customers_deletion_billingState from "../customers/deletion/billingState.js";
-import type * as customers_deletion_cleanup from "../customers/deletion/cleanup.js";
-import type * as customers_deletion_workflow from "../customers/deletion/workflow.js";
-import type * as customers_integrity_internal from "../customers/integrity/internal.js";
-import type * as customers_mutations_internal from "../customers/mutations/internal.js";
-import type * as customers_mutations_spec from "../customers/mutations/spec.js";
-import type * as customers_polar_impl from "../customers/polar/impl.js";
-import type * as customers_polar_live from "../customers/polar/live.js";
-import type * as customers_polar_spec from "../customers/polar/spec.js";
-import type * as customers_polar_target from "../customers/polar/target.js";
-import type * as customers_polar_webhook from "../customers/polar/webhook.js";
-import type * as customers_queries_internal_customer from "../customers/queries/internal/customer.js";
-import type * as customers_records from "../customers/records.js";
-import type * as customers_sync_impl from "../customers/sync/impl.js";
-import type * as customers_sync_settlement from "../customers/sync/settlement.js";
-import type * as customers_sync_spec from "../customers/sync/spec.js";
-import type * as emails_client from "../emails/client.js";
-import type * as emails_retention from "../emails/retention.js";
-import type * as emails_welcome_delivery from "../emails/welcome/delivery.js";
-import type * as emails_welcome_impl from "../emails/welcome/impl.js";
-import type * as emails_welcome_input from "../emails/welcome/input.js";
-import type * as emails_welcome_internal from "../emails/welcome/internal.js";
-import type * as emails_welcome_reconciliation from "../emails/welcome/reconciliation.js";
-import type * as emails_welcome_spec from "../emails/welcome/spec.js";
-import type * as emails_welcome_workflow from "../emails/welcome/workflow.js";
-import type * as functions from "../functions.js";
-import type * as http from "../http.js";
-import type * as learningPreferences_impl from "../learningPreferences/impl.js";
-import type * as learningPreferences_mutations from "../learningPreferences/mutations.js";
-import type * as learningPreferences_program from "../learningPreferences/program.js";
-import type * as learningPreferences_queries from "../learningPreferences/queries.js";
-import type * as lib_attempts from "../lib/attempts.js";
-import type * as lib_effect from "../lib/effect.js";
-import type * as lib_helpers_auth from "../lib/helpers/auth.js";
-import type * as lib_helpers_chat from "../lib/helpers/chat.js";
-import type * as lib_helpers_class from "../lib/helpers/class.js";
-import type * as lib_helpers_invite from "../lib/helpers/invite.js";
-import type * as lib_helpers_permissions from "../lib/helpers/permissions.js";
-import type * as lib_helpers_school from "../lib/helpers/school.js";
-import type * as lib_helpers_user from "../lib/helpers/user.js";
-import type * as lib_images from "../lib/images.js";
-import type * as lib_validators_contents from "../lib/validators/contents.js";
-import type * as lib_validators_trending from "../lib/validators/trending.js";
-import type * as lib_validators_user from "../lib/validators/user.js";
-import type * as lib_validators_vv from "../lib/validators/vv.js";
-import type * as notifications_mutations from "../notifications/mutations.js";
-import type * as notifications_queries from "../notifications/queries.js";
-import type * as onboarding_impl from "../onboarding/impl.js";
-import type * as onboarding_lifecycle from "../onboarding/lifecycle.js";
-import type * as onboarding_mutations from "../onboarding/mutations.js";
-import type * as onboarding_queries from "../onboarding/queries.js";
-import type * as onboarding_spec from "../onboarding/spec.js";
-import type * as onboarding_status from "../onboarding/status.js";
-import type * as onboarding_values from "../onboarding/values.js";
-import type * as polyfills from "../polyfills.js";
-import type * as privacy_recovery from "../privacy/recovery.js";
-import type * as privacy_spec from "../privacy/spec.js";
-import type * as routes_agent_api from "../routes/agent/api.js";
-import type * as routes_agent_content from "../routes/agent/content.js";
-import type * as routes_agent_guard from "../routes/agent/guard.js";
-import type * as routes_agent_input from "../routes/agent/input.js";
-import type * as routes_agent_limit from "../routes/agent/limit.js";
-import type * as routes_agent_mcp_guard from "../routes/agent/mcp/guard.js";
-import type * as routes_agent_mcp_input from "../routes/agent/mcp/input.js";
-import type * as routes_agent_mcp_response from "../routes/agent/mcp/response.js";
-import type * as routes_agent_mcp_route from "../routes/agent/mcp/route.js";
-import type * as routes_agent_quran from "../routes/agent/quran.js";
-import type * as routes_agent_response from "../routes/agent/response.js";
-import type * as routes_agent_runtime from "../routes/agent/runtime.js";
-import type * as routes_agent_search from "../routes/agent/search.js";
-import type * as routes_agent_security from "../routes/agent/security.js";
-import type * as routes_constants from "../routes/constants.js";
-import type * as routes_middleware_logger from "../routes/middleware/logger.js";
-import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
-import type * as routes_polar from "../routes/polar.js";
-import type * as routes_resend from "../routes/resend.js";
-import type * as schools_mutations from "../schools/mutations.js";
-import type * as schools_queries from "../schools/queries.js";
-import type * as schools_slug from "../schools/slug.js";
-import type * as schools_utils from "../schools/utils.js";
-import type * as schools_validators from "../schools/validators.js";
-import type * as site_config from "../site/config.js";
-import type * as subscriptions_mutations from "../subscriptions/mutations.js";
-import type * as subscriptions_queries from "../subscriptions/queries.js";
-import type * as subscriptions_records_impl from "../subscriptions/records/impl.js";
-import type * as subscriptions_records_spec from "../subscriptions/records/spec.js";
-import type * as subscriptions_utils from "../subscriptions/utils.js";
-import type * as triggers_chats_chats from "../triggers/chats/chats.js";
-import type * as triggers_chats_cleanup from "../triggers/chats/cleanup.js";
-import type * as triggers_chats_messages from "../triggers/chats/messages.js";
-import type * as triggers_comments_cleanup from "../triggers/comments/cleanup.js";
-import type * as triggers_comments_commentVotes from "../triggers/comments/commentVotes.js";
-import type * as triggers_comments_comments from "../triggers/comments/comments.js";
-import type * as triggers_contents_popularity from "../triggers/contents/popularity.js";
-import type * as triggers_contents_views from "../triggers/contents/views.js";
-import type * as triggers_forums_postReactions from "../triggers/forums/postReactions.js";
-import type * as triggers_forums_posts from "../triggers/forums/posts.js";
-import type * as triggers_forums_reactions from "../triggers/forums/reactions.js";
-import type * as triggers_helpers_classes from "../triggers/helpers/classes.js";
-import type * as triggers_helpers_forumPosts from "../triggers/helpers/forumPosts.js";
-import type * as triggers_helpers_metadata from "../triggers/helpers/metadata.js";
-import type * as triggers_helpers_notifications from "../triggers/helpers/notifications.js";
-import type * as triggers_materials_cleanup from "../triggers/materials/cleanup.js";
-import type * as triggers_materials_groups from "../triggers/materials/groups.js";
-import type * as triggers_materials_materials from "../triggers/materials/materials.js";
-import type * as triggers_notifications_notifications from "../triggers/notifications/notifications.js";
-import type * as triggers_schools_classMembers from "../triggers/schools/classMembers.js";
-import type * as triggers_schools_classes from "../triggers/schools/classes.js";
-import type * as triggers_schools_cleanup from "../triggers/schools/cleanup.js";
-import type * as triggers_schools_members from "../triggers/schools/members.js";
-import type * as triggers_schools_schools from "../triggers/schools/schools.js";
-import type * as triggers_subscriptions_impl from "../triggers/subscriptions/impl.js";
-import type * as triggers_subscriptions_spec from "../triggers/subscriptions/spec.js";
-import type * as triggers_subscriptions_subscriptions from "../triggers/subscriptions/subscriptions.js";
-import type * as triggers_tryouts_scores from "../triggers/tryouts/scores.js";
-import type * as tryouts_access_impl from "../tryouts/access/impl.js";
-import type * as tryouts_access_source from "../tryouts/access/source.js";
-import type * as tryouts_access_subscription from "../tryouts/access/subscription.js";
-import type * as tryouts_attemptPage_impl from "../tryouts/attemptPage/impl.js";
-import type * as tryouts_attemptPage_spec from "../tryouts/attemptPage/spec.js";
-import type * as tryouts_catalog_destination from "../tryouts/catalog/destination.js";
-import type * as tryouts_catalog_spec from "../tryouts/catalog/spec.js";
-import type * as tryouts_mutations_access from "../tryouts/mutations/access.js";
-import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
-import type * as tryouts_mutations_expiry from "../tryouts/mutations/expiry.js";
-import type * as tryouts_mutations_responses from "../tryouts/mutations/responses.js";
-import type * as tryouts_mutations_sections from "../tryouts/mutations/sections.js";
-import type * as tryouts_progress_size from "../tryouts/progress/size.js";
-import type * as tryouts_progress_write from "../tryouts/progress/write.js";
-import type * as tryouts_queries_access from "../tryouts/queries/access.js";
-import type * as tryouts_queries_attempt from "../tryouts/queries/attempt.js";
-import type * as tryouts_queries_attemptPage from "../tryouts/queries/attemptPage.js";
-import type * as tryouts_queries_catalog from "../tryouts/queries/catalog.js";
-import type * as tryouts_queries_catalogModel from "../tryouts/queries/catalogModel.js";
-import type * as tryouts_queries_content from "../tryouts/queries/content.js";
-import type * as tryouts_queries_history from "../tryouts/queries/history.js";
-import type * as tryouts_queries_runtime from "../tryouts/queries/runtime.js";
-import type * as tryouts_queries_sets from "../tryouts/queries/sets.js";
-import type * as tryouts_questions from "../tryouts/questions.js";
-import type * as tryouts_response_evaluation from "../tryouts/response/evaluation.js";
-import type * as tryouts_response_integrity from "../tryouts/response/integrity.js";
-import type * as tryouts_response_model from "../tryouts/response/model.js";
-import type * as tryouts_response_selection from "../tryouts/response/selection.js";
-import type * as tryouts_response_spec from "../tryouts/response/spec.js";
-import type * as tryouts_response_validation from "../tryouts/response/validation.js";
-import type * as tryouts_response_write from "../tryouts/response/write.js";
-import type * as tryouts_route from "../tryouts/route.js";
-import type * as tryouts_runtime_access from "../tryouts/runtime/access.js";
-import type * as tryouts_runtime_attempt_page from "../tryouts/runtime/attempt/page.js";
-import type * as tryouts_runtime_attempt_sections from "../tryouts/runtime/attempt/sections.js";
-import type * as tryouts_runtime_attempt_source from "../tryouts/runtime/attempt/source.js";
-import type * as tryouts_runtime_attempt_state from "../tryouts/runtime/attempt/state.js";
-import type * as tryouts_runtime_body from "../tryouts/runtime/body.js";
-import type * as tryouts_runtime_budget from "../tryouts/runtime/budget.js";
-import type * as tryouts_runtime_completion from "../tryouts/runtime/completion.js";
-import type * as tryouts_runtime_content from "../tryouts/runtime/content.js";
-import type * as tryouts_runtime_error from "../tryouts/runtime/error.js";
-import type * as tryouts_runtime_estimate from "../tryouts/runtime/estimate.js";
-import type * as tryouts_runtime_finish from "../tryouts/runtime/finish.js";
-import type * as tryouts_runtime_history_placement from "../tryouts/runtime/history/placement.js";
-import type * as tryouts_runtime_history_read from "../tryouts/runtime/history/read.js";
-import type * as tryouts_runtime_history_spec from "../tryouts/runtime/history/spec.js";
-import type * as tryouts_runtime_irt from "../tryouts/runtime/irt.js";
-import type * as tryouts_runtime_irt_items from "../tryouts/runtime/irt/items.js";
-import type * as tryouts_runtime_irt_score from "../tryouts/runtime/irt/score.js";
-import type * as tryouts_runtime_lookup from "../tryouts/runtime/lookup.js";
-import type * as tryouts_runtime_ownership from "../tryouts/runtime/ownership.js";
-import type * as tryouts_runtime_placement from "../tryouts/runtime/placement.js";
-import type * as tryouts_runtime_response from "../tryouts/runtime/response.js";
-import type * as tryouts_runtime_result from "../tryouts/runtime/result.js";
-import type * as tryouts_runtime_scale from "../tryouts/runtime/scale.js";
-import type * as tryouts_runtime_score from "../tryouts/runtime/score.js";
-import type * as tryouts_runtime_section_questions from "../tryouts/runtime/section/questions.js";
-import type * as tryouts_runtime_section_state from "../tryouts/runtime/section/state.js";
-import type * as tryouts_runtime_sectionAttempt from "../tryouts/runtime/sectionAttempt.js";
-import type * as tryouts_runtime_selectors from "../tryouts/runtime/selectors.js";
-import type * as tryouts_runtime_set_state from "../tryouts/runtime/set/state.js";
-import type * as tryouts_runtime_signed from "../tryouts/runtime/signed.js";
-import type * as tryouts_runtime_spec from "../tryouts/runtime/spec.js";
-import type * as tryouts_score from "../tryouts/score.js";
-import type * as tryouts_score_result from "../tryouts/score/result.js";
-import type * as tryouts_sets_page from "../tryouts/sets/page.js";
-import type * as tryouts_sets_published from "../tryouts/sets/published.js";
-import type * as tryouts_sets_spec from "../tryouts/sets/spec.js";
-import type * as tryouts_start_attempt from "../tryouts/start/attempt.js";
-import type * as tryouts_start_impl from "../tryouts/start/impl.js";
-import type * as tryouts_start_scale from "../tryouts/start/scale.js";
-import type * as tryouts_start_source from "../tryouts/start/source.js";
-import type * as tryouts_start_spec from "../tryouts/start/spec.js";
-import type * as tryouts_status from "../tryouts/status.js";
-import type * as users_mutations from "../users/mutations.js";
-import type * as users_queries from "../users/queries.js";
-import type * as users_roles from "../users/roles.js";
-import type * as utils_error from "../utils/error.js";
-import type * as utils_id from "../utils/id.js";
-import type * as utils_logger from "../utils/logger.js";
-import type * as utils_number from "../utils/number.js";
-import type * as utils_polar_client from "../utils/polar/client.js";
-import type * as utils_polar_config from "../utils/polar/config.js";
-import type * as utils_polar_env from "../utils/polar/env.js";
-import type * as utils_polar_products from "../utils/polar/products.js";
-import type * as utils_polar_webhook from "../utils/polar/webhook.js";
-import type * as utils_text from "../utils/text.js";
-import type * as workflow from "../workflow.js";
-
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
-
-declare const fullApi: ApiFromModules<{
-  "analytics/capture": typeof analytics_capture;
-  "analytics/erasure/action": typeof analytics_erasure_action;
-  "analytics/erasure/policy": typeof analytics_erasure_policy;
-  "analytics/erasure/request": typeof analytics_erasure_request;
-  "analytics/erasure/workflow": typeof analytics_erasure_workflow;
-  "analytics/events": typeof analytics_events;
-  "auth/actions": typeof auth_actions;
-  "auth/cleanup": typeof auth_cleanup;
-  "auth/cleanup/consents": typeof auth_cleanup_consents;
-  "auth/cleanup/impl": typeof auth_cleanup_impl;
-  "auth/cleanup/learning": typeof auth_cleanup_learning;
-  "auth/cleanup/notifications": typeof auth_cleanup_notifications;
-  "auth/cleanup/schoolCommunity": typeof auth_cleanup_schoolCommunity;
-  "auth/cleanup/schools": typeof auth_cleanup_schools;
-  "auth/cleanup/social": typeof auth_cleanup_social;
-  "auth/cleanup/spec": typeof auth_cleanup_spec;
-  "auth/cleanup/tryouts": typeof auth_cleanup_tryouts;
-  "auth/client": typeof auth_client;
-  "auth/config": typeof auth_config;
-  "auth/deletion": typeof auth_deletion;
-  "auth/deletion/attemptCancellation": typeof auth_deletion_attemptCancellation;
-  "auth/deletion/cancel": typeof auth_deletion_cancel;
-  "auth/deletion/claim": typeof auth_deletion_claim;
-  "auth/deletion/commit": typeof auth_deletion_commit;
-  "auth/deletion/constants": typeof auth_deletion_constants;
-  "auth/deletion/finalize": typeof auth_deletion_finalize;
-  "auth/deletion/prepare": typeof auth_deletion_prepare;
-  "auth/deletion/receipt": typeof auth_deletion_receipt;
-  "auth/deletion/recovery": typeof auth_deletion_recovery;
-  "auth/deletion/spec": typeof auth_deletion_spec;
-  "auth/deletion/state": typeof auth_deletion_state;
-  "auth/deletion/successor": typeof auth_deletion_successor;
-  "auth/deletion/tombstone": typeof auth_deletion_tombstone;
-  "auth/deletion/transfers": typeof auth_deletion_transfers;
-  "auth/deletion/verification": typeof auth_deletion_verification;
-  "auth/lifecycle": typeof auth_lifecycle;
-  "auth/queries": typeof auth_queries;
-  "auth/reader": typeof auth_reader;
-  "auth/runtime": typeof auth_runtime;
-  "auth/username/availability": typeof auth_username_availability;
-  "auth/username/plugin": typeof auth_username_plugin;
-  "auth/username/policy": typeof auth_username_policy;
-  "auth/username/request": typeof auth_username_request;
-  "chats/actions": typeof chats_actions;
-  "chats/assistantResponses": typeof chats_assistantResponses;
-  "chats/assistantResponses/impl": typeof chats_assistantResponses_impl;
-  "chats/constants": typeof chats_constants;
-  "chats/context": typeof chats_context;
-  "chats/helpers": typeof chats_helpers;
-  "chats/messageParts/dbToUi": typeof chats_messageParts_dbToUi;
-  "chats/messageParts/providerMetadata": typeof chats_messageParts_providerMetadata;
-  "chats/messageParts/shared": typeof chats_messageParts_shared;
-  "chats/messageParts/uiToDb": typeof chats_messageParts_uiToDb;
-  "chats/mutations": typeof chats_mutations;
-  "chats/nakafa": typeof chats_nakafa;
-  "chats/queries": typeof chats_queries;
-  "chats/read": typeof chats_read;
-  "chats/traces/impl": typeof chats_traces_impl;
-  "chats/traces/mutations": typeof chats_traces_mutations;
-  "chats/traces/queries": typeof chats_traces_queries;
-  "chats/traces/spec": typeof chats_traces_spec;
-  "chats/utils": typeof chats_utils;
-  "classes/constants": typeof classes_constants;
-  "classes/forums/aggregate": typeof classes_forums_aggregate;
-  "classes/forums/attachments/constants": typeof classes_forums_attachments_constants;
-  "classes/forums/attachments/impl": typeof classes_forums_attachments_impl;
-  "classes/forums/attachments/route": typeof classes_forums_attachments_route;
-  "classes/forums/attachments/spec": typeof classes_forums_attachments_spec;
-  "classes/forums/attachments/upload": typeof classes_forums_attachments_upload;
-  "classes/forums/cleanup": typeof classes_forums_cleanup;
-  "classes/forums/internalMutations": typeof classes_forums_internalMutations;
-  "classes/forums/mutations/forums": typeof classes_forums_mutations_forums;
-  "classes/forums/mutations/posts": typeof classes_forums_mutations_posts;
-  "classes/forums/mutations/reactions": typeof classes_forums_mutations_reactions;
-  "classes/forums/mutations/readState": typeof classes_forums_mutations_readState;
-  "classes/forums/mutations/uploads": typeof classes_forums_mutations_uploads;
-  "classes/forums/queries/forums": typeof classes_forums_queries_forums;
-  "classes/forums/queries/pages": typeof classes_forums_queries_pages;
-  "classes/forums/utils/access": typeof classes_forums_utils_access;
-  "classes/forums/utils/constants": typeof classes_forums_utils_constants;
-  "classes/forums/utils/mentions": typeof classes_forums_utils_mentions;
-  "classes/forums/utils/postReactions": typeof classes_forums_utils_postReactions;
-  "classes/forums/utils/posts": typeof classes_forums_utils_posts;
-  "classes/forums/utils/reactions": typeof classes_forums_utils_reactions;
-  "classes/forums/utils/readStateWrite": typeof classes_forums_utils_readStateWrite;
-  "classes/forums/utils/unreadCounts": typeof classes_forums_utils_unreadCounts;
-  "classes/forums/validators": typeof classes_forums_validators;
-  "classes/materials/mutations": typeof classes_materials_mutations;
-  "classes/materials/queries": typeof classes_materials_queries;
-  "classes/materials/utils": typeof classes_materials_utils;
-  "classes/mutations": typeof classes_mutations;
-  "classes/queries": typeof classes_queries;
-  "classes/utils": typeof classes_utils;
-  "classes/validators": typeof classes_validators;
-  "comments/mutations": typeof comments_mutations;
-  "comments/queries": typeof comments_queries;
-  "consents/current": typeof consents_current;
-  "consents/impl": typeof consents_impl;
-  "contentRelease/abort": typeof contentRelease_abort;
-  "contentRelease/abort/budget": typeof contentRelease_abort_budget;
-  "contentRelease/abort/rows": typeof contentRelease_abort_rows;
-  "contentRelease/abort/runtime": typeof contentRelease_abort_runtime;
-  "contentRelease/accept": typeof contentRelease_accept;
-  "contentRelease/activate": typeof contentRelease_activate;
-  "contentRelease/activation/candidate": typeof contentRelease_activation_candidate;
-  "contentRelease/activation/complete": typeof contentRelease_activation_complete;
-  "contentRelease/activation/model": typeof contentRelease_activation_model;
-  "contentRelease/activation/recovery": typeof contentRelease_activation_recovery;
-  "contentRelease/activation/spec": typeof contentRelease_activation_spec;
-  "contentRelease/activation/validate": typeof contentRelease_activation_validate;
-  "contentRelease/article": typeof contentRelease_article;
-  "contentRelease/article/agent": typeof contentRelease_article_agent;
-  "contentRelease/article/bucket": typeof contentRelease_article_bucket;
-  "contentRelease/article/internal": typeof contentRelease_article_internal;
-  "contentRelease/article/limits": typeof contentRelease_article_limits;
-  "contentRelease/article/order": typeof contentRelease_article_order;
-  "contentRelease/article/ownership": typeof contentRelease_article_ownership;
-  "contentRelease/article/spec": typeof contentRelease_article_spec;
-  "contentRelease/article/sync": typeof contentRelease_article_sync;
-  "contentRelease/article/validation": typeof contentRelease_article_validation;
-  "contentRelease/article/write": typeof contentRelease_article_write;
-  "contentRelease/artifact/store": typeof contentRelease_artifact_store;
-  "contentRelease/artifacts": typeof contentRelease_artifacts;
-  "contentRelease/base": typeof contentRelease_base;
-  "contentRelease/batch": typeof contentRelease_batch;
-  "contentRelease/bucket": typeof contentRelease_bucket;
-  "contentRelease/cleanup": typeof contentRelease_cleanup;
-  "contentRelease/compact": typeof contentRelease_compact;
-  "contentRelease/compact/artifacts": typeof contentRelease_compact_artifacts;
-  "contentRelease/compact/rows": typeof contentRelease_compact_rows;
-  "contentRelease/compact/runtime": typeof contentRelease_compact_runtime;
-  "contentRelease/compact/state": typeof contentRelease_compact_state;
-  "contentRelease/cursor": typeof contentRelease_cursor;
-  "contentRelease/digest": typeof contentRelease_digest;
-  "contentRelease/document": typeof contentRelease_document;
-  "contentRelease/envelope": typeof contentRelease_envelope;
-  "contentRelease/error": typeof contentRelease_error;
-  "contentRelease/heads": typeof contentRelease_heads;
-  "contentRelease/http/body": typeof contentRelease_http_body;
-  "contentRelease/http/runtime/batch": typeof contentRelease_http_runtime_batch;
-  "contentRelease/http/runtime/protected": typeof contentRelease_http_runtime_protected;
-  "contentRelease/http/runtime/public": typeof contentRelease_http_runtime_public;
-  "contentRelease/http/runtime/request": typeof contentRelease_http_runtime_request;
-  "contentRelease/http/runtime/response": typeof contentRelease_http_runtime_response;
-  "contentRelease/http/secret": typeof contentRelease_http_secret;
-  "contentRelease/ingress/call": typeof contentRelease_ingress_call;
-  "contentRelease/ingress/current": typeof contentRelease_ingress_current;
-  "contentRelease/ingress/decode": typeof contentRelease_ingress_decode;
-  "contentRelease/ingress/dispatch": typeof contentRelease_ingress_dispatch;
-  "contentRelease/ingress/envelope": typeof contentRelease_ingress_envelope;
-  "contentRelease/ingress/failure": typeof contentRelease_ingress_failure;
-  "contentRelease/ingress/group": typeof contentRelease_ingress_group;
-  "contentRelease/ingress/key": typeof contentRelease_ingress_key;
-  "contentRelease/ingress/lifecycle": typeof contentRelease_ingress_lifecycle;
-  "contentRelease/ingress/models": typeof contentRelease_ingress_models;
-  "contentRelease/ingress/read": typeof contentRelease_ingress_read;
-  "contentRelease/ingress/response": typeof contentRelease_ingress_response;
-  "contentRelease/ingress/rollback": typeof contentRelease_ingress_rollback;
-  "contentRelease/ingress/route": typeof contentRelease_ingress_route;
-  "contentRelease/ingress/runtime/bundle": typeof contentRelease_ingress_runtime_bundle;
-  "contentRelease/ingress/snapshot": typeof contentRelease_ingress_snapshot;
-  "contentRelease/ingress/stage": typeof contentRelease_ingress_stage;
-  "contentRelease/item": typeof contentRelease_item;
-  "contentRelease/items": typeof contentRelease_items;
-  "contentRelease/manifest": typeof contentRelease_manifest;
-  "contentRelease/material": typeof contentRelease_material;
-  "contentRelease/material/bucket": typeof contentRelease_material_bucket;
-  "contentRelease/material/limits": typeof contentRelease_material_limits;
-  "contentRelease/material/spec": typeof contentRelease_material_spec;
-  "contentRelease/material/state": typeof contentRelease_material_state;
-  "contentRelease/material/sync": typeof contentRelease_material_sync;
-  "contentRelease/material/topic": typeof contentRelease_material_topic;
-  "contentRelease/material/validation": typeof contentRelease_material_validation;
-  "contentRelease/material/write": typeof contentRelease_material_write;
-  "contentRelease/model": typeof contentRelease_model;
-  "contentRelease/models": typeof contentRelease_models;
-  "contentRelease/models/article": typeof contentRelease_models_article;
-  "contentRelease/models/build": typeof contentRelease_models_build;
-  "contentRelease/models/impact": typeof contentRelease_models_impact;
-  "contentRelease/models/items": typeof contentRelease_models_items;
-  "contentRelease/models/material": typeof contentRelease_models_material;
-  "contentRelease/models/page": typeof contentRelease_models_page;
-  "contentRelease/models/phase": typeof contentRelease_models_phase;
-  "contentRelease/models/reconcile": typeof contentRelease_models_reconcile;
-  "contentRelease/models/search": typeof contentRelease_models_search;
-  "contentRelease/models/slot": typeof contentRelease_models_slot;
-  "contentRelease/models/spec": typeof contentRelease_models_spec;
-  "contentRelease/ownership": typeof contentRelease_ownership;
-  "contentRelease/page": typeof contentRelease_page;
-  "contentRelease/page/limits": typeof contentRelease_page_limits;
-  "contentRelease/paging": typeof contentRelease_paging;
-  "contentRelease/parse": typeof contentRelease_parse;
-  "contentRelease/partner/cursor": typeof contentRelease_partner_cursor;
-  "contentRelease/partner/page": typeof contentRelease_partner_page;
-  "contentRelease/program": typeof contentRelease_program;
-  "contentRelease/program/bucket": typeof contentRelease_program_bucket;
-  "contentRelease/program/limits": typeof contentRelease_program_limits;
-  "contentRelease/projection": typeof contentRelease_projection;
-  "contentRelease/proof/artifact": typeof contentRelease_proof_artifact;
-  "contentRelease/proof/budget": typeof contentRelease_proof_budget;
-  "contentRelease/proof/catalog": typeof contentRelease_proof_catalog;
-  "contentRelease/proof/commit": typeof contentRelease_proof_commit;
-  "contentRelease/proof/content": typeof contentRelease_proof_content;
-  "contentRelease/proof/coordinator": typeof contentRelease_proof_coordinator;
-  "contentRelease/proof/failure": typeof contentRelease_proof_failure;
-  "contentRelease/proof/poll": typeof contentRelease_proof_poll;
-  "contentRelease/proof/read": typeof contentRelease_proof_read;
-  "contentRelease/proof/routes": typeof contentRelease_proof_routes;
-  "contentRelease/proof/snapshot": typeof contentRelease_proof_snapshot;
-  "contentRelease/proof/spec": typeof contentRelease_proof_spec;
-  "contentRelease/proof/stream": typeof contentRelease_proof_stream;
-  "contentRelease/proof/verify": typeof contentRelease_proof_verify;
-  "contentRelease/proof/workflow": typeof contentRelease_proof_workflow;
-  "contentRelease/quran": typeof contentRelease_quran;
-  "contentRelease/quran/facts": typeof contentRelease_quran_facts;
-  "contentRelease/quran/input": typeof contentRelease_quran_input;
-  "contentRelease/quran/limits": typeof contentRelease_quran_limits;
-  "contentRelease/quran/spec": typeof contentRelease_quran_spec;
-  "contentRelease/quran/translation": typeof contentRelease_quran_translation;
-  "contentRelease/quran/verify": typeof contentRelease_quran_verify;
-  "contentRelease/receipt": typeof contentRelease_receipt;
-  "contentRelease/recovery": typeof contentRelease_recovery;
-  "contentRelease/reference": typeof contentRelease_reference;
-  "contentRelease/reference/agent": typeof contentRelease_reference_agent;
-  "contentRelease/reference/input": typeof contentRelease_reference_input;
-  "contentRelease/reference/internal": typeof contentRelease_reference_internal;
-  "contentRelease/reference/spec": typeof contentRelease_reference_spec;
-  "contentRelease/renderer": typeof contentRelease_renderer;
-  "contentRelease/retention": typeof contentRelease_retention;
-  "contentRelease/rollback": typeof contentRelease_rollback;
-  "contentRelease/rollback/state": typeof contentRelease_rollback_state;
-  "contentRelease/route": typeof contentRelease_route;
-  "contentRelease/routes": typeof contentRelease_routes;
-  "contentRelease/runtime/active": typeof contentRelease_runtime_active;
-  "contentRelease/runtime/origin": typeof contentRelease_runtime_origin;
-  "contentRelease/runtime/pin": typeof contentRelease_runtime_pin;
-  "contentRelease/runtime/protected/dispatch": typeof contentRelease_runtime_protected_dispatch;
-  "contentRelease/runtime/protected/internal": typeof contentRelease_runtime_protected_internal;
-  "contentRelease/runtime/public/batch": typeof contentRelease_runtime_public_batch;
-  "contentRelease/runtime/public/dispatch": typeof contentRelease_runtime_public_dispatch;
-  "contentRelease/runtime/public/internal": typeof contentRelease_runtime_public_internal;
-  "contentRelease/runtime/result": typeof contentRelease_runtime_result;
-  "contentRelease/scope/family": typeof contentRelease_scope_family;
-  "contentRelease/search/input": typeof contentRelease_search_input;
-  "contentRelease/search/owner": typeof contentRelease_search_owner;
-  "contentRelease/search/spec": typeof contentRelease_search_spec;
-  "contentRelease/search/sync": typeof contentRelease_search_sync;
-  "contentRelease/search/validation": typeof contentRelease_search_validation;
-  "contentRelease/search/verify": typeof contentRelease_search_verify;
-  "contentRelease/search/write": typeof contentRelease_search_write;
-  "contentRelease/sitemap": typeof contentRelease_sitemap;
-  "contentRelease/snapshot": typeof contentRelease_snapshot;
-  "contentRelease/snapshot/batch": typeof contentRelease_snapshot_batch;
-  "contentRelease/snapshot/cleanup": typeof contentRelease_snapshot_cleanup;
-  "contentRelease/snapshot/manifest": typeof contentRelease_snapshot_manifest;
-  "contentRelease/snapshot/program": typeof contentRelease_snapshot_program;
-  "contentRelease/snapshot/quran": typeof contentRelease_snapshot_quran;
-  "contentRelease/snapshot/read": typeof contentRelease_snapshot_read;
-  "contentRelease/snapshot/request": typeof contentRelease_snapshot_request;
-  "contentRelease/snapshot/retention": typeof contentRelease_snapshot_retention;
-  "contentRelease/snapshot/rows": typeof contentRelease_snapshot_rows;
-  "contentRelease/snapshot/tryout": typeof contentRelease_snapshot_tryout;
-  "contentRelease/spec": typeof contentRelease_spec;
-  "contentRelease/status": typeof contentRelease_status;
-  "contentRelease/sync": typeof contentRelease_sync;
-  "contentRelease/tryout": typeof contentRelease_tryout;
-  "contentRelease/tryout/binding": typeof contentRelease_tryout_binding;
-  "contentRelease/tryout/facts": typeof contentRelease_tryout_facts;
-  "contentRelease/tryout/limits": typeof contentRelease_tryout_limits;
-  "contentRelease/tryout/row": typeof contentRelease_tryout_row;
-  "contentRelease/tryout/runtime": typeof contentRelease_tryout_runtime;
-  "contentRelease/tryout/taxonomy": typeof contentRelease_tryout_taxonomy;
-  "contentRelease/tryout/verify": typeof contentRelease_tryout_verify;
-  "contentRelease/verify": typeof contentRelease_verify;
-  "contentRelease/verify/delete": typeof contentRelease_verify_delete;
-  "contentRelease/verify/item": typeof contentRelease_verify_item;
-  "contentRelease/verify/upsert": typeof contentRelease_verify_upsert;
-  "contentRelease/wire": typeof contentRelease_wire;
-  "contents/analytics/budget": typeof contents_analytics_budget;
-  "contents/analytics/drain": typeof contents_analytics_drain;
-  "contents/analytics/impl": typeof contents_analytics_impl;
-  "contents/analytics/spec": typeof contents_analytics_spec;
-  "contents/constants": typeof contents_constants;
-  "contents/context": typeof contents_context;
-  "contents/graph": typeof contents_graph;
-  "contents/helpers/partitions": typeof contents_helpers_partitions;
-  "contents/helpers/search/documents": typeof contents_helpers_search_documents;
-  "contents/helpers/search/excerpt": typeof contents_helpers_search_excerpt;
-  "contents/helpers/search/groups": typeof contents_helpers_search_groups;
-  "contents/helpers/search/input": typeof contents_helpers_search_input;
-  "contents/helpers/search/published": typeof contents_helpers_search_published;
-  "contents/helpers/search/quran/candidates": typeof contents_helpers_search_quran_candidates;
-  "contents/helpers/search/quran/read": typeof contents_helpers_search_quran_read;
-  "contents/helpers/search/rank": typeof contents_helpers_search_rank;
-  "contents/helpers/search/read": typeof contents_helpers_search_read;
-  "contents/helpers/search/result": typeof contents_helpers_search_result;
-  "contents/helpers/search/terms": typeof contents_helpers_search_terms;
-  "contents/helpers/search/tryout": typeof contents_helpers_search_tryout;
-  "contents/metrics/apply": typeof contents_metrics_apply;
-  "contents/metrics/batch": typeof contents_metrics_batch;
-  "contents/metrics/counter": typeof contents_metrics_counter;
-  "contents/metrics/cycle": typeof contents_metrics_cycle;
-  "contents/metrics/expiry": typeof contents_metrics_expiry;
-  "contents/metrics/refresh": typeof contents_metrics_refresh;
-  "contents/metrics/repair": typeof contents_metrics_repair;
-  "contents/metrics/retention": typeof contents_metrics_retention;
-  "contents/metrics/signal": typeof contents_metrics_signal;
-  "contents/mutations/analytics": typeof contents_mutations_analytics;
-  "contents/mutations/popularity": typeof contents_mutations_popularity;
-  "contents/mutations/views": typeof contents_mutations_views;
-  "contents/popularity": typeof contents_popularity;
-  "contents/queries/recent": typeof contents_queries_recent;
-  "contents/queries/search": typeof contents_queries_search;
-  "contents/queries/trending": typeof contents_queries_trending;
-  "contents/rankings": typeof contents_rankings;
-  "contents/trending/impl": typeof contents_trending_impl;
-  "contents/trending/spec": typeof contents_trending_spec;
-  "contents/views/context": typeof contents_views_context;
-  "contents/views/impl": typeof contents_views_impl;
-  "contents/views/recent": typeof contents_views_recent;
-  "contents/views/signals": typeof contents_views_signals;
-  "contents/views/spec": typeof contents_views_spec;
-  "contents/views/target": typeof contents_views_target;
-  "credits/constants": typeof credits_constants;
-  "credits/helpers/state": typeof credits_helpers_state;
-  "credits/mutations": typeof credits_mutations;
-  crons: typeof crons;
-  "customers/actions/internal": typeof customers_actions_internal;
-  "customers/actions/public": typeof customers_actions_public;
-  "customers/checkout/admission": typeof customers_checkout_admission;
-  "customers/checkout/impl": typeof customers_checkout_impl;
-  "customers/checkout/localization": typeof customers_checkout_localization;
-  "customers/checkout/session": typeof customers_checkout_session;
-  "customers/checkout/spec": typeof customers_checkout_spec;
-  "customers/deletion/billing": typeof customers_deletion_billing;
-  "customers/deletion/billingState": typeof customers_deletion_billingState;
-  "customers/deletion/cleanup": typeof customers_deletion_cleanup;
-  "customers/deletion/workflow": typeof customers_deletion_workflow;
-  "customers/integrity/internal": typeof customers_integrity_internal;
-  "customers/mutations/internal": typeof customers_mutations_internal;
-  "customers/mutations/spec": typeof customers_mutations_spec;
-  "customers/polar/impl": typeof customers_polar_impl;
-  "customers/polar/live": typeof customers_polar_live;
-  "customers/polar/spec": typeof customers_polar_spec;
-  "customers/polar/target": typeof customers_polar_target;
-  "customers/polar/webhook": typeof customers_polar_webhook;
-  "customers/queries/internal/customer": typeof customers_queries_internal_customer;
-  "customers/records": typeof customers_records;
-  "customers/sync/impl": typeof customers_sync_impl;
-  "customers/sync/settlement": typeof customers_sync_settlement;
-  "customers/sync/spec": typeof customers_sync_spec;
-  "emails/client": typeof emails_client;
-  "emails/retention": typeof emails_retention;
-  "emails/welcome/delivery": typeof emails_welcome_delivery;
-  "emails/welcome/impl": typeof emails_welcome_impl;
-  "emails/welcome/input": typeof emails_welcome_input;
-  "emails/welcome/internal": typeof emails_welcome_internal;
-  "emails/welcome/reconciliation": typeof emails_welcome_reconciliation;
-  "emails/welcome/spec": typeof emails_welcome_spec;
-  "emails/welcome/workflow": typeof emails_welcome_workflow;
-  functions: typeof functions;
-  http: typeof http;
-  "learningPreferences/impl": typeof learningPreferences_impl;
-  "learningPreferences/mutations": typeof learningPreferences_mutations;
-  "learningPreferences/program": typeof learningPreferences_program;
-  "learningPreferences/queries": typeof learningPreferences_queries;
-  "lib/attempts": typeof lib_attempts;
-  "lib/effect": typeof lib_effect;
-  "lib/helpers/auth": typeof lib_helpers_auth;
-  "lib/helpers/chat": typeof lib_helpers_chat;
-  "lib/helpers/class": typeof lib_helpers_class;
-  "lib/helpers/invite": typeof lib_helpers_invite;
-  "lib/helpers/permissions": typeof lib_helpers_permissions;
-  "lib/helpers/school": typeof lib_helpers_school;
-  "lib/helpers/user": typeof lib_helpers_user;
-  "lib/images": typeof lib_images;
-  "lib/validators/contents": typeof lib_validators_contents;
-  "lib/validators/trending": typeof lib_validators_trending;
-  "lib/validators/user": typeof lib_validators_user;
-  "lib/validators/vv": typeof lib_validators_vv;
-  "notifications/mutations": typeof notifications_mutations;
-  "notifications/queries": typeof notifications_queries;
-  "onboarding/impl": typeof onboarding_impl;
-  "onboarding/lifecycle": typeof onboarding_lifecycle;
-  "onboarding/mutations": typeof onboarding_mutations;
-  "onboarding/queries": typeof onboarding_queries;
-  "onboarding/spec": typeof onboarding_spec;
-  "onboarding/status": typeof onboarding_status;
-  "onboarding/values": typeof onboarding_values;
-  polyfills: typeof polyfills;
-  "privacy/recovery": typeof privacy_recovery;
-  "privacy/spec": typeof privacy_spec;
-  "routes/agent/api": typeof routes_agent_api;
-  "routes/agent/content": typeof routes_agent_content;
-  "routes/agent/guard": typeof routes_agent_guard;
-  "routes/agent/input": typeof routes_agent_input;
-  "routes/agent/limit": typeof routes_agent_limit;
-  "routes/agent/mcp/guard": typeof routes_agent_mcp_guard;
-  "routes/agent/mcp/input": typeof routes_agent_mcp_input;
-  "routes/agent/mcp/response": typeof routes_agent_mcp_response;
-  "routes/agent/mcp/route": typeof routes_agent_mcp_route;
-  "routes/agent/quran": typeof routes_agent_quran;
-  "routes/agent/response": typeof routes_agent_response;
-  "routes/agent/runtime": typeof routes_agent_runtime;
-  "routes/agent/search": typeof routes_agent_search;
-  "routes/agent/security": typeof routes_agent_security;
-  "routes/constants": typeof routes_constants;
-  "routes/middleware/logger": typeof routes_middleware_logger;
-  "routes/middleware/requestId": typeof routes_middleware_requestId;
-  "routes/polar": typeof routes_polar;
-  "routes/resend": typeof routes_resend;
-  "schools/mutations": typeof schools_mutations;
-  "schools/queries": typeof schools_queries;
-  "schools/slug": typeof schools_slug;
-  "schools/utils": typeof schools_utils;
-  "schools/validators": typeof schools_validators;
-  "site/config": typeof site_config;
-  "subscriptions/mutations": typeof subscriptions_mutations;
-  "subscriptions/queries": typeof subscriptions_queries;
-  "subscriptions/records/impl": typeof subscriptions_records_impl;
-  "subscriptions/records/spec": typeof subscriptions_records_spec;
-  "subscriptions/utils": typeof subscriptions_utils;
-  "triggers/chats/chats": typeof triggers_chats_chats;
-  "triggers/chats/cleanup": typeof triggers_chats_cleanup;
-  "triggers/chats/messages": typeof triggers_chats_messages;
-  "triggers/comments/cleanup": typeof triggers_comments_cleanup;
-  "triggers/comments/commentVotes": typeof triggers_comments_commentVotes;
-  "triggers/comments/comments": typeof triggers_comments_comments;
-  "triggers/contents/popularity": typeof triggers_contents_popularity;
-  "triggers/contents/views": typeof triggers_contents_views;
-  "triggers/forums/postReactions": typeof triggers_forums_postReactions;
-  "triggers/forums/posts": typeof triggers_forums_posts;
-  "triggers/forums/reactions": typeof triggers_forums_reactions;
-  "triggers/helpers/classes": typeof triggers_helpers_classes;
-  "triggers/helpers/forumPosts": typeof triggers_helpers_forumPosts;
-  "triggers/helpers/metadata": typeof triggers_helpers_metadata;
-  "triggers/helpers/notifications": typeof triggers_helpers_notifications;
-  "triggers/materials/cleanup": typeof triggers_materials_cleanup;
-  "triggers/materials/groups": typeof triggers_materials_groups;
-  "triggers/materials/materials": typeof triggers_materials_materials;
-  "triggers/notifications/notifications": typeof triggers_notifications_notifications;
-  "triggers/schools/classMembers": typeof triggers_schools_classMembers;
-  "triggers/schools/classes": typeof triggers_schools_classes;
-  "triggers/schools/cleanup": typeof triggers_schools_cleanup;
-  "triggers/schools/members": typeof triggers_schools_members;
-  "triggers/schools/schools": typeof triggers_schools_schools;
-  "triggers/subscriptions/impl": typeof triggers_subscriptions_impl;
-  "triggers/subscriptions/spec": typeof triggers_subscriptions_spec;
-  "triggers/subscriptions/subscriptions": typeof triggers_subscriptions_subscriptions;
-  "triggers/tryouts/scores": typeof triggers_tryouts_scores;
-  "tryouts/access/impl": typeof tryouts_access_impl;
-  "tryouts/access/source": typeof tryouts_access_source;
-  "tryouts/access/subscription": typeof tryouts_access_subscription;
-  "tryouts/attemptPage/impl": typeof tryouts_attemptPage_impl;
-  "tryouts/attemptPage/spec": typeof tryouts_attemptPage_spec;
-  "tryouts/catalog/destination": typeof tryouts_catalog_destination;
-  "tryouts/catalog/spec": typeof tryouts_catalog_spec;
-  "tryouts/mutations/access": typeof tryouts_mutations_access;
-  "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
-  "tryouts/mutations/expiry": typeof tryouts_mutations_expiry;
-  "tryouts/mutations/responses": typeof tryouts_mutations_responses;
-  "tryouts/mutations/sections": typeof tryouts_mutations_sections;
-  "tryouts/progress/size": typeof tryouts_progress_size;
-  "tryouts/progress/write": typeof tryouts_progress_write;
-  "tryouts/queries/access": typeof tryouts_queries_access;
-  "tryouts/queries/attempt": typeof tryouts_queries_attempt;
-  "tryouts/queries/attemptPage": typeof tryouts_queries_attemptPage;
-  "tryouts/queries/catalog": typeof tryouts_queries_catalog;
-  "tryouts/queries/catalogModel": typeof tryouts_queries_catalogModel;
-  "tryouts/queries/content": typeof tryouts_queries_content;
-  "tryouts/queries/history": typeof tryouts_queries_history;
-  "tryouts/queries/runtime": typeof tryouts_queries_runtime;
-  "tryouts/queries/sets": typeof tryouts_queries_sets;
-  "tryouts/questions": typeof tryouts_questions;
-  "tryouts/response/evaluation": typeof tryouts_response_evaluation;
-  "tryouts/response/integrity": typeof tryouts_response_integrity;
-  "tryouts/response/model": typeof tryouts_response_model;
-  "tryouts/response/selection": typeof tryouts_response_selection;
-  "tryouts/response/spec": typeof tryouts_response_spec;
-  "tryouts/response/validation": typeof tryouts_response_validation;
-  "tryouts/response/write": typeof tryouts_response_write;
-  "tryouts/route": typeof tryouts_route;
-  "tryouts/runtime/access": typeof tryouts_runtime_access;
-  "tryouts/runtime/attempt/page": typeof tryouts_runtime_attempt_page;
-  "tryouts/runtime/attempt/sections": typeof tryouts_runtime_attempt_sections;
-  "tryouts/runtime/attempt/source": typeof tryouts_runtime_attempt_source;
-  "tryouts/runtime/attempt/state": typeof tryouts_runtime_attempt_state;
-  "tryouts/runtime/body": typeof tryouts_runtime_body;
-  "tryouts/runtime/budget": typeof tryouts_runtime_budget;
-  "tryouts/runtime/completion": typeof tryouts_runtime_completion;
-  "tryouts/runtime/content": typeof tryouts_runtime_content;
-  "tryouts/runtime/error": typeof tryouts_runtime_error;
-  "tryouts/runtime/estimate": typeof tryouts_runtime_estimate;
-  "tryouts/runtime/finish": typeof tryouts_runtime_finish;
-  "tryouts/runtime/history/placement": typeof tryouts_runtime_history_placement;
-  "tryouts/runtime/history/read": typeof tryouts_runtime_history_read;
-  "tryouts/runtime/history/spec": typeof tryouts_runtime_history_spec;
-  "tryouts/runtime/irt": typeof tryouts_runtime_irt;
-  "tryouts/runtime/irt/items": typeof tryouts_runtime_irt_items;
-  "tryouts/runtime/irt/score": typeof tryouts_runtime_irt_score;
-  "tryouts/runtime/lookup": typeof tryouts_runtime_lookup;
-  "tryouts/runtime/ownership": typeof tryouts_runtime_ownership;
-  "tryouts/runtime/placement": typeof tryouts_runtime_placement;
-  "tryouts/runtime/response": typeof tryouts_runtime_response;
-  "tryouts/runtime/result": typeof tryouts_runtime_result;
-  "tryouts/runtime/scale": typeof tryouts_runtime_scale;
-  "tryouts/runtime/score": typeof tryouts_runtime_score;
-  "tryouts/runtime/section/questions": typeof tryouts_runtime_section_questions;
-  "tryouts/runtime/section/state": typeof tryouts_runtime_section_state;
-  "tryouts/runtime/sectionAttempt": typeof tryouts_runtime_sectionAttempt;
-  "tryouts/runtime/selectors": typeof tryouts_runtime_selectors;
-  "tryouts/runtime/set/state": typeof tryouts_runtime_set_state;
-  "tryouts/runtime/signed": typeof tryouts_runtime_signed;
-  "tryouts/runtime/spec": typeof tryouts_runtime_spec;
-  "tryouts/score": typeof tryouts_score;
-  "tryouts/score/result": typeof tryouts_score_result;
-  "tryouts/sets/page": typeof tryouts_sets_page;
-  "tryouts/sets/published": typeof tryouts_sets_published;
-  "tryouts/sets/spec": typeof tryouts_sets_spec;
-  "tryouts/start/attempt": typeof tryouts_start_attempt;
-  "tryouts/start/impl": typeof tryouts_start_impl;
-  "tryouts/start/scale": typeof tryouts_start_scale;
-  "tryouts/start/source": typeof tryouts_start_source;
-  "tryouts/start/spec": typeof tryouts_start_spec;
-  "tryouts/status": typeof tryouts_status;
-  "users/mutations": typeof users_mutations;
-  "users/queries": typeof users_queries;
-  "users/roles": typeof users_roles;
-  "utils/error": typeof utils_error;
-  "utils/id": typeof utils_id;
-  "utils/logger": typeof utils_logger;
-  "utils/number": typeof utils_number;
-  "utils/polar/client": typeof utils_polar_client;
-  "utils/polar/config": typeof utils_polar_config;
-  "utils/polar/env": typeof utils_polar_env;
-  "utils/polar/products": typeof utils_polar_products;
-  "utils/polar/webhook": typeof utils_polar_webhook;
-  "utils/text": typeof utils_text;
-  workflow: typeof workflow;
-}>;
+import type { FunctionReference } from "convex/server";
+import type { GenericId as Id } from "convex/values";
 
 /**
  * A utility for referencing Convex functions in your app's public API.
@@ -1104,10 +19,9455 @@ declare const fullApi: ApiFromModules<{
  * const myFunctionReference = api.myModule.myFunction;
  * ```
  */
-export declare const api: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "public">
->;
+export declare const api: {
+  auth: {
+    deletion: {
+      cancelAccountDeletionAttempt: FunctionReference<
+        "mutation",
+        "public",
+        { attemptId: string },
+        "complete" | "continue"
+      >;
+      getAccountDeletionAttemptStatus: FunctionReference<
+        "query",
+        "public",
+        { attemptId: string },
+        "committed" | "pending" | "unknown"
+      >;
+      prepareCurrentAccountDeletion: FunctionReference<
+        "mutation",
+        "public",
+        { attemptId: string },
+        | "continue"
+        | "ready"
+        | "school-successor-required"
+        | "temporarily-unavailable"
+      >;
+    };
+    queries: {
+      getCurrentUser: FunctionReference<
+        "query",
+        "public",
+        {},
+        null | {
+          appUser: {
+            _creationTime: number;
+            _id: Id<"users">;
+            authId: string;
+            authVerificationCleanupCursor?: string;
+            credits: number;
+            creditsResetAt: number;
+            deletedAt?: number;
+            deletionCleanupStartedAt?: number;
+            deletionPreparedAt?: number;
+            email: string;
+            image?: string;
+            name: string;
+            plan: "free" | "pro";
+            role?: "teacher" | "student" | "parent" | "administrator";
+          };
+          authUser: {
+            _creationTime: number;
+            _id: string;
+            createdAt: number;
+            displayUsername?: null | string;
+            email: string;
+            emailVerified: boolean;
+            image?: null | string;
+            name: string;
+            updatedAt: number;
+            userId?: null | string;
+            username?: null | string;
+          };
+        }
+      >;
+      getUserById: FunctionReference<
+        "query",
+        "public",
+        { userId: Id<"users"> },
+        null | { image?: string; name: string }
+      >;
+    };
+  };
+  chats: {
+    actions: {
+      scheduleSaveAssistantFailure: FunctionReference<
+        "action",
+        "public",
+        {
+          message: {
+            chatId: Id<"chats">;
+            generationErrorCode: "CHAT_RESPONSE_FAILED";
+            identifier: string;
+            modelId: "nakafa-lite" | "nakafa-pro";
+          };
+        },
+        null
+      >;
+      scheduleSaveAssistantResponse: FunctionReference<
+        "action",
+        "public",
+        {
+          message: {
+            chatId: Id<"chats">;
+            credits?: number;
+            generationErrorCode?: "CHAT_RESPONSE_FAILED";
+            generationStatus?: "complete" | "failed";
+            identifier: string;
+            inputTokens?: number;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            ninaContextSnapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            ninaContextTransition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            outputTokens?: number;
+            role: "user" | "assistant" | "system";
+            totalTokens?: number;
+          };
+          parts: Array<{
+            dataMathData?:
+              | {
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  result: {
+                    conditions: Array<{ expression: string; latex: string }>;
+                    input: {
+                      distribution?: string;
+                      expression?: string;
+                      expressions?: Array<string>;
+                      inclusive?: boolean;
+                      k?: string;
+                      kind: "math";
+                      left?: string;
+                      lower?: string;
+                      lowerInclusive?: boolean;
+                      matrix?: Array<Array<string>>;
+                      modulus?: string;
+                      n?: string;
+                      operation:
+                        | "apart"
+                        | "cancel"
+                        | "circle"
+                        | "combination"
+                        | "compare"
+                        | "cumulative_probability"
+                        | "determinant"
+                        | "differentiate"
+                        | "distance"
+                        | "distribution"
+                        | "domain"
+                        | "eigen_analysis"
+                        | "eigenvalues"
+                        | "eigenvectors"
+                        | "evaluate"
+                        | "expected_value"
+                        | "expand"
+                        | "factor"
+                        | "gcd"
+                        | "integrate"
+                        | "intersection"
+                        | "inverse"
+                        | "interval_probability"
+                        | "is_prime"
+                        | "lcm"
+                        | "limit"
+                        | "line"
+                        | "linear_system"
+                        | "matrix_multiply"
+                        | "mean"
+                        | "median"
+                        | "midpoint"
+                        | "mode"
+                        | "modular"
+                        | "permutation"
+                        | "point_probability"
+                        | "prime_factorization"
+                        | "product"
+                        | "quartiles"
+                        | "rank"
+                        | "rationalize"
+                        | "roots"
+                        | "rref"
+                        | "series"
+                        | "simplify"
+                        | "slope"
+                        | "solve"
+                        | "standard_deviation"
+                        | "summation"
+                        | "tail_probability"
+                        | "together"
+                        | "variance"
+                        | "variance_probability"
+                        | "z_score";
+                      order?: number;
+                      parameters?: {
+                        lambda?: string;
+                        lower?: string;
+                        mean?: string;
+                        n?: string;
+                        p?: string;
+                        standard_deviation?: string;
+                        upper?: string;
+                      };
+                      point?: string;
+                      points?: Array<{ x: string; y: string }>;
+                      right?: string;
+                      right_matrix?: Array<Array<string>>;
+                      upper?: string;
+                      upperInclusive?: boolean;
+                      values?: Array<string>;
+                      variable?: string;
+                      variables?: Array<string>;
+                      vector?: Array<string>;
+                    };
+                    items: Array<{
+                      label: string;
+                      latex?: string;
+                      value: string;
+                    }>;
+                    kind:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    primary: { expression: string; latex: string };
+                    reason: string;
+                    secondary?: { expression: string; latex: string };
+                    status: "verified" | "contradicted" | "inconclusive";
+                    stepStatus: "complete" | "partial" | "unavailable";
+                    steps: Array<{
+                      action: string;
+                      items: Array<{
+                        label: string;
+                        latex?: string;
+                        value: string;
+                      }>;
+                      primary: { expression: string; latex: string };
+                      relation?: { expression: string; latex: string };
+                      secondary?: { expression: string; latex: string };
+                    }>;
+                  };
+                  status: "verified" | "contradicted" | "inconclusive";
+                  summary: string;
+                }
+              | {
+                  error: string;
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  status: "error";
+                };
+            dataMathId?: string;
+            dataNakafaData?:
+              | {
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  result: {
+                    count: number;
+                    has_more: boolean;
+                    items: Array<{
+                      alignmentId: string;
+                      assetId: string;
+                      conceptId: string;
+                      content_id: string;
+                      description: string;
+                      excerpt: string;
+                      learningObjectId: string;
+                      lensId: string;
+                      locale: "en" | "id" | "de";
+                      markdown_url?: string;
+                      route: string;
+                      section: "articles" | "material" | "tryout" | "quran";
+                      title: string;
+                      url: string;
+                    }>;
+                    limit: number;
+                    next_offset?: number;
+                    offset: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  status: "error";
+                }
+              | {
+                  input: { content_ref: string };
+                  kind: "content";
+                  status: "loading";
+                }
+              | {
+                  input: { content_ref: string };
+                  kind: "content";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    description?: string;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en" | "id" | "de";
+                    markdown_url?: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    title: string;
+                    url: string;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: { content_ref: string };
+                  kind: "content";
+                  status: "error";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en";
+                    markdown_url?: string;
+                    meaning: { locale: "en" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "id";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "id";
+                    markdown_url?: string;
+                    meaning: { locale: "id" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "de";
+                    markdown_url?: string;
+                    meaning: { locale: "de" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en" | "id" | "de";
+                    markdown_url?: string;
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    translation: string;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  status: "error";
+                }
+              | {
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  status: "loading";
+                }
+              | {
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  result: {
+                    content_counts: Array<{
+                      count: number;
+                      locale: "en" | "id" | "de";
+                    }>;
+                    locale: "en" | "id" | "de";
+                    sections: Array<
+                      "articles" | "material" | "tryout" | "quran"
+                    >;
+                    tools: Array<string>;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  status: "error";
+                };
+            dataNakafaId?: string;
+            dataScrapeUrlContent?: string;
+            dataScrapeUrlDescription?: string;
+            dataScrapeUrlError?: string;
+            dataScrapeUrlFavicon?: string;
+            dataScrapeUrlId?: string;
+            dataScrapeUrlStatus?: "loading" | "done" | "error";
+            dataScrapeUrlTitle?: string;
+            dataScrapeUrlUrl?: string;
+            dataSuggestionsData?: Array<string>;
+            dataSuggestionsId?: string;
+            dataWebSearchError?: string;
+            dataWebSearchId?: string;
+            dataWebSearchProvider?: "firecrawl" | "google";
+            dataWebSearchQueries?: Array<string>;
+            dataWebSearchSources?: Array<{
+              citation: string;
+              content: string;
+              description: string;
+              title: string;
+              url: string;
+            }>;
+            dataWebSearchStatus?: "loading" | "done" | "error";
+            fileFilename?: string;
+            fileMediaType?: string;
+            fileUrl?: string;
+            messageId?: Id<"messages">;
+            order: number;
+            providerMetadata?: Record<string, Record<string, string>>;
+            reasoningState?: "streaming" | "done";
+            reasoningText?: string;
+            textState?: "streaming" | "done";
+            textText?: string;
+            toolCallProviderMetadata?: Record<string, Record<string, string>>;
+            toolDeepResearchInput?: {
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+              sourceRequirements: Array<string>;
+            };
+            toolDeepResearchOutput?: string;
+            toolErrorText?: string;
+            toolMathInput?: {
+              given: Array<string>;
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+            };
+            toolMathOutput?: string;
+            toolNakafaInput?: {
+              deliverables: Array<string>;
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+            };
+            toolNakafaOutput?: string;
+            toolResultProviderMetadata?: Record<string, Record<string, string>>;
+            toolState?:
+              | "input-streaming"
+              | "input-available"
+              | "output-available"
+              | "output-error";
+            toolToolCallId?: string;
+            type:
+              | "text"
+              | "reasoning"
+              | "file"
+              | "step-start"
+              | "tool-nakafa"
+              | "tool-deepResearch"
+              | "tool-math"
+              | "data-suggestions"
+              | "data-nakafa"
+              | "data-math"
+              | "data-scrape-url"
+              | "data-web-search";
+          }>;
+        },
+        null
+      >;
+    };
+    mutations: {
+      createChat: FunctionReference<
+        "mutation",
+        "public",
+        { title?: string; type: "study" },
+        Id<"chats">
+      >;
+      createChatWithMessage: FunctionReference<
+        "mutation",
+        "public",
+        {
+          message: {
+            chatId?: Id<"chats">;
+            credits?: number;
+            generationErrorCode?: "CHAT_RESPONSE_FAILED";
+            generationStatus?: "complete" | "failed";
+            identifier: string;
+            inputTokens?: number;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            ninaContextSnapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            ninaContextTransition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            outputTokens?: number;
+            role: "user" | "assistant" | "system";
+            totalTokens?: number;
+          };
+          parts: Array<{
+            dataMathData?:
+              | {
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  result: {
+                    conditions: Array<{ expression: string; latex: string }>;
+                    input: {
+                      distribution?: string;
+                      expression?: string;
+                      expressions?: Array<string>;
+                      inclusive?: boolean;
+                      k?: string;
+                      kind: "math";
+                      left?: string;
+                      lower?: string;
+                      lowerInclusive?: boolean;
+                      matrix?: Array<Array<string>>;
+                      modulus?: string;
+                      n?: string;
+                      operation:
+                        | "apart"
+                        | "cancel"
+                        | "circle"
+                        | "combination"
+                        | "compare"
+                        | "cumulative_probability"
+                        | "determinant"
+                        | "differentiate"
+                        | "distance"
+                        | "distribution"
+                        | "domain"
+                        | "eigen_analysis"
+                        | "eigenvalues"
+                        | "eigenvectors"
+                        | "evaluate"
+                        | "expected_value"
+                        | "expand"
+                        | "factor"
+                        | "gcd"
+                        | "integrate"
+                        | "intersection"
+                        | "inverse"
+                        | "interval_probability"
+                        | "is_prime"
+                        | "lcm"
+                        | "limit"
+                        | "line"
+                        | "linear_system"
+                        | "matrix_multiply"
+                        | "mean"
+                        | "median"
+                        | "midpoint"
+                        | "mode"
+                        | "modular"
+                        | "permutation"
+                        | "point_probability"
+                        | "prime_factorization"
+                        | "product"
+                        | "quartiles"
+                        | "rank"
+                        | "rationalize"
+                        | "roots"
+                        | "rref"
+                        | "series"
+                        | "simplify"
+                        | "slope"
+                        | "solve"
+                        | "standard_deviation"
+                        | "summation"
+                        | "tail_probability"
+                        | "together"
+                        | "variance"
+                        | "variance_probability"
+                        | "z_score";
+                      order?: number;
+                      parameters?: {
+                        lambda?: string;
+                        lower?: string;
+                        mean?: string;
+                        n?: string;
+                        p?: string;
+                        standard_deviation?: string;
+                        upper?: string;
+                      };
+                      point?: string;
+                      points?: Array<{ x: string; y: string }>;
+                      right?: string;
+                      right_matrix?: Array<Array<string>>;
+                      upper?: string;
+                      upperInclusive?: boolean;
+                      values?: Array<string>;
+                      variable?: string;
+                      variables?: Array<string>;
+                      vector?: Array<string>;
+                    };
+                    items: Array<{
+                      label: string;
+                      latex?: string;
+                      value: string;
+                    }>;
+                    kind:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    primary: { expression: string; latex: string };
+                    reason: string;
+                    secondary?: { expression: string; latex: string };
+                    status: "verified" | "contradicted" | "inconclusive";
+                    stepStatus: "complete" | "partial" | "unavailable";
+                    steps: Array<{
+                      action: string;
+                      items: Array<{
+                        label: string;
+                        latex?: string;
+                        value: string;
+                      }>;
+                      primary: { expression: string; latex: string };
+                      relation?: { expression: string; latex: string };
+                      secondary?: { expression: string; latex: string };
+                    }>;
+                  };
+                  status: "verified" | "contradicted" | "inconclusive";
+                  summary: string;
+                }
+              | {
+                  error: string;
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  status: "error";
+                };
+            dataMathId?: string;
+            dataNakafaData?:
+              | {
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  result: {
+                    count: number;
+                    has_more: boolean;
+                    items: Array<{
+                      alignmentId: string;
+                      assetId: string;
+                      conceptId: string;
+                      content_id: string;
+                      description: string;
+                      excerpt: string;
+                      learningObjectId: string;
+                      lensId: string;
+                      locale: "en" | "id" | "de";
+                      markdown_url?: string;
+                      route: string;
+                      section: "articles" | "material" | "tryout" | "quran";
+                      title: string;
+                      url: string;
+                    }>;
+                    limit: number;
+                    next_offset?: number;
+                    offset: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  status: "error";
+                }
+              | {
+                  input: { content_ref: string };
+                  kind: "content";
+                  status: "loading";
+                }
+              | {
+                  input: { content_ref: string };
+                  kind: "content";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    description?: string;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en" | "id" | "de";
+                    markdown_url?: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    title: string;
+                    url: string;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: { content_ref: string };
+                  kind: "content";
+                  status: "error";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en";
+                    markdown_url?: string;
+                    meaning: { locale: "en" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "id";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "id";
+                    markdown_url?: string;
+                    meaning: { locale: "id" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "de";
+                    markdown_url?: string;
+                    meaning: { locale: "de" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en" | "id" | "de";
+                    markdown_url?: string;
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    translation: string;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  status: "error";
+                }
+              | {
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  status: "loading";
+                }
+              | {
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  result: {
+                    content_counts: Array<{
+                      count: number;
+                      locale: "en" | "id" | "de";
+                    }>;
+                    locale: "en" | "id" | "de";
+                    sections: Array<
+                      "articles" | "material" | "tryout" | "quran"
+                    >;
+                    tools: Array<string>;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  status: "error";
+                };
+            dataNakafaId?: string;
+            dataScrapeUrlContent?: string;
+            dataScrapeUrlDescription?: string;
+            dataScrapeUrlError?: string;
+            dataScrapeUrlFavicon?: string;
+            dataScrapeUrlId?: string;
+            dataScrapeUrlStatus?: "loading" | "done" | "error";
+            dataScrapeUrlTitle?: string;
+            dataScrapeUrlUrl?: string;
+            dataSuggestionsData?: Array<string>;
+            dataSuggestionsId?: string;
+            dataWebSearchError?: string;
+            dataWebSearchId?: string;
+            dataWebSearchProvider?: "firecrawl" | "google";
+            dataWebSearchQueries?: Array<string>;
+            dataWebSearchSources?: Array<{
+              citation: string;
+              content: string;
+              description: string;
+              title: string;
+              url: string;
+            }>;
+            dataWebSearchStatus?: "loading" | "done" | "error";
+            fileFilename?: string;
+            fileMediaType?: string;
+            fileUrl?: string;
+            messageId?: Id<"messages">;
+            order: number;
+            providerMetadata?: Record<string, Record<string, string>>;
+            reasoningState?: "streaming" | "done";
+            reasoningText?: string;
+            textState?: "streaming" | "done";
+            textText?: string;
+            toolCallProviderMetadata?: Record<string, Record<string, string>>;
+            toolDeepResearchInput?: {
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+              sourceRequirements: Array<string>;
+            };
+            toolDeepResearchOutput?: string;
+            toolErrorText?: string;
+            toolMathInput?: {
+              given: Array<string>;
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+            };
+            toolMathOutput?: string;
+            toolNakafaInput?: {
+              deliverables: Array<string>;
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+            };
+            toolNakafaOutput?: string;
+            toolResultProviderMetadata?: Record<string, Record<string, string>>;
+            toolState?:
+              | "input-streaming"
+              | "input-available"
+              | "output-available"
+              | "output-error";
+            toolToolCallId?: string;
+            type:
+              | "text"
+              | "reasoning"
+              | "file"
+              | "step-start"
+              | "tool-nakafa"
+              | "tool-deepResearch"
+              | "tool-math"
+              | "data-suggestions"
+              | "data-nakafa"
+              | "data-math"
+              | "data-scrape-url"
+              | "data-web-search";
+          }>;
+          title?: string;
+          type: "study";
+        },
+        {
+          chatId: Id<"chats">;
+          messageId: Id<"messages">;
+          partIds: Array<Id<"messageParts">>;
+        }
+      >;
+      deleteChat: FunctionReference<
+        "mutation",
+        "public",
+        { chatId: Id<"chats"> },
+        null
+      >;
+      saveMessage: FunctionReference<
+        "mutation",
+        "public",
+        {
+          message: {
+            chatId: Id<"chats">;
+            credits?: number;
+            generationErrorCode?: "CHAT_RESPONSE_FAILED";
+            generationStatus?: "complete" | "failed";
+            identifier: string;
+            inputTokens?: number;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            ninaContextSnapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            ninaContextTransition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            outputTokens?: number;
+            role: "user" | "assistant" | "system";
+            totalTokens?: number;
+          };
+          parts: Array<{
+            dataMathData?:
+              | {
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  result: {
+                    conditions: Array<{ expression: string; latex: string }>;
+                    input: {
+                      distribution?: string;
+                      expression?: string;
+                      expressions?: Array<string>;
+                      inclusive?: boolean;
+                      k?: string;
+                      kind: "math";
+                      left?: string;
+                      lower?: string;
+                      lowerInclusive?: boolean;
+                      matrix?: Array<Array<string>>;
+                      modulus?: string;
+                      n?: string;
+                      operation:
+                        | "apart"
+                        | "cancel"
+                        | "circle"
+                        | "combination"
+                        | "compare"
+                        | "cumulative_probability"
+                        | "determinant"
+                        | "differentiate"
+                        | "distance"
+                        | "distribution"
+                        | "domain"
+                        | "eigen_analysis"
+                        | "eigenvalues"
+                        | "eigenvectors"
+                        | "evaluate"
+                        | "expected_value"
+                        | "expand"
+                        | "factor"
+                        | "gcd"
+                        | "integrate"
+                        | "intersection"
+                        | "inverse"
+                        | "interval_probability"
+                        | "is_prime"
+                        | "lcm"
+                        | "limit"
+                        | "line"
+                        | "linear_system"
+                        | "matrix_multiply"
+                        | "mean"
+                        | "median"
+                        | "midpoint"
+                        | "mode"
+                        | "modular"
+                        | "permutation"
+                        | "point_probability"
+                        | "prime_factorization"
+                        | "product"
+                        | "quartiles"
+                        | "rank"
+                        | "rationalize"
+                        | "roots"
+                        | "rref"
+                        | "series"
+                        | "simplify"
+                        | "slope"
+                        | "solve"
+                        | "standard_deviation"
+                        | "summation"
+                        | "tail_probability"
+                        | "together"
+                        | "variance"
+                        | "variance_probability"
+                        | "z_score";
+                      order?: number;
+                      parameters?: {
+                        lambda?: string;
+                        lower?: string;
+                        mean?: string;
+                        n?: string;
+                        p?: string;
+                        standard_deviation?: string;
+                        upper?: string;
+                      };
+                      point?: string;
+                      points?: Array<{ x: string; y: string }>;
+                      right?: string;
+                      right_matrix?: Array<Array<string>>;
+                      upper?: string;
+                      upperInclusive?: boolean;
+                      values?: Array<string>;
+                      variable?: string;
+                      variables?: Array<string>;
+                      vector?: Array<string>;
+                    };
+                    items: Array<{
+                      label: string;
+                      latex?: string;
+                      value: string;
+                    }>;
+                    kind:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    primary: { expression: string; latex: string };
+                    reason: string;
+                    secondary?: { expression: string; latex: string };
+                    status: "verified" | "contradicted" | "inconclusive";
+                    stepStatus: "complete" | "partial" | "unavailable";
+                    steps: Array<{
+                      action: string;
+                      items: Array<{
+                        label: string;
+                        latex?: string;
+                        value: string;
+                      }>;
+                      primary: { expression: string; latex: string };
+                      relation?: { expression: string; latex: string };
+                      secondary?: { expression: string; latex: string };
+                    }>;
+                  };
+                  status: "verified" | "contradicted" | "inconclusive";
+                  summary: string;
+                }
+              | {
+                  error: string;
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  status: "error";
+                };
+            dataMathId?: string;
+            dataNakafaData?:
+              | {
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  result: {
+                    count: number;
+                    has_more: boolean;
+                    items: Array<{
+                      alignmentId: string;
+                      assetId: string;
+                      conceptId: string;
+                      content_id: string;
+                      description: string;
+                      excerpt: string;
+                      learningObjectId: string;
+                      lensId: string;
+                      locale: "en" | "id" | "de";
+                      markdown_url?: string;
+                      route: string;
+                      section: "articles" | "material" | "tryout" | "quran";
+                      title: string;
+                      url: string;
+                    }>;
+                    limit: number;
+                    next_offset?: number;
+                    offset: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  status: "error";
+                }
+              | {
+                  input: { content_ref: string };
+                  kind: "content";
+                  status: "loading";
+                }
+              | {
+                  input: { content_ref: string };
+                  kind: "content";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    description?: string;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en" | "id" | "de";
+                    markdown_url?: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    title: string;
+                    url: string;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: { content_ref: string };
+                  kind: "content";
+                  status: "error";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en";
+                    markdown_url?: string;
+                    meaning: { locale: "en" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "id";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "id";
+                    markdown_url?: string;
+                    meaning: { locale: "id" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "de";
+                    markdown_url?: string;
+                    meaning: { locale: "de" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en" | "id" | "de";
+                    markdown_url?: string;
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    translation: string;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  status: "error";
+                }
+              | {
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  status: "loading";
+                }
+              | {
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  result: {
+                    content_counts: Array<{
+                      count: number;
+                      locale: "en" | "id" | "de";
+                    }>;
+                    locale: "en" | "id" | "de";
+                    sections: Array<
+                      "articles" | "material" | "tryout" | "quran"
+                    >;
+                    tools: Array<string>;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  status: "error";
+                };
+            dataNakafaId?: string;
+            dataScrapeUrlContent?: string;
+            dataScrapeUrlDescription?: string;
+            dataScrapeUrlError?: string;
+            dataScrapeUrlFavicon?: string;
+            dataScrapeUrlId?: string;
+            dataScrapeUrlStatus?: "loading" | "done" | "error";
+            dataScrapeUrlTitle?: string;
+            dataScrapeUrlUrl?: string;
+            dataSuggestionsData?: Array<string>;
+            dataSuggestionsId?: string;
+            dataWebSearchError?: string;
+            dataWebSearchId?: string;
+            dataWebSearchProvider?: "firecrawl" | "google";
+            dataWebSearchQueries?: Array<string>;
+            dataWebSearchSources?: Array<{
+              citation: string;
+              content: string;
+              description: string;
+              title: string;
+              url: string;
+            }>;
+            dataWebSearchStatus?: "loading" | "done" | "error";
+            fileFilename?: string;
+            fileMediaType?: string;
+            fileUrl?: string;
+            messageId?: Id<"messages">;
+            order: number;
+            providerMetadata?: Record<string, Record<string, string>>;
+            reasoningState?: "streaming" | "done";
+            reasoningText?: string;
+            textState?: "streaming" | "done";
+            textText?: string;
+            toolCallProviderMetadata?: Record<string, Record<string, string>>;
+            toolDeepResearchInput?: {
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+              sourceRequirements: Array<string>;
+            };
+            toolDeepResearchOutput?: string;
+            toolErrorText?: string;
+            toolMathInput?: {
+              given: Array<string>;
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+            };
+            toolMathOutput?: string;
+            toolNakafaInput?: {
+              deliverables: Array<string>;
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+            };
+            toolNakafaOutput?: string;
+            toolResultProviderMetadata?: Record<string, Record<string, string>>;
+            toolState?:
+              | "input-streaming"
+              | "input-available"
+              | "output-available"
+              | "output-error";
+            toolToolCallId?: string;
+            type:
+              | "text"
+              | "reasoning"
+              | "file"
+              | "step-start"
+              | "tool-nakafa"
+              | "tool-deepResearch"
+              | "tool-math"
+              | "data-suggestions"
+              | "data-nakafa"
+              | "data-math"
+              | "data-scrape-url"
+              | "data-web-search";
+          }>;
+        },
+        { messageId: Id<"messages">; partIds: Array<Id<"messageParts">> }
+      >;
+      updateChatTitle: FunctionReference<
+        "mutation",
+        "public",
+        { chatId: Id<"chats">; title: string },
+        Id<"chats">
+      >;
+      updateChatVisibility: FunctionReference<
+        "mutation",
+        "public",
+        { chatId: Id<"chats">; visibility: "private" | "public" },
+        Id<"chats">
+      >;
+    };
+    queries: {
+      getChat: FunctionReference<
+        "query",
+        "public",
+        { chatId: Id<"chats"> },
+        {
+          _creationTime: number;
+          _id: Id<"chats">;
+          title?: string;
+          type: "study";
+          updatedAt: number;
+          userId: Id<"users">;
+          visibility: "private" | "public";
+        }
+      >;
+      getChats: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          q?: string;
+          type?: "study";
+          userId: Id<"users">;
+          visibility?: "private" | "public";
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"chats">;
+            title?: string;
+            type: "study";
+            updatedAt: number;
+            userId: Id<"users">;
+            visibility: "private" | "public";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      getChatTitle: FunctionReference<
+        "query",
+        "public",
+        { chatId: Id<"chats"> },
+        null | string
+      >;
+      getOwnChats: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          q?: string;
+          type?: "study";
+          visibility?: "private" | "public";
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"chats">;
+            title?: string;
+            type: "study";
+            updatedAt: number;
+            userId: Id<"users">;
+            visibility: "private" | "public";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      getPinnedNinaContextForTurn: FunctionReference<
+        "query",
+        "public",
+        { chatId: Id<"chats">; messageIdentifier: string },
+        null | {
+          capturedAt: string;
+          learning: {
+            assetId?: string;
+            contentId?: string;
+            locale: "en" | "id" | "de";
+            materialKey?: string;
+            section?: string;
+            slug: string;
+            sourcePath?: string;
+            title?: string;
+            url: string;
+            verified: boolean;
+          };
+          placement?: {
+            mode: "placement";
+            nodeKey: string;
+            parentHref: string;
+            parentTitle: string;
+            programKey: string;
+          };
+          source: "current-page" | "pinned-chat" | "message";
+          tools: {
+            allowDeepResearch: boolean;
+            allowMath: boolean;
+            allowNakafa: boolean;
+            allowPageFetch: boolean;
+            evidenceScope: "verified-page" | "general-learning";
+          };
+        }
+      >;
+      loadMessagesPage: FunctionReference<
+        "query",
+        "public",
+        {
+          chatId: Id<"chats">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"messages">;
+            chatId: Id<"chats">;
+            credits?: number;
+            generationErrorCode?: "CHAT_RESPONSE_FAILED";
+            generationStatus?: "complete" | "failed";
+            identifier: string;
+            inputTokens?: number;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            ninaContextSnapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            ninaContextTransition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            outputTokens?: number;
+            parts: Array<{
+              _creationTime: number;
+              _id: Id<"messageParts">;
+              dataMathData?:
+                | {
+                    input: {
+                      distribution?: string;
+                      expression?: string;
+                      expressions?: Array<string>;
+                      inclusive?: boolean;
+                      k?: string;
+                      kind: "math";
+                      left?: string;
+                      lower?: string;
+                      lowerInclusive?: boolean;
+                      matrix?: Array<Array<string>>;
+                      modulus?: string;
+                      n?: string;
+                      operation:
+                        | "apart"
+                        | "cancel"
+                        | "circle"
+                        | "combination"
+                        | "compare"
+                        | "cumulative_probability"
+                        | "determinant"
+                        | "differentiate"
+                        | "distance"
+                        | "distribution"
+                        | "domain"
+                        | "eigen_analysis"
+                        | "eigenvalues"
+                        | "eigenvectors"
+                        | "evaluate"
+                        | "expected_value"
+                        | "expand"
+                        | "factor"
+                        | "gcd"
+                        | "integrate"
+                        | "intersection"
+                        | "inverse"
+                        | "interval_probability"
+                        | "is_prime"
+                        | "lcm"
+                        | "limit"
+                        | "line"
+                        | "linear_system"
+                        | "matrix_multiply"
+                        | "mean"
+                        | "median"
+                        | "midpoint"
+                        | "mode"
+                        | "modular"
+                        | "permutation"
+                        | "point_probability"
+                        | "prime_factorization"
+                        | "product"
+                        | "quartiles"
+                        | "rank"
+                        | "rationalize"
+                        | "roots"
+                        | "rref"
+                        | "series"
+                        | "simplify"
+                        | "slope"
+                        | "solve"
+                        | "standard_deviation"
+                        | "summation"
+                        | "tail_probability"
+                        | "together"
+                        | "variance"
+                        | "variance_probability"
+                        | "z_score";
+                      order?: number;
+                      parameters?: {
+                        lambda?: string;
+                        lower?: string;
+                        mean?: string;
+                        n?: string;
+                        p?: string;
+                        standard_deviation?: string;
+                        upper?: string;
+                      };
+                      point?: string;
+                      points?: Array<{ x: string; y: string }>;
+                      right?: string;
+                      right_matrix?: Array<Array<string>>;
+                      upper?: string;
+                      upperInclusive?: boolean;
+                      values?: Array<string>;
+                      variable?: string;
+                      variables?: Array<string>;
+                      vector?: Array<string>;
+                    };
+                    kind:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    status: "loading";
+                  }
+                | {
+                    input: {
+                      distribution?: string;
+                      expression?: string;
+                      expressions?: Array<string>;
+                      inclusive?: boolean;
+                      k?: string;
+                      kind: "math";
+                      left?: string;
+                      lower?: string;
+                      lowerInclusive?: boolean;
+                      matrix?: Array<Array<string>>;
+                      modulus?: string;
+                      n?: string;
+                      operation:
+                        | "apart"
+                        | "cancel"
+                        | "circle"
+                        | "combination"
+                        | "compare"
+                        | "cumulative_probability"
+                        | "determinant"
+                        | "differentiate"
+                        | "distance"
+                        | "distribution"
+                        | "domain"
+                        | "eigen_analysis"
+                        | "eigenvalues"
+                        | "eigenvectors"
+                        | "evaluate"
+                        | "expected_value"
+                        | "expand"
+                        | "factor"
+                        | "gcd"
+                        | "integrate"
+                        | "intersection"
+                        | "inverse"
+                        | "interval_probability"
+                        | "is_prime"
+                        | "lcm"
+                        | "limit"
+                        | "line"
+                        | "linear_system"
+                        | "matrix_multiply"
+                        | "mean"
+                        | "median"
+                        | "midpoint"
+                        | "mode"
+                        | "modular"
+                        | "permutation"
+                        | "point_probability"
+                        | "prime_factorization"
+                        | "product"
+                        | "quartiles"
+                        | "rank"
+                        | "rationalize"
+                        | "roots"
+                        | "rref"
+                        | "series"
+                        | "simplify"
+                        | "slope"
+                        | "solve"
+                        | "standard_deviation"
+                        | "summation"
+                        | "tail_probability"
+                        | "together"
+                        | "variance"
+                        | "variance_probability"
+                        | "z_score";
+                      order?: number;
+                      parameters?: {
+                        lambda?: string;
+                        lower?: string;
+                        mean?: string;
+                        n?: string;
+                        p?: string;
+                        standard_deviation?: string;
+                        upper?: string;
+                      };
+                      point?: string;
+                      points?: Array<{ x: string; y: string }>;
+                      right?: string;
+                      right_matrix?: Array<Array<string>>;
+                      upper?: string;
+                      upperInclusive?: boolean;
+                      values?: Array<string>;
+                      variable?: string;
+                      variables?: Array<string>;
+                      vector?: Array<string>;
+                    };
+                    kind:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    result: {
+                      conditions: Array<{ expression: string; latex: string }>;
+                      input: {
+                        distribution?: string;
+                        expression?: string;
+                        expressions?: Array<string>;
+                        inclusive?: boolean;
+                        k?: string;
+                        kind: "math";
+                        left?: string;
+                        lower?: string;
+                        lowerInclusive?: boolean;
+                        matrix?: Array<Array<string>>;
+                        modulus?: string;
+                        n?: string;
+                        operation:
+                          | "apart"
+                          | "cancel"
+                          | "circle"
+                          | "combination"
+                          | "compare"
+                          | "cumulative_probability"
+                          | "determinant"
+                          | "differentiate"
+                          | "distance"
+                          | "distribution"
+                          | "domain"
+                          | "eigen_analysis"
+                          | "eigenvalues"
+                          | "eigenvectors"
+                          | "evaluate"
+                          | "expected_value"
+                          | "expand"
+                          | "factor"
+                          | "gcd"
+                          | "integrate"
+                          | "intersection"
+                          | "inverse"
+                          | "interval_probability"
+                          | "is_prime"
+                          | "lcm"
+                          | "limit"
+                          | "line"
+                          | "linear_system"
+                          | "matrix_multiply"
+                          | "mean"
+                          | "median"
+                          | "midpoint"
+                          | "mode"
+                          | "modular"
+                          | "permutation"
+                          | "point_probability"
+                          | "prime_factorization"
+                          | "product"
+                          | "quartiles"
+                          | "rank"
+                          | "rationalize"
+                          | "roots"
+                          | "rref"
+                          | "series"
+                          | "simplify"
+                          | "slope"
+                          | "solve"
+                          | "standard_deviation"
+                          | "summation"
+                          | "tail_probability"
+                          | "together"
+                          | "variance"
+                          | "variance_probability"
+                          | "z_score";
+                        order?: number;
+                        parameters?: {
+                          lambda?: string;
+                          lower?: string;
+                          mean?: string;
+                          n?: string;
+                          p?: string;
+                          standard_deviation?: string;
+                          upper?: string;
+                        };
+                        point?: string;
+                        points?: Array<{ x: string; y: string }>;
+                        right?: string;
+                        right_matrix?: Array<Array<string>>;
+                        upper?: string;
+                        upperInclusive?: boolean;
+                        values?: Array<string>;
+                        variable?: string;
+                        variables?: Array<string>;
+                        vector?: Array<string>;
+                      };
+                      items: Array<{
+                        label: string;
+                        latex?: string;
+                        value: string;
+                      }>;
+                      kind:
+                        | "apart"
+                        | "cancel"
+                        | "circle"
+                        | "combination"
+                        | "compare"
+                        | "cumulative_probability"
+                        | "determinant"
+                        | "differentiate"
+                        | "distance"
+                        | "distribution"
+                        | "domain"
+                        | "eigen_analysis"
+                        | "eigenvalues"
+                        | "eigenvectors"
+                        | "evaluate"
+                        | "expected_value"
+                        | "expand"
+                        | "factor"
+                        | "gcd"
+                        | "integrate"
+                        | "intersection"
+                        | "inverse"
+                        | "interval_probability"
+                        | "is_prime"
+                        | "lcm"
+                        | "limit"
+                        | "line"
+                        | "linear_system"
+                        | "matrix_multiply"
+                        | "mean"
+                        | "median"
+                        | "midpoint"
+                        | "mode"
+                        | "modular"
+                        | "permutation"
+                        | "point_probability"
+                        | "prime_factorization"
+                        | "product"
+                        | "quartiles"
+                        | "rank"
+                        | "rationalize"
+                        | "roots"
+                        | "rref"
+                        | "series"
+                        | "simplify"
+                        | "slope"
+                        | "solve"
+                        | "standard_deviation"
+                        | "summation"
+                        | "tail_probability"
+                        | "together"
+                        | "variance"
+                        | "variance_probability"
+                        | "z_score";
+                      operation:
+                        | "apart"
+                        | "cancel"
+                        | "circle"
+                        | "combination"
+                        | "compare"
+                        | "cumulative_probability"
+                        | "determinant"
+                        | "differentiate"
+                        | "distance"
+                        | "distribution"
+                        | "domain"
+                        | "eigen_analysis"
+                        | "eigenvalues"
+                        | "eigenvectors"
+                        | "evaluate"
+                        | "expected_value"
+                        | "expand"
+                        | "factor"
+                        | "gcd"
+                        | "integrate"
+                        | "intersection"
+                        | "inverse"
+                        | "interval_probability"
+                        | "is_prime"
+                        | "lcm"
+                        | "limit"
+                        | "line"
+                        | "linear_system"
+                        | "matrix_multiply"
+                        | "mean"
+                        | "median"
+                        | "midpoint"
+                        | "mode"
+                        | "modular"
+                        | "permutation"
+                        | "point_probability"
+                        | "prime_factorization"
+                        | "product"
+                        | "quartiles"
+                        | "rank"
+                        | "rationalize"
+                        | "roots"
+                        | "rref"
+                        | "series"
+                        | "simplify"
+                        | "slope"
+                        | "solve"
+                        | "standard_deviation"
+                        | "summation"
+                        | "tail_probability"
+                        | "together"
+                        | "variance"
+                        | "variance_probability"
+                        | "z_score";
+                      primary: { expression: string; latex: string };
+                      reason: string;
+                      secondary?: { expression: string; latex: string };
+                      status: "verified" | "contradicted" | "inconclusive";
+                      stepStatus: "complete" | "partial" | "unavailable";
+                      steps: Array<{
+                        action: string;
+                        items: Array<{
+                          label: string;
+                          latex?: string;
+                          value: string;
+                        }>;
+                        primary: { expression: string; latex: string };
+                        relation?: { expression: string; latex: string };
+                        secondary?: { expression: string; latex: string };
+                      }>;
+                    };
+                    status: "verified" | "contradicted" | "inconclusive";
+                    summary: string;
+                  }
+                | {
+                    error: string;
+                    input: {
+                      distribution?: string;
+                      expression?: string;
+                      expressions?: Array<string>;
+                      inclusive?: boolean;
+                      k?: string;
+                      kind: "math";
+                      left?: string;
+                      lower?: string;
+                      lowerInclusive?: boolean;
+                      matrix?: Array<Array<string>>;
+                      modulus?: string;
+                      n?: string;
+                      operation:
+                        | "apart"
+                        | "cancel"
+                        | "circle"
+                        | "combination"
+                        | "compare"
+                        | "cumulative_probability"
+                        | "determinant"
+                        | "differentiate"
+                        | "distance"
+                        | "distribution"
+                        | "domain"
+                        | "eigen_analysis"
+                        | "eigenvalues"
+                        | "eigenvectors"
+                        | "evaluate"
+                        | "expected_value"
+                        | "expand"
+                        | "factor"
+                        | "gcd"
+                        | "integrate"
+                        | "intersection"
+                        | "inverse"
+                        | "interval_probability"
+                        | "is_prime"
+                        | "lcm"
+                        | "limit"
+                        | "line"
+                        | "linear_system"
+                        | "matrix_multiply"
+                        | "mean"
+                        | "median"
+                        | "midpoint"
+                        | "mode"
+                        | "modular"
+                        | "permutation"
+                        | "point_probability"
+                        | "prime_factorization"
+                        | "product"
+                        | "quartiles"
+                        | "rank"
+                        | "rationalize"
+                        | "roots"
+                        | "rref"
+                        | "series"
+                        | "simplify"
+                        | "slope"
+                        | "solve"
+                        | "standard_deviation"
+                        | "summation"
+                        | "tail_probability"
+                        | "together"
+                        | "variance"
+                        | "variance_probability"
+                        | "z_score";
+                      order?: number;
+                      parameters?: {
+                        lambda?: string;
+                        lower?: string;
+                        mean?: string;
+                        n?: string;
+                        p?: string;
+                        standard_deviation?: string;
+                        upper?: string;
+                      };
+                      point?: string;
+                      points?: Array<{ x: string; y: string }>;
+                      right?: string;
+                      right_matrix?: Array<Array<string>>;
+                      upper?: string;
+                      upperInclusive?: boolean;
+                      values?: Array<string>;
+                      variable?: string;
+                      variables?: Array<string>;
+                      vector?: Array<string>;
+                    };
+                    kind:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    status: "error";
+                  };
+              dataMathId?: string;
+              dataNakafaData?:
+                | {
+                    input: {
+                      limit: number;
+                      locale: "en" | "id" | "de";
+                      offset: number;
+                      queries?: Array<string>;
+                      section?: "articles" | "material" | "tryout" | "quran";
+                    };
+                    kind: "search";
+                    status: "loading";
+                  }
+                | {
+                    input: {
+                      limit: number;
+                      locale: "en" | "id" | "de";
+                      offset: number;
+                      queries?: Array<string>;
+                      section?: "articles" | "material" | "tryout" | "quran";
+                    };
+                    kind: "search";
+                    result: {
+                      count: number;
+                      has_more: boolean;
+                      items: Array<{
+                        alignmentId: string;
+                        assetId: string;
+                        conceptId: string;
+                        content_id: string;
+                        description: string;
+                        excerpt: string;
+                        learningObjectId: string;
+                        lensId: string;
+                        locale: "en" | "id" | "de";
+                        markdown_url?: string;
+                        route: string;
+                        section: "articles" | "material" | "tryout" | "quran";
+                        title: string;
+                        url: string;
+                      }>;
+                      limit: number;
+                      next_offset?: number;
+                      offset: number;
+                    };
+                    status: "done";
+                  }
+                | {
+                    error: string;
+                    input: {
+                      limit: number;
+                      locale: "en" | "id" | "de";
+                      offset: number;
+                      queries?: Array<string>;
+                      section?: "articles" | "material" | "tryout" | "quran";
+                    };
+                    kind: "search";
+                    status: "error";
+                  }
+                | {
+                    input: { content_ref: string };
+                    kind: "content";
+                    status: "loading";
+                  }
+                | {
+                    input: { content_ref: string };
+                    kind: "content";
+                    result: {
+                      alignmentId: string;
+                      assetId: string;
+                      conceptId: string;
+                      content_id: string;
+                      description?: string;
+                      learningObjectId: string;
+                      lensId: string;
+                      locale: "en" | "id" | "de";
+                      markdown_url?: string;
+                      route: string;
+                      section: "articles" | "material" | "tryout" | "quran";
+                      title: string;
+                      url: string;
+                    };
+                    status: "done";
+                  }
+                | {
+                    error: string;
+                    input: { content_ref: string };
+                    kind: "content";
+                    status: "error";
+                  }
+                | {
+                    input: {
+                      from_verse: number;
+                      include_tafsir: boolean;
+                      locale: "en" | "id" | "de";
+                      surah: number;
+                      to_verse?: number;
+                    };
+                    kind: "quran";
+                    status: "loading";
+                  }
+                | {
+                    input: {
+                      from_verse: number;
+                      include_tafsir: boolean;
+                      locale: "en";
+                      surah: number;
+                      to_verse?: number;
+                    };
+                    kind: "quran";
+                    result: {
+                      alignmentId: string;
+                      assetId: string;
+                      conceptId: string;
+                      content_id: string;
+                      from_verse: number;
+                      learningObjectId: string;
+                      lensId: string;
+                      locale: "en";
+                      markdown_url?: string;
+                      meaning: { locale: "en" | "en"; text: string };
+                      name: string;
+                      revelation: string;
+                      route: string;
+                      section: "articles" | "material" | "tryout" | "quran";
+                      to_verse: number;
+                      url: string;
+                      verse_count: number;
+                    };
+                    status: "done";
+                  }
+                | {
+                    input: {
+                      from_verse: number;
+                      include_tafsir: boolean;
+                      locale: "id";
+                      surah: number;
+                      to_verse?: number;
+                    };
+                    kind: "quran";
+                    result: {
+                      alignmentId: string;
+                      assetId: string;
+                      conceptId: string;
+                      content_id: string;
+                      from_verse: number;
+                      learningObjectId: string;
+                      lensId: string;
+                      locale: "id";
+                      markdown_url?: string;
+                      meaning: { locale: "id" | "en"; text: string };
+                      name: string;
+                      revelation: string;
+                      route: string;
+                      section: "articles" | "material" | "tryout" | "quran";
+                      to_verse: number;
+                      url: string;
+                      verse_count: number;
+                    };
+                    status: "done";
+                  }
+                | {
+                    input: {
+                      from_verse: number;
+                      include_tafsir: boolean;
+                      locale: "de";
+                      surah: number;
+                      to_verse?: number;
+                    };
+                    kind: "quran";
+                    result: {
+                      alignmentId: string;
+                      assetId: string;
+                      conceptId: string;
+                      content_id: string;
+                      from_verse: number;
+                      learningObjectId: string;
+                      lensId: string;
+                      locale: "de";
+                      markdown_url?: string;
+                      meaning: { locale: "de" | "en"; text: string };
+                      name: string;
+                      revelation: string;
+                      route: string;
+                      section: "articles" | "material" | "tryout" | "quran";
+                      to_verse: number;
+                      url: string;
+                      verse_count: number;
+                    };
+                    status: "done";
+                  }
+                | {
+                    input: {
+                      from_verse: number;
+                      include_tafsir: boolean;
+                      locale: "en" | "id" | "de";
+                      surah: number;
+                      to_verse?: number;
+                    };
+                    kind: "quran";
+                    result: {
+                      alignmentId: string;
+                      assetId: string;
+                      conceptId: string;
+                      content_id: string;
+                      from_verse: number;
+                      learningObjectId: string;
+                      lensId: string;
+                      locale: "en" | "id" | "de";
+                      markdown_url?: string;
+                      name: string;
+                      revelation: string;
+                      route: string;
+                      section: "articles" | "material" | "tryout" | "quran";
+                      to_verse: number;
+                      translation: string;
+                      url: string;
+                      verse_count: number;
+                    };
+                    status: "done";
+                  }
+                | {
+                    error: string;
+                    input: {
+                      from_verse: number;
+                      include_tafsir: boolean;
+                      locale: "en" | "id" | "de";
+                      surah: number;
+                      to_verse?: number;
+                    };
+                    kind: "quran";
+                    status: "error";
+                  }
+                | {
+                    input: { locale: "en" | "id" | "de" };
+                    kind: "taxonomy";
+                    status: "loading";
+                  }
+                | {
+                    input: { locale: "en" | "id" | "de" };
+                    kind: "taxonomy";
+                    result: {
+                      content_counts: Array<{
+                        count: number;
+                        locale: "en" | "id" | "de";
+                      }>;
+                      locale: "en" | "id" | "de";
+                      sections: Array<
+                        "articles" | "material" | "tryout" | "quran"
+                      >;
+                      tools: Array<string>;
+                    };
+                    status: "done";
+                  }
+                | {
+                    error: string;
+                    input: { locale: "en" | "id" | "de" };
+                    kind: "taxonomy";
+                    status: "error";
+                  };
+              dataNakafaId?: string;
+              dataScrapeUrlContent?: string;
+              dataScrapeUrlDescription?: string;
+              dataScrapeUrlError?: string;
+              dataScrapeUrlFavicon?: string;
+              dataScrapeUrlId?: string;
+              dataScrapeUrlStatus?: "loading" | "done" | "error";
+              dataScrapeUrlTitle?: string;
+              dataScrapeUrlUrl?: string;
+              dataSuggestionsData?: Array<string>;
+              dataSuggestionsId?: string;
+              dataWebSearchError?: string;
+              dataWebSearchId?: string;
+              dataWebSearchProvider?: "firecrawl" | "google";
+              dataWebSearchQueries?: Array<string>;
+              dataWebSearchSources?: Array<{
+                citation: string;
+                content: string;
+                description: string;
+                title: string;
+                url: string;
+              }>;
+              dataWebSearchStatus?: "loading" | "done" | "error";
+              fileFilename?: string;
+              fileMediaType?: string;
+              fileUrl?: string;
+              messageId: Id<"messages">;
+              order: number;
+              providerMetadata?: Record<string, Record<string, string>>;
+              reasoningState?: "streaming" | "done";
+              reasoningText?: string;
+              textState?: "streaming" | "done";
+              textText?: string;
+              toolCallProviderMetadata?: Record<string, Record<string, string>>;
+              toolDeepResearchInput?: {
+                objective: string;
+                request: string;
+                requirements?: Array<string>;
+                sourceRequirements: Array<string>;
+              };
+              toolDeepResearchOutput?: string;
+              toolErrorText?: string;
+              toolMathInput?: {
+                given: Array<string>;
+                objective: string;
+                request: string;
+                requirements?: Array<string>;
+              };
+              toolMathOutput?: string;
+              toolNakafaInput?: {
+                deliverables: Array<string>;
+                objective: string;
+                request: string;
+                requirements?: Array<string>;
+              };
+              toolNakafaOutput?: string;
+              toolResultProviderMetadata?: Record<
+                string,
+                Record<string, string>
+              >;
+              toolState?:
+                | "input-streaming"
+                | "input-available"
+                | "output-available"
+                | "output-error";
+              toolToolCallId?: string;
+              type:
+                | "text"
+                | "reasoning"
+                | "file"
+                | "step-start"
+                | "tool-nakafa"
+                | "tool-deepResearch"
+                | "tool-math"
+                | "data-suggestions"
+                | "data-nakafa"
+                | "data-math"
+                | "data-scrape-url"
+                | "data-web-search";
+            }>;
+            role: "user" | "assistant" | "system";
+            totalTokens?: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+    traces: {
+      mutations: {
+        save: FunctionReference<
+          "mutation",
+          "public",
+          {
+            chatId: Id<"chats">;
+            trace: {
+              capability: "nakafa" | "deepResearch" | "math";
+              durationMs: number;
+              endedAt: number;
+              evidence: {
+                capability: "nakafa" | "deepResearch" | "math";
+                limitations?: Array<string>;
+                refs?: Array<string>;
+                status: "available" | "limited" | "failed" | "denied";
+                summary: string;
+              };
+              responseMessageIdentifier: string;
+              startedAt: number;
+              toolCallId?: string;
+            };
+          },
+          Id<"ninaCapabilityTraces">
+        >;
+      };
+      queries: {
+        list: FunctionReference<
+          "query",
+          "public",
+          {
+            chatId: Id<"chats">;
+            limit?: number;
+            responseMessageIdentifier?: string;
+          },
+          Array<{
+            _creationTime: number;
+            _id: Id<"ninaCapabilityTraces">;
+            capability: "nakafa" | "deepResearch" | "math";
+            chatId: Id<"chats">;
+            durationMs: number;
+            endedAt: number;
+            evidence: {
+              capability: "nakafa" | "deepResearch" | "math";
+              limitations?: Array<string>;
+              refs?: Array<string>;
+              status: "available" | "limited" | "failed" | "denied";
+              summary: string;
+            };
+            expiresAt: number;
+            responseMessageIdentifier: string;
+            startedAt: number;
+            status: "available" | "limited" | "failed" | "denied";
+            toolCallId?: string;
+            userId: Id<"users">;
+          }>
+        >;
+      };
+    };
+  };
+  classes: {
+    forums: {
+      mutations: {
+        forums: {
+          createForum: FunctionReference<
+            "mutation",
+            "public",
+            {
+              body: string;
+              classId: Id<"schoolClasses">;
+              tag:
+                | "general"
+                | "question"
+                | "announcement"
+                | "assignment"
+                | "resource";
+              title: string;
+            },
+            Id<"schoolClassForums">
+          >;
+        };
+        posts: {
+          createForumPost: FunctionReference<
+            "mutation",
+            "public",
+            {
+              attachmentUploadIds?: Array<Id<"schoolClassForumPendingUploads">>;
+              body: string;
+              forumId: Id<"schoolClassForums">;
+              mentions?: Array<Id<"users">>;
+              parentId?: Id<"schoolClassForumPosts">;
+            },
+            Id<"schoolClassForumPosts">
+          >;
+        };
+        reactions: {
+          toggleForumReaction: FunctionReference<
+            "mutation",
+            "public",
+            { emoji: string; forumId: Id<"schoolClassForums"> },
+            { added: boolean }
+          >;
+          togglePostReaction: FunctionReference<
+            "mutation",
+            "public",
+            { emoji: string; postId: Id<"schoolClassForumPosts"> },
+            { added: boolean }
+          >;
+        };
+        readState: {
+          markForumRead: FunctionReference<
+            "mutation",
+            "public",
+            {
+              forumId: Id<"schoolClassForums">;
+              lastReadPostId: Id<"schoolClassForumPosts">;
+            },
+            null
+          >;
+        };
+        uploads: {
+          discardForumUploads: FunctionReference<
+            "mutation",
+            "public",
+            { uploadIds: Array<Id<"schoolClassForumPendingUploads">> },
+            null
+          >;
+          generateUploadUrl: FunctionReference<
+            "mutation",
+            "public",
+            { forumId: Id<"schoolClassForums"> },
+            {
+              uploadId: Id<"schoolClassForumPendingUploads">;
+              uploadUrl: string;
+            }
+          >;
+          saveForumUpload: FunctionReference<
+            "mutation",
+            "public",
+            {
+              name: string;
+              size: number;
+              storageId: Id<"_storage">;
+              type: string;
+              uploadId: Id<"schoolClassForumPendingUploads">;
+            },
+            Id<"schoolClassForumPendingUploads">
+          >;
+        };
+      };
+      queries: {
+        forums: {
+          getForum: FunctionReference<
+            "query",
+            "public",
+            { forumId: Id<"schoolClassForums"> },
+            {
+              _creationTime: number;
+              _id: Id<"schoolClassForums">;
+              body: string;
+              classId: Id<"schoolClasses">;
+              createdBy: Id<"users">;
+              isPinned: boolean;
+              lastPostAt: number;
+              lastPostBy?: Id<"users">;
+              myReactions: Array<string>;
+              nextPostSequence: number;
+              postCount: number;
+              reactionCounts: Array<{ count: number; emoji: string }>;
+              reactionUsers: Array<{
+                count: number;
+                emoji: string;
+                reactors: Array<string>;
+              }>;
+              schoolId: Id<"schools">;
+              status: "open" | "locked" | "archived";
+              tag:
+                | "general"
+                | "question"
+                | "announcement"
+                | "assignment"
+                | "resource";
+              title: string;
+              updatedAt: number;
+              user: null | {
+                _id: Id<"users">;
+                email: string;
+                image?: null | string;
+                name: string;
+              };
+            }
+          >;
+          getForums: FunctionReference<
+            "query",
+            "public",
+            {
+              classId: Id<"schoolClasses">;
+              paginationOpts: {
+                cursor: string | null;
+                endCursor?: string | null;
+                id?: number;
+                maximumBytesRead?: number;
+                maximumRowsRead?: number;
+                numItems: number;
+              };
+              q?: string;
+            },
+            {
+              continueCursor: string;
+              isDone: boolean;
+              page: Array<{
+                _creationTime: number;
+                _id: Id<"schoolClassForums">;
+                body: string;
+                classId: Id<"schoolClasses">;
+                createdBy: Id<"users">;
+                isPinned: boolean;
+                lastPostAt: number;
+                lastPostBy?: Id<"users">;
+                myReactions: Array<string>;
+                nextPostSequence: number;
+                postCount: number;
+                reactionCounts: Array<{ count: number; emoji: string }>;
+                schoolId: Id<"schools">;
+                status: "open" | "locked" | "archived";
+                tag:
+                  | "general"
+                  | "question"
+                  | "announcement"
+                  | "assignment"
+                  | "resource";
+                title: string;
+                unreadCount: number;
+                updatedAt: number;
+                user: null | {
+                  _id: Id<"users">;
+                  email: string;
+                  image?: null | string;
+                  name: string;
+                };
+              }>;
+              pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+              splitCursor?: string | null;
+            }
+          >;
+        };
+        pages: {
+          getForumPosts: FunctionReference<
+            "query",
+            "public",
+            { forumId: Id<"schoolClassForums"> },
+            Array<{
+              _creationTime: number;
+              _id: Id<"schoolClassForumPosts">;
+              attachments: Array<{
+                _id: Id<"schoolClassForumPostAttachments">;
+                mimeType: string;
+                name: string;
+                size: number;
+                url: null | string;
+              }>;
+              body: string;
+              classId: Id<"schoolClasses">;
+              createdBy: Id<"users">;
+              editedAt?: number;
+              forumId: Id<"schoolClassForums">;
+              isUnread: boolean;
+              mentions: Array<Id<"users">>;
+              myReactions: Array<string>;
+              parentId?: Id<"schoolClassForumPosts">;
+              reactionCounts: Array<{ count: number; emoji: string }>;
+              reactionUsers: Array<{
+                count: number;
+                emoji: string;
+                reactors: Array<string>;
+              }>;
+              replyCount: number;
+              replyToBody?: string;
+              replyToUser: null | {
+                _id: Id<"users">;
+                email: string;
+                image?: null | string;
+                name: string;
+              };
+              replyToUserId?: Id<"users">;
+              sequence: number;
+              updatedAt: number;
+              user: null | {
+                _id: Id<"users">;
+                email: string;
+                image?: null | string;
+                name: string;
+              };
+            }>
+          >;
+        };
+      };
+    };
+    materials: {
+      mutations: {
+        createMaterialGroup: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"schoolClasses">;
+            description: string;
+            name: string;
+            scheduledAt?: number;
+            status: "draft" | "published" | "scheduled" | "archived";
+          },
+          Id<"schoolClassMaterialGroups">
+        >;
+        deleteMaterialGroup: FunctionReference<
+          "mutation",
+          "public",
+          { groupId: Id<"schoolClassMaterialGroups"> },
+          null
+        >;
+        reorderMaterialGroup: FunctionReference<
+          "mutation",
+          "public",
+          {
+            direction: "up" | "down";
+            groupId: Id<"schoolClassMaterialGroups">;
+          },
+          null
+        >;
+        updateMaterialGroup: FunctionReference<
+          "mutation",
+          "public",
+          {
+            description?: string;
+            groupId: Id<"schoolClassMaterialGroups">;
+            name?: string;
+            scheduledAt?: number;
+            status?: "draft" | "published" | "scheduled" | "archived";
+          },
+          Id<"schoolClassMaterialGroups">
+        >;
+      };
+      queries: {
+        getMaterialGroups: FunctionReference<
+          "query",
+          "public",
+          {
+            classId: Id<"schoolClasses">;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            parentId?: Id<"schoolClassMaterialGroups">;
+            q?: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              _creationTime: number;
+              _id: Id<"schoolClassMaterialGroups">;
+              childGroupCount: number;
+              classId: Id<"schoolClasses">;
+              createdBy: Id<"users">;
+              description: string;
+              materialCount: number;
+              name: string;
+              order: number;
+              parentId?: Id<"schoolClassMaterialGroups">;
+              publishedAt?: number;
+              publishedBy?: Id<"users">;
+              publishedByUser: null | {
+                _id: Id<"users">;
+                email: string;
+                image?: null | string;
+                name: string;
+              };
+              scheduledAt?: number;
+              scheduledJobId?: Id<"_scheduled_functions">;
+              schoolId: Id<"schools">;
+              status: "draft" | "published" | "scheduled" | "archived";
+              updatedAt: number;
+              user: null | {
+                _id: Id<"users">;
+                email: string;
+                image?: null | string;
+                name: string;
+              };
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+      };
+    };
+    mutations: {
+      createClass: FunctionReference<
+        "mutation",
+        "public",
+        {
+          name: string;
+          schoolId: Id<"schools">;
+          subject: string;
+          visibility: "private" | "public";
+          year: string;
+        },
+        Id<"schoolClasses">
+      >;
+      joinClass: FunctionReference<
+        "mutation",
+        "public",
+        { code: string },
+        { classId: Id<"schoolClasses"> }
+      >;
+      joinPublicClass: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"schoolClasses"> },
+        { classId: Id<"schoolClasses"> }
+      >;
+      updateClassImage: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"schoolClasses">;
+          image:
+            | "retro"
+            | "time"
+            | "stars"
+            | "chill"
+            | "puzzle"
+            | "line"
+            | "shoot"
+            | "virus"
+            | "bacteria"
+            | "cooking"
+            | "disco"
+            | "logic"
+            | "ball"
+            | "duck"
+            | "music"
+            | "nightly"
+            | "writer"
+            | "barbie"
+            | "fun"
+            | "lamp"
+            | "lemon"
+            | "nighty"
+            | "rocket"
+            | "sakura"
+            | "sky"
+            | "stamp"
+            | "vintage";
+        },
+        null
+      >;
+      updateClassVisibility: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"schoolClasses">; visibility: "private" | "public" },
+        null
+      >;
+    };
+    queries: {
+      getClasses: FunctionReference<
+        "query",
+        "public",
+        {
+          isArchived?: boolean;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          q?: string;
+          schoolId: Id<"schools">;
+          visibility?: "private" | "public";
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"schoolClasses">;
+            archivedAt?: number;
+            archivedBy?: Id<"users">;
+            createdBy: Id<"users">;
+            image:
+              | "retro"
+              | "time"
+              | "stars"
+              | "chill"
+              | "puzzle"
+              | "line"
+              | "shoot"
+              | "virus"
+              | "bacteria"
+              | "cooking"
+              | "disco"
+              | "logic"
+              | "ball"
+              | "duck"
+              | "music"
+              | "nightly"
+              | "writer"
+              | "barbie"
+              | "fun"
+              | "lamp"
+              | "lemon"
+              | "nighty"
+              | "rocket"
+              | "sakura"
+              | "sky"
+              | "stamp"
+              | "vintage";
+            isArchived: boolean;
+            name: string;
+            schoolId: Id<"schools">;
+            studentCount: number;
+            subject: string;
+            teacherCount: number;
+            updatedAt: number;
+            updatedBy?: Id<"users">;
+            visibility: "private" | "public";
+            year: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      getClassRoute: FunctionReference<
+        "query",
+        "public",
+        { classId: string },
+        | {
+            class: {
+              _creationTime: number;
+              _id: Id<"schoolClasses">;
+              archivedAt?: number;
+              archivedBy?: Id<"users">;
+              createdBy: Id<"users">;
+              image:
+                | "retro"
+                | "time"
+                | "stars"
+                | "chill"
+                | "puzzle"
+                | "line"
+                | "shoot"
+                | "virus"
+                | "bacteria"
+                | "cooking"
+                | "disco"
+                | "logic"
+                | "ball"
+                | "duck"
+                | "music"
+                | "nightly"
+                | "writer"
+                | "barbie"
+                | "fun"
+                | "lamp"
+                | "lemon"
+                | "nighty"
+                | "rocket"
+                | "sakura"
+                | "sky"
+                | "stamp"
+                | "vintage";
+              isArchived: boolean;
+              name: string;
+              schoolId: Id<"schools">;
+              studentCount: number;
+              subject: string;
+              teacherCount: number;
+              updatedAt: number;
+              updatedBy?: Id<"users">;
+              visibility: "private" | "public";
+              year: string;
+            };
+            classMembership: null | {
+              _creationTime: number;
+              _id: Id<"schoolClassMembers">;
+              addedBy?: Id<"users">;
+              classId: Id<"schoolClasses">;
+              enrollMethod?:
+                "by_code" | "teacher" | "admin" | "invite" | "public";
+              inviteCodeId?: Id<"schoolClassInviteCodes">;
+              removedAt?: number;
+              removedBy?: Id<"users">;
+              role: "teacher" | "student";
+              schoolId: Id<"schools">;
+              teacherRole?: "primary" | "co-teacher" | "assistant";
+              updatedAt: number;
+              userId: Id<"users">;
+            };
+            kind: "accessible";
+            schoolMembership: {
+              _creationTime: number;
+              _id: Id<"schoolMembers">;
+              inviteCodeId?: Id<"schoolInviteCodes">;
+              inviteToken?: string;
+              invitedAt?: number;
+              invitedBy?: Id<"users">;
+              joinedAt: number;
+              removedAt?: number;
+              removedBy?: Id<"users">;
+              role: "admin" | "teacher" | "student" | "parent" | "demo";
+              schoolId: Id<"schools">;
+              status: "active" | "invited" | "removed";
+              updatedAt: number;
+              userId: Id<"users">;
+            };
+          }
+        | {
+            class: {
+              _id: Id<"schoolClasses">;
+              image:
+                | "retro"
+                | "time"
+                | "stars"
+                | "chill"
+                | "puzzle"
+                | "line"
+                | "shoot"
+                | "virus"
+                | "bacteria"
+                | "cooking"
+                | "disco"
+                | "logic"
+                | "ball"
+                | "duck"
+                | "music"
+                | "nightly"
+                | "writer"
+                | "barbie"
+                | "fun"
+                | "lamp"
+                | "lemon"
+                | "nighty"
+                | "rocket"
+                | "sakura"
+                | "sky"
+                | "stamp"
+                | "vintage";
+              name: string;
+              subject: string;
+              visibility: "private" | "public";
+              year: string;
+            };
+            kind: "joinRequired";
+            schoolMembership: {
+              _creationTime: number;
+              _id: Id<"schoolMembers">;
+              inviteCodeId?: Id<"schoolInviteCodes">;
+              inviteToken?: string;
+              invitedAt?: number;
+              invitedBy?: Id<"users">;
+              joinedAt: number;
+              removedAt?: number;
+              removedBy?: Id<"users">;
+              role: "admin" | "teacher" | "student" | "parent" | "demo";
+              schoolId: Id<"schools">;
+              status: "active" | "invited" | "removed";
+              updatedAt: number;
+              userId: Id<"users">;
+            };
+          }
+      >;
+      getInviteCodes: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"schoolClasses"> },
+        Array<{
+          _creationTime: number;
+          _id: Id<"schoolClassInviteCodes">;
+          classId: Id<"schoolClasses">;
+          code: string;
+          createdBy: Id<"users">;
+          currentUsage: number;
+          description?: string;
+          enabled: boolean;
+          expiresAt?: number;
+          maxUsage?: number;
+          role: "teacher" | "student";
+          schoolId: Id<"schools">;
+          updatedAt: number;
+          updatedBy?: Id<"users">;
+        }>
+      >;
+      getPeople: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"schoolClasses">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          q?: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"schoolClassMembers">;
+            addedBy?: Id<"users">;
+            classId: Id<"schoolClasses">;
+            enrollMethod?:
+              "by_code" | "teacher" | "admin" | "invite" | "public";
+            inviteCodeId?: Id<"schoolClassInviteCodes">;
+            removedAt?: number;
+            removedBy?: Id<"users">;
+            role: "teacher" | "student";
+            schoolId: Id<"schools">;
+            teacherRole?: "primary" | "co-teacher" | "assistant";
+            updatedAt: number;
+            user: {
+              _id: Id<"users">;
+              email: string;
+              image?: null | string;
+              name: string;
+            };
+            userId: Id<"users">;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+  };
+  comments: {
+    mutations: {
+      addComment: FunctionReference<
+        "mutation",
+        "public",
+        { parentId?: Id<"comments">; slug: string; text: string },
+        Id<"comments">
+      >;
+      deleteComment: FunctionReference<
+        "mutation",
+        "public",
+        { commentId: Id<"comments"> },
+        null
+      >;
+      voteOnComment: FunctionReference<
+        "mutation",
+        "public",
+        { commentId: Id<"comments">; vote: -1 | 0 | 1 },
+        null
+      >;
+    };
+    queries: {
+      getCommentsBySlug: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"comments">;
+            downvoteCount: number;
+            parentId?: Id<"comments">;
+            replyCount: number;
+            replyToText?: string;
+            replyToUser: null | {
+              _id: Id<"users">;
+              image?: null | string;
+              name: string;
+            };
+            replyToUserId?: Id<"users">;
+            slug: string;
+            text: string;
+            upvoteCount: number;
+            user: null | {
+              _id: Id<"users">;
+              image?: null | string;
+              name: string;
+            };
+            userId: Id<"users">;
+            viewerVote: null | -1 | 1;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      getCommentsByUserId: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          userId: Id<"users">;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"comments">;
+            downvoteCount: number;
+            parentId?: Id<"comments">;
+            replyCount: number;
+            replyToText?: string;
+            replyToUserId?: Id<"users">;
+            slug: string;
+            text: string;
+            upvoteCount: number;
+            userId: Id<"users">;
+            viewerVote: null | -1 | 1;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+  };
+  consents: {
+    current: {
+      get: FunctionReference<
+        "query",
+        "public",
+        { category: "analytics" },
+        {
+          currentNoticeVersion: "privacy-2026-08-22";
+          decision:
+            | null
+            | {
+                category: "analytics";
+                decidedAt: number;
+                granted: boolean;
+                mechanism: "privacy-controls";
+                noticeVersion: "privacy-2026-08-22" | "privacy-2026-08-21";
+              }
+            | {
+                category: "analytics";
+                decidedAt: number;
+                granted: false;
+                mechanism: "browser-privacy-signal";
+                noticeVersion: "privacy-2026-08-22" | "privacy-2026-08-21";
+              };
+        }
+      >;
+      set: FunctionReference<
+        "mutation",
+        "public",
+        {
+          decision:
+            | {
+                category: "analytics";
+                granted: boolean;
+                mechanism: "privacy-controls";
+                noticeVersion: "privacy-2026-08-22";
+              }
+            | {
+                category: "analytics";
+                granted: false;
+                mechanism: "browser-privacy-signal";
+                noticeVersion: "privacy-2026-08-22";
+              };
+          expectedUserId: Id<"users">;
+        },
+        | {
+            category: "analytics";
+            decidedAt: number;
+            granted: boolean;
+            mechanism: "privacy-controls";
+            noticeVersion: "privacy-2026-08-22" | "privacy-2026-08-21";
+          }
+        | {
+            category: "analytics";
+            decidedAt: number;
+            granted: false;
+            mechanism: "browser-privacy-signal";
+            noticeVersion: "privacy-2026-08-22" | "privacy-2026-08-21";
+          }
+      >;
+    };
+  };
+  contentRelease: {
+    article: {
+      apiPage: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          cursor: string | null;
+          limit: number;
+          prefix: string;
+        },
+        {
+          activeReleaseId: string;
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{ appLocale: "en" | "id" | "de"; publicPath: string }>;
+        }
+      >;
+      bucket: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; bucket: string },
+        {
+          activeReleaseId: string | null;
+          articles: Array<{
+            articleSlug: string;
+            authors: Array<{ name: string }>;
+            category: string;
+            categoryTitle: string;
+            dateModified?: string;
+            datePublished: string;
+            description?: string;
+            official: boolean;
+            publicPath: string;
+            route: { category: string; slug: string };
+            title: string;
+          }> | null;
+          managed: boolean;
+        }
+      >;
+      categories: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          expectedManifestHash: string | null;
+          expectedReleaseId: string | null;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          managed: boolean;
+          result: {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              category: string;
+              rendererDomain:
+                | "ai-ds"
+                | "biology"
+                | "chemistry"
+                | "mathematics"
+                | "physics"
+                | "politics"
+                | "site"
+                | "snbt-general"
+                | "snbt-math"
+                | "snbt-plain"
+                | "snbt-quant"
+                | "tka-math";
+              route: string;
+              title: string;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          };
+          sourceRevision: string | null;
+          stale: boolean;
+        }
+      >;
+      delivery: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; publicPath: string },
+        {
+          model: {
+            activeAppLocales: Array<"en" | "id" | "de">;
+            activeReleaseId: string;
+            alternateJson: Array<string>;
+            projectionJson: string | null;
+          };
+          runtimeJson: string | null;
+        }
+      >;
+      latest: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; limit: number },
+        {
+          activeReleaseId: string | null;
+          articles: Array<{
+            articleSlug: string;
+            authors: Array<{ name: string }>;
+            category: string;
+            categoryTitle: string;
+            dateModified?: string;
+            datePublished: string;
+            description?: string;
+            official: boolean;
+            publicPath: string;
+            route: { category: string; slug: string };
+            title: string;
+          }>;
+          managed: boolean;
+        }
+      >;
+      listing: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; category: string; limit: number },
+        {
+          activeReleaseId: string | null;
+          articles: Array<{
+            articleSlug: string;
+            authors: Array<{ name: string }>;
+            category: string;
+            categoryTitle: string;
+            dateModified?: string;
+            datePublished: string;
+            description?: string;
+            official: boolean;
+            publicPath: string;
+            route: { category: string; slug: string };
+            title: string;
+          }>;
+          managed: boolean;
+        }
+      >;
+      publications: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          category: string;
+          expectedManifestHash: string | null;
+          expectedReleaseId: string | null;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          managed: boolean;
+          result: {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              appLocale: "en" | "id" | "de";
+              artifactLocale: "en" | "id" | "de";
+              contentKey: string;
+              family: "article";
+              projectionHash: string;
+              projectionJson: string;
+              publicPath: string;
+              releaseId: string;
+              rendererDomain:
+                | "ai-ds"
+                | "biology"
+                | "chemistry"
+                | "mathematics"
+                | "physics"
+                | "politics"
+                | "site"
+                | "snbt-general"
+                | "snbt-math"
+                | "snbt-plain"
+                | "snbt-quant"
+                | "tka-math";
+              sequence: number;
+              sourcePath: string;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          };
+          sourceRevision: string | null;
+          stale: boolean;
+        }
+      >;
+      route: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          expectedActiveReleaseId?: string | null;
+          publicPath: string;
+        },
+        {
+          activeAppLocales: Array<"en" | "id" | "de">;
+          activeReleaseId: string;
+          alternateJson: Array<string>;
+          projectionJson: string | null;
+        }
+      >;
+      sitemapBuckets: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de" },
+        {
+          activeReleaseId: string | null;
+          articleCount: number;
+          buckets: Array<string>;
+          managed: boolean;
+        }
+      >;
+      sitemapPage: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; bucket: string },
+        { routes: Array<{ lastModified?: string; publicPath: string }> } | null
+      >;
+    };
+    material: {
+      apiPage: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          cursor: string | null;
+          limit: number;
+          prefix: string;
+        },
+        {
+          activeReleaseId: string;
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{ appLocale: "en" | "id" | "de"; publicPath: string }>;
+        }
+      >;
+      bucket: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; bucket: string },
+        {
+          activeReleaseId: string | null;
+          managed: boolean;
+          materials: Array<{
+            authors: Array<{ name: string }>;
+            dateModified?: string;
+            datePublished: string;
+            description?: string;
+            publicPath: string;
+            sourcePath: string;
+            title: string;
+          }> | null;
+        }
+      >;
+      delivery: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; publicPath: string },
+        {
+          model: {
+            activeAppLocales: Array<"en" | "id" | "de">;
+            activeManifestHash: string | null;
+            activeReleaseId: string | null;
+            alternateJson: Array<string>;
+            projectionJson: string | null;
+            rendererDomain:
+              | "ai-ds"
+              | "biology"
+              | "chemistry"
+              | "mathematics"
+              | "physics"
+              | "politics"
+              | "site"
+              | "snbt-general"
+              | "snbt-math"
+              | "snbt-plain"
+              | "snbt-quant"
+              | "tka-math"
+              | null;
+            siblingJson: Array<string>;
+            sourcePath: string | null;
+            sourceRevision: string | null;
+          };
+          runtimeJson: string | null;
+        }
+      >;
+      identity: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          contentKey: string;
+          expectedMaterialKey: string;
+          expectedSectionKey: string;
+        },
+        {
+          activeReleaseId: string | null;
+          managed: boolean;
+          publicPath: string | null;
+        }
+      >;
+      latest: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; limit: number },
+        {
+          activeReleaseId: string | null;
+          managed: boolean;
+          materials: Array<{
+            authors: Array<{ name: string }>;
+            dateModified?: string;
+            datePublished: string;
+            description?: string;
+            publicPath: string;
+            sourcePath: string;
+            title: string;
+          }>;
+        }
+      >;
+      publication: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          expectedActiveReleaseId?: string | null;
+          publicPath: string;
+        },
+        {
+          activeAppLocales: Array<"en" | "id" | "de">;
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          alternateJson: Array<string>;
+          projectionJson: string | null;
+          rendererDomain:
+            | "ai-ds"
+            | "biology"
+            | "chemistry"
+            | "mathematics"
+            | "physics"
+            | "politics"
+            | "site"
+            | "snbt-general"
+            | "snbt-math"
+            | "snbt-plain"
+            | "snbt-quant"
+            | "tka-math"
+            | null;
+          siblingJson: Array<string>;
+          sourcePath: string | null;
+          sourceRevision: string | null;
+        }
+      >;
+      publications: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          expectedManifestHash: string | null;
+          expectedReleaseId: string | null;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          managed: boolean;
+          result: {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<string>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          };
+          sourceRevision: string | null;
+          stale: boolean;
+        }
+      >;
+      sitemapBuckets: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de" },
+        {
+          activeReleaseId: string | null;
+          buckets: Array<string>;
+          managed: boolean;
+          materialCount: number;
+        }
+      >;
+      sitemapPage: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; bucket: string },
+        null | { routes: Array<{ lastModified: string; publicPath: string }> }
+      >;
+    };
+    ownership: {
+      resolve: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          family: "article" | "material" | "page" | "question";
+          publicPath: string;
+        },
+        | { activeReleaseId: string | null; kind: "unmanaged" }
+        | { activeReleaseId: string; kind: "missing" }
+        | { activeReleaseId: string; kind: "found"; projectionJson: string }
+      >;
+    };
+    page: {
+      catalog: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          activeReleaseId: string | null;
+          managed: boolean;
+          projectionJson: Array<string>;
+        }
+      >;
+    };
+    program: {
+      catalog: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de" },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          managed: boolean;
+          programJson: Array<string>;
+          routeJson: Array<string>;
+          snapshotId: string | null;
+          sourceRevision: string | null;
+        }
+      >;
+      context: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          contentKey: string;
+          expectedActiveReleaseId?: string | null;
+          materialKey: string;
+          nodeKey: string;
+          parentPath: string;
+          programKey: string;
+          publicPath: string;
+        },
+        {
+          groupJson: string | null;
+          managed: boolean;
+          mappingJson: string | null;
+          parentJson: string | null;
+          resolvedCanonicalPath: string | null;
+        }
+      >;
+      page: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          expectedManifestHash: string | null;
+          expectedReleaseId: string | null;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          managed: boolean;
+          result: {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<string>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          };
+          snapshotId: string | null;
+          sourceRevision: string | null;
+          stale: boolean;
+        }
+      >;
+      path: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; publicPath: string },
+        { managed: boolean; routeJson: string | null }
+      >;
+      route: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; publicPath: string },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          alternateJson: Array<string>;
+          ancestorJson: Array<string>;
+          childJson: Array<string>;
+          contextJson: Array<string>;
+          groupJson: Array<string>;
+          managed: boolean;
+          materialJson: Array<string>;
+          programJson: string | null;
+          routeJson: string | null;
+          snapshotId: string | null;
+          sourceRevision: string | null;
+        }
+      >;
+      sitemapBuckets: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de" },
+        { buckets: Array<string>; managed: boolean; routeCount: number }
+      >;
+      sitemapPage: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; bucket: string },
+        null | { routes: Array<{ publicPath: string }> }
+      >;
+      subjects: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de" },
+        { managed: boolean; routeJson: Array<string> }
+      >;
+    };
+    quran: {
+      attribution: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          managed: boolean;
+          rowJson: string | null;
+          snapshotId: string | null;
+          sourceOrigin:
+            | { kind: "git"; sha: string }
+            | { kind: "rollback"; releaseId: string }
+            | null;
+          sourceRevision: string | null;
+        }
+      >;
+      page: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; surahNumber: number },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          appLocale: "en" | "id" | "de";
+          managed: boolean;
+          nextSurah: {
+            name: {
+              sourceMeaning:
+                | { de: string; en: string; id: string }
+                | { appLocale: "en"; text: string };
+              transliteration: string;
+            };
+            number: number;
+            numberOfVerses: number;
+          } | null;
+          preBismillah: {
+            arabic: string;
+            translation: {
+              notes: Array<{
+                number: number;
+                referenceOffset: number;
+                text: string;
+              }>;
+              segments: Array<
+                | { kind: "text"; offset: number; value: string }
+                | { kind: "note"; number: number; offset: number }
+              >;
+            };
+          } | null;
+          previousSurah: {
+            name: {
+              sourceMeaning:
+                | { de: string; en: string; id: string }
+                | { appLocale: "en"; text: string };
+              transliteration: string;
+            };
+            number: number;
+            numberOfVerses: number;
+          } | null;
+          snapshotId: string | null;
+          sourceOrigin:
+            | { kind: "git"; sha: string }
+            | { kind: "rollback"; releaseId: string }
+            | null;
+          sourceRevision: string | null;
+          sources:
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-english";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-indonesian";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-german";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | null;
+          surah: {
+            name: {
+              sourceMeaning:
+                | { de: string; en: string; id: string }
+                | { appLocale: "en"; text: string };
+              transliteration: string;
+            };
+            number: number;
+            numberOfVerses: number;
+          } | null;
+          tafsirAccess:
+            | {
+                appLocale: "id";
+                kind: "embedded";
+                notice: string;
+                source: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-tafsir";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "en";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-english";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "de";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-german";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | null;
+          verses: Array<{
+            arabic: string;
+            number: { inQuran: number; inSurah: number };
+            translation: {
+              notes: Array<{
+                number: number;
+                referenceOffset: number;
+                text: string;
+              }>;
+              segments: Array<
+                | { kind: "text"; offset: number; value: string }
+                | { kind: "note"; number: number; offset: number }
+              >;
+            };
+          }>;
+        }
+      >;
+      passage: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          fromVerse: number;
+          surahNumber: number;
+          toVerse?: number;
+        },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          chunkJson: Array<string>;
+          fromVerse: number;
+          managed: boolean;
+          preBismillah: {
+            arabic: string;
+            translation: {
+              notes: Array<{
+                number: number;
+                referenceOffset: number;
+                text: string;
+              }>;
+              segments: Array<
+                | { kind: "text"; offset: number; value: string }
+                | { kind: "note"; number: number; offset: number }
+              >;
+            };
+          } | null;
+          searchJson: string | null;
+          snapshotId: string | null;
+          sourceOrigin:
+            | { kind: "git"; sha: string }
+            | { kind: "rollback"; releaseId: string }
+            | null;
+          sourceRevision: string | null;
+          sources:
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-english";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-indonesian";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-german";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | null;
+          surahJson: string | null;
+          tafsirAccess:
+            | {
+                appLocale: "id";
+                kind: "embedded";
+                notice: string;
+                source: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-tafsir";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "en";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-english";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "de";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-german";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | null;
+          toVerse: number;
+        }
+      >;
+      prose: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          surahNumber: number;
+          verseLimit?: number;
+        },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          appLocale: "en" | "id" | "de";
+          managed: boolean;
+          preBismillah: {
+            arabic: string;
+            translation: {
+              notes: Array<{
+                number: number;
+                referenceOffset: number;
+                text: string;
+              }>;
+              segments: Array<
+                | { kind: "text"; offset: number; value: string }
+                | { kind: "note"; number: number; offset: number }
+              >;
+            };
+          } | null;
+          snapshotId: string | null;
+          sourceOrigin:
+            | { kind: "git"; sha: string }
+            | { kind: "rollback"; releaseId: string }
+            | null;
+          sourceRevision: string | null;
+          sources:
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-english";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-indonesian";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-german";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | null;
+          surah: {
+            name: {
+              sourceMeaning:
+                | { de: string; en: string; id: string }
+                | { appLocale: "en"; text: string };
+              transliteration: string;
+            };
+            number: number;
+            numberOfVerses: number;
+            revelation: { place: "Meccan" | "Medinan" };
+          } | null;
+          tafsirAccess:
+            | {
+                appLocale: "id";
+                kind: "embedded";
+                notice: string;
+                source: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-tafsir";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "en";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-english";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "de";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-german";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | null;
+          toVerse: number;
+          verses: Array<{
+            arabic: string;
+            number: { inSurah: number };
+            translation: {
+              notes: Array<{
+                number: number;
+                referenceOffset: number;
+                text: string;
+              }>;
+              segments: Array<
+                | { kind: "text"; offset: number; value: string }
+                | { kind: "note"; number: number; offset: number }
+              >;
+            };
+          }>;
+        }
+      >;
+      surah: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; surahNumber: number },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          appLocale: "en" | "id" | "de";
+          managed: boolean;
+          preBismillah: {
+            arabic: string;
+            translation: {
+              notes: Array<{
+                number: number;
+                referenceOffset: number;
+                text: string;
+              }>;
+              segments: Array<
+                | { kind: "text"; offset: number; value: string }
+                | { kind: "note"; number: number; offset: number }
+              >;
+            };
+          } | null;
+          snapshotId: string | null;
+          sourceOrigin:
+            | { kind: "git"; sha: string }
+            | { kind: "rollback"; releaseId: string }
+            | null;
+          sourceRevision: string | null;
+          sources:
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-english";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-indonesian";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                arabic: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "tanzil-text";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+                translation: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-german";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | null;
+          surah: {
+            kind: "quran-surah";
+            name: {
+              arabic: string;
+              sourceMeaning:
+                | { de: string; en: string; id: string }
+                | { appLocale: "en"; text: string };
+              transliteration: string;
+            };
+            number: number;
+            numberOfVerses: number;
+            revelation: { order: number; place: "Meccan" | "Medinan" };
+          } | null;
+          tafsirAccess:
+            | {
+                appLocale: "id";
+                kind: "embedded";
+                notice: string;
+                source: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-tafsir";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "en";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-english";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "de";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-german";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | null;
+          verses: Array<{
+            arabic: string;
+            number: { inQuran: number; inSurah: number };
+            translation: {
+              notes: Array<{
+                number: number;
+                referenceOffset: number;
+                text: string;
+              }>;
+              segments: Array<
+                | { kind: "text"; offset: number; value: string }
+                | { kind: "note"; number: number; offset: number }
+              >;
+            };
+          }>;
+        }
+      >;
+      surahs: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          managed: boolean;
+          rowJson: Array<string>;
+          snapshotId: string | null;
+          sourceOrigin:
+            | { kind: "git"; sha: string }
+            | { kind: "rollback"; releaseId: string }
+            | null;
+          sourceRevision: string | null;
+        }
+      >;
+      tafsir: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "id";
+          expectedSnapshotId: string;
+          surahNumber: number;
+          verseNumber: number;
+        },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          appLocale: "id";
+          interpretation: string | null;
+          managed: boolean;
+          snapshotId: string | null;
+          sourceOrigin:
+            | { kind: "git"; sha: string }
+            | { kind: "rollback"; releaseId: string }
+            | null;
+          sourceRevision: string | null;
+          surahNumber: number;
+          tafsirAccess:
+            | {
+                appLocale: "id";
+                kind: "embedded";
+                notice: string;
+                source: {
+                  artifact: {
+                    byteCount: number;
+                    digest: string;
+                    fileCount: number;
+                  };
+                  id: "quranenc-tafsir";
+                  kind: "embedded";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: {
+                    artifact: {
+                      byteCount: number;
+                      digest: string;
+                      fileCount: number;
+                    };
+                    url: string;
+                  };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "en";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-english";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | {
+                appLocale: "de";
+                kind: "external";
+                notice: string;
+                source: {
+                  id: "mokhtasar-german";
+                  kind: "external";
+                  label: string;
+                  notice: string;
+                  publisher: string;
+                  retrievedAt: string;
+                  sourceUrl: string;
+                  terms: { access: "link-only"; url: string };
+                  updateUrl: string;
+                  version: string;
+                };
+              }
+            | null;
+          verseNumber: number;
+        }
+      >;
+    };
+    reference: {
+      read: FunctionReference<
+        "query",
+        "public",
+        {
+          input:
+            | { contentId: string; kind: "content" }
+            | {
+                appLocale: "en" | "id" | "de";
+                kind: "route";
+                publicPath: string;
+              };
+        },
+        {
+          alignmentId: string;
+          assetId: string;
+          conceptId: string;
+          content_id: string;
+          description: string;
+          learningObjectId: string;
+          lensId: string;
+          locale: "en" | "id" | "de";
+          markdown_url?: string;
+          route: string;
+          section: "articles" | "material" | "tryout" | "quran";
+          title: string;
+          url: string;
+        } | null
+      >;
+    };
+    runtime: {
+      active: {
+        read: FunctionReference<
+          "query",
+          "public",
+          {},
+          null | { manifestHash: string; releaseId: string; sequence: number }
+        >;
+      };
+    };
+    tryout: {
+      catalog: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de" },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          rowJson: Array<string>;
+          snapshotId: string;
+          sourceRevision: string | null;
+        }
+      >;
+      sitemapCount: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de" },
+        { pageCount: number; routeCount: number }
+      >;
+      sitemapPage: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; page: number },
+        { paths: Array<string> } | null
+      >;
+      taxonomy: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de" },
+        {
+          countries: Array<{ id: string; label: string }>;
+          exams: Array<{ id: string; label: string }>;
+          routeCount: number;
+        }
+      >;
+    };
+  };
+  contents: {
+    mutations: {
+      views: {
+        recordContentView: FunctionReference<
+          "mutation",
+          "public",
+          {
+            contentId: string;
+            context?: {
+              mode: "placement";
+              nodeKey?: string;
+              programKey?: string;
+            };
+            deviceId: string;
+            locale: "en" | "id" | "de";
+            publicPath: string;
+            section: "articles" | "material";
+          },
+          { alreadyViewed: boolean; isNewView: boolean; success: boolean }
+        >;
+      };
+    };
+    queries: {
+      recent: {
+        getRecentlyViewed: FunctionReference<
+          "query",
+          "public",
+          { limit?: number; locale: "en" | "id" | "de" },
+          Array<{
+            alignmentId: string;
+            assetId: string;
+            conceptId: string;
+            content_id: string;
+            contextKey: string;
+            description: string;
+            href: string;
+            lastViewedAt: number;
+            learningObjectId: string;
+            lensId: string;
+            locale: "en" | "id" | "de";
+            markdown_url?: string;
+            materialDomain: string;
+            route: string;
+            section: "articles" | "material" | "tryout" | "quran";
+            title: string;
+            url: string;
+          }>
+        >;
+      };
+      search: {
+        search: FunctionReference<
+          "query",
+          "public",
+          {
+            limit: number;
+            locale: "en" | "id" | "de";
+            offset: number;
+            queries?: Array<string>;
+            section?: "articles" | "material" | "tryout" | "quran";
+          },
+          {
+            count: number;
+            has_more: boolean;
+            items: Array<{
+              alignmentId: string;
+              assetId: string;
+              conceptId: string;
+              content_id: string;
+              description: string;
+              excerpt: string;
+              learningObjectId: string;
+              lensId: string;
+              locale: "en" | "id" | "de";
+              markdown_url?: string;
+              route: string;
+              section: "articles" | "material" | "tryout" | "quran";
+              title: string;
+              url: string;
+            }>;
+            limit: number;
+            next_offset?: number;
+            offset: number;
+          }
+        >;
+      };
+      trending: {
+        getTrendingSubjects: FunctionReference<
+          "query",
+          "public",
+          {
+            limit?: number;
+            locale: "en" | "id" | "de";
+            minViews?: number;
+            windowKey?:
+              | "1d"
+              | "7d"
+              | "14d"
+              | "30d"
+              | "90d"
+              | "180d"
+              | "365d"
+              | "lifetime";
+          },
+          Array<{
+            alignmentId: string;
+            assetId: string;
+            conceptId: string;
+            content_id: string;
+            contextKey: string;
+            description: string;
+            href: string;
+            learningObjectId: string;
+            lensId: string;
+            locale: "en" | "id" | "de";
+            markdown_url?: string;
+            materialDomain: string;
+            route: string;
+            section: "articles" | "material" | "tryout" | "quran";
+            title: string;
+            url: string;
+            viewCount: number;
+          }>
+        >;
+      };
+    };
+  };
+  customers: {
+    actions: {
+      public: {
+        generateCheckoutLink: FunctionReference<
+          "action",
+          "public",
+          { locale: "en" | "id" | "de"; successUrl: string },
+          { url: string }
+        >;
+        generateCustomerPortalUrl: FunctionReference<
+          "action",
+          "public",
+          {},
+          { url: string }
+        >;
+      };
+    };
+  };
+  learningPreferences: {
+    mutations: {
+      setPreferredCurriculum: FunctionReference<
+        "mutation",
+        "public",
+        { locale: "en" | "id" | "de"; preferredCurriculumProgramKey: string },
+        null | {
+          preferredCurriculumProgramKey: string;
+          program: {
+            countryCode?: string;
+            key: string;
+            publicSlug: string;
+            title: string;
+          };
+        }
+      >;
+      setPreferredTryoutCountry: FunctionReference<
+        "mutation",
+        "public",
+        { locale: "en" | "id" | "de"; preferredTryoutCountryKey: string },
+        null | {
+          country: {
+            countryCode: string;
+            key: string;
+            publicPath: string;
+            title: string;
+          };
+          preferredTryoutCountryKey: string;
+        }
+      >;
+    };
+    queries: {
+      getCurrent: FunctionReference<
+        "query",
+        "public",
+        { locale: "en" | "id" | "de" },
+        null | {
+          preferredCurriculumProgramKey: string;
+          program: {
+            countryCode?: string;
+            key: string;
+            publicSlug: string;
+            title: string;
+          };
+        }
+      >;
+      getCurrentTryout: FunctionReference<
+        "query",
+        "public",
+        { locale: "en" | "id" | "de" },
+        null | {
+          country: {
+            countryCode: string;
+            key: string;
+            publicPath: string;
+            title: string;
+          };
+          preferredTryoutCountryKey: string;
+        }
+      >;
+      listCurriculumPrograms: FunctionReference<
+        "query",
+        "public",
+        { locale: "en" | "id" | "de" },
+        Array<{
+          countryCode?: string;
+          key: string;
+          publicSlug: string;
+          title: string;
+        }>
+      >;
+    };
+  };
+  notifications: {
+    mutations: {
+      setDisabledNotificationTypes: FunctionReference<
+        "mutation",
+        "public",
+        {
+          disabledTypes: Array<
+            | "forum_mention"
+            | "forum_reply"
+            | "forum_reaction"
+            | "post_mention"
+            | "post_reply"
+            | "post_reaction"
+            | "comment_reply"
+            | "comment_mention"
+            | "comment_upvote"
+            | "class_joined"
+            | "class_announcement"
+            | "class_assignment"
+            | "class_removed"
+            | "school_invite"
+            | "school_joined"
+            | "school_role_changed"
+            | "school_removed"
+            | "system"
+          >;
+        },
+        null
+      >;
+      setNotificationEntityMute: FunctionReference<
+        "mutation",
+        "public",
+        {
+          entityId:
+            | Id<"schoolClassForums">
+            | Id<"schoolClassForumPosts">
+            | Id<"schoolClasses">
+            | Id<"schools">
+            | Id<"comments">;
+          entityType:
+            | "schoolClassForums"
+            | "schoolClassForumPosts"
+            | "schoolClasses"
+            | "schools"
+            | "comments"
+            | "system";
+          muted: boolean;
+        },
+        null
+      >;
+      updateNotificationPreferences: FunctionReference<
+        "mutation",
+        "public",
+        { emailDigest: "daily" | "weekly" | "never"; emailEnabled: boolean },
+        null
+      >;
+    };
+    queries: {
+      getNotificationPreferences: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          disabledTypes: Array<
+            | "forum_mention"
+            | "forum_reply"
+            | "forum_reaction"
+            | "post_mention"
+            | "post_reply"
+            | "post_reaction"
+            | "comment_reply"
+            | "comment_mention"
+            | "comment_upvote"
+            | "class_joined"
+            | "class_announcement"
+            | "class_assignment"
+            | "class_removed"
+            | "school_invite"
+            | "school_joined"
+            | "school_role_changed"
+            | "school_removed"
+            | "system"
+          >;
+          emailDigest: "daily" | "weekly" | "never";
+          emailEnabled: boolean;
+        }
+      >;
+      listMutedNotificationEntities: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            entityId:
+              | Id<"schoolClassForums">
+              | Id<"schoolClassForumPosts">
+              | Id<"schoolClasses">
+              | Id<"schools">
+              | Id<"comments">;
+            entityType:
+              | "schoolClassForums"
+              | "schoolClassForumPosts"
+              | "schoolClasses"
+              | "schools"
+              | "comments"
+              | "system";
+            mutedAt: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+  };
+  onboarding: {
+    mutations: {
+      admit: FunctionReference<
+        "mutation",
+        "public",
+        {},
+        | { isAuthenticated: false; isRequired: false; profile: null }
+        | {
+            isAuthenticated: true;
+            isRequired: boolean;
+            profile: null | {
+              completedAt?: number;
+              focus?: "learning" | "tryout";
+              region?:
+                | "indonesia"
+                | "singapore"
+                | "united-kingdom"
+                | "germany"
+                | "united-states"
+                | "international";
+              role?: "teacher" | "student" | "parent";
+              updatedAt: number;
+            };
+          }
+      >;
+      finish: FunctionReference<
+        "mutation",
+        "public",
+        {
+          answers: {
+            focus: "learning" | "tryout";
+            region:
+              | "indonesia"
+              | "singapore"
+              | "united-kingdom"
+              | "germany"
+              | "united-states"
+              | "international";
+            role: "teacher" | "student" | "parent";
+          };
+        },
+        {
+          destination:
+            | { kind: "curriculum-index" }
+            | { kind: "curriculum-program"; publicSlug: string }
+            | { kind: "tryout" };
+          locale: "en" | "id" | "de";
+        }
+      >;
+      saveAnswer: FunctionReference<
+        "mutation",
+        "public",
+        {
+          answer:
+            | { kind: "role"; value: "teacher" | "student" | "parent" }
+            | {
+                kind: "region";
+                value:
+                  | "indonesia"
+                  | "singapore"
+                  | "united-kingdom"
+                  | "germany"
+                  | "united-states"
+                  | "international";
+              }
+            | { kind: "focus"; value: "learning" | "tryout" };
+        },
+        {
+          completedAt?: number;
+          focus?: "learning" | "tryout";
+          region?:
+            | "indonesia"
+            | "singapore"
+            | "united-kingdom"
+            | "germany"
+            | "united-states"
+            | "international";
+          role?: "teacher" | "student" | "parent";
+          updatedAt: number;
+        }
+      >;
+    };
+    queries: {
+      getStatus: FunctionReference<
+        "query",
+        "public",
+        {},
+        | { isAuthenticated: false; isRequired: false; profile: null }
+        | {
+            isAuthenticated: true;
+            isRequired: boolean;
+            profile: null | {
+              completedAt?: number;
+              focus?: "learning" | "tryout";
+              region?:
+                | "indonesia"
+                | "singapore"
+                | "united-kingdom"
+                | "germany"
+                | "united-states"
+                | "international";
+              role?: "teacher" | "student" | "parent";
+              updatedAt: number;
+            };
+          }
+      >;
+    };
+  };
+  schools: {
+    mutations: {
+      createSchool: FunctionReference<
+        "mutation",
+        "public",
+        {
+          address: string;
+          city: string;
+          email: string;
+          name: string;
+          phone: string;
+          province: string;
+          type:
+            | "elementary-school"
+            | "middle-school"
+            | "high-school"
+            | "vocational-school"
+            | "university"
+            | "other";
+        },
+        { schoolId: Id<"schools">; slug: string }
+      >;
+      joinSchool: FunctionReference<
+        "mutation",
+        "public",
+        { code: string },
+        { schoolId: Id<"schools">; slug: string }
+      >;
+    };
+    queries: {
+      getMySchoolLandingState: FunctionReference<
+        "query",
+        "public",
+        {},
+        | { kind: "none" }
+        | { kind: "single"; slug: string }
+        | { kind: "multiple" }
+      >;
+      getMySchoolsPage: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _id: Id<"schools">;
+            name: string;
+            slug: string;
+            type:
+              | "elementary-school"
+              | "middle-school"
+              | "high-school"
+              | "vocational-school"
+              | "university"
+              | "other";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      getSchoolBySlug: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        {
+          membership: {
+            _creationTime: number;
+            _id: Id<"schoolMembers">;
+            inviteCodeId?: Id<"schoolInviteCodes">;
+            inviteToken?: string;
+            invitedAt?: number;
+            invitedBy?: Id<"users">;
+            joinedAt: number;
+            removedAt?: number;
+            removedBy?: Id<"users">;
+            role: "admin" | "teacher" | "student" | "parent" | "demo";
+            schoolId: Id<"schools">;
+            status: "active" | "invited" | "removed";
+            updatedAt: number;
+            userId: Id<"users">;
+          };
+          school: {
+            _creationTime: number;
+            _id: Id<"schools">;
+            address?: string;
+            city: string;
+            createdBy: Id<"users">;
+            currentStudents: number;
+            currentTeachers: number;
+            email: string;
+            name: string;
+            phone?: string;
+            province: string;
+            slug: string;
+            type:
+              | "elementary-school"
+              | "middle-school"
+              | "high-school"
+              | "vocational-school"
+              | "university"
+              | "other";
+            updatedAt: number;
+            updatedBy?: Id<"users">;
+          };
+        }
+      >;
+    };
+  };
+  subscriptions: {
+    queries: {
+      hasActiveSubscription: FunctionReference<
+        "query",
+        "public",
+        { productId: string },
+        boolean
+      >;
+    };
+  };
+  tryouts: {
+    mutations: {
+      access: {
+        trackPaywallView: FunctionReference<
+          "mutation",
+          "public",
+          { source: "access-query" | "start-mutation" },
+          null
+        >;
+      };
+      attempts: {
+        startAttempt: FunctionReference<
+          "mutation",
+          "public",
+          {
+            countryKey: string;
+            destinationSectionKey?: string;
+            entrySectionKey?: string;
+            examKey: string;
+            locale: "en" | "id" | "de";
+            setKey: string;
+            trackKey: string;
+          },
+          {
+            attemptId: Id<"tryoutAttempts">;
+            navigation: { publicPath: string };
+          }
+        >;
+      };
+      responses: {
+        save: FunctionReference<
+          "mutation",
+          "public",
+          {
+            placementId: Id<"tryoutAttemptPlacements">;
+            selection:
+              | { kind: "single-choice"; optionKey: string }
+              | { kind: "multiple-choice"; optionKeys: Array<string> }
+              | {
+                  assignments: Array<{
+                    categoryKey: string;
+                    statementKey: string;
+                  }>;
+                  kind: "category";
+                }
+              | null;
+          },
+          null
+        >;
+      };
+      sections: {
+        complete: FunctionReference<
+          "mutation",
+          "public",
+          { attemptId: Id<"tryoutAttempts">; sectionKey: string },
+          { kind: "completed" }
+        >;
+        start: FunctionReference<
+          "mutation",
+          "public",
+          { attemptId: Id<"tryoutAttempts">; sectionKey: string },
+          { kind: "started" }
+        >;
+      };
+    };
+    queries: {
+      access: {
+        getStartAccess: FunctionReference<
+          "query",
+          "public",
+          {
+            countryKey: string;
+            destinationSectionKey?: string;
+            examKey: string;
+            locale: "en" | "id" | "de";
+            now: number;
+            setKey: string;
+            trackKey: string;
+          },
+          | { kind: "free-attempt" }
+          | { kind: "included" }
+          | { kind: "upgrade-required" }
+        >;
+      };
+      attempt: {
+        isLockedByAttemptId: FunctionReference<
+          "query",
+          "public",
+          { attemptId: string },
+          boolean
+        >;
+      };
+      attemptPage: {
+        getSection: FunctionReference<
+          "query",
+          "public",
+          {
+            request:
+              | {
+                  countryKey: string;
+                  examKey: string;
+                  kind: "current";
+                  locale: "en" | "id" | "de";
+                  sectionKey: string;
+                  setKey: string;
+                  trackKey: string;
+                }
+              | {
+                  attemptId: string;
+                  kind: "retained";
+                  locale: "en" | "id" | "de";
+                  publicPath: string;
+                };
+          },
+          | null
+          | {
+              attemptId: Id<"tryoutAttempts">;
+              kind: "redirect";
+              publicPath: string;
+            }
+          | {
+              activeSectionPublicPath: string | null;
+              activeSetPublicPath: string | null;
+              attemptId: Id<"tryoutAttempts">;
+              content:
+                | { kind: "none" }
+                | {
+                    answers: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "entitled";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
+                    kind: "signed";
+                    questions: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "authenticated";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
+                  };
+              initialState: {
+                attempt: {
+                  activeSectionKey: string | null;
+                  attemptId: Id<"tryoutAttempts">;
+                  attemptNumber: number;
+                  completedSectionKeys: Array<string>;
+                  expiresAt: number;
+                  resumeSectionKey: string | null;
+                  resumeSectionPublicPath: string | null;
+                  score: {
+                    publishedScore: number;
+                    rawScore: number;
+                    scoreStatus: "provisional" | "official";
+                    scoringStrategy: "irt" | "raw" | "weighted";
+                    theta?: number;
+                    thetaSE?: number;
+                    totalCorrect: number;
+                    totalQuestions: number;
+                  } | null;
+                  section: {
+                    answeredCount: number;
+                    completedAt: number | null;
+                    endReason: "submitted" | "time-expired" | null;
+                    expiresAt: number;
+                    score: {
+                      publishedScore: number;
+                      rawScore: number;
+                      scoreStatus: "provisional" | "official";
+                      scoringStrategy: "irt" | "raw" | "weighted";
+                      theta?: number;
+                      thetaSE?: number;
+                      totalCorrect: number;
+                      totalQuestions: number;
+                    } | null;
+                    sectionKey: string;
+                    startedAt: number;
+                    status: "in-progress" | "completed" | "expired";
+                    totalQuestions: number;
+                  } | null;
+                  startedAt: number;
+                  status: "in-progress" | "completed" | "expired";
+                };
+                runtime: null | {
+                  attemptId: Id<"tryoutAttempts">;
+                  expiresAt: number;
+                  questions: Array<{
+                    contentHash: string;
+                    placementId: Id<"tryoutAttemptPlacements">;
+                    questionOrder: number;
+                    response: {
+                      answeredAt: number;
+                      isComplete: boolean;
+                      selection:
+                        | { kind: "single-choice"; optionKey: string }
+                        | { kind: "multiple-choice"; optionKeys: Array<string> }
+                        | {
+                            assignments: Array<{
+                              categoryKey: string;
+                              statementKey: string;
+                            }>;
+                            kind: "category";
+                          };
+                      updatedAt: number;
+                    } | null;
+                    responseSpec:
+                      | {
+                          kind: "single-choice";
+                          options: Array<{
+                            isCorrect?: boolean;
+                            label: string;
+                            optionKey: string;
+                            order: number;
+                          }>;
+                        }
+                      | {
+                          kind: "multiple-choice";
+                          options: Array<{
+                            isCorrect?: boolean;
+                            label: string;
+                            optionKey: string;
+                            order: number;
+                          }>;
+                        }
+                      | {
+                          categories: Array<{
+                            categoryKey: string;
+                            label: string;
+                            order: number;
+                          }>;
+                          kind: "category";
+                          statements: Array<{
+                            correctCategoryKey?: string;
+                            label: string;
+                            order: number;
+                            statementKey: string;
+                          }>;
+                        };
+                    sourcePath: string;
+                    sourceRevision: string;
+                  }>;
+                  section: {
+                    answeredCount: number;
+                    completedAt: number | null;
+                    endReason: "submitted" | "time-expired" | null;
+                    expiresAt: number;
+                    score: {
+                      publishedScore: number;
+                      rawScore: number;
+                      scoreStatus: "provisional" | "official";
+                      scoringStrategy: "irt" | "raw" | "weighted";
+                      theta?: number;
+                      thetaSE?: number;
+                      totalCorrect: number;
+                      totalQuestions: number;
+                    } | null;
+                    sectionKey: string;
+                    startedAt: number;
+                    status: "in-progress" | "completed" | "expired";
+                    totalQuestions: number;
+                  };
+                };
+              };
+              kind: "retained";
+              page: {
+                exam: {
+                  description?: string;
+                  examKey: string;
+                  publicPath: string;
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  title: string;
+                };
+                section: {
+                  description?: string;
+                  publicPath?: string;
+                  questionCount: number;
+                  sectionKey: string;
+                  timeLimitSeconds: number;
+                  title: string;
+                  visibility: "internal-entry" | "visible";
+                };
+                set: {
+                  countryKey: string;
+                  description?: string;
+                  examKey: string;
+                  publicPath: string;
+                  readyQuestionCount: number;
+                  readyVisibleSectionCount: number;
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  sectionCount: number;
+                  setKey: string;
+                  title: string;
+                  totalQuestionCount: number;
+                  trackKey: string;
+                  visibleSectionCount: number;
+                };
+                track: {
+                  description?: string;
+                  publicPath: string;
+                  readyQuestionCount: number;
+                  readySetCount: number;
+                  readyVisibleSectionCount: number;
+                  title: string;
+                  trackKey: string;
+                  trackKind: "subject" | "year";
+                };
+              };
+            }
+        >;
+        getSet: FunctionReference<
+          "query",
+          "public",
+          {
+            request:
+              | {
+                  countryKey: string;
+                  examKey: string;
+                  kind: "current";
+                  locale: "en" | "id" | "de";
+                  setKey: string;
+                  trackKey: string;
+                }
+              | {
+                  attemptId: string;
+                  kind: "retained";
+                  locale: "en" | "id" | "de";
+                  publicPath: string;
+                };
+          },
+          | null
+          | {
+              attemptId: Id<"tryoutAttempts">;
+              kind: "redirect";
+              publicPath: string;
+            }
+          | {
+              attemptId: Id<"tryoutAttempts">;
+              content:
+                | { kind: "none" }
+                | {
+                    answers: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "entitled";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
+                    kind: "signed";
+                    questions: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "authenticated";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
+                  };
+              initialState: {
+                attempt: {
+                  activeSectionKey: string | null;
+                  attemptId: Id<"tryoutAttempts">;
+                  attemptNumber: number;
+                  completedSectionKeys: Array<string>;
+                  expiresAt: number;
+                  resumeSectionKey: string | null;
+                  resumeSectionPublicPath: string | null;
+                  score: {
+                    publishedScore: number;
+                    rawScore: number;
+                    scoreStatus: "provisional" | "official";
+                    scoringStrategy: "irt" | "raw" | "weighted";
+                    theta?: number;
+                    thetaSE?: number;
+                    totalCorrect: number;
+                    totalQuestions: number;
+                  } | null;
+                  section: {
+                    answeredCount: number;
+                    completedAt: number | null;
+                    endReason: "submitted" | "time-expired" | null;
+                    expiresAt: number;
+                    score: {
+                      publishedScore: number;
+                      rawScore: number;
+                      scoreStatus: "provisional" | "official";
+                      scoringStrategy: "irt" | "raw" | "weighted";
+                      theta?: number;
+                      thetaSE?: number;
+                      totalCorrect: number;
+                      totalQuestions: number;
+                    } | null;
+                    sectionKey: string;
+                    startedAt: number;
+                    status: "in-progress" | "completed" | "expired";
+                    totalQuestions: number;
+                  } | null;
+                  startedAt: number;
+                  status: "in-progress" | "completed" | "expired";
+                };
+                runtime: null | {
+                  attemptId: Id<"tryoutAttempts">;
+                  expiresAt: number;
+                  questions: Array<{
+                    contentHash: string;
+                    placementId: Id<"tryoutAttemptPlacements">;
+                    questionOrder: number;
+                    response: {
+                      answeredAt: number;
+                      isComplete: boolean;
+                      selection:
+                        | { kind: "single-choice"; optionKey: string }
+                        | { kind: "multiple-choice"; optionKeys: Array<string> }
+                        | {
+                            assignments: Array<{
+                              categoryKey: string;
+                              statementKey: string;
+                            }>;
+                            kind: "category";
+                          };
+                      updatedAt: number;
+                    } | null;
+                    responseSpec:
+                      | {
+                          kind: "single-choice";
+                          options: Array<{
+                            isCorrect?: boolean;
+                            label: string;
+                            optionKey: string;
+                            order: number;
+                          }>;
+                        }
+                      | {
+                          kind: "multiple-choice";
+                          options: Array<{
+                            isCorrect?: boolean;
+                            label: string;
+                            optionKey: string;
+                            order: number;
+                          }>;
+                        }
+                      | {
+                          categories: Array<{
+                            categoryKey: string;
+                            label: string;
+                            order: number;
+                          }>;
+                          kind: "category";
+                          statements: Array<{
+                            correctCategoryKey?: string;
+                            label: string;
+                            order: number;
+                            statementKey: string;
+                          }>;
+                        };
+                    sourcePath: string;
+                    sourceRevision: string;
+                  }>;
+                  section: {
+                    answeredCount: number;
+                    completedAt: number | null;
+                    endReason: "submitted" | "time-expired" | null;
+                    expiresAt: number;
+                    score: {
+                      publishedScore: number;
+                      rawScore: number;
+                      scoreStatus: "provisional" | "official";
+                      scoringStrategy: "irt" | "raw" | "weighted";
+                      theta?: number;
+                      thetaSE?: number;
+                      totalCorrect: number;
+                      totalQuestions: number;
+                    } | null;
+                    sectionKey: string;
+                    startedAt: number;
+                    status: "in-progress" | "completed" | "expired";
+                    totalQuestions: number;
+                  };
+                };
+              };
+              kind: "current";
+              page: {
+                entrySection: {
+                  description?: string;
+                  publicPath?: string;
+                  questionCount: number;
+                  sectionKey: string;
+                  timeLimitSeconds: number;
+                  title: string;
+                  visibility: "internal-entry" | "visible";
+                } | null;
+                exam: {
+                  description?: string;
+                  examKey: string;
+                  publicPath: string;
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  title: string;
+                };
+                sections: Array<{
+                  description?: string;
+                  publicPath?: string;
+                  questionCount: number;
+                  sectionKey: string;
+                  timeLimitSeconds: number;
+                  title: string;
+                  visibility: "internal-entry" | "visible";
+                }>;
+                set: {
+                  countryKey: string;
+                  description?: string;
+                  examKey: string;
+                  publicPath: string;
+                  readyQuestionCount: number;
+                  readyVisibleSectionCount: number;
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  sectionCount: number;
+                  setKey: string;
+                  title: string;
+                  totalQuestionCount: number;
+                  trackKey: string;
+                  visibleSectionCount: number;
+                };
+                track: {
+                  description?: string;
+                  publicPath: string;
+                  readyQuestionCount: number;
+                  readySetCount: number;
+                  readyVisibleSectionCount: number;
+                  title: string;
+                  trackKey: string;
+                  trackKind: "subject" | "year";
+                };
+              };
+              restartTarget: {
+                entrySection: {
+                  description?: string;
+                  publicPath?: string;
+                  questionCount: number;
+                  sectionKey: string;
+                  timeLimitSeconds: number;
+                  title: string;
+                  visibility: "internal-entry" | "visible";
+                };
+                setPublicPath: string;
+              } | null;
+            }
+          | {
+              attemptId: Id<"tryoutAttempts">;
+              content:
+                | { kind: "none" }
+                | {
+                    answers: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "entitled";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
+                    kind: "signed";
+                    questions: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "authenticated";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
+                  };
+              initialState: {
+                attempt: {
+                  activeSectionKey: string | null;
+                  attemptId: Id<"tryoutAttempts">;
+                  attemptNumber: number;
+                  completedSectionKeys: Array<string>;
+                  expiresAt: number;
+                  resumeSectionKey: string | null;
+                  resumeSectionPublicPath: string | null;
+                  score: {
+                    publishedScore: number;
+                    rawScore: number;
+                    scoreStatus: "provisional" | "official";
+                    scoringStrategy: "irt" | "raw" | "weighted";
+                    theta?: number;
+                    thetaSE?: number;
+                    totalCorrect: number;
+                    totalQuestions: number;
+                  } | null;
+                  section: {
+                    answeredCount: number;
+                    completedAt: number | null;
+                    endReason: "submitted" | "time-expired" | null;
+                    expiresAt: number;
+                    score: {
+                      publishedScore: number;
+                      rawScore: number;
+                      scoreStatus: "provisional" | "official";
+                      scoringStrategy: "irt" | "raw" | "weighted";
+                      theta?: number;
+                      thetaSE?: number;
+                      totalCorrect: number;
+                      totalQuestions: number;
+                    } | null;
+                    sectionKey: string;
+                    startedAt: number;
+                    status: "in-progress" | "completed" | "expired";
+                    totalQuestions: number;
+                  } | null;
+                  startedAt: number;
+                  status: "in-progress" | "completed" | "expired";
+                };
+                runtime: null | {
+                  attemptId: Id<"tryoutAttempts">;
+                  expiresAt: number;
+                  questions: Array<{
+                    contentHash: string;
+                    placementId: Id<"tryoutAttemptPlacements">;
+                    questionOrder: number;
+                    response: {
+                      answeredAt: number;
+                      isComplete: boolean;
+                      selection:
+                        | { kind: "single-choice"; optionKey: string }
+                        | { kind: "multiple-choice"; optionKeys: Array<string> }
+                        | {
+                            assignments: Array<{
+                              categoryKey: string;
+                              statementKey: string;
+                            }>;
+                            kind: "category";
+                          };
+                      updatedAt: number;
+                    } | null;
+                    responseSpec:
+                      | {
+                          kind: "single-choice";
+                          options: Array<{
+                            isCorrect?: boolean;
+                            label: string;
+                            optionKey: string;
+                            order: number;
+                          }>;
+                        }
+                      | {
+                          kind: "multiple-choice";
+                          options: Array<{
+                            isCorrect?: boolean;
+                            label: string;
+                            optionKey: string;
+                            order: number;
+                          }>;
+                        }
+                      | {
+                          categories: Array<{
+                            categoryKey: string;
+                            label: string;
+                            order: number;
+                          }>;
+                          kind: "category";
+                          statements: Array<{
+                            correctCategoryKey?: string;
+                            label: string;
+                            order: number;
+                            statementKey: string;
+                          }>;
+                        };
+                    sourcePath: string;
+                    sourceRevision: string;
+                  }>;
+                  section: {
+                    answeredCount: number;
+                    completedAt: number | null;
+                    endReason: "submitted" | "time-expired" | null;
+                    expiresAt: number;
+                    score: {
+                      publishedScore: number;
+                      rawScore: number;
+                      scoreStatus: "provisional" | "official";
+                      scoringStrategy: "irt" | "raw" | "weighted";
+                      theta?: number;
+                      thetaSE?: number;
+                      totalCorrect: number;
+                      totalQuestions: number;
+                    } | null;
+                    sectionKey: string;
+                    startedAt: number;
+                    status: "in-progress" | "completed" | "expired";
+                    totalQuestions: number;
+                  };
+                };
+              };
+              kind: "retained";
+              page: {
+                entrySection: {
+                  description?: string;
+                  publicPath?: string;
+                  questionCount: number;
+                  sectionKey: string;
+                  timeLimitSeconds: number;
+                  title: string;
+                  visibility: "internal-entry" | "visible";
+                } | null;
+                exam: {
+                  description?: string;
+                  examKey: string;
+                  publicPath: string;
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  title: string;
+                };
+                sections: Array<{
+                  description?: string;
+                  publicPath?: string;
+                  questionCount: number;
+                  sectionKey: string;
+                  timeLimitSeconds: number;
+                  title: string;
+                  visibility: "internal-entry" | "visible";
+                }>;
+                set: {
+                  countryKey: string;
+                  description?: string;
+                  examKey: string;
+                  publicPath: string;
+                  readyQuestionCount: number;
+                  readyVisibleSectionCount: number;
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  sectionCount: number;
+                  setKey: string;
+                  title: string;
+                  totalQuestionCount: number;
+                  trackKey: string;
+                  visibleSectionCount: number;
+                };
+                track: {
+                  description?: string;
+                  publicPath: string;
+                  readyQuestionCount: number;
+                  readySetCount: number;
+                  readyVisibleSectionCount: number;
+                  title: string;
+                  trackKey: string;
+                  trackKind: "subject" | "year";
+                };
+              };
+              restartTarget: {
+                entrySection: {
+                  description?: string;
+                  publicPath?: string;
+                  questionCount: number;
+                  sectionKey: string;
+                  timeLimitSeconds: number;
+                  title: string;
+                  visibility: "internal-entry" | "visible";
+                };
+                setPublicPath: string;
+              } | null;
+            }
+        >;
+      };
+      catalog: {
+        getCountryPage: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de"; publicPath: string },
+          null | {
+            country: {
+              countryCode: string;
+              countryKey: string;
+              description?: string;
+              publicPath: string;
+              title: string;
+            };
+            exams: Array<{
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              title: string;
+            }>;
+            sourceRevision: string | null;
+          }
+        >;
+        getExamPage: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de"; publicPath: string },
+          null | {
+            country: {
+              countryCode: string;
+              countryKey: string;
+              description?: string;
+              publicPath: string;
+              title: string;
+            };
+            exam: {
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              title: string;
+            };
+            tracks: Array<{
+              description?: string;
+              publicPath: string;
+              readyQuestionCount: number;
+              readySetCount: number;
+              readyVisibleSectionCount: number;
+              title: string;
+              trackKey: string;
+              trackKind: "subject" | "year";
+            }>;
+          }
+        >;
+        getFeaturedQuestion: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de" },
+          {
+            question: {
+              appLocale: "en" | "id" | "de";
+              artifactHash: string;
+              bundleHash: string;
+              contentHash: string;
+              contentKey: string;
+              delivery: "authenticated";
+              questionOrder: number;
+              sectionKey: string;
+              snapshotId: string;
+              snapshotReleaseId: string;
+              sourcePath: string;
+              sourceRevision: string;
+            };
+            response:
+              | {
+                  kind: "single-choice";
+                  options: Array<{
+                    isCorrect: boolean;
+                    label: string;
+                    optionKey: string;
+                    order: number;
+                  }>;
+                }
+              | {
+                  kind: "multiple-choice";
+                  options: Array<{
+                    isCorrect: boolean;
+                    label: string;
+                    optionKey: string;
+                    order: number;
+                  }>;
+                }
+              | {
+                  categories: Array<{
+                    categoryKey: string;
+                    label: string;
+                    order: number;
+                  }>;
+                  kind: "category";
+                  statements: Array<{
+                    correctCategoryKey: string;
+                    label: string;
+                    order: number;
+                    statementKey: string;
+                  }>;
+                };
+          }
+        >;
+        getHubPage: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de" },
+          {
+            countries: Array<{
+              countryCode: string;
+              countryKey: string;
+              description?: string;
+              examCount: number;
+              publicPath: string;
+              title: string;
+            }>;
+            sourceRevision: string | null;
+          }
+        >;
+        getLocalizedPath: FunctionReference<
+          "query",
+          "public",
+          {
+            currentAppLocale: "en" | "id" | "de";
+            publicPath: string;
+            targetAppLocale: "en" | "id" | "de";
+          },
+          string | null
+        >;
+        getMetadata: FunctionReference<
+          "query",
+          "public",
+          {
+            appLocale: "en" | "id" | "de";
+            kind: "country" | "exam" | "track" | "set" | "section";
+            publicPath: string;
+          },
+          {
+            route: null | {
+              alternates: Array<{
+                appLocale: "en" | "id" | "de";
+                publicPath: string;
+              }>;
+              description?: string;
+              publicPath: string;
+              socialImageIdentity: null | {
+                countryKey: string;
+                examKey: string;
+              };
+              title: string;
+            };
+          }
+        >;
+        getSectionPage: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de"; publicPath: string },
+          null | {
+            exam: {
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              title: string;
+            };
+            section: {
+              description?: string;
+              publicPath?: string;
+              questionCount: number;
+              sectionKey: string;
+              timeLimitSeconds: number;
+              title: string;
+              visibility: "internal-entry" | "visible";
+            };
+            set: {
+              countryKey: string;
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              readyQuestionCount: number;
+              readyVisibleSectionCount: number;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              sectionCount: number;
+              setKey: string;
+              title: string;
+              totalQuestionCount: number;
+              trackKey: string;
+              visibleSectionCount: number;
+            };
+            track: {
+              description?: string;
+              publicPath: string;
+              readyQuestionCount: number;
+              readySetCount: number;
+              readyVisibleSectionCount: number;
+              title: string;
+              trackKey: string;
+              trackKind: "subject" | "year";
+            };
+          }
+        >;
+        getSetPage: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de"; publicPath: string },
+          null | {
+            entrySection: {
+              description?: string;
+              publicPath?: string;
+              questionCount: number;
+              sectionKey: string;
+              timeLimitSeconds: number;
+              title: string;
+              visibility: "internal-entry" | "visible";
+            } | null;
+            exam: {
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              title: string;
+            };
+            sections: Array<{
+              description?: string;
+              publicPath?: string;
+              questionCount: number;
+              sectionKey: string;
+              timeLimitSeconds: number;
+              title: string;
+              visibility: "internal-entry" | "visible";
+            }>;
+            set: {
+              countryKey: string;
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              readyQuestionCount: number;
+              readyVisibleSectionCount: number;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              sectionCount: number;
+              setKey: string;
+              title: string;
+              totalQuestionCount: number;
+              trackKey: string;
+              visibleSectionCount: number;
+            };
+            track: {
+              description?: string;
+              publicPath: string;
+              readyQuestionCount: number;
+              readySetCount: number;
+              readyVisibleSectionCount: number;
+              title: string;
+              trackKey: string;
+              trackKind: "subject" | "year";
+            };
+          }
+        >;
+        getTrackPage: FunctionReference<
+          "query",
+          "public",
+          { appLocale: "en" | "id" | "de"; publicPath: string },
+          null | {
+            country: {
+              countryCode: string;
+              countryKey: string;
+              description?: string;
+              publicPath: string;
+              title: string;
+            };
+            exam: {
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              title: string;
+            };
+            track: {
+              description?: string;
+              publicPath: string;
+              readyQuestionCount: number;
+              readySetCount: number;
+              readyVisibleSectionCount: number;
+              title: string;
+              trackKey: string;
+              trackKind: "subject" | "year";
+            };
+          }
+        >;
+      };
+      content: {
+        getBatch: FunctionReference<
+          "query",
+          "public",
+          {
+            attemptId: Id<"tryoutAttempts">;
+            selectors: Array<
+              | {
+                  appLocale: "en" | "id" | "de";
+                  artifactHash: string;
+                  bundleHash: string;
+                  contentHash: string;
+                  contentKey: string;
+                  delivery: "authenticated";
+                  questionOrder: number;
+                  sectionKey: string;
+                  snapshotId: string;
+                  snapshotReleaseId: string;
+                  sourcePath: string;
+                  sourceRevision: string;
+                }
+              | {
+                  appLocale: "en" | "id" | "de";
+                  artifactHash: string;
+                  bundleHash: string;
+                  contentHash: string;
+                  contentKey: string;
+                  delivery: "entitled";
+                  questionOrder: number;
+                  sectionKey: string;
+                  snapshotId: string;
+                  snapshotReleaseId: string;
+                  sourcePath: string;
+                  sourceRevision: string;
+                }
+            >;
+          },
+          null | {
+            bundleJson: string;
+            items: Array<{
+              artifactJson: string;
+              delivery: "authenticated" | "entitled";
+              sourcePath: string;
+            }>;
+            rendererJson: string;
+          }
+        >;
+      };
+      history: {
+        bySet: FunctionReference<
+          "query",
+          "public",
+          {
+            countryKey: string;
+            examKey: string;
+            locale: "en" | "id" | "de";
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            setKey: string;
+            trackKey: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              attemptId: Id<"tryoutAttempts">;
+              attemptNumber: number;
+              completedAt: number | null;
+              score: {
+                publishedScore: number;
+                rawScore: number;
+                scoreStatus: "provisional" | "official";
+                scoringStrategy: "irt" | "raw" | "weighted";
+                theta?: number;
+                thetaSE?: number;
+                totalCorrect: number;
+                totalQuestions: number;
+              } | null;
+              startedAt: number;
+              status: "in-progress" | "completed" | "expired";
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+      };
+      runtime: {
+        getSectionAttemptState: FunctionReference<
+          "query",
+          "public",
+          { attemptId: Id<"tryoutAttempts">; sectionKey: string },
+          null | {
+            attempt: {
+              activeSectionKey: string | null;
+              attemptId: Id<"tryoutAttempts">;
+              attemptNumber: number;
+              completedSectionKeys: Array<string>;
+              expiresAt: number;
+              resumeSectionKey: string | null;
+              resumeSectionPublicPath: string | null;
+              score: {
+                publishedScore: number;
+                rawScore: number;
+                scoreStatus: "provisional" | "official";
+                scoringStrategy: "irt" | "raw" | "weighted";
+                theta?: number;
+                thetaSE?: number;
+                totalCorrect: number;
+                totalQuestions: number;
+              } | null;
+              section: {
+                answeredCount: number;
+                completedAt: number | null;
+                endReason: "submitted" | "time-expired" | null;
+                expiresAt: number;
+                score: {
+                  publishedScore: number;
+                  rawScore: number;
+                  scoreStatus: "provisional" | "official";
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  theta?: number;
+                  thetaSE?: number;
+                  totalCorrect: number;
+                  totalQuestions: number;
+                } | null;
+                sectionKey: string;
+                startedAt: number;
+                status: "in-progress" | "completed" | "expired";
+                totalQuestions: number;
+              } | null;
+              startedAt: number;
+              status: "in-progress" | "completed" | "expired";
+            };
+            runtime: null | {
+              attemptId: Id<"tryoutAttempts">;
+              expiresAt: number;
+              questions: Array<{
+                contentHash: string;
+                placementId: Id<"tryoutAttemptPlacements">;
+                questionOrder: number;
+                response: {
+                  answeredAt: number;
+                  isComplete: boolean;
+                  selection:
+                    | { kind: "single-choice"; optionKey: string }
+                    | { kind: "multiple-choice"; optionKeys: Array<string> }
+                    | {
+                        assignments: Array<{
+                          categoryKey: string;
+                          statementKey: string;
+                        }>;
+                        kind: "category";
+                      };
+                  updatedAt: number;
+                } | null;
+                responseSpec:
+                  | {
+                      kind: "single-choice";
+                      options: Array<{
+                        isCorrect?: boolean;
+                        label: string;
+                        optionKey: string;
+                        order: number;
+                      }>;
+                    }
+                  | {
+                      kind: "multiple-choice";
+                      options: Array<{
+                        isCorrect?: boolean;
+                        label: string;
+                        optionKey: string;
+                        order: number;
+                      }>;
+                    }
+                  | {
+                      categories: Array<{
+                        categoryKey: string;
+                        label: string;
+                        order: number;
+                      }>;
+                      kind: "category";
+                      statements: Array<{
+                        correctCategoryKey?: string;
+                        label: string;
+                        order: number;
+                        statementKey: string;
+                      }>;
+                    };
+                sourcePath: string;
+                sourceRevision: string;
+              }>;
+              section: {
+                answeredCount: number;
+                completedAt: number | null;
+                endReason: "submitted" | "time-expired" | null;
+                expiresAt: number;
+                score: {
+                  publishedScore: number;
+                  rawScore: number;
+                  scoreStatus: "provisional" | "official";
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  theta?: number;
+                  thetaSE?: number;
+                  totalCorrect: number;
+                  totalQuestions: number;
+                } | null;
+                sectionKey: string;
+                startedAt: number;
+                status: "in-progress" | "completed" | "expired";
+                totalQuestions: number;
+              };
+            };
+          }
+        >;
+        getSetAttemptState: FunctionReference<
+          "query",
+          "public",
+          { attemptId: Id<"tryoutAttempts"> },
+          null | {
+            attempt: {
+              activeSectionKey: string | null;
+              attemptId: Id<"tryoutAttempts">;
+              attemptNumber: number;
+              completedSectionKeys: Array<string>;
+              expiresAt: number;
+              resumeSectionKey: string | null;
+              resumeSectionPublicPath: string | null;
+              score: {
+                publishedScore: number;
+                rawScore: number;
+                scoreStatus: "provisional" | "official";
+                scoringStrategy: "irt" | "raw" | "weighted";
+                theta?: number;
+                thetaSE?: number;
+                totalCorrect: number;
+                totalQuestions: number;
+              } | null;
+              section: {
+                answeredCount: number;
+                completedAt: number | null;
+                endReason: "submitted" | "time-expired" | null;
+                expiresAt: number;
+                score: {
+                  publishedScore: number;
+                  rawScore: number;
+                  scoreStatus: "provisional" | "official";
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  theta?: number;
+                  thetaSE?: number;
+                  totalCorrect: number;
+                  totalQuestions: number;
+                } | null;
+                sectionKey: string;
+                startedAt: number;
+                status: "in-progress" | "completed" | "expired";
+                totalQuestions: number;
+              } | null;
+              startedAt: number;
+              status: "in-progress" | "completed" | "expired";
+            };
+            runtime: null | {
+              attemptId: Id<"tryoutAttempts">;
+              expiresAt: number;
+              questions: Array<{
+                contentHash: string;
+                placementId: Id<"tryoutAttemptPlacements">;
+                questionOrder: number;
+                response: {
+                  answeredAt: number;
+                  isComplete: boolean;
+                  selection:
+                    | { kind: "single-choice"; optionKey: string }
+                    | { kind: "multiple-choice"; optionKeys: Array<string> }
+                    | {
+                        assignments: Array<{
+                          categoryKey: string;
+                          statementKey: string;
+                        }>;
+                        kind: "category";
+                      };
+                  updatedAt: number;
+                } | null;
+                responseSpec:
+                  | {
+                      kind: "single-choice";
+                      options: Array<{
+                        isCorrect?: boolean;
+                        label: string;
+                        optionKey: string;
+                        order: number;
+                      }>;
+                    }
+                  | {
+                      kind: "multiple-choice";
+                      options: Array<{
+                        isCorrect?: boolean;
+                        label: string;
+                        optionKey: string;
+                        order: number;
+                      }>;
+                    }
+                  | {
+                      categories: Array<{
+                        categoryKey: string;
+                        label: string;
+                        order: number;
+                      }>;
+                      kind: "category";
+                      statements: Array<{
+                        correctCategoryKey?: string;
+                        label: string;
+                        order: number;
+                        statementKey: string;
+                      }>;
+                    };
+                sourcePath: string;
+                sourceRevision: string;
+              }>;
+              section: {
+                answeredCount: number;
+                completedAt: number | null;
+                endReason: "submitted" | "time-expired" | null;
+                expiresAt: number;
+                score: {
+                  publishedScore: number;
+                  rawScore: number;
+                  scoreStatus: "provisional" | "official";
+                  scoringStrategy: "irt" | "raw" | "weighted";
+                  theta?: number;
+                  thetaSE?: number;
+                  totalCorrect: number;
+                  totalQuestions: number;
+                } | null;
+                sectionKey: string;
+                startedAt: number;
+                status: "in-progress" | "completed" | "expired";
+                totalQuestions: number;
+              };
+            };
+          }
+        >;
+      };
+      sets: {
+        byStatus: FunctionReference<
+          "query",
+          "public",
+          {
+            countryKey: string;
+            examKey: string;
+            locale: "en" | "id" | "de";
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            status: "in-progress" | "completed" | "expired";
+            trackKey: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              attemptStatus: null | "in-progress" | "completed" | "expired";
+              countryKey: string;
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              publishedScore: number | null;
+              readyQuestionCount: number;
+              readyVisibleSectionCount: number;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              sectionCount: number;
+              setKey: string;
+              title: string;
+              totalQuestionCount: number;
+              trackKey: string;
+              visibleSectionCount: number;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        list: FunctionReference<
+          "query",
+          "public",
+          {
+            countryKey: string;
+            examKey: string;
+            locale: "en" | "id" | "de";
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            sort: {
+              direction: "asc" | "desc";
+              field:
+                "order" | "publishedScore" | "readyQuestionCount" | "title";
+            };
+            trackKey: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              attemptStatus: null | "in-progress" | "completed" | "expired";
+              countryKey: string;
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              publishedScore: number | null;
+              readyQuestionCount: number;
+              readyVisibleSectionCount: number;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              sectionCount: number;
+              setKey: string;
+              title: string;
+              totalQuestionCount: number;
+              trackKey: string;
+              visibleSectionCount: number;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        unattempted: FunctionReference<
+          "query",
+          "public",
+          {
+            countryKey: string;
+            examKey: string;
+            locale: "en" | "id" | "de";
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            trackKey: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              attemptStatus: null | "in-progress" | "completed" | "expired";
+              countryKey: string;
+              description?: string;
+              examKey: string;
+              publicPath: string;
+              publishedScore: number | null;
+              readyQuestionCount: number;
+              readyVisibleSectionCount: number;
+              scoringStrategy: "irt" | "raw" | "weighted";
+              sectionCount: number;
+              setKey: string;
+              title: string;
+              totalQuestionCount: number;
+              trackKey: string;
+              visibleSectionCount: number;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+      };
+    };
+  };
+  users: {
+    mutations: {
+      syncUserInfoForChat: FunctionReference<
+        "mutation",
+        "public",
+        {},
+        {
+          credits: number;
+          role:
+            null | null | "teacher" | "student" | "parent" | "administrator";
+          userId: Id<"users">;
+        }
+      >;
+      updateUserName: FunctionReference<
+        "mutation",
+        "public",
+        { name: string },
+        null
+      >;
+      updateUserRole: FunctionReference<
+        "mutation",
+        "public",
+        { role: "teacher" | "student" | "parent" },
+        null
+      >;
+    };
+  };
+};
 
 /**
  * A utility for referencing Convex functions in your app's internal API.
@@ -1117,10 +9477,3706 @@ export declare const api: FilterApi<
  * const myFunctionReference = internal.myModule.myFunction;
  * ```
  */
-export declare const internal: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "internal">
->;
+export declare const internal: {
+  analytics: {
+    capture: {
+      deliverProductEvent: FunctionReference<
+        "action",
+        "internal",
+        {
+          disableGeoip: boolean;
+          distinctId: Id<"users">;
+          event: string;
+          properties?: string;
+          timestamp?: number;
+        },
+        null
+      >;
+      isProductAnalyticsUserEligible: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        boolean
+      >;
+    };
+    erasure: {
+      action: {
+        eraseUserAnalytics: FunctionReference<
+          "action",
+          "internal",
+          { userId: Id<"users"> },
+          null
+        >;
+      };
+      workflow: {
+        eraseConsentOverlap: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { userId: Id<"users"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+      };
+    };
+  };
+  auth: {
+    actions: {
+      getLatestJwks: FunctionReference<
+        "action",
+        "internal",
+        {},
+        Array<{
+          alg: "RS256";
+          createdAt: number;
+          expiresAt?: null | number;
+          id: string;
+          privateKey: string;
+          publicKey: string;
+        }>
+      >;
+    };
+    cleanup: {
+      cleanupDeletedUser: FunctionReference<
+        "mutation",
+        "internal",
+        { userId: Id<"users"> },
+        boolean
+      >;
+      drainDeletedUserData: FunctionReference<
+        "action",
+        "internal",
+        { userId: Id<"users"> },
+        null
+      >;
+    };
+    deletion: {
+      cancelAccountDeletion: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          authId: string;
+          expectedPreparation: {
+            attemptId: string;
+            preparationId: Id<"accountDeletionPreparations">;
+            recoveryGeneration: number;
+          };
+        },
+        boolean
+      >;
+      claimAccountDeletion: FunctionReference<
+        "mutation",
+        "internal",
+        { attemptId: string; authId: string },
+        | "continue"
+        | "ready"
+        | "school-successor-required"
+        | "temporarily-unavailable"
+      >;
+      continueAccountDeletionCommit: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          authId: string;
+          expectedPreparation: {
+            attemptId: string;
+            preparationId: Id<"accountDeletionPreparations">;
+            recoveryGeneration: number;
+          };
+        },
+        boolean
+      >;
+      recovery: {
+        recoverAccountDeletion: FunctionReference<
+          "action",
+          "internal",
+          {
+            authId: string;
+            expectedPreparation: {
+              attemptId: string;
+              preparationId: Id<"accountDeletionPreparations">;
+              recoveryGeneration: number;
+            };
+          },
+          null
+        >;
+        sweepAccountDeletionRecovery: FunctionReference<
+          "mutation",
+          "internal",
+          {},
+          null
+        >;
+      };
+      sweepAccountDeletionRetention: FunctionReference<
+        "mutation",
+        "internal",
+        {},
+        null
+      >;
+      verification: {
+        drainDeletedUserVerifications: FunctionReference<
+          "action",
+          "internal",
+          { authId: string; userId: Id<"users"> },
+          null
+        >;
+        loadDeletedUserVerificationCursor: FunctionReference<
+          "query",
+          "internal",
+          { userId: Id<"users"> },
+          null | string
+        >;
+        saveDeletedUserVerificationCursor: FunctionReference<
+          "mutation",
+          "internal",
+          { cursor: null | string; userId: Id<"users"> },
+          null
+        >;
+      };
+    };
+    lifecycle: {
+      onCreate: FunctionReference<
+        "mutation",
+        "internal",
+        { doc: any; model: string },
+        any
+      >;
+      onDelete: FunctionReference<
+        "mutation",
+        "internal",
+        { doc: any; model: string },
+        any
+      >;
+      onUpdate: FunctionReference<
+        "mutation",
+        "internal",
+        { model: string; newDoc: any; oldDoc: any },
+        any
+      >;
+    };
+  };
+  chats: {
+    assistantResponses: {
+      saveAssistantFailure: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          message: {
+            chatId: Id<"chats">;
+            generationErrorCode: "CHAT_RESPONSE_FAILED";
+            identifier: string;
+            modelId: "nakafa-lite" | "nakafa-pro";
+          };
+          userId: Id<"users">;
+        },
+        null | { messageId: Id<"messages"> }
+      >;
+      saveAssistantResponse: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          message: {
+            chatId: Id<"chats">;
+            credits?: number;
+            generationErrorCode?: "CHAT_RESPONSE_FAILED";
+            generationStatus?: "complete" | "failed";
+            identifier: string;
+            inputTokens?: number;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            ninaContextSnapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            ninaContextTransition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            outputTokens?: number;
+            role: "user" | "assistant" | "system";
+            totalTokens?: number;
+          };
+          parts: Array<{
+            dataMathData?:
+              | {
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  result: {
+                    conditions: Array<{ expression: string; latex: string }>;
+                    input: {
+                      distribution?: string;
+                      expression?: string;
+                      expressions?: Array<string>;
+                      inclusive?: boolean;
+                      k?: string;
+                      kind: "math";
+                      left?: string;
+                      lower?: string;
+                      lowerInclusive?: boolean;
+                      matrix?: Array<Array<string>>;
+                      modulus?: string;
+                      n?: string;
+                      operation:
+                        | "apart"
+                        | "cancel"
+                        | "circle"
+                        | "combination"
+                        | "compare"
+                        | "cumulative_probability"
+                        | "determinant"
+                        | "differentiate"
+                        | "distance"
+                        | "distribution"
+                        | "domain"
+                        | "eigen_analysis"
+                        | "eigenvalues"
+                        | "eigenvectors"
+                        | "evaluate"
+                        | "expected_value"
+                        | "expand"
+                        | "factor"
+                        | "gcd"
+                        | "integrate"
+                        | "intersection"
+                        | "inverse"
+                        | "interval_probability"
+                        | "is_prime"
+                        | "lcm"
+                        | "limit"
+                        | "line"
+                        | "linear_system"
+                        | "matrix_multiply"
+                        | "mean"
+                        | "median"
+                        | "midpoint"
+                        | "mode"
+                        | "modular"
+                        | "permutation"
+                        | "point_probability"
+                        | "prime_factorization"
+                        | "product"
+                        | "quartiles"
+                        | "rank"
+                        | "rationalize"
+                        | "roots"
+                        | "rref"
+                        | "series"
+                        | "simplify"
+                        | "slope"
+                        | "solve"
+                        | "standard_deviation"
+                        | "summation"
+                        | "tail_probability"
+                        | "together"
+                        | "variance"
+                        | "variance_probability"
+                        | "z_score";
+                      order?: number;
+                      parameters?: {
+                        lambda?: string;
+                        lower?: string;
+                        mean?: string;
+                        n?: string;
+                        p?: string;
+                        standard_deviation?: string;
+                        upper?: string;
+                      };
+                      point?: string;
+                      points?: Array<{ x: string; y: string }>;
+                      right?: string;
+                      right_matrix?: Array<Array<string>>;
+                      upper?: string;
+                      upperInclusive?: boolean;
+                      values?: Array<string>;
+                      variable?: string;
+                      variables?: Array<string>;
+                      vector?: Array<string>;
+                    };
+                    items: Array<{
+                      label: string;
+                      latex?: string;
+                      value: string;
+                    }>;
+                    kind:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    primary: { expression: string; latex: string };
+                    reason: string;
+                    secondary?: { expression: string; latex: string };
+                    status: "verified" | "contradicted" | "inconclusive";
+                    stepStatus: "complete" | "partial" | "unavailable";
+                    steps: Array<{
+                      action: string;
+                      items: Array<{
+                        label: string;
+                        latex?: string;
+                        value: string;
+                      }>;
+                      primary: { expression: string; latex: string };
+                      relation?: { expression: string; latex: string };
+                      secondary?: { expression: string; latex: string };
+                    }>;
+                  };
+                  status: "verified" | "contradicted" | "inconclusive";
+                  summary: string;
+                }
+              | {
+                  error: string;
+                  input: {
+                    distribution?: string;
+                    expression?: string;
+                    expressions?: Array<string>;
+                    inclusive?: boolean;
+                    k?: string;
+                    kind: "math";
+                    left?: string;
+                    lower?: string;
+                    lowerInclusive?: boolean;
+                    matrix?: Array<Array<string>>;
+                    modulus?: string;
+                    n?: string;
+                    operation:
+                      | "apart"
+                      | "cancel"
+                      | "circle"
+                      | "combination"
+                      | "compare"
+                      | "cumulative_probability"
+                      | "determinant"
+                      | "differentiate"
+                      | "distance"
+                      | "distribution"
+                      | "domain"
+                      | "eigen_analysis"
+                      | "eigenvalues"
+                      | "eigenvectors"
+                      | "evaluate"
+                      | "expected_value"
+                      | "expand"
+                      | "factor"
+                      | "gcd"
+                      | "integrate"
+                      | "intersection"
+                      | "inverse"
+                      | "interval_probability"
+                      | "is_prime"
+                      | "lcm"
+                      | "limit"
+                      | "line"
+                      | "linear_system"
+                      | "matrix_multiply"
+                      | "mean"
+                      | "median"
+                      | "midpoint"
+                      | "mode"
+                      | "modular"
+                      | "permutation"
+                      | "point_probability"
+                      | "prime_factorization"
+                      | "product"
+                      | "quartiles"
+                      | "rank"
+                      | "rationalize"
+                      | "roots"
+                      | "rref"
+                      | "series"
+                      | "simplify"
+                      | "slope"
+                      | "solve"
+                      | "standard_deviation"
+                      | "summation"
+                      | "tail_probability"
+                      | "together"
+                      | "variance"
+                      | "variance_probability"
+                      | "z_score";
+                    order?: number;
+                    parameters?: {
+                      lambda?: string;
+                      lower?: string;
+                      mean?: string;
+                      n?: string;
+                      p?: string;
+                      standard_deviation?: string;
+                      upper?: string;
+                    };
+                    point?: string;
+                    points?: Array<{ x: string; y: string }>;
+                    right?: string;
+                    right_matrix?: Array<Array<string>>;
+                    upper?: string;
+                    upperInclusive?: boolean;
+                    values?: Array<string>;
+                    variable?: string;
+                    variables?: Array<string>;
+                    vector?: Array<string>;
+                  };
+                  kind:
+                    | "apart"
+                    | "cancel"
+                    | "circle"
+                    | "combination"
+                    | "compare"
+                    | "cumulative_probability"
+                    | "determinant"
+                    | "differentiate"
+                    | "distance"
+                    | "distribution"
+                    | "domain"
+                    | "eigen_analysis"
+                    | "eigenvalues"
+                    | "eigenvectors"
+                    | "evaluate"
+                    | "expected_value"
+                    | "expand"
+                    | "factor"
+                    | "gcd"
+                    | "integrate"
+                    | "intersection"
+                    | "inverse"
+                    | "interval_probability"
+                    | "is_prime"
+                    | "lcm"
+                    | "limit"
+                    | "line"
+                    | "linear_system"
+                    | "matrix_multiply"
+                    | "mean"
+                    | "median"
+                    | "midpoint"
+                    | "mode"
+                    | "modular"
+                    | "permutation"
+                    | "point_probability"
+                    | "prime_factorization"
+                    | "product"
+                    | "quartiles"
+                    | "rank"
+                    | "rationalize"
+                    | "roots"
+                    | "rref"
+                    | "series"
+                    | "simplify"
+                    | "slope"
+                    | "solve"
+                    | "standard_deviation"
+                    | "summation"
+                    | "tail_probability"
+                    | "together"
+                    | "variance"
+                    | "variance_probability"
+                    | "z_score";
+                  status: "error";
+                };
+            dataMathId?: string;
+            dataNakafaData?:
+              | {
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  result: {
+                    count: number;
+                    has_more: boolean;
+                    items: Array<{
+                      alignmentId: string;
+                      assetId: string;
+                      conceptId: string;
+                      content_id: string;
+                      description: string;
+                      excerpt: string;
+                      learningObjectId: string;
+                      lensId: string;
+                      locale: "en" | "id" | "de";
+                      markdown_url?: string;
+                      route: string;
+                      section: "articles" | "material" | "tryout" | "quran";
+                      title: string;
+                      url: string;
+                    }>;
+                    limit: number;
+                    next_offset?: number;
+                    offset: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: {
+                    limit: number;
+                    locale: "en" | "id" | "de";
+                    offset: number;
+                    queries?: Array<string>;
+                    section?: "articles" | "material" | "tryout" | "quran";
+                  };
+                  kind: "search";
+                  status: "error";
+                }
+              | {
+                  input: { content_ref: string };
+                  kind: "content";
+                  status: "loading";
+                }
+              | {
+                  input: { content_ref: string };
+                  kind: "content";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    description?: string;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en" | "id" | "de";
+                    markdown_url?: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    title: string;
+                    url: string;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: { content_ref: string };
+                  kind: "content";
+                  status: "error";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  status: "loading";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en";
+                    markdown_url?: string;
+                    meaning: { locale: "en" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "id";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "id";
+                    markdown_url?: string;
+                    meaning: { locale: "id" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "de";
+                    markdown_url?: string;
+                    meaning: { locale: "de" | "en"; text: string };
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  result: {
+                    alignmentId: string;
+                    assetId: string;
+                    conceptId: string;
+                    content_id: string;
+                    from_verse: number;
+                    learningObjectId: string;
+                    lensId: string;
+                    locale: "en" | "id" | "de";
+                    markdown_url?: string;
+                    name: string;
+                    revelation: string;
+                    route: string;
+                    section: "articles" | "material" | "tryout" | "quran";
+                    to_verse: number;
+                    translation: string;
+                    url: string;
+                    verse_count: number;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: {
+                    from_verse: number;
+                    include_tafsir: boolean;
+                    locale: "en" | "id" | "de";
+                    surah: number;
+                    to_verse?: number;
+                  };
+                  kind: "quran";
+                  status: "error";
+                }
+              | {
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  status: "loading";
+                }
+              | {
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  result: {
+                    content_counts: Array<{
+                      count: number;
+                      locale: "en" | "id" | "de";
+                    }>;
+                    locale: "en" | "id" | "de";
+                    sections: Array<
+                      "articles" | "material" | "tryout" | "quran"
+                    >;
+                    tools: Array<string>;
+                  };
+                  status: "done";
+                }
+              | {
+                  error: string;
+                  input: { locale: "en" | "id" | "de" };
+                  kind: "taxonomy";
+                  status: "error";
+                };
+            dataNakafaId?: string;
+            dataScrapeUrlContent?: string;
+            dataScrapeUrlDescription?: string;
+            dataScrapeUrlError?: string;
+            dataScrapeUrlFavicon?: string;
+            dataScrapeUrlId?: string;
+            dataScrapeUrlStatus?: "loading" | "done" | "error";
+            dataScrapeUrlTitle?: string;
+            dataScrapeUrlUrl?: string;
+            dataSuggestionsData?: Array<string>;
+            dataSuggestionsId?: string;
+            dataWebSearchError?: string;
+            dataWebSearchId?: string;
+            dataWebSearchProvider?: "firecrawl" | "google";
+            dataWebSearchQueries?: Array<string>;
+            dataWebSearchSources?: Array<{
+              citation: string;
+              content: string;
+              description: string;
+              title: string;
+              url: string;
+            }>;
+            dataWebSearchStatus?: "loading" | "done" | "error";
+            fileFilename?: string;
+            fileMediaType?: string;
+            fileUrl?: string;
+            messageId?: Id<"messages">;
+            order: number;
+            providerMetadata?: Record<string, Record<string, string>>;
+            reasoningState?: "streaming" | "done";
+            reasoningText?: string;
+            textState?: "streaming" | "done";
+            textText?: string;
+            toolCallProviderMetadata?: Record<string, Record<string, string>>;
+            toolDeepResearchInput?: {
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+              sourceRequirements: Array<string>;
+            };
+            toolDeepResearchOutput?: string;
+            toolErrorText?: string;
+            toolMathInput?: {
+              given: Array<string>;
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+            };
+            toolMathOutput?: string;
+            toolNakafaInput?: {
+              deliverables: Array<string>;
+              objective: string;
+              request: string;
+              requirements?: Array<string>;
+            };
+            toolNakafaOutput?: string;
+            toolResultProviderMetadata?: Record<string, Record<string, string>>;
+            toolState?:
+              | "input-streaming"
+              | "input-available"
+              | "output-available"
+              | "output-error";
+            toolToolCallId?: string;
+            type:
+              | "text"
+              | "reasoning"
+              | "file"
+              | "step-start"
+              | "tool-nakafa"
+              | "tool-deepResearch"
+              | "tool-math"
+              | "data-suggestions"
+              | "data-nakafa"
+              | "data-math"
+              | "data-scrape-url"
+              | "data-web-search";
+          }>;
+          userId: Id<"users">;
+        },
+        null | {
+          credits: number;
+          messageId: Id<"messages">;
+          newBalance: number;
+          partIds: Array<Id<"messageParts">>;
+        }
+      >;
+    };
+    traces: {
+      mutations: {
+        deleteExpiredBatch: FunctionReference<
+          "mutation",
+          "internal",
+          { now: number },
+          { deleted: number; hasMore: boolean }
+        >;
+        sweepExpired: FunctionReference<
+          "mutation",
+          "internal",
+          {},
+          { deleted: number; hasMore: boolean }
+        >;
+      };
+    };
+  };
+  classes: {
+    forums: {
+      attachments: {
+        upload: {
+          claim: FunctionReference<
+            "mutation",
+            "internal",
+            { leaseId: string; uploadId: string; uploadToken: string },
+            boolean
+          >;
+          release: FunctionReference<
+            "mutation",
+            "internal",
+            { leaseId: string; uploadId: string },
+            null
+          >;
+          settle: FunctionReference<
+            "mutation",
+            "internal",
+            {
+              contentType: string;
+              leaseId: string;
+              size: number;
+              storageId: Id<"_storage">;
+              uploadId: string;
+              uploadToken: string;
+            },
+            "accepted" | "discarded" | "rejected"
+          >;
+        };
+      };
+      internalMutations: {
+        deleteExpiredPendingUpload: FunctionReference<
+          "mutation",
+          "internal",
+          { uploadId: Id<"schoolClassForumPendingUploads"> },
+          null
+        >;
+      };
+    };
+    materials: {
+      mutations: {
+        publishMaterialGroup: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            groupId: Id<"schoolClassMaterialGroups">;
+            publishedBy: Id<"users">;
+          },
+          null
+        >;
+      };
+    };
+  };
+  contentRelease: {
+    accept: {
+      accept: FunctionReference<
+        "mutation",
+        "internal",
+        { recoveryId: string; releaseId: string },
+        {
+          complete: boolean;
+          processedItems: number;
+          releaseId: string;
+          totalItems: number;
+        }
+      >;
+    };
+    activate: {
+      activate: FunctionReference<
+        "mutation",
+        "internal",
+        { manifestHash: string; releaseId: string; rendererJson: string },
+        | {
+            kind: "activated";
+            receipt: {
+              activatedHeads: number;
+              activeAppLocales: Array<"en" | "id" | "de">;
+              deletedHeads: number;
+              manifestHash: string;
+              projectionDigest: string;
+              releaseId: string;
+              resultCount: number;
+              resultDigest: string;
+              routeDigest: string;
+              snapshots: {
+                program: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                quran: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                tryout: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+              };
+              stagedArtifacts: number;
+              stagedItems: number;
+              stagedProjections: number;
+              stagedRoutes: number;
+              stagedSnapshotRows: number;
+            };
+          }
+        | {
+            kind: "completed";
+            receipt: {
+              activatedHeads: number;
+              activeAppLocales: Array<"en" | "id" | "de">;
+              deletedHeads: number;
+              manifestHash: string;
+              projectionDigest: string;
+              releaseId: string;
+              resultCount: number;
+              resultDigest: string;
+              routeDigest: string;
+              snapshots: {
+                program: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                quran: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                tryout: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+              };
+              stagedArtifacts: number;
+              stagedItems: number;
+              stagedProjections: number;
+              stagedRoutes: number;
+              stagedSnapshotRows: number;
+            };
+          }
+      >;
+      activateRecovery: FunctionReference<
+        "mutation",
+        "internal",
+        { manifestHash: string; releaseId: string; rendererJson: string },
+        | {
+            kind: "activated";
+            receipt: {
+              activatedHeads: number;
+              activeAppLocales: Array<"en" | "id" | "de">;
+              deletedHeads: number;
+              manifestHash: string;
+              projectionDigest: string;
+              releaseId: string;
+              resultCount: number;
+              resultDigest: string;
+              routeDigest: string;
+              snapshots: {
+                program: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                quran: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                tryout: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+              };
+              stagedArtifacts: number;
+              stagedItems: number;
+              stagedProjections: number;
+              stagedRoutes: number;
+              stagedSnapshotRows: number;
+            };
+          }
+        | {
+            kind: "completed";
+            receipt: {
+              activatedHeads: number;
+              activeAppLocales: Array<"en" | "id" | "de">;
+              deletedHeads: number;
+              manifestHash: string;
+              projectionDigest: string;
+              releaseId: string;
+              resultCount: number;
+              resultDigest: string;
+              routeDigest: string;
+              snapshots: {
+                program: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                quran: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                tryout: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+              };
+              stagedArtifacts: number;
+              stagedItems: number;
+              stagedProjections: number;
+              stagedRoutes: number;
+              stagedSnapshotRows: number;
+            };
+          }
+      >;
+      prepare: FunctionReference<
+        "mutation",
+        "internal",
+        { manifestHash: string; releaseId: string; rendererJson: string },
+        { kind: "completed" } | { kind: "prepared" }
+      >;
+      prepareRecovery: FunctionReference<
+        "mutation",
+        "internal",
+        { manifestHash: string; releaseId: string; rendererJson: string },
+        { kind: "completed" } | { kind: "prepared" }
+      >;
+    };
+    article: {
+      internal: {
+        readAgentTaxonomy: FunctionReference<
+          "query",
+          "internal",
+          { appLocale: "en" | "id" | "de" },
+          { categories: Array<string>; managed: boolean }
+        >;
+      };
+    };
+    artifacts: {
+      stageArtifactBatch: FunctionReference<
+        "mutation",
+        "internal",
+        { artifactJson: Array<string>; batchIndex: number; releaseId: string },
+        {
+          batchIndex: number;
+          created: number;
+          releaseId: string;
+          unchanged: number;
+        }
+      >;
+    };
+    cleanup: {
+      cleanup: FunctionReference<
+        "mutation",
+        "internal",
+        { releaseId: string },
+        {
+          complete: boolean;
+          deletedArtifacts: number;
+          releaseId: string;
+          retryAt?: number;
+        }
+      >;
+    };
+    compact: {
+      page: FunctionReference<
+        "mutation",
+        "internal",
+        {},
+        {
+          complete: boolean;
+          deleted: number;
+          floor: number;
+          phase:
+            | "heads"
+            | "bindings"
+            | "items"
+            | "batches"
+            | "artifacts"
+            | "snapshots"
+            | "releases";
+        }
+      >;
+      run: FunctionReference<
+        "action",
+        "internal",
+        {},
+        {
+          complete: boolean;
+          deleted: number;
+          floor: number;
+          phase:
+            | "heads"
+            | "bindings"
+            | "items"
+            | "batches"
+            | "artifacts"
+            | "snapshots"
+            | "releases";
+        }
+      >;
+    };
+    envelope: {
+      byRelease: FunctionReference<
+        "query",
+        "internal",
+        { releaseId: string },
+        {
+          releaseJson: string;
+          rendererJson: string;
+          role: "candidate" | "recovery";
+        }
+      >;
+      get: FunctionReference<
+        "query",
+        "internal",
+        { manifestHash: string; releaseId: string },
+        { releaseJson: string; rendererJson: string }
+      >;
+    };
+    heads: {
+      page: FunctionReference<
+        "query",
+        "internal",
+        {
+          activeManifestHash: string;
+          activeReleaseId: string;
+          cursor: string | null;
+          family: "article" | "material" | "page" | "question";
+          limit: number;
+        },
+        {
+          activeManifestHash: string;
+          activeReleaseId: string;
+          cursor: string | null;
+          done: boolean;
+          family: "article" | "material" | "page" | "question";
+          heads: Array<{
+            artifactHash: string;
+            artifactLocale: "en" | "id" | "de";
+            compilerConfigHash: string;
+            contentKey: string;
+            delivery: "public" | "authenticated" | "entitled";
+            family: "article" | "material" | "page" | "question";
+            projectionHash: string;
+            publicPath?: string;
+            rendererDomain:
+              | "ai-ds"
+              | "biology"
+              | "chemistry"
+              | "mathematics"
+              | "physics"
+              | "politics"
+              | "site"
+              | "snbt-general"
+              | "snbt-math"
+              | "snbt-plain"
+              | "snbt-quant"
+              | "tka-math";
+            sourceHash: string;
+            sourcePath: string;
+          }>;
+          nextCursor: string | null;
+        }
+      >;
+    };
+    ingress: {
+      dispatch: {
+        dispatch: FunctionReference<
+          "action",
+          "internal",
+          { byteLength: number; source: string },
+          { body: string; status: number }
+        >;
+      };
+    };
+    items: {
+      stageItemBatch: FunctionReference<
+        "mutation",
+        "internal",
+        { batchIndex: number; itemJson: Array<string>; releaseId: string },
+        {
+          batchIndex: number;
+          created: number;
+          releaseId: string;
+          unchanged: number;
+        }
+      >;
+      stageProjectionBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          batchIndex: number;
+          projectionJson: Array<string>;
+          releaseId: string;
+        },
+        {
+          batchIndex: number;
+          created: number;
+          releaseId: string;
+          unchanged: number;
+        }
+      >;
+      stageRollbackProjectionBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          batchIndex: number;
+          projectionJson: Array<string>;
+          releaseId: string;
+        },
+        {
+          batchIndex: number;
+          created: number;
+          releaseId: string;
+          unchanged: number;
+        }
+      >;
+    };
+    manifest: {
+      abort: FunctionReference<
+        "mutation",
+        "internal",
+        { releaseId: string },
+        {
+          complete: boolean;
+          processedItems: number;
+          releaseId: string;
+          totalItems: number;
+        }
+      >;
+      stageRecovery: FunctionReference<
+        "mutation",
+        "internal",
+        { releaseJson: string; rendererJson: string },
+        | {
+            manifestHash: string;
+            phase:
+              | "missing"
+              | "staging"
+              | "verifying"
+              | "verified"
+              | "aborting"
+              | "aborted";
+            releaseId: string;
+          }
+        | {
+            manifestHash: string;
+            phase: "completed";
+            receipt: {
+              activatedHeads: number;
+              activeAppLocales: Array<"en" | "id" | "de">;
+              deletedHeads: number;
+              manifestHash: string;
+              projectionDigest: string;
+              releaseId: string;
+              resultCount: number;
+              resultDigest: string;
+              routeDigest: string;
+              snapshots: {
+                program: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                quran: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                tryout: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+              };
+              stagedArtifacts: number;
+              stagedItems: number;
+              stagedProjections: number;
+              stagedRoutes: number;
+              stagedSnapshotRows: number;
+            };
+            releaseId: string;
+          }
+      >;
+      stageRelease: FunctionReference<
+        "mutation",
+        "internal",
+        { releaseJson: string; rendererJson: string },
+        | {
+            manifestHash: string;
+            phase:
+              | "missing"
+              | "staging"
+              | "verifying"
+              | "verified"
+              | "aborting"
+              | "aborted";
+            releaseId: string;
+          }
+        | {
+            manifestHash: string;
+            phase: "completed";
+            receipt: {
+              activatedHeads: number;
+              activeAppLocales: Array<"en" | "id" | "de">;
+              deletedHeads: number;
+              manifestHash: string;
+              projectionDigest: string;
+              releaseId: string;
+              resultCount: number;
+              resultDigest: string;
+              routeDigest: string;
+              snapshots: {
+                program: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                quran: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                tryout: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+              };
+              stagedArtifacts: number;
+              stagedItems: number;
+              stagedProjections: number;
+              stagedRoutes: number;
+              stagedSnapshotRows: number;
+            };
+            releaseId: string;
+          }
+      >;
+    };
+    models: {
+      restart: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          expectedGeneration: number;
+          expectedJobId: Id<"_scheduled_functions">;
+          releaseId: string;
+        },
+        | {
+            status: "restarted";
+            syncGeneration: number;
+            syncJobId: Id<"_scheduled_functions">;
+          }
+        | { status: "stale" }
+      >;
+      resume: FunctionReference<
+        "mutation",
+        "internal",
+        { generation: number; releaseId: string },
+        null
+      >;
+      status: FunctionReference<
+        "query",
+        "internal",
+        { releaseId: string },
+        | { phase: "completed"; releaseId: string }
+        | { phase: "ready"; releaseId: string }
+        | {
+            phase: "building" | "failed";
+            releaseId: string;
+            syncGeneration: number;
+            syncJobId: Id<"_scheduled_functions">;
+          }
+      >;
+    };
+    proof: {
+      catalog: {
+        page: FunctionReference<
+          "query",
+          "internal",
+          {
+            cursor: {
+              artifactLocale: "en" | "id" | "de";
+              contentKey: string;
+            } | null;
+            releaseId: string;
+          },
+          {
+            done: boolean;
+            heads: Array<{
+              artifactHash: string;
+              artifactLocale: "en" | "id" | "de";
+              compilerConfigHash: string;
+              contentKey: string;
+              delivery: "public" | "authenticated" | "entitled";
+              family: "article" | "material" | "page" | "question";
+              projectionHash: string;
+              publicPath?: string;
+              rendererDomain:
+                | "ai-ds"
+                | "biology"
+                | "chemistry"
+                | "mathematics"
+                | "physics"
+                | "politics"
+                | "site"
+                | "snbt-general"
+                | "snbt-math"
+                | "snbt-plain"
+                | "snbt-quant"
+                | "tka-math";
+              sourceHash: string;
+              sourcePath: string;
+            }>;
+            nextCursor: {
+              artifactLocale: "en" | "id" | "de";
+              contentKey: string;
+            } | null;
+          }
+        >;
+      };
+      commit: {
+        commitProof: FunctionReference<
+          "mutation",
+          "internal",
+          { proofJson: string },
+          | {
+              manifestHash: string;
+              phase:
+                | "missing"
+                | "staging"
+                | "verifying"
+                | "verified"
+                | "aborting"
+                | "aborted";
+              releaseId: string;
+            }
+          | {
+              manifestHash: string;
+              phase: "completed";
+              receipt: {
+                activatedHeads: number;
+                activeAppLocales: Array<"en" | "id" | "de">;
+                deletedHeads: number;
+                manifestHash: string;
+                projectionDigest: string;
+                releaseId: string;
+                resultCount: number;
+                resultDigest: string;
+                routeDigest: string;
+                snapshots: {
+                  program: {
+                    baseSnapshotId: string | null;
+                    mode: "inherit" | "replace" | "restore";
+                    resultSnapshotId: string | null;
+                    rowCount: number;
+                    rowDigest: string;
+                  };
+                  quran: {
+                    baseSnapshotId: string | null;
+                    mode: "inherit" | "replace" | "restore";
+                    resultSnapshotId: string | null;
+                    rowCount: number;
+                    rowDigest: string;
+                  };
+                  tryout: {
+                    baseSnapshotId: string | null;
+                    mode: "inherit" | "replace" | "restore";
+                    resultSnapshotId: string | null;
+                    rowCount: number;
+                    rowDigest: string;
+                  };
+                };
+                stagedArtifacts: number;
+                stagedItems: number;
+                stagedProjections: number;
+                stagedRoutes: number;
+                stagedSnapshotRows: number;
+              };
+              releaseId: string;
+            }
+        >;
+      };
+      poll: {
+        poll: FunctionReference<
+          "mutation",
+          "internal",
+          { manifestHash: string; releaseId: string },
+          | { phase: "verifying" }
+          | { phase: "verified"; proofJson: string }
+          | { phase: "failed"; reason: "canceled" | "failed" }
+        >;
+      };
+      read: {
+        artifactBatch: FunctionReference<
+          "query",
+          "internal",
+          { batchIndex: number; releaseId: string },
+          {
+            batchIndex: number;
+            rows: Array<{
+              artifactJson: string;
+              index: number;
+              itemJson: string;
+            }>;
+          }
+        >;
+        artifactPlan: FunctionReference<
+          "query",
+          "internal",
+          { manifestHash: string; releaseId: string },
+          { batchCount: number; stagedArtifacts: number }
+        >;
+        page: FunctionReference<
+          "query",
+          "internal",
+          { afterIndex: number; releaseId: string },
+          {
+            done: boolean;
+            nextIndex: number;
+            rows: Array<{
+              index: number;
+              itemJson: string;
+              projectionJson?: string;
+              rollbackJson: string;
+            }>;
+          }
+        >;
+        routePage: FunctionReference<
+          "query",
+          "internal",
+          { afterIndex: number; releaseId: string },
+          {
+            done: boolean;
+            nextIndex: number;
+            rows: Array<{ index: number; routeJson: string }>;
+          }
+        >;
+        state: FunctionReference<
+          "query",
+          "internal",
+          { manifestHash: string; releaseId: string },
+          {
+            checkedIndex: number;
+            releaseJson: string;
+            rendererJson: string;
+            role: "candidate" | "recovery";
+            stagedArtifacts: number;
+            stagedDeletes: number;
+            stagedItems: number;
+            stagedProjections: number;
+            stagedRoutes: number;
+            stagedSnapshotBatches: number;
+            stagedSnapshotRows: number;
+            stagedUpserts: number;
+            status: "verifying" | "verified";
+          }
+        >;
+      };
+      routes: {
+        routes: FunctionReference<
+          "query",
+          "internal",
+          { cursor: string | null; releaseId: string },
+          { checked: number; done: boolean; nextCursor: string | null }
+        >;
+      };
+      verify: {
+        verifyArtifacts: FunctionReference<
+          "action",
+          "internal",
+          { batchIndex: number; manifestHash: string; releaseId: string },
+          { batchIndex: number; verifiedArtifacts: number }
+        >;
+        verifyRelease: FunctionReference<
+          "action",
+          "internal",
+          {
+            manifestHash: string;
+            releaseId: string;
+            verifiedArtifacts: number;
+          },
+          null
+        >;
+      };
+      workflow: {
+        verifyRelease: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { manifestHash: string; releaseId: string };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+      };
+    };
+    recovery: {
+      lookup: FunctionReference<
+        "query",
+        "internal",
+        { recoveryId: string; releaseId: string },
+        | { kind: "missing" }
+        | {
+            kind: "completed";
+            value: {
+              receipt: {
+                activatedHeads: number;
+                activeAppLocales: Array<"en" | "id" | "de">;
+                deletedHeads: number;
+                manifestHash: string;
+                projectionDigest: string;
+                releaseId: string;
+                resultCount: number;
+                resultDigest: string;
+                routeDigest: string;
+                snapshots: {
+                  program: {
+                    baseSnapshotId: string | null;
+                    mode: "inherit" | "replace" | "restore";
+                    resultSnapshotId: string | null;
+                    rowCount: number;
+                    rowDigest: string;
+                  };
+                  quran: {
+                    baseSnapshotId: string | null;
+                    mode: "inherit" | "replace" | "restore";
+                    resultSnapshotId: string | null;
+                    rowCount: number;
+                    rowDigest: string;
+                  };
+                  tryout: {
+                    baseSnapshotId: string | null;
+                    mode: "inherit" | "replace" | "restore";
+                    resultSnapshotId: string | null;
+                    rowCount: number;
+                    rowDigest: string;
+                  };
+                };
+                stagedArtifacts: number;
+                stagedItems: number;
+                stagedProjections: number;
+                stagedRoutes: number;
+                stagedSnapshotRows: number;
+              };
+              releaseJson: string;
+              rendererJson: string;
+            };
+          }
+      >;
+    };
+    reference: {
+      internal: {
+        readAgentContent: FunctionReference<
+          "query",
+          "internal",
+          {
+            input:
+              | { contentId: string; kind: "content" }
+              | {
+                  appLocale: "en" | "id" | "de";
+                  kind: "route";
+                  publicPath: string;
+                };
+          },
+          | {
+              kind: "reference";
+              reference: {
+                alignmentId: string;
+                assetId: string;
+                conceptId: string;
+                content_id: string;
+                description: string;
+                learningObjectId: string;
+                lensId: string;
+                locale: "en" | "id" | "de";
+                markdown_url?: string;
+                route: string;
+                section: "articles" | "material" | "tryout" | "quran";
+                title: string;
+                url: string;
+              };
+            }
+          | {
+              kind: "quran";
+              markdown: {
+                activeManifestHash: string | null;
+                activeReleaseId: string | null;
+                appLocale: "en" | "id" | "de";
+                managed: boolean;
+                preBismillah: {
+                  arabic: string;
+                  translation: {
+                    notes: Array<{
+                      number: number;
+                      referenceOffset: number;
+                      text: string;
+                    }>;
+                    segments: Array<
+                      | { kind: "text"; offset: number; value: string }
+                      | { kind: "note"; number: number; offset: number }
+                    >;
+                  };
+                } | null;
+                snapshotId: string | null;
+                sourceOrigin:
+                  | { kind: "git"; sha: string }
+                  | { kind: "rollback"; releaseId: string }
+                  | null;
+                sourceRevision: string | null;
+                sources:
+                  | {
+                      arabic: {
+                        artifact: {
+                          byteCount: number;
+                          digest: string;
+                          fileCount: number;
+                        };
+                        id: "tanzil-text";
+                        kind: "embedded";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: {
+                          artifact: {
+                            byteCount: number;
+                            digest: string;
+                            fileCount: number;
+                          };
+                          url: string;
+                        };
+                        updateUrl: string;
+                        version: string;
+                      };
+                      translation: {
+                        artifact: {
+                          byteCount: number;
+                          digest: string;
+                          fileCount: number;
+                        };
+                        id: "quranenc-english";
+                        kind: "embedded";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: {
+                          artifact: {
+                            byteCount: number;
+                            digest: string;
+                            fileCount: number;
+                          };
+                          url: string;
+                        };
+                        updateUrl: string;
+                        version: string;
+                      };
+                    }
+                  | {
+                      arabic: {
+                        artifact: {
+                          byteCount: number;
+                          digest: string;
+                          fileCount: number;
+                        };
+                        id: "tanzil-text";
+                        kind: "embedded";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: {
+                          artifact: {
+                            byteCount: number;
+                            digest: string;
+                            fileCount: number;
+                          };
+                          url: string;
+                        };
+                        updateUrl: string;
+                        version: string;
+                      };
+                      translation: {
+                        artifact: {
+                          byteCount: number;
+                          digest: string;
+                          fileCount: number;
+                        };
+                        id: "quranenc-indonesian";
+                        kind: "embedded";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: {
+                          artifact: {
+                            byteCount: number;
+                            digest: string;
+                            fileCount: number;
+                          };
+                          url: string;
+                        };
+                        updateUrl: string;
+                        version: string;
+                      };
+                    }
+                  | {
+                      arabic: {
+                        artifact: {
+                          byteCount: number;
+                          digest: string;
+                          fileCount: number;
+                        };
+                        id: "tanzil-text";
+                        kind: "embedded";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: {
+                          artifact: {
+                            byteCount: number;
+                            digest: string;
+                            fileCount: number;
+                          };
+                          url: string;
+                        };
+                        updateUrl: string;
+                        version: string;
+                      };
+                      translation: {
+                        artifact: {
+                          byteCount: number;
+                          digest: string;
+                          fileCount: number;
+                        };
+                        id: "quranenc-german";
+                        kind: "embedded";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: {
+                          artifact: {
+                            byteCount: number;
+                            digest: string;
+                            fileCount: number;
+                          };
+                          url: string;
+                        };
+                        updateUrl: string;
+                        version: string;
+                      };
+                    }
+                  | null;
+                surah: {
+                  name: {
+                    sourceMeaning:
+                      | { de: string; en: string; id: string }
+                      | { appLocale: "en"; text: string };
+                    transliteration: string;
+                  };
+                  number: number;
+                  numberOfVerses: number;
+                  revelation: { place: "Meccan" | "Medinan" };
+                } | null;
+                tafsirAccess:
+                  | {
+                      appLocale: "id";
+                      kind: "embedded";
+                      notice: string;
+                      source: {
+                        artifact: {
+                          byteCount: number;
+                          digest: string;
+                          fileCount: number;
+                        };
+                        id: "quranenc-tafsir";
+                        kind: "embedded";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: {
+                          artifact: {
+                            byteCount: number;
+                            digest: string;
+                            fileCount: number;
+                          };
+                          url: string;
+                        };
+                        updateUrl: string;
+                        version: string;
+                      };
+                    }
+                  | {
+                      appLocale: "en";
+                      kind: "external";
+                      notice: string;
+                      source: {
+                        id: "mokhtasar-english";
+                        kind: "external";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: { access: "link-only"; url: string };
+                        updateUrl: string;
+                        version: string;
+                      };
+                    }
+                  | {
+                      appLocale: "de";
+                      kind: "external";
+                      notice: string;
+                      source: {
+                        id: "mokhtasar-german";
+                        kind: "external";
+                        label: string;
+                        notice: string;
+                        publisher: string;
+                        retrievedAt: string;
+                        sourceUrl: string;
+                        terms: { access: "link-only"; url: string };
+                        updateUrl: string;
+                        version: string;
+                      };
+                    }
+                  | null;
+                toVerse: number;
+                verses: Array<{
+                  arabic: string;
+                  number: { inSurah: number };
+                  translation: {
+                    notes: Array<{
+                      number: number;
+                      referenceOffset: number;
+                      text: string;
+                    }>;
+                    segments: Array<
+                      | { kind: "text"; offset: number; value: string }
+                      | { kind: "note"; number: number; offset: number }
+                    >;
+                  };
+                }>;
+              };
+              reference: {
+                alignmentId: string;
+                assetId: string;
+                conceptId: string;
+                content_id: string;
+                description: string;
+                learningObjectId: string;
+                lensId: string;
+                locale: "en" | "id" | "de";
+                markdown_url?: string;
+                route: string;
+                section: "articles" | "material" | "tryout" | "quran";
+                title: string;
+                url: string;
+              };
+              surahNumber: number;
+            }
+          | null
+        >;
+      };
+    };
+    rollback: {
+      prepareRollback: FunctionReference<
+        "query",
+        "internal",
+        {
+          afterIndex: number;
+          limit: number;
+          rollbackOf: string;
+          rollbackOfManifestHash: string;
+        },
+        string
+      >;
+      prepareRoutes: FunctionReference<
+        "query",
+        "internal",
+        {
+          afterIndex: number;
+          limit: number;
+          rollbackOf: string;
+          rollbackOfManifestHash: string;
+        },
+        string
+      >;
+    };
+    routes: {
+      stageRouteBatch: FunctionReference<
+        "mutation",
+        "internal",
+        { batchIndex: number; releaseId: string; routeJson: Array<string> },
+        {
+          batchIndex: number;
+          created: number;
+          releaseId: string;
+          unchanged: number;
+        }
+      >;
+    };
+    runtime: {
+      protected: {
+        dispatch: {
+          dispatch: FunctionReference<
+            "action",
+            "internal",
+            { byteLength: number; source: string },
+            { body: string; status: number }
+          >;
+        };
+        internal: {
+          read: FunctionReference<
+            "query",
+            "internal",
+            {
+              bundleHash: string;
+              selectors: Array<{
+                artifactHash: string;
+                contentKey: string;
+                delivery: "authenticated" | "entitled";
+              }>;
+              snapshotId: string;
+            },
+            null | {
+              bundleJson: string;
+              items: Array<{
+                artifactJson: string;
+                delivery: "authenticated" | "entitled";
+                sourcePath: string;
+              }>;
+              rendererJson: string;
+            }
+          >;
+        };
+      };
+      public: {
+        internal: {
+          read: FunctionReference<
+            "query",
+            "internal",
+            { appLocale: "en" | "id" | "de"; publicPath: string },
+            null | {
+              activeManifestHash: string;
+              activeReleaseId: string;
+              artifactJson: string;
+              delivery: "public";
+              projectionHash: string;
+              projectionJson: string;
+              releaseJson: string;
+              rendererJson: string;
+              sourcePath: string;
+            }
+          >;
+          readBatch: FunctionReference<
+            "query",
+            "internal",
+            {
+              requests: Array<{
+                appLocale: "en" | "id" | "de";
+                publicPath: string;
+              }>;
+            },
+            Array<null | {
+              activeManifestHash: string;
+              activeReleaseId: string;
+              artifactJson: string;
+              delivery: "public";
+              projectionHash: string;
+              projectionJson: string;
+              releaseJson: string;
+              rendererJson: string;
+              sourcePath: string;
+            }>
+          >;
+        };
+      };
+    };
+    snapshot: {
+      batch: {
+        stageSnapshotBatch: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            batchIndex: number;
+            family: "program" | "quran" | "tryout";
+            releaseId: string;
+            rowJson: Array<string>;
+            snapshotId: string;
+          },
+          {
+            batchIndex: number;
+            created: number;
+            family: "program" | "quran" | "tryout";
+            releaseId: string;
+            snapshotId: string;
+            unchanged: number;
+          }
+        >;
+      };
+      manifest: {
+        stageSnapshot: FunctionReference<
+          "mutation",
+          "internal",
+          { releaseId: string; snapshotJson: string },
+          {
+            created: 0 | 1;
+            family: "program" | "quran" | "tryout";
+            releaseId: string;
+            snapshotId: string;
+            unchanged: 0 | 1;
+          }
+        >;
+      };
+      read: {
+        manifest: FunctionReference<
+          "query",
+          "internal",
+          { family: "program" | "quran" | "tryout"; releaseId: string },
+          string
+        >;
+        rows: FunctionReference<
+          "query",
+          "internal",
+          {
+            afterBatchIndex: number;
+            family: "program" | "quran" | "tryout";
+            releaseId: string;
+          },
+          {
+            batchIndex: number;
+            done: boolean;
+            firstIndex: number;
+            nextBatchIndex: number;
+            rowJson: Array<string>;
+            snapshotId: string;
+          }
+        >;
+      };
+    };
+    status: {
+      current: FunctionReference<
+        "query",
+        "internal",
+        {},
+        {
+          active: null | {
+            receipt: {
+              activatedHeads: number;
+              activeAppLocales: Array<"en" | "id" | "de">;
+              deletedHeads: number;
+              manifestHash: string;
+              projectionDigest: string;
+              releaseId: string;
+              resultCount: number;
+              resultDigest: string;
+              routeDigest: string;
+              snapshots: {
+                program: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                quran: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                tryout: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+              };
+              stagedArtifacts: number;
+              stagedItems: number;
+              stagedProjections: number;
+              stagedRoutes: number;
+              stagedSnapshotRows: number;
+            };
+            releaseJson: string;
+            rendererJson: string;
+          };
+          candidate: null | {
+            phase: "staging" | "verifying" | "verified" | "aborting";
+            releaseJson: string;
+            rendererJson: string;
+          };
+          recovery: null | {
+            phase: "staging" | "verifying" | "verified" | "aborting";
+            releaseJson: string;
+            rendererJson: string;
+          };
+          tryoutRuntimeBundleJson: string | null;
+        }
+      >;
+      getStatus: FunctionReference<
+        "query",
+        "internal",
+        { manifestHash: string; releaseId: string },
+        | {
+            manifestHash: string;
+            phase:
+              | "missing"
+              | "staging"
+              | "verifying"
+              | "verified"
+              | "aborting"
+              | "aborted";
+            releaseId: string;
+          }
+        | {
+            manifestHash: string;
+            phase: "completed";
+            receipt: {
+              activatedHeads: number;
+              activeAppLocales: Array<"en" | "id" | "de">;
+              deletedHeads: number;
+              manifestHash: string;
+              projectionDigest: string;
+              releaseId: string;
+              resultCount: number;
+              resultDigest: string;
+              routeDigest: string;
+              snapshots: {
+                program: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                quran: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+                tryout: {
+                  baseSnapshotId: string | null;
+                  mode: "inherit" | "replace" | "restore";
+                  resultSnapshotId: string | null;
+                  rowCount: number;
+                  rowDigest: string;
+                };
+              };
+              stagedArtifacts: number;
+              stagedItems: number;
+              stagedProjections: number;
+              stagedRoutes: number;
+              stagedSnapshotRows: number;
+            };
+            releaseId: string;
+          }
+      >;
+    };
+    verify: {
+      verifyItems: FunctionReference<
+        "mutation",
+        "internal",
+        { afterIndex: number; releaseId: string },
+        { done: boolean; nextIndex: number; processed: number }
+      >;
+    };
+  };
+  contents: {
+    mutations: {
+      analytics: {
+        processContentAnalyticsPartition: FunctionReference<
+          "mutation",
+          "internal",
+          { leaseVersion: number; partition: number },
+          {
+            hasMore: boolean;
+            partition: number;
+            processed: number;
+            skipped: boolean;
+          }
+        >;
+        scheduleContentAnalyticsPartition: FunctionReference<
+          "mutation",
+          "internal",
+          { partition: number },
+          { createdPartition: boolean; scheduled: boolean }
+        >;
+        scheduleContentAnalyticsPartitions: FunctionReference<
+          "mutation",
+          "internal",
+          {},
+          { enqueuedPartitions: number }
+        >;
+      };
+      popularity: {
+        expireLearningPopularityWindowPage: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            cursor?: string;
+            day: number;
+            scopeMode: "global" | "placement";
+            windowKey: "1d" | "7d" | "14d" | "30d" | "90d" | "180d" | "365d";
+          },
+          {
+            continueCursor: string;
+            expiredCounters: number;
+            isDone: boolean;
+            removedCounters: number;
+            repairedCounters: number;
+            skipped: boolean;
+          }
+        >;
+        refreshLearningPopularityWindowPage: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            cursor?: string;
+            day: number;
+            scopeMode: "global" | "placement";
+            windowKey: "1d" | "7d" | "14d" | "30d" | "90d" | "180d" | "365d";
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            refreshedCounters: number;
+            removedCounters: number;
+            skipped: boolean;
+          }
+        >;
+        scheduleLearningPopularityExpiries: FunctionReference<
+          "mutation",
+          "internal",
+          {},
+          {
+            expiryWindows: number;
+            repairWindows: number;
+            skippedWindows: number;
+          }
+        >;
+        scheduleLearningPopularityRefreshes: FunctionReference<
+          "mutation",
+          "internal",
+          {},
+          { scheduledWindows: number }
+        >;
+        sweepLearningPopularityRetention: FunctionReference<
+          "mutation",
+          "internal",
+          { day: number },
+          { deleted: number; done: boolean; skipped: boolean }
+        >;
+      };
+    };
+  };
+  credits: {
+    mutations: {
+      syncAllCreditResetPeriods: FunctionReference<
+        "mutation",
+        "internal",
+        {},
+        null
+      >;
+      syncCreditResetPeriod: FunctionReference<
+        "mutation",
+        "internal",
+        { plan: "free" | "pro" },
+        null
+      >;
+    };
+  };
+  customers: {
+    actions: {
+      internal: {
+        cleanupDeletedUserCustomerData: FunctionReference<
+          "action",
+          "internal",
+          { authId: string; userId: Id<"users"> },
+          null
+        >;
+        syncCustomer: FunctionReference<
+          "action",
+          "internal",
+          { userId: Id<"users"> },
+          Id<"customers"> | null
+        >;
+      };
+    };
+    checkout: {
+      admission: {
+        admitCheckoutSession: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            event:
+              | {
+                  name: "content viewed";
+                  properties: {
+                    alignment_id: string;
+                    concept_id: string;
+                    content_id: string;
+                    content_type: "article" | "material" | "question";
+                    context_key: string;
+                    is_new_view: boolean;
+                    learning_object_id: string;
+                    lens_id: string;
+                    locale: "en" | "id" | "de";
+                    route: string;
+                  };
+                }
+              | {
+                  name: "tryout attempt started";
+                  properties: {
+                    access_source:
+                      "free" | "competition" | "access-pass" | "subscription";
+                    attempt_number: number;
+                    country_key: string;
+                    exam_key: string;
+                    locale: "en" | "id" | "de";
+                    score_status: "provisional" | "official";
+                    set_key: string;
+                    track_key: string;
+                  };
+                }
+              | {
+                  name: "tryout attempt completed";
+                  properties: {
+                    attempt_number: number;
+                    country_key: string;
+                    exam_key: string;
+                    locale: "en" | "id" | "de";
+                    score_status: "provisional" | "official";
+                    set_key: string;
+                    total_questions: number;
+                    track_key: string;
+                  };
+                }
+              | {
+                  name: "tryout paywall viewed";
+                  properties: { source: "access-query" | "start-mutation" };
+                }
+              | {
+                  name: "chat message sent";
+                  properties: {
+                    chat_type: "study";
+                    model_id?: "nakafa-lite" | "nakafa-pro";
+                  };
+                }
+              | {
+                  name: "chat response completed";
+                  properties: {
+                    chat_type: "study";
+                    credits?: number;
+                    input_tokens?: number;
+                    model_id?: "nakafa-lite" | "nakafa-pro";
+                    output_tokens?: number;
+                    total_tokens?: number;
+                  };
+                }
+              | {
+                  name: "chat response failed";
+                  properties: {
+                    chat_type: "study";
+                    error_code: "CHAT_RESPONSE_FAILED";
+                    model_id?: "nakafa-lite" | "nakafa-pro";
+                  };
+                }
+              | {
+                  name: "checkout started";
+                  properties: {
+                    checkout_locale: "de" | "en";
+                    customer_ip_available: boolean;
+                    locale: "en" | "id" | "de";
+                    product_count: number;
+                    product_id: string;
+                  };
+                }
+              | {
+                  name: "subscription started";
+                  properties: { product_id: string; status: string };
+                }
+              | {
+                  name: "subscription canceled";
+                  properties: { product_id: string; status: string };
+                }
+              | {
+                  name: "plan changed";
+                  properties: {
+                    new_plan: "free" | "pro";
+                    previous_plan: "free" | "pro";
+                  };
+                };
+            timestamp?: number;
+            userId: Id<"users">;
+          },
+          { kind: "admitted" } | { kind: "unavailable" }
+        >;
+      };
+    };
+    deletion: {
+      cleanup: {
+        cleanupDeletedUserAnalytics: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { userId: Id<"users"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+        cleanupDeletedUserAuth: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { authId: string; userId: Id<"users"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+        cleanupDeletedUserCustomer: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { authId: string; userId: Id<"users"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+        cleanupDeletedUserData: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { userId: Id<"users"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+      };
+      workflow: {
+        finalizeDeletedUserCleanup: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            authId: string;
+            expectedPreparation?: {
+              attemptId: string;
+              preparationId: Id<"accountDeletionPreparations">;
+              recoveryGeneration: number;
+            };
+          },
+          null
+        >;
+        launchDeletedUserCleanup: FunctionReference<
+          "mutation",
+          "internal",
+          { authId: string; userId: Id<"users"> },
+          null
+        >;
+      };
+    };
+    integrity: {
+      internal: {
+        listActiveSubscriptionsForIntegrity: FunctionReference<
+          "query",
+          "internal",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              currentPeriodEnd: string | null;
+              customerId: string;
+              status: string;
+              subscriptionId: string;
+            }>;
+          }
+        >;
+        listCustomersForIntegrity: FunctionReference<
+          "query",
+          "internal",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              externalId: string | null;
+              localCustomerId: Id<"customers">;
+              polarCustomerId: string;
+              userId: Id<"users">;
+            }>;
+          }
+        >;
+        listUsersForCustomerIntegrity: FunctionReference<
+          "query",
+          "internal",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{ authId: string; email: string; userId: Id<"users"> }>;
+          }
+        >;
+      };
+    };
+    mutations: {
+      internal: {
+        completeCustomerDeletionCheckpoint: FunctionReference<
+          "mutation",
+          "internal",
+          { polarCustomerId: string; userId: Id<"users"> },
+          null
+        >;
+        deleteCustomerById: FunctionReference<
+          "mutation",
+          "internal",
+          { id: string },
+          boolean
+        >;
+        recordCustomerDeletionCheckpoint: FunctionReference<
+          "mutation",
+          "internal",
+          { polarCustomerId: string; userId: Id<"users"> },
+          null
+        >;
+        upsertCustomer: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            customer: {
+              externalId: null | string;
+              id: string;
+              metadata?: Record<string, string | number | boolean>;
+              userId: Id<"users">;
+            };
+          },
+          | { customerId: Id<"customers">; kind: "stored" }
+          | { kind: "deleted" }
+          | { kind: "missing" }
+          | { kind: "prepared" }
+        >;
+      };
+    };
+    queries: {
+      internal: {
+        customer: {
+          getCustomerByPolarId: FunctionReference<
+            "query",
+            "internal",
+            { polarCustomerId: string },
+            null | {
+              _creationTime: number;
+              _id: Id<"customers">;
+              externalId: null | string;
+              id: string;
+              metadata?: Record<string, string | number | boolean>;
+              userId: Id<"users">;
+            }
+          >;
+          getCustomerByUserId: FunctionReference<
+            "query",
+            "internal",
+            { userId: Id<"users"> },
+            null | {
+              _creationTime: number;
+              _id: Id<"customers">;
+              externalId: null | string;
+              id: string;
+              metadata?: Record<string, string | number | boolean>;
+              userId: Id<"users">;
+            }
+          >;
+          getCustomerDeletionCheckpoint: FunctionReference<
+            "query",
+            "internal",
+            { userId: Id<"users"> },
+            null | string
+          >;
+          hasActiveSubscriptionByCustomerId: FunctionReference<
+            "query",
+            "internal",
+            { customerId: string },
+            boolean
+          >;
+          resolveWebhookTarget: FunctionReference<
+            "query",
+            "internal",
+            {
+              externalId?: string;
+              metadataUserId?: string;
+              polarCustomerId: string;
+            },
+            | { kind: "active"; userId: Id<"users"> }
+            | { kind: "conflict" }
+            | { kind: "deleted" }
+            | { kind: "missing" }
+            | { kind: "prepared" }
+          >;
+        };
+      };
+    };
+  };
+  emails: {
+    retention: {
+      cleanupRetainedEmailData: FunctionReference<
+        "mutation",
+        "internal",
+        {},
+        null
+      >;
+    };
+    welcome: {
+      delivery: {
+        sendWelcomeEmail: FunctionReference<
+          "action",
+          "internal",
+          { intentId: Id<"welcomeEmailIntents"> },
+          null
+        >;
+      };
+      internal: {
+        enqueueRenderedWelcome: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            html: string;
+            intentId: Id<"welcomeEmailIntents">;
+            subject: string;
+            text: string;
+          },
+          null
+        >;
+        readIntentInput: FunctionReference<
+          "query",
+          "internal",
+          { intentId: Id<"welcomeEmailIntents"> },
+          null | {
+            continueUrl: string;
+            locale: "en" | "id" | "de";
+            privacyPolicyUrl: string;
+            termsOfServiceUrl: string;
+          }
+        >;
+      };
+      reconciliation: {
+        reconcileWelcomeIntentLifecycle: FunctionReference<
+          "mutation",
+          "internal",
+          { cursor: null | string; phase: "scheduled" | "enqueued" },
+          null
+        >;
+      };
+      workflow: {
+        deliverWelcomeEmail: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { intentId: Id<"welcomeEmailIntents"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+      };
+    };
+  };
+  onboarding: {
+    lifecycle: {
+      readLifecyclePage: FunctionReference<
+        "query",
+        "internal",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            dataQuality: {
+              completedWithoutAdmission: number;
+              completedWithoutRole: number;
+              completedWithoutStart: number;
+              startedWithoutAdmission: number;
+            };
+            incomplete: {
+              admittedNotStarted: number;
+              noRecordedAdmission: number;
+              startedNotCompleted: number;
+            };
+            milestones: {
+              admitted: number;
+              completed: number;
+              started: number;
+            };
+            population: { eligible: number; excluded: number; scanned: number };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+  };
+  privacy: {
+    recovery: {
+      cleanupWorkflowStorage: FunctionReference<
+        "mutation",
+        "internal",
+        { source: "account-deletion" | "consent-overlap"; workflowId: string },
+        null
+      >;
+      handleCleanupComplete: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          context: { source: "account-deletion" | "consent-overlap" };
+          result:
+            | { kind: "success"; returnValue: any }
+            | { error: string; kind: "failed" }
+            | { kind: "canceled" };
+          workflowId: string;
+        },
+        null
+      >;
+      retryCleanupWorkflow: FunctionReference<
+        "mutation",
+        "internal",
+        { source: "account-deletion" | "consent-overlap"; workflowId: string },
+        null
+      >;
+    };
+  };
+  subscriptions: {
+    mutations: {
+      createSubscription: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          subscription: {
+            amount: null | number;
+            cancelAtPeriodEnd: boolean;
+            checkoutId: null | string;
+            createdAt: string;
+            currency: null | string;
+            currentPeriodEnd: null | string;
+            currentPeriodStart: string;
+            customerCancellationComment?: null | string;
+            customerCancellationReason?: null | string;
+            customerId: string;
+            endedAt: null | string;
+            id: string;
+            metadata: Record<string, string | number | boolean>;
+            modifiedAt: null | string;
+            priceId?: string;
+            productId: string;
+            recurringInterval: null | "day" | "week" | "month" | "year";
+            schoolId?: string;
+            startedAt: null | string;
+            status: string;
+          };
+        },
+        Id<"subscriptions"> | null
+      >;
+      updateSubscription: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          subscription: {
+            amount: null | number;
+            cancelAtPeriodEnd: boolean;
+            checkoutId: null | string;
+            createdAt: string;
+            currency: null | string;
+            currentPeriodEnd: null | string;
+            currentPeriodStart: string;
+            customerCancellationComment?: null | string;
+            customerCancellationReason?: null | string;
+            customerId: string;
+            endedAt: null | string;
+            id: string;
+            metadata: Record<string, string | number | boolean>;
+            modifiedAt: null | string;
+            priceId?: string;
+            productId: string;
+            recurringInterval: null | "day" | "week" | "month" | "year";
+            schoolId?: string;
+            startedAt: null | string;
+            status: string;
+          };
+        },
+        null
+      >;
+    };
+  };
+  triggers: {
+    chats: {
+      cleanup: {
+        cleanupDeletedChat: FunctionReference<
+          "mutation",
+          "internal",
+          { chatId: Id<"chats"> },
+          null
+        >;
+      };
+    };
+    comments: {
+      cleanup: {
+        cleanupDeletedComment: FunctionReference<
+          "mutation",
+          "internal",
+          { commentId: Id<"comments"> },
+          null
+        >;
+      };
+    };
+    materials: {
+      cleanup: {
+        cleanupDeletedGroup: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            classId: Id<"schoolClasses">;
+            groupId: Id<"schoolClassMaterialGroups">;
+          },
+          null
+        >;
+        cleanupDeletedMaterial: FunctionReference<
+          "mutation",
+          "internal",
+          { materialId: Id<"schoolClassMaterials"> },
+          null
+        >;
+      };
+    };
+    schools: {
+      cleanup: {
+        cleanupDeletedClass: FunctionReference<
+          "mutation",
+          "internal",
+          { classId: Id<"schoolClasses"> },
+          null
+        >;
+        cleanupDeletedForum: FunctionReference<
+          "mutation",
+          "internal",
+          { forumId: Id<"schoolClassForums"> },
+          null
+        >;
+      };
+    };
+  };
+  tryouts: {
+    mutations: {
+      expiry: {
+        attempt: FunctionReference<
+          "mutation",
+          "internal",
+          { attemptId: Id<"tryoutAttempts">; expiresAt: number },
+          null
+        >;
+        reconcileAttempts: FunctionReference<
+          "mutation",
+          "internal",
+          { before: number },
+          null
+        >;
+        reconcileSections: FunctionReference<
+          "mutation",
+          "internal",
+          { before: number; scheduledAttemptIds: Array<Id<"tryoutAttempts">> },
+          null
+        >;
+        section: FunctionReference<
+          "mutation",
+          "internal",
+          { expiresAt: number; sectionAttemptId: Id<"tryoutSectionAttempts"> },
+          null
+        >;
+        sweep: FunctionReference<"mutation", "internal", {}, null>;
+      };
+    };
+    runtime: {
+      signed: {
+        stageTryoutRuntimeBundle: FunctionReference<
+          "mutation",
+          "internal",
+          { bundleJson: string; rendererJson: string },
+          {
+            bundleHash: string;
+            created: 0 | 1;
+            releaseId: string;
+            snapshotId: string;
+            unchanged: 0 | 1;
+          }
+        >;
+      };
+    };
+  };
+  users: {
+    queries: {
+      getUserByAuthId: FunctionReference<
+        "query",
+        "internal",
+        { authId: string },
+        null | {
+          _creationTime: number;
+          _id: Id<"users">;
+          authId: string;
+          authVerificationCleanupCursor?: string;
+          credits: number;
+          creditsResetAt: number;
+          deletedAt?: number;
+          deletionCleanupStartedAt?: number;
+          deletionPreparedAt?: number;
+          email: string;
+          image?: string;
+          name: string;
+          plan: "free" | "pro";
+          role?: "teacher" | "student" | "parent" | "administrator";
+        }
+      >;
+      getUserById: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        null | {
+          _creationTime: number;
+          _id: Id<"users">;
+          authId: string;
+          authVerificationCleanupCursor?: string;
+          credits: number;
+          creditsResetAt: number;
+          deletedAt?: number;
+          deletionCleanupStartedAt?: number;
+          deletionPreparedAt?: number;
+          email: string;
+          image?: string;
+          name: string;
+          plan: "free" | "pro";
+          role?: "teacher" | "student" | "parent" | "administrator";
+        }
+      >;
+    };
+  };
+};
 
 export declare const components: {
   betterAuth: import("@repo/backend/convex/betterAuth/_generated/component.js").ComponentApi<"betterAuth">;

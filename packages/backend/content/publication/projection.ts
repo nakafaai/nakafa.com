@@ -89,15 +89,24 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
   function* (
     head: PublicationRow<"contentHeads">,
     projection: RoutedContentProjection,
-    activeSequence: number
+    activeSequence: number,
+    selectedBinding: Option.Option<PublicationRow<"contentBindings">>
   ) {
-    const binding = Option.getOrNull(
-      yield* (yield* PublicationSource).binding(
-        projection.appLocale,
-        projection.publicPath,
-        activeSequence
-      )
+    const matchingBinding = Option.filter(
+      selectedBinding,
+      (binding) =>
+        binding.appLocale === projection.appLocale &&
+        binding.publicPath === projection.publicPath
     );
+    const binding = Option.isSome(matchingBinding)
+      ? matchingBinding.value
+      : Option.getOrNull(
+          yield* (yield* PublicationSource).binding(
+            projection.appLocale,
+            projection.publicPath,
+            activeSequence
+          )
+        );
     if (
       binding?.operation !== "bind" ||
       binding.contentKey !== head.contentKey
@@ -120,12 +129,13 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
   }
 );
 /** Resolves one exact public projection selected by a frozen sequence. */
-export const resolvePublicProjection = Effect.fn(
-  "contentRelease.resolvePublicProjection"
+const selectPublicProjection = Effect.fn(
+  "contentRelease.selectPublicProjection"
 )(function* (
   contentKey: string,
   artifactLocale: Doc<"contentKeys">["artifactLocale"],
-  sequence: number
+  sequence: number,
+  binding: Option.Option<PublicationRow<"contentBindings">>
 ) {
   const head = Option.getOrNull(
     yield* (yield* PublicationSource).version(
@@ -147,7 +157,12 @@ export const resolvePublicProjection = Effect.fn(
   if (projection.kind === "question-body") {
     return null;
   }
-  const publicPath = yield* resolvePublicPath(head, projection, sequence);
+  const publicPath = yield* resolvePublicPath(
+    head,
+    projection,
+    sequence,
+    binding
+  );
   const projectionHash = yield* hashText(
     "the public content projection",
     canonicalizeContentProjection(projection)
@@ -168,6 +183,7 @@ export const resolvePublicProjection = Effect.fn(
     );
   }
   return {
+    head,
     appLocale: projection.appLocale,
     artifactHash: head.artifactHash,
     artifactLocale: head.artifactLocale,
@@ -183,6 +199,35 @@ export const resolvePublicProjection = Effect.fn(
     sourcePath: head.sourcePath,
   };
 });
+/** Selects a public projection by its stable content identity. */
+export const resolvePublicProjection = Effect.fn(
+  "contentRelease.resolvePublicProjection"
+)(
+  (
+    contentKey: string,
+    artifactLocale: Doc<"contentKeys">["artifactLocale"],
+    sequence: number
+  ) =>
+    selectPublicProjection(contentKey, artifactLocale, sequence, Option.none())
+);
+
+/** Reuses a route binding only after proving it is the canonical binding. */
+export const resolveBoundPublicProjection = Effect.fn(
+  "contentRelease.resolveBoundPublicProjection"
+)(function* (binding: PublicationRow<"contentBindings">, sequence: number) {
+  if (binding.operation !== "bind" || !binding.contentKey) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "The selected public binding lost its content identity."
+    );
+  }
+  return yield* selectPublicProjection(
+    binding.contentKey,
+    binding.appLocale,
+    sequence,
+    Option.some(binding)
+  );
+});
 /** Authenticates one already-loaded version through its frozen publication sequence. */
 export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
   head: PublicationRow<"contentHeads">,
@@ -192,7 +237,12 @@ export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
   const publicPath =
     projection.kind === "question-body"
       ? undefined
-      : yield* resolvePublicPath(head, projection, activeSequence);
+      : yield* resolvePublicPath(
+          head,
+          projection,
+          activeSequence,
+          Option.none()
+        );
   return yield* decodeContentHead(head, publicPath);
 });
 /** Resolves one effective immutable head from a frozen sequence snapshot. */

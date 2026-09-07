@@ -3,7 +3,7 @@ import { resolveArticleRoute } from "@repo/backend/content/article/route";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";
 import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
-import { resolvePublicRoute } from "@repo/backend/content/publication/public";
+import { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
@@ -12,12 +12,18 @@ import { Effect, Option } from "effect";
 /** Reads every locale-specific counterpart for one stable article identity. */
 const readAlternates = Effect.fn("contentRelease.readArticleAlternates")(
   function* (
-    row: PublicationRow<"articleCatalog">,
+    requested: NonNullable<
+      Effect.Success<ReturnType<typeof resolveArticleRoute>>["article"]
+    >,
     activeAppLocales: ActiveAppLocaleList,
     activeSequence: number
   ) {
+    const { row } = requested;
     return yield* Effect.forEach(activeAppLocales, (appLocale) =>
       Effect.gen(function* () {
+        if (appLocale === row.appLocale) {
+          return requested;
+        }
         const source = yield* ArticleSource;
         const alternate = yield* source
           .article(row.slot, row.contentKey, appLocale)
@@ -35,13 +41,12 @@ const readAlternates = Effect.fn("contentRelease.readArticleAlternates")(
 );
 
 /** Resolves one article projection and every active localized counterpart. */
-export const readArticleModel = Effect.fn("contentRelease.readArticleModel")(
+const assembleArticleModel = Effect.fn("contentRelease.assembleArticleModel")(
   function* (
     appLocale: PublicationRow<"articleCatalog">["appLocale"],
-    publicPath: string,
+    route: Effect.Success<ReturnType<typeof resolveArticleRoute>>,
     expectedActiveReleaseId?: string | null
   ) {
-    const route = yield* resolveArticleRoute(appLocale, publicPath);
     yield* requireExpectedActiveRelease(
       route.active,
       expectedActiveReleaseId,
@@ -65,7 +70,7 @@ export const readArticleModel = Effect.fn("contentRelease.readArticleModel")(
       };
     }
     const alternates = yield* readAlternates(
-      route.article.row,
+      route.article,
       route.active.signed.manifest.activeAppLocales,
       route.active.sequence
     );
@@ -78,6 +83,22 @@ export const readArticleModel = Effect.fn("contentRelease.readArticleModel")(
   }
 );
 
+/** Resolves one article projection and every active localized counterpart. */
+export const readArticleModel = Effect.fn("contentRelease.readArticleModel")(
+  function* (
+    appLocale: PublicationRow<"articleCatalog">["appLocale"],
+    publicPath: string,
+    expectedActiveReleaseId?: string | null
+  ) {
+    const route = yield* resolveArticleRoute(appLocale, publicPath);
+    return yield* assembleArticleModel(
+      appLocale,
+      route,
+      expectedActiveReleaseId
+    );
+  }
+);
+
 /** Reads the article shell and signed body in one Convex snapshot. */
 export const readArticleDelivery = Effect.fn(
   "contentRelease.readArticleDelivery"
@@ -85,10 +106,9 @@ export const readArticleDelivery = Effect.fn(
   appLocale: PublicationRow<"articleCatalog">["appLocale"],
   publicPath: string
 ) {
-  const [model, row] = yield* Effect.all([
-    readArticleModel(appLocale, publicPath),
-    resolvePublicRoute(appLocale, publicPath),
-  ]);
-  const runtimeJson = yield* encodePublicDelivery(row, model);
+  const route = yield* resolveArticleRoute(appLocale, publicPath);
+  const model = yield* assembleArticleModel(appLocale, route);
+  const runtime = yield* readSelectedPublicRuntime(route);
+  const runtimeJson = yield* encodePublicDelivery(runtime, model);
   return { model, runtimeJson };
 });
