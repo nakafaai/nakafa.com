@@ -294,3 +294,6 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
     } as const;
   }
 );
+
+/** Temporary retirement seam; remove after predecessor history is absent. */
+export { protectedFloor };
