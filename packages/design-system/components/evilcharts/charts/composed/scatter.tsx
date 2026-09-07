@@ -26,12 +26,6 @@ import {
 } from "react";
 import { Scatter as RechartsScatter } from "recharts";
 
-type ScatterShapeProp = ComponentProps<typeof RechartsScatter>["shape"];
-
-type ScatterActiveShapeProp = ComponentProps<
-  typeof RechartsScatter
->["activeShape"];
-
 interface ScatterProps
   extends Omit<
     ComponentProps<typeof RechartsScatter>,
@@ -56,22 +50,31 @@ export function Scatter({ dataKey, children, ...scatterProps }: ScatterProps) {
 
   const opacity = getOpacity(selectedDataKey, dataKey);
   const chartId = `${id}-scatter`;
-  const { shape, activeShape } = resolveScatterShapes(
-    children,
-    chartId,
-    dataKey,
-    opacity.dot
-  );
+  const { shape, activeShape } = resolveScatterShapes(children);
 
   return (
     <>
       <RechartsScatter
-        activeShape={activeShape}
+        activeShape={
+          <ChartDot
+            chartId={chartId}
+            dataKey={dataKey}
+            fillOpacity={opacity.dot}
+            type={activeShape.variant}
+          />
+        }
         fill={`url(#${getChartSeriesId(chartId, "colors", dataKey)})`}
         isAnimationActive={false}
         legendType="circle"
         name={dataKey}
-        shape={shape}
+        shape={
+          <ChartDot
+            chartId={chartId}
+            dataKey={dataKey}
+            fillOpacity={opacity.dot}
+            type={shape.variant}
+          />
+        }
         {...scatterProps}
       />
       <defs>
@@ -81,29 +84,10 @@ export function Scatter({ dataKey, children, ...scatterProps }: ScatterProps) {
   );
 }
 
-// Pulls <Dot /> and <ActiveDot /> into Recharts Scatter shape slots.
-const resolveScatterShapes = (
-  children: ReactNode,
-  id: string,
-  dataKey: string,
-  dotOpacity: number
-): { shape: ScatterShapeProp; activeShape: ScatterActiveShapeProp } => {
-  let shape: ScatterShapeProp = (
-    <ChartDot
-      chartId={id}
-      dataKey={dataKey}
-      fillOpacity={dotOpacity}
-      type="default"
-    />
-  );
-  let activeShape: ScatterActiveShapeProp = (
-    <ChartDot
-      chartId={id}
-      dataKey={dataKey}
-      fillOpacity={dotOpacity}
-      type="colored-border"
-    />
-  );
+// Reads marker configuration while preserving Scatter's default point styles.
+const resolveScatterShapes = (children: ReactNode) => {
+  let shape: DotProps = { variant: "default" };
+  let activeShape: DotProps = { variant: "colored-border" };
 
   Children.forEach(children, (child) => {
     if (!isValidElement<DotProps>(child)) {
@@ -111,27 +95,11 @@ const resolveScatterShapes = (
     }
 
     if (child.type === Dot) {
-      const { variant } = child.props;
-      shape = (
-        <ChartDot
-          chartId={id}
-          dataKey={dataKey}
-          fillOpacity={dotOpacity}
-          type={variant}
-        />
-      );
+      shape = child.props;
     }
 
     if (child.type === ActiveDot) {
-      const { variant } = child.props;
-      activeShape = (
-        <ChartDot
-          chartId={id}
-          dataKey={dataKey}
-          fillOpacity={dotOpacity}
-          type={variant}
-        />
-      );
+      activeShape = child.props;
     }
   });
 

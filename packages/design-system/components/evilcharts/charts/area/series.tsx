@@ -31,8 +31,6 @@ import { Area as RechartsArea } from "recharts";
 
 const STROKE_WIDTH = 0.8;
 const STACK_ID = "evil-stacked";
-type AreaDotProp = ComponentProps<typeof RechartsArea>["dot"];
-type AreaActiveDotProp = ComponentProps<typeof RechartsArea>["activeDot"];
 type StrokeVariant = "solid" | "dashed" | "animated-dashed";
 
 interface AreaProps {
@@ -99,13 +97,7 @@ export function Area({
   const showUnselected = hasSelection && !isSelected;
   const colorsCount = getColorsCount(config[dataKey] ?? {});
 
-  const { dot, activeDot } = resolveDots(
-    children,
-    id,
-    dataKey,
-    opacity.dot,
-    maskId
-  );
+  const { dot, activeDot } = resolveDots(children);
 
   const isAnimatedDashed =
     !shouldReduceMotion && strokeVariant === "animated-dashed";
@@ -114,10 +106,33 @@ export function Area({
   return (
     <>
       <RechartsArea
-        activeDot={activeDot}
+        activeDot={
+          activeDot ? (
+            <ChartDot
+              chartId={id}
+              dataKey={dataKey}
+              fillOpacity={opacity.dot}
+              type={activeDot.variant}
+            />
+          ) : (
+            false
+          )
+        }
         connectNulls={connectNulls}
         dataKey={dataKey}
-        dot={dot}
+        dot={
+          dot ? (
+            <ChartDot
+              chartId={id}
+              dataKey={dataKey}
+              fillOpacity={opacity.dot}
+              maskId={maskId}
+              type={dot.variant}
+            />
+          ) : (
+            false
+          )
+        }
         fill={getFillPattern(variant, showUnselected, id)}
         fillOpacity={opacity.fill}
         // Recharts' built-in area animation is permanently disabled ; it drew
@@ -200,19 +215,10 @@ const getFillPattern = (
   return `url(#${id}-${variant})`;
 };
 
-// Pulls <Dot /> and <ActiveDot /> out of an area's children into Recharts dot slots.
-// When a `maskId` is given the resting dot is wired to the intro reveal mask so it
-// wipes in with the line; the active dot is always left unmasked since it only
-// appears on hover, after the intro has finished.
-const resolveDots = (
-  children: ReactNode,
-  id: string,
-  dataKey: string,
-  dotOpacity: number,
-  maskId: string | undefined
-): { dot: AreaDotProp; activeDot: AreaActiveDotProp } => {
-  let dot: AreaDotProp = false;
-  let activeDot: AreaActiveDotProp = false;
+// Reads marker configuration; the series owns the Recharts rendering slots.
+const resolveDots = (children: ReactNode) => {
+  let dot: DotProps | undefined;
+  let activeDot: DotProps | undefined;
 
   Children.forEach(children, (child) => {
     if (!isValidElement<DotProps>(child)) {
@@ -220,28 +226,11 @@ const resolveDots = (
     }
 
     if (child.type === Dot) {
-      const { variant } = child.props;
-      dot = (
-        <ChartDot
-          chartId={id}
-          dataKey={dataKey}
-          fillOpacity={dotOpacity}
-          maskId={maskId}
-          type={variant}
-        />
-      );
+      dot = child.props;
     }
 
     if (child.type === ActiveDot) {
-      const { variant } = child.props;
-      activeDot = (
-        <ChartDot
-          chartId={id}
-          dataKey={dataKey}
-          fillOpacity={dotOpacity}
-          type={variant}
-        />
-      );
+      activeDot = child.props;
     }
   });
 

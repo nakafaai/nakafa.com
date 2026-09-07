@@ -47,44 +47,25 @@ export function ParabolicMovementLab({
     {
       id: "initial-speed",
       label: labels.factLabels.initialSpeed,
-      value: (
-        <InlineMath
-          math={`v_0=${formatSpeedMath(
-            motion.scenario.initialSpeed,
-            decimalSeparator
-          )}`}
-        />
-      ),
+      math: `v_0=${formatSpeedMath(
+        motion.scenario.initialSpeed,
+        decimalSeparator
+      )}`,
     },
     {
       id: "flight-time",
       label: labels.factLabels.flightTime,
-      value: (
-        <InlineMath
-          math={`T=${formatSecondMath(motion.flightTime, decimalSeparator)}`}
-        />
-      ),
+      math: `T=${formatSecondMath(motion.flightTime, decimalSeparator)}`,
     },
     {
       id: "range",
       label: labels.factLabels.range,
-      value: (
-        <InlineMath
-          math={`R=${formatMeterMath(motion.range, decimalSeparator)}`}
-        />
-      ),
+      math: `R=${formatMeterMath(motion.range, decimalSeparator)}`,
     },
     {
       id: "peak-height",
       label: labels.factLabels.peakHeight,
-      value: (
-        <InlineMath
-          math={`h_{\\max}=${formatMeterMath(
-            motion.peakHeight,
-            decimalSeparator
-          )}`}
-        />
-      ),
+      math: `h_{\\max}=${formatMeterMath(motion.peakHeight, decimalSeparator)}`,
     },
   ];
 
@@ -159,7 +140,11 @@ export function ParabolicMovementLab({
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
           {facts.map((fact) => (
-            <LabFact key={fact.id} label={fact.label} value={fact.value} />
+            <LabFact
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
           ))}
         </dl>
       </CardFooter>

@@ -29,6 +29,15 @@ interface Props {
   title?: string;
 }
 
+/** Keeps outline labels on one line while exposing their complete title. */
+function SidebarTreeLabel({ label }: Pick<ParsedHeading, "label">) {
+  return (
+    <span className="truncate" title={label}>
+      {label}
+    </span>
+  );
+}
+
 /**
  * Recursive component to render nested headings
  */
@@ -52,7 +61,7 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
                   // In-page headings use native fragment navigation so an
                   // existing hash never enters the route prefetch cache.
                   <a href={heading.href} title={heading.label}>
-                    {heading.label}
+                    <SidebarTreeLabel label={heading.label} />
                   </a>
                 ) : (
                   <button
@@ -61,14 +70,12 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
                       scrollToIndex(virtualIndex);
                     }}
                     type="button"
-                  />
+                  >
+                    <SidebarTreeLabel label={heading.label} />
+                  </button>
                 )
               }
-            >
-              <span className="truncate" title={heading.label}>
-                {heading.label}
-              </span>
-            </SidebarMenuButton>
+            />
           }
         />
         <TooltipContent

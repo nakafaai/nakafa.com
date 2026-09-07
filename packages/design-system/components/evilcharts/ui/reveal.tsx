@@ -2,6 +2,7 @@
 
 import type { OrderedRevealAnimation } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import { m } from "motion/react";
+import type { ComponentProps, ReactNode } from "react";
 
 const REVEAL_DURATION = 1;
 
@@ -20,6 +21,29 @@ const SINGLE_REVEAL_ORIGIN: Record<
   "right-to-left": 1,
   "center-out": 0.5,
 };
+
+/** Keeps painted geometry together while its reveal is active or static. */
+export function RevealGroup({
+  animation,
+  children,
+  ...props
+}: Pick<ComponentProps<"g">, "className" | "filter" | "opacity"> & {
+  animation: Pick<
+    ComponentProps<typeof m.g>,
+    "animate" | "style" | "transition"
+  > | null;
+  children: ReactNode;
+}) {
+  if (!animation) {
+    return <g {...props}>{children}</g>;
+  }
+
+  return (
+    <m.g {...animation} {...props}>
+      {children}
+    </m.g>
+  );
+}
 
 export const RevealMask = ({
   id,

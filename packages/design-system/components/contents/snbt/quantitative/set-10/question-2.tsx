@@ -34,58 +34,56 @@ export function Graph(
     { x: -LENGTH * Math.cos(ANGLE), y: -LENGTH * Math.sin(ANGLE), z: 0 },
   ];
 
-  const refinedData: ComponentProps<typeof LineEquation>["data"] = [
-    {
-      points: horizontalPointsWithCenter,
-      color: getColor("INDIGO"),
-      showPoints: false,
-      smooth: false,
-      cone: { position: "both", size: 0.5 },
-    },
-    {
-      points: d1PointsWithCenter,
-      color: getColor("INDIGO"),
-      showPoints: false,
-      smooth: false,
-      cone: { position: "both", size: 0.5 },
-      labels: [
-        {
-          text: <InlineMath math="x^\circ" />,
-          at: 1, // Center point
-          offset: [-1.2, 0.4, 0], // Adjusted for x position
-          color: getColor("TEAL"),
-        },
-      ],
-    },
-    {
-      points: d2PointsWithCenter,
-      color: getColor("INDIGO"),
-      showPoints: false,
-      smooth: false,
-      cone: { position: "both", size: 0.5 },
-      labels: [
-        {
-          text: <InlineMath math="y^\circ" />,
-          at: 1, // Center point
-          offset: [1.2, 0.4, 0], // Adjusted for y position
-          fontSize: 0.6,
-          color: getColor("TEAL"),
-        },
-        {
-          text: <InlineMath math="z^\circ" />,
-          at: 1, // Center point
-          offset: [0, -0.8, 0], // Adjusted for z position
-          fontSize: 0.6,
-          color: getColor("TEAL"),
-        },
-      ],
-    },
-  ];
-
   return (
     <LineEquation
       cameraPosition={[0, 0, 10]}
-      data={refinedData}
+      data={[
+        {
+          points: horizontalPointsWithCenter,
+          color: getColor("INDIGO"),
+          showPoints: false,
+          smooth: false,
+          cone: { position: "both", size: 0.5 },
+        },
+        {
+          points: d1PointsWithCenter,
+          color: getColor("INDIGO"),
+          showPoints: false,
+          smooth: false,
+          cone: { position: "both", size: 0.5 },
+          labels: [
+            {
+              text: <InlineMath math="x^\circ" />,
+              at: 1, // Center point
+              offset: [-1.2, 0.4, 0], // Adjusted for x position
+              color: getColor("TEAL"),
+            },
+          ],
+        },
+        {
+          points: d2PointsWithCenter,
+          color: getColor("INDIGO"),
+          showPoints: false,
+          smooth: false,
+          cone: { position: "both", size: 0.5 },
+          labels: [
+            {
+              text: <InlineMath math="y^\circ" />,
+              at: 1, // Center point
+              offset: [1.2, 0.4, 0], // Adjusted for y position
+              fontSize: 0.6,
+              color: getColor("TEAL"),
+            },
+            {
+              text: <InlineMath math="z^\circ" />,
+              at: 1, // Center point
+              offset: [0, -0.8, 0], // Adjusted for z position
+              fontSize: 0.6,
+              color: getColor("TEAL"),
+            },
+          ],
+        },
+      ]}
       showZAxis={false}
       {...props}
     />

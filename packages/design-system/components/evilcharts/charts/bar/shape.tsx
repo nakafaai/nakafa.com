@@ -6,13 +6,15 @@ import {
   getChartColorVariable,
   getChartSeriesId,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
-import { REVEAL_EASE } from "@repo/design-system/components/evilcharts/ui/reveal";
+import {
+  REVEAL_EASE,
+  RevealGroup,
+} from "@repo/design-system/components/evilcharts/ui/reveal";
 import {
   BAR_REVEAL_DURATION_MS,
   BAR_REVEAL_STAGGER_MS,
   getOrderedRevealStep,
 } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
-import { m } from "motion/react";
 import type { KeyboardEvent } from "react";
 import { Rectangle } from "recharts";
 import type { RectRadius } from "recharts/types/shape/Rectangle";
@@ -117,37 +119,6 @@ export const CustomBar = (props: CustomBarProps) => {
     ? [barRadius, barRadius, 0, 0]
     : barRadius;
 
-  // The visible, painted bar, plus the stripped variant's solid top strip
-  const visibleBar = (
-    <>
-      <Rectangle
-        fill={fill}
-        filter={filter}
-        height={Math.max(0, height - 3)}
-        opacity={fillOpacity}
-        radius={radius}
-        stroke={
-          isLastBar
-            ? `url(#${getChartSeriesId(id, "colors", dataKey)})`
-            : undefined
-        }
-        strokeWidth={isLastBar ? 1 : undefined}
-        width={width}
-        x={x}
-        y={y}
-      />
-      {isStripped && (
-        <Rectangle
-          fill={`url(#${getChartSeriesId(id, "colors", dataKey)})`}
-          height={2}
-          radius={1}
-          width={width}
-          x={x}
-          y={y - 4}
-        />
-      )}
-    </>
-  );
   const interactiveProps = onClick
     ? {
         onClick,
@@ -169,17 +140,34 @@ export const CustomBar = (props: CustomBarProps) => {
       {/* Full-height invisible rect keeps the whole column hoverable/clickable */}
       <Rectangle {...props} fill="transparent" />
       {/* The painted bar grows in from its baseline; the hit rect above stays put */}
-      {grow ? (
-        <m.g
-          animate={grow.animate}
-          style={grow.style}
-          transition={grow.transition}
-        >
-          {visibleBar}
-        </m.g>
-      ) : (
-        visibleBar
-      )}
+      <RevealGroup animation={grow}>
+        <Rectangle
+          fill={fill}
+          filter={filter}
+          height={Math.max(0, height - 3)}
+          opacity={fillOpacity}
+          radius={radius}
+          stroke={
+            isLastBar
+              ? `url(#${getChartSeriesId(id, "colors", dataKey)})`
+              : undefined
+          }
+          strokeWidth={isLastBar ? 1 : undefined}
+          width={width}
+          x={x}
+          y={y}
+        />
+        {isStripped && (
+          <Rectangle
+            fill={`url(#${getChartSeriesId(id, "colors", dataKey)})`}
+            height={2}
+            radius={1}
+            width={width}
+            x={x}
+            y={y - 4}
+          />
+        )}
+      </RevealGroup>
     </g>
   );
 };

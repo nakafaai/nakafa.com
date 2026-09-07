@@ -3,13 +3,15 @@
 import type { BarVariant } from "@repo/design-system/components/evilcharts/charts/composed/bars";
 import type { ComposedAnimationType } from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import { getChartColorVariable } from "@repo/design-system/components/evilcharts/ui/chart-config";
-import { REVEAL_EASE } from "@repo/design-system/components/evilcharts/ui/reveal";
+import {
+  REVEAL_EASE,
+  RevealGroup,
+} from "@repo/design-system/components/evilcharts/ui/reveal";
 import {
   BAR_REVEAL_DURATION_MS,
   BAR_REVEAL_STAGGER_MS,
   getOrderedRevealStep,
 } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
-import { m } from "motion/react";
 import type { KeyboardEvent } from "react";
 
 // Custom bar shape
@@ -118,16 +120,6 @@ export const CustomBar = ({
     }
   };
 
-  // Full-height invisible rect, keeps the column hoverable even mid grow-in
-  const hitArea = enableHoverHighlight ? (
-    <rect
-      fill="transparent"
-      height={hitAreaHeight}
-      width={hitAreaWidth}
-      x={hitAreaX}
-      y={hitAreaY}
-    />
-  ) : null;
   const interactiveProps = onClick
     ? {
         onClick,
@@ -144,76 +136,50 @@ export const CustomBar = ({
       }
     : {};
 
-  if (variant === "stripped") {
-    const strippedBar = (
-      <>
-        <rect fill={getFill()} height={height} width={width} x={x} y={y} />
-        <rect
-          fill={`url(#${id}-bar-colors)`}
-          height={2}
-          width={width}
-          x={x}
-          y={y}
-        />
-      </>
-    );
-
-    return (
-      <g {...interactiveProps} style={cursorStyle}>
-        {grow ? (
-          <m.g
-            animate={grow.animate}
-            className="transition-opacity duration-200"
-            filter={filter}
-            opacity={fillOpacity}
-            style={grow.style}
-            transition={grow.transition}
-          >
-            {strippedBar}
-          </m.g>
-        ) : (
-          <g
-            className="transition-opacity duration-200"
-            filter={filter}
-            opacity={fillOpacity}
-          >
-            {strippedBar}
-          </g>
-        )}
-        {hitArea}
-      </g>
-    );
-  }
-
-  const bar = (
-    <rect
-      className="transition-opacity duration-200"
-      fill={getFill()}
-      filter={filter}
-      height={height}
-      opacity={fillOpacity}
-      rx={barRadius}
-      ry={barRadius}
-      width={width}
-      x={x}
-      y={y}
-    />
-  );
-
   return (
     <g {...interactiveProps} style={cursorStyle}>
-      {grow ? (
-        <m.g
-          animate={grow.animate}
-          style={grow.style}
-          transition={grow.transition}
+      {variant === "stripped" ? (
+        <RevealGroup
+          animation={grow}
+          className="transition-opacity duration-200"
+          filter={filter}
+          opacity={fillOpacity}
         >
-          {bar}
-        </m.g>
+          <rect fill={getFill()} height={height} width={width} x={x} y={y} />
+          <rect
+            fill={`url(#${id}-bar-colors)`}
+            height={2}
+            width={width}
+            x={x}
+            y={y}
+          />
+        </RevealGroup>
       ) : (
-        bar
+        <RevealGroup animation={grow}>
+          <rect
+            className="transition-opacity duration-200"
+            fill={getFill()}
+            filter={filter}
+            height={height}
+            opacity={fillOpacity}
+            rx={barRadius}
+            ry={barRadius}
+            width={width}
+            x={x}
+            y={y}
+          />
+        </RevealGroup>
       )}
-      {hitArea}
+      {/* The hit area stays fixed while the visible bar grows. */}
+      {enableHoverHighlight && (
+        <rect
+          fill="transparent"
+          height={hitAreaHeight}
+          width={hitAreaWidth}
+          x={hitAreaX}
+          y={hitAreaY}
+        />
+      )}
     </g>
   );
 };
