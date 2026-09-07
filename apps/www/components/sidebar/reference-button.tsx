@@ -157,7 +157,7 @@ export function ReferenceButton({ references, title }: Props) {
                                   className="size-4 shrink-0"
                                   icon={Book03Icon}
                                 />
-                                <span className="min-w-0 truncate text-sm">
+                                <span className="wrap-anywhere min-w-0 text-sm">
                                   {reference.details}
                                 </span>
                               </div>
