@@ -101,7 +101,7 @@ export function TryoutRuntimeControls({
   return (
     <>
       <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-        <h1 className="min-w-0 truncate font-medium text-sm" title={title}>
+        <h1 className="min-w-0 truncate font-medium text-base" title={title}>
           {title}
         </h1>
         <div className="col-span-2 row-start-2 flex items-center justify-center gap-4 sm:col-span-1 sm:col-start-2 sm:row-start-1">
@@ -109,7 +109,7 @@ export function TryoutRuntimeControls({
           <span aria-hidden="true" className="h-5 w-px shrink-0 bg-border" />
           <output
             aria-label={`${tTryouts("part-questions-label")}: ${runtime.section.answeredCount}/${runtime.section.totalQuestions}`}
-            className="inline-flex font-mono text-sm tabular-nums"
+            className="inline-flex font-mono text-base tabular-nums"
             style={{
               minWidth: `${String(runtime.section.totalQuestions).length * 2 + 3}ch`,
             }}

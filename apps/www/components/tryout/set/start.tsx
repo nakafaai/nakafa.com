@@ -92,13 +92,9 @@ export function StartTryoutButton({
   const resolvingAccess = isLoading || accessLoading || attemptLoading;
   const busy = isPending || resolvingAccess;
   const dialogKind = getTryoutStartDialogKind(access, forceUpgrade);
-  const buttonLabel = getButtonLabel({
-    activeAttempt,
-    dialogKind,
-    finishedAttempt,
-    resolvingAccess,
-    t,
-  });
+  const buttonLabel = activeAttempt
+    ? t("continue-cta")
+    : t(finishedAttempt ? "restart-cta" : "start-cta");
   const authRedirect = `/${request.locale}${request.authRedirectHref}`;
 
   /** Opens the correct decision or continues an already-active runtime. */
@@ -252,21 +248,7 @@ export function StartTryoutButton({
     <>
       <Button disabled={busy} onClick={onStart}>
         <Spinner icon={Rocket01Icon} isLoading={isPending || resolvingAccess} />
-        {/* Reserve intrinsic label width while access resolves. */}
-        <span className="grid">
-          <span className="col-start-1 row-start-1">{buttonLabel}</span>
-          {(
-            ["start-cta", "restart-cta", "free-cta", "continue-cta"] as const
-          ).map((key) => (
-            <span
-              aria-hidden="true"
-              className="invisible col-start-1 row-start-1"
-              key={key}
-            >
-              {t(key)}
-            </span>
-          ))}
-        </span>
+        {buttonLabel}
       </Button>
       <TryoutStartDialog
         busy={isPending}
@@ -286,30 +268,4 @@ export function StartTryoutButton({
       />
     </>
   );
-}
-
-/** Selects the CTA that explains free, included, active, or paid access. */
-function getButtonLabel({
-  activeAttempt,
-  dialogKind,
-  finishedAttempt,
-  resolvingAccess,
-  t,
-}: {
-  activeAttempt: boolean;
-  dialogKind: ReturnType<typeof getTryoutStartDialogKind>;
-  finishedAttempt: boolean;
-  resolvingAccess: boolean;
-  t: ReturnType<typeof useTranslations<"Tryouts">>;
-}) {
-  if (activeAttempt) {
-    return t("continue-cta");
-  }
-  if (resolvingAccess) {
-    return t(finishedAttempt ? "restart-cta" : "start-cta");
-  }
-  if (dialogKind === "free-attempt") {
-    return t("free-cta");
-  }
-  return t(finishedAttempt ? "restart-cta" : "start-cta");
 }

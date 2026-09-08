@@ -20,8 +20,8 @@ export function TryoutPageHeader({
 }) {
   const tCommon = useTranslations("Common");
   return (
-    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
-      <div className="col-span-2 min-w-0 sm:col-span-1">
+    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+      <div className="col-span-2 min-w-0 md:col-span-1">
         <BreadcrumbHeaderPath
           homeLabel={tCommon("home")}
           items={[
@@ -29,10 +29,11 @@ export function TryoutPageHeader({
             ...items,
           ]}
           menuLabel={tCommon("more")}
+          visibleItemCount={1}
         />
       </div>
       <h1
-        className="min-w-0 truncate font-medium text-sm sm:text-center"
+        className="min-w-0 truncate font-medium text-base md:max-w-xs md:text-center"
         title={title}
       >
         {title}
