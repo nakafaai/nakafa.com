@@ -25,7 +25,7 @@ export function TryoutCountdown({ expiresAt }: { expiresAt: number }) {
   return (
     <section className="flex flex-col items-center gap-3 rounded-xl border bg-card p-5 shadow-sm">
       <NumberFormatGroup>
-        <div className="flex items-end justify-center gap-2 sm:gap-3">
+        <div className="items-baseline-last flex justify-center gap-2 sm:gap-3">
           {segments.map((segment, index) => (
             <Fragment key={segment.label}>
               <div className="grid gap-1 text-center">
