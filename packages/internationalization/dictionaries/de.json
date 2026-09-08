@@ -426,7 +426,14 @@
     "complete-part-error": "Dieser Abschnitt konnte noch nicht beendet werden. Versuche es erneut.",
     "back-to-set-cta": "Zurück",
     "slug-description": "Wenn du bereit bist, starte diesen Probetest und wähle den Abschnitt, den du zuerst bearbeiten möchtest.",
-    "question-unit": "Aufgaben"
+    "question-unit": "Aufgaben",
+    "set-column-duration": "Dauer",
+    "set-duration-minutes": "{minutes, number} Min.",
+    "set-sort-duration-ascending": "Kürzeste Dauer",
+    "set-sort-duration-descending": "Längste Dauer",
+    "set-updating": "Wird aktualisiert...",
+    "set-update-error": "Ergebnisse konnten nicht aktualisiert werden.",
+    "set-offline": "Verbindung unterbrochen."
   },
   "Utils": {
     "search": "Suchen",

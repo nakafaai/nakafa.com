@@ -9333,6 +9333,7 @@ export declare const api: {
               attemptStatus: null | "in-progress" | "completed" | "expired";
               countryKey: string;
               description?: string;
+              durationSeconds: number;
               examKey: string;
               publicPath: string;
               publishedScore: number | null;
@@ -9347,7 +9348,9 @@ export declare const api: {
               visibleSectionCount: number;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            snapshotId: string;
             splitCursor?: string | null;
+            viewerId: string | null;
           }
         >;
         list: FunctionReference<
@@ -9356,6 +9359,8 @@ export declare const api: {
           {
             countryKey: string;
             examKey: string;
+            filter?:
+              "all" | "not-started" | "in-progress" | "completed" | "expired";
             locale: "en" | "id" | "de";
             paginationOpts: {
               cursor: string | null;
@@ -9368,7 +9373,11 @@ export declare const api: {
             sort: {
               direction: "asc" | "desc";
               field:
-                "order" | "publishedScore" | "readyQuestionCount" | "title";
+                | "order"
+                | "publishedScore"
+                | "readyQuestionCount"
+                | "durationSeconds"
+                | "title";
             };
             trackKey: string;
           },
@@ -9379,6 +9388,7 @@ export declare const api: {
               attemptStatus: null | "in-progress" | "completed" | "expired";
               countryKey: string;
               description?: string;
+              durationSeconds: number;
               examKey: string;
               publicPath: string;
               publishedScore: number | null;
@@ -9393,7 +9403,9 @@ export declare const api: {
               visibleSectionCount: number;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            snapshotId: string;
             splitCursor?: string | null;
+            viewerId: string | null;
           }
         >;
         unattempted: FunctionReference<
@@ -9420,6 +9432,7 @@ export declare const api: {
               attemptStatus: null | "in-progress" | "completed" | "expired";
               countryKey: string;
               description?: string;
+              durationSeconds: number;
               examKey: string;
               publicPath: string;
               publishedScore: number | null;
@@ -9434,7 +9447,9 @@ export declare const api: {
               visibleSectionCount: number;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            snapshotId: string;
             splitCursor?: string | null;
+            viewerId: string | null;
           }
         >;
       };

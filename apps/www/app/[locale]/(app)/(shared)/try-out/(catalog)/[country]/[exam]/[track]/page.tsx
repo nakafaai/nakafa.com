@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import type { SearchParams } from "nuqs/server";
 import { Suspense } from "react";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
@@ -11,7 +12,7 @@ import {
   readTryoutCountryPage,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/server";
-import { TryoutTrackPageClient } from "@/components/tryout/catalog/track.client";
+import { TryoutTrackTable } from "@/components/tryout/catalog/track";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -38,6 +39,7 @@ export async function generateMetadata({
 
 /** Renders active try-out sets for one exam track. */
 export default function Page(props: {
+  searchParams: Promise<SearchParams>;
   params: Promise<{
     country: string;
     exam: string;
@@ -47,7 +49,10 @@ export default function Page(props: {
 }) {
   return (
     <Suspense fallback={null}>
-      <TryoutTrackRoute params={props.params} />
+      <TryoutTrackRoute
+        params={props.params}
+        searchParams={props.searchParams}
+      />
     </Suspense>
   );
 }
@@ -55,7 +60,9 @@ export default function Page(props: {
 /** Resolves one cached public track inside its route-owned boundary. */
 async function TryoutTrackRoute({
   params,
+  searchParams,
 }: {
+  searchParams: Promise<SearchParams>;
   params: Promise<{
     country: string;
     exam: string;
@@ -113,7 +120,13 @@ async function TryoutTrackRoute({
             title: page.track.title,
           }}
         />
-        <TryoutTrackPageClient locale={locale} page={page} />
+        <Suspense fallback={null}>
+          <TryoutTrackTable
+            locale={locale}
+            page={page}
+            searchParams={searchParams}
+          />
+        </Suspense>
       </LayoutMaterialContent>
     </LayoutMaterial>
   );

@@ -4,13 +4,14 @@ import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
 import { toPublicPublishedSet } from "@repo/backend/content/tryout/published";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
+import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import type { ListArgs } from "@repo/backend/convex/tryouts/sets/spec";
 import { Effect, Schema } from "effect";
 
 const SIGNED_CURSOR_PREFIX = "signed:";
-const SIGNED_PAGE_LIMIT = 100;
 /** One authored set joined with the current user's optional progress. */
 export interface PublishedSetRow {
+  readonly durationSeconds: number;
   readonly progress: Doc<"tryoutSetProgress"> | null;
   readonly set: TryoutSet;
 }
@@ -42,7 +43,8 @@ export const paginatePublishedSets = Effect.fn(
   }
   const revision = yield* identifyRows(rows);
   const offset = yield* decodeCursor(snapshotId, revision, pagination.cursor);
-  const size = Math.min(pagination.numItems, SIGNED_PAGE_LIMIT);
+  // A growing first-page subscription never exceeds the verified whole-catalog ceiling.
+  const size = Math.min(pagination.numItems, TRYOUT_CATALOG_LIMIT);
   const end = Math.min(offset + size, rows.length);
   const page = rows.slice(offset, end).map(projectPublishedSet);
   const isDone = end >= rows.length;
@@ -67,10 +69,15 @@ const identifyRows = Effect.fn("tryouts.sets.identifyPublishedPage")(
     )
 );
 /** Projects one signed set plus optional user progress into the public row. */
-function projectPublishedSet({ progress, set }: PublishedSetRow) {
+function projectPublishedSet({
+  durationSeconds,
+  progress,
+  set,
+}: PublishedSetRow) {
   return {
     ...toPublicPublishedSet(set),
     attemptStatus: progress?.status ?? null,
+    durationSeconds,
     publishedScore: progress?.publishedScore ?? null,
   };
 }

@@ -1,12 +1,18 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
+import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
-import { readPublishedTrackSets } from "@repo/backend/content/tryout/hierarchy";
+import {
+  readPublishedSetSections,
+  readPublishedTrackSets,
+} from "@repo/backend/content/tryout/hierarchy";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { TRYOUT_PROGRESS_IDENTITY_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { isTryoutProgressWithinReadBudget } from "@repo/backend/convex/tryouts/progress/size";
 import {
   type PublishedSetRow,
@@ -14,71 +20,58 @@ import {
 } from "@repo/backend/convex/tryouts/sets/page";
 import type {
   ListArgs,
-  StatusArgs,
   TrackIdentity,
-  UnattemptedArgs,
 } from "@repo/backend/convex/tryouts/sets/spec";
+import { emptySetPage } from "@repo/backend/convex/tryouts/sets/spec";
 import { Effect } from "effect";
 
 type Progress = Doc<"tryoutSetProgress">;
 type User = Doc<"users">;
 
-interface ScoredSet extends PublishedSetRow {
-  readonly progress: Progress & { readonly publishedScore: number };
-}
-
-/** Lists one signed catalog page with optional authenticated progress. */
+/** Resolves one authorized, filtered, sorted page from the signed catalog. */
 export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
-  function* (
-    ctx: QueryCtx,
-    catalog: PublishedCatalog,
-    args: ListArgs,
-    user: User | null
-  ) {
-    const joined = yield* readJoinedSets(ctx, catalog, args, user);
+  function* (ctx: QueryCtx, args: ListArgs) {
+    const [catalog, auth] = yield* Effect.all(
+      [
+        loadTryoutCatalog(args.locale).pipe(
+          Effect.provide(convexTryoutLayer(ctx))
+        ),
+        Effect.promise(() => getOptionalAppUserForRead(ctx)),
+      ],
+      { concurrency: 2 }
+    );
+    const joined = yield* readJoinedSets(
+      ctx,
+      catalog,
+      args,
+      auth?.appUser ?? null
+    );
+    const scope = {
+      snapshotId: catalog.snapshotId,
+      viewerId: auth?.authUser._id ?? null,
+    };
     if (!joined) {
-      return emptyPage();
+      return { ...emptySetPage, ...scope };
     }
-    const sorted = sortJoinedSets(joined, args.sort);
-    return yield* paginatePublishedSets(catalog, args.paginationOpts, sorted);
+    const filter = args.filter ?? "all";
+    const filtered = joined.filter(({ progress }) => {
+      if (filter === "all") {
+        return true;
+      }
+      if (filter === "not-started") {
+        return progress === null;
+      }
+      return progress?.status === filter;
+    });
+    const sorted = sortJoinedSets(filtered, args.sort);
+    const page = yield* paginatePublishedSets(
+      catalog,
+      args.paginationOpts,
+      sorted
+    );
+    return { ...page, ...scope };
   }
 );
-
-/** Lists one exact signed attempt status after joining stable progress rows. */
-export const listPublishedSetsByStatus = Effect.fn(
-  "tryouts.sets.listPublishedByStatus"
-)(function* (
-  ctx: QueryCtx,
-  catalog: PublishedCatalog,
-  args: StatusArgs,
-  user: User
-) {
-  const joined = yield* readJoinedSets(ctx, catalog, args, user);
-  if (!joined) {
-    return emptyPage();
-  }
-  const rows = joined.filter(
-    ({ progress }) => progress?.status === args.status
-  );
-  return yield* paginatePublishedSets(catalog, args.paginationOpts, rows);
-});
-
-/** Lists signed sets without progress for the current optional user. */
-export const listPublishedUnattemptedSets = Effect.fn(
-  "tryouts.sets.listPublishedUnattempted"
-)(function* (
-  ctx: QueryCtx,
-  catalog: PublishedCatalog,
-  args: UnattemptedArgs,
-  user: User | null
-) {
-  const joined = yield* readJoinedSets(ctx, catalog, args, user);
-  if (!joined) {
-    return emptyPage();
-  }
-  const rows = joined.filter(({ progress }) => progress === null);
-  return yield* paginatePublishedSets(catalog, args.paginationOpts, rows);
-});
 
 /** Joins every authored set with at most one stable user progress row. */
 const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
@@ -95,10 +88,20 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
     const progress = user
       ? yield* loadProgress(ctx, found.sets, identity.locale, user)
       : new Map<string, Progress>();
-    return found.sets.map((set) => ({
-      progress: progress.get(tryoutCatalogIdentity(set)) ?? null,
-      set,
-    }));
+    return yield* Effect.forEach(
+      found.sets,
+      Effect.fn("tryouts.sets.projectPublished")(function* (set) {
+        const sections = yield* readPublishedSetSections(found.index, set);
+        return {
+          durationSeconds: sections.reduce(
+            (total, section) => total + section.timeLimitSeconds,
+            0
+          ),
+          progress: progress.get(tryoutCatalogIdentity(set)) ?? null,
+          set,
+        };
+      })
+    );
   }
 );
 
@@ -112,7 +115,7 @@ const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
   const entries = yield* Effect.forEach(
     sets,
     (set) => loadSetProgress(ctx, set, appLocale, user),
-    { concurrency: "unbounded" }
+    { concurrency: 16 }
   );
   const byIdentity = new Map<string, Progress>();
   for (const entry of entries) {
@@ -186,48 +189,44 @@ function sortJoinedSets(
   rows: readonly PublishedSetRow[],
   sort: ListArgs["sort"]
 ) {
-  if (sort.field === "publishedScore") {
-    return sortByScore(rows, sort.direction);
-  }
   const result = [...rows];
   result.sort((left, right) => {
-    let comparison = left.set.order - right.set.order;
-    if (sort.field === "readyQuestionCount") {
-      comparison = left.set.questionCount - right.set.questionCount;
+    const authoredOrder =
+      left.set.order - right.set.order ||
+      tryoutCatalogIdentity(left.set).localeCompare(
+        tryoutCatalogIdentity(right.set)
+      );
+    let comparison = authoredOrder;
+    switch (sort.field) {
+      case "publishedScore": {
+        const leftScore = left.progress?.publishedScore ?? null;
+        const rightScore = right.progress?.publishedScore ?? null;
+        if (leftScore === null && rightScore === null) {
+          return authoredOrder;
+        }
+        if (leftScore === null) {
+          return 1;
+        }
+        if (rightScore === null) {
+          return -1;
+        }
+        comparison = leftScore - rightScore;
+        break;
+      }
+      case "readyQuestionCount":
+        comparison = left.set.questionCount - right.set.questionCount;
+        break;
+      case "durationSeconds":
+        comparison = left.durationSeconds - right.durationSeconds;
+        break;
+      case "title":
+        comparison = left.set.title.localeCompare(right.set.title);
+        break;
+      default:
+        break;
     }
-    if (sort.field === "title") {
-      comparison = left.set.title.localeCompare(right.set.title);
-    }
-    if (comparison === 0) {
-      comparison = left.set.order - right.set.order;
-    }
-    return sort.direction === "desc" ? -comparison : comparison;
+    const directed = sort.direction === "desc" ? -comparison : comparison;
+    return directed || authoredOrder;
   });
   return result;
-}
-
-/** Sorts scored rows first and leaves unscored rows in authored order. */
-function sortByScore(
-  rows: readonly PublishedSetRow[],
-  direction: ListArgs["sort"]["direction"]
-) {
-  const scored = rows.filter(hasPublishedScore);
-  const unscored = rows.filter((row) => !hasPublishedScore(row));
-  scored.sort((left, right) => {
-    const comparison =
-      left.progress.publishedScore - right.progress.publishedScore;
-    return direction === "desc" ? -comparison : comparison;
-  });
-  unscored.sort((left, right) => left.set.order - right.set.order);
-  return [...scored, ...unscored];
-}
-
-/** Narrows one joined row to progress with a real published score. */
-function hasPublishedScore(row: PublishedSetRow): row is ScoredSet {
-  return row.progress !== null && row.progress.publishedScore !== null;
-}
-
-/** Returns the shared empty immutable page shape. */
-function emptyPage() {
-  return { continueCursor: "", isDone: true, page: [] };
 }

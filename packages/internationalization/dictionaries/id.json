@@ -426,7 +426,14 @@
     "complete-part-error": "Bagian belum bisa diselesaikan. Coba lagi ya.",
     "back-to-set-cta": "Kembali",
     "slug-description": "Kalau sudah siap, mulai try out ini lalu pilih bagian yang ingin kamu kerjakan dulu.",
-    "question-unit": "soal"
+    "question-unit": "soal",
+    "set-column-duration": "Durasi",
+    "set-duration-minutes": "{minutes, number} menit",
+    "set-sort-duration-ascending": "Durasi terpendek",
+    "set-sort-duration-descending": "Durasi terpanjang",
+    "set-updating": "Memperbarui...",
+    "set-update-error": "Hasil belum bisa diperbarui.",
+    "set-offline": "Koneksi terputus."
   },
   "Utils": {
     "search": "Cari",

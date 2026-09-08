@@ -40,6 +40,7 @@ import {
   readTryoutSectionAttemptPage,
   readTryoutSectionPage,
   readTryoutSetAttemptPage,
+  readTryoutSetList,
   readTryoutSetPage,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/server";
@@ -155,6 +156,46 @@ describe("immutable try-out application catalog", () => {
             readTryoutCountryPage(locale, "try-out/missing")
           )
         ).toBeNull();
+      })
+  );
+
+  it.effect(
+    "keeps personalized discovery uncached and preserves transport failures",
+    () =>
+      Effect.gen(function* () {
+        const args = {
+          countryKey: "indonesia",
+          examKey: "tka",
+          trackKey: "matematika",
+          locale: "id",
+          filter: "completed",
+          sort: { field: "durationSeconds", direction: "desc" },
+          paginationOpts: { cursor: null, numItems: 25 },
+        } as const;
+        const page = {
+          page: [],
+          isDone: true,
+          continueCursor: "",
+          snapshotId: "signed",
+          viewerId: "viewer",
+        };
+        fetchQueryMock.mockResolvedValue(page);
+        expect(yield* readTryoutSetList("technical-token", args)).toBe(page);
+        expect(fetchQueryMock).toHaveBeenCalledWith(
+          api.tryouts.queries.sets.list,
+          args,
+          {
+            token: "technical-token",
+            url: "https://test.convex.cloud",
+          }
+        );
+        fetchQueryMock.mockRejectedValue(new Error("Transport unavailable"));
+        expect(
+          yield* readTryoutSetList(undefined, args).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "TryoutCatalogReadError",
+          cause: { message: "Transport unavailable" },
+        });
       })
   );
 

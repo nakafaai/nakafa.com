@@ -156,6 +156,23 @@ export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
   );
 }
 
+/** Reads the first personalized catalog result after the framework resolves the session. */
+export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
+  function* (
+    token: string | undefined,
+    args: FunctionArgs<typeof api.tryouts.queries.sets.list>
+  ) {
+    return yield* Effect.tryPromise({
+      catch: (cause) => new TryoutCatalogReadError({ cause }),
+      try: () =>
+        fetchQuery(api.tryouts.queries.sets.list, args, {
+          token,
+          url: env.NEXT_PUBLIC_CONVEX_URL,
+        }),
+    });
+  }
+);
+
 /** Reads one public set page from the tagged content cache. */
 export async function readTryoutSetPage(locale: Locale, publicPath: string) {
   "use cache";
