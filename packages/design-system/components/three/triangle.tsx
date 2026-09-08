@@ -299,13 +299,14 @@ export function Triangle({
           Math.sin(angleInRadians / 2) * angleLabelDistance,
           0,
         ]}
+        visible={angle !== 0}
       >
         <InlineMath math={`${angle}^\\circ`} />
       </ThreeLabel>
 
       {/* Side labels */}
       <ThreeLabel
-        anchorX="center"
+        anchorX={adjacent >= 0 ? "left" : "right"}
         color={COLORS.CYAN}
         fontSize={BASE_FONT_SIZE}
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}

@@ -59,7 +59,7 @@ export function VectorChart({ title, description, vectors }: Props) {
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <CoordinateSystem cameraPosition={[0, 0, 15]}>
+          <CoordinateSystem cameraPosition={[0, 0, 15]} showOrigin={false}>
             {vectors.map((vector, index) => {
               const geometry = Effect.runSync(resolveVectorGeometry(vector));
               const arrow = VECTOR_ARROWS[geometry.direction];
@@ -83,7 +83,7 @@ export function VectorChart({ title, description, vectors }: Props) {
                   />
                   <ThreeLabel
                     anchorX={horizontal === 0 ? "center" : horizontalAnchor}
-                    anchorY={horizontal === 0 ? verticalAnchor : "middle"}
+                    anchorY={verticalAnchor}
                     color={color}
                     fontSize="diagram"
                     gap={0.2}

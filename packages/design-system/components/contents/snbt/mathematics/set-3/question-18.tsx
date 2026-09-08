@@ -201,7 +201,6 @@ export function Graph({ title, description, labels }: GraphProps) {
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

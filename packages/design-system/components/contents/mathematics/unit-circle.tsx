@@ -1,6 +1,7 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   CoordinateControls,
   CoordinateProvider,
@@ -87,29 +88,35 @@ function Content({
       <CardContent>
         <CoordinateSystem
           cameraPosition={[0, 0, CAMERA_Z_POSITION]}
+          cameraProjection={{ kind: "orthographic" }}
           showOrigin={false}
-          showZAxis={false}
         >
-          <UnitCircle3D angle={angleValue} trigValues={exactValues} />
+          <UnitCircle3D angle={angleValue} />
         </CoordinateSystem>
       </CardContent>
       <CoordinateControls>
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
-            <Badge className="font-mono" variant="outline">
-              Sin ({angleValue}°) ={" "}
-              {exactValues?.sin ?? getSin(angleValue).toFixed(2)}
+            <Badge variant="outline">
+              <InlineMath
+                math={`\\sin\\theta ${formatRatio(getSin(angleValue), exactValues?.sin)}`}
+              />
             </Badge>
-            <Badge className="font-mono" variant="outline">
-              Cos ({angleValue}°) ={" "}
-              {exactValues?.cos ?? getCos(angleValue).toFixed(2)}
+            <Badge variant="outline">
+              <InlineMath
+                math={`\\cos\\theta ${formatRatio(getCos(angleValue), exactValues?.cos)}`}
+              />
             </Badge>
-            <Badge className="font-mono" variant="outline">
-              Tan ({angleValue}°) ={" "}
-              {exactValues?.tan ??
-                (Number.isFinite(getTan(angleValue))
-                  ? getTan(angleValue).toFixed(2)
-                  : t("undefined"))}
+            <Badge variant="outline">
+              {Number.isFinite(getTan(angleValue)) ? (
+                <InlineMath
+                  math={`\\tan\\theta ${formatRatio(getTan(angleValue), exactValues?.tan)}`}
+                />
+              ) : (
+                <>
+                  <InlineMath math="\tan\theta" />: {t("undefined")}
+                </>
+              )}
             </Badge>
           </div>
 
@@ -118,7 +125,7 @@ function Content({
           <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
             <div className="flex items-center gap-2">
               <Badge className="font-mono" variant="outline">
-                {angleValue}°
+                <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
               </Badge>
               <Badge className="font-mono" variant="outline">
                 {getRadians(angleValue).toFixed(2)} {t("radian")}
@@ -168,4 +175,28 @@ function Content({
       </CoordinateControls>
     </>
   );
+}
+
+function formatRatio(value: number, exactValue?: string) {
+  if (exactValue !== undefined) {
+    return `= ${exactValue}`;
+  }
+  if (Math.abs(value) < 1e-10) {
+    return "= 0";
+  }
+  const commonValues = [
+    { value: 0.5, display: "\\frac{1}{2}" },
+    { value: Math.SQRT1_2, display: "\\frac{\\sqrt{2}}{2}" },
+    { value: Math.sqrt(3) / 2, display: "\\frac{\\sqrt{3}}{2}" },
+    { value: 1, display: "1" },
+    { value: Math.sqrt(3), display: "\\sqrt{3}" },
+    { value: Math.sqrt(3) / 3, display: "\\frac{\\sqrt{3}}{3}" },
+  ];
+  const exact = commonValues.find(
+    (candidate) => Math.abs(Math.abs(value) - candidate.value) < 1e-10
+  );
+  if (exact) {
+    return `= ${value < 0 ? "-" : ""}${exact.display}`;
+  }
+  return `\\approx ${value.toFixed(2)}`;
 }

@@ -57,7 +57,6 @@ export function Vector3d({
             {vectors.map((vector) => (
               <Vector
                 key={`vector-${vector.from?.join(",")}-${vector.to.join(",")}`}
-                labelOffset={[0.5, 1.5, 0]}
                 {...vector}
               />
             ))}

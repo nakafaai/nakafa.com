@@ -230,7 +230,6 @@ export function GraphSolution({
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

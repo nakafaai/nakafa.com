@@ -93,7 +93,6 @@ export function QuestionGraph({
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

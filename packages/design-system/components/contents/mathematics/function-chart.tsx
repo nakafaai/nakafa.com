@@ -23,13 +23,13 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -37,7 +37,7 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { Effect } from "effect";
 import { useFormatter } from "next-intl";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useId, useMemo } from "react";
 
 const CHART_CONFIG = {
   y: {
@@ -63,6 +63,7 @@ export function FunctionChart({
   title,
   description,
 }: Exponential & { title: ReactNode; description: ReactNode }) {
+  const formulaId = useId();
   const formatter = useFormatter();
   const formatNumber = (value: number) =>
     formatter.number(value, {
@@ -115,12 +116,7 @@ export function FunctionChart({
           <Scatter data={plot.values} dataKey="y" />
           <Legend verticalAlign="bottom" />
         </EvilComposedChart>
-        <Table>
-          <TableCaption>
-            <InlineMath
-              math={`f(x)=${coefficientMath(p)}\\cdot(${coefficientMath(a)})^x`}
-            />
-          </TableCaption>
+        <Table aria-describedby={formulaId}>
           <TableHeader>
             <TableRow>
               <TableHead scope="col">
@@ -147,6 +143,11 @@ export function FunctionChart({
           </TableBody>
         </Table>
       </CardContent>
+      <CardFooter className="justify-center" id={formulaId}>
+        <InlineMath
+          math={`f(x)=${coefficientMath(p)}\\cdot(${coefficientMath(a)})^x`}
+        />
+      </CardFooter>
     </Card>
   );
 }

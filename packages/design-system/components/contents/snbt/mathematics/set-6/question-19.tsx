@@ -265,7 +265,6 @@ export function Graph({ title, description, label }: GraphProps) {
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

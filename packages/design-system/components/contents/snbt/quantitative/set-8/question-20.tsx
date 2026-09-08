@@ -138,7 +138,6 @@ export function Graph({
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

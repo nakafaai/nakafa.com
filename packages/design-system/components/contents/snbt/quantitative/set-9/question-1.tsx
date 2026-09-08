@@ -67,7 +67,6 @@ export function Graph({ title, description }: GraphProps) {
       cameraPosition={[0, 0, 20]}
       data={data}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

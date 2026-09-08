@@ -81,7 +81,6 @@ export function Graph(
           ],
         },
       ]}
-      showZAxis={false}
       {...props}
     />
   );
