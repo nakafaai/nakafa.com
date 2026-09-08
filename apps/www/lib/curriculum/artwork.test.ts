@@ -2,7 +2,6 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
-import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   getCurriculumIndexSocialImage,
@@ -33,60 +32,116 @@ describe("curriculum artwork", () => {
     ).toBe("/open-graph/curriculum/en-united-states.png");
   });
 
-  it("maps signed grade and material identities to reviewed artwork", () => {
-    expect(
-      resolveCurriculumCatalogArtwork("de", {
-        nodeKey: "class-10",
-        iconKey: "grade-10",
-        kind: "route",
-      })
-    ).toBe("/open-graph/grade/de-10.png");
-    expect(
-      resolveCurriculumCatalogArtwork("de", {
-        nodeKey: "economics",
-        iconKey: "mathematics",
-        kind: "route",
-        materialDomain: MaterialDomainSchema.make("economy"),
-      })
-    ).toBe("/open-graph/subject/de-economics.png");
-  });
-
   it.each(["en", "id", "de"] as const)(
-    "resolves stage artwork by identity in %s",
+    "distinguishes Mathematics from courses and topics sharing its domain in %s",
     (locale) => {
-      for (const nodeKey of ["secondary", "upper-secondary"]) {
-        expect(
-          resolveCurriculumCatalogArtwork(locale, {
-            kind: "route",
-            nodeKey,
-            iconKey: "school",
-          })
-        ).toBe(
-          `/open-graph/grade/${locale === "id" ? "en" : locale}-${nodeKey}.png`
-        );
-      }
+      const programKey = LearningProgramKeySchema.make("singapore-moe");
       expect(
         resolveCurriculumCatalogArtwork(locale, {
           kind: "route",
-          nodeKey: "lower-secondary",
-          iconKey: "middle-school",
+          programKey,
+          nodeKey: "secondary-mathematics",
         })
-      ).toBeUndefined();
+      ).toBe(`/open-graph/subject/${locale}-mathematics.png`);
+
+      for (const nodeKey of [
+        "secondary-additional-mathematics",
+        "secondary-mathematics-number-algebra",
+        "secondary-additional-mathematics-functions-calculus",
+      ]) {
+        expect(
+          resolveCurriculumCatalogArtwork(locale, {
+            kind: "route",
+            programKey,
+            nodeKey,
+          })
+        ).toBeUndefined();
+      }
     }
   );
 
-  it("keeps unknown catalog identities on card gradients", () => {
+  it.each([
+    ["merdeka", "class-11-mathematics"],
+    ["cambridge-international", "mathematics-0580"],
+    ["united-states", "high-school-mathematics"],
+  ])("preserves reviewed Mathematics artwork for %s", (program, nodeKey) => {
+    expect(
+      resolveCurriculumCatalogArtwork("de", {
+        kind: "route",
+        programKey: LearningProgramKeySchema.make(program),
+        nodeKey,
+      })
+    ).toBe("/open-graph/subject/de-mathematics.png");
+  });
+
+  it("preserves reviewed discipline artwork within the combined science course", () => {
+    const programKey = LearningProgramKeySchema.make("singapore-moe");
+    expect(
+      resolveCurriculumCatalogArtwork("id", {
+        kind: "route",
+        programKey,
+        nodeKey: "secondary-science-physics",
+      })
+    ).toBe("/open-graph/subject/id-physics.png");
+    expect(
+      resolveCurriculumCatalogArtwork("id", {
+        kind: "route",
+        programKey,
+        nodeKey: "secondary-science",
+      })
+    ).toBeUndefined();
+  });
+
+  it.each(["en", "id", "de"] as const)(
+    "preserves reviewed stage and grade artwork in %s",
+    (locale) => {
+      expect(
+        resolveCurriculumCatalogArtwork(locale, {
+          kind: "route",
+          programKey: LearningProgramKeySchema.make("merdeka"),
+          nodeKey: "class-10",
+        })
+      ).toBe(`/open-graph/grade/${locale}-10.png`);
+      expect(
+        resolveCurriculumCatalogArtwork(locale, {
+          kind: "route",
+          programKey: LearningProgramKeySchema.make("cambridge-international"),
+          nodeKey: "upper-secondary",
+        })
+      ).toBe(
+        `/open-graph/grade/${locale === "id" ? "en" : locale}-upper-secondary.png`
+      );
+      expect(
+        resolveCurriculumCatalogArtwork(locale, {
+          kind: "route",
+          programKey: LearningProgramKeySchema.make("singapore-moe"),
+          nodeKey: "secondary",
+        })
+      ).toBe(
+        `/open-graph/grade/${locale === "id" ? "en" : locale}-secondary.png`
+      );
+    }
+  );
+
+  it("does not infer artwork from another program or a shared school icon", () => {
+    for (const nodeKey of [
+      "secondary",
+      "secondary-mathematics",
+      "lower-secondary",
+      "class-10",
+    ]) {
+      expect(
+        resolveCurriculumCatalogArtwork("en", {
+          kind: "route",
+          programKey: LearningProgramKeySchema.make("cambridge-international"),
+          nodeKey,
+        })
+      ).toBeUndefined();
+    }
     expect(
       resolveCurriculumCatalogArtwork("en", {
         kind: "program",
         programKey: LearningProgramKeySchema.make("future"),
-      })
-    ).toBeUndefined();
-    expect(
-      resolveCurriculumCatalogArtwork("en", {
-        nodeKey: "future",
-        iconKey: "science",
-        kind: "route",
       })
     ).toBeUndefined();
   });

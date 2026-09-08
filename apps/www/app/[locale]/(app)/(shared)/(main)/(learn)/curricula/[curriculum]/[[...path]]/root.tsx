@@ -143,9 +143,8 @@ export function CurriculumChildCards({
       {routes.map((route, index) => {
         const imageSrc = resolveCurriculumCatalogArtwork(locale, {
           nodeKey: route.nodeKey,
-          iconKey: route.iconKey,
+          programKey: route.programKey,
           kind: "route",
-          materialDomain: route.materialDomain,
         });
 
         return (
