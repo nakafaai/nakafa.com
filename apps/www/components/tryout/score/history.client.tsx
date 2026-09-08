@@ -25,7 +25,7 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "@repo/design-system/lib/utils";
-import { usePaginatedQuery } from "convex/react";
+import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
@@ -215,12 +215,13 @@ export function TryoutAttemptResults({
 }: {
   value: TryoutAttemptResultsValue;
 }) {
+  const { isAuthenticated } = useConvexAuth();
   const [selectedAttemptId, setSelectedAttemptId] = useState<
     HistoryRow["attemptId"] | null
   >(null);
   const history = usePaginatedQuery(
     api.tryouts.queries.history.bySet,
-    value.identity,
+    isAuthenticated ? value.identity : "skip",
     { initialNumItems: 25 }
   );
   const attempts = history.results.filter(hasScore);
