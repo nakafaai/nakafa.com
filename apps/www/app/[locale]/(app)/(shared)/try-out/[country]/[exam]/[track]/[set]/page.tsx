@@ -28,6 +28,11 @@ import {
 } from "@/components/tryout/route/path";
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
+import type {
+  SetPage,
+  TryoutSetRoute as SetRoute,
+  TryoutSetRestartTarget,
+} from "@/components/tryout/set/model";
 import { getToken } from "@/lib/auth/server";
 import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -155,6 +160,32 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   }
   const { page, restartTarget } = pages;
 
+  return (
+    <ResolvedTryoutSetRoute
+      attemptPage={attemptPage}
+      page={page}
+      restartTarget={restartTarget}
+      route={{ country, exam, locale, set, track }}
+    />
+  );
+}
+
+/** Composes signed runtime or review content after route ownership is resolved. */
+async function ResolvedTryoutSetRoute({
+  attemptPage,
+  page,
+  restartTarget,
+  route,
+}: {
+  attemptPage: Exclude<
+    Awaited<ReturnType<typeof readRoutePage>>["attemptPage"],
+    { kind: "redirect" }
+  >;
+  page: SetPage;
+  restartTarget: TryoutSetRestartTarget | null;
+  route: SetRoute;
+}) {
+  const { locale } = route;
   const [articleNavigation, initialNow] = await Promise.all([
     getShellArticleNavigation(locale),
     Effect.runPromise(Clock.currentTimeMillis),
@@ -188,7 +219,7 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
         content={reviewRuntime ? null : signedContent}
         page={page}
         restartTarget={restartTarget}
-        route={{ country, exam, locale, set, track }}
+        route={route}
       >
         {signedContent && reviewRuntime ? (
           <TryoutReview content={signedContent} runtime={reviewRuntime} />

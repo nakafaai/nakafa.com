@@ -175,42 +175,18 @@ function ResolvedTryoutSetPage({
       ? null
       : currentAttempt;
 
-  const resumeSectionKey = activeAttempt?.resumeSectionKey ?? null;
-  const resumeSection =
-    page.sections.find(
-      (sectionItem) => sectionItem.sectionKey === resumeSectionKey
-    ) ?? entrySection;
   const startEntrySection = activeAttempt
     ? entrySection
     : (restartTarget?.entrySection ?? null);
-  const destinationSection = activeAttempt ? resumeSection : startEntrySection;
   const currentSetHref = restartTarget
     ? getTryoutPublicPathHref(restartTarget.setPublicPath)
     : getTryoutHref();
-  const destinationSetHref = activeAttempt
-    ? getTryoutHref(route)
-    : currentSetHref;
-  let destination = destinationSection
-    ? {
-        href: getEntrySectionHref({
-          entrySection: destinationSection,
-          setHref: destinationSetHref,
-        }),
-        sectionKey: destinationSection.sectionKey,
-      }
-    : null;
-  if (
-    activeAttempt?.resumeSectionKey &&
-    activeAttempt.resumeSectionPublicPath
-  ) {
-    destination = {
-      href: getTryoutAttemptHref(
-        activeAttempt.resumeSectionPublicPath,
-        activeAttempt.attemptId
-      ),
-      sectionKey: activeAttempt.resumeSectionKey,
-    };
-  }
+  const destination = getStartDestination({
+    activeAttempt,
+    page,
+    startEntrySection,
+    setHref: activeAttempt ? getTryoutHref(route) : currentSetHref,
+  });
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,
@@ -298,4 +274,42 @@ function getEntrySectionHref({
   }
 
   return setHref;
+}
+
+/** Resolves the start or resume destination without mixing route policy with rendering. */
+function getStartDestination({
+  activeAttempt,
+  page,
+  startEntrySection,
+  setHref,
+}: {
+  activeAttempt: TryoutSetView["activeAttempt"];
+  page: SetPage;
+  startEntrySection: SetEntrySection | null;
+  setHref: string;
+}) {
+  if (
+    activeAttempt?.resumeSectionKey &&
+    activeAttempt.resumeSectionPublicPath
+  ) {
+    return {
+      href: getTryoutAttemptHref(
+        activeAttempt.resumeSectionPublicPath,
+        activeAttempt.attemptId
+      ),
+      sectionKey: activeAttempt.resumeSectionKey,
+    };
+  }
+  const resumeSection =
+    page.sections.find(
+      (section) => section.sectionKey === activeAttempt?.resumeSectionKey
+    ) ?? page.entrySection;
+  const section = activeAttempt ? resumeSection : startEntrySection;
+  if (!section) {
+    return null;
+  }
+  return {
+    href: getEntrySectionHref({ entrySection: section, setHref }),
+    sectionKey: section.sectionKey,
+  };
 }

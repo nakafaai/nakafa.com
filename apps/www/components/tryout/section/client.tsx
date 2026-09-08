@@ -217,12 +217,6 @@ function ResolvedTryoutSectionPage({
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
-  const startDestination = getStartDestination(binding, route);
-  const runtimeReturnHref = binding
-    ? getTryoutAttemptHref(page.set.publicPath, binding.attemptId)
-    : setHref;
-
-  const hasCurrentPath = !binding || binding.startHref === getTryoutHref(route);
   const isRunning =
     runtimeState.kind === "active" || runtimeState.kind === "pending";
   return (
@@ -230,50 +224,16 @@ function ResolvedTryoutSectionPage({
       articleNavigation={articleNavigation}
       locked={currentAttempt?.status === "in-progress"}
     >
-      {isRunning ? (
-        <TryoutRuntimeControls
-          title={page.section.title}
-          value={{
-            expired: runtimeState.kind === "pending",
-            runtime: runtimeState.runtime,
-            returnHref: runtimeReturnHref,
-          }}
-        />
-      ) : (
-        <TryoutPageHeader
-          action={
-            <TryoutSummaryAction
-              value={{
-                activeAttempt,
-                attempt: actionAttempt,
-                completedAction: "return",
-                locale: route.locale,
-                returnHref: setHref,
-                section: page.section,
-                sectionFinished: sectionStatus !== null,
-                set: page.set,
-                startDestination,
-              }}
-            />
-          }
-          items={[
-            {
-              href: hasCurrentPath
-                ? getTryoutPublicPathHref(page.exam.publicPath)
-                : undefined,
-              label: page.exam.title,
-            },
-            {
-              href: hasCurrentPath
-                ? getTryoutPublicPathHref(page.track.publicPath)
-                : undefined,
-              label: page.track.title,
-            },
-            { href: setHref, label: page.set.title },
-          ]}
-          title={page.section.title}
-        />
-      )}
+      <TryoutSectionHeader
+        actionAttempt={actionAttempt}
+        activeAttempt={activeAttempt}
+        binding={binding}
+        page={page}
+        route={route}
+        runtimeState={runtimeState}
+        sectionStatus={sectionStatus}
+        setHref={setHref}
+      />
       <TryoutPageBody>
         {!isRunning && (
           <TryoutSectionSummary
@@ -289,6 +249,78 @@ function ResolvedTryoutSectionPage({
         </TryoutSectionBody>
       </TryoutPageBody>
     </AppShell>
+  );
+}
+
+/** Switches the section header between runtime controls and the start or return action. */
+function TryoutSectionHeader({
+  activeAttempt,
+  actionAttempt,
+  binding,
+  page,
+  route,
+  runtimeState,
+  sectionStatus,
+  setHref,
+}: Pick<
+  TryoutSectionPageClientProps,
+  "binding" | "page" | "route" | "setHref"
+> & {
+  activeAttempt: NonNullable<SectionState>["attempt"] | null;
+  actionAttempt: NonNullable<SectionState>["attempt"] | null;
+  runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
+  sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
+}) {
+  const startDestination = getStartDestination(binding, route);
+  const runtimeReturnHref = binding
+    ? getTryoutAttemptHref(page.set.publicPath, binding.attemptId)
+    : setHref;
+  const hasCurrentPath = !binding || binding.startHref === getTryoutHref(route);
+  const isRunning =
+    runtimeState.kind === "active" || runtimeState.kind === "pending";
+  return isRunning ? (
+    <TryoutRuntimeControls
+      title={page.section.title}
+      value={{
+        expired: runtimeState.kind === "pending",
+        runtime: runtimeState.runtime,
+        returnHref: runtimeReturnHref,
+      }}
+    />
+  ) : (
+    <TryoutPageHeader
+      action={
+        <TryoutSummaryAction
+          value={{
+            activeAttempt,
+            attempt: actionAttempt,
+            completedAction: "return",
+            locale: route.locale,
+            returnHref: setHref,
+            section: page.section,
+            sectionFinished: sectionStatus !== null,
+            set: page.set,
+            startDestination,
+          }}
+        />
+      }
+      items={[
+        {
+          href: hasCurrentPath
+            ? getTryoutPublicPathHref(page.exam.publicPath)
+            : undefined,
+          label: page.exam.title,
+        },
+        {
+          href: hasCurrentPath
+            ? getTryoutPublicPathHref(page.track.publicPath)
+            : undefined,
+          label: page.track.title,
+        },
+        { href: setHref, label: page.set.title },
+      ]}
+      title={page.section.title}
+    />
   );
 }
 

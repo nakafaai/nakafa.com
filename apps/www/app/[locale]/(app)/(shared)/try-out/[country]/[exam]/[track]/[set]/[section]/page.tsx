@@ -25,6 +25,7 @@ import {
 } from "@/components/tryout/route/path";
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
+import type { TryoutSectionPage } from "@/components/tryout/section/model";
 import { getToken } from "@/lib/auth/server";
 import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -179,6 +180,34 @@ async function TryoutSectionRoute({
     publicHref: getTryoutHref({ country, exam, set, track }),
   });
 
+  return (
+    <ResolvedTryoutSectionRoute
+      attemptPage={attemptPage}
+      page={page}
+      route={{ country, exam, locale, section, set, track }}
+      setHref={setHref}
+    />
+  );
+}
+
+/** Composes signed runtime or review content after route ownership is resolved. */
+async function ResolvedTryoutSectionRoute({
+  attemptPage,
+  page,
+  route,
+  setHref,
+}: {
+  attemptPage: Exclude<
+    Awaited<ReturnType<typeof readRoutePage>>["attemptPage"],
+    { kind: "redirect" }
+  >;
+  page: TryoutSectionPage;
+  route: Omit<TryoutSectionParams, "locale"> & {
+    locale: ReturnType<typeof getLocaleOrThrow>;
+  };
+  setHref: string;
+}) {
+  const { locale } = route;
   const [articleNavigation, initialNow] = await Promise.all([
     getShellArticleNavigation(locale),
     Effect.runPromise(Clock.currentTimeMillis),
@@ -214,7 +243,7 @@ async function TryoutSectionRoute({
         }
         content={reviewRuntime ? null : signedContent}
         page={page}
-        route={{ country, exam, locale, section, set, track }}
+        route={route}
         setHref={setHref}
       >
         {signedContent && reviewRuntime ? (
