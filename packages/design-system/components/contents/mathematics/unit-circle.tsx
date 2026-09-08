@@ -18,6 +18,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
 import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
@@ -124,7 +125,7 @@ function Content({
 
           <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
             <div className="flex items-center gap-2">
-              <Badge className="font-mono" variant="outline">
+              <Badge style={{ color: COLORS.VIOLET }} variant="outline">
                 <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
               </Badge>
               <Badge className="font-mono" variant="outline">

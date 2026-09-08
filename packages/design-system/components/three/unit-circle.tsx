@@ -101,24 +101,6 @@ export function UnitCircle({ angle = 45, showLabels = true, ...props }: Props) {
           points={arcPoints}
         />
 
-        {/* Angle label */}
-        <ThreeLabel
-          anchorX={Math.cos(angleInRadians / 2) < 0 ? "right" : "left"}
-          anchorY={Math.sin(angleInRadians / 2) < 0 ? "top" : "bottom"}
-          color={COLORS.VIOLET}
-          fontSize={LABEL_FONT_SIZE}
-          gap={0.1}
-          minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
-          position={[
-            Math.cos(angleInRadians / 2) * 0.7,
-            Math.sin(angleInRadians / 2) * 0.7,
-            0,
-          ]}
-          visible={showLabels && Math.abs(angle) > EPSILON}
-        >
-          <InlineMath math="\theta" />
-        </ThreeLabel>
-
         <mesh frustumCulled position={pointPosition}>
           <sphereGeometry
             args={[SPHERE_RADIUS, GRAPH_POINT_SEGMENTS, GRAPH_POINT_SEGMENTS]}

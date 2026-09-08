@@ -11,9 +11,8 @@ import {
 } from "@repo/design-system/components/three/frame";
 import { COLORS } from "@repo/design-system/lib/color";
 import { type ComponentProps, useCallback, useMemo, useRef } from "react";
-import { Frustum, type Group, Matrix4, Vector3 } from "three";
+import { Frustum, type Group, Matrix4, Vector2, Vector3 } from "three";
 
-const LABEL_INSET = 8;
 const LABEL_EDGE_SPACE = 4;
 const LABEL_GAP = 12;
 
@@ -65,6 +64,7 @@ function AxisLabel({
     () => ({
       frustum: new Frustum(),
       projection: new Matrix4(),
+      screen: new Vector2(),
       start: new Vector3(),
       end: new Vector3(),
     }),
@@ -82,8 +82,16 @@ function AxisLabel({
       return;
     }
     camera.updateMatrixWorld();
-    const horizontal = Math.max(0.1, 1 - (2 * LABEL_INSET) / size.width);
-    const vertical = Math.max(0.1, 1 - (2 * LABEL_INSET) / size.height);
+    const marginX = element.offsetWidth / 2 + LABEL_EDGE_SPACE;
+    const marginY = element.offsetHeight / 2 + LABEL_EDGE_SPACE;
+    const horizontal = Math.max(
+      0.1,
+      1 - (2 * (marginX + LABEL_GAP)) / size.width
+    );
+    const vertical = Math.max(
+      0.1,
+      1 - (2 * (marginY + LABEL_GAP)) / size.height
+    );
     scratch.projection
       .makeScale(1 / horizontal, 1 / vertical, 1)
       .multiply(camera.projectionMatrix)
@@ -106,8 +114,11 @@ function AxisLabel({
     const normalY = length > 1 ? (dx / length) * LABEL_GAP : -LABEL_GAP;
     const centerX = ((scratch.end.x + 1) * size.width) / 2;
     const centerY = ((1 - scratch.end.y) * size.height) / 2;
-    const marginX = element.offsetWidth / 2 + LABEL_EDGE_SPACE;
-    const marginY = element.offsetHeight / 2 + LABEL_EDGE_SPACE;
+    if (!(Number.isFinite(centerX) && Number.isFinite(centerY))) {
+      element.style.visibility = "hidden";
+      return;
+    }
+    scratch.screen.set(centerX, centerY);
     const offsetX =
       Math.min(size.width - marginX, Math.max(marginX, centerX + normalX)) -
       centerX;
@@ -121,6 +132,9 @@ function AxisLabel({
   return (
     <group ref={group}>
       <Html
+        // Html must never cache the camera's non-finite mount projection.
+        // The axis frame already owns the validated visible endpoint.
+        calculatePosition={() => [scratch.screen.x, scratch.screen.y]}
         ref={attachLabel}
         style={{
           color,
@@ -129,6 +143,7 @@ function AxisLabel({
           pointerEvents: "none",
           userSelect: "none",
           whiteSpace: "nowrap",
+          visibility: "hidden",
         }}
         zIndexRange={[1, 0]}
       >
