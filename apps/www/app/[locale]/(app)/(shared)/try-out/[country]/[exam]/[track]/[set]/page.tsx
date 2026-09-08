@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Clock, Effect, Option } from "effect";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
@@ -26,8 +26,10 @@ import {
   readTryoutRouteAttemptCapability,
   type TryoutRouteSearchParams,
 } from "@/components/tryout/route/path";
+import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { getToken } from "@/lib/auth/server";
+import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 interface TryoutSetParams {
@@ -153,6 +155,11 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   }
   const { page, restartTarget } = pages;
 
+  const [articleNavigation, initialNow] = await Promise.all([
+    getShellArticleNavigation(locale),
+    Effect.runPromise(Clock.currentTimeMillis),
+  ]);
+
   const signedContent =
     attemptPage?.content.kind === "signed"
       ? Effect.runPromise(
@@ -166,25 +173,28 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
       : null;
 
   return (
-    <TryoutSetPageClient
-      binding={
-        attemptPage
-          ? {
-              attemptId: attemptPage.attemptId,
-              initialState: attemptPage.initialState,
-              sectionRoutes: attemptPage.page.sections,
-            }
-          : null
-      }
-      content={reviewRuntime ? null : signedContent}
-      page={page}
-      restartTarget={restartTarget}
-      route={{ country, exam, locale, set, track }}
-    >
-      {signedContent && reviewRuntime ? (
-        <TryoutReview content={signedContent} runtime={reviewRuntime} />
-      ) : null}
-    </TryoutSetPageClient>
+    <TryoutClockProvider initialNow={initialNow}>
+      <TryoutSetPageClient
+        articleNavigation={articleNavigation}
+        binding={
+          attemptPage
+            ? {
+                attemptId: attemptPage.attemptId,
+                initialState: attemptPage.initialState,
+                sectionRoutes: attemptPage.page.sections,
+              }
+            : null
+        }
+        content={reviewRuntime ? null : signedContent}
+        page={page}
+        restartTarget={restartTarget}
+        route={{ country, exam, locale, set, track }}
+      >
+        {signedContent && reviewRuntime ? (
+          <TryoutReview content={signedContent} runtime={reviewRuntime} />
+        ) : null}
+      </TryoutSetPageClient>
+    </TryoutClockProvider>
   );
 }
 

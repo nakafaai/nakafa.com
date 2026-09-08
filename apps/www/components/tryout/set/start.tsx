@@ -252,7 +252,21 @@ export function StartTryoutButton({
     <>
       <Button disabled={busy} onClick={onStart}>
         <Spinner icon={Rocket01Icon} isLoading={isPending || resolvingAccess} />
-        {buttonLabel}
+        {/* Reserve intrinsic label width while access resolves. */}
+        <span className="grid">
+          <span className="col-start-1 row-start-1">{buttonLabel}</span>
+          {(
+            ["start-cta", "restart-cta", "free-cta", "continue-cta"] as const
+          ).map((key) => (
+            <span
+              aria-hidden="true"
+              className="invisible col-start-1 row-start-1"
+              key={key}
+            >
+              {t(key)}
+            </span>
+          ))}
+        </span>
       </Button>
       <TryoutStartDialog
         busy={isPending}
@@ -293,9 +307,6 @@ function getButtonLabel({
   }
   if (resolvingAccess) {
     return t(finishedAttempt ? "restart-cta" : "start-cta");
-  }
-  if (dialogKind === "upgrade-required") {
-    return t(finishedAttempt ? "restart-pro-cta" : "start-pro-cta");
   }
   if (dialogKind === "free-attempt") {
     return t("free-cta");

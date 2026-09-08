@@ -1,23 +1,23 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { type ReactNode, Suspense, use } from "react";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
-import { getTryoutAttemptHref } from "@/components/tryout/route/path";
+import {
+  getTryoutAttemptHref,
+  getTryoutPublicPathHref,
+} from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
+import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
-import {
-  TryoutEntrySummary,
-  TryoutEntrySummaryAction,
-} from "@/components/tryout/section/entry.client";
-import {
-  getTryoutFinishedSectionDescription,
-  getTryoutFinishedSectionStatus,
-} from "@/components/tryout/section/finished";
+import { TryoutSummaryAction } from "@/components/tryout/section/action.client";
+import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
+import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import type { TryoutInternalSetView } from "@/components/tryout/set/model";
-import { TryoutPageHeader } from "@/components/tryout/shell/header";
-import { TryoutMeta } from "@/components/tryout/shell/meta";
+import {
+  TryoutPageBody,
+  TryoutPageHeader,
+} from "@/components/tryout/shell/header";
 
 /** Renders a no-nested-section set as the directly startable section surface. */
 export function TryoutSetEntry({
@@ -29,64 +29,46 @@ export function TryoutSetEntry({
   content: Promise<TryoutRuntimeContent> | null;
   value: TryoutInternalSetView;
 }) {
-  const tCommon = useTranslations("Common");
-  const tTryouts = useTranslations("Tryouts");
-  const sectionAttempt =
-    value.runtimeState.kind === "none"
-      ? null
-      : value.runtimeState.runtime.section;
-  const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
-  const sectionFinished = sectionStatus !== null;
-  const sectionTimeExpired = sectionStatus === "expired";
-  const attemptFinished = Boolean(
-    value.actionAttempt && value.actionAttempt.status !== "in-progress"
-  );
-  let status = tTryouts("entry-head-ready");
-
-  if (value.runtimeState.kind === "active") {
-    status = tTryouts("part-head-in-progress");
-  } else if (value.runtimeState.kind === "pending") {
-    status = tTryouts("part-head-expiring");
-  } else if (sectionFinished) {
-    status = getTryoutFinishedSectionDescription({
-      attemptFinished,
-      sectionTimeExpired,
-      tTryouts,
-    });
-  }
-
+  const state = value.runtimeState;
+  const isRunning = state.kind === "active" || state.kind === "pending";
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
-      <div className="space-y-10">
-        <TryoutPageHeader
+    <>
+      {isRunning ? (
+        <TryoutRuntimeControls
+          title={value.page.set.title}
           value={{
-            link: {
-              href: value.returnHref,
-              label: tCommon("back"),
-            },
-            meta: (
-              <TryoutMeta
-                items={[
-                  value.page.exam.title,
-                  value.page.track.title,
-                  value.page.set.title,
-                ]}
-              />
+            expired: state.kind === "pending",
+            returnHref: getTryoutAttemptHref(
+              value.page.set.publicPath,
+              state.runtime.attemptId
             ),
-            status,
-            title: value.page.set.title,
+            runtime: state.runtime,
           }}
         />
-
-        <div className="space-y-12">
-          <TryoutEntryResult value={value} />
-
-          <TryoutEntryRuntime content={content} value={value}>
-            {children}
-          </TryoutEntryRuntime>
-        </div>
-      </div>
-    </div>
+      ) : (
+        <TryoutPageHeader
+          action={<TryoutEntryAction value={value} />}
+          items={[
+            {
+              href:
+                value.currentHref ===
+                getTryoutPublicPathHref(value.page.set.publicPath)
+                  ? getTryoutPublicPathHref(value.page.exam.publicPath)
+                  : undefined,
+              label: value.page.exam.title,
+            },
+            { href: value.returnHref, label: value.page.track.title },
+          ]}
+          title={value.page.set.title}
+        />
+      )}
+      <TryoutPageBody>
+        {!isRunning && <TryoutEntryResult value={value} />}
+        <TryoutEntryRuntime content={content} value={value}>
+          {children}
+        </TryoutEntryRuntime>
+      </TryoutPageBody>
+    </>
   );
 }
 
@@ -101,15 +83,13 @@ function TryoutEntryResult({ value }: { value: TryoutInternalSetView }) {
 
   if (!attempt?.score) {
     return (
-      <TryoutEntrySummary
+      <TryoutSectionSummary
         value={{
           score: sectionAttempt?.score ?? null,
           section: value.entrySection,
           sectionStatus,
         }}
-      >
-        <TryoutEntryAction value={value} />
-      </TryoutEntrySummary>
+      />
     );
   }
 
@@ -131,9 +111,7 @@ function TryoutEntryResult({ value }: { value: TryoutInternalSetView }) {
           trackKey: value.page.set.trackKey,
         },
       }}
-    >
-      <TryoutEntryAction value={value} />
-    </TryoutAttemptResults>
+    />
   );
 }
 
@@ -159,8 +137,9 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
   }
 
   return (
-    <TryoutEntrySummaryAction
+    <TryoutSummaryAction
       value={{
+        completedAction: "restart",
         activeAttempt: value.activeAttempt,
         attempt: value.actionAttempt,
         locale: value.route.locale,
@@ -239,10 +218,6 @@ function TryoutEntryRuntimeContent({
       value={{
         expired: value.runtimeState.kind !== "active",
         questions: resolvedContent.questions,
-        returnHref: getTryoutAttemptHref(
-          value.page.set.publicPath,
-          value.runtimeState.runtime.attemptId
-        ),
         runtime: value.runtimeState.runtime,
       }}
     />

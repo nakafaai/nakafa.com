@@ -9,16 +9,6 @@ export function TryoutPartSummary({ children }: { children: ReactNode }) {
   );
 }
 
-/** Stacks the summary lead metrics and CTAs. */
-export function TryoutPartBody({ children }: { children: ReactNode }) {
-  return <div className="flex flex-col gap-4">{children}</div>;
-}
-
-/** Holds the primary summary metrics. */
-export function TryoutPartLead({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 flex-col gap-5">{children}</div>;
-}
-
 /** Lays out the summary metric columns. */
 export function TryoutPartStats({ children }: { children: ReactNode }) {
   return (
@@ -44,9 +34,4 @@ export function TryoutPartStat({
       {children}
     </div>
   );
-}
-
-/** Renders summary card CTAs with production spacing. */
-export function TryoutPartCtas({ children }: { children: ReactNode }) {
-  return <div className="flex flex-wrap gap-3">{children}</div>;
 }

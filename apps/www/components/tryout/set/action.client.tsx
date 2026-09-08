@@ -1,7 +1,6 @@
 "use client";
 
 import type { Locale } from "next-intl";
-import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
 import type {
   CurrentAttempt,
   SetEntrySection,
@@ -49,25 +48,10 @@ export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {
     trackKey: value.set.trackKey,
   };
 
-  if (value.activeAttempt) {
-    return (
-      <div>
-        <TryoutCountdown
-          action={
-            <StartTryoutButton
-              attempt={value.activeAttempt}
-              request={request}
-            />
-          }
-          expiresAt={value.activeAttempt.expiresAt}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <StartTryoutButton attempt={value.currentAttempt} request={request} />
-    </div>
+    <StartTryoutButton
+      attempt={value.activeAttempt ?? value.currentAttempt}
+      request={request}
+    />
   );
 }

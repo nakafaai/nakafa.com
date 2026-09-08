@@ -1,73 +1,54 @@
-import type { IconSvgElement } from "@hugeicons/react";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
+import {
+  type BreadcrumbHeaderItem,
+  BreadcrumbHeaderPath,
+} from "@/components/shared/breadcrumb/header";
 
-/** Cohesive content model for the compact try-out page header. */
-export interface TryoutPageHeaderValue {
-  description?: ReactNode;
-  icon?: IconSvgElement;
-  link: {
-    href: string;
-    label: string;
-  };
-  meta?: ReactNode;
-  status?: ReactNode;
-  title: ReactNode;
-}
-
-/**
- * Renders the compact try-out page header with parent navigation and optional
- * concise state or set-introduction copy.
- */
-export function TryoutPageHeader({ value }: { value: TryoutPageHeaderValue }) {
-  const { description, icon, link, meta, status, title } = value;
-
+/** Keeps navigation, heading, and the primary action in one stable page row. */
+export function TryoutPageHeader({
+  action,
+  items,
+  title,
+}: {
+  action: ReactNode;
+  items: readonly BreadcrumbHeaderItem[];
+  title: string;
+}) {
+  const tCommon = useTranslations("Common");
   return (
-    <header className="flex flex-col gap-3">
-      <IntentLink
-        className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
-        href={link.href}
-      >
-        {link.label}
-      </IntentLink>
-
-      <div className="space-y-3">
-        {meta}
-
-        <div className="flex items-start gap-2">
-          <TryoutPageIcon icon={icon} />
-          <h1 className="text-pretty font-medium text-3xl leading-tight tracking-tight">
-            {title}
-          </h1>
-        </div>
+    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="col-span-2 min-w-0 sm:col-span-1">
+        <BreadcrumbHeaderPath
+          homeLabel={tCommon("home")}
+          items={[
+            { href: "/try-out", label: tCommon("try-out-short") },
+            ...items,
+          ]}
+          menuLabel={tCommon("more")}
+        />
       </div>
-
-      <TryoutPageCopy content={description} />
-      <TryoutPageCopy content={status} />
-    </header>
+      <h1
+        className="min-w-0 truncate font-medium text-sm sm:text-center"
+        title={title}
+      >
+        {title}
+      </h1>
+      <div className="flex min-w-0 justify-end [&_button]:max-w-full [&_button]:whitespace-normal [&_button]:text-start">
+        {action}
+      </div>
+    </BreadcrumbHeaderFrame>
   );
 }
 
-/** Renders an optional try-out heading icon at supported viewport sizes. */
-function TryoutPageIcon({ icon }: { icon: IconSvgElement | undefined }) {
-  if (!icon) {
-    return null;
-  }
-
+/** Owns the body width and spacing shared by sets and timed sections. */
+export function TryoutPageBody({ children }: { children: ReactNode }) {
   return (
-    <HugeIcons
-      className="hidden size-7 shrink-0 translate-y-1 sm:block"
-      icon={icon}
-    />
+    <div className="mx-auto w-full max-w-3xl space-y-8 px-6 py-6">
+      {children}
+    </div>
   );
-}
-
-/** Renders optional concise copy with the shared page-header treatment. */
-function TryoutPageCopy({ content }: { content: ReactNode | undefined }) {
-  if (content === undefined || content === null) {
-    return null;
-  }
-
-  return <p className="max-w-2xl text-muted-foreground">{content}</p>;
 }

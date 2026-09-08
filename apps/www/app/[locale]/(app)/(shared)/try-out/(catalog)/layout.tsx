@@ -1,21 +1,14 @@
 import { locale as rootLocale } from "next/root-params";
-import { Suspense } from "react";
-import { TryoutShell } from "@/components/tryout/shell/client";
+import { AppShell } from "@/components/sidebar/app-shell";
 import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-/** Renders the shared tryout shell for every route in the tryout subtree. */
+/** Renders the discovery shell without an attempt subscription. */
 export default async function Layout({
   children,
 }: LayoutProps<"/[locale]/try-out">) {
   const locale = getLocaleOrThrow(await rootLocale());
   const articleNavigation = await getShellArticleNavigation(locale);
 
-  return (
-    <Suspense fallback={null}>
-      <TryoutShell articleNavigation={articleNavigation}>
-        {children}
-      </TryoutShell>
-    </Suspense>
-  );
+  return <AppShell articleNavigation={articleNavigation}>{children}</AppShell>;
 }

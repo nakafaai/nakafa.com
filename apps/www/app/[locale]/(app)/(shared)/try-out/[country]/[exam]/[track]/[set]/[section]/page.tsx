@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Clock, Effect, Option } from "effect";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
@@ -23,8 +23,10 @@ import {
   readTryoutRouteAttemptCapability,
   type TryoutRouteSearchParams,
 } from "@/components/tryout/route/path";
+import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
 import { getToken } from "@/lib/auth/server";
+import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 interface TryoutSectionParams {
@@ -177,6 +179,11 @@ async function TryoutSectionRoute({
     publicHref: getTryoutHref({ country, exam, set, track }),
   });
 
+  const [articleNavigation, initialNow] = await Promise.all([
+    getShellArticleNavigation(locale),
+    Effect.runPromise(Clock.currentTimeMillis),
+  ]);
+
   const signedContent =
     attemptPage?.content.kind === "signed"
       ? Effect.runPromise(
@@ -193,25 +200,28 @@ async function TryoutSectionRoute({
     : null;
 
   return (
-    <TryoutSectionPageClient
-      binding={
-        attemptPage
-          ? {
-              attemptId: attemptPage.attemptId,
-              initialState: attemptPage.initialState,
-              startHref,
-            }
-          : null
-      }
-      content={reviewRuntime ? null : signedContent}
-      page={page}
-      route={{ country, exam, locale, section, set, track }}
-      setHref={setHref}
-    >
-      {signedContent && reviewRuntime ? (
-        <TryoutReview content={signedContent} runtime={reviewRuntime} />
-      ) : null}
-    </TryoutSectionPageClient>
+    <TryoutClockProvider initialNow={initialNow}>
+      <TryoutSectionPageClient
+        articleNavigation={articleNavigation}
+        binding={
+          attemptPage
+            ? {
+                attemptId: attemptPage.attemptId,
+                initialState: attemptPage.initialState,
+                startHref,
+              }
+            : null
+        }
+        content={reviewRuntime ? null : signedContent}
+        page={page}
+        route={{ country, exam, locale, section, set, track }}
+        setHref={setHref}
+      >
+        {signedContent && reviewRuntime ? (
+          <TryoutReview content={signedContent} runtime={reviewRuntime} />
+        ) : null}
+      </TryoutSectionPageClient>
+    </TryoutClockProvider>
   );
 }
 

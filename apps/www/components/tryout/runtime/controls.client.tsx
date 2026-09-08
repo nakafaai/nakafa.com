@@ -1,56 +1,51 @@
 "use client";
 
-import { StopIcon, Timer02Icon } from "@hugeicons/core-free-icons";
+import { StopIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  NumberFormat,
-  NumberFormatGroup,
-} from "@repo/design-system/components/ui/number-flow";
-import { Progress } from "@repo/design-system/components/ui/progress";
+import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
-import { domAnimation, LazyMotion } from "motion/react";
-// biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
-import * as m from "motion/react-m";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
+import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import { TryoutTimer } from "@/components/tryout/runtime/countdown";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
-import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
 interface TryoutRuntimeControlsValue {
   expired: boolean;
-  remainingSeconds: number;
   returnHref: string;
   runtime: TryoutSectionRuntime;
 }
 
 /** Renders the production sticky timer, progress, and finish controls. */
 export function TryoutRuntimeControls({
+  title,
   value,
 }: {
+  title: string;
   value: TryoutRuntimeControlsValue;
 }) {
-  const { expired, remainingSeconds, returnHref, runtime } = value;
+  const { expired, returnHref, runtime } = value;
   const router = useRouter();
   const prewarmData = useTryoutDataIntent();
   const completeSection = useMutation(api.tryouts.mutations.sections.complete);
-  const tExercises = useTranslations("Exercises");
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
   const [isOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const { hidden } = useStickyVisibility();
-  const progress = getProgress(runtime);
+  const now = useTryoutClock(true);
+  const remainingSeconds = Math.max(
+    0,
+    Math.ceil((runtime.expiresAt - now) / 1000)
+  );
   const isBusy = isPending || expired;
 
   /** Prefetch the set route and warm its authenticated data before return. */
@@ -105,61 +100,43 @@ export function TryoutRuntimeControls({
 
   return (
     <>
-      <div
-        className={cn(
-          "sticky top-18 z-1 mb-20 lg:top-2",
-          hidden && "pointer-events-none"
-        )}
-      >
-        <LazyMotion features={domAnimation} strict>
-          <m.div
-            animate={hidden ? "hidden" : "visible"}
-            className="flex flex-col rounded-xl border bg-card p-2 shadow-sm"
-            transition={{ ease: "easeOut" }}
-            variants={{
-              hidden: { y: "-120%", opacity: 0 },
-              visible: { y: 0, opacity: 1 },
+      <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <h1 className="min-w-0 truncate font-medium text-sm" title={title}>
+          {title}
+        </h1>
+        <div className="col-span-2 row-start-2 flex items-center justify-center gap-4 sm:col-span-1 sm:col-start-2 sm:row-start-1">
+          <TryoutTimer seconds={remainingSeconds} />
+          <span aria-hidden="true" className="h-5 w-px shrink-0 bg-border" />
+          <output
+            aria-label={`${tTryouts("part-questions-label")}: ${runtime.section.answeredCount}/${runtime.section.totalQuestions}`}
+            className="inline-flex font-mono text-sm tabular-nums"
+            style={{
+              minWidth: `${String(runtime.section.totalQuestions).length * 2 + 3}ch`,
             }}
           >
-            <div className="flex items-center justify-between">
-              <Countdown seconds={remainingSeconds} />
-
-              <Button
-                disabled={isBusy}
-                onClick={openCompletionDialog}
-                onFocus={prepareReturnRoute}
-                onPointerEnter={prepareReturnRoute}
-                onTouchStart={prepareReturnRoute}
-                type="button"
-                variant="destructive"
-              >
-                <Spinner icon={StopIcon} isLoading={isPending} />
-                {tTryouts("complete-part-cta")}
-              </Button>
-            </div>
-
-            <div className="pt-2">
-              <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-muted/20 p-4">
-                <div className="flex items-center justify-between text-sm">
-                  <Badge variant="default-subtle">
-                    <HugeIcons icon={Timer02Icon} />
-                    {tExercises("simulation")}
-                  </Badge>
-
-                  <NumberFormatGroup>
-                    <div className="flex items-baseline text-sm tabular-nums">
-                      <NumberFormat value={runtime.section.answeredCount} />
-                      <span className="mx-2 text-muted-foreground">/</span>
-                      <NumberFormat value={runtime.section.totalQuestions} />
-                    </div>
-                  </NumberFormatGroup>
-                </div>
-                <Progress value={progress} />
-              </div>
-            </div>
-          </m.div>
-        </LazyMotion>
-      </div>
+            <NumberFormat
+              aria-hidden="true"
+              format={{ useGrouping: false }}
+              suffix={` / ${runtime.section.totalQuestions}`}
+              value={runtime.section.answeredCount}
+            />
+          </output>
+        </div>
+        <div className="col-start-2 row-start-1 flex justify-end sm:col-start-3">
+          <Button
+            disabled={isBusy}
+            onClick={openCompletionDialog}
+            onFocus={prepareReturnRoute}
+            onPointerEnter={prepareReturnRoute}
+            onTouchStart={prepareReturnRoute}
+            type="button"
+            variant="destructive"
+          >
+            <Spinner icon={StopIcon} isLoading={isPending} />
+            {tTryouts("complete-part-cta")}
+          </Button>
+        </div>
+      </BreadcrumbHeaderFrame>
 
       <ResponsiveDialog
         description={tTryouts("complete-part-description")}
@@ -192,39 +169,4 @@ export function TryoutRuntimeControls({
       />
     </>
   );
-}
-
-/** Renders the attempt timer as stable tabular text. */
-function Countdown({ seconds }: { seconds: number }) {
-  const formatted = formatTime(seconds);
-
-  return (
-    <div className="pl-2">
-      <time className="font-mono text-lg tabular-nums">
-        {formatted.hours}:{formatted.minutes}:{formatted.seconds}
-      </time>
-    </div>
-  );
-}
-
-/** Calculates answered-question progress without hiding divide-by-zero cases. */
-function getProgress(runtime: TryoutSectionRuntime) {
-  if (runtime.section.totalQuestions === 0) {
-    return 0;
-  }
-
-  return (runtime.section.answeredCount / runtime.section.totalQuestions) * 100;
-}
-
-/** Formats seconds into fixed-width timer segments. */
-function formatTime(totalSeconds: number) {
-  const hours = Math.floor(totalSeconds / 3600)
-    .toString()
-    .padStart(2, "0");
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-
-  return { hours, minutes, seconds };
 }
