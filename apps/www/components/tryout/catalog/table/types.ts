@@ -13,7 +13,7 @@ export type TryoutSetRow = TryoutSetPage["page"][number];
 export type TryoutTrackPage = NonNullable<FunctionReturnType<TrackPageQuery>>;
 export type TryoutSetAttemptStatus = NonNullable<TryoutSetRow["attemptStatus"]>;
 export type TryoutSetSort = TryoutSetListArgs["sort"];
-export type TryoutSetStatusFilter = NonNullable<TryoutSetListArgs["filter"]>;
+export type TryoutSetStatusFilter = TryoutSetListArgs["filter"];
 
 export interface TryoutCatalogBootstrap {
   readonly args: TryoutSetListArgs;

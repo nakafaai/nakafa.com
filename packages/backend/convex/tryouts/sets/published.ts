@@ -53,7 +53,7 @@ export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
     if (!joined) {
       return { ...emptySetPage, ...scope };
     }
-    const filter = args.filter ?? "all";
+    const filter = args.filter;
     const filtered = joined.filter(({ progress }) => {
       if (filter === "all") {
         return true;

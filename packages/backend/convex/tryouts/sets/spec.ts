@@ -37,21 +37,9 @@ export const trackIdentityValidator = v.object({
 
 export const listArgsValidator = v.object({
   ...trackIdentityValidator.fields,
-  // Older deployed clients omit this until the catalog rollout completes.
-  filter: v.optional(setFilterValidator),
+  filter: setFilterValidator,
   paginationOpts: paginationOptsValidator,
   sort: setSortValidator,
-});
-
-export const statusArgsValidator = v.object({
-  ...trackIdentityValidator.fields,
-  paginationOpts: paginationOptsValidator,
-  status: tryoutStatusValidator,
-});
-
-export const unattemptedArgsValidator = v.object({
-  ...trackIdentityValidator.fields,
-  paginationOpts: paginationOptsValidator,
 });
 
 export const trackSetValidator = v.object({
@@ -69,9 +57,7 @@ export const trackSetPageValidator = paginationResultValidator(
 });
 
 export type ListArgs = Infer<typeof listArgsValidator>;
-export type StatusArgs = Infer<typeof statusArgsValidator>;
 export type TrackIdentity = Infer<typeof trackIdentityValidator>;
-export type UnattemptedArgs = Infer<typeof unattemptedArgsValidator>;
 
 export const emptySetPage = {
   continueCursor: "",

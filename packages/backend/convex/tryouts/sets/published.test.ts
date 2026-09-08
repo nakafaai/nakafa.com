@@ -67,17 +67,10 @@ describe("tryouts/sets/published", () => {
         expect(
           anonymous.page.every(({ publishedScore }) => publishedScore === null)
         ).toBe(true);
-        const unattempted = yield* Effect.promise(() =>
-          authed.query(api.tryouts.queries.sets.unattempted, catalogListArgs)
-        );
-        expect(unattempted.page.map(({ setKey }) => setKey)).toEqual([
-          "set-3",
-          "set-4",
-        ]);
         const unauthenticated = yield* Effect.promise(() =>
-          t.query(api.tryouts.queries.sets.byStatus, {
+          t.query(api.tryouts.queries.sets.list, {
             ...catalogListArgs,
-            status: "completed",
+            filter: "completed",
           })
         );
         expect(unauthenticated).toMatchObject({
@@ -88,33 +81,21 @@ describe("tryouts/sets/published", () => {
       })
   );
 
-  it.effect(
-    "returns empty pages for an absent signed track in every list mode",
-    () =>
-      Effect.gen(function* () {
-        const { authed, t } = yield* activateTryoutSetCatalog();
-        const missing = { ...catalogListArgs, trackKey: "missing-track" };
-        const results = yield* Effect.promise(() =>
-          Promise.all([
-            authed.query(api.tryouts.queries.sets.list, {
-              ...missing,
-              sort: { direction: "asc", field: "order" },
-            }),
-            authed.query(api.tryouts.queries.sets.byStatus, {
-              ...missing,
-              status: "completed",
-            }),
-            t.query(api.tryouts.queries.sets.unattempted, missing),
-          ])
-        );
-        for (const result of results) {
-          expect(result).toMatchObject({
-            continueCursor: "",
-            isDone: true,
-            page: [],
-          });
-        }
-      })
+  it.effect("returns an empty page for an absent signed track", () =>
+    Effect.gen(function* () {
+      const { authed } = yield* activateTryoutSetCatalog();
+      const result = yield* Effect.promise(() =>
+        authed.query(api.tryouts.queries.sets.list, {
+          ...catalogListArgs,
+          trackKey: "missing-track",
+        })
+      );
+      expect(result).toMatchObject({
+        continueCursor: "",
+        isDone: true,
+        page: [],
+      });
+    })
   );
 
   it.effect(
@@ -240,18 +221,17 @@ describe("tryouts/sets/published", () => {
       sessionId: identity.sessionId,
       subject: identity.authUserId,
     });
-    const args: FunctionArgs<typeof api.tryouts.queries.sets.unattempted> = {
+    const args: FunctionArgs<typeof api.tryouts.queries.sets.list> = {
       countryKey: TRYOUT_START_COUNTRY,
       examKey: TRYOUT_START_EXAM,
+      filter: "not-started",
       locale: "id",
       paginationOpts: { cursor: null, numItems: 10 },
+      sort: { direction: "asc", field: "order" },
       trackKey: TRYOUT_START_TRACK,
     };
 
-    const before = await authed.query(
-      api.tryouts.queries.sets.unattempted,
-      args
-    );
+    const before = await authed.query(api.tryouts.queries.sets.list, args);
     const attempt = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
       {
@@ -290,16 +270,14 @@ describe("tryouts/sets/published", () => {
     });
     const list = await authed.query(api.tryouts.queries.sets.list, {
       ...args,
+      filter: "all",
       sort: { direction: "desc", field: "publishedScore" },
     });
-    const inProgress = await authed.query(api.tryouts.queries.sets.byStatus, {
+    const inProgress = await authed.query(api.tryouts.queries.sets.list, {
       ...args,
-      status: "in-progress",
+      filter: "in-progress",
     });
-    const after = await authed.query(
-      api.tryouts.queries.sets.unattempted,
-      args
-    );
+    const after = await authed.query(api.tryouts.queries.sets.list, args);
 
     expect(before.page).toMatchObject([
       { attemptStatus: null, setKey: TRYOUT_START_SET },

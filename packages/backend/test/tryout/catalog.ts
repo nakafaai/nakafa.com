@@ -21,15 +21,15 @@ import {
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema, Struct } from "effect";
 
-type UnattemptedArgs = FunctionArgs<
-  typeof api.tryouts.queries.sets.unattempted
->;
-
-export const catalogListArgs: UnattemptedArgs = {
+export const catalogListArgs: FunctionArgs<
+  typeof api.tryouts.queries.sets.list
+> = {
   countryKey: TRYOUT_START_COUNTRY,
   examKey: TRYOUT_START_EXAM,
+  filter: "all",
   locale: "id",
   paginationOpts: { cursor: null, numItems: 10 },
+  sort: { direction: "asc", field: "order" },
   trackKey: TRYOUT_START_TRACK,
 };
 
@@ -174,7 +174,7 @@ export const activateTryoutSetCatalog = Effect.fn(
   for (const setKey of ["set-1", "set-2"]) {
     const attempt = yield* Effect.promise(() =>
       authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-        ...Struct.omit(catalogListArgs, ["paginationOpts"]),
+        ...Struct.omit(catalogListArgs, ["filter", "paginationOpts", "sort"]),
         setKey,
       })
     );
