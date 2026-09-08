@@ -22,11 +22,18 @@ export function AppShell({
   locked?: boolean;
 }) {
   return (
-    <SidebarProvider locked={locked}>
+    <SidebarProvider
+      className={locked ? "[--app-header-top:0px]" : "[--app-header-top:4rem]"}
+      locked={locked}
+    >
       <SidebarInset>
-        <Header />
-        <DeferredSearchCommand articleNavigation={articleNavigation} />
-        <DeferredAiSheet />
+        {!locked && (
+          <>
+            <Header />
+            <DeferredSearchCommand articleNavigation={articleNavigation} />
+            <DeferredAiSheet />
+          </>
+        )}
         <div className="relative">{children}</div>
       </SidebarInset>
       <AppSidebar

@@ -1,8 +1,6 @@
 "use client";
 
 import type { TryoutQuestionContent } from "@/components/tryout/content/model";
-import { useTryoutClock } from "@/components/tryout/runtime/clock";
-import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
 import { TryoutActiveQuestion } from "@/components/tryout/runtime/question.client";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
@@ -10,7 +8,6 @@ import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 export interface TryoutRuntimeValue {
   expired: boolean;
   questions: readonly TryoutQuestionContent[];
-  returnHref: string;
   runtime: TryoutSectionRuntime;
 }
 
@@ -40,8 +37,6 @@ export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
 
   return (
     <section className="space-y-12">
-      <TryoutRuntimeActions value={value} />
-
       {runtimeQuestions.map(({ content, question }) => (
         <TryoutActiveQuestion
           content={content}
@@ -52,41 +47,6 @@ export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
       ))}
     </section>
   );
-}
-
-/** Renders runtime controls only while the section remains active. */
-function TryoutRuntimeActions({ value }: { value: TryoutRuntimeValue }) {
-  const isActive = value.runtime.section.status === "in-progress";
-  const remainingSeconds = useRemainingSeconds(
-    value.runtime.expiresAt,
-    isActive
-  );
-
-  if (!isActive) {
-    return null;
-  }
-
-  return (
-    <TryoutRuntimeControls
-      value={{
-        expired: value.expired,
-        remainingSeconds,
-        returnHref: value.returnHref,
-        runtime: value.runtime,
-      }}
-    />
-  );
-}
-
-/** Tracks remaining section seconds from the Convex expiry timestamp. */
-function useRemainingSeconds(expiresAt: number, isActive: boolean) {
-  const now = useTryoutClock(isActive);
-
-  if (!isActive) {
-    return 0;
-  }
-
-  return Math.max(0, Math.ceil((expiresAt - now) / 1000));
 }
 
 /** Builds the stable content identity captured when the attempt was created. */

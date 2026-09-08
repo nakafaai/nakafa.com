@@ -311,7 +311,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
 
         const start = page.getByRole("button", {
           exact: true,
-          name: "Start free",
+          name: "Start",
         });
         yield* Effect.promise(() =>
           expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })

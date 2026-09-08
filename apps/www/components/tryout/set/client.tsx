@@ -2,8 +2,9 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { type ReactNode, useState } from "react";
+import { AppShell } from "@/components/sidebar/app-shell";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { selectTryoutTrackReturnHref } from "@/components/tryout/route/owner";
 import {
@@ -28,6 +29,7 @@ import type {
   TryoutSetView,
 } from "@/components/tryout/set/model";
 import { TryoutSetOverview } from "@/components/tryout/set/overview";
+import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 type SetState = TryoutSetInitialState | null;
 
@@ -38,6 +40,7 @@ interface TryoutSetPageBinding {
 }
 
 interface TryoutSetPageClientProps {
+  articleNavigation: readonly ArticleNavigationItem[];
   binding: TryoutSetPageBinding | null;
   children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
@@ -48,6 +51,7 @@ interface TryoutSetPageClientProps {
 
 /** Renders one stable page with an active-only mutable subscription. */
 export function TryoutSetPageClient({
+  articleNavigation,
   binding,
   children,
   content,
@@ -58,6 +62,7 @@ export function TryoutSetPageClient({
   if (!binding) {
     return (
       <ResolvedTryoutSetPage
+        articleNavigation={articleNavigation}
         binding={null}
         content={content}
         page={page}
@@ -73,6 +78,7 @@ export function TryoutSetPageClient({
   if (!isTryoutStateLive(binding.initialState)) {
     return (
       <ResolvedTryoutSetPage
+        articleNavigation={articleNavigation}
         binding={binding}
         content={content}
         page={page}
@@ -87,6 +93,7 @@ export function TryoutSetPageClient({
 
   return (
     <LiveTryoutSetPage
+      articleNavigation={articleNavigation}
       binding={binding}
       content={content}
       key={binding.attemptId}
@@ -101,6 +108,7 @@ export function TryoutSetPageClient({
 
 /** Owns one active subscription and skips it after a terminal update. */
 function LiveTryoutSetPage({
+  articleNavigation,
   binding,
   children,
   content,
@@ -108,10 +116,14 @@ function LiveTryoutSetPage({
   restartTarget,
   route,
 }: TryoutSetPageClientProps & { binding: TryoutSetPageBinding }) {
+  const { isLoading } = useConvexAuth();
   const [terminalState, setTerminalState] = useState<SetState | undefined>();
+  // An unauthenticated response during hydration is not a terminal attempt.
   const liveState = useQuery(
     api.tryouts.queries.runtime.getSetAttemptState,
-    terminalState === undefined ? { attemptId: binding.attemptId } : "skip"
+    !isLoading && terminalState === undefined
+      ? { attemptId: binding.attemptId }
+      : "skip"
   );
 
   if (
@@ -131,6 +143,7 @@ function LiveTryoutSetPage({
   }
   return (
     <ResolvedTryoutSetPage
+      articleNavigation={articleNavigation}
       binding={binding}
       content={content}
       page={page}
@@ -145,6 +158,7 @@ function LiveTryoutSetPage({
 
 /** Renders one stable set view from its exact mutable state. */
 function ResolvedTryoutSetPage({
+  articleNavigation,
   binding,
   children,
   content,
@@ -165,42 +179,18 @@ function ResolvedTryoutSetPage({
       ? null
       : currentAttempt;
 
-  const resumeSectionKey = activeAttempt?.resumeSectionKey ?? null;
-  const resumeSection =
-    page.sections.find(
-      (sectionItem) => sectionItem.sectionKey === resumeSectionKey
-    ) ?? entrySection;
   const startEntrySection = activeAttempt
     ? entrySection
     : (restartTarget?.entrySection ?? null);
-  const destinationSection = activeAttempt ? resumeSection : startEntrySection;
   const currentSetHref = restartTarget
     ? getTryoutPublicPathHref(restartTarget.setPublicPath)
     : getTryoutHref();
-  const destinationSetHref = activeAttempt
-    ? getTryoutHref(route)
-    : currentSetHref;
-  let destination = destinationSection
-    ? {
-        href: getEntrySectionHref({
-          entrySection: destinationSection,
-          setHref: destinationSetHref,
-        }),
-        sectionKey: destinationSection.sectionKey,
-      }
-    : null;
-  if (
-    activeAttempt?.resumeSectionKey &&
-    activeAttempt.resumeSectionPublicPath
-  ) {
-    destination = {
-      href: getTryoutAttemptHref(
-        activeAttempt.resumeSectionPublicPath,
-        activeAttempt.attemptId
-      ),
-      sectionKey: activeAttempt.resumeSectionKey,
-    };
-  }
+  const destination = getStartDestination({
+    activeAttempt,
+    page,
+    startEntrySection,
+    setHref: activeAttempt ? getTryoutHref(route) : currentSetHref,
+  });
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,
@@ -217,23 +207,28 @@ function ResolvedTryoutSetPage({
     },
   };
 
-  if (isInternalEntry && entrySection) {
-    return (
-      <TryoutInternalSet
-        value={{
-          content,
-          entrySection,
-          now,
-          runtime,
-          view,
-        }}
-      >
-        {children}
-      </TryoutInternalSet>
-    );
-  }
-
-  return <TryoutSetOverview value={view} />;
+  return (
+    <AppShell
+      articleNavigation={articleNavigation}
+      locked={currentAttempt?.status === "in-progress"}
+    >
+      {isInternalEntry && entrySection ? (
+        <TryoutInternalSet
+          value={{
+            content,
+            entrySection,
+            now,
+            runtime,
+            view,
+          }}
+        >
+          {children}
+        </TryoutInternalSet>
+      ) : (
+        <TryoutSetOverview value={view} />
+      )}
+    </AppShell>
+  );
 }
 
 /** Renders one direct-entry runtime from its exact authenticated query. */
@@ -283,4 +278,42 @@ function getEntrySectionHref({
   }
 
   return setHref;
+}
+
+/** Resolves the start or resume destination without mixing route policy with rendering. */
+function getStartDestination({
+  activeAttempt,
+  page,
+  startEntrySection,
+  setHref,
+}: {
+  activeAttempt: TryoutSetView["activeAttempt"];
+  page: SetPage;
+  startEntrySection: SetEntrySection | null;
+  setHref: string;
+}) {
+  if (
+    activeAttempt?.resumeSectionKey &&
+    activeAttempt.resumeSectionPublicPath
+  ) {
+    return {
+      href: getTryoutAttemptHref(
+        activeAttempt.resumeSectionPublicPath,
+        activeAttempt.attemptId
+      ),
+      sectionKey: activeAttempt.resumeSectionKey,
+    };
+  }
+  const resumeSection =
+    page.sections.find(
+      (section) => section.sectionKey === activeAttempt?.resumeSectionKey
+    ) ?? page.entrySection;
+  const section = activeAttempt ? resumeSection : startEntrySection;
+  if (!section) {
+    return null;
+  }
+  return {
+    href: getEntrySectionHref({ entrySection: section, setHref }),
+    sectionKey: section.sectionKey,
+  };
 }

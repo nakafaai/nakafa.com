@@ -1,12 +1,8 @@
 import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/score";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
 import { TryoutScoreStatus } from "@/components/tryout/score/status";
 import {
-  TryoutPartBody,
-  TryoutPartCtas,
-  TryoutPartLead,
   TryoutPartStat,
   TryoutPartStats,
   TryoutPartSummary,
@@ -27,10 +23,8 @@ export interface TryoutSummarySection {
 
 /** Renders shared section metrics around a composed action. */
 export function TryoutSectionSummary({
-  children,
   value,
 }: {
-  children: ReactNode;
   value: {
     score: TryoutScoreResult | null;
     section: TryoutSummarySection;
@@ -41,15 +35,9 @@ export function TryoutSectionSummary({
 
   return (
     <TryoutPartSummary>
-      <TryoutPartBody>
-        <TryoutPartLead>
-          <TryoutSectionStatuses score={score} status={sectionStatus} />
+      <TryoutSectionStatuses score={score} status={sectionStatus} />
 
-          <TryoutSectionMetrics score={score} section={section} />
-        </TryoutPartLead>
-
-        <TryoutPartCtas>{children}</TryoutPartCtas>
-      </TryoutPartBody>
+      <TryoutSectionMetrics score={score} section={section} />
     </TryoutPartSummary>
   );
 }

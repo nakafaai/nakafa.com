@@ -25,11 +25,11 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "@repo/design-system/lib/utils";
-import { usePaginatedQuery } from "convex/react";
+import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { TryoutScoreCard } from "@/components/tryout/score/card";
 import { getLocale } from "@/lib/utils/date";
 
@@ -211,18 +211,17 @@ function TryoutAttemptHistory({
 
 /** Renders a score card with selectable immutable attempt history. */
 export function TryoutAttemptResults({
-  children,
   value,
 }: {
-  children: ReactNode;
   value: TryoutAttemptResultsValue;
 }) {
+  const { isAuthenticated } = useConvexAuth();
   const [selectedAttemptId, setSelectedAttemptId] = useState<
     HistoryRow["attemptId"] | null
   >(null);
   const history = usePaginatedQuery(
     api.tryouts.queries.history.bySet,
-    value.identity,
+    isAuthenticated ? value.identity : "skip",
     { initialNumItems: 25 }
   );
   const attempts = history.results.filter(hasScore);
@@ -232,24 +231,20 @@ export function TryoutAttemptResults({
   const visibleAttempt = selectedAttempt ?? value.attempt;
 
   return (
-    <div className="w-full space-y-4">
-      <TryoutScoreCard
-        value={{ score: visibleAttempt.score, status: visibleAttempt.status }}
+    <TryoutScoreCard
+      value={{ score: visibleAttempt.score, status: visibleAttempt.status }}
+    >
+      <TryoutAttemptHistory
+        value={{
+          attempts,
+          locale: value.identity.locale,
+          loadMore: history.loadMore,
+          onChoose: setSelectedAttemptId,
+          selectedAttemptId: visibleAttempt.attemptId,
+          status: history.status,
+        }}
       />
-      <div className="flex min-h-9 w-full flex-wrap items-center gap-3">
-        {children}
-        <TryoutAttemptHistory
-          value={{
-            attempts,
-            locale: value.identity.locale,
-            loadMore: history.loadMore,
-            onChoose: setSelectedAttemptId,
-            selectedAttemptId: visibleAttempt.attemptId,
-            status: history.status,
-          }}
-        />
-      </div>
-    </div>
+    </TryoutScoreCard>
   );
 }
 

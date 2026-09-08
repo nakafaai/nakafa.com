@@ -1,8 +1,7 @@
 import "server-only";
 
-import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { AppShell } from "@/components/sidebar/app-shell";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import {
   TryoutActiveQuestionShell,
@@ -13,8 +12,11 @@ import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response
 import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
-import { TryoutPageHeader } from "@/components/tryout/shell/header";
-import { TryoutMeta } from "@/components/tryout/shell/meta";
+import {
+  TryoutPageBody,
+  TryoutPageHeader,
+} from "@/components/tryout/shell/header";
+import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import type { QuestionPreviewContent } from "@/lib/content/preview/question";
 
 /** Renders one authenticated prompt or full answer on its real public route. */
@@ -23,37 +25,36 @@ export async function TryoutQuestionPreview({
 }: {
   readonly content: QuestionPreviewContent;
 }) {
-  const [tCommon, tTryouts] = await Promise.all([
-    getTranslations({ locale: content.appLocale, namespace: "Common" }),
-    getTranslations({ locale: content.appLocale, namespace: "Tryouts" }),
-  ]);
+  const articleNavigation = await getShellArticleNavigation(content.appLocale);
   const { exam, section, set, track } = content.target;
   const Question = content.Question;
-  const parentPublicPath =
-    section.publicPath === undefined ? track.publicPath : set.publicPath;
-
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
-      <div className="space-y-10">
-        <TryoutPageHeader
-          value={{
-            description: section.description,
-            icon: getMaterialIcon(section.sectionKey),
-            link: {
-              href: getTryoutPublicPathHref(parentPublicPath),
-              label: tCommon("back"),
-            },
-            meta: <TryoutMeta items={[exam.title, track.title, set.title]} />,
-            status: tTryouts("part-head-ready"),
-            title: section.title,
-          }}
-        />
-
+    <AppShell articleNavigation={articleNavigation}>
+      <TryoutPageHeader
+        action={null}
+        items={[
+          { href: getTryoutPublicPathHref(exam.publicPath), label: exam.title },
+          {
+            href: getTryoutPublicPathHref(track.publicPath),
+            label: track.title,
+          },
+          ...(section.publicPath
+            ? [
+                {
+                  href: getTryoutPublicPathHref(set.publicPath),
+                  label: set.title,
+                },
+              ]
+            : []),
+        ]}
+        title={section.title}
+      />
+      <TryoutPageBody>
         <QuestionPreviewBody content={content}>
           <Question />
         </QuestionPreviewBody>
-      </div>
-    </div>
+      </TryoutPageBody>
+    </AppShell>
   );
 }
 

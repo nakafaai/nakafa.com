@@ -19,8 +19,6 @@ import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
-const VISIBLE_PATH_ITEM_COUNT = 2;
-
 export type BreadcrumbHeaderItem = Readonly<{
   href?: string;
   label: string;
@@ -59,9 +57,12 @@ export function BreadcrumbHeaderPath({
   homeLabel,
   items,
   menuLabel,
-}: Pick<BreadcrumbHeaderValue, "homeLabel" | "items" | "menuLabel">) {
-  const hiddenItems = items.slice(0, -VISIBLE_PATH_ITEM_COUNT);
-  const visibleItems = items.slice(-VISIBLE_PATH_ITEM_COUNT);
+  visibleItemCount = 2,
+}: Pick<BreadcrumbHeaderValue, "homeLabel" | "items" | "menuLabel"> & {
+  visibleItemCount?: 1 | 2;
+}) {
+  const hiddenItems = items.slice(0, -visibleItemCount);
+  const visibleItems = items.slice(-visibleItemCount);
   return (
     <Breadcrumb className="min-w-0">
       <BreadcrumbList className="flex-nowrap">
