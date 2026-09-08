@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { type ReactNode, useState } from "react";
 import { AppShell } from "@/components/sidebar/app-shell";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
@@ -116,10 +116,14 @@ function LiveTryoutSetPage({
   restartTarget,
   route,
 }: TryoutSetPageClientProps & { binding: TryoutSetPageBinding }) {
+  const { isLoading } = useConvexAuth();
   const [terminalState, setTerminalState] = useState<SetState | undefined>();
+  // An unauthenticated response during hydration is not a terminal attempt.
   const liveState = useQuery(
     api.tryouts.queries.runtime.getSetAttemptState,
-    terminalState === undefined ? { attemptId: binding.attemptId } : "skip"
+    !isLoading && terminalState === undefined
+      ? { attemptId: binding.attemptId }
+      : "skip"
   );
 
   if (
