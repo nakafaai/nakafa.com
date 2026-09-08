@@ -11,9 +11,15 @@ export function LineScene({
   lines,
   showZAxis,
 }: LineSceneProps) {
+  const isFrontalPlane =
+    cameraPosition[0] === (cameraTarget?.[0] ?? 0) &&
+    cameraPosition[1] === (cameraTarget?.[1] ?? 0) &&
+    lines.every((line) => line.points.every((point) => point.z === 0));
+
   return (
     <CoordinateSystem
       cameraPosition={cameraPosition}
+      cameraProjection={isFrontalPlane ? { kind: "orthographic" } : undefined}
       cameraTarget={cameraTarget}
       showZAxis={showZAxis}
     >

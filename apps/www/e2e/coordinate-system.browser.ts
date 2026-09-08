@@ -176,7 +176,7 @@ const expectBoundedTriangleZoom = Effect.fn(
   const scene = page.locator('[data-slot="triangle-scene"]');
   const card = page.locator('[data-slot="card"]').filter({ has: scene });
   const canvas = scene.locator("canvas");
-  const label = scene.getByText("Hypotenuse", { exact: true });
+  const label = scene.getByText("c", { exact: true });
   // Reveal the content-visibility card before scrolling its deferred scene.
   yield* Effect.promise(() =>
     expect(async () => {
@@ -187,6 +187,11 @@ const expectBoundedTriangleZoom = Effect.fn(
     }).toPass({ timeout: 30_000 })
   );
   yield* Effect.promise(() => expect(label).toBeVisible());
+  yield* Effect.promise(() =>
+    expect(card.locator("[data-coordinate-controls]")).toContainText(
+      "Hypotenuse"
+    )
+  );
   yield* waitForStableCanvas(canvas);
   yield* expectReadableLabel(label);
 
