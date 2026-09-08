@@ -12985,6 +12985,250 @@ export declare const internal: {
       >;
     };
   };
+  retirement: {
+    internal: {
+      emptyAttempt: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          plan: {
+            active: {
+              manifestHash: string;
+              releaseId: string;
+              sequence: number;
+            };
+            attempt: {
+              _creationTime: number;
+              _id: Id<"tryoutAttempts">;
+              accessCampaignId?: Id<"tryoutAccessCampaigns">;
+              accessEndsAt: number;
+              accessGrantId?: Id<"tryoutAccessGrants">;
+              accessSourceKind:
+                "free" | "competition" | "access-pass" | "subscription";
+              accessSubscriptionId?: string;
+              appLocale: "en" | "id" | "de";
+              attemptNumber: number;
+              completedAt: number | null;
+              completedSectionKeys: Array<string>;
+              countryKey: string;
+              countsForCompetition: boolean;
+              endReason: "submitted" | "time-expired" | null;
+              examKey: string;
+              expiresAt: number;
+              lastActivityAt: number;
+              scaleVersionId?: Id<"irtScaleVersions">;
+              scoreStatus: "provisional" | "official";
+              scoringStrategy: "irt" | "raw" | "weighted";
+              sectionSnapshots: Array<{
+                publicPath?: string;
+                questionCount: number;
+                questionSourcePath: string;
+                sectionIdentity: string;
+                sectionKey: string;
+                sectionOrder: number;
+                sectionRowHash: string;
+                sourceRevision: string;
+                timeLimitSeconds: number;
+              }>;
+              setIdentity: string;
+              setKey: string;
+              setPublicPath: string;
+              snapshotReleaseId: string;
+              startedAt: number;
+              status: "in-progress" | "completed" | "expired";
+              theta?: number;
+              thetaSE?: number;
+              totalCorrect: number;
+              totalQuestions: number;
+              trackKey: string;
+              tryoutBundleHash: string;
+              tryoutBundleId: Id<"tryoutRuntimeBundles">;
+              tryoutSnapshotId: string;
+              userId: Id<"users">;
+            };
+            newSnapshotId: string;
+            previous: {
+              _creationTime: number;
+              _id: Id<"tryoutAttempts">;
+              accessCampaignId?: Id<"tryoutAccessCampaigns">;
+              accessEndsAt: number;
+              accessGrantId?: Id<"tryoutAccessGrants">;
+              accessSourceKind:
+                "free" | "competition" | "access-pass" | "subscription";
+              accessSubscriptionId?: string;
+              appLocale: "en" | "id" | "de";
+              attemptNumber: number;
+              completedAt: number | null;
+              completedSectionKeys: Array<string>;
+              countryKey: string;
+              countsForCompetition: boolean;
+              endReason: "submitted" | "time-expired" | null;
+              examKey: string;
+              expiresAt: number;
+              lastActivityAt: number;
+              scaleVersionId?: Id<"irtScaleVersions">;
+              scoreStatus: "provisional" | "official";
+              scoringStrategy: "irt" | "raw" | "weighted";
+              sectionSnapshots: Array<{
+                publicPath?: string;
+                questionCount: number;
+                questionSourcePath: string;
+                sectionIdentity: string;
+                sectionKey: string;
+                sectionOrder: number;
+                sectionRowHash: string;
+                sourceRevision: string;
+                timeLimitSeconds: number;
+              }>;
+              setIdentity: string;
+              setKey: string;
+              setPublicPath: string;
+              snapshotReleaseId: string;
+              startedAt: number;
+              status: "in-progress" | "completed" | "expired";
+              theta?: number;
+              thetaSE?: number;
+              totalCorrect: number;
+              totalQuestions: number;
+              trackKey: string;
+              tryoutBundleHash: string;
+              tryoutBundleId: Id<"tryoutRuntimeBundles">;
+              tryoutSnapshotId: string;
+              userId: Id<"users">;
+            };
+            previousScore: {
+              _creationTime: number;
+              _id: Id<"tryoutScores">;
+              finalizedAt: number;
+              publishedScore: number;
+              rawScore: number;
+              scaleVersionId?: Id<"irtScaleVersions">;
+              scoreStatus: "provisional" | "official";
+              scoringStrategy: "irt" | "raw" | "weighted";
+              setIdentity: string;
+              theta?: number;
+              thetaSE?: number;
+              totalCorrect: number;
+              totalQuestions: number;
+              tryoutAttemptId: Id<"tryoutAttempts">;
+              tryoutSnapshotId: string;
+              userId: Id<"users">;
+            };
+            progress: {
+              _creationTime: number;
+              _id: Id<"tryoutSetProgress">;
+              appLocale: "en" | "id" | "de";
+              attemptNumber: number;
+              countryKey: string;
+              examKey: string;
+              latestAttemptId: Id<"tryoutAttempts">;
+              publishedScore: number | null;
+              setIdentity: string;
+              setKey: string;
+              status: "in-progress" | "completed" | "expired";
+              statusRank: 1 | 2 | 3;
+              trackKey: string;
+              updatedAt: number;
+              userId: Id<"users">;
+            };
+            scale: {
+              _creationTime: number;
+              _id: Id<"irtScaleVersions">;
+              history?: true;
+              model: "2pl";
+              publishedAt: number;
+              questionCount: number;
+              setIdentity: string;
+              status: "provisional" | "official";
+              tryoutSnapshotId: string;
+            };
+            section: {
+              _creationTime: number;
+              _id: Id<"tryoutSectionAttempts">;
+              answeredCount: number;
+              completedAt: number | null;
+              correctAnswers: number;
+              endReason: "submitted" | "time-expired" | null;
+              expiresAt: number;
+              lastActivityAt: number;
+              score?: {
+                publishedScore: number;
+                rawScore: number;
+                scoreStatus: "provisional" | "official";
+                scoringStrategy: "irt" | "raw" | "weighted";
+                theta?: number;
+                thetaSE?: number;
+              };
+              sectionIdentity: string;
+              sectionKey: string;
+              sectionOrder: number;
+              startedAt: number;
+              status: "in-progress" | "completed" | "expired";
+              totalQuestions: number;
+              tryoutAttemptId: Id<"tryoutAttempts">;
+            };
+            sharedAttempts: Array<{
+              _creationTime: number;
+              _id: Id<"tryoutAttempts">;
+              accessCampaignId?: Id<"tryoutAccessCampaigns">;
+              accessEndsAt: number;
+              accessGrantId?: Id<"tryoutAccessGrants">;
+              accessSourceKind:
+                "free" | "competition" | "access-pass" | "subscription";
+              accessSubscriptionId?: string;
+              appLocale: "en" | "id" | "de";
+              attemptNumber: number;
+              completedAt: number | null;
+              completedSectionKeys: Array<string>;
+              countryKey: string;
+              countsForCompetition: boolean;
+              endReason: "submitted" | "time-expired" | null;
+              examKey: string;
+              expiresAt: number;
+              lastActivityAt: number;
+              scaleVersionId?: Id<"irtScaleVersions">;
+              scoreStatus: "provisional" | "official";
+              scoringStrategy: "irt" | "raw" | "weighted";
+              sectionSnapshots: Array<{
+                publicPath?: string;
+                questionCount: number;
+                questionSourcePath: string;
+                sectionIdentity: string;
+                sectionKey: string;
+                sectionOrder: number;
+                sectionRowHash: string;
+                sourceRevision: string;
+                timeLimitSeconds: number;
+              }>;
+              setIdentity: string;
+              setKey: string;
+              setPublicPath: string;
+              snapshotReleaseId: string;
+              startedAt: number;
+              status: "in-progress" | "completed" | "expired";
+              theta?: number;
+              thetaSE?: number;
+              totalCorrect: number;
+              totalQuestions: number;
+              trackKey: string;
+              tryoutBundleHash: string;
+              tryoutBundleId: Id<"tryoutRuntimeBundles">;
+              tryoutSnapshotId: string;
+              userId: Id<"users">;
+            }>;
+          };
+        },
+        {
+          alreadyRetired: boolean;
+          removedPlacements: number;
+          removedSections: number;
+          restoredAttemptId: Id<"tryoutAttempts">;
+          restoredProgressId: Id<"tryoutSetProgress">;
+          retiredAttemptId: Id<"tryoutAttempts">;
+        }
+      >;
+    };
+  };
   subscriptions: {
     mutations: {
       createSubscription: FunctionReference<
