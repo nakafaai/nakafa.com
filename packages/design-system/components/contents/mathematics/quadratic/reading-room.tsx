@@ -62,6 +62,7 @@ export function ReadingRoomProblem({
               smooth={false}
             />
             <ThreeLabel
+              anchorX="left"
               anchorY="top"
               color={COLORS.SLATE}
               fontSize="diagram"
@@ -72,6 +73,7 @@ export function ReadingRoomProblem({
             </ThreeLabel>
             <ThreeLabel
               anchorX="left"
+              anchorY="bottom"
               color={COLORS.SLATE}
               fontSize="diagram"
               gap={0.2}
@@ -98,20 +100,20 @@ export function ReadingRoomProblem({
                     smooth={false}
                   />
                   <ThreeLabel
-                    anchorX={dx > 0 ? "left" : "right"}
+                    anchorX={dx > 0 ? "right" : "left"}
                     color={color}
                     fontSize="diagram"
                     gap={0.15}
-                    position={[insideX, (y + insideY) / 2, 0]}
+                    position={[x, (y + insideY) / 2, 0]}
                   >
                     <InlineMath math="x" />
                   </ThreeLabel>
                   <ThreeLabel
-                    anchorY={dy > 0 ? "bottom" : "top"}
+                    anchorY={dy > 0 ? "top" : "bottom"}
                     color={color}
                     fontSize="diagram"
                     gap={0.15}
-                    position={[(x + insideX) / 2, insideY, 0]}
+                    position={[(x + insideX) / 2, y, 0]}
                   >
                     <InlineMath math="x" />
                   </ThreeLabel>

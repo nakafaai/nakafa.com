@@ -33,7 +33,11 @@ export function Inequality({ title, description, data }: Props) {
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <CoordinateSystem>
+          <CoordinateSystem
+            cameraPosition={
+              data.every((item) => item.is2D) ? [0, 0, 15] : undefined
+            }
+          >
             {data.map((item, index) => (
               <Inequality3D
                 key={`inequality-${item.boundaryLine2D?.join("_") || index}`}

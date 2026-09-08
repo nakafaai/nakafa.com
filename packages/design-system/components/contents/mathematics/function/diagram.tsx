@@ -99,49 +99,52 @@ export function RelationVisualizer({
   ];
   return (
     <figure aria-label={accessibilityLabel}>
-      <CoordinateSystem cameraPosition={[0, 0, 15]}>
-        {sets.map((set) => (
-          <group key={set.id}>
+      <CoordinateSystem cameraPosition={[0, 0, 15]} showOrigin={false}>
+        {/* Keep every element on its arrow row, above the X axis. */}
+        <group position={[0, 3, 0]}>
+          {sets.map((set) => (
+            <group key={set.id}>
+              <LineEquation
+                color={set.color}
+                points={ELLIPSE_POINTS.map((point) => ({
+                  ...point,
+                  x: point.x + set.x,
+                }))}
+                showPoints={false}
+                smooth={false}
+              />
+              <ThreeLabel
+                anchorY="bottom"
+                color={set.color}
+                fontSize="diagram"
+                gap={0.2}
+                position={[set.x, 2.5, 0]}
+              >
+                {set.label}
+              </ThreeLabel>
+              {set.points.map((point, index) => (
+                <ThreeLabel
+                  color={set.color}
+                  fontSize="diagram"
+                  key={point.id}
+                  position={[point.x, point.y, point.z]}
+                >
+                  {set.elements[index].label}
+                </ThreeLabel>
+              ))}
+            </group>
+          ))}
+          {relation.mappings.map((mapping) => (
             <LineEquation
-              color={set.color}
-              points={ELLIPSE_POINTS.map((point) => ({
-                ...point,
-                x: point.x + set.x,
-              }))}
+              color={COLORS.BLUE}
+              cone={{ position: "end", size: 0.25 }}
+              key={mapping.id}
+              points={mapping.points}
               showPoints={false}
               smooth={false}
             />
-            <ThreeLabel
-              anchorY="bottom"
-              color={set.color}
-              fontSize="diagram"
-              gap={0.2}
-              position={[set.x, 2.5, 0]}
-            >
-              {set.label}
-            </ThreeLabel>
-            {set.points.map((point, index) => (
-              <ThreeLabel
-                color={set.color}
-                fontSize="diagram"
-                key={point.id}
-                position={[point.x, point.y, point.z]}
-              >
-                {set.elements[index].label}
-              </ThreeLabel>
-            ))}
-          </group>
-        ))}
-        {relation.mappings.map((mapping) => (
-          <LineEquation
-            color={COLORS.BLUE}
-            cone={{ position: "end", size: 0.25 }}
-            key={mapping.id}
-            points={mapping.points}
-            showPoints={false}
-            smooth={false}
-          />
-        ))}
+          ))}
+        </group>
       </CoordinateSystem>
       <ul className="sr-only">
         {relation.mappings.map((mapping) => (

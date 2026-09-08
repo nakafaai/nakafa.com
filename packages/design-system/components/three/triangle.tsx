@@ -287,7 +287,7 @@ export function Triangle({
 
       {/* Angle label */}
       <ThreeLabel
-        anchorX="center"
+        anchorX={Math.cos(angleInRadians / 2) >= 0 ? "left" : "right"}
         color={COLORS.VIOLET}
         fontSize={BASE_FONT_SIZE}
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
@@ -315,10 +315,12 @@ export function Triangle({
       </ThreeLabel>
 
       <ThreeLabel
+        anchorX={opposite >= 0 ? "left" : "right"}
         color={COLORS.ORANGE}
         fontSize={BASE_FONT_SIZE}
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.oppositeLabelPos}
+        rotation={-Math.PI / 2}
       >
         {labels.opposite}
       </ThreeLabel>

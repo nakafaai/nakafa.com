@@ -4,223 +4,124 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { cn } from "@repo/design-system/lib/utils";
-import { useRouter } from "@repo/internationalization/src/navigation";
-import {
-  type ColumnFiltersState,
-  functionalUpdate,
-  type Header,
-  type OnChangeFn,
-  type ReactTable,
-  type SortingState,
-  useTable,
-} from "@tanstack/react-table";
-import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
+import { useQueryStates } from "nuqs";
 import { useState } from "react";
-import { createTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
-import { tryoutTableFeatures } from "@/components/tryout/catalog/table/features";
-import { readTryoutSetStatusFilter } from "@/components/tryout/catalog/table/filter";
+import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
+import { catalogQuery } from "@/components/tryout/catalog/table/query";
 import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
-import { readTryoutSetSort } from "@/components/tryout/catalog/table/sort";
-import type {
-  TryoutSetRow,
-  TryoutTrackPage,
-} from "@/components/tryout/catalog/table/types";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import type { TryoutCatalogBootstrap } from "@/components/tryout/catalog/table/types";
 
-const EMPTY_ROWS: TryoutSetRow[] = [];
-
-/** Renders one realtime, server-sorted try-out set discovery table. */
+/** Displays one complete signed discovery result with independent URL controls. */
 export function TryoutSetTable({
-  locale,
-  page,
+  bootstrap,
+  title,
 }: {
-  locale: Locale;
-  page: TryoutTrackPage;
+  bootstrap: TryoutCatalogBootstrap;
+  title: string;
 }) {
-  const router = useRouter();
-  const tTryouts = useTranslations("Tryouts");
+  const t = useTranslations("Tryouts");
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [intentHref, setIntentHref] = useState<string | null>(null);
-  const statusFilter = readTryoutSetStatusFilter(columnFilters);
-  const columns = createTryoutSetColumns({
-    intentHref,
-    sorting,
-    statusFilter,
+  const [selection, setSelection] = useQueryStates(catalogQuery, {
+    history: "push",
+    shallow: true,
+    scroll: false,
   });
+  const sort = { field: selection.sort, direction: selection.direction };
+  const { countryKey, examKey, locale, trackKey } = bootstrap.args;
   const data = useTryoutSetData({
-    locale,
-    page,
-    statusFilter,
-    sort: readTryoutSetSort(sorting),
-  });
-
-  /** Upgrades the row's real link to a full URL-specific runtime prefetch. */
-  function markSetIntent(row: TryoutSetRow) {
-    const href = getTryoutPublicPathHref(row.publicPath);
-
-    setIntentHref(href);
-  }
-
-  /** Navigates one row after warming its URL-specific route. */
-  function navigateToSet(row: TryoutSetRow) {
-    markSetIntent(row);
-    router.push(getTryoutPublicPathHref(row.publicPath));
-  }
-  const [retainedRows, setRetainedRows] = useState<TryoutSetRow[]>(EMPTY_ROWS);
-  const visibleRows = data.pending ? retainedRows : data.rows;
-
-  /** Retain visible rows while requesting a newly sorted server page. */
-  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
-    setRetainedRows(visibleRows);
-    setColumnFilters([]);
-    setSorting((current) => functionalUpdate(updater, current));
-  };
-
-  /** Retain visible rows while requesting a newly filtered server page. */
-  const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (
-    updater
-  ) => {
-    setRetainedRows(visibleRows);
-    setSorting([]);
-    setColumnFilters((current) => functionalUpdate(updater, current));
-  };
-
-  const table = useTable({
-    columns,
-    data: visibleRows,
-    enableMultiSort: false,
-    features: tryoutTableFeatures,
-    getRowId: (row) => row.setKey,
-    manualFiltering: true,
-    manualSorting: true,
-    onColumnFiltersChange: handleColumnFiltersChange,
-    onSortingChange: handleSortingChange,
-    state: {
-      columnFilters,
-      sorting,
+    bootstrap,
+    request: {
+      countryKey,
+      examKey,
+      locale,
+      trackKey,
+      filter: selection.status,
+      sort,
     },
   });
-
-  if (data.pending && visibleRows.length === 0) {
-    return null;
+  let status = "";
+  let emptyLabel = t("list-empty");
+  if (data.busy) {
+    status = t("set-updating");
+    emptyLabel = status;
+  }
+  if (data.offline) {
+    status = t("set-offline");
+  }
+  if (data.error) {
+    status = t("set-update-error");
+    emptyLabel = status;
   }
 
+  const canLoadMore =
+    data.hasMore && !data.busy && !data.error && !data.offline;
   return (
-    <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col px-6 py-4">
+    <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-3xl flex-1 flex-col px-6 py-4">
       <div
         aria-busy={data.busy}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border"
+        className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md border"
+        data-catalog-snapshot={data.snapshotId}
       >
-        <div className="min-h-0 flex-1 overflow-auto" ref={setScrollRoot}>
+        <div
+          className="min-h-0 min-w-0 flex-1 overflow-auto"
+          ref={setScrollRoot}
+        >
           <Table
-            className="min-w-136 table-fixed"
+            className="min-w-176 table-fixed"
             containerClassName="overflow-visible"
           >
-            <TableHeader className="sticky top-0 z-10 bg-background">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow
-                  className="hover:bg-transparent hover:text-inherit"
-                  key={headerGroup.id}
-                >
-                  {headerGroup.headers.map((header) => (
-                    <TableHead
-                      className={cn(
-                        "px-2 sm:px-4",
-                        getColumnWidthClassName(header.column.id)
-                      )}
-                      key={header.id}
-                    >
-                      <TryoutTableHeaderContent header={header} table={table} />
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
+            <TableCaption className="sr-only">{title}</TableCaption>
+            <colgroup>
+              <col />
+              <col className="w-40" />
+              <col className="w-32" />
+              <col className="w-28" />
+              <col className="w-28" />
+            </colgroup>
+            <TryoutTableHeader
+              filter={selection.status}
+              onFilter={async (status) => {
+                await setSelection({ status });
+              }}
+              onSort={async ({ field, direction }) => {
+                await setSelection({ sort: field, direction });
+              }}
+              sort={sort}
+            />
             <TableBody>
-              <TryoutTableRows
-                emptyLabel={tTryouts("list-empty")}
-                navigation={{ intent: markSetIntent, navigate: navigateToSet }}
-                table={table}
-              />
-              <TryoutTableLoader
-                data={data}
-                scrollRoot={scrollRoot}
-                table={table}
-              />
+              <TryoutTableRows emptyLabel={emptyLabel} rows={data.rows} />
+              {canLoadMore && (
+                <TableRow
+                  aria-hidden="true"
+                  className="h-px hover:bg-transparent"
+                >
+                  <TableCell className="p-0" colSpan={5}>
+                    <Intersection
+                      className="h-px"
+                      key={`${selection.status}:${selection.sort}:${selection.direction}:${data.rows.length}`}
+                      onIntersect={data.loadMore}
+                      root={scrollRoot}
+                    />
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
+        <span
+          aria-live="polite"
+          className="pointer-events-none absolute inset-x-4 bottom-3 text-muted-foreground text-xs empty:hidden"
+          role="status"
+        >
+          {status}
+        </span>
       </div>
     </div>
   );
-}
-
-/** Renders one concrete TanStack header or nothing for a placeholder. */
-function TryoutTableHeaderContent({
-  header,
-  table,
-}: {
-  header: Header<typeof tryoutTableFeatures, TryoutSetRow, unknown>;
-  table: ReactTable<typeof tryoutTableFeatures, TryoutSetRow>;
-}) {
-  if (header.isPlaceholder) {
-    return null;
-  }
-
-  return <table.FlexRender header={header} />;
-}
-
-/** Renders the infinite-query sentinel until Convex exhausts the result set. */
-function TryoutTableLoader({
-  data,
-  scrollRoot,
-  table,
-}: {
-  data: ReturnType<typeof useTryoutSetData>;
-  scrollRoot: HTMLDivElement | null;
-  table: ReactTable<typeof tryoutTableFeatures, TryoutSetRow>;
-}) {
-  if (data.exhausted) {
-    return null;
-  }
-
-  return (
-    <TableRow aria-hidden="true" className="h-px hover:bg-transparent">
-      <TableCell className="p-0" colSpan={table.getAllLeafColumns().length}>
-        <Intersection
-          className="h-px"
-          key={data.loadKey}
-          onIntersect={data.loadMore}
-          root={scrollRoot}
-        />
-      </TableCell>
-    </TableRow>
-  );
-}
-
-/** Return responsive widths for each stable try-out table column. */
-function getColumnWidthClassName(columnId: string) {
-  if (columnId === "title") {
-    return "w-[30%] sm:w-[40%]";
-  }
-
-  if (columnId === "readyQuestionCount") {
-    return "w-[16%]";
-  }
-
-  if (columnId === "publishedScore") {
-    return "w-[16%]";
-  }
-
-  return "w-[38%] sm:w-[28%]";
 }

@@ -174,11 +174,13 @@ const expectBoundedTriangleZoom = Effect.fn(
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
   const scene = page.locator('[data-slot="triangle-scene"]');
+  const card = page.locator('[data-slot="card"]').filter({ has: scene });
   const canvas = scene.locator("canvas");
   const label = scene.getByText("Hypotenuse", { exact: true });
-  // Keep the deferred scene in view while streaming startup finishes.
+  // Reveal the content-visibility card before scrolling its deferred scene.
   yield* Effect.promise(() =>
     expect(async () => {
+      await card.scrollIntoViewIfNeeded();
       await expect(scene).toBeVisible();
       await scene.scrollIntoViewIfNeeded();
       expect(await canvas.isVisible()).toBe(true);
@@ -227,6 +229,7 @@ const expectStableCoordinateSystem = Effect.fn(
     expect(async () => {
       await expect(card).toHaveCount(1);
       await expect(scene).toBeAttached();
+      await card.scrollIntoViewIfNeeded();
       await scene.scrollIntoViewIfNeeded();
       expect(await canvas.isVisible()).toBe(true);
     }).toPass({ timeout: 30_000 })
