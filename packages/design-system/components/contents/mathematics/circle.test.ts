@@ -108,7 +108,7 @@ describe("circle visual geometry", () => {
       color: "amber",
       labels: [{ at: 2, offset: [0, -0.5, 0], text: "120°" }],
       showPoints: false,
-      smooth: true,
+      smooth: false,
     });
     if (!arcLine.labels) {
       throw new Error("Expected arc line to include a label");
@@ -137,7 +137,7 @@ describe("circle visual geometry", () => {
     expect(arcLine.labels[0]).toMatchObject({ at: 0, text: "start" });
   });
 
-  it("keeps circle segment arcs smooth and chords straight", () => {
+  it("preserves analytical circle samples and straight chord endpoints", () => {
     const [arcLine, chordLine] = createCircleSegmentBoundaryLines({
       color: "orange",
       label: {
@@ -156,7 +156,7 @@ describe("circle visual geometry", () => {
       labels: [{ at: 4, offset: [0, -1.5, 0], text: "Major Segment" }],
       lineWidth: 4,
       showPoints: false,
-      smooth: true,
+      smooth: false,
     });
     expect(chordLine).toMatchObject({
       color: "orange",
@@ -191,7 +191,7 @@ describe("circle visual geometry", () => {
       color: "lime",
       lineWidth: 2,
       showPoints: false,
-      smooth: true,
+      smooth: false,
     });
     expect(arcLine).not.toHaveProperty("labels");
     expect(chordLine).toMatchObject({

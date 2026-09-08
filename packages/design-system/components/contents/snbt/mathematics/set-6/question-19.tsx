@@ -48,9 +48,8 @@ export function Graph({ title, description, label }: GraphProps) {
   const HorizontalEnd = { x: A.x + HorizontalLen, y: A.y, z: 0 };
   const MidHorizontal = { x: A.x + HorizontalLen / 2, y: A.y, z: 0 };
 
-  // Person Height (173 cm = 1.73 m)
-  // Use a fixed visual height because true scale (1.73/20 = 0.08) is too small to see
-  const H_PERSON_GRAPH = 2;
+  // The marker's 173 cm height uses the same scale as the triangle.
+  const H_PERSON_GRAPH = 1.73 / SCALE;
 
   const B_Ground = { x: B.x, y: B.y - H_PERSON_GRAPH, z: 0 };
   const B_Mid = { x: B.x, y: B.y - H_PERSON_GRAPH / 2, z: 0 };
@@ -104,7 +103,6 @@ export function Graph({ title, description, label }: GraphProps) {
               text: label.horizontal,
               at: 1,
               offset: [0, 0.5, 0],
-              color: COLOR_SIGHT,
             },
           ],
         },
@@ -127,7 +125,6 @@ export function Graph({ title, description, label }: GraphProps) {
               text: <InlineMath math="60\,\text{m}" />,
               at: 1, // midpoint
               offset: [-1, 0, 0],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -142,7 +139,6 @@ export function Graph({ title, description, label }: GraphProps) {
               text: <InlineMath math="180\,\text{m}" />,
               at: 1,
               offset: [0, -1, 0],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -175,10 +171,9 @@ export function Graph({ title, description, label }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: <InlineMath math="a" />,
+              text: <InlineMath math="\alpha" />,
               at: 0,
               offset: [0, 0, 0],
-              color: COLOR_AUX,
             },
           ],
         },
@@ -195,10 +190,9 @@ export function Graph({ title, description, label }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: <InlineMath math="a" />,
+              text: <InlineMath math="\alpha" />,
               at: 0,
               offset: [0, 0, 0],
-              color: COLOR_AUX,
             },
           ],
         },
@@ -213,7 +207,6 @@ export function Graph({ title, description, label }: GraphProps) {
               text: <InlineMath math="173\,\text{cm}" />,
               at: 1,
               offset: [-0.8, 0, 0],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -227,7 +220,6 @@ export function Graph({ title, description, label }: GraphProps) {
               text: <InlineMath math="173\,\text{cm}" />,
               at: 1,
               offset: [0.8, 0, 0],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -242,7 +234,6 @@ export function Graph({ title, description, label }: GraphProps) {
               text: <InlineMath math="A" />,
               at: 0,
               offset: [-0.5, 0.5, 0],
-              color: COLOR_TRIANGLE,
             },
           ],
         },
@@ -256,7 +247,6 @@ export function Graph({ title, description, label }: GraphProps) {
               text: <InlineMath math="B" />,
               at: 0,
               offset: [-0.5, -0.5, 0],
-              color: COLOR_TRIANGLE,
             },
           ],
         },
@@ -270,7 +260,6 @@ export function Graph({ title, description, label }: GraphProps) {
               text: <InlineMath math="C" />,
               at: 0,
               offset: [0.5, -0.5, 0],
-              color: COLOR_TRIANGLE,
             },
           ],
         },

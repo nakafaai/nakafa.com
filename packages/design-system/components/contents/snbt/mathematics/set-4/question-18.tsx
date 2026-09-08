@@ -12,11 +12,11 @@ interface GraphProps {
   title: ReactNode;
 }
 
-const DISTANCE_AC = 12;
-const DISTANCE_CD = 2;
+const DISTANCE_AC = 20;
+const DISTANCE_CD = 7;
 const SIN_37 = 0.6;
 const COS_37 = 0.8;
-const SCALE = 1.2;
+const SCALE = 2;
 
 const abLength = DISTANCE_AC * SIN_37;
 const bcLength = DISTANCE_AC * COS_37;
@@ -34,18 +34,8 @@ const midAC = getMidpoint(pointA, pointC);
 
 const angleCARad = Math.atan2(pointA.y - pointC.y, pointA.x - pointC.x);
 const angleDARad = Math.atan2(pointA.y - pointD.y, pointA.x - pointD.x);
-const arcCPoints = getArcPoints(
-  pointC,
-  scaleDistance(2) * 0.5,
-  Math.PI,
-  angleCARad
-);
-const arcDPoints = getArcPoints(
-  pointD,
-  scaleDistance(2) * 0.4,
-  Math.PI,
-  angleDARad
-);
+const arcCPoints = getArcPoints(pointC, 0.8, Math.PI, angleCARad);
+const arcDPoints = getArcPoints(pointD, 0.6, Math.PI, angleDARad);
 const arcCLabelIndex = Math.floor(arcCPoints.length / 2);
 const arcDLabelIndex = Math.floor(arcDPoints.length / 2);
 
@@ -71,7 +61,11 @@ const graphData = [
     showPoints: false,
     labels: [
       { text: <InlineMath math="D" />, at: 0, offset: [0, -0.5, 0] },
-      { text: <InlineMath math="2\,\text{km}" />, at: 1, offset: [0, -0.8, 0] },
+      {
+        text: <InlineMath math={`${DISTANCE_CD}\\,\\text{km}`} />,
+        at: 1,
+        offset: [0, -0.8, 0],
+      },
       { text: <InlineMath math="C" />, at: 2, offset: [0, -0.5, 0] },
     ],
   },
@@ -81,7 +75,7 @@ const graphData = [
     showPoints: false,
     labels: [
       {
-        text: <InlineMath math="12\,\text{km}" />,
+        text: <InlineMath math={`${DISTANCE_AC}\\,\\text{km}`} />,
         at: 1,
         offset: [0.5, 0.5, 0],
       },

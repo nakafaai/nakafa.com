@@ -136,7 +136,7 @@ export function CameraControls(props: CameraControlsProps) {
   const projectionFov =
     projection.kind === "perspective" ? (projection.fov ?? fov) : fov;
   const projectionHeight =
-    projection.kind === "orthographic" ? projection.viewHeight : 0;
+    projection.kind === "orthographic" ? (projection.viewHeight ?? 0) : 0;
   const projectionNear = projection.near;
   const projectionFar = projection.far;
 
@@ -193,7 +193,7 @@ export function CameraControls(props: CameraControlsProps) {
         cameraTargetY,
         cameraTargetZ
       );
-      const bounds = Effect.runSync(
+      const measurement = Effect.runSync(
         measureCameraBounds({
           labels: framing.labels,
           position: authoredPosition,
@@ -202,13 +202,22 @@ export function CameraControls(props: CameraControlsProps) {
           target: authoredTarget,
         })
       );
-      if (Option.isNone(bounds)) {
+      if (Option.isNone(measurement)) {
         initializePose(controls, authoredPosition, authoredTarget);
         return;
       }
+      const { bounds, labels } = measurement.value;
       const key = [
-        ...bounds.value.min.toArray(),
-        ...bounds.value.max.toArray(),
+        ...bounds.min.toArray(),
+        ...bounds.max.toArray(),
+        ...labels.flatMap((label) => [
+          ...label.anchors.min.toArray(),
+          ...label.anchors.max.toArray(),
+          label.gap.x,
+          label.gap.y,
+          ...label.rectangle.min.toArray(),
+          ...label.rectangle.max.toArray(),
+        ]),
         ...authoredPosition.toArray(),
         ...authoredTarget.toArray(),
         viewportWidth,
@@ -224,14 +233,19 @@ export function CameraControls(props: CameraControlsProps) {
         return;
       }
 
-      const fitted = resolveCameraFit({
-        bounds: bounds.value,
-        fov: projectionFov,
-        height: viewportHeight,
-        position: authoredPosition,
-        target: authoredTarget,
-        width: viewportWidth,
-      });
+      const fitted = Effect.runSync(
+        resolveCameraFit({
+          bounds,
+          fov: projectionFov,
+          height: viewportHeight,
+          labels,
+          minimumViewHeight: projectionHeight,
+          position: authoredPosition,
+          projection: projection.kind,
+          target: authoredTarget,
+          width: viewportWidth,
+        })
+      );
       const limits = resolveCameraDistanceLimits({
         maxDistance,
         minDistance,
@@ -268,7 +282,7 @@ export function CameraControls(props: CameraControlsProps) {
       }
       object.updateProjectionMatrix();
       lastFit.current = {
-        bounds: bounds.value,
+        bounds: bounds.clone().expandByPoint(fitted.target),
         camera: object,
         distance: fitted.distance,
         key,
@@ -297,6 +311,7 @@ export function CameraControls(props: CameraControlsProps) {
     projectionFar,
     projectionFov,
     projectionHeight,
+    projection.kind,
     projectionNear,
     scene,
     viewportHeight,

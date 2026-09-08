@@ -1,13 +1,16 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import {
+  CoordinateControls,
+  CoordinateProvider,
+} from "@repo/design-system/components/three/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
@@ -35,6 +38,19 @@ import {
   NumberField,
 } from "react-aria-components";
 
+function ScenePlaceholder() {
+  return (
+    <div
+      aria-hidden="true"
+      className={threeSceneFrameVariants({
+        className: "grid place-items-center",
+      })}
+    >
+      <Spinner className="size-6" />
+    </div>
+  );
+}
+
 // Next owns this client-only import boundary so offscreen lessons do not load WebGL.
 const TriangleScene = dynamic(
   () =>
@@ -42,7 +58,7 @@ const TriangleScene = dynamic(
       "@repo/design-system/components/contents/mathematics/triangle/scene"
     ).then((module) => module.TriangleScene),
   {
-    loading: () => <Spinner aria-hidden="true" className="size-6" />,
+    loading: ScenePlaceholder,
     ssr: false,
   }
 );
@@ -69,15 +85,17 @@ export function Triangle({
   const locale = useLocale();
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <I18nProvider locale={locale}>
-        <Content angle={angle} labels={labels} size={size} />
-      </I18nProvider>
-    </Card>
+    <CoordinateProvider>
+      <Card className="content-auto-card">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <I18nProvider locale={locale}>
+          <Content angle={angle} labels={labels} size={size} />
+        </I18nProvider>
+      </Card>
+    </CoordinateProvider>
   );
 }
 
@@ -99,19 +117,19 @@ function Content({
     <>
       <CardContent>
         <Intersection
-          className={threeSceneFrameVariants({
-            className: "grid place-items-center",
-          })}
+          className="relative"
           data-slot="triangle-scene"
           once
           onIntersect={() => setIsNearViewport(true)}
         >
           {isNearViewport ? (
             <TriangleScene angle={angleValue} labels={labels} size={size} />
-          ) : null}
+          ) : (
+            <ScenePlaceholder />
+          )}
         </Intersection>
       </CardContent>
-      <CardFooter className="border-t px-0">
+      <CoordinateControls>
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge className="font-mono" variant="outline">
@@ -180,7 +198,7 @@ function Content({
             </NumberField>
           </div>
         </div>
-      </CardFooter>
+      </CoordinateControls>
     </>
   );
 }

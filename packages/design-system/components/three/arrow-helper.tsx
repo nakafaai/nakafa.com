@@ -1,7 +1,10 @@
 "use client";
 
 import { Line } from "@react-three/drei";
-import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
+import {
+  THREE_DIAGRAM_MINIMUM_FONT_SIZE,
+  type ThreeFontSize,
+} from "@repo/design-system/components/three/data/constants";
 import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
@@ -256,6 +259,7 @@ export function ArrowHelper({
           anchorX={labelAnchorX}
           color={color}
           fontSize={labelSize}
+          minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
           position={labelPos}
         >
           {label}

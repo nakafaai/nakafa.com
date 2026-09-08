@@ -23,7 +23,7 @@ import {
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
-  { year: "2013", growth: 5.58, barValue: 5.58 },
+  { year: "2013", growth: 5.56, barValue: 5.56 },
   { year: "2014", growth: 5.01, barValue: null },
   { year: "2015", growth: 4.88, barValue: 4.88 },
   { year: "2016", growth: 5.03, barValue: null },

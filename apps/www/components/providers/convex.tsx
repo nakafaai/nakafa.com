@@ -4,6 +4,7 @@ import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
 import { Data, Effect } from "effect";
 import { type ReactNode, useCallback, useRef } from "react";
 import { authClient } from "@/lib/auth/client";
+import { AuthSessionProvider, useAuthSession } from "@/lib/auth/session";
 
 let sharedConvexClient: ConvexReactClient | undefined;
 
@@ -49,7 +50,7 @@ const readConvexToken = Effect.fn("NakafaAuth.readConvexToken")(function* () {
  * Source: https://github.com/get-convex/better-auth/blob/v0.12.5/src/react/index.tsx#L53-L171
  */
 function useBetterAuth() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending } = useAuthSession();
   const sessionId = session?.session?.id;
   const cachedTokenRef = useRef<{
     readonly sessionId: string;
@@ -132,7 +133,7 @@ export function ConvexProvider({
 }) {
   const convex = getSharedConvexClient(convexUrl);
 
-  return (
+  const authenticatedChildren = (
     // Convex's public API explicitly requires an authentication Hook prop.
     // https://docs.convex.dev/api/modules/react#convexproviderwithauth
     // https://github.com/get-convex/convex-js/blob/d28852aa028dede94796a012a2a802ae6ad04188/src/react/ConvexAuthState.tsx#L75-L99
@@ -143,4 +144,6 @@ export function ConvexProvider({
       {children}
     </ConvexProviderWithAuth>
   );
+
+  return <AuthSessionProvider>{authenticatedChildren}</AuthSessionProvider>;
 }

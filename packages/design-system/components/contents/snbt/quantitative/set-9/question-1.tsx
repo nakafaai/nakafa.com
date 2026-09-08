@@ -50,7 +50,7 @@ export function Graph({ title, description }: GraphProps) {
       points: circlePoints,
       color: getColor("EMERALD"),
       lineWidth: 2,
-      smooth: true,
+      smooth: false,
       showPoints: false,
     },
     {

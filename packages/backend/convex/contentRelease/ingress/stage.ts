@@ -5,7 +5,6 @@ import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/truste
 import type { StageOperation } from "@nakafa/aksara-contracts/transport/group";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import {
   loadStageEnvelope,
@@ -78,11 +77,6 @@ const projectionBatchReference = makeFunctionReference<
   { batchIndex: number; projectionJson: string[]; releaseId: string },
   StageReceipt
 >("contentRelease/items:stageProjectionBatch");
-const rollbackProjectionBatchReference = makeFunctionReference<
-  "mutation",
-  { batchIndex: number; projectionJson: string[]; releaseId: string },
-  StageReceipt
->("contentRelease/items:stageRollbackProjectionBatch");
 const artifactBatchReference = makeFunctionReference<
   "mutation",
   { artifactJson: string[]; batchIndex: number; releaseId: string },
@@ -211,30 +205,14 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
       );
       return { ok: true, operation: request.operation, value };
     }
-    if (request.operation === "stageRollbackProjectionBatch") {
-      const value = yield* callInternal(() =>
-        ctx.runMutation(rollbackProjectionBatchReference, {
-          batchIndex: request.batchIndex,
-          projectionJson: request.projections.map(encodeProjectionJson),
-          releaseId: request.releaseId,
-        })
-      );
-      return { ok: true, operation: request.operation, value };
-    }
-    if (request.operation === "stageArtifactBatch") {
-      yield* verifyArtifactBatch(ctx, request, activeKeyId);
-      const value = yield* callInternal(() =>
-        ctx.runMutation(artifactBatchReference, {
-          artifactJson: request.artifacts.map(encodeArtifactJson),
-          batchIndex: request.batchIndex,
-          releaseId: request.releaseId,
-        })
-      );
-      return { ok: true, operation: request.operation, value };
-    }
-    return yield* releaseFail(
-      "CONTENT_RELEASE_UNSUPPORTED",
-      "Publication staging operation is not implemented."
+    yield* verifyArtifactBatch(ctx, request, activeKeyId);
+    const value = yield* callInternal(() =>
+      ctx.runMutation(artifactBatchReference, {
+        artifactJson: request.artifacts.map(encodeArtifactJson),
+        batchIndex: request.batchIndex,
+        releaseId: request.releaseId,
+      })
     );
+    return { ok: true, operation: request.operation, value };
   }
 );

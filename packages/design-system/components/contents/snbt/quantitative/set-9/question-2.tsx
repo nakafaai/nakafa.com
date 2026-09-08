@@ -39,7 +39,7 @@ const questionData = [
     })),
     color: getColor("EMERALD"),
     lineWidth: 2,
-    smooth: true,
+    smooth: false,
     showPoints: false,
   },
 ] satisfies ComponentProps<typeof LineEquation>["data"];

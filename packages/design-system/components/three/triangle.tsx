@@ -4,6 +4,7 @@ import { Instance, Instances, Line } from "@react-three/drei";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ORIGIN_COLOR,
+  THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   THREE_FONT_SIZE,
 } from "@repo/design-system/components/three/data/constants";
 import {
@@ -289,6 +290,7 @@ export function Triangle({
         anchorX="center"
         color={COLORS.VIOLET}
         fontSize={BASE_FONT_SIZE}
+        minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={[
           Math.cos(angleInRadians / 2) * angleLabelDistance +
             (angle > DEGREES_IN_HALF_CIRCLE ? -1 : 1) *
@@ -306,6 +308,7 @@ export function Triangle({
         anchorX="center"
         color={COLORS.CYAN}
         fontSize={BASE_FONT_SIZE}
+        minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.adjacentLabelPos}
       >
         {labels.adjacent}
@@ -314,6 +317,7 @@ export function Triangle({
       <ThreeLabel
         color={COLORS.ORANGE}
         fontSize={BASE_FONT_SIZE}
+        minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.oppositeLabelPos}
       >
         {labels.opposite}
@@ -323,6 +327,7 @@ export function Triangle({
         anchorX="center"
         color={COLORS.ROSE}
         fontSize={BASE_FONT_SIZE}
+        minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.hypotenuseLabelPos}
         rotation={-hypotenuseLabelRotation}
       >

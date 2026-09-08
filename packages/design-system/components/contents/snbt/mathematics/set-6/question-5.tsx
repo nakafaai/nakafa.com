@@ -12,12 +12,12 @@ interface GraphProps {
 export function Graph({ title, description }: GraphProps) {
   // Constants for Cone 1 (R1 = h1)
   const R1 = 3;
-  const H1 = 3;
+  const H1 = R1;
   const SEGMENTS = 64;
 
-  // Constants for Cone 2 (R2 = 2h2)
-  const R2 = 4;
-  const H2 = 2;
+  // Equal volumes with R2 = 2h2 require R2³ = 2R1³.
+  const R2 = R1 * Math.cbrt(2);
+  const H2 = R2 / 2;
 
   // Positioning: Centered around origin
   const DISTANCE = 10;
@@ -28,7 +28,6 @@ export function Graph({ title, description }: GraphProps) {
   const COLOR_CONE_1 = getColor("INDIGO");
   const COLOR_CONE_2 = getColor("TEAL");
   const COLOR_HELPER = getColor("ORANGE");
-  const COLOR_LABEL = getColor("SLATE");
 
   /** Samples one horizontal cone base in the XZ plane. */
   const createCircle = (cx: number, cz: number, r: number) =>
@@ -87,7 +86,7 @@ export function Graph({ title, description }: GraphProps) {
         {
           points: cone1Base,
           color: COLOR_CONE_1,
-          smooth: true,
+          smooth: false,
           showPoints: false,
           lineWidth: 2,
         },
@@ -108,13 +107,11 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="h_1" />,
               at: 0,
               offset: [0.2, H1 / 2, 0],
-              color: COLOR_LABEL,
             },
             {
               text: <InlineMath math="P_1" />,
               at: 0,
               offset: [0, -0.5, 0],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -129,7 +126,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="R_1" />,
               at: 0,
               offset: [R1 / 2, -0.5, 0],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -138,7 +134,7 @@ export function Graph({ title, description }: GraphProps) {
         {
           points: cone2Base,
           color: COLOR_CONE_2,
-          smooth: true,
+          smooth: false,
           showPoints: false,
           lineWidth: 2,
         },
@@ -159,13 +155,11 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="h_2" />,
               at: 0,
               offset: [0.2, H2 / 2, 0],
-              color: COLOR_LABEL,
             },
             {
               text: <InlineMath math="P_2" />,
               at: 0,
               offset: [0, -0.5, 0],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -180,7 +174,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="R_2" />,
               at: 0,
               offset: [R2 / 2, -0.5, 0],
-              color: COLOR_LABEL,
             },
           ],
         },

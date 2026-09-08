@@ -2,6 +2,10 @@ import { DeferredLineScene } from "@repo/design-system/components/contents/mathe
 import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import type { AuthoredLine } from "@repo/design-system/components/contents/mathematics/line/spec";
 import {
+  CoordinateControls,
+  CoordinateProvider,
+} from "@repo/design-system/components/three/controls";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -39,19 +43,22 @@ export function LineEquation({
   const lines = resolveAuthoredLines(data);
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <DeferredLineScene
-          cameraPosition={cameraPosition}
-          cameraTarget={cameraTarget}
-          lines={lines}
-          showZAxis={showZAxis}
-        />
-      </CardContent>
-    </Card>
+    <CoordinateProvider>
+      <Card className="content-auto-card">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DeferredLineScene
+            cameraPosition={cameraPosition}
+            cameraTarget={cameraTarget}
+            lines={lines}
+            showZAxis={showZAxis}
+          />
+        </CardContent>
+        <CoordinateControls />
+      </Card>
+    </CoordinateProvider>
   );
 }

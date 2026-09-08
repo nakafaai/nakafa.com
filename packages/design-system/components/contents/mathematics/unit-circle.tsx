@@ -1,6 +1,10 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import {
+  CoordinateControls,
+  CoordinateProvider,
+} from "@repo/design-system/components/three/controls";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { UnitCircle as UnitCircle3D } from "@repo/design-system/components/three/unit-circle";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -8,7 +12,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
@@ -49,15 +52,17 @@ export function UnitCircle({
   const locale = useLocale();
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <I18nProvider locale={locale}>
-        <Content angle={angle} trigValues={trigValues} />
-      </I18nProvider>
-    </Card>
+    <CoordinateProvider>
+      <Card className="content-auto-card">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <I18nProvider locale={locale}>
+          <Content angle={angle} trigValues={trigValues} />
+        </I18nProvider>
+      </Card>
+    </CoordinateProvider>
   );
 }
 
@@ -88,7 +93,7 @@ function Content({
           <UnitCircle3D angle={angleValue} trigValues={exactValues} />
         </CoordinateSystem>
       </CardContent>
-      <CardFooter className="border-t px-0">
+      <CoordinateControls>
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge className="font-mono" variant="outline">
@@ -160,7 +165,7 @@ function Content({
             </NumberField>
           </div>
         </div>
-      </CardFooter>
+      </CoordinateControls>
     </>
   );
 }

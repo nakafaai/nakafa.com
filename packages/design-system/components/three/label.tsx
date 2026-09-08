@@ -1,10 +1,11 @@
 "use client";
 
 import { Html } from "@react-three/drei";
-import { useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import {
   resolveThreeFontSize,
+  THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import {
@@ -12,9 +13,16 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
 } from "react";
-import { Color, type Group, OrthographicCamera } from "three";
+import {
+  Color,
+  type Group,
+  MathUtils,
+  OrthographicCamera,
+  Vector3,
+} from "three";
 
 type HtmlProps = ComponentProps<typeof Html>;
 type LabelAnchorX = "center" | "left" | "right";
@@ -26,6 +34,10 @@ interface ThreeLabelProps {
   children: ReactNode;
   color: string | Color;
   fontSize?: ThreeFontSize | number;
+  /** Separation from the anchor in camera-facing world units. */
+  gap?: number;
+  /** Minimum rendered font size in CSS pixels, independent of the world scale. */
+  minimumFontSize?: number;
   /** Enables scene-aware depth occlusion for labels attached to geometry. */
   occlude?: HtmlProps["occlude"];
   outlineColor?: string;
@@ -51,6 +63,16 @@ function anchorOffset(anchor: LabelAnchorX | LabelAnchorY) {
   return -0.5;
 }
 
+function gapDirection(anchor: LabelAnchorX | LabelAnchorY) {
+  if (anchor === "left" || anchor === "top") {
+    return 1;
+  }
+  if (anchor === "right" || anchor === "bottom") {
+    return -1;
+  }
+  return 0;
+}
+
 function anchorOrigin(anchor: LabelAnchorX | LabelAnchorY) {
   return anchor === "middle" ? "center" : anchor;
 }
@@ -71,6 +93,10 @@ export function ThreeLabel({
   children,
   color,
   fontSize = "annotation",
+  gap = 0,
+  minimumFontSize = fontSize === "diagram"
+    ? THREE_DIAGRAM_MINIMUM_FONT_SIZE
+    : 0,
   outlineColor,
   outlineWidth = 0,
   occlude,
@@ -80,6 +106,9 @@ export function ThreeLabel({
 }: ThreeLabelProps) {
   const framing = useCameraFraming();
   const group = useRef<Group>(null);
+  const content = useRef<HTMLSpanElement>(null);
+  const labelPosition = useMemo(() => new Vector3(), []);
+  const cameraPosition = useMemo(() => new Vector3(), []);
   const camera = useThree((state) => state.camera);
   const canvasHeight = useThree((state) => state.size.height);
   const invalidate = useThree((state) => state.invalidate);
@@ -89,10 +118,37 @@ export function ThreeLabel({
     (worldFontSize *
       (camera instanceof OrthographicCamera ? 1 : canvasHeight)) /
     LABEL_BASE_FONT_SIZE;
+  const gapPixels =
+    worldFontSize > 0 ? (gap * LABEL_BASE_FONT_SIZE) / worldFontSize : 0;
   const outlineWidthEm = worldFontSize > 0 ? outlineWidth / worldFontSize : 0;
 
-  // Drei mounts Html through a separate React root, so demand-mode canvases
-  // need one frame after each label render to apply its final world matrix.
+  // Display scaling never changes the natural dimensions observed for fitting.
+  useFrame(({ camera: activeCamera, size }) => {
+    const element = content.current;
+    const object = group.current;
+    if (!(element && object)) {
+      return;
+    }
+    if (minimumFontSize <= 0 || worldFontSize <= 0) {
+      element.style.scale = "1";
+      return;
+    }
+    object.getWorldPosition(labelPosition);
+    activeCamera.getWorldPosition(cameraPosition);
+    const pixelsPerUnit =
+      activeCamera instanceof OrthographicCamera
+        ? activeCamera.zoom
+        : size.height /
+          (2 *
+            Math.tan(MathUtils.degToRad(activeCamera.fov) / 2) *
+            labelPosition.distanceTo(cameraPosition));
+    element.style.scale = `${Math.max(
+      1,
+      minimumFontSize / (worldFontSize * pixelsPerUnit)
+    )}`;
+  });
+
+  // Position changes must also update the camera's label bounds.
   useEffect(() => {
     if (position === undefined) {
       return;
@@ -103,17 +159,41 @@ export function ThreeLabel({
 
   const measureLabel = useCallback(
     (element: HTMLDivElement | null) => {
+      if (!element) {
+        return;
+      }
+      // Html commits through a separate React root after this component.
+      // Wake the canvas once its content can be scaled and projected.
+      invalidate();
       const object = group.current;
-      if (!(element && object && framing)) {
+      if (!(object && framing)) {
         return;
       }
       const measure = () => {
+        const width =
+          (element.offsetWidth * worldFontSize) / LABEL_BASE_FONT_SIZE;
+        const height =
+          (element.offsetHeight * worldFontSize) / LABEL_BASE_FONT_SIZE;
         framing.labels.set(object, {
           anchorX: anchorOffset(anchorX),
           anchorY: anchorOffset(anchorY),
-          height: (element.offsetHeight * worldFontSize) / LABEL_BASE_FONT_SIZE,
+          gap: {
+            x: gapDirection(anchorX) * gap,
+            y: gapDirection(anchorY) * gap,
+          },
+          height,
+          pixels: minimumFontSize
+            ? {
+                width:
+                  (element.offsetWidth * minimumFontSize) /
+                  LABEL_BASE_FONT_SIZE,
+                height:
+                  (element.offsetHeight * minimumFontSize) /
+                  LABEL_BASE_FONT_SIZE,
+              }
+            : undefined,
           rotation,
-          width: (element.offsetWidth * worldFontSize) / LABEL_BASE_FONT_SIZE,
+          width,
         });
         framing.invalidate();
       };
@@ -126,7 +206,16 @@ export function ThreeLabel({
         framing.invalidate();
       };
     },
-    [anchorX, anchorY, framing, rotation, worldFontSize]
+    [
+      anchorX,
+      anchorY,
+      framing,
+      gap,
+      invalidate,
+      minimumFontSize,
+      rotation,
+      worldFontSize,
+    ]
   );
 
   if (!visible) {
@@ -150,14 +239,24 @@ export function ThreeLabel({
           lineHeight: 1,
           paintOrder: "stroke fill",
           pointerEvents: "none",
-          transform: `translate(${anchorOffset(anchorX) * 100}%, ${anchorOffset(anchorY) * 100}%) rotate(${rotation}rad)`,
+          transform: `translate(${anchorOffset(anchorX) * 100}%, ${anchorOffset(anchorY) * 100}%) rotate(${rotation}rad) translate(${gapDirection(anchorX) * gapPixels}px, ${gapDirection(anchorY) * gapPixels}px)`,
           transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
           userSelect: "none",
           whiteSpace: "nowrap",
         }}
         zIndexRange={LABEL_Z_INDEX_RANGE}
       >
-        <span aria-hidden="true">{children}</span>
+        <span
+          aria-hidden="true"
+          ref={content}
+          style={{
+            display: "inline-block",
+            transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
+            verticalAlign: "top",
+          }}
+        >
+          {children}
+        </span>
       </Html>
     </group>
   );

@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -76,15 +77,14 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
       smooth: false,
       showPoints: false,
       labels: [
-        { text: t1Text.top, at: 0, offset: offTop },
-        { text: t1Text.left, at: 0, offset: offLeft },
-        { text: t1Text.right, at: 0, offset: offRight },
-        { text: t1Text.bottom, at: 0, offset: offBottom },
+        { text: <InlineMath math={t1Text.top} />, at: 0, offset: offTop },
+        { text: <InlineMath math={t1Text.left} />, at: 0, offset: offLeft },
+        { text: <InlineMath math={t1Text.right} />, at: 0, offset: offRight },
+        { text: <InlineMath math={t1Text.bottom} />, at: 0, offset: offBottom },
         {
-          text: t1Text.center,
+          text: <InlineMath math={t1Text.center} />,
           at: 0,
           offset: offCenter,
-          color: getColor("INDIGO"),
         },
       ],
     },
@@ -94,15 +94,14 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
       smooth: false,
       showPoints: false,
       labels: [
-        { text: t2Text.top, at: 0, offset: offTop },
-        { text: t2Text.left, at: 0, offset: offLeft },
-        { text: t2Text.right, at: 0, offset: offRight },
-        { text: t2Text.bottom, at: 0, offset: offBottom },
+        { text: <InlineMath math={t2Text.top} />, at: 0, offset: offTop },
+        { text: <InlineMath math={t2Text.left} />, at: 0, offset: offLeft },
+        { text: <InlineMath math={t2Text.right} />, at: 0, offset: offRight },
+        { text: <InlineMath math={t2Text.bottom} />, at: 0, offset: offBottom },
         {
-          text: t2Text.center,
+          text: <InlineMath math={t2Text.center} />,
           at: 0,
           offset: offCenter,
-          color: getColor("ROSE"),
         },
       ],
     },

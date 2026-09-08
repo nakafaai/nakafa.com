@@ -28,10 +28,13 @@ function GridSegments({
   return points.length > 0 ? (
     <Line
       color={color}
+      depthWrite={false}
       frustumCulled={false}
       lineWidth={lineWidth}
+      opacity={0.5}
       points={points}
       segments
+      transparent
     />
   ) : null;
 }

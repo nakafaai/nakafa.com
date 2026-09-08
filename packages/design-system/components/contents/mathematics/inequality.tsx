@@ -1,5 +1,9 @@
 // CoordinateSystem renders a dynamic WebGL canvas with SSR disabled.
 // https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr
+import {
+  CoordinateControls,
+  CoordinateProvider,
+} from "@repo/design-system/components/three/controls";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { Inequality as Inequality3D } from "@repo/design-system/components/three/inequality";
 import {
@@ -22,21 +26,24 @@ interface Props {
  */
 export function Inequality({ title, description, data }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <CoordinateSystem>
-          {data.map((item, index) => (
-            <Inequality3D
-              key={`inequality-${item.boundaryLine2D?.join("_") || index}`}
-              {...item}
-            />
-          ))}
-        </CoordinateSystem>
-      </CardContent>
-    </Card>
+    <CoordinateProvider>
+      <Card className="content-auto-card">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CoordinateSystem>
+            {data.map((item, index) => (
+              <Inequality3D
+                key={`inequality-${item.boundaryLine2D?.join("_") || index}`}
+                {...item}
+              />
+            ))}
+          </CoordinateSystem>
+        </CardContent>
+        <CoordinateControls />
+      </Card>
+    </CoordinateProvider>
   );
 }

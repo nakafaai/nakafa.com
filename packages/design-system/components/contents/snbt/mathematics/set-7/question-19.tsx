@@ -9,7 +9,7 @@ interface GraphProps {
     atc: string;
     initialPos: string;
     finalPos: string;
-    height: string;
+    height: ReactNode;
   };
   title: ReactNode;
 }
@@ -61,7 +61,6 @@ export function Graph({ title, description, labels }: GraphProps) {
   const COLOR_PATH = getColor("TEAL");
   const COLOR_HEIGHT = getColor("INDIGO");
   const COLOR_LABEL = getColor("VIOLET");
-  const COLOR_ATC = getColor("AMBER");
 
   // Arcs for angles
   // Arc 1: 30 degrees (larger radius to avoid clutter)
@@ -115,7 +114,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: labels.atc,
               at: 0, // At A
               offset: [0, -0.6, 0], // Below A
-              color: COLOR_ATC,
             },
           ],
         },
@@ -135,13 +133,11 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: labels.height,
               at: 1, // Midpoint
               offset: [1, 0.5, 0], // Moved up to avoid X-axis overlap
-              color: COLOR_HEIGHT,
             },
             {
               text: labels.initialPos,
               at: 2, // At C
               offset: [1.5, 0.6, 0], // Shifted right to separate from Final Pos
-              color: COLOR_PATH,
             },
           ],
         },
@@ -161,7 +157,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: labels.finalPos,
               at: 1, // At E
               offset: [-1.5, 0.6, 0], // Shifted left to separate from Initial Pos
-              color: COLOR_PATH,
             },
           ],
         },
@@ -193,7 +188,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: <InlineMath math="30^\circ" />,
               at: 0,
               offset: [0, 0, 0],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -213,7 +207,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: <InlineMath math="45^\circ" />,
               at: 0,
               offset: [0, 0, 0],
-              color: COLOR_LABEL,
             },
           ],
         },

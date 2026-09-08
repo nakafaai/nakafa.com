@@ -2,189 +2,155 @@ import type { CoordinateFrame } from "@repo/design-system/components/three/frame
 import { BigDecimal } from "effect";
 
 import type {
+  PlanePoint,
+  PlaneVisual,
   SpacePoint,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
 
-const WORLD_EXTENT = 10;
+const WORLD_EXTENT = BigDecimal.fromBigInt(10n);
 const TWO = BigDecimal.fromBigInt(2n);
-
+const ZERO = BigDecimal.fromBigInt(0n);
 interface ExactRange {
   readonly max: BigDecimal.BigDecimal;
   readonly min: BigDecimal.BigDecimal;
 }
-
-export interface SpaceProjection {
-  readonly center: readonly [
-    BigDecimal.BigDecimal,
-    BigDecimal.BigDecimal,
-    BigDecimal.BigDecimal,
-  ];
+export interface VisualProjection {
+  readonly center: {
+    readonly x: BigDecimal.BigDecimal;
+    readonly y: BigDecimal.BigDecimal;
+    readonly z: BigDecimal.BigDecimal;
+  };
   readonly extent: BigDecimal.BigDecimal;
 }
-
 function decimal(value: number) {
   return BigDecimal.fromNumberUnsafe(value);
 }
-
-function exactRange(min: number, max: number): ExactRange {
-  return { max: decimal(max), min: decimal(min) };
-}
-
-function include(range: ExactRange, value: number): ExactRange {
-  const candidate = decimal(value);
+function range(
+  bounds: { readonly min: number; readonly max: number },
+  padding: number
+): ExactRange {
   return {
-    max: BigDecimal.max(range.max, candidate),
-    min: BigDecimal.min(range.min, candidate),
+    min: BigDecimal.subtract(decimal(bounds.min), decimal(padding)),
+    max: BigDecimal.sum(decimal(bounds.max), decimal(padding)),
   };
 }
-
-function span(range: ExactRange) {
-  return BigDecimal.subtract(range.max, range.min);
-}
-
-function midpoint(range: ExactRange) {
-  return BigDecimal.divideUnsafe(BigDecimal.sum(range.min, range.max), TWO);
-}
-
-function viewPoints(scene: SpaceVisual) {
-  if (scene.view.kind === "camera") {
-    return [scene.view.position, scene.view.target];
-  }
-  if (scene.view.kind === "isometric" && scene.view.target) {
-    return [scene.view.target];
-  }
-  return [];
-}
-
-/** Resolves one uniform affine map from authored space into safe GPU units. */
-export function resolveSpaceProjection(scene: SpaceVisual): SpaceProjection {
-  const padding = scene.view.kind === "fit" ? (scene.view.padding ?? 0) : 0;
-  const ranges = [scene.frame.x, scene.frame.y, scene.frame.z].map((range) => ({
-    max: BigDecimal.sum(decimal(range.max), decimal(padding)),
-    min: BigDecimal.subtract(decimal(range.min), decimal(padding)),
-  }));
-
-  for (const point of viewPoints(scene)) {
-    ranges[0] = include(ranges[0] ?? exactRange(point.x, point.x), point.x);
-    ranges[1] = include(ranges[1] ?? exactRange(point.y, point.y), point.y);
-    ranges[2] = include(ranges[2] ?? exactRange(point.z, point.z), point.z);
-  }
-
-  const x = ranges[0] ?? exactRange(scene.frame.x.min, scene.frame.x.max);
-  const y = ranges[1] ?? exactRange(scene.frame.y.min, scene.frame.y.max);
-  const z = ranges[2] ?? exactRange(scene.frame.z.min, scene.frame.z.max);
+function include(bounds: ExactRange, value: number): ExactRange {
   return {
-    center: [midpoint(x), midpoint(y), midpoint(z)],
+    min: BigDecimal.min(bounds.min, decimal(value)),
+    max: BigDecimal.max(bounds.max, decimal(value)),
+  };
+}
+function midpoint(bounds: ExactRange) {
+  return BigDecimal.divideUnsafe(BigDecimal.sum(bounds.min, bounds.max), TWO);
+}
+function span(bounds: ExactRange) {
+  return BigDecimal.subtract(bounds.max, bounds.min);
+}
+function frameRanges(scene: PlaneVisual | SpaceVisual, padded: boolean) {
+  const padding =
+    padded && scene.view.kind === "fit" ? (scene.view.padding ?? 0) : 0;
+  return {
+    x: range(scene.frame.x, padding),
+    y: range(scene.frame.y, padding),
+    z:
+      scene.space === "plane"
+        ? { min: ZERO, max: ZERO }
+        : range(scene.frame.z, padding),
+  };
+}
+/** Uses one exact uniform scale before converting authored values to GPU units. */
+export function resolveVisualProjection(
+  scene: PlaneVisual | SpaceVisual
+): VisualProjection {
+  let { x, y, z } = frameRanges(scene, true);
+  let points: readonly SpacePoint[] = [];
+  if (scene.view.kind === "camera") {
+    points = [scene.view.position, scene.view.target];
+  } else if (scene.view.kind === "isometric" && scene.view.target) {
+    points = [scene.view.target];
+  }
+  for (const point of points) {
+    x = include(x, point.x);
+    y = include(y, point.y);
+    z = include(z, point.z);
+  }
+  return {
+    center: { x: midpoint(x), y: midpoint(y), z: midpoint(z) },
     extent: BigDecimal.max(span(x), BigDecimal.max(span(y), span(z))),
   };
 }
-
-function projectCoordinate(
-  value: number,
+function coordinate(
+  value: BigDecimal.BigDecimal,
   center: BigDecimal.BigDecimal,
   extent: BigDecimal.BigDecimal
 ) {
   return BigDecimal.toNumberUnsafe(
     BigDecimal.divideUnsafe(
-      BigDecimal.multiply(
-        BigDecimal.subtract(decimal(value), center),
-        decimal(WORLD_EXTENT)
-      ),
+      BigDecimal.multiply(BigDecimal.subtract(value, center), WORLD_EXTENT),
       extent
     )
   );
 }
-
-/** Projects one authored point with the scene's uniform affine transform. */
-export function projectSpacePoint(
-  point: SpacePoint,
-  projection: SpaceProjection
+/** Projects plane points into z=0 and spatial points through the same map. */
+export function projectVisualPoint(
+  point: PlanePoint | SpacePoint,
+  projection: VisualProjection
 ): SpacePoint {
   return {
-    x: projectCoordinate(point.x, projection.center[0], projection.extent),
-    y: projectCoordinate(point.y, projection.center[1], projection.extent),
-    z: projectCoordinate(point.z, projection.center[2], projection.extent),
+    x: coordinate(decimal(point.x), projection.center.x, projection.extent),
+    y: coordinate(decimal(point.y), projection.center.y, projection.extent),
+    z: coordinate(
+      "z" in point ? decimal(point.z) : ZERO,
+      projection.center.z,
+      projection.extent
+    ),
   };
 }
-
-/** Projects one positive authored measure with the same uniform scale. */
-export function projectSpaceMeasure(
+/** Keeps quadratic control points exact until after normalization. */
+export function projectExactPlanePoint(
+  point: {
+    readonly x: BigDecimal.BigDecimal;
+    readonly y: BigDecimal.BigDecimal;
+  },
+  projection: VisualProjection
+): SpacePoint {
+  return {
+    x: coordinate(point.x, projection.center.x, projection.extent),
+    y: coordinate(point.y, projection.center.y, projection.extent),
+    z: 0,
+  };
+}
+/** Scales an authored length without overflowing an intermediate product. */
+export function projectVisualMeasure(
   measure: number,
-  projection: SpaceProjection
+  projection: VisualProjection
 ) {
-  if (measure === 0) {
-    return 0;
-  }
-  const projected = BigDecimal.toNumberUnsafe(
+  return BigDecimal.toNumberUnsafe(
     BigDecimal.divideUnsafe(
-      BigDecimal.multiply(decimal(measure), decimal(WORLD_EXTENT)),
+      BigDecimal.multiply(decimal(measure), WORLD_EXTENT),
       projection.extent
     )
   );
-  return Math.max(projected, Number.EPSILON);
 }
-
-/** Projects the authored Cartesian frame without changing axis proportions. */
-export function projectSpaceFrame(
-  frame: SpaceVisual["frame"],
-  projection: SpaceProjection
+/** Preserves authored frame proportions and optional camera padding. */
+export function projectVisualFrame(
+  scene: PlaneVisual | SpaceVisual,
+  projection: VisualProjection,
+  padded = false
 ): CoordinateFrame {
-  return {
-    x: {
-      max: projectCoordinate(
-        frame.x.max,
-        projection.center[0],
-        projection.extent
-      ),
-      min: projectCoordinate(
-        frame.x.min,
-        projection.center[0],
-        projection.extent
-      ),
-    },
-    y: {
-      max: projectCoordinate(
-        frame.y.max,
-        projection.center[1],
-        projection.extent
-      ),
-      min: projectCoordinate(
-        frame.y.min,
-        projection.center[1],
-        projection.extent
-      ),
-    },
-    z: {
-      max: projectCoordinate(
-        frame.z.max,
-        projection.center[2],
-        projection.extent
-      ),
-      min: projectCoordinate(
-        frame.z.min,
-        projection.center[2],
-        projection.extent
-      ),
-    },
-  };
-}
-
-/** Returns the longest frame side, saturating only beyond Number's range. */
-export function getSpaceFrameExtent(scene: SpaceVisual) {
-  const exact = BigDecimal.max(
-    BigDecimal.subtract(decimal(scene.frame.x.max), decimal(scene.frame.x.min)),
-    BigDecimal.max(
-      BigDecimal.subtract(
-        decimal(scene.frame.y.max),
-        decimal(scene.frame.y.min)
-      ),
-      BigDecimal.subtract(
-        decimal(scene.frame.z.max),
-        decimal(scene.frame.z.min)
-      )
-    )
-  );
-  const numeric = BigDecimal.toNumberUnsafe(exact);
-  return Number.isFinite(numeric) ? numeric : Number.MAX_VALUE;
+  const bounds = frameRanges(scene, padded);
+  const project = (axis: "x" | "y" | "z") => ({
+    min: coordinate(
+      bounds[axis].min,
+      projection.center[axis],
+      projection.extent
+    ),
+    max: coordinate(
+      bounds[axis].max,
+      projection.center[axis],
+      projection.extent
+    ),
+  });
+  return { x: project("x"), y: project("y"), z: project("z") };
 }

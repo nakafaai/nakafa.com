@@ -15,7 +15,6 @@ export function TriangleScene({
   return (
     <CoordinateSystem
       cameraPosition={[0, 0, CAMERA_Z_POSITION]}
-      className="size-full"
       showOrigin={false}
       showZAxis={false}
     >

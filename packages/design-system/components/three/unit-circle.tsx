@@ -4,6 +4,7 @@ import { Line } from "@react-three/drei";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ORIGIN_COLOR,
+  THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   THREE_FONT_SIZE,
 } from "@repo/design-system/components/three/data/constants";
 import {
@@ -234,6 +235,7 @@ export function UnitCircle({
           anchorX="center"
           color={COLORS.VIOLET}
           fontSize={LABEL_FONT_SIZE}
+          minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
           position={[
             Math.cos(angleInRadians / 2) * ANGLE_LABEL_X_FACTOR,
             Math.sin(angleInRadians / 2) * ANGLE_LABEL_Y_FACTOR,
@@ -283,6 +285,7 @@ export function UnitCircle({
               anchorX="center"
               color={COLORS.CYAN}
               fontSize={LABEL_FONT_SIZE}
+              minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
               position={[cos / 2, COS_LABEL_Y_OFFSET, 0]}
             >
               <InlineMath
@@ -293,6 +296,7 @@ export function UnitCircle({
               anchorX={cos < 0 ? "right" : "left"}
               color={COLORS.ORANGE}
               fontSize={LABEL_FONT_SIZE}
+              minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
               position={[
                 cos + SIN_LABEL_X_OFFSET * sineLabelDirection,
                 sin / 2,
@@ -306,6 +310,7 @@ export function UnitCircle({
             <ThreeLabel
               color={COLORS.ROSE}
               fontSize={LABEL_FONT_SIZE}
+              minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
               position={[TAN_LABEL_POSITION, TAN_LABEL_POSITION, 0]}
             >
               {labels.tan ? (

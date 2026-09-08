@@ -124,9 +124,6 @@ describe("content publication request decoding", () => {
     expect(publicationRequestLimit("stageProjectionBatch")).toBe(
       MAX_PROJECTION_BATCH_BYTES
     );
-    expect(publicationRequestLimit("stageRollbackProjectionBatch")).toBe(
-      MAX_PROJECTION_BATCH_BYTES
-    );
     expect(publicationRequestLimit("stageRouteBatch")).toBe(
       MAX_ROUTE_BATCH_BYTES
     );

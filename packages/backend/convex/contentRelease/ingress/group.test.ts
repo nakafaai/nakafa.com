@@ -18,9 +18,9 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import {
-  TEST_HISTORICAL_QUESTION_PROJECTION,
-  TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
   TEST_QUESTION_CONTENT_KEY,
+  TEST_QUESTION_PROJECTION,
+  TEST_QUESTION_PROJECTION_JSON,
   TEST_QUESTION_SOURCE,
 } from "@repo/backend/test/content/question";
 import {
@@ -44,70 +44,72 @@ class UnexpectedGroupTestState extends Data.TaggedError(
 }> {}
 
 describe("content release staging groups", () => {
-  it.effect("stages prior Question bytes only through a recovery group", () =>
-    Effect.gen(function* () {
-      const request = yield* Schema.decodeEffect(StageGroupRequestSchema)({
-        operation: "stageGroup",
-        releaseId,
-        requests: [
-          {
-            batchIndex: 0,
-            items: [
-              JSON.parse(
-                testUpsertJson({
-                  contentKey: TEST_QUESTION_CONTENT_KEY,
-                  family: "question",
-                  releaseId,
-                  rendererDomain: "snbt-general",
-                  sourcePath: TEST_QUESTION_SOURCE,
-                })
-              ),
-            ],
-            operation: "stageItemBatch",
-            releaseId,
-          },
-          {
-            batchIndex: 0,
-            operation: "stageRollbackProjectionBatch",
-            projections: [TEST_HISTORICAL_QUESTION_PROJECTION],
-            releaseId,
-          },
-        ],
-      });
-      const t = convexTest(schema, convexModules);
-      yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          insertTestRelease(ctx, { releaseId, role: "recovery" })
-        )
-      );
-
-      expect(
+  it.effect(
+    "stages authenticated Question projections through a recovery group",
+    () =>
+      Effect.gen(function* () {
+        const request = yield* Schema.decodeEffect(StageGroupRequestSchema)({
+          operation: "stageGroup",
+          releaseId,
+          requests: [
+            {
+              batchIndex: 0,
+              items: [
+                JSON.parse(
+                  testUpsertJson({
+                    contentKey: TEST_QUESTION_CONTENT_KEY,
+                    family: "question",
+                    releaseId,
+                    rendererDomain: "snbt-general",
+                    sourcePath: TEST_QUESTION_SOURCE,
+                  })
+                ),
+              ],
+              operation: "stageItemBatch",
+              releaseId,
+            },
+            {
+              batchIndex: 0,
+              operation: "stageProjectionBatch",
+              projections: [TEST_QUESTION_PROJECTION],
+              releaseId,
+            },
+          ],
+        });
+        const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
-          t.action((ctx) =>
-            runConvexProgram(
-              stagePublicationGroup(ctx, request, TEST_KEY_ID).pipe(
-                Effect.provideService(
-                  ContentVerificationKeyResolver,
-                  TEST_KEY_RESOLVER
+          t.mutation((ctx) =>
+            insertTestRelease(ctx, { releaseId, role: "recovery" })
+          )
+        );
+
+        expect(
+          yield* Effect.promise(() =>
+            t.action((ctx) =>
+              runConvexProgram(
+                stagePublicationGroup(ctx, request, TEST_KEY_ID).pipe(
+                  Effect.provideService(
+                    ContentVerificationKeyResolver,
+                    TEST_KEY_RESOLVER
+                  )
                 )
               )
             )
           )
-        )
-      ).toEqual({
-        ok: true,
-        operation: "stageGroup",
-        value: { releaseId, requestCount: 2 },
-      });
-      expect(
-        yield* Effect.promise(() =>
-          t.run((ctx) => ctx.db.query("contentItems").unique())
-        )
-      ).toMatchObject({
-        projectionJson: TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
-        projectionReady: true,
-      });
-    })
+        ).toEqual({
+          ok: true,
+          operation: "stageGroup",
+          value: { releaseId, requestCount: 2 },
+        });
+        expect(
+          yield* Effect.promise(() =>
+            t.run((ctx) => ctx.db.query("contentItems").unique())
+          )
+        ).toMatchObject({
+          projectionJson: TEST_QUESTION_PROJECTION_JSON,
+          projectionReady: true,
+        });
+      })
   );
 
   it.effect("resumes a committed prefix and retries the complete group", () =>

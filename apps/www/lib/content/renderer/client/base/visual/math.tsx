@@ -1,5 +1,9 @@
 import type { MathVisual as MathVisualScene } from "@nakafa/aksara-contracts/math/visual";
 import {
+  CoordinateControls,
+  CoordinateProvider,
+} from "@repo/design-system/components/three/controls";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -8,8 +12,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { type ReactNode, useId } from "react";
 
-import { DeferredMathSpace } from "@/lib/content/renderer/client/base/visual/deferred";
-import { MathPlane } from "@/lib/content/renderer/client/base/visual/plane";
+import { DeferredMathScene } from "@/lib/content/renderer/client/base/visual/deferred";
 
 const EMPTY_LABELS: Readonly<Record<string, ReactNode>> = {};
 
@@ -32,24 +35,23 @@ export function MathVisual({
   const titleId = `${identifier}-title`;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle id={titleId}>{title}</CardTitle>
-        <CardDescription id={descriptionId}>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <figure
-          aria-describedby={descriptionId}
-          aria-labelledby={titleId}
-          className="m-0"
-        >
-          {scene.space === "plane" ? (
-            <MathPlane labels={labels} scene={scene} />
-          ) : (
-            <DeferredMathSpace labels={labels} scene={scene} />
-          )}
-        </figure>
-      </CardContent>
-    </Card>
+    <CoordinateProvider>
+      <Card className="content-auto-card">
+        <CardHeader>
+          <CardTitle id={titleId}>{title}</CardTitle>
+          <CardDescription id={descriptionId}>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <figure
+            aria-describedby={descriptionId}
+            aria-labelledby={titleId}
+            className="m-0"
+          >
+            <DeferredMathScene labels={labels} scene={scene} />
+          </figure>
+        </CardContent>
+        <CoordinateControls />
+      </Card>
+    </CoordinateProvider>
   );
 }

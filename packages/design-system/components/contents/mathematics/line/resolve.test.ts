@@ -65,7 +65,7 @@ describe("authored mathematical lines", () => {
     expect(lines[1]).toMatchObject({
       color: "cyan",
       showPoints: false,
-      smooth: true,
+      smooth: false,
     });
     expect(lines[1]?.points.length).toBeGreaterThan(4);
     expect(lines[2]).toMatchObject({ smooth: false });
@@ -75,9 +75,9 @@ describe("authored mathematical lines", () => {
     expect(lines[4]).toMatchObject({
       color: "amber",
       showPoints: false,
-      smooth: true,
+      smooth: false,
     });
-    expect(lines[5]).toMatchObject({ smooth: true });
+    expect(lines[5]).toMatchObject({ smooth: false });
     expect(lines[6]).toMatchObject({ smooth: false });
     expect(lines.slice(7)).toHaveLength(12);
     expect(lines.slice(7)).toSatisfy((cuboidLines: typeof lines) =>

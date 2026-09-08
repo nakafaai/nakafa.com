@@ -5,8 +5,9 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
-  TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
   TEST_QUESTION_CONTENT_KEY,
+  TEST_QUESTION_PROJECTION,
+  TEST_QUESTION_PROJECTION_JSON,
   TEST_QUESTION_SOURCE,
 } from "@repo/backend/test/content/question";
 import {
@@ -21,8 +22,6 @@ import { convexTest, type TestConvex } from "convex-test";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageProjections = internal.contentRelease.items.stageProjectionBatch;
-const stageRollbackProjections =
-  internal.contentRelease.items.stageRollbackProjectionBatch;
 
 /** Stages the exact technical upsert required by projection tests. */
 function stageUpsert(t: TestConvex<typeof schema>, contentKey = "test:head-0") {
@@ -203,53 +202,30 @@ describe("contentRelease/projection", () => {
     });
   });
 
-  it("rejects prior Question bytes from normal candidate staging", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertTestRelease(ctx));
-    await stageQuestionUpsert(t);
+  it.each(["candidate", "recovery"] as const)(
+    "stages strict Question projections for a signed %s release",
+    async (role) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation((ctx) => insertTestRelease(ctx, { role }));
+      await stageQuestionUpsert(t);
+      await expect(
+        stage(t, [TEST_QUESTION_PROJECTION_JSON])
+      ).resolves.toMatchObject({
+        created: 1,
+        unchanged: 0,
+      });
+    }
+  );
 
-    await expect(
-      stage(t, [TEST_HISTORICAL_QUESTION_PROJECTION_JSON])
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-  });
-
-  it("stages prior Question bytes only through explicit recovery", async () => {
-    const recovery = convexTest(schema, convexModules);
-    await recovery.mutation((ctx) =>
-      insertTestRelease(ctx, { role: "recovery" })
-    );
-    await stageQuestionUpsert(recovery);
-
-    await expect(
-      recovery.mutation(stageProjections, {
-        batchIndex: 0,
-        projectionJson: [TEST_HISTORICAL_QUESTION_PROJECTION_JSON],
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-
-    const rollback = convexTest(schema, convexModules);
-    await rollback.mutation((ctx) =>
-      insertTestRelease(ctx, { role: "recovery" })
-    );
-    await stageQuestionUpsert(rollback);
-    await expect(
-      rollback.mutation(stageRollbackProjections, {
-        batchIndex: 0,
-        projectionJson: [TEST_HISTORICAL_QUESTION_PROJECTION_JSON],
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).resolves.toMatchObject({ created: 1, unchanged: 0 });
-
-    const candidate = convexTest(schema, convexModules);
-    await candidate.mutation((ctx) => insertTestRelease(ctx));
-    await stageQuestionUpsert(candidate);
-    await expect(
-      candidate.mutation(stageRollbackProjections, {
-        batchIndex: 0,
-        projectionJson: [TEST_HISTORICAL_QUESTION_PROJECTION_JSON],
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-  });
+  it.each(["candidate", "recovery"] as const)(
+    "rejects extra Question fields for a signed %s release",
+    async (role) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation((ctx) => insertTestRelease(ctx, { role }));
+      await stageQuestionUpsert(t);
+      await expect(
+        stage(t, [JSON.stringify({ ...TEST_QUESTION_PROJECTION, choices: [] })])
+      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    }
+  );
 });

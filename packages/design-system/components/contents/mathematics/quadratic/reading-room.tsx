@@ -1,4 +1,21 @@
+"use client";
+
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import {
+  CoordinateControls,
+  CoordinateProvider,
+} from "@repo/design-system/components/three/controls";
+import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { LineEquation } from "@repo/design-system/components/three/line-equation";
+import { Polygon } from "@repo/design-system/components/three/polygon";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
+import { COLORS } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
 interface ReadingRoomProblemProps {
@@ -6,76 +23,108 @@ interface ReadingRoomProblemProps {
   widthLabel: ReactNode;
 }
 
-/** Renders the room dimensions used by the quadratic-equation problem. */
+const ROOM = [
+  { x: -3, y: -2, z: 0 },
+  { x: 3, y: -2, z: 0 },
+  { x: 3, y: 2, z: 0 },
+  { x: -3, y: 2, z: 0 },
+];
+
+// The room keeps its exact 6:4 proportions. Each unknown x is illustrated by
+// the same schematic square, without assigning x a value from the solution.
+const CORNER_SIDE = 0.75;
+const CORNERS = [
+  { id: "top-left", x: -3, y: 2, dx: 1, dy: -1, color: COLORS.BLUE },
+  { id: "top-right", x: 3, y: 2, dx: -1, dy: -1, color: COLORS.PURPLE },
+  { id: "bottom-left", x: -3, y: -2, dx: 1, dy: 1, color: COLORS.AMBER },
+  { id: "bottom-right", x: 3, y: -2, dx: -1, dy: 1, color: COLORS.GREEN },
+];
+
+/** Composes the room and its four equal square corners on the shared plane. */
 export function ReadingRoomProblem({
   heightLabel,
   widthLabel,
 }: ReadingRoomProblemProps) {
   return (
-    <div className="my-6 grid place-items-center">
-      <div className="relative w-full max-w-md">
-        {/* Main container - Classroom */}
-        <div className="relative aspect-3/2 w-full border bg-card shadow-sm">
-          {/* Top left corner square */}
-          <div className="absolute top-0 left-0 aspect-square w-[12.5%] border-r border-b bg-chart-1" />
-
-          {/* Top right corner square */}
-          <div className="absolute top-0 right-0 aspect-square w-[12.5%] border-b border-l bg-chart-2" />
-
-          {/* Bottom left corner square */}
-          <div className="absolute bottom-0 left-0 aspect-square w-[12.5%] border-t border-r bg-chart-3" />
-
-          {/* Bottom right corner square */}
-          <div className="absolute right-0 bottom-0 aspect-square w-[12.5%] border-t border-l bg-chart-4" />
-
-          {/* Red dots at corners */}
-          <div className="absolute top-0 left-0 size-2 -translate-x-1 -translate-y-1 transform rounded-full bg-border" />
-          <div className="absolute top-0 right-0 size-2 translate-x-1 -translate-y-1 transform rounded-full bg-border" />
-          <div className="absolute bottom-0 left-0 size-2 -translate-x-1 translate-y-1 transform rounded-full bg-border" />
-          <div className="absolute right-0 bottom-0 size-2 translate-x-1 translate-y-1 transform rounded-full bg-border" />
-
-          {/* Dimension labels */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 -translate-y-2 transform text-center">
-            <span>{widthLabel}</span>
-          </div>
-          <div className="absolute top-1/2 -right-1 -translate-x-4 -translate-y-1/2 transform text-center">
-            <span>{heightLabel}</span>
-          </div>
-
-          {/* "x" labels - Positioned to match the reference layout */}
-          {/* Top left corner labels */}
-          <div className="absolute top-[6%] left-[14.5%]">
-            <InlineMath math="x" />
-          </div>
-          <div className="absolute top-[18.5%] left-[6%]">
-            <InlineMath math="x" />
-          </div>
-
-          {/* Top right corner labels */}
-          <div className="absolute top-[6%] right-[14.5%]">
-            <InlineMath math="x" />
-          </div>
-          <div className="absolute top-[18.5%] right-[6%]">
-            <InlineMath math="x" />
-          </div>
-
-          {/* Bottom left corner labels */}
-          <div className="absolute bottom-[6%] left-[14.5%]">
-            <InlineMath math="x" />
-          </div>
-          <div className="absolute bottom-[18.5%] left-[6%]">
-            <InlineMath math="x" />
-          </div>
-
-          {/* Bottom right corner labels */}
-          <div className="absolute right-[14.5%] bottom-[6%]">
-            <InlineMath math="x" />
-          </div>
-          <div className="absolute right-[6%] bottom-[18.5%]">
-            <InlineMath math="x" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <CoordinateProvider>
+      <Card className="my-6">
+        <CardHeader>
+          <CardTitle>
+            {widthLabel} × {heightLabel}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CoordinateSystem cameraPosition={[0, 0, 15]}>
+            <LineEquation
+              color={COLORS.SLATE}
+              points={[...ROOM, ROOM[0]]}
+              showPoints={false}
+              smooth={false}
+            />
+            <ThreeLabel
+              anchorY="top"
+              color={COLORS.SLATE}
+              fontSize="diagram"
+              gap={0.2}
+              position={[0, -2, 0]}
+            >
+              {widthLabel}
+            </ThreeLabel>
+            <ThreeLabel
+              anchorX="left"
+              color={COLORS.SLATE}
+              fontSize="diagram"
+              gap={0.2}
+              position={[3, 0, 0]}
+            >
+              {heightLabel}
+            </ThreeLabel>
+            {CORNERS.map(({ id, x, y, dx, dy, color }) => {
+              const insideX = x + dx * CORNER_SIDE;
+              const insideY = y + dy * CORNER_SIDE;
+              const vertices = [
+                { x, y, z: 0 },
+                { x: insideX, y, z: 0 },
+                { x: insideX, y: insideY, z: 0 },
+                { x, y: insideY, z: 0 },
+              ];
+              return (
+                <group key={id}>
+                  <Polygon color={color} opacity={0.5} vertices={vertices} />
+                  <LineEquation
+                    color={color}
+                    points={[...vertices, vertices[0]]}
+                    showPoints={false}
+                    smooth={false}
+                  />
+                  <ThreeLabel
+                    anchorX={dx > 0 ? "left" : "right"}
+                    color={color}
+                    fontSize="diagram"
+                    gap={0.15}
+                    position={[insideX, (y + insideY) / 2, 0]}
+                  >
+                    <InlineMath math="x" />
+                  </ThreeLabel>
+                  <ThreeLabel
+                    anchorY={dy > 0 ? "bottom" : "top"}
+                    color={color}
+                    fontSize="diagram"
+                    gap={0.15}
+                    position={[(x + insideX) / 2, insideY, 0]}
+                  >
+                    <InlineMath math="x" />
+                  </ThreeLabel>
+                </group>
+              );
+            })}
+          </CoordinateSystem>
+          <p className="sr-only">
+            {widthLabel} × {heightLabel}; <InlineMath math="4x^2" />.
+          </p>
+        </CardContent>
+        <CoordinateControls />
+      </Card>
+    </CoordinateProvider>
   );
 }

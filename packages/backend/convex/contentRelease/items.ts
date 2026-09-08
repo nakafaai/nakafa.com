@@ -22,10 +22,7 @@ import {
   decodeItemJson,
   decodeReleaseJson,
 } from "@repo/backend/convex/contentRelease/parse";
-import {
-  stageProjectionProgram,
-  stageRollbackProjectionProgram,
-} from "@repo/backend/convex/contentRelease/projection";
+import { stageProjectionProgram } from "@repo/backend/convex/contentRelease/projection";
 import { stageReceiptValidator } from "@repo/backend/convex/contentRelease/spec";
 import { encodeItemJson } from "@repo/backend/convex/contentRelease/wire";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -160,7 +157,7 @@ export const stageItemBatch = internalMutation({
       stageItemProgram(ctx, args.releaseId, args.batchIndex, args.itemJson)
     ),
 });
-/** Stages one bounded material-projection batch through internal state. */
+/** Stages one bounded content projection batch through internal state. */
 export const stageProjectionBatch = internalMutation({
   args: {
     batchIndex: v.number(),
@@ -171,24 +168,6 @@ export const stageProjectionBatch = internalMutation({
   handler: (ctx, args) =>
     runConvexProgram(
       stageProjectionProgram(
-        ctx,
-        args.releaseId,
-        args.batchIndex,
-        args.projectionJson
-      )
-    ),
-});
-/** Stages one bounded retained-recovery projection batch. */
-export const stageRollbackProjectionBatch = internalMutation({
-  args: {
-    batchIndex: v.number(),
-    projectionJson: v.array(v.string()),
-    releaseId: v.string(),
-  },
-  returns: stageReceiptValidator,
-  handler: (ctx, args) =>
-    runConvexProgram(
-      stageRollbackProjectionProgram(
         ctx,
         args.releaseId,
         args.batchIndex,

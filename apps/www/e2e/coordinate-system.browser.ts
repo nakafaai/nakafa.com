@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { THREE_DIAGRAM_MINIMUM_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { Effect } from "effect";
 import {
   withBrowserContext,
@@ -137,6 +138,33 @@ const zoomScene = Effect.fn("NakafaE2E.zoomScene")(function* (
   yield* waitForStableCanvas(canvas);
 });
 
+const expectReadableLabel = Effect.fn("NakafaE2E.expectReadableLabel")(
+  function* (label: Locator) {
+    const fontSize = yield* Effect.promise(() =>
+      label.evaluate((element) => {
+        let scale = 1;
+        for (
+          let node: Element | null = element;
+          node && node.getAttribute("data-slot") !== "coordinate-system";
+          node = node.parentElement
+        ) {
+          const style = getComputedStyle(node);
+          const matrix = new DOMMatrixReadOnly(style.transform);
+          const localScale =
+            style.scale === "none" ? 1 : Number.parseFloat(style.scale);
+          scale *= Math.hypot(matrix.a, matrix.b) * localScale;
+        }
+        return Number.parseFloat(getComputedStyle(element).fontSize) * scale;
+      })
+    );
+    yield* Effect.sync(() =>
+      expect(fontSize).toBeGreaterThanOrEqual(
+        THREE_DIAGRAM_MINIMUM_FONT_SIZE - 0.01
+      )
+    );
+  }
+);
+
 const expectBoundedTriangleZoom = Effect.fn(
   "NakafaE2E.expectBoundedTriangleZoom"
 )(function* (page: Page) {
@@ -158,20 +186,10 @@ const expectBoundedTriangleZoom = Effect.fn(
   );
   yield* Effect.promise(() => expect(label).toBeVisible());
   yield* waitForStableCanvas(canvas);
-  const initialWidth = yield* Effect.promise(() =>
-    label.evaluate((element) => element.getBoundingClientRect().width)
-  );
-  yield* Effect.sync(() => expect(initialWidth).toBeGreaterThan(0));
+  yield* expectReadableLabel(label);
 
   yield* zoomScene(page, canvas, 240);
-  const boundedWidth = yield* Effect.promise(() =>
-    label.evaluate((element) => element.getBoundingClientRect().width)
-  );
-  yield* Effect.sync(() => {
-    // The label is offset from the target, so its perspective scale exceeds 2/3.
-    expect(boundedWidth / initialWidth).toBeGreaterThanOrEqual(0.66);
-    expect(boundedWidth / initialWidth).toBeLessThanOrEqual(0.75);
-  });
+  yield* expectReadableLabel(label);
   const atLimit = yield* Effect.promise(() => canvas.screenshot());
   yield* zoomScene(page, canvas, 240);
   const afterMoreZoom = yield* Effect.promise(() => canvas.screenshot());
@@ -179,10 +197,7 @@ const expectBoundedTriangleZoom = Effect.fn(
 
   yield* zoomScene(page, canvas, -240, 1);
   yield* expectCanvasToMove(canvas, atLimit);
-  const zoomedInWidth = yield* Effect.promise(() =>
-    label.evaluate((element) => element.getBoundingClientRect().width)
-  );
-  yield* Effect.sync(() => expect(zoomedInWidth).toBeGreaterThan(boundedWidth));
+  yield* expectReadableLabel(label);
   const beforeOrbit = yield* Effect.promise(() => canvas.screenshot());
   yield* orbitScene(page, canvas);
   yield* expectCanvasToMove(canvas, beforeOrbit);
@@ -202,8 +217,9 @@ const expectStableCoordinateSystem = Effect.fn(
   });
   const scene = card.locator('[data-slot="line-scene"]');
   const canvas = scene.locator("canvas");
-  const gridButton = scene.getByRole("button", { name: "Kisi" });
-  const rotationButton = scene.getByRole("button", {
+  const footer = card.locator("[data-coordinate-controls]");
+  const gridButton = footer.getByRole("button", { name: "Kisi" });
+  const rotationButton = footer.getByRole("button", {
     name: "Rotasi otomatis",
   });
 

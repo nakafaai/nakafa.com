@@ -15,7 +15,6 @@ export function LineScene({
     <CoordinateSystem
       cameraPosition={cameraPosition}
       cameraTarget={cameraTarget}
-      showGizmo={showZAxis}
       showZAxis={showZAxis}
     >
       {lines.map((line, index) => (
