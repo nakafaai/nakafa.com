@@ -31,7 +31,7 @@ function GridSegments({
       depthWrite={false}
       frustumCulled={false}
       lineWidth={lineWidth}
-      opacity={0.5}
+      opacity={0.2}
       points={points}
       segments
       transparent
