@@ -27,19 +27,16 @@ const graphData = [
         text: <InlineMath math="A" />,
         at: 0,
         offset: [-0.5, -0.5, 0],
-        color: getColor("INDIGO"),
       },
       {
         text: <InlineMath math="B" />,
         at: 1,
         offset: [0.5, -0.5, 0],
-        color: getColor("INDIGO"),
       },
       {
         text: <InlineMath math="C" />,
         at: 2,
         offset: [0, 0.5, 0],
-        color: getColor("INDIGO"),
       },
     ],
   },
@@ -53,7 +50,6 @@ const graphData = [
         text: <InlineMath math="P" />,
         at: 1,
         offset: [0, -0.5, 0],
-        color: getColor("TEAL"),
       },
     ],
   },
@@ -67,7 +63,6 @@ const graphData = [
         text: <InlineMath math="Q" />,
         at: 1,
         offset: [0.3, 0.3, 0],
-        color: getColor("VIOLET"),
       },
     ],
   },
@@ -81,7 +76,6 @@ const graphData = [
         text: <InlineMath math="R" />,
         at: 1,
         offset: [-0.3, 0.3, 0],
-        color: getColor("VIOLET"),
       },
     ],
   },
@@ -94,7 +88,6 @@ export function Graph({ title, description }: Props) {
       cameraPosition={[0, 0, 10]}
       data={graphData}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

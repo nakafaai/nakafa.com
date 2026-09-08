@@ -1,5 +1,17 @@
 "use client";
 
+import { createCircleOutlinePoints } from "@repo/design-system/components/contents/mathematics/circle";
+import {
+  type RelationMapping,
+  resolveRelation,
+} from "@repo/design-system/components/contents/mathematics/function/relation";
+import {
+  CoordinateControls,
+  CoordinateProvider,
+} from "@repo/design-system/components/three/controls";
+import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import {
   Card,
   CardContent,
@@ -7,15 +19,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { type ReactNode, useMemo } from "react";
-
-const SVG_PADDING = 20;
-const ELLIPSE_RX = 50;
-const ELLIPSE_RY = 90;
-const ELLIPSE_GAP = 100;
-const TEXT_PADDING = 15;
-const LINE_OFFSET = 0.3;
-const SLOT_CENTER_OFFSET = 0.5;
+import { COLORS } from "@repo/design-system/lib/color";
+import { Effect } from "effect";
+import type { ReactNode } from "react";
 
 interface DiagramProps {
   children: ReactNode;
@@ -26,13 +32,16 @@ interface DiagramProps {
 /** Frames a relation diagram with the lesson's title and explanation. */
 export function Diagram({ title, description, children }: DiagramProps) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+    <CoordinateProvider>
+      <Card className="content-auto-card">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>{children}</CardContent>
+        <CoordinateControls />
+      </Card>
+    </CoordinateProvider>
   );
 }
 
@@ -40,50 +49,21 @@ interface Element {
   id: string;
   label: ReactNode;
 }
-
-interface Mapping {
-  from: string; // Corresponds to Element id in domain
-  to: string; // Corresponds to Element id in codomain
-}
-
 interface RelationVisualizerProps {
   accessibilityLabel: string;
   codomain: Element[];
   codomainLabel: ReactNode;
   domain: Element[];
   domainLabel: ReactNode;
-  mappings: Mapping[];
+  mappings: RelationMapping[];
 }
 
-// --- SVG Configuration ---
-const svgWidth = 2 * ELLIPSE_RX * 2 + ELLIPSE_GAP + 2 * SVG_PADDING;
-const svgHeight = 2 * ELLIPSE_RY + 2 * SVG_PADDING;
+const ELLIPSE_POINTS = createCircleOutlinePoints(1).map((point) => ({
+  ...point,
+  y: point.y * 2.5,
+}));
 
-// Center X coordinates for the ellipses
-const domainEllipseCx = SVG_PADDING + ELLIPSE_RX;
-const codomainEllipseCx = domainEllipseCx + 2 * ELLIPSE_RX + ELLIPSE_GAP;
-const ellipseCy = SVG_PADDING + ELLIPSE_RY; // Y center for both ellipses
-
-// Calculate X coordinate for text within ellipses
-const domainTextX = domainEllipseCx;
-const codomainTextX = codomainEllipseCx;
-
-// Helper to calculate Text Y position dynamically within an ellipse
-function calculateTextY(
-  index: number,
-  total: number,
-  ry: number,
-  cy: number
-): number {
-  // Calculate the effective height available for text
-  const textHeightArea = ry * 2 - TEXT_PADDING * 2;
-  // Calculate the height of each slot
-  const slotHeight = textHeightArea / total;
-  // Calculate the center Y of the slot, offset by top padding and ellipse center
-  return cy - ry + TEXT_PADDING + slotHeight * (index + SLOT_CENTER_OFFSET);
-}
-
-/** Renders an authored relation mapping for function classification. */
+/** Composes set outlines, semantic labels, and exact directed mappings. */
 export function RelationVisualizer({
   accessibilityLabel,
   domain,
@@ -92,157 +72,88 @@ export function RelationVisualizer({
   domainLabel,
   codomainLabel,
 }: RelationVisualizerProps) {
-  const renderableMappings = useMemo(() => {
-    const seenMappings = new Map<string, number>();
-
-    return mappings.map((mapping) => {
-      const baseKey = `${mapping.from}-${mapping.to}`;
-      const occurrence = seenMappings.get(baseKey) ?? 0;
-      seenMappings.set(baseKey, occurrence + 1);
-
-      return {
-        ...mapping,
-        key: `mapping-${baseKey}-${occurrence}`,
-      };
-    });
-  }, [mappings]);
-
-  // Calculate Text Y coordinates dynamically for domain and codomain
-  const elementCoords = useMemo(() => {
-    const coords: Record<string, { x: number; y: number }> = {};
-    // Domain elements
-    domain.forEach((el, index) => {
-      coords[el.id] = {
-        x: domainTextX,
-        y: calculateTextY(index, domain.length, ELLIPSE_RY, ellipseCy),
-      };
-    });
-    // Codomain elements
-    codomain.forEach((el, index) => {
-      coords[el.id] = {
-        x: codomainTextX,
-        y: calculateTextY(index, codomain.length, ELLIPSE_RY, ellipseCy),
-      };
-    });
-    return coords;
-  }, [domain, codomain]);
-
+  const relation = Effect.runSync(
+    resolveRelation({
+      domain: domain.map(({ id }) => id),
+      codomain: codomain.map(({ id }) => id),
+      mappings,
+    })
+  );
+  const sets = [
+    {
+      id: "domain",
+      label: domainLabel,
+      elements: domain,
+      points: relation.domain,
+      x: -3,
+      color: COLORS.ORANGE,
+    },
+    {
+      id: "codomain",
+      label: codomainLabel,
+      elements: codomain,
+      points: relation.codomain,
+      x: 3,
+      color: COLORS.PURPLE,
+    },
+  ];
   return (
-    <div className="flex justify-center py-4">
-      <svg
-        aria-label={accessibilityLabel}
-        height={svgHeight} // Fixed height based on ellipse Ry
-        preserveAspectRatio="xMidYMid meet"
-        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        width="100%"
-      >
-        <defs>
-          <marker
-            id="arrowhead-visualizer" // Unique ID for this component's marker
-            markerHeight="6" // Use viewBox for scaling
-            markerWidth="8"
-            orient="auto-start-reverse"
-            refX="7" // Adjust refX so the tip is at the coordinate, line stops just before
-            refY="3"
-            viewBox="0 0 8 6" // Orients correctly
-          >
-            {/* Use foreground color */}
-            <polygon className="fill-foreground/80" points="0 0, 8 3, 0 6" />
-          </marker>
-        </defs>
-
-        {/* Domain Ellipse and Label */}
-        <text
-          className="fill-foreground font-semibold text-sm"
-          textAnchor="middle" // Position label above ellipse
-          x={domainEllipseCx}
-          y={SVG_PADDING - 10}
-        >
-          {domainLabel}
-        </text>
-        <ellipse
-          className="fill-muted stroke-border"
-          cx={domainEllipseCx}
-          cy={ellipseCy}
-          rx={ELLIPSE_RX}
-          ry={ELLIPSE_RY}
-          strokeWidth="1"
-        />
-
-        {/* Codomain Ellipse and Label */}
-        <text
-          className="fill-foreground font-semibold text-sm"
-          textAnchor="middle" // Position label above ellipse
-          x={codomainEllipseCx}
-          y={SVG_PADDING - 10}
-        >
-          {codomainLabel}
-        </text>
-        <ellipse
-          className="fill-muted stroke-border"
-          cx={codomainEllipseCx}
-          cy={ellipseCy}
-          rx={ELLIPSE_RX}
-          ry={ELLIPSE_RY}
-          strokeWidth="1"
-        />
-
-        {/* Domain Elements (Text) */}
-        {domain.map((el) => (
-          <text
-            className="fill-foreground font-medium text-sm"
-            dominantBaseline="middle"
-            key={`domain-${el.id}`}
-            textAnchor="middle"
-            x={elementCoords[el.id]?.x}
-            y={elementCoords[el.id]?.y}
-          >
-            {el.label}
-          </text>
-        ))}
-
-        {/* Codomain Elements (Text) */}
-        {codomain.map((el) => (
-          <text
-            className="fill-foreground font-medium text-sm"
-            dominantBaseline="middle"
-            key={`codomain-${el.id}`}
-            textAnchor="middle"
-            x={elementCoords[el.id]?.x}
-            y={elementCoords[el.id]?.y}
-          >
-            {el.label}
-          </text>
-        ))}
-
-        {/* Mappings (Arrows/Lines) */}
-        {renderableMappings.map((mapping) => {
-          const startCoords = elementCoords[mapping.from];
-          const endCoords = elementCoords[mapping.to];
-
-          // Check if coordinates exist before drawing
-          if (!(!!startCoords && !!endCoords)) {
-            return null;
-          }
-
-          // Calculate start/end points for the line, slightly offset from text center
-          const lineStartX = startCoords.x + ELLIPSE_RX * LINE_OFFSET; // Start near edge of domain ellipse
-          const lineEndX = endCoords.x - ELLIPSE_RX * LINE_OFFSET; // End near edge of codomain ellipse
-
-          return (
-            <line
-              className="stroke-foreground/50"
-              key={mapping.key}
-              markerEnd="url(#arrowhead-visualizer)"
-              strokeWidth="1.5" // Adjusted end point for marker
-              x1={lineStartX}
-              x2={lineEndX}
-              y1={startCoords.y}
-              y2={endCoords.y}
+    <figure aria-label={accessibilityLabel}>
+      <CoordinateSystem cameraPosition={[0, 0, 15]} showOrigin={false}>
+        {/* Keep every element on its arrow row, above the X axis. */}
+        <group position={[0, 3, 0]}>
+          {sets.map((set) => (
+            <group key={set.id}>
+              <LineEquation
+                color={set.color}
+                points={ELLIPSE_POINTS.map((point) => ({
+                  ...point,
+                  x: point.x + set.x,
+                }))}
+                showPoints={false}
+                smooth={false}
+              />
+              <ThreeLabel
+                anchorY="bottom"
+                color={set.color}
+                fontSize="diagram"
+                gap={0.2}
+                position={[set.x, 2.5, 0]}
+              >
+                {set.label}
+              </ThreeLabel>
+              {set.points.map((point, index) => (
+                <ThreeLabel
+                  color={set.color}
+                  fontSize="diagram"
+                  key={point.id}
+                  position={[point.x, point.y, point.z]}
+                >
+                  {set.elements[index].label}
+                </ThreeLabel>
+              ))}
+            </group>
+          ))}
+          {relation.mappings.map((mapping) => (
+            <LineEquation
+              color={COLORS.ORANGE}
+              cone={{ position: "end", size: 0.25 }}
+              key={mapping.id}
+              points={mapping.points}
+              showPoints={false}
+              smooth={false}
             />
-          );
-        })}
-      </svg>
-    </div>
+          ))}
+        </group>
+      </CoordinateSystem>
+      <ul className="sr-only">
+        {relation.mappings.map((mapping) => (
+          <li key={mapping.id}>
+            {domain[mapping.domainIndex].label} →{" "}
+            {codomain[mapping.codomainIndex].label}
+          </li>
+        ))}
+      </ul>
+    </figure>
   );
 }

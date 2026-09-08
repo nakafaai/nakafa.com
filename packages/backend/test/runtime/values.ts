@@ -11,14 +11,7 @@ export const TEST_RUNTIME_PATH = "subjects/test/runtime";
 const runtimeReleaseId = ReleaseIdSchema.make("release-runtime");
 const runtimeManifest = testEmptyManifest(runtimeReleaseId);
 
-export const TEST_RUNTIME_ENVELOPE = testSignedRelease({
-  ...runtimeManifest,
-  scope: {
-    content: [],
-    families: runtimeManifest.scope.families,
-    snapshots: runtimeManifest.scope.snapshots,
-  },
-});
+export const TEST_RUNTIME_ENVELOPE = testSignedRelease(runtimeManifest);
 
 export const TEST_RUNTIME_RELEASE = {
   manifestHash: TEST_RUNTIME_ENVELOPE.manifestHash,

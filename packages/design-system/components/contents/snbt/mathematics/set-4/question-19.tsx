@@ -61,7 +61,7 @@ export function Graph({ title, description }: GraphProps) {
           color: getColor("EMERALD"),
           showPoints: false,
           labels: [
-            { text: <InlineMath math="C" />, at: 2, offset: [-0.6, -0.7, 0] },
+            { text: <InlineMath math="C" />, at: 2, offset: [-0.6, 0.7, 0] },
           ],
         },
         {
@@ -90,7 +90,6 @@ export function Graph({ title, description }: GraphProps) {
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

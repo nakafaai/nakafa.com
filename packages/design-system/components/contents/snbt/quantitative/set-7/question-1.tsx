@@ -47,25 +47,21 @@ export function Graph({
               text: <InlineMath math="3" />,
               at: indexY3,
               offset: [0.5, 0.5, 0], // Slightly right
-              color: getColor("INDIGO"),
             },
             {
               text: <InlineMath math="4" />,
               at: indexY0,
               offset: [0.5, 0.5, 0], // Above
-              color: getColor("INDIGO"),
             },
             {
               text: <InlineMath math="-5" />,
               at: indexYMin5,
               offset: [0.5, -0.5, 0], // Slightly right
-              color: getColor("INDIGO"),
             },
           ],
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

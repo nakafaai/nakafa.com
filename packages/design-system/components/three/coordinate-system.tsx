@@ -1,16 +1,10 @@
 "use client";
 
-import {
-  GridIcon,
-  GridOffIcon,
-  PauseIcon,
-  PlayIcon,
-} from "@hugeicons/core-free-icons";
-import { GizmoHelper, GizmoViewport } from "@react-three/drei";
 import { Axes } from "@repo/design-system/components/three/axes";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import { useCoordinateControls } from "@repo/design-system/components/three/controls";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import {
   type CoordinateFrame,
@@ -20,26 +14,13 @@ import {
 import { CoordinateGrid } from "@repo/design-system/components/three/grid";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { COLORS, getColor } from "@repo/design-system/lib/color";
+import { getColor } from "@repo/design-system/lib/color";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "@repo/design-system/lib/utils";
-import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import {
-  type CSSProperties,
-  type ReactNode,
-  Suspense,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type CSSProperties, type ReactNode, Suspense, useMemo } from "react";
 
-const GIZMO_MARGIN = 56;
-const SCENE_READY_DELAY = 100;
 const CAMERA_POSITION_X = 12;
 const CAMERA_POSITION_Y = 8;
 const CAMERA_POSITION_Z = 12;
@@ -69,10 +50,6 @@ interface Props {
   origin?: CoordinatePoint;
   /** Show the coordinate axes */
   showAxes?: boolean;
-  /** Show the gizmo helper for orientation */
-  showGizmo?: boolean;
-  /** Show the grid planes */
-  showGrid?: boolean;
   /** Show axis labels */
   showLabels?: boolean;
   /** Show the origin point */
@@ -85,12 +62,10 @@ interface Props {
 
 /** Renders an interactive coordinate scene with grid and playback controls. */
 export function CoordinateSystem({
-  showGrid: initialShowGrid = true,
   showAxes = true,
   showZAxis = true,
   showOrigin = true,
   showLabels = true,
-  showGizmo = true,
   gridSize = 30,
   size = 30,
   backgroundColor = "transparent",
@@ -104,16 +79,9 @@ export function CoordinateSystem({
   children,
   className,
 }: Props) {
-  const t = useTranslations("Common");
+  const { play, showGrid } = useCoordinateControls();
   const { resolvedTheme } = useTheme();
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
-  const [sceneState, setSceneState] = useState(() => ({
-    play: false,
-    sceneReady: false,
-    showGrid: initialShowGrid,
-  }));
-  const { play, sceneReady, showGrid } = sceneState;
-
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
     if (isDarkTheme) {
@@ -139,51 +107,12 @@ export function CoordinateSystem({
     [frame, gridSize]
   );
 
-  // Handle button clicks with proper invalidation for on-demand rendering
-  const handleGridToggle = useCallback(() => {
-    setSceneState((current) => ({
-      ...current,
-      showGrid: !current.showGrid,
-    }));
-  }, []);
-
-  const handlePlayToggle = useCallback(() => {
-    setSceneState((current) => ({
-      ...current,
-      play: !current.play,
-    }));
-  }, []);
-
-  // Activity hides preserved routes by disconnecting effects. ThreeCanvas owns
-  // WebGL remounting, so this cleanup only resets local interaction state.
-  useLayoutEffect(
-    () => () => {
-      setSceneState({
-        play: false,
-        sceneReady: false,
-        showGrid: initialShowGrid,
-      });
-    },
-    [initialShowGrid]
-  );
-
   return (
     <div
       className={cn(threeSceneFrameVariants(), "grid cursor-grab", className)}
+      data-slot="coordinate-system"
     >
-      <ThreeCanvas
-        onCreated={() =>
-          setTimeout(
-            () =>
-              setSceneState((current) => ({
-                ...current,
-                sceneReady: true,
-              })),
-            SCENE_READY_DELAY
-          )
-        }
-        style={{ background: backgroundColor }}
-      >
+      <ThreeCanvas style={{ background: backgroundColor }}>
         <Suspense>
           {/* Camera Controls */}
           <CameraControls
@@ -200,11 +129,23 @@ export function CoordinateSystem({
           <pointLight intensity={1} position={[10, 10, 10]} />
 
           {/* Coordinate System */}
-          <CameraBounds exclude={!frame}>
+          {/* Fit the true origin without measuring decorative axis lengths. */}
+          <CameraBounds
+            bounds={
+              !frame && showAxes
+                ? {
+                    x: { min: origin?.x ?? 0, max: origin?.x ?? 0 },
+                    y: { min: origin?.y ?? 0, max: origin?.y ?? 0 },
+                    z: { min: origin?.z ?? 0, max: origin?.z ?? 0 },
+                  }
+                : undefined
+            }
+            exclude={!(frame || showAxes)}
+          >
             <Axes
               frame={axisFrame}
               origin={origin}
-              showLabels={showLabels}
+              showLabels={showAxes && showLabels}
               showZAxis={showZAxis}
               size={size}
               visible={showAxes}
@@ -232,48 +173,8 @@ export function CoordinateSystem({
 
           {/* User Content */}
           {children}
-
-          {/* Orientation Helper */}
-          {showGizmo ? (
-            <GizmoHelper
-              alignment="bottom-right"
-              margin={[GIZMO_MARGIN, GIZMO_MARGIN]}
-            >
-              <GizmoViewport
-                axisColors={[COLORS.RED, COLORS.GREEN, COLORS.BLUE]}
-                labelColor={ORIGIN_COLOR.LIGHT}
-              />
-            </GizmoHelper>
-          ) : null}
         </Suspense>
       </ThreeCanvas>
-
-      {/* UI Controls */}
-      <div
-        className={cn(
-          "absolute bottom-3 left-3 z-10 flex gap-2 transition-opacity duration-300 ease-out",
-          sceneReady ? "opacity-100" : "opacity-0"
-        )}
-      >
-        <Button
-          aria-pressed={showGrid}
-          onClick={handleGridToggle}
-          size="icon"
-          variant="secondary"
-        >
-          <HugeIcons icon={showGrid ? GridIcon : GridOffIcon} />
-          <span className="sr-only">{t("grid")}</span>
-        </Button>
-        <Button
-          aria-pressed={play}
-          onClick={handlePlayToggle}
-          size="icon"
-          variant={play ? "secondary" : "default"}
-        >
-          <HugeIcons icon={play ? PauseIcon : PlayIcon} />
-          <span className="sr-only">{t("automatic-rotation")}</span>
-        </Button>
-      </div>
     </div>
   );
 }

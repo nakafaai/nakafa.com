@@ -136,12 +136,6 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
       `Content release ${signed.manifest.releaseId} does not bind its renderer.`
     );
   }
-  if (signed.manifest.scope.content !== undefined) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_UNSUPPORTED",
-      `Content release ${signed.manifest.releaseId} uses predecessor exact-content ownership.`
-    );
-  }
   const state = yield* ensureState(ctx);
   const existing = yield* Effect.promise(() =>
     ctx.db

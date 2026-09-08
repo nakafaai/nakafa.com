@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { canonicalizeQuestionProjection } from "@nakafa/aksara-contracts/projection/question";
 import {
   type RollbackPage,
   RollbackPageSchema,
@@ -20,7 +21,6 @@ import {
   FUNCTION_MATERIAL_SOURCE,
 } from "@repo/backend/test/content/material";
 import {
-  TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
   TEST_QUESTION_PROJECTION,
   TEST_QUESTION_PROJECTION_JSON,
   TEST_QUESTION_SOURCE,
@@ -191,8 +191,15 @@ describe("contentRelease/rollback", () => {
     );
   });
 
-  it("preserves an authenticated historical Question rollback state", async () => {
+  it("preserves an authenticated prior Question rollback state", async () => {
     const t = convexTest(schema, convexModules);
+    const priorProjection = {
+      ...TEST_QUESTION_PROJECTION,
+      metadata: {
+        ...TEST_QUESTION_PROJECTION.metadata,
+        title: "Prior question",
+      },
+    };
     await t.mutation(async (ctx) => {
       await activateRollbackFixture(ctx, 1);
       await insertRollbackItem(ctx, 0, true, "return {};", {
@@ -201,7 +208,7 @@ describe("contentRelease/rollback", () => {
         currentSourcePath: TEST_QUESTION_SOURCE,
         delivery: "authenticated",
         family: "question",
-        priorProjectionJson: TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
+        priorProjectionJson: canonicalizeQuestionProjection(priorProjection),
         priorSourcePath: TEST_QUESTION_SOURCE,
         rendererDomain: "snbt-general",
       });
@@ -215,13 +222,7 @@ describe("contentRelease/rollback", () => {
         family: "question",
         operation: "upsert",
       },
-      projection: {
-        choices: [
-          { label: "Correct", value: true },
-          { label: "Incorrect", value: false },
-        ],
-        metadata: { date: "2026-07-24" },
-      },
+      projection: priorProjection,
     });
     const prior = page.records[0]?.prior;
     expect(

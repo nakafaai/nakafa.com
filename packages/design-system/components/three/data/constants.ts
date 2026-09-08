@@ -18,6 +18,9 @@ export const THREE_FONT_SIZE = {
 
 export type ThreeFontSize = keyof typeof THREE_FONT_SIZE;
 
+/** Minimum diagram-label font size in CSS pixels at the camera boundary. */
+export const THREE_DIAGRAM_MINIMUM_FONT_SIZE = 14;
+
 const PARTICLE_LABEL_FONT_RATIO = 0.72;
 
 /**

@@ -2,8 +2,7 @@
 
 import { Instance, Instances, Line } from "@react-three/drei";
 import {
-  resolveThreeFontSize,
-  THREE_FONT_SIZE,
+  THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import {
@@ -12,8 +11,13 @@ import {
   getCurveDivisions,
 } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { randomColor } from "@repo/design-system/lib/color";
+import { COLORS } from "@repo/design-system/lib/color";
 import { resolveArrowSize } from "@repo/design-system/lib/geometry/arrow";
+import {
+  type LineMarkerIndices,
+  resolveLineMarkers,
+} from "@repo/design-system/lib/geometry/markers";
+import { Effect } from "effect";
 import { type ReactNode, useMemo } from "react";
 import {
   CatmullRomCurve3,
@@ -28,7 +32,7 @@ import {
 const SPHERE_GEOMETRY_RADIUS = 0.1;
 const CONE_GEOMETRY_HEIGHT_SEGMENTS = 1;
 const DEFAULT_ARROW_SIZE = 0.5;
-const DEFAULT_FONT_SIZE = THREE_FONT_SIZE.diagram;
+const DEFAULT_FONT_SIZE = "diagram" satisfies ThreeFontSize;
 
 // Shared geometry cache
 let sharedSphereGeometry: SphereGeometry | null = null;
@@ -93,8 +97,6 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
 interface LineLabelStyle {
   /** Optional index into the points array where this label appears. */
   at?: number;
-  /** Color for the label. */
-  color?: string | Color;
   /** Font size of the label. */
   fontSize?: ThreeFontSize | number;
   /** Optional [x,y,z] offset from the selected point. */
@@ -128,6 +130,8 @@ export interface Props {
    */
   labels?: LineLabel[];
   lineWidth?: number;
+  /** Optional sample indices to mark without changing the curve geometry. */
+  pointIndices?: LineMarkerIndices;
   points: {
     x: number;
     y: number;
@@ -147,10 +151,11 @@ const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
  */
 export function LineEquation({
   points,
-  color = randomColor(["YELLOW", "GREEN", "BLUE"]),
+  pointIndices,
+  color = COLORS.AMBER,
   lineWidth = 2,
   showPoints = true,
-  smooth = true,
+  smooth = false,
   curvePoints,
   labels = DEFAULT_LABELS,
   cone,
@@ -158,6 +163,11 @@ export function LineEquation({
   const vectorPoints = useMemo(
     () => points.map((point) => new Vector3(point.x, point.y, point.z)),
     [points]
+  );
+
+  const markerPoints = useMemo(
+    () => Effect.runSync(resolveLineMarkers(vectorPoints, pointIndices)),
+    [pointIndices, vectorPoints]
   );
 
   // Define cone size (default to 0.5 if not provided in cone prop)
@@ -295,13 +305,12 @@ export function LineEquation({
           {
             key: `label-${idx}`,
             position,
-            color: label.color ?? color,
-            fontSize: resolveThreeFontSize(label.fontSize ?? DEFAULT_FONT_SIZE),
+            fontSize: label.fontSize ?? DEFAULT_FONT_SIZE,
             text: label.text,
           },
         ];
       }),
-    [labels, vectorPoints, color]
+    [labels, vectorPoints]
   );
 
   return (
@@ -331,13 +340,13 @@ export function LineEquation({
 
       {/* Optionally render a small sphere at each point */}
       <Instances
-        count={vectorPoints.length}
+        count={markerPoints.length}
         frustumCulled
         geometry={pointGeom}
         material={pointMat}
         visible={showPoints}
       >
-        {vectorPoints.map((v, index) => (
+        {markerPoints.map((v, index) => (
           <Instance
             // biome-ignore lint/suspicious/noArrayIndexKey: Coordinates may appear multiple times, need index for uniqueness
             key={`point-${index}-${v.x}-${v.y}-${v.z}`}
@@ -349,9 +358,10 @@ export function LineEquation({
       {/* Render custom labels at specified indices */}
       {labelData.map((data) => (
         <ThreeLabel
-          color={data.color}
+          color={color}
           fontSize={data.fontSize}
           key={data.key}
+          minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
           position={data.position}
         >
           {data.text}

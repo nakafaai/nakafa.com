@@ -3,6 +3,7 @@
 import { Line } from "@react-three/drei";
 import {
   resolveThreeFontSize,
+  THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   THREE_FONT_SIZE,
 } from "@repo/design-system/components/three/data/constants";
 import {
@@ -31,7 +32,7 @@ export function Inequality({
   yRange = [DEFAULT_INEQUALITY_RANGE_MIN, DEFAULT_INEQUALITY_RANGE_MAX],
   zRange = [DEFAULT_INEQUALITY_RANGE_MIN, DEFAULT_INEQUALITY_RANGE_MAX],
   resolution = 200,
-  color = COLORS.BLUE,
+  color = COLORS.PURPLE,
   boundaryColor,
   opacity = 0.1,
   boundaryLineWidth = 2,
@@ -126,6 +127,7 @@ export function Inequality({
           fontSize={resolveThreeFontSize(
             label.fontSize ?? DEFAULT_LABEL_FONT_SIZE
           )}
+          minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
           position={label.position}
         >
           {label.text}

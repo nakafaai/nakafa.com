@@ -27,7 +27,6 @@ const MID_DISTANCE = { x: 0, y: -HALF / 2, z: 0 };
 const COLOR_CUBE = getColor("INDIGO");
 const COLOR_DIAGONAL = getColor("ROSE");
 const COLOR_DISTANCE = getColor("AMBER");
-const COLOR_LABEL = getColor("VIOLET");
 
 const cubeEdges = [
   [A, B],
@@ -81,10 +80,9 @@ export function Graph({ title, description }: GraphProps) {
           lineWidth: 3,
           labels: [
             {
-              text: <InlineMath math="2.5\,\text{m}" />,
+              text: <InlineMath math="\frac{5}{2}\,\text{m}" />,
               at: 1,
               offset: [1, 0, 0],
-              color: COLOR_DISTANCE,
             },
           ],
         },
@@ -110,7 +108,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="A" />,
               at: 0,
               offset: [-0.5, -0.5, 0.5],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -123,7 +120,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="B" />,
               at: 0,
               offset: [0.5, -0.5, 0.5],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -136,7 +132,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="C" />,
               at: 0,
               offset: [0.5, -0.5, -0.5],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -149,7 +144,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="D" />,
               at: 0,
               offset: [-0.5, -0.5, -0.5],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -162,7 +156,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="E" />,
               at: 0,
               offset: [-0.5, 0.5, 0.5],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -175,7 +168,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="F" />,
               at: 0,
               offset: [0.5, 0.5, 0.5],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -188,7 +180,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="G" />,
               at: 0,
               offset: [0.5, 0.5, -0.5],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -201,13 +192,11 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="H" />,
               at: 0,
               offset: [-0.5, 0.5, -0.5],
-              color: COLOR_LABEL,
             },
           ],
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

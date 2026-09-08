@@ -8,20 +8,36 @@ import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 const verifyAngleEditing = Effect.fn("NakafaE2E.verifyAngleEditing")(function* (
   card: Locator,
   angle: Locator,
-  locale: AppLocaleCode
+  locale: AppLocaleCode,
+  diagram: "triangle" | "circle"
 ) {
   const formatter = new Intl.NumberFormat(locale);
+  const ratioFormatter = new Intl.NumberFormat(locale, {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    useGrouping: false,
+  });
+  const annotations = card.locator(
+    '[data-coordinate-controls] annotation[encoding="application/x-tex"]'
+  );
   for (const value of [31.5, -30.5, 390.5]) {
     const formatted = formatter.format(value);
-    yield* Effect.promise(() => angle.fill(formatted));
-    yield* Effect.promise(() => angle.press("Tab"));
-    yield* Effect.promise(() => expect(angle).toHaveValue(formatted));
-    yield* Effect.promise(() => expect(card).toContainText(`Sin (${value}°)`));
-    yield* Effect.promise(() => angle.fill(""));
-    yield* Effect.promise(() => angle.press("Tab"));
-    yield* Effect.promise(() => expect(angle).toHaveValue(formatted));
-    yield* Effect.promise(() => expect(card).not.toContainText("NaN"));
-    yield* Effect.promise(() => expect(card).toContainText(`Sin (${value}°)`));
+    const radians = (value * Math.PI) / 180;
+    const argument = diagram === "triangle" ? `(${value}^\\circ)` : "\\theta";
+    const expected = [
+      ...(diagram === "triangle" ? ["b", "a", "c"] : []),
+      `\\sin${argument} \\approx ${ratioFormatter.format(Math.sin(radians)).replaceAll(",", "{,}")}`,
+      `\\cos${argument} \\approx ${ratioFormatter.format(Math.cos(radians)).replaceAll(",", "{,}")}`,
+      `\\tan${argument} \\approx ${ratioFormatter.format(Math.tan(radians)).replaceAll(",", "{,}")}`,
+      diagram === "triangle" ? `${value}^\\circ` : `\\theta = ${value}^\\circ`,
+    ];
+    for (const input of [formatted, ""]) {
+      yield* Effect.promise(() => angle.fill(input));
+      yield* Effect.promise(() => angle.press("Tab"));
+      yield* Effect.promise(() => expect(angle).toHaveValue(formatted));
+      yield* Effect.promise(() => expect(card).not.toContainText("NaN"));
+      yield* Effect.promise(() => expect(annotations).toHaveText(expected));
+    }
   }
 });
 
@@ -89,7 +105,7 @@ const verifyPublishedTrustLesson = Effect.fn(
       .click()
   );
   yield* Effect.promise(() => expect(angle).toHaveValue("30"));
-  yield* verifyAngleEditing(article, angle, locale);
+  yield* verifyAngleEditing(article, angle, locale, "triangle");
 
   const lessonLink = trust.locator(
     '[data-trust-primary-pane] a[target="_blank"]'
@@ -206,7 +222,7 @@ test("published unit-circle controls preserve finite angles after clearing", asy
             yield* Effect.promise(() => expect(circle).toHaveCount(1));
             yield* Effect.promise(() => angle.scrollIntoViewIfNeeded());
             yield* Effect.promise(() => expect(angle).toHaveValue("30"));
-            yield* verifyAngleEditing(circle, angle, locale);
+            yield* verifyAngleEditing(circle, angle, locale, "circle");
           })
         )
       )

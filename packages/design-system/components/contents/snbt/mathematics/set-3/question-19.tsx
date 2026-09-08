@@ -32,21 +32,13 @@ const midDC = getMidpoint(pointD, pointC);
 const midAC = getMidpoint(pointA, pointC);
 
 const angleCARad = Math.atan2(pointA.y - pointC.y, pointA.x - pointC.x);
-const angleDARad = Math.atan2(pointA.y - pointD.y, pointA.x - pointD.x);
 const arcCPoints = getArcPoints(
   pointC,
   scaleDistance(2) * 0.5,
   Math.PI,
   angleCARad
 );
-const arcDPoints = getArcPoints(
-  pointD,
-  scaleDistance(2) * 0.4,
-  Math.PI,
-  angleDARad
-);
 const arcCLabelIndex = Math.floor(arcCPoints.length / 2);
-const arcDLabelIndex = Math.floor(arcDPoints.length / 2);
 
 const graphData = [
   {
@@ -103,18 +95,6 @@ const graphData = [
       },
     ],
   },
-  {
-    points: arcDPoints,
-    color: getColor("ORANGE"),
-    showPoints: false,
-    labels: [
-      {
-        text: <InlineMath math="53^\circ" />,
-        at: arcDLabelIndex,
-        offset: [-0.5, 0.2, 0],
-      },
-    ],
-  },
 ] satisfies ComponentProps<typeof LineEquation>["data"];
 
 /** Scales real-world distances into the chart coordinate space. */
@@ -129,7 +109,6 @@ export function Graph({ title, description }: GraphProps) {
       cameraPosition={[0, 0, 15]}
       data={graphData}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

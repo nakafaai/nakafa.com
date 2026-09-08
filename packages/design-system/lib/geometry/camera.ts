@@ -10,7 +10,8 @@ export type CameraProjection =
       readonly far?: number;
       readonly kind: "orthographic";
       readonly near?: number;
-      readonly viewHeight: number;
+      /** Optional minimum; measured subjects determine the fitted height. */
+      readonly viewHeight?: number;
     };
 
 // Zooming out must retain at least two thirds of the scene's initial scale.

@@ -10,7 +10,6 @@ export interface LinePoint {
 /** Serializable label contract passed from the server card to WebGL. */
 export interface ResolvedLineLabel {
   at?: number;
-  color?: string;
   fontSize?: ThreeFontSize | number;
   offset?: [number, number, number];
   text: ReactNode;
@@ -26,6 +25,8 @@ export interface ResolvedLine {
   curvePoints?: number;
   labels?: ResolvedLineLabel[];
   lineWidth?: number;
+  /** Original authored samples that retain visible point markers. */
+  pointIndices?: readonly number[];
   points: LinePoint[];
   showPoints?: boolean;
   smooth?: boolean;

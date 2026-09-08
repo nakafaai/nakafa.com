@@ -1,7 +1,6 @@
 import { CorpusSourcePathSchema } from "@nakafa/aksara-contracts/ids";
 import {
   canonicalizeQuestionProjection,
-  HistoricalQuestionBodyProjectionSchema,
   QuestionPromptProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/question";
 import { Schema } from "effect";
@@ -56,21 +55,3 @@ export const TEST_QUESTION_PROJECTION = Schema.decodeSync(
 export const TEST_QUESTION_PROJECTION_JSON = canonicalizeQuestionProjection(
   TEST_QUESTION_PROJECTION
 );
-
-/** Prior Question projection admitted only by authenticated recovery staging. */
-export const TEST_HISTORICAL_QUESTION_PROJECTION = Schema.decodeSync(
-  HistoricalQuestionBodyProjectionSchema
-)({
-  ...identity,
-  choices: [
-    { label: "Correct", value: true },
-    { label: "Incorrect", value: false },
-  ],
-  metadata: {
-    authors: [{ name: "Nakafa" }],
-    date: "2026-07-24",
-    title: "Technical question",
-  },
-});
-export const TEST_HISTORICAL_QUESTION_PROJECTION_JSON =
-  canonicalizeQuestionProjection(TEST_HISTORICAL_QUESTION_PROJECTION);

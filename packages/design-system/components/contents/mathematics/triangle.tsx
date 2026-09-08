@@ -1,30 +1,25 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import {
+  CoordinateControls,
+  CoordinateProvider,
+} from "@repo/design-system/components/three/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { Separator } from "@repo/design-system/components/ui/separator";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  getCos,
-  getRadians,
-  getSin,
-  getTan,
-  ISOSCELES_RIGHT_TRIANGLE_ANGLE,
-} from "@repo/math/angles";
+import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { useState } from "react";
 import {
   Button,
@@ -35,6 +30,19 @@ import {
   NumberField,
 } from "react-aria-components";
 
+function ScenePlaceholder() {
+  return (
+    <div
+      aria-hidden="true"
+      className={threeSceneFrameVariants({
+        className: "grid place-items-center",
+      })}
+    >
+      <Spinner className="size-6" />
+    </div>
+  );
+}
+
 // Next owns this client-only import boundary so offscreen lessons do not load WebGL.
 const TriangleScene = dynamic(
   () =>
@@ -42,19 +50,24 @@ const TriangleScene = dynamic(
       "@repo/design-system/components/contents/mathematics/triangle/scene"
     ).then((module) => module.TriangleScene),
   {
-    loading: () => <Spinner aria-hidden="true" className="size-6" />,
+    loading: ScenePlaceholder,
     ssr: false,
   }
+);
+
+// Keep KaTeX outside the page's initial component graph until the scene is visible.
+const TriangleReadout = dynamic(
+  () =>
+    import(
+      "@repo/design-system/components/contents/mathematics/triangle/readout"
+    ).then((module) => module.TriangleReadout),
+  { ssr: false }
 );
 
 interface Props {
   angle?: number;
   description: ReactNode;
-  labels?: {
-    opposite: ReactNode;
-    adjacent: ReactNode;
-    hypotenuse: ReactNode;
-  };
+  labels?: ComponentProps<typeof TriangleReadout>["labels"];
   size?: number;
   title: ReactNode;
 }
@@ -64,20 +77,26 @@ export function Triangle({
   description,
   angle = ISOSCELES_RIGHT_TRIANGLE_ANGLE,
   size = 2,
-  labels,
+  labels = {
+    opposite: "Opposite",
+    adjacent: "Adjacent",
+    hypotenuse: "Hypotenuse",
+  },
 }: Props) {
   const locale = useLocale();
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <I18nProvider locale={locale}>
-        <Content angle={angle} labels={labels} size={size} />
-      </I18nProvider>
-    </Card>
+    <CoordinateProvider>
+      <Card className="content-auto-card">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <I18nProvider locale={locale}>
+          <Content angle={angle} labels={labels} size={size} />
+        </I18nProvider>
+      </Card>
+    </CoordinateProvider>
   );
 }
 
@@ -88,7 +107,7 @@ function Content({
 }: {
   angle: number;
   size: number;
-  labels?: Props["labels"];
+  labels: NonNullable<Props["labels"]>;
 }) {
   const t = useTranslations("Common");
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
@@ -99,47 +118,24 @@ function Content({
     <>
       <CardContent>
         <Intersection
-          className={threeSceneFrameVariants({
-            className: "grid place-items-center",
-          })}
+          className="relative"
           data-slot="triangle-scene"
           once
           onIntersect={() => setIsNearViewport(true)}
         >
           {isNearViewport ? (
-            <TriangleScene angle={angleValue} labels={labels} size={size} />
-          ) : null}
+            <TriangleScene angle={angleValue} size={size} />
+          ) : (
+            <ScenePlaceholder />
+          )}
         </Intersection>
       </CardContent>
-      <CardFooter className="border-t px-0">
+      <CoordinateControls>
         <div className="flex w-full flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 px-6">
-            <Badge className="font-mono" variant="outline">
-              Sin ({angleValue}°) = {getSin(angleValue).toFixed(2)}
-            </Badge>{" "}
-            <Badge className="font-mono" variant="outline">
-              Cos ({angleValue}°) = {getCos(angleValue).toFixed(2)}
-            </Badge>{" "}
-            <Badge className="font-mono" variant="outline">
-              Tan ({angleValue}°) ={" "}
-              {Number.isFinite(getTan(angleValue))
-                ? getTan(angleValue).toFixed(2)
-                : t("undefined")}
-            </Badge>
-          </div>
-
-          <Separator />
-
+          {isNearViewport ? (
+            <TriangleReadout angle={angleValue} labels={labels} />
+          ) : null}
           <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
-            <div className="flex items-center gap-2">
-              <Badge className="font-mono" variant="outline">
-                {angleValue}°
-              </Badge>{" "}
-              <Badge className="font-mono" variant="outline">
-                {getRadians(angleValue).toFixed(2)} {t("radian")}
-              </Badge>
-            </div>
-
             <NumberField
               decrementAriaLabel={t("decrease-angle")}
               incrementAriaLabel={t("increase-angle")}
@@ -180,7 +176,7 @@ function Content({
             </NumberField>
           </div>
         </div>
-      </CardFooter>
+      </CoordinateControls>
     </>
   );
 }

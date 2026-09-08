@@ -4,8 +4,6 @@ import {
   compactProgram,
   runProgram,
 } from "@repo/backend/convex/contentRelease/compact";
-import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
-import { beginHistoryRetirement } from "@repo/backend/convex/contentRelease/retire/history";
 import { ARTIFACT_PAGE_COUNT } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -18,7 +16,6 @@ import {
   insertCompletedRelease,
   seedCompactionHistory,
 } from "@repo/backend/test/content/compact";
-import { testSignedRelease } from "@repo/backend/test/content/proof";
 import {
   insertTestState,
   insertZeroRelease,
@@ -338,106 +335,71 @@ describe("contentRelease/compact", () => {
 
 describe("contentRelease/compact permanent history", () => {
   beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
-  it.each(["retention", "retirement"] as const)(
-    "preserves frozen attempt history after %s removes its source release",
-    async (mode) => {
-      const t = createConvexTestWithBetterAuth();
-      const { seed, plan } = await t.mutation(async (ctx) => {
-        const seed = await insertHistoryAttempt(ctx);
-        const source = await ctx.db.query("contentReleases").unique();
-        assert.ok(source);
-        const createdAt = mode === "retention" ? 0 : Date.now();
-        await ctx.db.patch(source._id, { createdAt });
-        const releases = [
-          {
-            manifestHash: seed.runtime.sourceManifestHash,
-            releaseId: seed.runtime.sourceReleaseId,
-            sequence: source.sequence,
-          },
-        ];
-        for (let sequence = 2; sequence <= 5; sequence += 1) {
-          const identity = compactionIdentity(sequence);
-          await insertCompletedRelease(
-            ctx,
-            identity,
-            releases.at(-1),
-            createdAt
-          );
-          const row = await ctx.db
-            .query("contentReleases")
-            .withIndex("by_releaseId", (query) =>
-              query.eq("releaseId", identity.releaseId)
-            )
-            .unique();
-          assert.ok(row);
-          const parsed = await runConvexProgram(
-            decodeReleaseJson(row.releaseJson)
-          );
-          const signed = testSignedRelease(parsed.manifest);
-          await ctx.db.patch(row._id, { releaseJson: JSON.stringify(signed) });
-          releases.push({ ...identity, manifestHash: signed.manifestHash });
-        }
-        const state = await ctx.db.query("contentState").unique();
-        const active = releases.at(-1);
-        assert.ok(state && active);
-        await ctx.db.patch(state._id, {
-          activeManifestHash: active.manifestHash,
-          activeReleaseId: active.releaseId,
-          activeSequence: active.sequence,
-          compactedFloor: 1,
-          nextSequence: 6,
-        });
-        const snapshot = await ctx.db.query("contentSnapshots").unique();
-        assert.ok(snapshot);
-        await ctx.db.patch(snapshot._id, { retainUntil: 0 });
-        for (const artifact of await ctx.db
-          .query("contentArtifacts")
-          .collect()) {
-          await ctx.db.patch(artifact._id, { retainUntil: 0 });
-        }
-        return { seed, plan: { active, releases: releases.slice(0, 2) } };
-      });
-      const owned = t.withIdentity({
-        subject: seed.identity.authUserId,
-        sessionId: seed.identity.sessionId,
-      });
-      const read = () =>
-        owned.query((ctx) =>
-          runConvexProgram(readTryoutHistory(ctx, seed.request))
-        );
-      const before = await read();
-      assert.ok(before);
-      const attempt = await t.query((ctx) =>
-        ctx.db.get(seed.request.attemptId)
-      );
-      if (mode === "retirement") {
-        await expect(
-          t.mutation((ctx) =>
-            runConvexProgram(beginHistoryRetirement(ctx, plan))
-          )
-        ).resolves.toEqual({ complete: false, floor: 3 });
+  it("preserves frozen attempt history after its source release expires", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seed = await t.mutation(async (ctx) => {
+      const seed = await insertHistoryAttempt(ctx);
+      const source = await ctx.db.query("contentReleases").unique();
+      assert.ok(source);
+      await ctx.db.patch(source._id, { createdAt: 0 });
+      let active = {
+        manifestHash: seed.runtime.sourceManifestHash,
+        releaseId: seed.runtime.sourceReleaseId,
+        sequence: source.sequence,
+      };
+      for (let sequence = 2; sequence <= 5; sequence += 1) {
+        const identity = compactionIdentity(sequence);
+        await insertCompletedRelease(ctx, identity, active, 0);
+        active = identity;
       }
-      await expect(
-        t.action((ctx) => runConvexProgram(runProgram(ctx)))
-      ).resolves.toMatchObject({ complete: true, floor: 3 });
-      expect(await read()).toEqual(before);
-      expect(
-        await t.query((ctx) => ctx.db.get(seed.request.attemptId))
-      ).toEqual(attempt);
-      expect(await t.query((ctx) => ctx.db.get(seed.runtime._id))).toEqual(
-        seed.runtime
+      const state = await ctx.db.query("contentState").unique();
+      assert.ok(state);
+      await ctx.db.patch(state._id, {
+        activeManifestHash: active.manifestHash,
+        activeReleaseId: active.releaseId,
+        activeSequence: active.sequence,
+        compactedFloor: 1,
+        nextSequence: 6,
+      });
+      const snapshot = await ctx.db.query("contentSnapshots").unique();
+      assert.ok(snapshot);
+      await ctx.db.patch(snapshot._id, { retainUntil: 0 });
+      for (const artifact of await ctx.db.query("contentArtifacts").collect()) {
+        await ctx.db.patch(artifact._id, { retainUntil: 0 });
+      }
+      return seed;
+    });
+    const owned = t.withIdentity({
+      subject: seed.identity.authUserId,
+      sessionId: seed.identity.sessionId,
+    });
+    const read = () =>
+      owned.query((ctx) =>
+        runConvexProgram(readTryoutHistory(ctx, seed.request))
       );
-      expect(
-        await t.query(async (ctx) =>
-          (await ctx.db.query("contentReleases").collect()).map(
-            ({ sequence }) => sequence
-          )
+    const before = await read();
+    assert.ok(before);
+    const attempt = await t.query((ctx) => ctx.db.get(seed.request.attemptId));
+    await expect(
+      t.action((ctx) => runConvexProgram(runProgram(ctx)))
+    ).resolves.toMatchObject({ complete: true, floor: 3 });
+    expect(await read()).toEqual(before);
+    expect(await t.query((ctx) => ctx.db.get(seed.request.attemptId))).toEqual(
+      attempt
+    );
+    expect(await t.query((ctx) => ctx.db.get(seed.runtime._id))).toEqual(
+      seed.runtime
+    );
+    expect(
+      await t.query(async (ctx) =>
+        (await ctx.db.query("contentReleases").collect()).map(
+          ({ sequence }) => sequence
         )
-      ).toEqual([3, 4, 5]);
-      expect(before.items.map(({ delivery }) => delivery)).toEqual([
-        "authenticated",
-        "entitled",
-      ]);
-    }
-  );
+      )
+    ).toEqual([3, 4, 5]);
+    expect(before.items.map(({ delivery }) => delivery)).toEqual([
+      "authenticated",
+      "entitled",
+    ]);
+  });
 });

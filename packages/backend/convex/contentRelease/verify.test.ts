@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import {
   PROOF_PAGE_LIMIT,
   RELEASE_PAGE_LIMIT,
@@ -22,6 +23,8 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
+
+vi.mock("@repo/backend/convex/contentRelease/proof/budget", { spy: true });
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
@@ -150,6 +153,40 @@ describe("contentRelease/verify", () => {
       done: true,
       nextIndex: PROOF_PAGE_LIMIT,
       processed: 1,
+    });
+  });
+
+  it("persists a continuation when proof headroom is exhausted", async () => {
+    const t = convexTest(schema, convexModules);
+    await stagePagedFixture(t);
+    const headroom = vi
+      .mocked(hasProofTransactionHeadroom)
+      .mockReturnValueOnce(false);
+    const first = await t.mutation(verifyItems, {
+      afterIndex: -1,
+      releaseId: TEST_RELEASE_ID,
+    });
+    headroom.mockRestore();
+    expect(first).toEqual({ done: false, nextIndex: 0, processed: 1 });
+    await expect(
+      t.mutation(verifyItems, {
+        afterIndex: first.nextIndex,
+        releaseId: TEST_RELEASE_ID,
+      })
+    ).resolves.toEqual({
+      done: false,
+      nextIndex: PROOF_PAGE_LIMIT,
+      processed: PROOF_PAGE_LIMIT,
+    });
+    await expect(
+      t.mutation(verifyItems, {
+        afterIndex: PROOF_PAGE_LIMIT,
+        releaseId: TEST_RELEASE_ID,
+      })
+    ).resolves.toEqual({
+      done: true,
+      nextIndex: PROOF_PAGE_LIMIT,
+      processed: 0,
     });
   });
 

@@ -11128,21 +11128,6 @@ export declare const internal: {
           unchanged: number;
         }
       >;
-      stageRollbackProjectionBatch: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          batchIndex: number;
-          projectionJson: Array<string>;
-          releaseId: string;
-        },
-        {
-          batchIndex: number;
-          created: number;
-          releaseId: string;
-          unchanged: number;
-        }
-      >;
     };
     manifest: {
       abort: FunctionReference<
@@ -11925,27 +11910,6 @@ export declare const internal: {
           | null
         >;
       };
-    };
-    retire: {
-      history: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          plan: {
-            active: {
-              manifestHash: string;
-              releaseId: string;
-              sequence: number;
-            };
-            releases: Array<{
-              manifestHash: string;
-              releaseId: string;
-              sequence: number;
-            }>;
-          };
-        },
-        { complete: boolean; floor: number }
-      >;
     };
     rollback: {
       prepareRollback: FunctionReference<

@@ -1,59 +1,81 @@
 "use client";
 
-import { Line } from "@repo/design-system/components/evilcharts/charts/line/series";
 import {
-  EvilLineChart,
+  type Exponential,
+  resolveExponential,
+} from "@repo/design-system/components/contents/mathematics/exponential";
+import { Line } from "@repo/design-system/components/evilcharts/charts/composed/line";
+import { Scatter } from "@repo/design-system/components/evilcharts/charts/composed/scatter";
+import {
+  EvilComposedChart,
   Grid,
   Legend,
   XAxis,
   YAxis,
-} from "@repo/design-system/components/evilcharts/charts/line-chart";
+} from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import type { ReactNode } from "react";
-import { useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@repo/design-system/components/ui/table";
+import { Effect } from "effect";
+import { useFormatter } from "next-intl";
+import { type ReactNode, useId, useMemo } from "react";
 
-const THRESHOLD_VALUE = 1000;
-const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
-const FUNCTION_CHART_CONFIG = {
+const CHART_CONFIG = {
   y: {
-    label: "f(x)",
+    label: <InlineMath math="f(x)" />,
     colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
   },
 } satisfies ChartConfig;
 
-interface Props {
-  a: number;
-  description: ReactNode;
-  n?: number;
-  p: number;
-  title: ReactNode;
+const DECIMAL_OR_GROUP_SEPARATOR = /[,.]/gu;
+
+function numberMath(value: number, format: (value: number) => string) {
+  const rounded = Number(value.toPrecision(10));
+  const text = format(rounded).replace(DECIMAL_OR_GROUP_SEPARATOR, "{$&}");
+  return `${rounded === value ? "" : "\\approx"}${text}`;
 }
 
-export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
-  const data = useMemo(
-    () =>
-      Array.from({ length: n }, (_, i) => {
-        // Handle the specific case where a=0 and x=0 (mathematically undefined)
-        if (a === 0 && i === 0) {
-          return { x: i, y: null }; // Use null to represent undefined
-        }
-        return {
-          x: i,
-          y: p * a ** i,
-        };
-      }),
-    [a, p, n]
+/** Composes an exact model curve, discrete observations, and accessible values. */
+export function FunctionChart({
+  a,
+  p,
+  n,
+  mode,
+  title,
+  description,
+}: Exponential & { title: ReactNode; description: ReactNode }) {
+  const formulaId = useId();
+  const formatter = useFormatter();
+  const formatNumber = (value: number) =>
+    formatter.number(value, {
+      maximumSignificantDigits: 10,
+    });
+  const coefficientMath = (value: number) =>
+    formatter
+      .number(value, { maximumSignificantDigits: 21, useGrouping: false })
+      .replace(DECIMAL_OR_GROUP_SEPARATOR, "{$&}");
+  const plot = useMemo(
+    () => Effect.runSync(resolveExponential({ a, p, n, mode })),
+    [a, p, n, mode]
   );
 
   return (
@@ -62,67 +84,70 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <EvilLineChart
-          config={FUNCTION_CHART_CONFIG}
-          curveType="monotone"
-          data={data}
+      <CardContent className="space-y-6">
+        <EvilComposedChart
+          animationType="none"
+          config={CHART_CONFIG}
+          curveType="linear"
+          data={plot.values}
         >
           <Grid />
           <XAxis
+            allowDecimals={false}
             dataKey="x"
-            tickFormatter={(value) => value.toString()}
-            tickMargin={8}
+            domain={["dataMin", "dataMax"]}
+            tickFormatter={formatNumber}
+            type="number"
           />
-          <YAxis
-            label={{
-              value: "f(x)",
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
-            }}
-            tickFormatter={(value) =>
-              value >= THRESHOLD_VALUE
-                ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
-                : String(value)
-            }
-            tickMargin={8}
-          />
-          <ChartTooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length > 0) {
-                const xValue = payload[0].payload.x;
-                const yValue = payload[0].payload.y;
-
-                if (yValue === null) {
-                  return (
-                    <ChartTooltipContent
-                      active={active}
-                      label={`x = ${xValue}, y = undefined`}
-                      payload={[]}
-                    />
-                  );
-                }
-
-                return (
-                  <ChartTooltipContent
-                    active={active}
-                    label={`x = ${xValue}`}
-                    payload={payload}
-                  />
-                );
-              }
-              return null;
-            }}
-          />
-          <Line
-            connectNulls={false}
-            dataKey="y"
-            lineProps={{ dot: true, name: "y", strokeWidth: 2 }}
-          />
+          <YAxis dataKey="y" tickFormatter={formatNumber} type="number" />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          {plot.curve.length > 0 ? (
+            <Line
+              dataKey="y"
+              lineProps={{
+                activeDot: false,
+                data: plot.curve,
+                dot: false,
+                legendType: "none",
+                tooltipType: "none",
+              }}
+            />
+          ) : null}
+          <Scatter data={plot.values} dataKey="y" />
           <Legend verticalAlign="bottom" />
-        </EvilLineChart>
+        </EvilComposedChart>
+        <Table aria-describedby={formulaId}>
+          <TableHeader>
+            <TableRow>
+              <TableHead scope="col">
+                <InlineMath math="x" />
+              </TableHead>
+              {plot.values.map(({ x }) => (
+                <TableHead key={x} scope="col">
+                  <InlineMath math={String(x)} />
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableHead scope="row">
+                <InlineMath math="f(x)" />
+              </TableHead>
+              {plot.values.map(({ x, y }) => (
+                <TableCell key={x}>
+                  <InlineMath math={numberMath(y, formatNumber)} />
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableBody>
+        </Table>
       </CardContent>
+      <CardFooter className="justify-center" id={formulaId}>
+        <InlineMath
+          math={`f(x)=${coefficientMath(p)}\\cdot(${coefficientMath(a)})^x`}
+        />
+      </CardFooter>
     </Card>
   );
 }

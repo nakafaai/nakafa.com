@@ -29,11 +29,10 @@ import { convexTest } from "convex-test";
 /** Runs item verification against the only staged release item. */
 async function verifyOnly(ctx: MutationCtx) {
   const row = await ctx.db.query("contentItems").unique();
-  const release = await ctx.db.query("contentReleases").unique();
-  if (!(row && release)) {
-    throw new Error("Expected verification item and release.");
+  if (!row) {
+    throw new Error("Expected verification item.");
   }
-  return await runConvexProgram(checkItem(ctx, row, release.role));
+  return await runConvexProgram(checkItem(ctx, row));
 }
 
 describe("contentRelease/verify/item", () => {

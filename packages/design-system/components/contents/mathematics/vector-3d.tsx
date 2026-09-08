@@ -1,5 +1,9 @@
 // CoordinateSystem renders a dynamic WebGL canvas with SSR disabled.
 // https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr
+import {
+  CoordinateControls,
+  CoordinateProvider,
+} from "@repo/design-system/components/three/controls";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { Vector } from "@repo/design-system/components/three/vector";
 import {
@@ -39,24 +43,27 @@ export function Vector3d({
   cameraTarget,
 }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <CoordinateSystem
-          cameraPosition={cameraPosition}
-          cameraTarget={cameraTarget}
-        >
-          {vectors.map((vector) => (
-            <Vector
-              key={`vector-${vector.from?.join(",")}-${vector.to.join(",")}`}
-              {...vector}
-            />
-          ))}
-        </CoordinateSystem>
-      </CardContent>
-    </Card>
+    <CoordinateProvider>
+      <Card className="content-auto-card">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CoordinateSystem
+            cameraPosition={cameraPosition}
+            cameraTarget={cameraTarget}
+          >
+            {vectors.map((vector) => (
+              <Vector
+                key={`vector-${vector.from?.join(",")}-${vector.to.join(",")}`}
+                {...vector}
+              />
+            ))}
+          </CoordinateSystem>
+        </CardContent>
+        <CoordinateControls />
+      </Card>
+    </CoordinateProvider>
   );
 }

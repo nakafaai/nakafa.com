@@ -11,13 +11,13 @@ import {
   saveAiDraftText,
 } from "@/components/ai/store/draft";
 import type { AiStore } from "@/components/ai/store/types";
-import { authClient } from "@/lib/auth/client";
+import { useAuthSession } from "@/lib/auth/session";
 
 const AiContext = createContext<AiStoreApi | null>(null);
 
 /** Provides the Nina store to AI components. */
 export function AiContextProvider({ children }: { children: ReactNode }) {
-  const { data: session, error, isPending } = authClient.useSession();
+  const { data: session, error, isPending } = useAuthSession();
   const activeDraftOwnerIdRef = useRef<string | null | undefined>(undefined);
   const pendingDraftRef = useRef({
     changed: false,

@@ -4,12 +4,15 @@ import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/re
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   decodeArtifactJson,
-  decodeCurrentProjectionJson,
   decodeItemJson,
   decodeProjectionJson,
   decodeProofJson,
   decodeReleaseJson,
   decodeRendererJson,
+  decodeRollbackJson,
+  decodeRouteJson,
+  decodeSnapshotJson,
+  decodeTryoutRuntimeBundleJson,
   parseStoredJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import {
@@ -24,10 +27,7 @@ import {
   FUNCTION_MATERIAL,
   testProjectionJson,
 } from "@repo/backend/test/content/material";
-import {
-  TEST_HISTORICAL_QUESTION_PROJECTION,
-  TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
-} from "@repo/backend/test/content/question";
+import { TEST_QUESTION_PROJECTION } from "@repo/backend/test/content/question";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -110,18 +110,28 @@ describe("contentRelease/parse", () => {
     })
   );
 
-  it.live("admits prior Question bytes only through readable decoding", () =>
-    Effect.gen(function* () {
-      const storedJson = TEST_HISTORICAL_QUESTION_PROJECTION_JSON;
-
-      const stored = yield* decodeProjectionJson(storedJson);
-      const rejected = yield* decodeCurrentProjectionJson(storedJson).pipe(
-        Effect.flip
-      );
-
-      expect(stored).toEqual(TEST_HISTORICAL_QUESTION_PROJECTION);
-      expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-    })
+  it.live(
+    "rejects retired Question fields at the stored projection boundary",
+    () =>
+      Effect.gen(function* () {
+        const projection = TEST_QUESTION_PROJECTION;
+        for (const value of [
+          { ...projection, choices: [] },
+          {
+            ...projection,
+            metadata: {
+              authors: projection.metadata.authors,
+              date: projection.metadata.datePublished,
+              title: projection.metadata.title,
+            },
+          },
+        ]) {
+          const rejected = yield* decodeProjectionJson(
+            JSON.stringify(value)
+          ).pipe(Effect.flip);
+          expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+        }
+      })
   );
 
   it.live(
@@ -137,12 +147,16 @@ describe("contentRelease/parse", () => {
             decodeProjectionJson("{}").pipe(Effect.flip),
             decodeProofJson("{}").pipe(Effect.flip),
             decodeRendererJson("{}").pipe(Effect.flip),
+            decodeRollbackJson("{}").pipe(Effect.flip),
+            decodeRouteJson("{}").pipe(Effect.flip),
+            decodeSnapshotJson("{}").pipe(Effect.flip),
+            decodeTryoutRuntimeBundleJson("{}").pipe(Effect.flip),
           ],
           { concurrency: "unbounded" }
         );
 
         expect(Exit.isFailure(malformed)).toBe(true);
-        expect(failures).toHaveLength(6);
+        expect(failures).toHaveLength(10);
         expect(
           failures.every(({ code }) => code === "CONTENT_RELEASE_INTEGRITY")
         ).toBe(true);

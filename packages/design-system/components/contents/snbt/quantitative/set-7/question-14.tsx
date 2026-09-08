@@ -33,12 +33,12 @@ export function Graph({
             },
             {
               text: <InlineMath math="5" />,
-              at: f_points.findIndex((p) => Math.abs(p.x) < 0.1),
+              at: f_points.findIndex((p) => p.x === 0),
               offset: [-0.5, 0, 0],
             },
             {
               text: <InlineMath math="5" />,
-              at: f_points.findIndex((p) => Math.abs(p.x - 5) < 0.1),
+              at: f_points.findIndex((p) => p.x === 5),
               offset: [0.5, 0.5, 0],
             },
           ],
@@ -56,16 +56,15 @@ export function Graph({
             },
             {
               text: <InlineMath math="(2, 3)" />,
-              at: g_points.findIndex((p) => Math.abs(p.x - 2) < 0.1),
+              at: g_points.findIndex((p) => p.x === 2),
               offset: [1, -0.5, 0],
             },
           ],
           showPoints: false,
-          smooth: true,
+          smooth: false,
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

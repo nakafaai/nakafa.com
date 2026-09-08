@@ -49,7 +49,7 @@ const questionData = [
     showPoints: true,
     labels: [
       { text: <InlineMath math="25^\circ" />, at: 0, offset: [-2, -0.5, 0] },
-      { text: <InlineMath math="\alpha" />, at: 1, offset: [-0.5, 0.5, 0] },
+      { text: <InlineMath math="\alpha" />, at: 1, offset: [1, 0, 0] },
       { text: <InlineMath math="135^\circ" />, at: 2, offset: [1, 0.5, 0] },
     ],
   },
@@ -77,7 +77,6 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
       cameraPosition={[0, 0, 10]}
       data={mode === "answer" ? answerData : questionData}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

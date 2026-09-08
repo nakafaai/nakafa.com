@@ -10,7 +10,6 @@ interface GraphProps {
 }
 
 const common = { showPoints: false, color: getColor("INDIGO") };
-const labelColor = getColor("INDIGO");
 const highlightColor = getColor("CYAN");
 
 /** Renders the coordinate graph for SNBT set 4 question 5. */
@@ -55,19 +54,16 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="A" />,
               at: 0,
               offset: [-0.2, -0.2, 0.2],
-              color: labelColor,
             },
             {
               text: <InlineMath math="B" />,
               at: 2,
               offset: [0.2, -0.2, 0.2],
-              color: labelColor,
             },
             {
               text: <InlineMath math="p = 2l" />,
               at: 1,
               offset: [0, -0.4, 0],
-              color: labelColor,
             },
           ],
         },
@@ -79,13 +75,11 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="C" />,
               at: 2,
               offset: [0.2, -0.2, -0.2],
-              color: labelColor,
             },
             {
               text: <InlineMath math="l" />,
               at: 1,
               offset: [0.4, 0, 0],
-              color: labelColor,
             },
           ],
         },
@@ -97,7 +91,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="D" />,
               at: 1,
               offset: [-0.2, -0.2, -0.2],
-              color: labelColor,
             },
           ],
         },
@@ -109,7 +102,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="l" />,
               at: 1,
               offset: [-0.4, 0, 0],
-              color: labelColor,
             },
           ],
         },
@@ -123,13 +115,11 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="E" />,
               at: 0,
               offset: [-0.2, 0.2, 0.2],
-              color: labelColor,
             },
             {
               text: <InlineMath math="F" />,
               at: 1,
               offset: [0.2, 0.2, 0.2],
-              color: labelColor,
             },
           ],
         },
@@ -141,7 +131,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="G" />,
               at: 1,
               offset: [0.2, 0.2, -0.2],
-              color: labelColor,
             },
           ],
         },
@@ -153,7 +142,6 @@ export function Graph({ title, description }: GraphProps) {
               text: <InlineMath math="H" />,
               at: 1,
               offset: [-0.2, 0.2, -0.2],
-              color: labelColor,
             },
           ],
         },
@@ -167,30 +155,28 @@ export function Graph({ title, description }: GraphProps) {
         { ...common, points: [D, H] },
         {
           ...common,
-          points: [B, F],
+          points: [B, getMidpoint(B, F), F],
           labels: [
             {
               text: <InlineMath math="t" />,
-              at: 0.5,
+              at: 1,
               offset: [0.2, 0, 0],
-              color: labelColor,
             },
           ],
         },
         {
           ...common,
-          points: [C, G],
+          points: [C, getMidpoint(C, G), G],
           labels: [
             {
               text: <InlineMath math="t" />,
-              at: 0.5,
+              at: 1,
               offset: [0.2, 0, 0],
-              color: labelColor,
             },
           ],
         },
 
-        // Plane ADFG (Diagonal Plane) - Highlighted
+        // Plane ADGF (Diagonal Plane) - Highlighted
         {
           points: [A, F],
           color: highlightColor,
@@ -224,7 +210,6 @@ export function Graph({ title, description }: GraphProps) {
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

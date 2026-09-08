@@ -23,7 +23,7 @@ function resolveLine(line: AuthoredLine): ResolvedLine[] {
       {
         ...props,
         points: createCircleOutlinePoints(radius),
-        smooth: true,
+        smooth: false,
       },
     ];
   }

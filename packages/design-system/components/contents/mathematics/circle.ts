@@ -45,7 +45,22 @@ const DEFAULT_LABEL_PROGRESS = 0.5;
  * carrying its own degree-to-radian arithmetic.
  */
 export function createCirclePoint(radius: number, degrees: number) {
-  const angle = getRadians(degrees);
+  const normalized =
+    ((degrees % FULL_CIRCLE_DEGREES) + FULL_CIRCLE_DEGREES) %
+    FULL_CIRCLE_DEGREES;
+  if (normalized === 0) {
+    return { x: radius, y: 0, z: 0 };
+  }
+  if (normalized === 90) {
+    return { x: 0, y: radius, z: 0 };
+  }
+  if (normalized === 180) {
+    return { x: -radius, y: 0, z: 0 };
+  }
+  if (normalized === 270) {
+    return { x: 0, y: -radius, z: 0 };
+  }
+  const angle = getRadians(normalized);
 
   return {
     x: radius * Math.cos(angle),
@@ -78,7 +93,7 @@ export function createCircleArcPoints({
 }
 
 /**
- * Builds a smooth arc line with an optional progress-based label.
+ * Builds an analytically sampled arc with an optional progress-based label.
  *
  * MDX lessons should describe where a label belongs along the mathematical arc,
  * not depend on the current number of sampled points. This adapter converts the
@@ -99,7 +114,7 @@ export function createCircleArcLine({
       lineWidth,
       points,
       showPoints: false,
-      smooth: true,
+      smooth: false,
     };
   }
 
@@ -108,7 +123,7 @@ export function createCircleArcLine({
     lineWidth,
     points,
     showPoints: false,
-    smooth: true,
+    smooth: false,
   };
 }
 
@@ -158,9 +173,8 @@ export function createCircleRadiusPoints({ degrees, radius }: CircleRadius) {
 /**
  * Builds the two line primitives that form a circle segment boundary.
  *
- * The arc is smooth, while the chord is deliberately unsmoothed. Keeping them
- * separate prevents Catmull-Rom interpolation from bending the straight chord
- * at the segment corner.
+ * The sampled arc and straight chord preserve their mathematical coordinates.
+ * Neither path applies spline interpolation to the analytic points.
  */
 export function createCircleSegmentBoundaryLines({
   color,

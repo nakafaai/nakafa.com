@@ -9,17 +9,19 @@ const CAMERA_Z_POSITION = 4;
 /** Owns the WebGL imports and camera for the interactive triangle lesson. */
 export function TriangleScene({
   angle,
-  labels,
-  size,
-}: Pick<ComponentProps<typeof Triangle>, "angle" | "labels" | "size">) {
+  size = 1,
+}: Pick<ComponentProps<typeof Triangle>, "angle" | "size">) {
   return (
     <CoordinateSystem
       cameraPosition={[0, 0, CAMERA_Z_POSITION]}
-      className="size-full"
+      cameraProjection={{ kind: "orthographic" }}
       showOrigin={false}
-      showZAxis={false}
     >
-      <Triangle angle={angle} labels={labels} size={size} />
+      <Triangle
+        angle={angle}
+        position={[1.5 * size, 1.5 * size, 0]}
+        size={size}
+      />
     </CoordinateSystem>
   );
 }

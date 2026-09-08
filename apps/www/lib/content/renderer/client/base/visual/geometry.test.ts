@@ -1,9 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 
-import {
-  resolvePlaneGeometry,
-  resolveSpaceGeometry,
-} from "@/lib/content/renderer/client/base/visual/geometry";
+import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import type {
   PlaneObject,
   PlaneVisual,
@@ -11,15 +8,13 @@ import type {
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
 import {
-  projectSpaceFrame,
-  resolveSpaceProjection,
+  projectVisualFrame,
+  resolveVisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
 
 function plane(first: PlaneObject, ...rest: PlaneObject[]): PlaneVisual {
   return {
     frame: {
-      axes: "visible",
-      grid: "visible",
       kind: "cartesian",
       x: { max: 5, min: -5 },
       y: { max: 4, min: -4 },
@@ -33,8 +28,6 @@ function plane(first: PlaneObject, ...rest: PlaneObject[]): PlaneVisual {
 function space(first: SpaceObject, ...rest: SpaceObject[]): SpaceVisual {
   return {
     frame: {
-      axes: "visible",
-      grid: "visible",
       kind: "cartesian",
       x: { max: 6, min: -6 },
       y: { max: 5, min: -5 },
@@ -47,8 +40,8 @@ function space(first: SpaceObject, ...rest: SpaceObject[]): SpaceVisual {
 }
 
 describe("MathVisual geometry", () => {
-  it("clips plane lines to exact frame boundaries", () => {
-    const geometry = resolvePlaneGeometry(
+  it("clips plane lines and preserves their direction", () => {
+    const geometry = resolveVisualGeometry(
       plane({
         appearance: "primary",
         id: "line",
@@ -59,24 +52,24 @@ describe("MathVisual geometry", () => {
         ],
       })
     );
-
-    expect(geometry).toEqual([
-      {
-        appearance: "primary",
-        arrows: "both",
-        fill: false,
-        id: "line",
-        kind: "path",
-        points: [
-          { x: -4, y: -4 },
-          { x: 4, y: 4 },
-        ],
-      },
-    ]);
+    expect(geometry).toEqual({
+      markers: [],
+      regions: [],
+      paths: [
+        {
+          appearance: "primary",
+          arrows: "both",
+          id: "line",
+          points: [
+            { x: -4, y: -4, z: 0 },
+            { x: 4, y: 4, z: 0 },
+          ],
+        },
+      ],
+    });
   });
-
-  it("preserves an exact corner tangent and omits a zero-length path", () => {
-    const geometry = resolvePlaneGeometry(
+  it("preserves an exact plane corner tangent and omits a zero-length path", () => {
+    const geometry = resolveVisualGeometry(
       plane(
         {
           appearance: "primary",
@@ -96,19 +89,16 @@ describe("MathVisual geometry", () => {
         }
       )
     );
-
-    expect(geometry).toEqual([
-      {
-        appearance: "primary",
-        at: { x: 5, y: 4 },
-        id: "tangent",
-        kind: "point",
-      },
-    ]);
+    expect(geometry).toEqual({
+      paths: [],
+      regions: [],
+      markers: [
+        { appearance: "primary", at: { x: 5, y: 4, z: 0 }, id: "tangent" },
+      ],
+    });
   });
-
   it("clips finite plane paths and omits markers outside the frame", () => {
-    const geometry = resolvePlaneGeometry(
+    const geometry = resolveVisualGeometry(
       plane(
         {
           appearance: "answer",
@@ -128,21 +118,20 @@ describe("MathVisual geometry", () => {
         }
       )
     );
-
-    expect(geometry).toMatchObject([
+    expect(geometry.markers).toEqual([]);
+    expect(geometry.paths).toMatchObject([
       {
         id: "polyline",
         points: [
-          { x: -5, y: 0 },
-          { x: 0, y: 0 },
-          { x: 5, y: 0 },
+          { x: -5, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+          { x: 5, y: 0, z: 0 },
         ],
       },
     ]);
   });
-
-  it("preserves a valid closed plane polygon as a filled path", () => {
-    const geometry = resolvePlaneGeometry(
+  it("shares polygon vertices between its region and closed outline", () => {
+    const geometry = resolveVisualGeometry(
       plane({
         appearance: "answer",
         id: "triangle",
@@ -154,26 +143,25 @@ describe("MathVisual geometry", () => {
         ],
       })
     );
-
-    expect(geometry).toEqual([
+    const vertices = [
+      { x: -2, y: -1, z: 0 },
+      { x: 2, y: -1, z: 0 },
+      { x: 0, y: 3, z: 0 },
+    ];
+    expect(geometry.regions).toEqual([
+      { appearance: "answer", id: "triangle", vertices },
+    ]);
+    expect(geometry.paths).toEqual([
       {
         appearance: "answer",
         arrows: "none",
-        fill: true,
         id: "triangle",
-        kind: "path",
-        points: [
-          { x: -2, y: -1 },
-          { x: 2, y: -1 },
-          { x: 0, y: 3 },
-          { x: -2, y: -1 },
-        ],
+        points: [...vertices, vertices[0]],
       },
     ]);
   });
-
-  it("preserves an exact quadratic primitive for affine SVG projection", () => {
-    const geometry = resolvePlaneGeometry(
+  it("samples a quadratic from its function without bending the result", () => {
+    const geometry = resolveVisualGeometry(
       plane({
         appearance: "primary",
         coefficients: { a: 1, b: 0, c: 0 },
@@ -183,21 +171,16 @@ describe("MathVisual geometry", () => {
         kind: "quadratic",
       })
     );
-
-    expect(geometry).toEqual([
-      {
-        appearance: "primary",
-        coefficients: { a: 1, b: 0, c: 0 },
-        domain: { max: 2, min: -2 },
-        id: "parabola",
-        inputAxis: "x",
-        kind: "quadratic",
-      },
-    ]);
+    expect(geometry.paths).toHaveLength(1);
+    for (const point of geometry.paths[0].points) {
+      expect(point.y).toBeCloseTo(point.x ** 2, 12);
+      expect(point.z).toBe(0);
+    }
+    expect(geometry.paths[0].points[0]).toEqual({ x: -2, y: 4, z: 0 });
+    expect(geometry.paths[0].points.at(-1)).toEqual({ x: 2, y: 4, z: 0 });
   });
-
   it("creates twelve straight cuboid edges with collision-free IDs", () => {
-    const geometry = resolveSpaceGeometry(
+    const geometry = resolveVisualGeometry(
       space(
         {
           appearance: "primary",
@@ -244,9 +227,9 @@ describe("MathVisual geometry", () => {
       kind: "cuboid",
       size: { height: 4, length: 4, width: 4 },
     });
-    const projection = resolveSpaceProjection(visual);
-    const frame = projectSpaceFrame(visual.frame, projection);
-    const geometry = resolveSpaceGeometry(visual, projection);
+    const projection = resolveVisualProjection(visual);
+    const frame = projectVisualFrame(visual, projection);
+    const geometry = resolveVisualGeometry(visual, projection);
 
     expect(geometry.markers).toEqual([]);
     expect(geometry.paths).toHaveLength(8);
@@ -271,7 +254,7 @@ describe("MathVisual geometry", () => {
   });
 
   it("preserves an exact space corner tangent as a marker", () => {
-    const geometry = resolveSpaceGeometry(
+    const geometry = resolveVisualGeometry(
       space({
         appearance: "secondary",
         id: "tangent",
@@ -294,7 +277,7 @@ describe("MathVisual geometry", () => {
   });
 
   it("preserves a valid closed space polygon as path geometry", () => {
-    const geometry = resolveSpaceGeometry(
+    const geometry = resolveVisualGeometry(
       space({
         appearance: "construction",
         id: "face",
@@ -337,19 +320,17 @@ describe("MathVisual geometry", () => {
         ],
       }),
       frame: {
-        axes: "visible",
-        grid: "visible",
         kind: "cartesian",
         x: { max: 1e308, min: -1e308 },
         y: { max: 1e308, min: -1e308 },
       },
     } satisfies PlaneVisual;
 
-    expect(resolvePlaneGeometry(visual)).toMatchObject([
+    expect(resolveVisualGeometry(visual).paths).toMatchObject([
       {
         points: [
-          { x: -1e308, y: -1e308 },
-          { x: 1e308, y: 1e308 },
+          { x: -5, y: -5, z: 0 },
+          { x: 5, y: 5, z: 0 },
         ],
       },
     ]);
@@ -359,8 +340,6 @@ describe("MathVisual geometry", () => {
     const minimum = Number.MIN_VALUE;
     const visual = {
       frame: {
-        axes: "visible",
-        grid: "visible",
         kind: "cartesian",
         x: { max: minimum, min: -minimum },
         y: { max: minimum, min: -minimum },
@@ -378,7 +357,7 @@ describe("MathVisual geometry", () => {
       space: "space",
       view: { kind: "fit" },
     } satisfies SpaceVisual;
-    const geometry = resolveSpaceGeometry(visual);
+    const geometry = resolveVisualGeometry(visual);
 
     expect(geometry.paths).toHaveLength(12);
     for (const path of geometry.paths) {

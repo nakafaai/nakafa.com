@@ -1,6 +1,7 @@
 import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
 import { Effect, Option } from "effect";
 import {
+  Box2,
   Box3,
   InstancedMesh,
   Line,
@@ -8,15 +9,30 @@ import {
   Mesh,
   type Object3D,
   Points,
+  Vector2,
   Vector3,
 } from "three";
 
 export interface CameraLabelBounds {
   readonly anchorX: number;
   readonly anchorY: number;
+  readonly gap: { readonly x: number; readonly y: number };
   readonly height: number;
+  readonly pixels?: { readonly width: number; readonly height: number };
   readonly rotation: number;
   readonly width: number;
+}
+
+/** A fixed pixel rectangle follows an anchor's complete world-space envelope. */
+export interface CameraPixelLabel {
+  readonly anchors: Box3;
+  readonly gap: { readonly x: number; readonly y: number };
+  readonly rectangle: Box2;
+}
+
+interface CameraMeasurement {
+  readonly bounds: Box3;
+  readonly labels: CameraPixelLabel[];
 }
 
 export interface CameraMotionBounds {
@@ -55,24 +71,31 @@ export const measureCameraBounds = Effect.fn("camera.measureBounds")(
     const visit = Effect.fn("camera.measureSubjectBounds")(function* (
       object: Object3D,
       parent: Matrix4
-    ): Effect.fn.Return<Box3> {
-      const bounds = new Box3();
+    ): Effect.fn.Return<CameraMeasurement> {
+      const result: CameraMeasurement = { bounds: new Box3(), labels: [] };
+      const { bounds } = result;
       const subject = subjects.get(object);
       if (!object.visible || subject === false) {
-        return bounds;
+        return result;
       }
 
       const matrix = parent.clone().multiply(object.matrix);
       if (subject instanceof Box3) {
-        return subject.clone().applyMatrix4(matrix);
+        bounds.copy(subject).applyMatrix4(matrix);
+        return result;
       }
       if (subject) {
         for (const child of object.children) {
-          bounds.union(
-            motionEnvelope(yield* visit(child, new Matrix4()), subject)
+          const measured = yield* visit(child, new Matrix4());
+          bounds.union(motionEnvelope(measured.bounds, subject));
+          result.labels.push(
+            ...measured.labels.map((label) => ({
+              ...label,
+              anchors: motionEnvelope(label.anchors, subject),
+            }))
           );
         }
-        return bounds.applyMatrix4(parent);
+        return transformMeasurement(result, parent);
       }
 
       bounds.union(yield* measureGeometryBounds(object, matrix));
@@ -80,21 +103,34 @@ export const measureCameraBounds = Effect.fn("camera.measureBounds")(
       const label = labels.get(object);
       if (label) {
         bounds.union(labelBounds(label, matrix, right, up));
+        if (label.pixels) {
+          result.labels.push(pixelLabelBounds(label, label.pixels, matrix));
+        }
       }
 
       for (const child of object.children) {
-        bounds.union(yield* visit(child, matrix));
+        const measured = yield* visit(child, matrix);
+        bounds.union(measured.bounds);
+        result.labels.push(...measured.labels);
       }
-      return bounds;
+      return result;
     });
 
-    const bounds = yield* visit(
+    const measured = yield* visit(
       root,
       root.parent?.matrixWorld ?? new Matrix4()
     );
-    return bounds.isEmpty() ? Option.none() : Option.some(bounds);
+    return measured.bounds.isEmpty() ? Option.none() : Option.some(measured);
   }
 );
+
+function transformMeasurement(measured: CameraMeasurement, matrix: Matrix4) {
+  measured.bounds.applyMatrix4(matrix);
+  for (const label of measured.labels) {
+    label.anchors.applyMatrix4(matrix);
+  }
+  return measured;
+}
 
 function motionEnvelope(
   bounds: Box3,
@@ -150,8 +186,8 @@ function labelBounds(
   const sine = Math.sin(label.rotation);
   for (const x of [label.anchorX, label.anchorX + 1]) {
     for (const y of [label.anchorY, label.anchorY + 1]) {
-      const horizontal = x * label.width;
-      const vertical = y * label.height;
+      const horizontal = x * label.width + label.gap.x;
+      const vertical = y * label.height + label.gap.y;
       bounds.expandByPoint(
         origin
           .clone()
@@ -161,6 +197,37 @@ function labelBounds(
     }
   }
   return bounds;
+}
+
+function pixelLabelBounds(
+  label: CameraLabelBounds,
+  pixels: NonNullable<CameraLabelBounds["pixels"]>,
+  matrix: Matrix4
+): CameraPixelLabel {
+  const position = new Vector3().setFromMatrixPosition(matrix);
+  const rectangle = new Box2();
+  const cosine = Math.cos(label.rotation);
+  const sine = Math.sin(label.rotation);
+  for (const x of [label.anchorX, label.anchorX + 1]) {
+    for (const y of [label.anchorY, label.anchorY + 1]) {
+      const horizontal = x * pixels.width;
+      const vertical = y * pixels.height;
+      rectangle.expandByPoint(
+        new Vector2(
+          horizontal * cosine - vertical * sine,
+          -(horizontal * sine + vertical * cosine)
+        )
+      );
+    }
+  }
+  return {
+    anchors: new Box3(position.clone(), position.clone()),
+    gap: {
+      x: label.gap.x * cosine - label.gap.y * sine,
+      y: -(label.gap.x * sine + label.gap.y * cosine),
+    },
+    rectangle,
+  };
 }
 
 /** Samples the renderer-owned buffers, including the current instance matrices. */

@@ -56,7 +56,6 @@ export function Graph(
               text: <InlineMath math="x^\circ" />,
               at: 1, // Center point
               offset: [-1.2, 0.4, 0], // Adjusted for x position
-              color: getColor("TEAL"),
             },
           ],
         },
@@ -72,19 +71,16 @@ export function Graph(
               at: 1, // Center point
               offset: [1.2, 0.4, 0], // Adjusted for y position
               fontSize: 0.6,
-              color: getColor("TEAL"),
             },
             {
               text: <InlineMath math="z^\circ" />,
               at: 1, // Center point
               offset: [0, -0.8, 0], // Adjusted for z position
               fontSize: 0.6,
-              color: getColor("TEAL"),
             },
           ],
         },
       ]}
-      showZAxis={false}
       {...props}
     />
   );

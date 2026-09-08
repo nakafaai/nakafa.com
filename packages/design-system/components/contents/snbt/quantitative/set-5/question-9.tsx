@@ -8,18 +8,20 @@ export function QuestionGraph({
   title,
   description,
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
-  // Configuration
   const step = 0.1;
   const startExp = -1.5;
   const endExp = 2.5;
   const startLine = -1;
   const endLine = 3.5;
+  // Solves 2^x + 2x - 6 = 0. Include D itself in the sampled curve.
+  const intersectionX = 1.543_000_440_865_408_3;
+  const indexD = Math.round((intersectionX - startExp) / step);
 
   // Function 1: y = 2^x - 2
   const expPoints = Array.from({
     length: Math.floor((endExp - startExp) / step) + 1,
   }).map((_, i) => {
-    const x = startExp + i * step;
+    const x = i === indexD ? intersectionX : startExp + i * step;
     return { x, y: 2 ** x - 2, z: 0 };
   });
 
@@ -38,10 +40,6 @@ export function QuestionGraph({
   const indexB = Math.round((1 - startExp) / step);
   // C: x = 2 on line curve
   const indexC = Math.round((2 - startLine) / step);
-  // D: Intersection. 2^x - 2 = -2x + 4 => 2^x + 2x - 6 = 0 => x approx 1.38
-  // We place label D on the exponential curve near intersection
-  const intersectionX = 1.38;
-  const indexD = Math.round((intersectionX - startExp) / step);
 
   return (
     <LineEquation
@@ -95,7 +93,6 @@ export function QuestionGraph({
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

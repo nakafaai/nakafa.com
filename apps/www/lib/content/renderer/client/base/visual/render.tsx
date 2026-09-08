@@ -4,32 +4,31 @@ import { CoordinateSystem } from "@repo/design-system/components/three/coordinat
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import { Origin } from "@repo/design-system/components/three/origin";
+import { Polygon } from "@repo/design-system/components/three/polygon";
 import type { ReactNode } from "react";
-import { containsSpacePoint } from "@/lib/content/renderer/client/base/visual/clip";
-import { resolveSpaceGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
+import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import { resolveMathAppearance } from "@/lib/content/renderer/client/base/visual/palette";
 import type {
+  PlaneVisual,
   SpacePoint,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
 import {
-  projectSpaceFrame,
-  projectSpacePoint,
-  resolveSpaceProjection,
+  projectVisualPoint,
+  resolveVisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
-import { resolveSpaceView } from "@/lib/content/renderer/client/base/visual/view";
+import { resolveMathView } from "@/lib/content/renderer/client/base/visual/view";
 
-export interface MathSpaceProps {
+export interface MathSceneProps {
   readonly labels: Readonly<Record<string, ReactNode>>;
-  readonly scene: SpaceVisual;
+  readonly scene: PlaneVisual | SpaceVisual;
 }
-
 interface LabelAnchor {
   readonly anchorX: "center" | "left" | "right";
   readonly anchorY: "bottom" | "middle" | "top";
 }
 
-type SpaceLabelPlacement = Exclude<
+type MathLabelPlacement = Exclude<
   NonNullable<SpaceVisual["labels"]>[number]["placement"],
   undefined
 >;
@@ -51,7 +50,7 @@ function resolveLabelAnchor(
     center: { anchorX: "center", anchorY: "middle" },
     left: { anchorX: "right", anchorY: "middle" },
     right: { anchorX: "left", anchorY: "middle" },
-  } satisfies Record<SpaceLabelPlacement, LabelAnchor>;
+  } satisfies Record<MathLabelPlacement, LabelAnchor>;
   return anchors[placement ?? "center"];
 }
 
@@ -59,40 +58,40 @@ function resolveArrow(position: "both" | "end" | "none", size: number) {
   return position === "none" ? undefined : { position, size };
 }
 
-/** Renders one contract-backed Cartesian space using deferred React Three Fiber. */
-export function MathSpace({ labels, scene }: MathSpaceProps) {
-  const projection = resolveSpaceProjection(scene);
-  const frame = projectSpaceFrame(scene.frame, projection);
-  const geometry = resolveSpaceGeometry(scene, projection);
-  const view = resolveSpaceView(scene, projection);
-  const origin = projectSpacePoint({ x: 0, y: 0, z: 0 }, projection);
-  const extent = Math.max(
-    frame.x.max - frame.x.min,
-    frame.y.max - frame.y.min,
-    frame.z.max - frame.z.min
+/** All authored dimensions compose the same interactive Nakafa primitives. */
+export function MathScene({ labels, scene }: MathSceneProps) {
+  const projection = resolveVisualProjection(scene);
+  const geometry = resolveVisualGeometry(scene, projection);
+  const view = resolveMathView(scene, projection);
+  const origin = projectVisualPoint({ x: 0, y: 0, z: 0 }, projection);
+  // Schema validation guarantees that each label has exactly one object owner.
+  const anchors = scene.objects.flatMap((object) =>
+    (scene.labels ?? []).flatMap((label) =>
+      label.objectId === object.id
+        ? [{ ...label, appearance: object.appearance }]
+        : []
+    )
   );
-  const markerSize = Math.min(0.25, Math.max(0.08, extent / 80));
-
   return (
     <CoordinateSystem
-      cameraMaxDistance={view.controls.maxDistance}
-      cameraMinDistance={view.controls.minDistance}
       cameraPosition={view.position}
       cameraProjection={view.projection}
       cameraTarget={view.target}
-      frame={frame}
       origin={origin}
-      showAxes={scene.frame.axes === "visible"}
-      showGrid={scene.frame.grid === "visible"}
-      showLabels={scene.frame.axes === "visible"}
       showOrigin={false}
     >
+      {geometry.regions.map((region) => (
+        <Polygon
+          color={resolveMathAppearance(region.appearance)}
+          key={region.id}
+          vertices={region.vertices}
+        />
+      ))}
       {geometry.paths.map((path) => (
         <LineEquation
           color={resolveMathAppearance(path.appearance)}
-          cone={resolveArrow(path.arrows, markerSize * 2)}
+          cone={resolveArrow(path.arrows, 0.25)}
           key={path.id}
-          lineWidth={3}
           points={[...path.points]}
           showPoints={false}
           smooth={false}
@@ -103,23 +102,21 @@ export function MathSpace({ labels, scene }: MathSpaceProps) {
           color={resolveMathAppearance(marker.appearance)}
           key={marker.id}
           position={pointTuple(marker.at)}
-          size={markerSize}
+          size={0.125}
         />
       ))}
-      {(scene.labels ?? []).map((label) =>
-        containsSpacePoint(scene.frame, label.at) ? (
-          <ThreeLabel
-            {...resolveLabelAnchor(label.placement)}
-            color="var(--foreground)"
-            key={label.key}
-            outlineColor="var(--background)"
-            outlineWidth={0.04}
-            position={pointTuple(projectSpacePoint(label.at, projection))}
-          >
-            {labels[label.key]}
-          </ThreeLabel>
-        ) : null
-      )}
+      {anchors.map((label) => (
+        <ThreeLabel
+          {...resolveLabelAnchor(label.placement)}
+          color={resolveMathAppearance(label.appearance)}
+          fontSize="diagram"
+          gap={0.15}
+          key={label.key}
+          position={pointTuple(projectVisualPoint(label.at, projection))}
+        >
+          {labels[label.key]}
+        </ThreeLabel>
+      ))}
     </CoordinateSystem>
   );
 }

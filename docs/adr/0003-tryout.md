@@ -76,10 +76,11 @@ state, response, history, and page operations. Public-path compatibility
 queries, fallback indexes, and duplicate state shapes are not supported.
 
 Retained attempts read their immutable signed catalog, placement, artifact,
-release, renderer, and snapshot bytes through one private history decoder. That
-decoder is not a writer, route, fallback, or public compatibility contract. It
-must be deleted when production proves zero retained attempts reference its
-historical snapshot and release identities.
+release, renderer, and snapshot bytes through the same canonical contracts as
+active content. Historical review preserves the exact signed identities frozen
+at attempt start and fails closed when those bytes violate the canonical
+contract. Historical decoders, fallback transformations, and separate recovery
+projection contracts are not supported.
 
 Section completion, attempt completion, and expiry load bounded indexed
 placement and response graphs. They reject missing, duplicate, or mismatched

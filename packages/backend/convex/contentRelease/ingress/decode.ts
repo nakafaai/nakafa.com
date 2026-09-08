@@ -33,7 +33,6 @@ const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   stageGroup: MAX_STAGE_GROUP_BYTES,
   stageItemBatch: MAX_ITEM_BATCH_BYTES,
   stageProjectionBatch: MAX_PROJECTION_BATCH_BYTES,
-  stageRollbackProjectionBatch: MAX_PROJECTION_BATCH_BYTES,
   stageRecovery: MAX_PUBLICATION_REQUEST_BYTES,
   stageRelease: MAX_PUBLICATION_REQUEST_BYTES,
   stageRouteBatch: MAX_ROUTE_BATCH_BYTES,

@@ -41,7 +41,7 @@ export function Graph({ title, description }: GraphProps) {
   const data = [
     {
       points: largeSquarePoints,
-      color: getColor("BLUE"),
+      color: getColor("VIOLET"),
       lineWidth: 2,
       smooth: false,
       showPoints: false,
@@ -50,7 +50,7 @@ export function Graph({ title, description }: GraphProps) {
       points: circlePoints,
       color: getColor("EMERALD"),
       lineWidth: 2,
-      smooth: true,
+      smooth: false,
       showPoints: false,
     },
     {
@@ -67,7 +67,6 @@ export function Graph({ title, description }: GraphProps) {
       cameraPosition={[0, 0, 20]}
       data={data}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

@@ -30,9 +30,65 @@ const sample = (
     root,
     subjects,
     target: new Vector3(),
-  });
+  }).pipe(Effect.map(Option.map((measurement) => measurement.bounds)));
 
 describe("camera subjects", () => {
+  it.effect(
+    "keeps minimum pixel rectangles separate from world bounds and animated anchor envelopes",
+    () =>
+      Effect.gen(function* () {
+        const root = new Group();
+        root.position.set(5, 0, 0);
+        const moving = new Group();
+        const label = new Group();
+        label.position.set(2, 3, 0);
+        moving.add(label);
+        root.add(moving);
+        const labels = new Map<Object3D, CameraLabelBounds>([
+          [
+            label,
+            {
+              anchorX: 0,
+              anchorY: -0.5,
+              gap: { x: 0.3, y: 0.1 },
+              height: 1,
+              width: 4,
+              pixels: { width: 112, height: 18 },
+              rotation: Math.PI / 2,
+            },
+          ],
+        ]);
+        const subjects = new Map<Object3D, CameraSubjectBounds>([
+          [moving, { rotation: "y", scale: 2 }],
+        ]);
+        const measure = () =>
+          measureCameraBounds({
+            labels,
+            position: new Vector3(0, 0, 5),
+            root,
+            subjects,
+            target: new Vector3(),
+          });
+        const first = Option.getOrThrow(yield* measure());
+        const [pixel] = first.labels;
+        expect(first.labels).toHaveLength(1);
+        expect(pixel.anchors.min.toArray()).toEqual([1, 6, -4]);
+        expect(pixel.anchors.max.toArray()).toEqual([9, 6, 4]);
+        expect(pixel.rectangle.min.x).toBeCloseTo(-9);
+        expect(pixel.rectangle.max.x).toBeCloseTo(9);
+        expect(pixel.rectangle.min.y).toBeCloseTo(-112);
+        expect(pixel.rectangle.max.y).toBeCloseTo(0);
+        expect(pixel.gap.x).toBeCloseTo(-0.1);
+        expect(pixel.gap.y).toBeCloseTo(-0.3);
+        moving.rotation.y = 1.4;
+        moving.scale.setScalar(0.6);
+        const after = Option.getOrThrow(yield* measure());
+        expect(after.bounds.equals(first.bounds)).toBe(true);
+        expect(after.labels[0].anchors.equals(pixel.anchors)).toBe(true);
+        expect(after.labels[0].rectangle.equals(pixel.rectangle)).toBe(true);
+      })
+  );
+
   it.effect("reports an empty scene without inventing a camera target", () =>
     Effect.gen(function* () {
       expect(Option.isNone(yield* sample(new Group()))).toBe(true);
@@ -91,6 +147,7 @@ describe("camera subjects", () => {
                 {
                   anchorX: 0,
                   anchorY: -0.5,
+                  gap: { x: 0, y: 0 },
                   height: 1,
                   rotation: Math.PI / 2,
                   width: 4,

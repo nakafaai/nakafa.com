@@ -9,7 +9,7 @@ interface GraphProps {
     eagle: string;
     fish: string;
     surface: string;
-    sightDistance: string;
+    sightDistance: ReactNode;
   };
   title: ReactNode;
 }
@@ -121,7 +121,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: labels.surface,
               at: 2, // At SURFACE_LABEL_POS
               offset: [0, -0.6, 0], // Below x-axis
-              color: COLOR_WATER,
             },
           ],
         },
@@ -142,7 +141,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: <InlineMath math="30^\circ" />,
               at: 0,
               offset: [0, 0, 0],
-              color: COLOR_LABEL,
             },
           ],
         },
@@ -156,7 +154,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: labels.sightDistance,
               at: 1, // Midpoint
               offset: [0, 1, 0],
-              color: COLOR_SIGHT,
             },
             // Removed 30 deg label from here
           ],
@@ -171,7 +168,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: <InlineMath math="3\,\text{m}" />,
               at: 1, // Midpoint
               offset: [-0.8, 0, 0], // Adjusted offset
-              color: COLOR_DEPTH,
             },
           ],
         },
@@ -185,7 +181,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: <InlineMath math="h = ?" />,
               at: 1, // Midpoint
               offset: [1, 0, 0], // Adjusted offset
-              color: COLOR_DEPTH,
             },
           ],
         },
@@ -199,7 +194,6 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: labels.fish,
               at: 0,
               offset: [0, -0.8, 0], // Adjusted offset
-              color: COLOR_FISH,
             },
           ],
         },
@@ -212,13 +206,11 @@ export function Graph({ title, description, labels }: GraphProps) {
               text: labels.eagle,
               at: 0,
               offset: [0, 0.8, 0], // Adjusted offset
-              color: COLOR_EAGLE,
             },
           ],
         },
       ]}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );

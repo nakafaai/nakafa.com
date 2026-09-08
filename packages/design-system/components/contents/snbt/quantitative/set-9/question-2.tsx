@@ -20,7 +20,7 @@ const pointG = { x: 4, y: 0, z: 0 };
 const questionData = [
   {
     points: [pointA, pointB, pointC, pointD, pointA],
-    color: getColor("BLUE"),
+    color: getColor("VIOLET"),
     lineWidth: 2,
     smooth: false,
     showPoints: true,
@@ -39,7 +39,7 @@ const questionData = [
     })),
     color: getColor("EMERALD"),
     lineWidth: 2,
-    smooth: true,
+    smooth: false,
     showPoints: false,
   },
 ] satisfies ComponentProps<typeof LineEquation>["data"];
@@ -77,7 +77,6 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
       cameraPosition={[0, 0, 15]}
       data={mode === "answer" ? answerData : questionData}
       description={description}
-      showZAxis={false}
       title={title}
     />
   );
