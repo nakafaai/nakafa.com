@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /** Renders the production summary card used by try-out section pages. */
 export function TryoutPartSummary({ children }: { children: ReactNode }) {
   return (
-    <section className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
+    <section className="space-y-4 rounded-xl border bg-card p-5 shadow-sm [--number-flow-mask-height:0.125em]">
       {children}
     </section>
   );
@@ -11,11 +11,7 @@ export function TryoutPartSummary({ children }: { children: ReactNode }) {
 
 /** Lays out the summary metric columns. */
 export function TryoutPartStats({ children }: { children: ReactNode }) {
-  return (
-    <div className="grid w-full max-w-xl gap-x-8 gap-y-3 sm:grid-cols-2 sm:gap-x-10">
-      {children}
-    </div>
-  );
+  return <div className="grid w-full gap-6 sm:grid-cols-2">{children}</div>;
 }
 
 /** Renders one labeled summary metric. */

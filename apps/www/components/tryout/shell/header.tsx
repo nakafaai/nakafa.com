@@ -48,7 +48,7 @@ export function TryoutPageHeader({
 /** Owns the body width and spacing shared by sets and timed sections. */
 export function TryoutPageBody({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-8 px-6 py-6">
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-6 py-6">
       {children}
     </div>
   );

@@ -23,7 +23,7 @@ export function TryoutCountdown({ expiresAt }: { expiresAt: number }) {
     { label: tTryouts("time-seconds-short"), value: seconds % 60 },
   ];
   return (
-    <section className="flex flex-col items-center gap-3 rounded-xl border bg-card p-5 shadow-sm">
+    <section className="flex flex-col items-center gap-3 rounded-xl border bg-card p-5 shadow-sm [--number-flow-mask-height:0.125em]">
       <NumberFormatGroup>
         <div className="items-baseline-last flex justify-center gap-2 sm:gap-3">
           {segments.map((segment, index) => (

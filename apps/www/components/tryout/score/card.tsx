@@ -18,7 +18,7 @@ export function TryoutScoreCard({
 }) {
   return (
     <TryoutPartSummary>
-      <div className="flex min-h-9 items-center justify-between gap-3">
+      <div className="flex min-h-9 items-start justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <TryoutScoreStatus score={value.score} />
           <TryoutStatus status={value.status} />
