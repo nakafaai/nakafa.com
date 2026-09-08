@@ -168,10 +168,13 @@ function TryoutStatusHeading({
               aria-label={t("set-filter-label", {
                 column: t("set-column-status"),
               })}
-              className="-mx-2 min-w-0 max-w-[calc(100%+1rem)] overflow-hidden sm:-mx-3 sm:max-w-[calc(100%+1.75rem)]"
+              className={cn(
+                "-mx-2 min-w-0 max-w-[calc(100%+1rem)] overflow-hidden sm:-mx-3 sm:max-w-[calc(100%+1.75rem)]",
+                filter !== "all" && "bg-muted text-foreground"
+              )}
               size="sm"
               type="button"
-              variant={filter === "all" ? "ghost" : "secondary"}
+              variant="ghost"
             >
               <span className="min-w-0 truncate">{t("set-column-status")}</span>
               <HugeIcons data-icon="inline-end" icon={FilterIcon} />
