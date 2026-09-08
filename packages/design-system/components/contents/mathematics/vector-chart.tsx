@@ -82,6 +82,9 @@ export function VectorChart({ title, description, vectors }: Props) {
                       ...point,
                       z: 0,
                     }))}
+                    showPoints={geometry.points.every(
+                      (point) => point.x === tip.x && point.y === tip.y
+                    )}
                     smooth={false}
                   />
                   <ThreeLabel
@@ -89,7 +92,7 @@ export function VectorChart({ title, description, vectors }: Props) {
                     anchorY={verticalAnchor}
                     color={color}
                     fontSize="diagram"
-                    gap={0.2}
+                    gap={0.75}
                     position={[tip.x, tip.y, 0]}
                   >
                     {vector.name}

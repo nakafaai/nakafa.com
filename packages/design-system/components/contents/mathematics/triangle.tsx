@@ -1,13 +1,11 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   CoordinateControls,
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -17,19 +15,11 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { Separator } from "@repo/design-system/components/ui/separator";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { COLORS } from "@repo/design-system/lib/color";
-import {
-  getCos,
-  getRadians,
-  getSin,
-  getTan,
-  ISOSCELES_RIGHT_TRIANGLE_ANGLE,
-} from "@repo/math/angles";
+import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
 import dynamic from "next/dynamic";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import type { ComponentProps, ReactNode } from "react";
 import { useState } from "react";
 import {
   Button,
@@ -65,14 +55,19 @@ const TriangleScene = dynamic(
   }
 );
 
+// Keep KaTeX outside the page's initial component graph until the scene is visible.
+const TriangleReadout = dynamic(
+  () =>
+    import(
+      "@repo/design-system/components/contents/mathematics/triangle/readout"
+    ).then((module) => module.TriangleReadout),
+  { ssr: false }
+);
+
 interface Props {
   angle?: number;
   description: ReactNode;
-  labels?: {
-    opposite: ReactNode;
-    adjacent: ReactNode;
-    hypotenuse: ReactNode;
-  };
+  labels?: ComponentProps<typeof TriangleReadout>["labels"];
   size?: number;
   title: ReactNode;
 }
@@ -82,7 +77,11 @@ export function Triangle({
   description,
   angle = ISOSCELES_RIGHT_TRIANGLE_ANGLE,
   size = 2,
-  labels,
+  labels = {
+    opposite: "Opposite",
+    adjacent: "Adjacent",
+    hypotenuse: "Hypotenuse",
+  },
 }: Props) {
   const locale = useLocale();
 
@@ -108,21 +107,12 @@ function Content({
 }: {
   angle: number;
   size: number;
-  labels?: Props["labels"];
+  labels: NonNullable<Props["labels"]>;
 }) {
   const t = useTranslations("Common");
-  const format = useFormatter();
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
   const [isNearViewport, setIsNearViewport] = useState(false);
   const angleValue = angleOverride ?? angle;
-  const formatRatio = (value: number) =>
-    format
-      .number(value, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-        useGrouping: false,
-      })
-      .replaceAll(",", "{,}");
 
   return (
     <>
@@ -134,7 +124,7 @@ function Content({
           onIntersect={() => setIsNearViewport(true)}
         >
           {isNearViewport ? (
-            <TriangleScene angle={angleValue} labels={labels} size={size} />
+            <TriangleScene angle={angleValue} size={size} />
           ) : (
             <ScenePlaceholder />
           )}
@@ -142,48 +132,10 @@ function Content({
       </CardContent>
       <CoordinateControls>
         <div className="flex w-full flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 px-6">
-            <Badge variant="outline">
-              <InlineMath
-                math={`\\sin(${angleValue}^\\circ) \\approx ${formatRatio(getSin(angleValue))}`}
-              />
-            </Badge>
-            <Badge variant="outline">
-              <InlineMath
-                math={`\\cos(${angleValue}^\\circ) \\approx ${formatRatio(getCos(angleValue))}`}
-              />
-            </Badge>
-            <Badge variant="outline">
-              {Number.isFinite(getTan(angleValue)) ? (
-                <InlineMath
-                  math={`\\tan(${angleValue}^\\circ) \\approx ${formatRatio(getTan(angleValue))}`}
-                />
-              ) : (
-                <>
-                  <InlineMath math={`\\tan(${angleValue}^\\circ)`} />:{" "}
-                  {t("undefined")}
-                </>
-              )}
-            </Badge>
-          </div>
-
-          <Separator />
-
+          {isNearViewport ? (
+            <TriangleReadout angle={angleValue} labels={labels} />
+          ) : null}
           <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
-            <div className="flex items-center gap-2">
-              <Badge style={{ color: COLORS.VIOLET }} variant="outline">
-                <InlineMath math={`${angleValue}^\\circ`} />
-              </Badge>{" "}
-              <Badge className="font-mono" variant="outline">
-                {format.number(getRadians(angleValue), {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                  useGrouping: false,
-                })}{" "}
-                {t("radian")}
-              </Badge>
-            </div>
-
             <NumberField
               decrementAriaLabel={t("decrease-angle")}
               incrementAriaLabel={t("increase-angle")}

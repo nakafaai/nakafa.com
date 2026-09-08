@@ -12,11 +12,12 @@ import {
   GRAPH_POINT_SEGMENTS,
 } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { getCos, getRadians, getSin } from "@repo/math/angles";
 import { useTheme } from "next-themes";
-import { type ComponentProps, type ReactNode, useMemo } from "react";
+import { type ComponentProps, useMemo } from "react";
 import { Vector3 } from "three";
 
 // Sizing and scaling constants
@@ -27,25 +28,13 @@ const ARC_RADIUS_SCALE_FACTOR = 0.2;
 const MIN_SCALE_FACTOR = 1;
 
 // Label offset multipliers
-const LABEL_OFFSET_ADJACENT_Y = 1.5;
+const LABEL_OFFSET_ADJACENT_Y = 3;
 const LABEL_OFFSET_OPPOSITE_X = 4;
-const LABEL_OFFSET_HYPOTENUSE_Y = 2;
-
-const TRIANGLE_SIDE_CONFIG = [
-  { color: COLORS.CYAN, key: "adjacent" },
-  { color: COLORS.ORANGE, key: "opposite" },
-  { color: COLORS.ROSE, key: "hypotenuse" },
-];
+const LABEL_OFFSET_HYPOTENUSE_Y = 3;
 
 interface Props {
   /** Angle in degrees */
   angle?: number;
-  /** Labels for the triangle */
-  labels?: {
-    opposite: ReactNode;
-    adjacent: ReactNode;
-    hypotenuse: ReactNode;
-  };
   /** Size of the triangle (scale factor) */
   size?: number;
 }
@@ -56,11 +45,6 @@ interface Props {
 export function Triangle({
   angle = 45,
   size = 1,
-  labels = {
-    opposite: "Opposite",
-    adjacent: "Adjacent",
-    hypotenuse: "Hypotenuse",
-  },
   ...props
 }: Props & ComponentProps<"group">) {
   const { resolvedTheme } = useTheme();
@@ -144,17 +128,14 @@ export function Triangle({
     }),
     [adjacent, angle, horizontalDirection, opposite, verticalDirection]
   );
-  const hypotenuseLabelRotation =
-    Math.atan2(opposite, adjacent) + (adjacent < 0 ? Math.PI : 0);
-
   return (
     <group frustumCulled {...props}>
       {/* Draw the triangle sides - optimized with single color array access */}
       {triangleSideLines.map((pts, i) => (
         <Line
-          color={TRIANGLE_SIDE_CONFIG[i].color}
+          color={TRIANGLE_SIDES[i].color}
           frustumCulled
-          key={TRIANGLE_SIDE_CONFIG[i].key}
+          key={TRIANGLE_SIDES[i].key}
           lineWidth={2}
           points={pts}
         />
@@ -170,35 +151,33 @@ export function Triangle({
 
       {/* Side labels */}
       <ThreeLabel
-        anchorX={adjacent >= 0 ? "left" : "right"}
-        color={COLORS.CYAN}
+        anchorX="center"
+        anchorY={opposite >= 0 ? "top" : "bottom"}
+        color={TRIANGLE_SIDES[0].color}
         fontSize={BASE_FONT_SIZE}
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.adjacentLabelPos}
       >
-        {labels.adjacent}
+        {TRIANGLE_SIDES[0].symbol}
       </ThreeLabel>
 
       <ThreeLabel
-        anchorX={opposite >= 0 ? "left" : "right"}
-        color={COLORS.ORANGE}
+        color={TRIANGLE_SIDES[1].color}
         fontSize={BASE_FONT_SIZE}
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.oppositeLabelPos}
-        rotation={-Math.PI / 2}
       >
-        {labels.opposite}
+        {TRIANGLE_SIDES[1].symbol}
       </ThreeLabel>
 
       <ThreeLabel
         anchorX="center"
-        color={COLORS.ROSE}
+        color={TRIANGLE_SIDES[2].color}
         fontSize={BASE_FONT_SIZE}
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.hypotenuseLabelPos}
-        rotation={-hypotenuseLabelRotation}
       >
-        {labels.hypotenuse}
+        {TRIANGLE_SIDES[2].symbol}
       </ThreeLabel>
 
       {/* Points at vertices - using instanced rendering */}
