@@ -9308,54 +9308,14 @@ export declare const api: {
         >;
       };
       sets: {
-        byStatus: FunctionReference<
-          "query",
-          "public",
-          {
-            countryKey: string;
-            examKey: string;
-            locale: "en" | "id" | "de";
-            paginationOpts: {
-              cursor: string | null;
-              endCursor?: string | null;
-              id?: number;
-              maximumBytesRead?: number;
-              maximumRowsRead?: number;
-              numItems: number;
-            };
-            status: "in-progress" | "completed" | "expired";
-            trackKey: string;
-          },
-          {
-            continueCursor: string;
-            isDone: boolean;
-            page: Array<{
-              attemptStatus: null | "in-progress" | "completed" | "expired";
-              countryKey: string;
-              description?: string;
-              examKey: string;
-              publicPath: string;
-              publishedScore: number | null;
-              readyQuestionCount: number;
-              readyVisibleSectionCount: number;
-              scoringStrategy: "irt" | "raw" | "weighted";
-              sectionCount: number;
-              setKey: string;
-              title: string;
-              totalQuestionCount: number;
-              trackKey: string;
-              visibleSectionCount: number;
-            }>;
-            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-            splitCursor?: string | null;
-          }
-        >;
         list: FunctionReference<
           "query",
           "public",
           {
             countryKey: string;
             examKey: string;
+            filter:
+              "all" | "not-started" | "in-progress" | "completed" | "expired";
             locale: "en" | "id" | "de";
             paginationOpts: {
               cursor: string | null;
@@ -9368,7 +9328,11 @@ export declare const api: {
             sort: {
               direction: "asc" | "desc";
               field:
-                "order" | "publishedScore" | "readyQuestionCount" | "title";
+                | "order"
+                | "publishedScore"
+                | "readyQuestionCount"
+                | "durationSeconds"
+                | "title";
             };
             trackKey: string;
           },
@@ -9379,6 +9343,7 @@ export declare const api: {
               attemptStatus: null | "in-progress" | "completed" | "expired";
               countryKey: string;
               description?: string;
+              durationSeconds: number;
               examKey: string;
               publicPath: string;
               publishedScore: number | null;
@@ -9393,48 +9358,9 @@ export declare const api: {
               visibleSectionCount: number;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            snapshotId: string;
             splitCursor?: string | null;
-          }
-        >;
-        unattempted: FunctionReference<
-          "query",
-          "public",
-          {
-            countryKey: string;
-            examKey: string;
-            locale: "en" | "id" | "de";
-            paginationOpts: {
-              cursor: string | null;
-              endCursor?: string | null;
-              id?: number;
-              maximumBytesRead?: number;
-              maximumRowsRead?: number;
-              numItems: number;
-            };
-            trackKey: string;
-          },
-          {
-            continueCursor: string;
-            isDone: boolean;
-            page: Array<{
-              attemptStatus: null | "in-progress" | "completed" | "expired";
-              countryKey: string;
-              description?: string;
-              examKey: string;
-              publicPath: string;
-              publishedScore: number | null;
-              readyQuestionCount: number;
-              readyVisibleSectionCount: number;
-              scoringStrategy: "irt" | "raw" | "weighted";
-              sectionCount: number;
-              setKey: string;
-              title: string;
-              totalQuestionCount: number;
-              trackKey: string;
-              visibleSectionCount: number;
-            }>;
-            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-            splitCursor?: string | null;
+            viewerId: string | null;
           }
         >;
       };

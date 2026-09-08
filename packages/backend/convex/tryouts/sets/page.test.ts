@@ -118,9 +118,20 @@ describe("tryouts/sets/page", () => {
                 }
                 const secondSet = yield* makeSecondSet(firstSet);
                 const initialRows: readonly PublishedSetRow[] = [
-                  { progress: null, set: firstSet },
-                  { progress: null, set: secondSet },
+                  { durationSeconds: 60, progress: null, set: firstSet },
+                  { durationSeconds: 120, progress: null, set: secondSet },
                 ];
+                for (const numItems of [0, -1, 0.5, Number.POSITIVE_INFINITY]) {
+                  expect(
+                    yield* paginatePublishedSets(
+                      catalog,
+                      { cursor: null, numItems },
+                      initialRows
+                    ).pipe(Effect.flip, Effect.orDie)
+                  ).toMatchObject({
+                    code: "INVALID_TRYOUT_SET_PAGE_SIZE",
+                  });
+                }
                 const firstPage = yield* paginatePublishedSets(
                   catalog,
                   { cursor: null, numItems: 1 },
@@ -156,8 +167,8 @@ describe("tryouts/sets/page", () => {
                   });
                 }
                 const changedRows: readonly PublishedSetRow[] = [
-                  { progress, set: firstSet },
-                  { progress: null, set: secondSet },
+                  { durationSeconds: 60, progress, set: firstSet },
+                  { durationSeconds: 120, progress: null, set: secondSet },
                 ];
                 return yield* paginatePublishedSets(
                   catalog,

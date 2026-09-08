@@ -426,7 +426,14 @@
     "complete-part-error": "We could not finish this section yet. Please try again.",
     "back-to-set-cta": "Back",
     "slug-description": "When you're ready, start this tryout and choose which section you want to do first.",
-    "question-unit": "questions"
+    "question-unit": "questions",
+    "set-column-duration": "Duration",
+    "set-duration-minutes": "{minutes, number} min",
+    "set-sort-duration-ascending": "Shortest duration",
+    "set-sort-duration-descending": "Longest duration",
+    "set-updating": "Updating...",
+    "set-update-error": "Unable to update results.",
+    "set-offline": "Connection lost."
   },
   "Utils": {
     "search": "Search",

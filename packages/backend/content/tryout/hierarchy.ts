@@ -159,7 +159,7 @@ export const readPublishedTrackSets = Effect.fn(
       "Signed try-out track lost one or more sets."
     );
   }
-  return { sets, track };
+  return { index, sets, track };
 });
 /** Resolves the set that owns one signed section. */
 export function findPublishedSet(
