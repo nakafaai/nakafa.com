@@ -385,6 +385,8 @@ describe("retirement empty attempt", () => {
     "partial-footprint",
     "changed-history",
     "changed-shared",
+    "missing-bundle",
+    "changed-bundle",
   ] as const) {
     it.effect(`refuses an incomplete or changed retry: ${mode}`, () =>
       fixture().pipe(
@@ -407,6 +409,12 @@ describe("retirement empty attempt", () => {
                 await ctx.db.patch(plan.previousScore._id, {
                   publishedScore: 101,
                 });
+              } else if (mode === "missing-bundle") {
+                await ctx.db.delete(plan.attempt.tryoutBundleId);
+              } else if (mode === "changed-bundle") {
+                await ctx.db.patch(plan.attempt.tryoutBundleId, {
+                  bundleHash: testTextHash("changed-shared-bundle"),
+                });
               } else {
                 const shared = plan.sharedAttempts[0];
                 assert.ok(shared);
@@ -419,7 +427,11 @@ describe("retirement empty attempt", () => {
             await expect(
               t.mutation((ctx) => runConvexProgram(retireAttempt(ctx, plan)))
             ).rejects.toMatchObject({
-              data: { code: "TRYOUT_EMPTY_RETIREMENT_REFUSED" },
+              data: {
+                code: mode.endsWith("bundle")
+                  ? "TRYOUT_SELECTOR_INTEGRITY"
+                  : "TRYOUT_EMPTY_RETIREMENT_REFUSED",
+              },
             });
             expect(await t.query(stored)).toEqual(before);
           })

@@ -11,6 +11,7 @@ import {
   requireProof,
   sameDocument,
 } from "@repo/backend/convex/retirement/spec";
+import { loadAttemptRuntimeBundle } from "@repo/backend/convex/tryouts/runtime/attempt/source";
 import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/status";
 import { Effect, Option } from "effect";
 
@@ -245,6 +246,7 @@ export const inspectRetirement = Effect.fn("retirement.inspect")(function* (
         sameDocument(row, shared),
       "A protected shared TKA history changed."
     );
+    yield* loadAttemptRuntimeBundle(ctx, shared);
   }
 });
 
@@ -341,6 +343,7 @@ export const readCompletedRetirement = Effect.fn("retirement.readCompleted")(
         row !== null && sameDocument(row, shared),
         "A previously preserved shared history changed."
       );
+      yield* loadAttemptRuntimeBundle(ctx, shared);
     }
     if (progress === null) {
       return yield* new EmptyAttemptRetirementError({
