@@ -1,6 +1,7 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   CoordinateControls,
   CoordinateProvider,
@@ -18,6 +19,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { COLORS } from "@repo/design-system/lib/color";
 import {
   getCos,
   getRadians,
@@ -26,7 +28,7 @@ import {
   ISOSCELES_RIGHT_TRIANGLE_ANGLE,
 } from "@repo/math/angles";
 import dynamic from "next/dynamic";
-import { useLocale, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import {
@@ -109,9 +111,18 @@ function Content({
   labels?: Props["labels"];
 }) {
   const t = useTranslations("Common");
+  const format = useFormatter();
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
   const [isNearViewport, setIsNearViewport] = useState(false);
   const angleValue = angleOverride ?? angle;
+  const formatRatio = (value: number) =>
+    format
+      .number(value, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        useGrouping: false,
+      })
+      .replaceAll(",", "{,}");
 
   return (
     <>
@@ -132,17 +143,27 @@ function Content({
       <CoordinateControls>
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
-            <Badge className="font-mono" variant="outline">
-              Sin ({angleValue}°) = {getSin(angleValue).toFixed(2)}
-            </Badge>{" "}
-            <Badge className="font-mono" variant="outline">
-              Cos ({angleValue}°) = {getCos(angleValue).toFixed(2)}
-            </Badge>{" "}
-            <Badge className="font-mono" variant="outline">
-              Tan ({angleValue}°) ={" "}
-              {Number.isFinite(getTan(angleValue))
-                ? getTan(angleValue).toFixed(2)
-                : t("undefined")}
+            <Badge variant="outline">
+              <InlineMath
+                math={`\\sin(${angleValue}^\\circ) \\approx ${formatRatio(getSin(angleValue))}`}
+              />
+            </Badge>
+            <Badge variant="outline">
+              <InlineMath
+                math={`\\cos(${angleValue}^\\circ) \\approx ${formatRatio(getCos(angleValue))}`}
+              />
+            </Badge>
+            <Badge variant="outline">
+              {Number.isFinite(getTan(angleValue)) ? (
+                <InlineMath
+                  math={`\\tan(${angleValue}^\\circ) \\approx ${formatRatio(getTan(angleValue))}`}
+                />
+              ) : (
+                <>
+                  <InlineMath math={`\\tan(${angleValue}^\\circ)`} />:{" "}
+                  {t("undefined")}
+                </>
+              )}
             </Badge>
           </div>
 
@@ -150,11 +171,16 @@ function Content({
 
           <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
             <div className="flex items-center gap-2">
-              <Badge className="font-mono" variant="outline">
-                {angleValue}°
+              <Badge style={{ color: COLORS.VIOLET }} variant="outline">
+                <InlineMath math={`${angleValue}^\\circ`} />
               </Badge>{" "}
               <Badge className="font-mono" variant="outline">
-                {getRadians(angleValue).toFixed(2)} {t("radian")}
+                {format.number(getRadians(angleValue), {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                  useGrouping: false,
+                })}{" "}
+                {t("radian")}
               </Badge>
             </div>
 

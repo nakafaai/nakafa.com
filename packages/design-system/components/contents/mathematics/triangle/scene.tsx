@@ -10,7 +10,7 @@ const CAMERA_Z_POSITION = 4;
 export function TriangleScene({
   angle,
   labels,
-  size,
+  size = 1,
 }: Pick<ComponentProps<typeof Triangle>, "angle" | "labels" | "size">) {
   return (
     <CoordinateSystem
@@ -18,7 +18,12 @@ export function TriangleScene({
       cameraProjection={{ kind: "orthographic" }}
       showOrigin={false}
     >
-      <Triangle angle={angle} labels={labels} size={size} />
+      <Triangle
+        angle={angle}
+        labels={labels}
+        position={[0, size, 0]}
+        size={size}
+      />
     </CoordinateSystem>
   );
 }

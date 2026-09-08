@@ -86,7 +86,7 @@ export function RelationVisualizer({
       elements: domain,
       points: relation.domain,
       x: -3,
-      color: COLORS.BLUE,
+      color: COLORS.ORANGE,
     },
     {
       id: "codomain",
@@ -136,7 +136,7 @@ export function RelationVisualizer({
           ))}
           {relation.mappings.map((mapping) => (
             <LineEquation
-              color={COLORS.BLUE}
+              color={COLORS.ORANGE}
               cone={{ position: "end", size: 0.25 }}
               key={mapping.id}
               points={mapping.points}

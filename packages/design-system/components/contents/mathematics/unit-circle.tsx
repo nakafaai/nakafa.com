@@ -20,7 +20,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
-import { useLocale, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {
   Button,
@@ -80,9 +80,34 @@ function Content({
   };
 }) {
   const t = useTranslations("Common");
+  const format = useFormatter();
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
   const angleValue = angleOverride ?? angle;
   const exactValues = angleValue === angle ? trigValues : undefined;
+
+  function formatRatio(value: number, exactValue?: string) {
+    if (exactValue !== undefined) {
+      return `= ${exactValue}`;
+    }
+    if (Math.abs(value) < 1e-10) {
+      return "= 0";
+    }
+    const commonValues = [
+      { value: 0.5, display: "\\frac{1}{2}" },
+      { value: Math.SQRT1_2, display: "\\frac{\\sqrt{2}}{2}" },
+      { value: Math.sqrt(3) / 2, display: "\\frac{\\sqrt{3}}{2}" },
+      { value: 1, display: "1" },
+      { value: Math.sqrt(3), display: "\\sqrt{3}" },
+      { value: Math.sqrt(3) / 3, display: "\\frac{\\sqrt{3}}{3}" },
+    ];
+    const exact = commonValues.find(
+      (candidate) => Math.abs(Math.abs(value) - candidate.value) < 1e-10
+    );
+    if (exact) {
+      return `= ${value < 0 ? "-" : ""}${exact.display}`;
+    }
+    return `\\approx ${format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).replaceAll(",", "{,}")}`;
+  }
 
   return (
     <>
@@ -129,7 +154,12 @@ function Content({
                 <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
               </Badge>
               <Badge className="font-mono" variant="outline">
-                {getRadians(angleValue).toFixed(2)} {t("radian")}
+                {format.number(getRadians(angleValue), {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                  useGrouping: false,
+                })}{" "}
+                {t("radian")}
               </Badge>
             </div>
 
@@ -176,28 +206,4 @@ function Content({
       </CoordinateControls>
     </>
   );
-}
-
-function formatRatio(value: number, exactValue?: string) {
-  if (exactValue !== undefined) {
-    return `= ${exactValue}`;
-  }
-  if (Math.abs(value) < 1e-10) {
-    return "= 0";
-  }
-  const commonValues = [
-    { value: 0.5, display: "\\frac{1}{2}" },
-    { value: Math.SQRT1_2, display: "\\frac{\\sqrt{2}}{2}" },
-    { value: Math.sqrt(3) / 2, display: "\\frac{\\sqrt{3}}{2}" },
-    { value: 1, display: "1" },
-    { value: Math.sqrt(3), display: "\\sqrt{3}" },
-    { value: Math.sqrt(3) / 3, display: "\\frac{\\sqrt{3}}{3}" },
-  ];
-  const exact = commonValues.find(
-    (candidate) => Math.abs(Math.abs(value) - candidate.value) < 1e-10
-  );
-  if (exact) {
-    return `= ${value < 0 ? "-" : ""}${exact.display}`;
-  }
-  return `\\approx ${value.toFixed(2)}`;
 }

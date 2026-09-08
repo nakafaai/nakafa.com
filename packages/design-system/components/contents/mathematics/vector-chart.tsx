@@ -35,7 +35,7 @@ interface Props {
   vectors: Vector[];
 }
 
-const VECTOR_COLORS = [COLORS.BLUE, COLORS.PURPLE, COLORS.AMBER];
+const VECTOR_COLORS = [COLORS.ORANGE, COLORS.PURPLE, COLORS.AMBER];
 const VECTOR_ARROWS = {
   forward: "end",
   backward: "start",
@@ -59,7 +59,11 @@ export function VectorChart({ title, description, vectors }: Props) {
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <CoordinateSystem cameraPosition={[0, 0, 15]} showOrigin={false}>
+          <CoordinateSystem
+            cameraPosition={[0, 0, 15]}
+            cameraProjection={{ kind: "orthographic" }}
+            showOrigin={false}
+          >
             {vectors.map((vector, index) => {
               const geometry = Effect.runSync(resolveVectorGeometry(vector));
               const arrow = VECTOR_ARROWS[geometry.direction];
@@ -67,9 +71,8 @@ export function VectorChart({ title, description, vectors }: Props) {
                 vector.color ?? VECTOR_COLORS[index % VECTOR_COLORS.length];
               const { tail, tip } = geometry;
               const horizontal = tip.x - tail.x;
-              const vertical = tip.y - tail.y;
               const horizontalAnchor = horizontal > 0 ? "left" : "right";
-              const verticalAnchor = vertical >= 0 ? "bottom" : "top";
+              const verticalAnchor = tip.y >= 0 ? "bottom" : "top";
               return (
                 <group key={vector.id}>
                   <LineEquation

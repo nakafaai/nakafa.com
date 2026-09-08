@@ -16,6 +16,13 @@ import { Frustum, type Group, Matrix4, Vector2, Vector3 } from "three";
 const LABEL_EDGE_SPACE = 4;
 const LABEL_GAP = 12;
 
+/** Places a point-like axis label away from the framed subject. */
+function pointLabelOffset(coordinate: number, extent: number, margin: number) {
+  const preferred = coordinate < extent / 2 ? -LABEL_GAP : LABEL_GAP;
+  const center = coordinate + preferred;
+  return center < margin || center > extent - margin ? -preferred : preferred;
+}
+
 /** Intersects an axis segment with the six planes of the camera frustum. */
 function clipAxis(frustum: Frustum, from: Vector3, to: Vector3) {
   let minimum = 0;
@@ -64,6 +71,7 @@ function AxisLabel({
     () => ({
       frustum: new Frustum(),
       projection: new Matrix4(),
+      offset: new Matrix4(),
       screen: new Vector2(),
       start: new Vector3(),
       end: new Vector3(),
@@ -84,18 +92,10 @@ function AxisLabel({
     camera.updateMatrixWorld();
     const marginX = element.offsetWidth / 2 + LABEL_EDGE_SPACE;
     const marginY = element.offsetHeight / 2 + LABEL_EDGE_SPACE;
-    const horizontal = Math.max(
-      0.1,
-      1 - (2 * (marginX + LABEL_GAP)) / size.width
+    scratch.projection.multiplyMatrices(
+      camera.projectionMatrix,
+      camera.matrixWorldInverse
     );
-    const vertical = Math.max(
-      0.1,
-      1 - (2 * (marginY + LABEL_GAP)) / size.height
-    );
-    scratch.projection
-      .makeScale(1 / horizontal, 1 / vertical, 1)
-      .multiply(camera.projectionMatrix)
-      .multiply(camera.matrixWorldInverse);
     scratch.frustum.setFromProjectionMatrix(scratch.projection);
     const interval = clipAxis(scratch.frustum, from, to);
     if (!interval) {
@@ -103,15 +103,59 @@ function AxisLabel({
       return;
     }
     const { minimum, maximum } = interval;
-    object.position.lerpVectors(from, to, maximum);
-    object.updateMatrixWorld();
     scratch.start.lerpVectors(from, to, minimum).project(camera);
-    scratch.end.copy(object.position).project(camera);
+    scratch.end.lerpVectors(from, to, maximum).project(camera);
     const dx = (scratch.end.x - scratch.start.x) * size.width;
     const dy = (scratch.start.y - scratch.end.y) * size.height;
     const length = Math.hypot(dx, dy);
-    const normalX = length > 1 ? (-dy / length) * LABEL_GAP : LABEL_GAP;
-    const normalY = length > 1 ? (dx / length) * LABEL_GAP : -LABEL_GAP;
+    let normalX = (-dy / length) * LABEL_GAP;
+    let normalY = (dx / length) * LABEL_GAP;
+    if (length <= 1) {
+      // An axis facing the camera projects to a point. Place its label away
+      // from the framed subject, whose bounds determine the viewport center.
+      normalX = pointLabelOffset(
+        ((scratch.end.x + 1) * size.width) / 2,
+        size.width,
+        marginX
+      );
+      normalY = pointLabelOffset(
+        ((1 - scratch.end.y) * size.height) / 2,
+        size.height,
+        marginY
+      );
+    }
+    const horizontal = Math.max(0.1, 1 - (2 * marginX) / size.width);
+    const vertical = Math.max(0.1, 1 - (2 * marginY) / size.height);
+    let endpoint = maximum;
+    // Reserve space only on the chosen side of the axis. A symmetric inset
+    // can reject a visible axis even when its other side has ample room.
+    for (const side of [1, -1]) {
+      scratch.offset.makeTranslation(
+        (2 * normalX * side) / size.width,
+        (-2 * normalY * side) / size.height,
+        0
+      );
+      scratch.projection
+        .makeScale(1 / horizontal, 1 / vertical, 1)
+        .multiply(scratch.offset)
+        .multiply(camera.projectionMatrix)
+        .multiply(camera.matrixWorldInverse);
+      scratch.frustum.setFromProjectionMatrix(scratch.projection);
+      const labelInterval = clipAxis(scratch.frustum, from, to);
+      if (
+        labelInterval &&
+        Math.max(minimum, labelInterval.minimum) <=
+          Math.min(maximum, labelInterval.maximum)
+      ) {
+        endpoint = Math.min(maximum, labelInterval.maximum);
+        normalX *= side;
+        normalY *= side;
+        break;
+      }
+    }
+    object.position.lerpVectors(from, to, endpoint);
+    object.updateMatrixWorld();
+    scratch.end.copy(object.position).project(camera);
     const centerX = ((scratch.end.x + 1) * size.width) / 2;
     const centerY = ((1 - scratch.end.y) * size.height) / 2;
     if (!(Number.isFinite(centerX) && Number.isFinite(centerY))) {

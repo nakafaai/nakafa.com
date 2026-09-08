@@ -1,7 +1,6 @@
 "use client";
 
 import { Instance, Instances, Line } from "@react-three/drei";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ORIGIN_COLOR,
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
@@ -15,35 +14,23 @@ import {
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { getCos, getRadians, getSin } from "@repo/math/angles";
 import { useTheme } from "next-themes";
-import { type ReactNode, useMemo } from "react";
-import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
-
-// Angle and Quadrant constants
-const DEGREES_IN_HALF_CIRCLE = 180;
-const DEGREES_TO_RADIANS = Math.PI / DEGREES_IN_HALF_CIRCLE;
-const DEGREES_IN_QUADRANT = 90;
-const QUADRANTS_IN_CIRCLE = 4;
+import { type ComponentProps, type ReactNode, useMemo } from "react";
+import { Vector3 } from "three";
 
 // Sizing and scaling constants
 const BASE_FONT_SIZE = THREE_FONT_SIZE.compact;
 const BASE_VERTEX_SIZE = 0.05;
 const VERTEX_SIZE_SCALE_FACTOR = 0.05;
 const ARC_RADIUS_SCALE_FACTOR = 0.2;
-const ANGLE_LABEL_DISTANCE_SCALE_FACTOR = 0.3;
 const MIN_SCALE_FACTOR = 1;
 
 // Label offset multipliers
 const LABEL_OFFSET_ADJACENT_Y = 1.5;
 const LABEL_OFFSET_OPPOSITE_X = 4;
 const LABEL_OFFSET_HYPOTENUSE_Y = 2;
-const ANGLE_LABEL_POSITION_ADJUSTMENT = 0.5;
 
-// Quadrant identifiers
-const Q1 = 1;
-const Q2 = 2;
-const Q3 = 3;
-const Q4 = 4;
 const TRIANGLE_SIDE_CONFIG = [
   { color: COLORS.CYAN, key: "adjacent" },
   { color: COLORS.ORANGE, key: "opposite" },
@@ -61,44 +48,6 @@ interface Props {
   };
   /** Size of the triangle (scale factor) */
   size?: number;
-  /** Additional props */
-  [key: string]: unknown;
-}
-
-// Singleton geometry instances for reuse
-let sharedSphereGeometry: SphereGeometry | null = null;
-const sharedMaterials: Map<string, MeshBasicMaterial> = new Map();
-
-/**
- * Reuses vertex marker geometry across triangle visualizations.
- *
- * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
- */
-function getSharedSphereGeometry() {
-  if (!sharedSphereGeometry) {
-    sharedSphereGeometry = new SphereGeometry(
-      1,
-      GRAPH_POINT_SEGMENTS,
-      GRAPH_POINT_SEGMENTS
-    );
-  }
-  return sharedSphereGeometry;
-}
-
-/**
- * Reuses triangle materials by color for repeated side and point rendering.
- *
- * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
- */
-function getSharedMaterial(color: string) {
-  if (!sharedMaterials.has(color)) {
-    sharedMaterials.set(color, new MeshBasicMaterial({ color }));
-  }
-  const material = sharedMaterials.get(color);
-  if (!material) {
-    throw new Error(`Material not found for color: ${color}`);
-  }
-  return material;
 }
 
 /**
@@ -113,20 +62,15 @@ export function Triangle({
     hypotenuse: "Hypotenuse",
   },
   ...props
-}: Props) {
+}: Props & ComponentProps<"group">) {
   const { resolvedTheme } = useTheme();
 
-  // Convert angle to radians and calculate the points
-  const angleInRadians = angle * DEGREES_TO_RADIANS;
-
-  // Identify which quadrant the angle is in
-  const quadrant =
-    (Math.floor(angle / DEGREES_IN_QUADRANT) % QUADRANTS_IN_CIRCLE) + Q1;
+  const angleInRadians = getRadians(angle);
 
   // Create a right triangle with sides of variable length based on the angle
   const hypotenuse = size; // Scale the hypotenuse by the size parameter
-  const adjacent = Math.cos(angleInRadians) * hypotenuse;
-  const opposite = Math.sin(angleInRadians) * hypotenuse;
+  const adjacent = getCos(angle) * hypotenuse;
+  const opposite = getSin(angle) * hypotenuse;
 
   // Colors based on theme
   const baseColor =
@@ -141,8 +85,6 @@ export function Triangle({
 
   // Scale the angle arc radius based on triangle size - make it more proportional
   const arcRadius = ARC_RADIUS_SCALE_FACTOR * Math.sqrt(size);
-  const angleLabelDistance =
-    ANGLE_LABEL_DISTANCE_SCALE_FACTOR * Math.sqrt(size);
 
   // Memoize triangle side segments
   const triangleSideLines = useMemo(() => {
@@ -165,104 +107,45 @@ export function Triangle({
   const triangleVertices = useMemo(() => {
     const vertices = triangleSideLines.map((pts) => pts[0]);
     return [
-      { position: vertices[0], key: "origin" },
       { position: vertices[1], key: "adjacent" },
       { position: vertices[2], key: "opposite" },
     ];
   }, [triangleSideLines]);
 
-  // Use shared geometry and material
-  const sphereGeo = getSharedSphereGeometry();
-  const sphereMat = getSharedMaterial(baseColor);
-
-  // Determine label positions based on quadrant and angle
-  const labelPositions = useMemo(() => {
-    // Calculate midpoints for labels
-    const adjacentMidpoint = new Vector3(adjacent / 2, 0, 0);
-    const oppositeMidpoint = new Vector3(adjacent, opposite / 2, 0);
-    const hypotenuseMidpoint = new Vector3(adjacent / 2, opposite / 2, 0);
-
-    const adjacentLabelPos = new Vector3();
-    const oppositeLabelPos = new Vector3();
-    const hypotenuseLabelPos = new Vector3();
-
-    // Combined switch statement for all label positions based on quadrant
-    switch (quadrant) {
-      case Q1: {
-        // 0-90 degrees
-        adjacentLabelPos
-          .copy(adjacentMidpoint)
-          .add(new Vector3(0, -BASE_FONT_SIZE * LABEL_OFFSET_ADJACENT_Y, 0));
-        oppositeLabelPos
-          .copy(oppositeMidpoint)
-          .add(new Vector3(BASE_FONT_SIZE * LABEL_OFFSET_OPPOSITE_X, 0, 0));
-        hypotenuseLabelPos
-          .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, BASE_FONT_SIZE * LABEL_OFFSET_HYPOTENUSE_Y, 0));
-        break;
-      }
-
-      case Q2: {
-        // 90-180 degrees
-        adjacentLabelPos
-          .copy(adjacentMidpoint)
-          .add(new Vector3(0, -BASE_FONT_SIZE * LABEL_OFFSET_ADJACENT_Y, 0));
-        oppositeLabelPos
-          .copy(oppositeMidpoint)
-          .add(new Vector3(-BASE_FONT_SIZE * LABEL_OFFSET_OPPOSITE_X, 0, 0));
-        hypotenuseLabelPos
-          .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, BASE_FONT_SIZE * LABEL_OFFSET_HYPOTENUSE_Y, 0));
-        break;
-      }
-
-      case Q3: {
-        // 180-270 degrees
-        adjacentLabelPos
-          .copy(adjacentMidpoint)
-          .add(new Vector3(0, BASE_FONT_SIZE * LABEL_OFFSET_ADJACENT_Y, 0));
-        oppositeLabelPos
-          .copy(oppositeMidpoint)
-          .add(new Vector3(-BASE_FONT_SIZE * LABEL_OFFSET_OPPOSITE_X, 0, 0));
-        hypotenuseLabelPos
-          .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, -BASE_FONT_SIZE * LABEL_OFFSET_HYPOTENUSE_Y, 0));
-        break;
-      }
-
-      case Q4: {
-        // 270-360 degrees
-        adjacentLabelPos
-          .copy(adjacentMidpoint)
-          .add(new Vector3(0, BASE_FONT_SIZE * LABEL_OFFSET_ADJACENT_Y, 0));
-        oppositeLabelPos
-          .copy(oppositeMidpoint)
-          .add(new Vector3(BASE_FONT_SIZE * LABEL_OFFSET_OPPOSITE_X, 0, 0));
-        hypotenuseLabelPos
-          .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, -BASE_FONT_SIZE * LABEL_OFFSET_HYPOTENUSE_Y, 0));
-        break;
-      }
-
-      default:
-        break;
-    }
-
-    return { adjacentLabelPos, oppositeLabelPos, hypotenuseLabelPos };
-  }, [quadrant, adjacent, opposite]);
-
-  // Calculate hypotenuse rotation once
-  const hypotenuseLabelRotation = useMemo(() => {
-    switch (quadrant) {
-      case Q1:
-        return Math.atan2(opposite, adjacent);
-      case Q2:
-      case Q3:
-        return Math.atan2(opposite, adjacent) + Math.PI;
-      default:
-        return Math.atan2(opposite, adjacent);
-    }
-  }, [quadrant, opposite, adjacent]);
+  // Side signs keep the labels outside the triangle in every quadrant.
+  const horizontalDirection = adjacent < 0 ? -1 : 1;
+  const verticalDirection = opposite < 0 ? -1 : 1;
+  const labelPositions = useMemo(
+    () => ({
+      adjacentLabelPos: new Vector3(
+        adjacent / 2,
+        -verticalDirection * BASE_FONT_SIZE * LABEL_OFFSET_ADJACENT_Y,
+        0
+      ),
+      oppositeLabelPos: new Vector3(
+        adjacent +
+          horizontalDirection * BASE_FONT_SIZE * LABEL_OFFSET_OPPOSITE_X,
+        opposite / 2,
+        0
+      ),
+      hypotenuseLabelPos: new Vector3(
+        adjacent / 2 -
+          horizontalDirection *
+            Math.abs(getSin(angle)) *
+            BASE_FONT_SIZE *
+            LABEL_OFFSET_HYPOTENUSE_Y,
+        opposite / 2 +
+          verticalDirection *
+            Math.abs(getCos(angle)) *
+            BASE_FONT_SIZE *
+            LABEL_OFFSET_HYPOTENUSE_Y,
+        0
+      ),
+    }),
+    [adjacent, angle, horizontalDirection, opposite, verticalDirection]
+  );
+  const hypotenuseLabelRotation =
+    Math.atan2(opposite, adjacent) + (adjacent < 0 ? Math.PI : 0);
 
   return (
     <group frustumCulled {...props}>
@@ -284,25 +167,6 @@ export function Triangle({
         lineWidth={2}
         points={triangleArcPoints}
       />
-
-      {/* Angle label */}
-      <ThreeLabel
-        anchorX={Math.cos(angleInRadians / 2) >= 0 ? "left" : "right"}
-        color={COLORS.VIOLET}
-        fontSize={BASE_FONT_SIZE}
-        minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
-        position={[
-          Math.cos(angleInRadians / 2) * angleLabelDistance +
-            (angle > DEGREES_IN_HALF_CIRCLE ? -1 : 1) *
-              BASE_FONT_SIZE *
-              ANGLE_LABEL_POSITION_ADJUSTMENT,
-          Math.sin(angleInRadians / 2) * angleLabelDistance,
-          0,
-        ]}
-        visible={angle !== 0}
-      >
-        <InlineMath math={`${angle}^\\circ`} />
-      </ThreeLabel>
 
       {/* Side labels */}
       <ThreeLabel
@@ -338,13 +202,11 @@ export function Triangle({
       </ThreeLabel>
 
       {/* Points at vertices - using instanced rendering */}
-      <Instances
-        count={triangleVertices.length}
-        frustumCulled
-        geometry={sphereGeo}
-        material={sphereMat}
-        visible
-      >
+      <Instances count={triangleVertices.length} frustumCulled visible>
+        <sphereGeometry
+          args={[1, GRAPH_POINT_SEGMENTS, GRAPH_POINT_SEGMENTS]}
+        />
+        <meshBasicMaterial color={baseColor} />
         {triangleVertices.map((vertex) => (
           <Instance
             key={vertex.key}

@@ -20,7 +20,7 @@ const pointG = { x: 4, y: 0, z: 0 };
 const questionData = [
   {
     points: [pointA, pointB, pointC, pointD, pointA],
-    color: getColor("BLUE"),
+    color: getColor("VIOLET"),
     lineWidth: 2,
     smooth: false,
     showPoints: true,

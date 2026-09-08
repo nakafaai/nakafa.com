@@ -32,7 +32,7 @@ export function Inequality({
   yRange = [DEFAULT_INEQUALITY_RANGE_MIN, DEFAULT_INEQUALITY_RANGE_MAX],
   zRange = [DEFAULT_INEQUALITY_RANGE_MIN, DEFAULT_INEQUALITY_RANGE_MAX],
   resolution = 200,
-  color = COLORS.BLUE,
+  color = COLORS.PURPLE,
   boundaryColor,
   opacity = 0.1,
   boundaryLineWidth = 2,

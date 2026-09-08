@@ -34,10 +34,10 @@ const ROOM = [
 // the same schematic square, without assigning x a value from the solution.
 const CORNER_SIDE = 0.75;
 const CORNERS = [
-  { id: "top-left", x: -3, y: 2, dx: 1, dy: -1, color: COLORS.BLUE },
+  { id: "top-left", x: -3, y: 2, dx: 1, dy: -1, color: COLORS.FUCHSIA },
   { id: "top-right", x: 3, y: 2, dx: -1, dy: -1, color: COLORS.PURPLE },
   { id: "bottom-left", x: -3, y: -2, dx: 1, dy: 1, color: COLORS.AMBER },
-  { id: "bottom-right", x: 3, y: -2, dx: -1, dy: 1, color: COLORS.GREEN },
+  { id: "bottom-right", x: 3, y: -2, dx: -1, dy: 1, color: COLORS.TEAL },
 ];
 
 /** Composes the room and its four equal square corners on the shared plane. */

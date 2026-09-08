@@ -41,7 +41,7 @@ export function Graph({ title, description }: GraphProps) {
   const data = [
     {
       points: largeSquarePoints,
-      color: getColor("BLUE"),
+      color: getColor("VIOLET"),
       lineWidth: 2,
       smooth: false,
       showPoints: false,

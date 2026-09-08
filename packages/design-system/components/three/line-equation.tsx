@@ -11,7 +11,7 @@ import {
   getCurveDivisions,
 } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { randomColor } from "@repo/design-system/lib/color";
+import { COLORS } from "@repo/design-system/lib/color";
 import { resolveArrowSize } from "@repo/design-system/lib/geometry/arrow";
 import {
   type LineMarkerIndices,
@@ -152,7 +152,7 @@ const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
 export function LineEquation({
   points,
   pointIndices,
-  color = randomColor(["YELLOW", "GREEN", "BLUE"]),
+  color = COLORS.AMBER,
   lineWidth = 2,
   showPoints = true,
   smooth = false,
