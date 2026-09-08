@@ -129,7 +129,19 @@ export function CoordinateSystem({
           <pointLight intensity={1} position={[10, 10, 10]} />
 
           {/* Coordinate System */}
-          <CameraBounds exclude={!frame}>
+          {/* Fit the true origin without measuring decorative axis lengths. */}
+          <CameraBounds
+            bounds={
+              !frame && showAxes
+                ? {
+                    x: { min: origin?.x ?? 0, max: origin?.x ?? 0 },
+                    y: { min: origin?.y ?? 0, max: origin?.y ?? 0 },
+                    z: { min: origin?.z ?? 0, max: origin?.z ?? 0 },
+                  }
+                : undefined
+            }
+            exclude={!(frame || showAxes)}
+          >
             <Axes
               frame={axisFrame}
               origin={origin}
