@@ -235,7 +235,7 @@ async function CachedSurahShell({
             quranLabel={t("quran")}
             title={title}
           />
-          <LayoutContent>
+          <LayoutContent className="pt-6">
             {result.preBismillah === null ? null : (
               <QuranBismillah
                 bismillah={result.preBismillah}
