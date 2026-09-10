@@ -30,8 +30,10 @@ catalogs:
 
 overrides:
   '@ai-sdk/devtools@1.0.15>@hono/node-server': 2.1.1
+  '@ai-sdk/devtools@1.0.15>hono': 4.13.5
   '@changesets/parse@0.4.3>js-yaml': 4.3.1
   '@effect/platform-node-shared': 4.0.0-rc.112
+  '@hono/node-server@2.1.1>hono': 4.13.5
   '@react-email/ui@6.9.3>next': 16.3.4
   '@vercel/routing-utils@6.5.0>path-to-regexp': 6.3.0
   '@vitest/coverage-istanbul@4.1.11>@babel/core': 7.29.7
@@ -2306,7 +2308,7 @@ packages:
     resolution: {integrity: sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==}
     engines: {node: '>=20'}
     peerDependencies:
-      hono: ^4
+      hono: 4.13.5
 
   '@hugeicons/core-free-icons@4.3.0':
     resolution: {integrity: sha512-5DC5gq2psNDKBQThOjpuFCtMco8nl2FkrBzZgG15cFGM0kSwUoych/pw0DmjBygF9qRDITdBPtmzJqLsOeImMg==}
@@ -5252,8 +5254,8 @@ packages:
   hls.js@1.7.1:
     resolution: {integrity: sha512-DlzIkeBAS9IIQ432k3BUf3HlwbsR0+trB1i2lDdN2gUkNkrehFurh0/48M5c1/EjlDkdGng1gwZIpwyPxvdZ/g==}
 
-  hono@4.13.3:
-    resolution: {integrity: sha512-r8AO2mYHoLxSHkgafNeC/BXyb2vWRxD3jem4Ts+ptav8oTG5FIRifAjuJEmZI4bSvvc2ns0GxmIYiZnHqN3mMw==}
+  hono@4.13.5:
+    resolution: {integrity: sha512-O6+/eCYRkzzzy0rPWwKLiGBR1nFuUPZynnwjxN1MBA62NNqbT0wQEzQyK2gSO5yDIDB336sXQleAhOHrzlYyKw==}
     engines: {node: '>=16.9.0'}
 
   hono@4.13.7:
@@ -7667,8 +7669,8 @@ snapshots:
   '@ai-sdk/devtools@1.0.15':
     dependencies:
       '@ai-sdk/provider': 4.0.10
-      '@hono/node-server': 2.1.1(hono@4.13.3)
-      hono: 4.13.3
+      '@hono/node-server': 2.1.1(hono@4.13.5)
+      hono: 4.13.5
 
   '@ai-sdk/gateway@4.0.75(zod@4.5.4)':
     dependencies:
@@ -8719,9 +8721,9 @@ snapshots:
 
   '@gar/promise-retry@1.0.3': {}
 
-  '@hono/node-server@2.1.1(hono@4.13.3)':
+  '@hono/node-server@2.1.1(hono@4.13.5)':
     dependencies:
-      hono: 4.13.3
+      hono: 4.13.5
 
   '@hugeicons/core-free-icons@4.3.0': {}
 
@@ -11561,7 +11563,7 @@ snapshots:
 
   hls.js@1.7.1: {}
 
-  hono@4.13.3: {}
+  hono@4.13.5: {}
 
   hono@4.13.7: {}
 
