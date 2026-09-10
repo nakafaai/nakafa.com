@@ -27,6 +27,7 @@ import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
 const quranViewNameValidator = v.object({
+  arabic: v.string(),
   sourceMeaning: quranSurahMeaningValidator,
   transliteration: v.string(),
 });
@@ -59,7 +60,7 @@ export const quranViewValidator = v.object({
   verses: v.array(quranViewVerseValidator),
 });
 
-type QuranView = Infer<typeof quranViewValidator>;
+export type QuranView = Infer<typeof quranViewValidator>;
 type QuranViewSurah = NonNullable<QuranView["surah"]>;
 
 /** Reads one neighboring surah metadata row when that neighbor exists. */
@@ -77,6 +78,7 @@ const readNeighbor = Effect.fn("contentRelease.readQuranNeighbor")(function* (
 function projectSurah(surah: PublishedQuranSurah): QuranViewSurah {
   return {
     name: {
+      arabic: surah.name.arabic,
       sourceMeaning: surah.name.meaning,
       transliteration: surah.name.transliteration,
     },
