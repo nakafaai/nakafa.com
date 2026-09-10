@@ -98,7 +98,7 @@ export function ReferenceButton({ references, title }: Props) {
                             >
                               {reference.title.toLowerCase()}
                             </h3>
-                            <div className="flex min-w-0 items-center gap-1 text-muted-foreground text-sm">
+                            <div className="flex min-w-0 items-center gap-2 text-muted-foreground text-sm">
                               <HugeIcons
                                 className="size-4 shrink-0"
                                 icon={Globe02Icon}
@@ -121,7 +121,7 @@ export function ReferenceButton({ references, title }: Props) {
                           </div>
 
                           <div className="flex flex-col gap-3">
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                               <HugeIcons
                                 className="size-4 shrink-0"
                                 icon={QuillWrite01Icon}
@@ -131,7 +131,7 @@ export function ReferenceButton({ references, title }: Props) {
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                               <HugeIcons
                                 className="size-4 shrink-0"
                                 icon={Calendar03Icon}
@@ -140,7 +140,7 @@ export function ReferenceButton({ references, title }: Props) {
                             </div>
 
                             {!!reference.publication && (
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-2">
                                 <HugeIcons
                                   className="size-4 shrink-0"
                                   icon={BookOpen02Icon}
@@ -152,7 +152,7 @@ export function ReferenceButton({ references, title }: Props) {
                             )}
 
                             {!!reference.details && (
-                              <div className="flex items-start gap-1">
+                              <div className="flex items-start gap-2">
                                 <HugeIcons
                                   className="mt-0.5 size-4 shrink-0"
                                   icon={Book03Icon}
