@@ -29,9 +29,11 @@ pnpm --dir packages/backend exec convex dev --once
 Use `convex codegen` for binding-only refreshes. Use the repository's pnpm CLI
 and never print secrets. Never copy `CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`,
 or generated Convex URL values out of this checkout. Production deploys only
-through the existing promote flow, never from a dev command. Create an
-isolated expiring Agent Mode deployment only when explicitly asked for
-throwaway isolation.
+through the existing promote flow, never from a dev command. Reach for an
+isolated expiring Agent Mode deployment whenever it is the better tool for
+the job, such as risky schema or function changes, destructive rehearsals, or
+parallel work that must not disturb the main dev loop. No explicit request
+needed.
 
 ## Nakafa Convex Architecture Rules
 
