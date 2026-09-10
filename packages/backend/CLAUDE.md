@@ -1,7 +1,7 @@
 # Backend agent guide
 
 Read [`AGENTS.md`](AGENTS.md) before changing this package. It owns the local
-workflow, package architecture, and isolated Convex Agent Mode requirements.
+workflow, package architecture, and main dev deployment policy.
 
 <!-- convex-ai-start -->
 
