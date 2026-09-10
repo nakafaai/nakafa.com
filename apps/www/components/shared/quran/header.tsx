@@ -34,12 +34,19 @@ export function QuranSurahHeader({
         />
       </div>
       <h1
-        className="min-w-0 truncate font-medium text-base md:max-w-xs md:text-center"
+        className="flex min-w-0 items-baseline gap-2 truncate font-medium text-base md:max-w-xs md:justify-center md:text-center"
         title={title}
       >
-        {title}
+        <span className="min-w-0 truncate">{title}</span>
+        <span
+          className="shrink-0 font-quran text-xl md:hidden"
+          dir="rtl"
+          lang="ar"
+        >
+          {arabic}
+        </span>
       </h1>
-      <div className="flex min-w-0 justify-end">
+      <div className="hidden min-w-0 justify-end md:flex">
         <span
           className="min-w-0 truncate font-quran text-xl"
           dir="rtl"
