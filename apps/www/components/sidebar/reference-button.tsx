@@ -152,9 +152,9 @@ export function ReferenceButton({ references, title }: Props) {
                             )}
 
                             {!!reference.details && (
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-start gap-1">
                                 <HugeIcons
-                                  className="size-4 shrink-0"
+                                  className="mt-0.5 size-4 shrink-0"
                                   icon={Book03Icon}
                                 />
                                 <span className="wrap-anywhere min-w-0 text-sm">
