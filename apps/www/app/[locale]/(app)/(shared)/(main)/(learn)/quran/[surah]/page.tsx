@@ -18,6 +18,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
+import { QuranSurahHeader } from "@/components/shared/quran/header";
 import {
   QuranInterpretationButton,
   QuranInterpretationLink,
@@ -229,6 +230,12 @@ async function CachedSurahShell({
       />
       <VirtualProvider>
         <LayoutMaterialContent>
+          <QuranSurahHeader
+            arabic={surahData.name.arabic}
+            meaning={description}
+            quranLabel={t("quran")}
+            title={title}
+          />
           <HeaderContent
             description={description}
             descriptionLanguage={descriptionLanguage}
