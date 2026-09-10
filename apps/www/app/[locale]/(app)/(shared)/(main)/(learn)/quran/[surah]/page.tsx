@@ -1,4 +1,3 @@
-import { AllahIcon } from "@hugeicons/core-free-icons";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { slugify } from "@repo/design-system/lib/routing/slug";
@@ -11,7 +10,6 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
-import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
@@ -234,16 +232,6 @@ async function CachedSurahShell({
             arabic={surahData.name.arabic}
             meaning={description}
             quranLabel={t("quran")}
-            title={title}
-          />
-          <HeaderContent
-            description={description}
-            descriptionLanguage={descriptionLanguage}
-            icon={AllahIcon}
-            link={{
-              href: "/quran",
-              label: t("quran"),
-            }}
             title={title}
           />
           <LayoutContent>
