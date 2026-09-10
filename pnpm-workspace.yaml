@@ -47,8 +47,10 @@ catalog:
 
 overrides:
   "@ai-sdk/devtools@1.0.15>@hono/node-server": "2.1.1"
+  "@ai-sdk/devtools@1.0.15>hono": "4.13.5"
   "@changesets/parse@0.4.3>js-yaml": "4.3.1"
   "@effect/platform-node-shared": "4.0.0-rc.112"
+  "@hono/node-server@2.1.1>hono": "4.13.5"
   "@react-email/ui@6.9.3>next": "16.3.4"
   "@vercel/routing-utils@6.5.0>path-to-regexp": "6.3.0"
   "@vitest/coverage-istanbul@4.1.11>@babel/core": "7.29.7"
