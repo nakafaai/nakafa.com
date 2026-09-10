@@ -8,11 +8,14 @@ import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 export function QuranSurahHeader({
   arabic,
   meaning,
+  meaningLanguage,
   quranLabel,
   title,
 }: {
   arabic: string;
   meaning: string;
+  /** BCP 47 language of the meaning when it differs from the page. */
+  meaningLanguage?: string;
   quranLabel: string;
   title: string;
 }) {
@@ -22,7 +25,10 @@ export function QuranSurahHeader({
       <div className="col-span-2 min-w-0 md:col-span-1">
         <BreadcrumbHeaderPath
           homeLabel={tCommon("home")}
-          items={[{ href: "/quran", label: quranLabel }, { label: meaning }]}
+          items={[
+            { href: "/quran", label: quranLabel },
+            { label: meaning, language: meaningLanguage },
+          ]}
           menuLabel={tCommon("more")}
           visibleItemCount={2}
         />

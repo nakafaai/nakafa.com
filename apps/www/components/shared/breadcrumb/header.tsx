@@ -22,6 +22,8 @@ import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 export type BreadcrumbHeaderItem = Readonly<{
   href?: string;
   label: string;
+  /** BCP 47 language of the label when it differs from the page. */
+  language?: string;
   menuLabel?: string;
 }>;
 
@@ -148,7 +150,9 @@ function BreadcrumbSegment({ item }: { item: BreadcrumbHeaderItem }) {
       <>
         <BreadcrumbSeparator className="shrink-0" />
         <BreadcrumbItem className="min-w-0">
-          <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
+          <BreadcrumbPage className="truncate" lang={item.language}>
+            {item.label}
+          </BreadcrumbPage>
         </BreadcrumbItem>
       </>
     );

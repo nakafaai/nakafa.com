@@ -231,6 +231,7 @@ async function CachedSurahShell({
           <QuranSurahHeader
             arabic={surahData.name.arabic}
             meaning={description}
+            meaningLanguage={descriptionLanguage}
             quranLabel={t("quran")}
             title={title}
           />
