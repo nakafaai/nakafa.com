@@ -9,49 +9,63 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { useTranslations } from "next-intl";
+import { AiMenuItem } from "@/components/ai/menu";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
+import { OpenContent } from "@/components/shared/open-content/actions";
 
 /** Keeps surah navigation, name, and outline actions in one stable page row. */
 export function QuranSurahHeader({
   arabic,
+  copySourceUrl,
   meaning,
   meaningLanguage,
   quranLabel,
+  slug,
   title,
 }: {
   arabic: string;
+  copySourceUrl: string;
   meaning: string;
   /** BCP 47 language of the meaning when it differs from the page. */
   meaningLanguage?: string;
   quranLabel: string;
+  slug: string;
   title: string;
 }) {
   const tCommon = useTranslations("Common");
   return (
     <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-      <div className="col-span-2 min-w-0 md:col-span-1">
+      <div className="col-start-1 row-start-1 min-w-0 md:col-span-1">
         <BreadcrumbHeaderPath
           homeLabel={tCommon("home")}
-          items={[
-            { href: "/quran", label: quranLabel },
-            { label: meaning, language: meaningLanguage },
-          ]}
+          items={[{ href: "/quran", label: quranLabel }]}
           menuLabel={tCommon("more")}
-          visibleItemCount={2}
         />
       </div>
       <h1
-        className="flex min-w-0 items-baseline gap-2 truncate font-medium text-base md:max-w-xs md:justify-center md:text-center"
+        className="col-span-2 col-start-1 row-start-2 flex min-w-0 flex-col items-center md:col-span-1 md:col-start-2 md:row-start-1 md:max-w-xs"
         title={title}
       >
-        <span className="min-w-0 truncate">{title}</span>
-        <span className="shrink-0 font-quran text-xl" dir="rtl" lang="ar">
-          {arabic}
+        <span
+          className="min-w-0 truncate text-muted-foreground text-sm"
+          data-slot="surah-meaning"
+          lang={meaningLanguage}
+        >
+          {meaning}
+        </span>
+        <span className="flex min-w-0 items-baseline gap-2 font-medium text-base">
+          <span className="min-w-0 truncate">{title}</span>
+          <span className="shrink-0 font-quran text-xl" dir="rtl" lang="ar">
+            {arabic}
+          </span>
         </span>
       </h1>
-      <div className="flex min-w-0 justify-end">
+      <div className="col-start-2 row-start-1 flex min-w-0 justify-end md:col-start-3">
         <ButtonGroup aria-label={tCommon("content-actions")}>
+          <OpenContent copySourceUrl={copySourceUrl} slug={slug}>
+            <AiMenuItem contextTitle={title} />
+          </OpenContent>
           <Tooltip>
             <TooltipTrigger
               render={

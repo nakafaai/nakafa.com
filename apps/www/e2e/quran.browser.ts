@@ -156,7 +156,7 @@ const verifyQuranLocaleCoverage = Effect.fn(
 
   const headerMeaning = quranMeaningLocator(
     page,
-    'header [aria-current="page"]',
+    'header [data-slot="surah-meaning"]',
     contract.meanings
   );
   yield* Effect.promise(() => expect(headerMeaning).toHaveCount(1));

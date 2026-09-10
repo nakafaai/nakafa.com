@@ -230,13 +230,15 @@ async function CachedSurahShell({
       <VirtualProvider>
         <SidebarRightProvider>
           <LayoutMaterialContent>
-            <QuranSurahHeader
-              arabic={surahData.name.arabic}
-              meaning={description}
-              meaningLanguage={descriptionLanguage}
-              quranLabel={t("quran")}
-              title={title}
-            />
+          <QuranSurahHeader
+            arabic={surahData.name.arabic}
+            copySourceUrl={`https://nakafa.com/${locale}/quran/${surah}.md`}
+            meaning={description}
+            meaningLanguage={descriptionLanguage}
+            quranLabel={t("quran")}
+            slug={`/${locale}/quran/${surah}`}
+            title={title}
+          />
             <LayoutContent className="pt-6">
               {result.preBismillah === null ? null : (
                 <QuranBismillah
