@@ -13,7 +13,7 @@ import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialToc } from "@/components/shared/material/toc";
+import { MaterialOutline } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
@@ -23,6 +23,7 @@ import {
 } from "@/components/shared/quran/interpretation/button";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
+import { SidebarRightProvider } from "@/components/shared/sidebar-right";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -227,72 +228,74 @@ async function CachedSurahShell({
         url={`https://nakafa.com/${locale}/quran/${surah}`}
       />
       <VirtualProvider>
-        <LayoutMaterialContent>
-          <QuranSurahHeader
-            arabic={surahData.name.arabic}
-            meaning={description}
-            meaningLanguage={descriptionLanguage}
-            quranLabel={t("quran")}
-            title={title}
-          />
-          <LayoutContent className="pt-6">
-            {result.preBismillah === null ? null : (
-              <QuranBismillah
-                bismillah={result.preBismillah}
-                subjectLabel={title}
-                translationNotesLabel={translationNotesLabel}
-              />
-            )}
-            {tafsirAccess.kind === "embedded" ? (
-              <QuranInterpretationControls
-                appLocale={tafsirAccess.appLocale}
-                errorMessage={t("interpretation-error")}
-                label={interpretationLabel}
-                recoverSnapshot={recoverSnapshot}
-                refreshingMessage={t("interpretation-refreshing")}
-                snapshotId={result.snapshotId}
-                surahNumber={surahData.number}
-              >
+        <SidebarRightProvider>
+          <LayoutMaterialContent>
+            <QuranSurahHeader
+              arabic={surahData.name.arabic}
+              meaning={description}
+              meaningLanguage={descriptionLanguage}
+              quranLabel={t("quran")}
+              title={title}
+            />
+            <LayoutContent className="pt-6">
+              {result.preBismillah === null ? null : (
+                <QuranBismillah
+                  bismillah={result.preBismillah}
+                  subjectLabel={title}
+                  translationNotesLabel={translationNotesLabel}
+                />
+              )}
+              {tafsirAccess.kind === "embedded" ? (
+                <QuranInterpretationControls
+                  appLocale={tafsirAccess.appLocale}
+                  errorMessage={t("interpretation-error")}
+                  label={interpretationLabel}
+                  recoverSnapshot={recoverSnapshot}
+                  refreshingMessage={t("interpretation-refreshing")}
+                  snapshotId={result.snapshotId}
+                  surahNumber={surahData.number}
+                >
+                  <QuranVerseList
+                    items={verseItems}
+                    renderAction={(verse, verseLabel) => (
+                      <QuranInterpretationButton
+                        label={`${interpretationLabel}: ${verseLabel}`}
+                        verseNumber={verse.number.inSurah}
+                      />
+                    )}
+                    translationNotesLabel={translationNotesLabel}
+                  />
+                </QuranInterpretationControls>
+              ) : (
                 <QuranVerseList
                   items={verseItems}
-                  renderAction={(verse, verseLabel) => (
-                    <QuranInterpretationButton
+                  renderAction={(_verse, verseLabel) => (
+                    <QuranInterpretationLink
+                      href={tafsirAccess.source.sourceUrl}
                       label={`${interpretationLabel}: ${verseLabel}`}
-                      verseNumber={verse.number.inSurah}
                     />
                   )}
                   translationNotesLabel={translationNotesLabel}
                 />
-              </QuranInterpretationControls>
-            ) : (
-              <QuranVerseList
-                items={verseItems}
-                renderAction={(_verse, verseLabel) => (
-                  <QuranInterpretationLink
-                    href={tafsirAccess.source.sourceUrl}
-                    label={`${interpretationLabel}: ${verseLabel}`}
-                  />
-                )}
-                translationNotesLabel={translationNotesLabel}
-              />
-            )}
-          </LayoutContent>
-          <PaginationContent pagination={pagination} />
-          {toolbar}
-        </LayoutMaterialContent>
-        <LayoutMaterialToc
-          chapters={{
-            label: t("verse"),
-            data: headings,
-          }}
-          header={{
-            title,
-            href: `/quran/${surah}`,
-            description,
-            descriptionLanguage,
-          }}
-          references={{ title, data: references }}
-        />
+              )}
+            </LayoutContent>
+            <PaginationContent pagination={pagination} />
+            {toolbar}
+          </LayoutMaterialContent>
+          <MaterialOutline
+            chapters={{
+              label: t("verse"),
+              data: headings,
+            }}
+            header={{
+              title,
+              href: `/quran/${surah}`,
+              description,
+              descriptionLanguage,
+            }}
+            references={{ title, data: references }}
+          />
+        </SidebarRightProvider>
       </VirtualProvider>
     </>
   );

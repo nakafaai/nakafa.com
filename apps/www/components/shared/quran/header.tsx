@@ -1,10 +1,18 @@
 "use client";
 
+import { Menu02Icon } from "@hugeicons/core-free-icons";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { useTranslations } from "next-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 
-/** Keeps surah navigation, transliterated name, and Arabic title in one stable page row. */
+/** Keeps surah navigation, name, and outline actions in one stable page row. */
 export function QuranSurahHeader({
   arabic,
   meaning,
@@ -38,22 +46,29 @@ export function QuranSurahHeader({
         title={title}
       >
         <span className="min-w-0 truncate">{title}</span>
-        <span
-          className="shrink-0 font-quran text-xl md:hidden"
-          dir="rtl"
-          lang="ar"
-        >
+        <span className="shrink-0 font-quran text-xl" dir="rtl" lang="ar">
           {arabic}
         </span>
       </h1>
-      <div className="hidden min-w-0 justify-end md:flex">
-        <span
-          className="min-w-0 truncate font-quran text-xl"
-          dir="rtl"
-          lang="ar"
-        >
-          {arabic}
-        </span>
+      <div className="flex min-w-0 justify-end">
+        <ButtonGroup aria-label={tCommon("content-actions")}>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <SidebarTrigger
+                  aria-label={tCommon("on-this-page")}
+                  className="size-9"
+                  icon={Menu02Icon}
+                  size="icon"
+                  variant="outline"
+                />
+              }
+            />
+            <TooltipContent side="bottom">
+              {tCommon("on-this-page")}
+            </TooltipContent>
+          </Tooltip>
+        </ButtonGroup>
       </div>
     </BreadcrumbHeaderFrame>
   );
