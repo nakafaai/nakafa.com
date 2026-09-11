@@ -256,6 +256,7 @@
   "Holy": {
     "holy": "Heilige Schriften",
     "quran": "Quran",
+    "quran-short": "Quran",
     "quran-description": "Lies den Quran mit einer Übersetzung Vers für Vers.",
     "verse": "Vers",
     "verse-count": "Vers {count}",
