@@ -129,7 +129,7 @@ test("baseline counts one cookieless pageview before consent", async ({
   );
 });
 
-test("grant upgrades to attributed pageviews without duplicates", async ({
+test("grant keeps exact counts and attributes the next view", async ({
   baseURL,
   browser,
 }) => {
@@ -154,20 +154,25 @@ test("grant upgrades to attributed pageviews without duplicates", async ({
               yield* Effect.promise(() =>
                 page.getByRole("button", { name: "Allow" }).click()
               );
-              yield* waitForPageviews(captured, 2);
+              yield* Effect.promise(() =>
+                page
+                  .getByRole("button", { name: "Allow" })
+                  .waitFor({ state: "hidden", timeout: 15_000 })
+              );
+              expect(pageviewCount(captured)).toBe(1);
 
               yield* Effect.promise(() =>
                 page.evaluate(() => {
                   window.history.pushState({}, "", "/en/e2e-nav?x=1");
                 })
               );
-              yield* waitForPageviews(captured, 3);
+              yield* waitForPageviews(captured, 2);
 
               const views = pageviews(captured);
-              expect(views).toHaveLength(3);
+              expect(views).toHaveLength(2);
               expect(views[0]?.properties.$cookieless_mode).toBe(true);
               expect(views[1]?.properties.consent_decision).toBe("granted");
-              expect(views[2]?.properties.$current_url).toContain("?x=1");
+              expect(views[1]?.properties.$current_url).toContain("?x=1");
             })
           );
         })

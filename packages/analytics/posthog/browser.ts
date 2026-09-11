@@ -21,6 +21,7 @@ export type BrowserAnalyticsClient = Pick<
   PostHog,
   | "capture"
   | "captureException"
+  | "get_explicit_consent_status"
   | "get_property"
   | "identify"
   | "init"
@@ -211,9 +212,10 @@ function synchronizeIdentity(
 /**
  * Upgrades one baseline client to a consented identity in a single transition.
  *
- * Upgrade, identity sync, and the grant pageview move together so callers can
- * never opt in without authorizing identity or double-count the grant view.
- * Repeated calls only re-sync identity without recapturing.
+ * Upgrade and identity sync move together so callers can never opt in without
+ * authorizing identity. No pageview fires here: the load or navigation that
+ * is already counted keeps the count exact, and the next navigation captures
+ * under the consented identity.
  */
 export const admitConsentedIdentity = Effect.fn(
   "Analytics.admitConsentedIdentity"
@@ -237,9 +239,6 @@ export const admitConsentedIdentity = Effect.fn(
   yield* Effect.try({
     try: () => {
       synchronizeIdentity(client, identity);
-      if (transitioned) {
-        client.capture("$pageview");
-      }
     },
     catch: browserAnalyticsLoadFailure,
   }).pipe(
@@ -256,27 +255,26 @@ export const admitConsentedIdentity = Effect.fn(
  *
  * The gate flips only after the SDK confirms the return: a throwing opt-out
  * surfaces the typed failure so the provider reports it and retries, instead
- * of leaving an opted-in SDK behind a baseline gate. Already-baseline callers
- * only revoke the gate, since recording an explicit SDK opt-out for undecided
- * visitors would corrupt their pending consent state. The baseline pageview
- * fires only on a real granted-to-baseline transition.
+ * of leaving an opted-in SDK behind a baseline gate. Callers that never
+ * granted only revoke the gate, unless the SDK itself reports a persisted
+ * opt-in (a stale grant from an earlier session), which is reconciled the
+ * same way. Recording an explicit opt-out for merely undecided visitors would
+ * corrupt their pending consent state, so that path stays untouched. No
+ * pageview fires here: the counted view keeps the count exact.
  */
 export const revokeToBaselineAnalytics = Effect.fn(
   "Analytics.revokeToBaselineAnalytics"
 )(function* () {
   const client = MutableRef.get(analyticsClient);
   const wasGranted = MutableRef.get(analyticsTier) === "granted";
-  if (!(client && wasGranted)) {
+  const hasPersistedOptIn = client?.get_explicit_consent_status() === "granted";
+  if (!(client && (wasGranted || hasPersistedOptIn))) {
     revokeGate();
     return;
   }
 
   yield* restoreBaselineSdk(client);
   revokeGate();
-  yield* Effect.try({
-    try: () => client.capture("$pageview"),
-    catch: browserAnalyticsLoadFailure,
-  }).pipe(Effect.ignore);
 });
 
 /** Revokes identity authorization without touching SDK consent or identity. */

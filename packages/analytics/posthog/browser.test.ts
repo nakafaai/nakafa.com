@@ -6,6 +6,7 @@ import type { CaptureResult } from "posthog-js";
 const client = {
   capture: vi.fn(),
   captureException: vi.fn(),
+  get_explicit_consent_status: vi.fn(),
   get_property: vi.fn(),
   identify: vi.fn(),
   init: vi.fn(),
@@ -67,6 +68,7 @@ describe("two-tier PostHog browser runtime", () => {
     vi.resetModules();
     vi.unstubAllGlobals();
     client.get_property.mockReturnValue(undefined);
+    client.get_explicit_consent_status.mockReturnValue("pending");
     stubWindow();
   });
 
@@ -198,7 +200,7 @@ describe("two-tier PostHog browser runtime", () => {
     })
   );
 
-  it.effect("admits a grant once with a single attributed pageview", () =>
+  it.effect("admits a grant once without recounting the view", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       yield* analytics.enableBaselineAnalytics({ load: loadClient });
@@ -209,8 +211,7 @@ describe("two-tier PostHog browser runtime", () => {
       expect(client.opt_in_capturing).toHaveBeenCalledExactlyOnceWith({
         captureEventName: false,
       });
-      expect(client.capture).toHaveBeenCalledTimes(2);
-      expect(client.capture).toHaveBeenNthCalledWith(2, "$pageview");
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
       expect(client.register).toHaveBeenCalledWith({
         $geoip_disable: false,
         consent_decided_at: "1970-01-01T00:00:00.100Z",
@@ -310,8 +311,21 @@ describe("two-tier PostHog browser runtime", () => {
 
       expect(client.opt_out_capturing).toHaveBeenCalledOnce();
       expect(client.reset).toHaveBeenLastCalledWith(true);
-      expect(client.capture).toHaveBeenCalledTimes(3);
-      expect(client.capture).toHaveBeenNthCalledWith(3, "$pageview");
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+    })
+  );
+
+  it.effect("reconciles a persisted SDK opt-in without a gate grant", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      client.get_explicit_consent_status.mockReturnValue("granted");
+
+      yield* analytics.revokeToBaselineAnalytics();
+
+      expect(client.opt_out_capturing).toHaveBeenCalledOnce();
+      expect(client.reset).toHaveBeenCalledExactlyOnceWith(true);
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
     })
   );
 
@@ -349,7 +363,7 @@ describe("two-tier PostHog browser runtime", () => {
       yield* analytics.admitConsentedIdentity(anonymousIdentity);
 
       expect(client.opt_in_capturing).toHaveBeenCalledTimes(2);
-      expect(client.capture).toHaveBeenCalledTimes(2);
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
     })
   );
 
@@ -368,13 +382,13 @@ describe("two-tier PostHog browser runtime", () => {
 
       expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
       expect(client.reset).not.toHaveBeenCalled();
-      expect(client.capture).toHaveBeenCalledTimes(2);
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
 
       yield* analytics.revokeToBaselineAnalytics();
 
       expect(client.opt_out_capturing).toHaveBeenCalledTimes(2);
       expect(client.reset).toHaveBeenCalledExactlyOnceWith(true);
-      expect(client.capture).toHaveBeenCalledTimes(3);
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
     })
   );
 
