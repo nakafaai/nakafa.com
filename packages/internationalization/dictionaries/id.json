@@ -255,14 +255,13 @@
   },
   "Holy": {
     "holy": "Suci",
-    "quran": "Al Quran",
-    "quran-short": "Quran",
-    "quran-description": "Baca Al-Quran dengan terjemahan dan tafsir per ayat.",
+    "quran": "Al-Qur'an",
+    "quran-description": "Baca Al-Qur'an dengan terjemahan dan tafsir per ayat.",
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
     "interpretation-error": "Tafsir ayat ini belum dapat dimuat. Coba lagi.",
-    "interpretation-refreshing": "Al-Quran telah diperbarui. Memuat ulang halaman ini...",
+    "interpretation-refreshing": "Al-Qur'an telah diperbarui. Memuat ulang halaman ini...",
     "meaning": "Makna nama",
     "revelation": "Tempat turun",
     "revelation-place": "{place, select, Meccan {Makkiyah} Medinan {Madaniyah} other {Tidak diketahui}}",
@@ -272,10 +271,10 @@
     "translation": "Terjemahan",
     "translation-source": "Terjemahan",
     "translation-notes": "Catatan terjemahan",
-    "markdown-limit": "Markdown pada halaman ini dibatasi pada ayat 1-{toVerse} dari {numberOfVerses}. Gunakan alat rujukan Al-Quran Nakafa untuk rentang ayat yang tepat.",
+    "markdown-limit": "Markdown pada halaman ini dibatasi pada ayat 1-{toVerse} dari {numberOfVerses}. Gunakan alat rujukan Al-Qur'an Nakafa untuk rentang ayat yang tepat.",
     "surah-title": "Surat {number}: {name} - {quran}",
     "verses": "Ayat",
-    "read-quran-description": "Baca Al-Quran online dengan terjemahan dan tafsir per ayat di Nakafa"
+    "read-quran-description": "Baca Al-Qur'an online dengan terjemahan dan tafsir per ayat di Nakafa"
   },
   "Exercises": {
     "exercises": "Latihan",
@@ -1177,8 +1176,8 @@
     },
     "quran": {
       "title": "Surat {number}. {name} ({transliteration}){translation, select, __EMPTY__ {} other { - {translation}}} | Nakafa",
-      "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Quran.",
-      "keywords": "Surat {name}, Al-Quran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}, tafsir"
+      "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Qur'an.",
+      "keywords": "Surat {name}, Al-Qur'an{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}, tafsir"
     }
   }
 }

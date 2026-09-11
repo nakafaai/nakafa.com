@@ -235,7 +235,7 @@ async function CachedSurahShell({
               copySourceUrl={`https://nakafa.com/${locale}/quran/${surah}.md`}
               meaning={description}
               meaningLanguage={descriptionLanguage}
-              quranLabel={t("quran-short")}
+              quranLabel={t("quran")}
               slug={`/${locale}/quran/${surah}`}
               title={title}
             />
