@@ -4,7 +4,6 @@ import { Deferred, Effect, Fiber, Ref } from "effect";
 const client = {
   captureException: vi.fn(),
   get_property: vi.fn(),
-  has_opted_out_capturing: vi.fn(() => false),
   identify: vi.fn(),
   init: vi.fn(),
   opt_in_capturing: vi.fn(),
@@ -34,35 +33,43 @@ const loadBrowserAnalytics = () =>
 /** Resolves the test-owned PostHog client through the production loader seam. */
 const loadClient = Effect.succeed(client);
 
-describe("consent-aware PostHog browser runtime", () => {
+const anonymousIdentity = {
+  consentDecidedAt: 100,
+  consentMechanism: "privacy-controls",
+  consentNoticeVersion: "privacy-2026-08-22",
+  status: "anonymous",
+} as const;
+
+describe("two-tier PostHog browser runtime", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
     client.get_property.mockReturnValue(undefined);
-    client.has_opted_out_capturing.mockReturnValue(false);
   });
 
-  it.effect("does not load PostHog for capture calls before consent", () =>
+  it.effect("drops capture calls until the baseline client loads", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
 
       analytics.captureException(new Error("blocked"), {
-        source: "pre-consent-test",
+        source: "pre-baseline-test",
       });
-      yield* analytics.disableBrowserAnalytics();
+      analytics.resetBrowserAnalyticsIdentity();
+      yield* analytics.downgradeToBaselineAnalytics();
 
       expect(client.init).not.toHaveBeenCalled();
       expect(client.captureException).not.toHaveBeenCalled();
+      expect(client.opt_out_capturing).not.toHaveBeenCalled();
     })
   );
 
   it.effect(
-    "initializes opted out, clears old state, then explicitly opts in",
+    "initializes the cookieless baseline without opting in or out",
     () =>
       Effect.gen(function* () {
         const analytics = yield* loadBrowserAnalytics();
 
-        yield* analytics.enableBrowserAnalytics();
+        yield* analytics.enableBaselineAnalytics();
 
         expect(client.init).toHaveBeenCalledWith(
           "phc_test",
@@ -76,7 +83,8 @@ describe("consent-aware PostHog browser runtime", () => {
             capture_heatmaps: false,
             capture_pageleave: false,
             capture_performance: false,
-            capture_pageview: false,
+            capture_pageview: "history_change",
+            cookieless_mode: "on_reject",
             disable_conversations: true,
             disableDeviceModel: true,
             disable_external_dependency_loading: true,
@@ -91,47 +99,23 @@ describe("consent-aware PostHog browser runtime", () => {
             opt_out_persistence_by_default: true,
             persistence: "localStorage",
             person_profiles: "identified_only",
-            property_denylist: [
-              "$browser",
-              "$browser_language",
-              "$browser_language_prefix",
-              "$browser_version",
-              "$current_url",
-              "$device",
-              "$device_model",
-              "$device_type",
-              "$host",
-              "$initialization_time",
-              "$os",
-              "$os_version",
-              "$pathname",
-              "$raw_user_agent",
-              "$referrer",
-              "$referring_domain",
-              "$screen_height",
-              "$screen_width",
-              "$session_id",
-              "$timezone",
-              "$timezone_offset",
-              "$viewport_height",
-              "$viewport_width",
-              "$window_id",
-            ],
             rageclick: false,
             request_batching: false,
             respect_dnt: true,
-            save_campaign_params: false,
-            save_referrer: false,
+            save_campaign_params: true,
+            save_referrer: true,
           })
         );
-        expect(client.reset).toHaveBeenCalledExactlyOnceWith(true);
-        expect(client.opt_in_capturing).toHaveBeenCalledExactlyOnceWith({
-          captureEventName: false,
-        });
+        expect(client.init.mock.calls[0]?.[1]).not.toHaveProperty(
+          "property_denylist"
+        );
+        expect(client.reset).not.toHaveBeenCalled();
+        expect(client.opt_in_capturing).not.toHaveBeenCalled();
+        expect(client.opt_out_capturing).not.toHaveBeenCalled();
       })
   );
 
-  it.effect("reuses an initialized client without loading it again", () =>
+  it.effect("reuses an initialized baseline without loading it again", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       const loadCount = yield* Ref.make(0);
@@ -139,11 +123,11 @@ describe("consent-aware PostHog browser runtime", () => {
         Effect.as(client)
       );
 
-      yield* analytics.enableBrowserAnalytics({ load });
-      yield* analytics.enableBrowserAnalytics({ load });
+      yield* analytics.enableBaselineAnalytics({ load });
+      yield* analytics.enableBaselineAnalytics({ load });
 
       expect(yield* Ref.get(loadCount)).toBe(1);
-      expect(client.opt_in_capturing).toHaveBeenCalledTimes(2);
+      expect(client.init).toHaveBeenCalledOnce();
     })
   );
 
@@ -152,7 +136,7 @@ describe("consent-aware PostHog browser runtime", () => {
       const analytics = yield* loadBrowserAnalytics();
 
       const failure = yield* analytics
-        .enableBrowserAnalytics({
+        .enableBaselineAnalytics({
           load: Effect.fail("network unavailable"),
         })
         .pipe(Effect.flip);
@@ -169,40 +153,14 @@ describe("consent-aware PostHog browser runtime", () => {
       });
 
       const failure = yield* analytics
-        .enableBrowserAnalytics({ load: loadClient })
+        .enableBaselineAnalytics({ load: loadClient })
         .pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
     })
   );
 
-  it.effect("disables a loaded client and clears its persisted identity", () =>
-    Effect.gen(function* () {
-      const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBrowserAnalytics({ load: loadClient });
-
-      yield* analytics.disableBrowserAnalytics();
-      yield* analytics.synchronizeBrowserAnalyticsIdentity({
-        consentDecidedAt: 100,
-        consentMechanism: "privacy-controls",
-        consentNoticeVersion: "privacy-2026-08-22",
-        status: "anonymous",
-      });
-      analytics.captureException(new Error("blocked"), {
-        source: "disabled-test",
-      });
-
-      expect(client.reset).toHaveBeenLastCalledWith(true);
-      expect(client.opt_out_capturing).toHaveBeenCalledOnce();
-      const optOutOrder =
-        client.opt_out_capturing.mock.invocationCallOrder[0] ?? 0;
-      const resetOrder = client.reset.mock.invocationCallOrder.at(-1) ?? 0;
-      expect(optOutOrder).toBeLessThan(resetOrder);
-      expect(client.captureException).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("stops an enable request withdrawn while the SDK loads", () =>
+  it.effect("completes baseline init when suspended while the SDK loads", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       const loading = yield* Deferred.make<typeof client>();
@@ -211,41 +169,85 @@ describe("consent-aware PostHog browser runtime", () => {
         Effect.andThen(Deferred.await(loading))
       );
       const enabling = yield* Effect.forkChild(
-        analytics.enableBrowserAnalytics({ load })
+        analytics.enableBaselineAnalytics({ load })
       );
       yield* Deferred.await(started);
 
-      yield* analytics.disableBrowserAnalytics();
+      analytics.suspendBrowserAnalyticsIdentity();
       yield* Deferred.succeed(loading, client);
       yield* Fiber.join(enabling);
 
+      expect(client.init).toHaveBeenCalledOnce();
       expect(client.opt_in_capturing).not.toHaveBeenCalled();
+      expect(client.opt_out_capturing).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("refuses upgrades before the baseline client loads", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+
+      const failure = yield* analytics
+        .upgradeToConsentedAnalytics()
+        .pipe(Effect.flip);
+
+      expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
+      expect(client.opt_in_capturing).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("upgrades once and ignores repeated grants", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+
+      yield* analytics.upgradeToConsentedAnalytics();
+      yield* analytics.upgradeToConsentedAnalytics();
+
+      expect(client.opt_in_capturing).toHaveBeenCalledExactlyOnceWith({
+        captureEventName: false,
+      });
+    })
+  );
+
+  it.effect("downgrades a granted client back to the baseline", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.upgradeToConsentedAnalytics();
+
+      yield* analytics.downgradeToBaselineAnalytics();
+
       expect(client.opt_out_capturing).toHaveBeenCalledOnce();
+      expect(client.reset).toHaveBeenLastCalledWith(true);
+    })
+  );
+
+  it.effect("downgrades baseline callers without touching SDK consent", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+
+      yield* analytics.downgradeToBaselineAnalytics();
+
+      expect(client.opt_out_capturing).not.toHaveBeenCalled();
+      expect(client.reset).not.toHaveBeenCalled();
     })
   );
 
   it.effect(
-    "synchronizes anonymous and identified identities after consent",
+    "synchronizes anonymous and identified identities after a grant",
     () =>
       Effect.gen(function* () {
         const analytics = yield* loadBrowserAnalytics();
-        yield* analytics.enableBrowserAnalytics({ load: loadClient });
+        yield* analytics.enableBaselineAnalytics({ load: loadClient });
+        yield* analytics.upgradeToConsentedAnalytics();
 
         client.get_property.mockReturnValueOnce("old-user");
-        yield* analytics.synchronizeBrowserAnalyticsIdentity({
-          consentDecidedAt: 100,
-          consentMechanism: "privacy-controls",
-          consentNoticeVersion: "privacy-2026-08-22",
-          status: "anonymous",
-        });
+        yield* analytics.synchronizeBrowserAnalyticsIdentity(anonymousIdentity);
 
         client.get_property.mockReturnValueOnce(undefined);
-        yield* analytics.synchronizeBrowserAnalyticsIdentity({
-          consentDecidedAt: 100,
-          consentMechanism: "privacy-controls",
-          consentNoticeVersion: "privacy-2026-08-22",
-          status: "anonymous",
-        });
+        yield* analytics.synchronizeBrowserAnalyticsIdentity(anonymousIdentity);
 
         client.get_property.mockReturnValueOnce("other-user");
         yield* analytics.synchronizeBrowserAnalyticsIdentity({
@@ -272,7 +274,7 @@ describe("consent-aware PostHog browser runtime", () => {
         expect(client.identify).toHaveBeenCalledOnce();
         expect(client.setPersonProperties).toHaveBeenCalledOnce();
         expect(client.register).toHaveBeenCalledWith({
-          $geoip_disable: true,
+          $geoip_disable: false,
           consent_decided_at: "1970-01-01T00:00:00.100Z",
           consent_decision: "granted",
           consent_mechanism: "privacy-controls",
@@ -282,20 +284,17 @@ describe("consent-aware PostHog browser runtime", () => {
       })
   );
 
-  it.effect("keeps capture dormant when identity changes before consent", () =>
+  it.effect("ignores identity changes while on the baseline tier", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
 
-      yield* analytics.synchronizeBrowserAnalyticsIdentity({
-        consentDecidedAt: 100,
-        consentMechanism: "privacy-controls",
-        consentNoticeVersion: "privacy-2026-08-22",
-        status: "anonymous",
-      });
+      yield* analytics.synchronizeBrowserAnalyticsIdentity(anonymousIdentity);
       analytics.resetBrowserAnalyticsIdentity();
 
       expect(client.get_property).not.toHaveBeenCalled();
-      expect(client.reset).not.toHaveBeenCalled();
+      expect(client.identify).not.toHaveBeenCalled();
+      expect(client.reset).toHaveBeenCalledExactlyOnceWith(false);
     })
   );
 
@@ -304,30 +303,24 @@ describe("consent-aware PostHog browser runtime", () => {
     () =>
       Effect.gen(function* () {
         const analytics = yield* loadBrowserAnalytics();
-        yield* analytics.enableBrowserAnalytics({ load: loadClient });
+        yield* analytics.enableBaselineAnalytics({ load: loadClient });
+        yield* analytics.upgradeToConsentedAnalytics();
         client.register.mockImplementationOnce(() => {
           throw new Error("identity unavailable");
         });
 
         const failure = yield* analytics
-          .synchronizeBrowserAnalyticsIdentity({
-            consentDecidedAt: 100,
-            consentMechanism: "privacy-controls",
-            consentNoticeVersion: "privacy-2026-08-22",
-            status: "anonymous",
-          })
+          .synchronizeBrowserAnalyticsIdentity(anonymousIdentity)
           .pipe(Effect.flip);
 
         expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
-        expect(client.reset).toHaveBeenLastCalledWith(true);
-        expect(client.opt_out_capturing).toHaveBeenCalledOnce();
       })
   );
 
-  it.effect("captures through an enabled client and resets its identity", () =>
+  it.effect("captures scrubbed exceptions through the baseline", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBrowserAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
 
       analytics.captureException(new Error("handled user@example.com"), {
         source: "browser-test",
@@ -351,7 +344,7 @@ describe("consent-aware PostHog browser runtime", () => {
   it.effect("drops runtime context outside the exact privacy contract", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBrowserAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
       const invalidProperties = {
         source: "browser-test",
         userId: "user-1",

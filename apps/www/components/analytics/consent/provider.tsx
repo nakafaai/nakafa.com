@@ -3,9 +3,11 @@
 import { useNetwork } from "@mantine/hooks";
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import {
-  disableBrowserAnalytics,
-  enableBrowserAnalytics,
+  downgradeToBaselineAnalytics,
+  enableBaselineAnalytics,
+  suspendBrowserAnalyticsIdentity,
   synchronizeBrowserAnalyticsIdentity,
+  upgradeToConsentedAnalytics,
 } from "@repo/analytics/posthog/browser";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
@@ -158,6 +160,9 @@ export function AnalyticsConsentProvider({
     status: state.status,
   });
   useEffect(() => {
+    // The baseline client counts every visit cookielessly; a proven grant then
+    // upgrades the same client to full consented capture. Cleanup only revokes
+    // the identity authorization so SDK consent is never touched by lifecycle.
     const analyticsIdentity = sessionPolicy.isRuntimeSuppressed
       ? null
       : createBrowserAnalyticsIdentity({
@@ -167,11 +172,17 @@ export function AnalyticsConsentProvider({
           status: state.status,
           user,
         });
-    const alignRuntime = analyticsIdentity
-      ? enableBrowserAnalytics().pipe(
-          Effect.andThen(synchronizeBrowserAnalyticsIdentity(analyticsIdentity))
-        )
-      : disableBrowserAnalytics();
+    const alignRuntime = enableBaselineAnalytics().pipe(
+      Effect.andThen(
+        analyticsIdentity
+          ? upgradeToConsentedAnalytics().pipe(
+              Effect.andThen(
+                synchronizeBrowserAnalyticsIdentity(analyticsIdentity)
+              )
+            )
+          : downgradeToBaselineAnalytics()
+      )
+    );
     const runtimeFiber = Effect.runFork(
       alignRuntime.pipe(
         Effect.andThen(Effect.sync(() => setRuntimeError(false))),
@@ -183,7 +194,7 @@ export function AnalyticsConsentProvider({
 
     return () => {
       Effect.runFork(Fiber.interrupt(runtimeFiber));
-      Effect.runSync(disableBrowserAnalytics());
+      suspendBrowserAnalyticsIdentity();
     };
   }, [
     accountConsent,

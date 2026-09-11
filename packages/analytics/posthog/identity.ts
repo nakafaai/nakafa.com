@@ -6,19 +6,44 @@ type AnalyticsIdentityAuthorization =
   | { readonly status: "identified"; readonly userId: string }
   | { readonly status: "unresolved" };
 
+/**
+ * Capture tier honored by the browser analytics gate.
+ *
+ * `baseline` is the always-on cookieless tier: anonymous events only, no
+ * browser storage, counted through PostHog's server-side hash. `granted` is
+ * the explicit-consent tier with stable identity and full event detail.
+ */
+export type AnalyticsTier = "baseline" | "granted";
+
 const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
   status: "unresolved",
 });
 
+const analyticsTier = MutableRef.make<AnalyticsTier>("baseline");
+
 interface AnalyticsIdentityClient {
-  has_opted_out_capturing: () => boolean;
-  opt_in_capturing: (options: { readonly captureEventName: false }) => void;
-  opt_out_capturing: () => void;
   reset: (resetDeviceId?: boolean) => void;
 }
 
 /** Starts one browser analytics lifecycle without stale authorization state. */
 export function initializeAnalyticsIdentityAuthorization() {
+  MutableRef.set(identityAuthorization, { status: "unresolved" });
+  MutableRef.set(analyticsTier, "baseline");
+}
+
+/** Reads the capture tier currently honored by the analytics gate. */
+export function getAnalyticsTier(): AnalyticsTier {
+  return MutableRef.get(analyticsTier);
+}
+
+/** Elevates the gate to the explicit-consent tier after a grant decision. */
+export function grantAnalyticsTier() {
+  MutableRef.set(analyticsTier, "granted");
+}
+
+/** Returns the gate to the always-on baseline tier and revokes identity. */
+export function revokeAnalyticsTier() {
+  MutableRef.set(analyticsTier, "baseline");
   MutableRef.set(identityAuthorization, { status: "unresolved" });
 }
 
@@ -27,15 +52,7 @@ export function resetAnalyticsIdentity(
   client: AnalyticsIdentityClient,
   resetDeviceId = false
 ) {
-  const wasOptedOut = client.has_opted_out_capturing();
-  client.opt_out_capturing();
   client.reset(resetDeviceId);
-
-  if (wasOptedOut) {
-    return;
-  }
-
-  client.opt_in_capturing({ captureEventName: false });
 }
 
 /** Authorizes identified analytics only after the current app user resolves. */
@@ -54,24 +71,57 @@ export function revokeAnalyticsIdentity() {
 }
 
 /**
- * Rejects every event until auth resolves, then admits only the exact resolved
- * anonymous or identified identity.
+ * Minimizes one baseline event URL to origin plus pathname.
+ *
+ * Query strings and fragments can carry user-entered text, so the always-on
+ * tier never sends them. Granted-tier events keep full URLs under consent.
+ */
+function minimizeBaselineEventUrl(event: CaptureResult): CaptureResult {
+  const currentUrl = event.properties.$current_url;
+  const referrer = event.properties.$referrer;
+  if (typeof currentUrl !== "string" && typeof referrer === "undefined") {
+    return event;
+  }
+
+  let nextCurrentUrl: string | null = null;
+  if (typeof currentUrl === "string" && URL.canParse(currentUrl)) {
+    const parsed = new URL(currentUrl);
+    nextCurrentUrl = `${parsed.origin}${parsed.pathname}`;
+  }
+
+  return {
+    ...event,
+    properties: {
+      ...event.properties,
+      $current_url: nextCurrentUrl,
+      $referrer: null,
+    },
+  };
+}
+
+/**
+ * Admits every anonymous event in any state, then admits only the exact
+ * resolved identified identity.
+ *
+ * Anonymous admission is what keeps always-on cookieless counting alive for
+ * undecided, declined, and privacy-signal visitors. Baseline events additionally
+ * lose query strings, fragments, and referrer URLs (referring domains stay).
  */
 export function filterAuthorizedAnalyticsEvent(event: CaptureResult | null) {
   if (!event) {
     return null;
   }
 
-  const authorization = MutableRef.get(identityAuthorization);
   const eventUserId = event.properties.$user_id;
-
-  if (authorization.status === "unresolved") {
-    return null;
+  if (typeof eventUserId === "string") {
+    const authorization = MutableRef.get(identityAuthorization);
+    return authorization.status === "identified" &&
+      authorization.userId === eventUserId
+      ? event
+      : null;
   }
 
-  if (authorization.status === "anonymous") {
-    return typeof eventUserId === "string" ? null : event;
-  }
-
-  return authorization.userId === eventUserId ? event : null;
+  return MutableRef.get(analyticsTier) === "granted"
+    ? event
+    : minimizeBaselineEventUrl(event);
 }

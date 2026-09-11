@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY } from "@repo/analytics/consent";
 import {
-  disableBrowserAnalytics,
+  downgradeToBaselineAnalytics,
   resetBrowserAnalyticsIdentity,
 } from "@repo/analytics/posthog/browser";
 import { Effect } from "effect";
@@ -18,7 +18,7 @@ vi.mock("@/lib/auth/client", () => ({
 }));
 
 vi.mock("@repo/analytics/posthog/browser", () => ({
-  disableBrowserAnalytics: vi.fn(() => Effect.void),
+  downgradeToBaselineAnalytics: vi.fn(() => Effect.void),
   resetBrowserAnalyticsIdentity: vi.fn(),
 }));
 
@@ -69,7 +69,7 @@ describe("account browser identity", () => {
 
         yield* clearAccountBrowserIdentity();
 
-        expect(disableBrowserAnalytics).not.toHaveBeenCalled();
+        expect(downgradeToBaselineAnalytics).not.toHaveBeenCalled();
         expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
         expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
         expect(window.localStorage.getItem("nakafa-content-views")).toBeNull();
@@ -88,26 +88,26 @@ describe("account browser identity", () => {
   );
 
   it.effect(
-    "disables analytics before clearing a deleted browser identity",
+    "downgrades analytics before clearing a deleted browser identity",
     () =>
       Effect.gen(function* () {
         const denyAnonymousAnalytics = vi.fn(() => Effect.void);
-        const disableAnalytics = vi.fn(() => Effect.void);
+        const downgradeAnalytics = vi.fn(() => Effect.void);
         const removePersistedAccountState = vi.fn();
         const resetAnalytics = vi.fn();
 
         yield* clearDeletedAccountBrowserIdentity({
           denyAnonymousAnalytics,
-          disableAnalytics,
+          downgradeAnalytics,
           removePersistedAccountState,
           resetAnalytics,
         });
 
-        expect(disableAnalytics).toHaveBeenCalledOnce();
+        expect(downgradeAnalytics).toHaveBeenCalledOnce();
         expect(denyAnonymousAnalytics).toHaveBeenCalledOnce();
         expect(removePersistedAccountState).toHaveBeenCalledOnce();
         expect(resetAnalytics).toHaveBeenCalledOnce();
-        expect(disableAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
+        expect(downgradeAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
           denyAnonymousAnalytics.mock.invocationCallOrder[0] ?? 0
         );
         expect(denyAnonymousAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
@@ -120,7 +120,7 @@ describe("account browser identity", () => {
     Effect.gen(function* () {
       yield* clearDeletedAccountBrowserIdentity();
 
-      expect(disableBrowserAnalytics).toHaveBeenCalledOnce();
+      expect(downgradeToBaselineAnalytics).toHaveBeenCalledOnce();
       expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
       expect(
         window.localStorage.getItem(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)
@@ -136,7 +136,8 @@ describe("account browser identity", () => {
           yield* clearDeletedAccountBrowserIdentity({
             denyAnonymousAnalytics: () =>
               Effect.fail("privacy storage unavailable"),
-            disableAnalytics: () => Effect.fail("analytics queue unavailable"),
+            downgradeAnalytics: () =>
+              Effect.fail("analytics queue unavailable"),
             removePersistedAccountState: () => {
               throw new Error("storage unavailable");
             },
@@ -166,7 +167,7 @@ describe("account browser identity", () => {
       expect(
         window.sessionStorage.getItem("nakafa-forum-session:class-1")
       ).toBeNull();
-      expect(disableBrowserAnalytics).not.toHaveBeenCalled();
+      expect(downgradeToBaselineAnalytics).not.toHaveBeenCalled();
       expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
       expect(authClient.signOut).toHaveBeenCalledOnce();
       expect(
