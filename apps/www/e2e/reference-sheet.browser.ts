@@ -23,7 +23,11 @@ const verifyCompactReferenceSheet = Effect.fn(
 
   const sidebarTrigger = page
     .getByRole("button", { exact: true, name: "Pada halaman ini" })
-    .or(page.locator('header [data-slot="surah-header-actions"] button'))
+    .or(
+      page.locator(
+        'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]'
+      )
+    )
     .filter({ visible: true });
   if (width < 1280) {
     yield* Effect.promise(() => sidebarTrigger.click());

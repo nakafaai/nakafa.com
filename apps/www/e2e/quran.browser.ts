@@ -311,7 +311,9 @@ const verifyQuranLocaleCoverage = Effect.fn(
 
   yield* Effect.promise(() => expect(page.locator("footer")).toHaveCount(0));
   const outline = page
-    .locator('header [data-slot="surah-header-actions"] button')
+    .locator(
+      'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]'
+    )
     .filter({ visible: true });
   yield* Effect.promise(() => outline.click());
   const bibliography = page.getByRole("button", {
