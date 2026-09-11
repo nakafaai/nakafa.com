@@ -20,6 +20,7 @@ const source = {
 };
 const surah = {
   name: {
+    arabic: "الفاتحة",
     sourceMeaning: makeQuranMeaning(1),
     transliteration: "Al-Fatihah",
   },
@@ -144,6 +145,7 @@ function viewBase() {
     nextSurah: {
       ...surah,
       name: {
+        arabic: "البقرة",
         sourceMeaning: makeQuranMeaning(2),
         transliteration: "Al-Baqarah",
       },

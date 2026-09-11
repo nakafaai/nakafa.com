@@ -10,6 +10,7 @@ import {
   readQuranInterpretation,
 } from "@repo/backend/content/quran/interpretation";
 import {
+  type QuranMarkdown,
   quranMarkdownValidator,
   readQuranMarkdown,
 } from "@repo/backend/content/quran/markdown";
@@ -18,6 +19,7 @@ import {
   readQuranPassage,
 } from "@repo/backend/content/quran/reference";
 import {
+  type QuranView,
   quranViewValidator,
   readQuranView,
 } from "@repo/backend/content/quran/view";
@@ -82,7 +84,10 @@ export const prose = query({
     verseLimit: v.optional(v.number()),
   },
   returns: quranMarkdownValidator,
-  handler: (ctx, { appLocale, surahNumber, verseLimit }) =>
+  handler: (
+    ctx,
+    { appLocale, surahNumber, verseLimit }
+  ): Promise<QuranMarkdown> =>
     runConvexProgram(
       readQuranMarkdown(appLocale, surahNumber, verseLimit).pipe(
         Effect.provide(convexQuranLayer(ctx))
@@ -94,7 +99,7 @@ export const prose = query({
 export const page = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
   returns: quranViewValidator,
-  handler: (ctx, { appLocale, surahNumber }) =>
+  handler: (ctx, { appLocale, surahNumber }): Promise<QuranView> =>
     runConvexProgram(
       readQuranView(appLocale, surahNumber).pipe(
         Effect.provide(convexQuranLayer(ctx))

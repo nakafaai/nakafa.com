@@ -247,6 +247,7 @@ describe("contentRelease/quran/view", () => {
 
     expect(english.nextSurah).toEqual({
       name: {
+        arabic: "سورة 2",
         sourceMeaning: makeQuranMeaning(2),
         transliteration: "Technical Surah 2",
       },
@@ -256,6 +257,7 @@ describe("contentRelease/quran/view", () => {
     expect(english.previousSurah).toBeNull();
     expect(english.surah).toEqual({
       name: {
+        arabic: "سورة 1",
         sourceMeaning: makeQuranMeaning(1),
         transliteration: "Technical Surah 1",
       },

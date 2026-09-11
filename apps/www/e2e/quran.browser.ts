@@ -156,7 +156,7 @@ const verifyQuranLocaleCoverage = Effect.fn(
 
   const headerMeaning = quranMeaningLocator(
     page,
-    "header p",
+    'header [data-slot="surah-meaning"]',
     contract.meanings
   );
   yield* Effect.promise(() => expect(headerMeaning).toHaveCount(1));
@@ -311,7 +311,9 @@ const verifyQuranLocaleCoverage = Effect.fn(
 
   yield* Effect.promise(() => expect(page.locator("footer")).toHaveCount(0));
   const outline = page
-    .locator('button[data-slot="sidebar-trigger"].fixed')
+    .locator(
+      'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]'
+    )
     .filter({ visible: true });
   yield* Effect.promise(() => outline.click());
   const bibliography = page.getByRole("button", {

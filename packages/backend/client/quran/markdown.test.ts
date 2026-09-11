@@ -172,6 +172,7 @@ function markdownResult(
     tafsirAccess: makeQuranTafsirProjection("en"),
     surah: {
       name: {
+        arabic: "الفاتحة",
         sourceMeaning: makeQuranMeaning(1),
         transliteration: "Al-Fatihah",
       },
