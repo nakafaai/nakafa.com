@@ -14,51 +14,26 @@ install standalone repository or package-local Convex skill copies.
 
 <!-- convex-ai-end -->
 
-## Parallel Worktree Deployments
+## Main Dev Deployment
 
-Read [Convex Agent Mode](https://docs.convex.dev/cli/agent-mode) before running
-Convex from a new worktree. Every concurrent task must select its own local
-backend or short-lived cloud dev deployment; never develop against Nakafa's
-shared personal dev deployment. Prefer local Agent Mode for isolated builds,
-content reads, and database rehearsals. Local deployments support explicitly
-configured environment values and local HTTP. Use cloud dev when the task
-needs public inbound traffic, project-default environment values, or an
-integration unavailable locally. Scope its deploy key to that deployment and
-set an expiration. Use the repository's pnpm CLI and never print secrets.
-
-Agent Mode isolates new development only. Existing workflows and scheduled
-functions remain on the deployment where they started, and shared-dev or
-production data/deploy windows still require explicit read-only proof and
-coordination.
-
-For cloud development, first resolve the actual team and project slugs. From
-the repository root, create and select an expiring worktree deployment:
+Develop directly against the main dev deployment selected in
+`packages/backend/.env.local` (`CONVEX_DEPLOYMENT`). It lives in the same
+Nakafa project as production, so keep the two cohesive: same functions and
+schema as `main`, verified signed content only, no throwaway experiments left
+behind. The normal loop is the repository's pnpm CLI:
 
 ```sh
-worktree_name=$(basename "$PWD")
-pnpm --dir packages/backend exec convex deployment create \
-  "$convex_team:$convex_project:dev/$USER-codex/$worktree_name" \
-  --type dev \
-  --select \
-  --expiration "in 5 days"
-pnpm --dir packages/backend exec convex deployment token create agent-token --save-env
 pnpm --dir packages/backend exec convex dev --once
 ```
 
-For a new isolated local worktree, initialize the backend, set the required
-local environment values, then compile:
-
-```sh
-CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex init
-CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex env set --from-file <local-environment-file>
-CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex dev --once
-```
-
-The deployment selection and URLs are worktree-owned. Never copy
-`CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`, or generated Convex URL values from
-another worktree. Copy other ignored application environment files only when
-the task needs them, byte-for-byte from the canonical checkout, without
-printing secrets.
+Use `convex codegen` for binding-only refreshes. Use the repository's pnpm CLI
+and never print secrets. Never copy `CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`,
+or generated Convex URL values out of this checkout. Production deploys only
+through the existing promote flow, never from a dev command. Reach for an
+isolated expiring Agent Mode deployment whenever it is the better tool for
+the job, such as risky schema or function changes, destructive rehearsals, or
+parallel work that must not disturb the main dev loop. No explicit request
+needed.
 
 ## Nakafa Convex Architecture Rules
 

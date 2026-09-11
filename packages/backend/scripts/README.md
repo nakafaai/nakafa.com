@@ -15,22 +15,15 @@ filesystem publication, repair, reset, or fallback path.
 
 ## Development setup
 
-Read [`../AGENTS.md`](../AGENTS.md) and use an isolated Agent Mode deployment.
-From the repository root:
+Develop directly against the main dev deployment selected in
+`packages/backend/.env.local`. From the repository root:
 
 ```sh
-worktree_name=$(basename "$PWD")
-pnpm --dir packages/backend exec convex deployment create \
-  "dev/$USER-codex/$worktree_name" \
-  --type dev \
-  --select \
-  --expiration "in 5 days"
-pnpm --dir packages/backend exec convex deployment token create agent-token --save-env
 pnpm --dir packages/backend exec convex dev --once
 ```
 
-The selected deployment and its generated URLs belong only to that worktree.
-Do not copy Convex deployment identity from another task.
+See [`../AGENTS.md`](../AGENTS.md) for deployment policy. Never print secrets
+or copy Convex deployment identity out of this checkout.
 
 ## Signed acceptance publication
 
