@@ -55,11 +55,18 @@ export function QuranSurahHeader({
           {meaning}
         </span>
         <span className="min-w-0 truncate">{title}</span>
-        <span className="shrink-0 font-normal font-quran text-xl" dir="rtl" lang="ar">
+        <span
+          className="shrink-0 font-normal font-quran text-xl"
+          dir="rtl"
+          lang="ar"
+        >
           {arabic}
         </span>
       </h1>
-      <div className="col-start-2 row-start-1 flex min-w-0 justify-end md:col-start-3">
+      <div
+        className="col-start-2 row-start-1 flex min-w-0 justify-end md:col-start-3"
+        data-slot="surah-header-actions"
+      >
         <ButtonGroup aria-label={tCommon("content-actions")}>
           <OpenContent copySourceUrl={copySourceUrl} slug={slug}>
             <AiMenuItem contextTitle={title} />
