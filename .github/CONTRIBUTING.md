@@ -51,8 +51,7 @@ from the checkout to obtain its branch-specific web URL.
 - For Effect work, read `repos/effect/.agents/AGENTS.md`, then inspect the matching
   implementation, tests, type-level tests, module structure, and API design.
   Treat the vendored subtree as read-only application reference material.
-- For Convex work, follow `packages/backend/AGENTS.md` and use an isolated Agent
-  Mode deployment.
+- For Convex work, follow `packages/backend/AGENTS.md`.
 
 ## Code standards
 

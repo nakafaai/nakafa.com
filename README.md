@@ -40,8 +40,9 @@ pnpm install --frozen-lockfile
 cp apps/www/.env.example apps/www/.env.local
 ```
 
-Fill in the application environment and configure an isolated Convex deployment
-using [`packages/backend/AGENTS.md`](packages/backend/AGENTS.md). Content routes
+Fill in the application environment and use the main dev deployment selected
+in `packages/backend/.env.local` (see
+[`packages/backend/AGENTS.md`](packages/backend/AGENTS.md)). Content routes
 need a populated, verified Aksara signed runtime. An empty backend is not a
 complete content fixture.
 
@@ -66,7 +67,7 @@ receive separate names. Use `pnpm exec portless list` to inspect active routes,
 
 Set `SITE_URL` in `apps/www/.env.local` and the selected development backend
 to that exact web origin. Set `NEXT_PUBLIC_CONVEX_URL` and
-`NEXT_PUBLIC_CONVEX_SITE_URL` to the same isolated development deployment.
+`NEXT_PUBLIC_CONVEX_SITE_URL` to the same main dev deployment.
 Google's client configuration must include the web origin under authorized
 JavaScript origins and `<web-origin>/api/auth/callback/google` under authorized
 redirect URIs. A worktree needs its exact callback registered separately;
