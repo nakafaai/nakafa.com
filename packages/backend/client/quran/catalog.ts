@@ -25,6 +25,7 @@ export type PublishedQuranCatalog = PublishedQuranSource & {
 
 interface QuranSurahTransportProjection {
   readonly name: {
+    readonly arabic: string;
     readonly sourceMeaning: unknown;
     readonly transliteration: string;
   };

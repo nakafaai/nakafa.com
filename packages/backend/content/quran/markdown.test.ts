@@ -59,6 +59,7 @@ describe("contentRelease/quran/markdown", () => {
 
     expect(markdown.surah).toEqual({
       name: {
+        arabic: "سورة 1",
         sourceMeaning: makeQuranMeaning(1),
         transliteration: "Technical Surah 1",
       },

@@ -28,6 +28,7 @@ import { Effect } from "effect";
 
 const quranMarkdownSurahValidator = v.object({
   name: v.object({
+    arabic: v.string(),
     sourceMeaning: quranSurahMeaningValidator,
     transliteration: v.string(),
   }),
@@ -61,6 +62,7 @@ type QuranMarkdownSurah = NonNullable<QuranMarkdown["surah"]>;
 function projectSurah(surah: PublishedQuranSurah): QuranMarkdownSurah {
   return {
     name: {
+      arabic: surah.name.arabic,
       sourceMeaning: surah.name.meaning,
       transliteration: surah.name.transliteration,
     },

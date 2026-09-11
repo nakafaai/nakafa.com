@@ -66,11 +66,43 @@ describe("signed Quran catalog decoder", () => {
     })
   );
 
+  it.live("fails closed for incomplete and unordered catalogs", () =>
+    Effect.gen(function* () {
+      const incomplete = yield* Effect.result(
+        decodePublishedQuranCatalog({
+          ...source,
+          rowJson: Array.from({ length: 113 }, (_, index) =>
+            encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
+          ),
+        })
+      );
+      const unordered = yield* Effect.result(
+        decodePublishedQuranCatalog(
+          catalogResult((index) => {
+            const surahNumber = index < 2 ? 2 - index : index + 1;
+            return encodeTestQuranRow(
+              source.snapshotId,
+              makeQuranSurah(surahNumber)
+            );
+          })
+        )
+      );
+
+      for (const result of [incomplete, unordered]) {
+        expect(result._tag).toBe("Failure");
+        if (result._tag === "Failure") {
+          expect(result.failure).toBeInstanceOf(QuranPublicationError);
+        }
+      }
+    })
+  );
+
   it.live("normalizes the required source meaning", () =>
     Effect.gen(function* () {
       const decoded = yield* decodePublishedQuranSurah(
         {
           name: {
+            arabic: "الفاتحة",
             sourceMeaning: {
               de: "Die Eröffnende",
               en: "The Opening",
@@ -84,6 +116,7 @@ describe("signed Quran catalog decoder", () => {
       );
 
       expect(decoded.name).toEqual({
+        arabic: "الفاتحة",
         meaning: {
           de: "Die Eröffnende",
           en: "The Opening",
@@ -100,6 +133,7 @@ describe("signed Quran catalog decoder", () => {
         decodePublishedQuranSurah(
           {
             name: {
+              arabic: "الفاتحة",
               sourceMeaning: { en: "The Opening" },
               transliteration: "Al-Fatihah",
             },
