@@ -143,6 +143,9 @@ export const enableBaselineAnalytics = Effect.fn(
           capture_pageview: false,
           cookieless_mode: "on_reject",
           defaults: "2026-01-30",
+          // Plain JSON bodies keep ingestion inspectable in tests and
+          // debugging; pageview payloads are too small to need gzip.
+          disable_compression: true,
           disable_conversations: true,
           disableDeviceModel: true,
           disable_external_dependency_loading: true,

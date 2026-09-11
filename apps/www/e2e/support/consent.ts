@@ -21,3 +21,19 @@ export const seedDeniedAnalyticsConsent = Effect.fn(
     })
   );
 });
+
+/** Exercises the granted tier without depending on the privacy prompt. */
+export const seedGrantedAnalyticsConsent = Effect.fn(
+  "NakafaE2E.seedGrantedAnalyticsConsent"
+)(function* (page: Page) {
+  const grantedConsent = yield* encodeAnonymousAnalyticsConsent(
+    createAnonymousAnalyticsConsent("granted", 1)
+  );
+
+  yield* Effect.promise(() =>
+    page.addInitScript(({ key, value }) => localStorage.setItem(key, value), {
+      key: ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
+      value: grantedConsent,
+    })
+  );
+});

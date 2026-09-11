@@ -4,6 +4,7 @@ import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/browser-context";
+import { seedGrantedAnalyticsConsent } from "@/e2e/support/consent";
 
 const CapturedIngestSchema = Schema.Struct({
   event: Schema.String,
@@ -80,7 +81,20 @@ const waitForPageviews = (captured: CapturedIngest[], count: number) =>
     expect.poll(() => pageviewCount(captured), { timeout: 15_000 }).toBe(count)
   );
 
-test("baseline counts one cookieless pageview before consent", async ({
+const openConsentPreferences = Effect.fn("NakafaE2E.openConsentPreferences")(
+  function* (page: Page) {
+    yield* Effect.promise(() =>
+      page.locator("footer").getByRole("button", { name: "Usage data" }).click()
+    );
+    yield* Effect.promise(() =>
+      expect(page.getByRole("heading", { name: "Usage data" })).toBeVisible({
+        timeout: 15_000,
+      })
+    );
+  }
+);
+
+test("baseline counts one cookieless pageview without consent", async ({
   baseURL,
   browser,
 }) => {
@@ -102,11 +116,6 @@ test("baseline counts one cookieless pageview before consent", async ({
                 })
               );
               yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-              yield* Effect.promise(() =>
-                expect(
-                  page.getByRole("button", { name: "Allow" })
-                ).toBeVisible()
-              );
               yield* waitForPageviews(captured, 1);
 
               const [view] = pageviews(captured);
@@ -122,6 +131,47 @@ test("baseline counts one cookieless pageview before consent", async ({
                     key.startsWith("ph_") || key.startsWith("__ph_opt_in_out")
                 )
               ).toEqual([]);
+            })
+          );
+        })
+    )
+  );
+});
+
+test("granted consent upgrades to attributed pageviews", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      { baseURL: baseURL ?? "", serviceWorkers: "block" },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          yield* withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              yield* seedGrantedAnalyticsConsent(page);
+              const captured = yield* observeIngest(page);
+              const response = yield* Effect.promise(() =>
+                page.goto("/en", { waitUntil: "domcontentloaded" })
+              );
+              yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+              yield* waitForPageviews(captured, 1);
+
+              yield* Effect.promise(() =>
+                page.evaluate(() => {
+                  window.history.pushState({}, "", "/en/e2e-nav?x=1");
+                })
+              );
+              yield* waitForPageviews(captured, 2);
+
+              const views = pageviews(captured);
+              expect(views).toHaveLength(2);
+              expect(views[0]?.properties.consent_decision).toBe("granted");
+              expect(views[1]?.properties.$current_url).toContain("?x=1");
             })
           );
         })
@@ -151,13 +201,17 @@ test("grant keeps exact counts and attributes the next view", async ({
               yield* Effect.sync(() => expect(response?.ok()).toBe(true));
               yield* waitForPageviews(captured, 1);
 
-              yield* Effect.promise(() =>
-                page.getByRole("button", { name: "Allow" }).click()
-              );
+              yield* openConsentPreferences(page);
               yield* Effect.promise(() =>
                 page
+                  .getByRole("dialog")
                   .getByRole("button", { name: "Allow" })
-                  .waitFor({ state: "hidden", timeout: 15_000 })
+                  .click()
+              );
+              yield* Effect.promise(() =>
+                expect(
+                  page.getByRole("heading", { name: "Usage data" })
+                ).toBeHidden({ timeout: 15_000 })
               );
               expect(pageviewCount(captured)).toBe(1);
 
