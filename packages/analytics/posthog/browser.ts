@@ -82,6 +82,16 @@ function revokeGate() {
   MutableRef.set(identityAuthorization, { status: "unresolved" });
 }
 
+/** Returns one client to baseline capture without admitting new identity. */
+const restoreBaselineSdk = (client: BrowserAnalyticsClient) =>
+  Effect.try({
+    try: () => {
+      client.opt_out_capturing();
+      client.reset(true);
+    },
+    catch: browserAnalyticsLoadFailure,
+  });
+
 /**
  * Loads the always-on baseline client without changing capture consent.
  *
@@ -232,32 +242,39 @@ export const admitConsentedIdentity = Effect.fn(
       }
     },
     catch: browserAnalyticsLoadFailure,
-  }).pipe(Effect.tapError(() => Effect.sync(revokeGate)));
+  }).pipe(
+    Effect.tapError(() =>
+      Effect.sync(revokeGate).pipe(
+        Effect.andThen(restoreBaselineSdk(client).pipe(Effect.ignore))
+      )
+    )
+  );
 });
 
 /**
  * Returns one granted client to the always-on baseline tier in transition.
  *
- * Already-baseline callers only revoke the gate: recording an explicit SDK
- * opt-out for undecided visitors would corrupt their pending consent state.
- * The baseline pageview fires only on a real granted-to-baseline transition.
+ * The gate flips only after the SDK confirms the return: a throwing opt-out
+ * surfaces the typed failure so the provider reports it and retries, instead
+ * of leaving an opted-in SDK behind a baseline gate. Already-baseline callers
+ * only revoke the gate, since recording an explicit SDK opt-out for undecided
+ * visitors would corrupt their pending consent state. The baseline pageview
+ * fires only on a real granted-to-baseline transition.
  */
 export const revokeToBaselineAnalytics = Effect.fn(
   "Analytics.revokeToBaselineAnalytics"
 )(function* () {
   const client = MutableRef.get(analyticsClient);
   const wasGranted = MutableRef.get(analyticsTier) === "granted";
-  revokeGate();
   if (!(client && wasGranted)) {
+    revokeGate();
     return;
   }
 
+  yield* restoreBaselineSdk(client);
+  revokeGate();
   yield* Effect.try({
-    try: () => {
-      client.opt_out_capturing();
-      client.reset(true);
-      client.capture("$pageview");
-    },
+    try: () => client.capture("$pageview"),
     catch: browserAnalyticsLoadFailure,
   }).pipe(Effect.ignore);
 });

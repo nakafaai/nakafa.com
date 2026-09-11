@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
 import { Deferred, Effect, Fiber, Ref } from "effect";
+import type { CaptureResult } from "posthog-js";
 
 const client = {
   capture: vi.fn(),
@@ -42,14 +44,14 @@ function stubWindow(href = "https://nakafa.com/en") {
   });
 }
 
-const anonymousIdentity = {
+const anonymousIdentity: BrowserAnalyticsIdentity = {
   consentDecidedAt: 100,
   consentMechanism: "privacy-controls",
   consentNoticeVersion: "privacy-2026-08-22",
   status: "anonymous",
-} as const;
+};
 
-const identifiedIdentity = {
+const identifiedIdentity: BrowserAnalyticsIdentity = {
   consentDecidedAt: 100,
   consentMechanism: "privacy-controls",
   consentNoticeVersion: "privacy-2026-08-22",
@@ -57,7 +59,7 @@ const identifiedIdentity = {
   role: "student",
   status: "identified",
   userId: "user-1",
-} as const;
+};
 
 describe("two-tier PostHog browser runtime", () => {
   beforeEach(() => {
@@ -224,22 +226,29 @@ describe("two-tier PostHog browser runtime", () => {
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       yield* analytics.enableBaselineAnalytics({ load: loadClient });
-      const beforeSend = client.init.mock.calls[0]?.[1]?.before_send as (
-        event: { event: string; properties: Record<string, unknown> } | null
-      ) => unknown;
-
-      const minimized = beforeSend({
+      const initConfig = client.init.mock.calls[0]?.[1];
+      const probe: CaptureResult = {
         event: "$pageview",
         properties: { $current_url: "https://nakafa.com/en?q=x" },
-      }) as { properties: Record<string, unknown> };
-      expect(minimized.properties.$current_url).toBe("https://nakafa.com/en");
+        uuid: "019fa44c-02be-7cd0-a4ed-61a7af8e0620",
+      };
+
+      const minimized = initConfig?.before_send(probe);
+      expect(minimized?.properties.$current_url).toBe("https://nakafa.com/en");
       expect(
-        beforeSend({ event: "$pageview", properties: { $user_id: "user-1" } })
+        initConfig?.before_send({
+          event: "$pageview",
+          properties: { $user_id: "user-1" },
+        })
       ).toBeNull();
 
       yield* analytics.admitConsentedIdentity(anonymousIdentity);
-      const admitted = { event: "$pageview", properties: {} };
-      expect(beforeSend(admitted)).toBe(admitted);
+      const admitted: CaptureResult = {
+        event: "$pageview",
+        properties: {},
+        uuid: "019fa44c-02be-7cd0-a4ed-61a7af8e0620",
+      };
+      expect(initConfig?.before_send(admitted)).toBe(admitted);
     })
   );
 
@@ -334,11 +343,38 @@ describe("two-tier PostHog browser runtime", () => {
 
       expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
       expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+      expect(client.opt_out_capturing).toHaveBeenCalledOnce();
+      expect(client.reset).toHaveBeenCalledExactlyOnceWith(true);
 
       yield* analytics.admitConsentedIdentity(anonymousIdentity);
 
       expect(client.opt_in_capturing).toHaveBeenCalledTimes(2);
       expect(client.capture).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect("surfaces revoke failure instead of stranding opt-in", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.admitConsentedIdentity(anonymousIdentity);
+      client.opt_out_capturing.mockImplementationOnce(() => {
+        throw new Error("opt-out unavailable");
+      });
+
+      const failure = yield* analytics
+        .revokeToBaselineAnalytics()
+        .pipe(Effect.flip);
+
+      expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
+      expect(client.reset).not.toHaveBeenCalled();
+      expect(client.capture).toHaveBeenCalledTimes(2);
+
+      yield* analytics.revokeToBaselineAnalytics();
+
+      expect(client.opt_out_capturing).toHaveBeenCalledTimes(2);
+      expect(client.reset).toHaveBeenCalledExactlyOnceWith(true);
+      expect(client.capture).toHaveBeenCalledTimes(3);
     })
   );
 

@@ -1,44 +1,35 @@
 import { expect, type Page, type Request, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/browser-context";
 
-interface CapturedIngest {
-  readonly event: string;
-  readonly properties: Record<string, unknown>;
-  readonly uuid: unknown;
-}
+const CapturedIngestSchema = Schema.Struct({
+  event: Schema.String,
+  properties: Schema.Record(Schema.String, Schema.Unknown),
+  uuid: Schema.optional(Schema.Unknown),
+});
+
+type CapturedIngest = Schema.Schema.Type<typeof CapturedIngestSchema>;
+
+const IngestBodySchema = Schema.Union([
+  CapturedIngestSchema,
+  Schema.Struct({ batch: Schema.Array(CapturedIngestSchema) }),
+]);
 
 function readIngestBody(request: Request): CapturedIngest | null {
-  let raw: unknown = null;
-  try {
-    raw = request.postDataJSON();
-  } catch {
-    return null;
-  }
-  if (typeof raw !== "object" || raw === null) {
-    return null;
-  }
-  const body = raw as {
-    readonly batch?: readonly CapturedIngest[];
-    readonly event?: unknown;
-    readonly properties?: unknown;
-    readonly uuid?: unknown;
-  };
-  if (typeof body.event === "string") {
-    return {
-      event: body.event,
-      properties:
-        typeof body.properties === "object" && body.properties !== null
-          ? (body.properties as Record<string, unknown>)
-          : {},
-      uuid: body.uuid,
-    };
-  }
-  const [first] = body.batch ?? [];
-  return first ?? null;
+  const raw: unknown = Effect.runSync(
+    Effect.try({
+      try: () => request.postDataJSON(),
+      catch: () => null,
+    })
+  );
+  return Option.getOrNull(
+    Option.flatMap(Schema.decodeUnknownOption(IngestBodySchema)(raw), (body) =>
+      "batch" in body ? Option.fromNullishOr(body.batch[0]) : Option.some(body)
+    )
+  );
 }
 
 const observeIngest = Effect.fn("NakafaE2E.observeIngest")(function* (
