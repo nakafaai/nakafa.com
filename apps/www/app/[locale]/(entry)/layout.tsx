@@ -5,6 +5,7 @@ import {
   EntryShellArtwork,
   EntryShellPanel,
 } from "@/components/shared/entry-shell";
+import { env } from "@/env";
 
 /**
  * Keeps one visual entry shell mounted while auth and onboarding content changes.
@@ -21,7 +22,9 @@ export default function Layout({ children }: LayoutProps<"/[locale]">) {
     <EntryShell>
       <EntryShellPanel>
         <NuqsAdapter>
-          <ConvexProvider>{children}</ConvexProvider>
+          <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
+            {children}
+          </ConvexProvider>
         </NuqsAdapter>
       </EntryShellPanel>
       <EntryShellArtwork />

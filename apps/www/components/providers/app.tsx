@@ -31,7 +31,7 @@ export function AppProviders({
   return (
     <NuqsAdapter>
       <ReactQueryProviders>
-        <ConvexProvider>
+        <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
           <UserContextProvider>
             <PageNavigationProvider navigation={pageNavigation}>
               {pageNavigation ? (
