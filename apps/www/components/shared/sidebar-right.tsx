@@ -107,7 +107,7 @@ export function SidebarRight({
     <div className="shrink-0">
       <SidebarRightProvider>
         <SidebarTrigger
-          className="fixed top-20 right-6 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
+          className="fixed top-20 right-6 z-20 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
           icon={Menu02Icon}
           size="icon"
           variant="outline"

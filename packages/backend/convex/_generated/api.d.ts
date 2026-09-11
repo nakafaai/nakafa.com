@@ -6008,6 +6008,7 @@ export declare const api: {
           managed: boolean;
           nextSurah: {
             name: {
+              arabic: string;
               sourceMeaning:
                 | { de: string; en: string; id: string }
                 | { appLocale: "en"; text: string };
@@ -6032,6 +6033,7 @@ export declare const api: {
           } | null;
           previousSurah: {
             name: {
+              arabic: string;
               sourceMeaning:
                 | { de: string; en: string; id: string }
                 | { appLocale: "en"; text: string };
@@ -6200,6 +6202,7 @@ export declare const api: {
             | null;
           surah: {
             name: {
+              arabic: string;
               sourceMeaning:
                 | { de: string; en: string; id: string }
                 | { appLocale: "en"; text: string };
@@ -6734,6 +6737,7 @@ export declare const api: {
             | null;
           surah: {
             name: {
+              arabic: string;
               sourceMeaning:
                 | { de: string; en: string; id: string }
                 | { appLocale: "en"; text: string };
@@ -11799,6 +11803,7 @@ export declare const internal: {
                   | null;
                 surah: {
                   name: {
+                    arabic: string;
                     sourceMeaning:
                       | { de: string; en: string; id: string }
                       | { appLocale: "en"; text: string };
