@@ -44,21 +44,19 @@ export function QuranSurahHeader({
         />
       </div>
       <h1
-        className="col-span-2 col-start-1 row-start-2 flex min-w-0 flex-col items-center md:col-span-1 md:col-start-2 md:row-start-1 md:max-w-xs"
-        title={title}
+        className="col-span-2 col-start-1 row-start-2 flex min-w-0 items-baseline gap-2 truncate font-medium text-base md:col-span-1 md:col-start-2 md:row-start-1 md:justify-center md:text-center"
+        title={`${title} — ${meaning}`}
       >
         <span
-          className="min-w-0 truncate text-muted-foreground text-sm"
+          className="shrink-0 truncate text-muted-foreground text-sm font-normal"
           data-slot="surah-meaning"
           lang={meaningLanguage}
         >
           {meaning}
         </span>
-        <span className="flex min-w-0 items-baseline gap-2 font-medium text-base">
-          <span className="min-w-0 truncate">{title}</span>
-          <span className="shrink-0 font-quran text-xl" dir="rtl" lang="ar">
-            {arabic}
-          </span>
+        <span className="min-w-0 truncate">{title}</span>
+        <span className="shrink-0 font-quran text-xl font-normal" dir="rtl" lang="ar">
+          {arabic}
         </span>
       </h1>
       <div className="col-start-2 row-start-1 flex min-w-0 justify-end md:col-start-3">
