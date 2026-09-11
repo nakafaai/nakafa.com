@@ -67,9 +67,12 @@ receive separate names. Use `pnpm exec portless list` to inspect active routes,
 
 Set `SITE_URL` in `apps/www/.env.local` and the selected development backend
 to that exact web origin. Set `NEXT_PUBLIC_CONVEX_URL` and
-`NEXT_PUBLIC_CONVEX_SITE_URL` to the same main dev deployment.
-Google's client configuration must include the web origin under authorized
-JavaScript origins and `<web-origin>/api/auth/callback/google` under authorized
+`NEXT_PUBLIC_CONVEX_SITE_URL` to the same main dev deployment. The shared
+deployment carries one `SITE_URL`, which backs auth and checkout, so a
+worktree on its own origin must use an isolated development deployment
+instead of the shared one. Google's client configuration must include the
+web origin under authorized JavaScript origins and
+`<web-origin>/api/auth/callback/google` under authorized
 redirect URIs. A worktree needs its exact callback registered separately;
 Google does not accept wildcard callbacks. See the
 [Portless OAuth guidance](https://github.com/vercel-labs/portless/blob/main/skills/oauth/SKILL.md).
