@@ -11,7 +11,7 @@ import {
   saveAiDraftText,
 } from "@/components/ai/store/draft";
 import type { AiStore } from "@/components/ai/store/types";
-import { useAuthSession } from "@/lib/auth/session";
+import { useAuthSession } from "@/components/auth/session";
 
 const AiContext = createContext<AiStoreApi | null>(null);
 

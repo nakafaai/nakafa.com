@@ -35,7 +35,7 @@ export function CatalogCard({
           <h2>{title}</h2>
         </CardTitle>
         {badge ? (
-          <CardAction>
+          <CardAction className="self-center">
             <Badge variant="outline">{badge}</Badge>
           </CardAction>
         ) : null}

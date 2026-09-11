@@ -19,6 +19,17 @@ export default {
         files: ["components/ai/message-parts.tsx"],
         rules: ["react-doctor/no-array-index-as-key"],
       },
+      {
+        // Convex's public type mandates a React hook for the useAuth prop, so
+        // every ConvexProviderWithAuth consumer passes a hook as a value.
+        // Convex calls it unconditionally at the provider top level, which
+        // keeps the Rules of Hooks intact at runtime; the static rule cannot
+        // see across that boundary.
+        // https://docs.convex.dev/api/modules/react#convexproviderwithauth
+        // https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
+        files: ["components/providers/convex.tsx"],
+        rules: ["react-hooks-js/hooks"],
+      },
     ],
   },
 };
