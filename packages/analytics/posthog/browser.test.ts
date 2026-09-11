@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Deferred, Effect, Fiber, Ref } from "effect";
 
 const client = {
+  capture: vi.fn(),
   captureException: vi.fn(),
   get_property: vi.fn(),
   identify: vi.fn(),
@@ -33,6 +34,14 @@ const loadBrowserAnalytics = () =>
 /** Resolves the test-owned PostHog client through the production loader seam. */
 const loadClient = Effect.succeed(client);
 
+function stubWindow(href = "https://nakafa.com/en") {
+  vi.stubGlobal("window", {
+    history: { pushState: vi.fn(), replaceState: vi.fn() },
+    location: { href },
+    addEventListener: vi.fn(),
+  });
+}
+
 const anonymousIdentity = {
   consentDecidedAt: 100,
   consentMechanism: "privacy-controls",
@@ -40,11 +49,23 @@ const anonymousIdentity = {
   status: "anonymous",
 } as const;
 
+const identifiedIdentity = {
+  consentDecidedAt: 100,
+  consentMechanism: "privacy-controls",
+  consentNoticeVersion: "privacy-2026-08-22",
+  plan: "free",
+  role: "student",
+  status: "identified",
+  userId: "user-1",
+} as const;
+
 describe("two-tier PostHog browser runtime", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    vi.unstubAllGlobals();
     client.get_property.mockReturnValue(undefined);
+    stubWindow();
   });
 
   it.effect("drops capture calls until the baseline client loads", () =>
@@ -55,67 +76,45 @@ describe("two-tier PostHog browser runtime", () => {
         source: "pre-baseline-test",
       });
       analytics.resetBrowserAnalyticsIdentity();
-      yield* analytics.downgradeToBaselineAnalytics();
+      yield* analytics.revokeToBaselineAnalytics();
 
       expect(client.init).not.toHaveBeenCalled();
+      expect(client.capture).not.toHaveBeenCalled();
       expect(client.captureException).not.toHaveBeenCalled();
       expect(client.opt_out_capturing).not.toHaveBeenCalled();
     })
   );
 
-  it.effect(
-    "initializes the cookieless baseline without opting in or out",
-    () =>
-      Effect.gen(function* () {
-        const analytics = yield* loadBrowserAnalytics();
+  it.effect("initializes the cookieless baseline with explicit pageviews", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
 
-        yield* analytics.enableBaselineAnalytics();
+      yield* analytics.enableBaselineAnalytics();
 
-        expect(client.init).toHaveBeenCalledWith(
-          "phc_test",
-          expect.objectContaining({
-            advanced_disable_flags: true,
-            api_host: "/ingest",
-            autocapture: false,
-            before_send: expect.any(Function),
-            capture_dead_clicks: false,
-            capture_exceptions: false,
-            capture_heatmaps: false,
-            capture_pageleave: false,
-            capture_performance: false,
-            capture_pageview: "history_change",
-            cookieless_mode: "on_reject",
-            disable_conversations: true,
-            disableDeviceModel: true,
-            disable_external_dependency_loading: true,
-            disable_product_tours: true,
-            disable_session_recording: true,
-            disable_surveys: true,
-            disable_web_experiments: true,
-            enable_recording_console_log: false,
-            mask_all_element_attributes: true,
-            mask_all_text: true,
-            opt_out_capturing_by_default: true,
-            opt_out_persistence_by_default: true,
-            persistence: "localStorage",
-            person_profiles: "identified_only",
-            rageclick: false,
-            request_batching: false,
-            respect_dnt: true,
-            save_campaign_params: true,
-            save_referrer: true,
-          })
-        );
-        expect(client.init.mock.calls[0]?.[1]).not.toHaveProperty(
-          "property_denylist"
-        );
-        expect(client.reset).not.toHaveBeenCalled();
-        expect(client.opt_in_capturing).not.toHaveBeenCalled();
-        expect(client.opt_out_capturing).not.toHaveBeenCalled();
-      })
+      expect(client.init).toHaveBeenCalledWith(
+        "phc_test",
+        expect.objectContaining({
+          api_host: "/ingest",
+          before_send: expect.any(Function),
+          capture_pageview: false,
+          cookieless_mode: "on_reject",
+          opt_out_capturing_by_default: true,
+          person_profiles: "identified_only",
+          respect_dnt: true,
+          save_campaign_params: true,
+          save_referrer: true,
+        })
+      );
+      expect(client.init.mock.calls[0]?.[1]).not.toHaveProperty(
+        "property_denylist"
+      );
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+      expect(client.opt_in_capturing).not.toHaveBeenCalled();
+      expect(client.opt_out_capturing).not.toHaveBeenCalled();
+    })
   );
 
-  it.effect("reuses an initialized baseline without loading it again", () =>
+  it.effect("reuses an initialized baseline without tracking twice", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       const loadCount = yield* Ref.make(0);
@@ -128,6 +127,7 @@ describe("two-tier PostHog browser runtime", () => {
 
       expect(yield* Ref.get(loadCount)).toBe(1);
       expect(client.init).toHaveBeenCalledOnce();
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
     })
   );
 
@@ -183,12 +183,12 @@ describe("two-tier PostHog browser runtime", () => {
     })
   );
 
-  it.effect("refuses upgrades before the baseline client loads", () =>
+  it.effect("refuses admission before the baseline client loads", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
 
       const failure = yield* analytics
-        .upgradeToConsentedAnalytics()
+        .admitConsentedIdentity(anonymousIdentity)
         .pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
@@ -196,125 +196,150 @@ describe("two-tier PostHog browser runtime", () => {
     })
   );
 
-  it.effect("upgrades once and ignores repeated grants", () =>
+  it.effect("admits a grant once with a single attributed pageview", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       yield* analytics.enableBaselineAnalytics({ load: loadClient });
 
-      yield* analytics.upgradeToConsentedAnalytics();
-      yield* analytics.upgradeToConsentedAnalytics();
+      yield* analytics.admitConsentedIdentity(anonymousIdentity);
+      yield* analytics.admitConsentedIdentity(anonymousIdentity);
 
       expect(client.opt_in_capturing).toHaveBeenCalledExactlyOnceWith({
         captureEventName: false,
       });
+      expect(client.capture).toHaveBeenCalledTimes(2);
+      expect(client.capture).toHaveBeenNthCalledWith(2, "$pageview");
+      expect(client.register).toHaveBeenCalledWith({
+        $geoip_disable: false,
+        consent_decided_at: "1970-01-01T00:00:00.100Z",
+        consent_decision: "granted",
+        consent_mechanism: "privacy-controls",
+        consent_notice_version: "privacy-2026-08-22",
+        consent_scope: "anonymous",
+      });
     })
   );
 
-  it.effect("downgrades a granted client back to the baseline", () =>
+  it.effect("routes automatic events through the live gate", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       yield* analytics.enableBaselineAnalytics({ load: loadClient });
-      yield* analytics.upgradeToConsentedAnalytics();
+      const beforeSend = client.init.mock.calls[0]?.[1]?.before_send as (
+        event: { event: string; properties: Record<string, unknown> } | null
+      ) => unknown;
 
-      yield* analytics.downgradeToBaselineAnalytics();
+      const minimized = beforeSend({
+        event: "$pageview",
+        properties: { $current_url: "https://nakafa.com/en?q=x" },
+      }) as { properties: Record<string, unknown> };
+      expect(minimized.properties.$current_url).toBe("https://nakafa.com/en");
+      expect(
+        beforeSend({ event: "$pageview", properties: { $user_id: "user-1" } })
+      ).toBeNull();
+
+      yield* analytics.admitConsentedIdentity(anonymousIdentity);
+      const admitted = { event: "$pageview", properties: {} };
+      expect(beforeSend(admitted)).toBe(admitted);
+    })
+  );
+
+  it.effect("clears stale identity on anonymous admission", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      client.get_property.mockReturnValue("old-user");
+
+      yield* analytics.admitConsentedIdentity(anonymousIdentity);
+
+      expect(client.reset).toHaveBeenCalledExactlyOnceWith(false);
+      expect(client.identify).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("updates person properties for the current user", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      client.get_property.mockReturnValue("user-1");
+
+      yield* analytics.admitConsentedIdentity({
+        ...identifiedIdentity,
+        role: null,
+      });
+
+      expect(client.setPersonProperties).toHaveBeenCalledExactlyOnceWith({
+        plan: "free",
+      });
+      expect(client.identify).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("identifies the resolved account on admission", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      client.get_property.mockReturnValue("other-user");
+
+      yield* analytics.admitConsentedIdentity(identifiedIdentity);
+
+      expect(client.identify).toHaveBeenCalledExactlyOnceWith("user-1", {
+        plan: "free",
+        role: "student",
+      });
+      expect(client.setPersonProperties).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("revokes a grant back to the baseline with one pageview", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.admitConsentedIdentity(anonymousIdentity);
+
+      yield* analytics.revokeToBaselineAnalytics();
+      yield* analytics.revokeToBaselineAnalytics();
 
       expect(client.opt_out_capturing).toHaveBeenCalledOnce();
       expect(client.reset).toHaveBeenLastCalledWith(true);
+      expect(client.capture).toHaveBeenCalledTimes(3);
+      expect(client.capture).toHaveBeenNthCalledWith(3, "$pageview");
     })
   );
 
-  it.effect("downgrades baseline callers without touching SDK consent", () =>
+  it.effect("revokes baseline callers without touching the SDK", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      analytics.suspendBrowserAnalyticsIdentity();
 
-      yield* analytics.downgradeToBaselineAnalytics();
+      yield* analytics.revokeToBaselineAnalytics();
 
       expect(client.opt_out_capturing).not.toHaveBeenCalled();
       expect(client.reset).not.toHaveBeenCalled();
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
     })
   );
 
-  it.effect(
-    "synchronizes anonymous and identified identities after a grant",
-    () =>
-      Effect.gen(function* () {
-        const analytics = yield* loadBrowserAnalytics();
-        yield* analytics.enableBaselineAnalytics({ load: loadClient });
-        yield* analytics.upgradeToConsentedAnalytics();
-
-        client.get_property.mockReturnValueOnce("old-user");
-        yield* analytics.synchronizeBrowserAnalyticsIdentity(anonymousIdentity);
-
-        client.get_property.mockReturnValueOnce(undefined);
-        yield* analytics.synchronizeBrowserAnalyticsIdentity(anonymousIdentity);
-
-        client.get_property.mockReturnValueOnce("other-user");
-        yield* analytics.synchronizeBrowserAnalyticsIdentity({
-          consentDecidedAt: 100,
-          consentMechanism: "privacy-controls",
-          consentNoticeVersion: "privacy-2026-08-22",
-          plan: "free",
-          role: "student",
-          status: "identified",
-          userId: "user-1",
-        });
-
-        client.get_property.mockReturnValueOnce("user-1");
-        yield* analytics.synchronizeBrowserAnalyticsIdentity({
-          consentDecidedAt: 100,
-          consentMechanism: "privacy-controls",
-          consentNoticeVersion: "privacy-2026-08-22",
-          plan: "free",
-          role: null,
-          status: "identified",
-          userId: "user-1",
-        });
-
-        expect(client.identify).toHaveBeenCalledOnce();
-        expect(client.setPersonProperties).toHaveBeenCalledOnce();
-        expect(client.register).toHaveBeenCalledWith({
-          $geoip_disable: false,
-          consent_decided_at: "1970-01-01T00:00:00.100Z",
-          consent_decision: "granted",
-          consent_mechanism: "privacy-controls",
-          consent_notice_version: "privacy-2026-08-22",
-          consent_scope: "account",
-        });
-      })
-  );
-
-  it.effect("ignores identity changes while on the baseline tier", () =>
+  it.effect("retries admission after a synchronization failure", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      client.register.mockImplementationOnce(() => {
+        throw new Error("identity unavailable");
+      });
 
-      yield* analytics.synchronizeBrowserAnalyticsIdentity(anonymousIdentity);
-      analytics.resetBrowserAnalyticsIdentity();
+      const failure = yield* analytics
+        .admitConsentedIdentity(anonymousIdentity)
+        .pipe(Effect.flip);
 
-      expect(client.get_property).not.toHaveBeenCalled();
-      expect(client.identify).not.toHaveBeenCalled();
-      expect(client.reset).toHaveBeenCalledExactlyOnceWith(false);
+      expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+
+      yield* analytics.admitConsentedIdentity(anonymousIdentity);
+
+      expect(client.opt_in_capturing).toHaveBeenCalledTimes(2);
+      expect(client.capture).toHaveBeenCalledTimes(2);
     })
-  );
-
-  it.effect(
-    "fails closed when the SDK cannot synchronize consent identity",
-    () =>
-      Effect.gen(function* () {
-        const analytics = yield* loadBrowserAnalytics();
-        yield* analytics.enableBaselineAnalytics({ load: loadClient });
-        yield* analytics.upgradeToConsentedAnalytics();
-        client.register.mockImplementationOnce(() => {
-          throw new Error("identity unavailable");
-        });
-
-        const failure = yield* analytics
-          .synchronizeBrowserAnalyticsIdentity(anonymousIdentity)
-          .pipe(Effect.flip);
-
-        expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
-      })
   );
 
   it.effect("captures scrubbed exceptions through the baseline", () =>

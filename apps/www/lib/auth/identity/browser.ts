@@ -3,8 +3,8 @@ import {
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
 import {
-  downgradeToBaselineAnalytics,
   resetBrowserAnalyticsIdentity,
+  revokeToBaselineAnalytics,
 } from "@repo/analytics/posthog/browser";
 import { Clock, Effect, type Effect as EffectType, Schema } from "effect";
 import { saveAnonymousAnalyticsConsent } from "@/lib/analytics/consent/storage";
@@ -23,7 +23,7 @@ interface BrowserAccountIdentityCleanup {
 
 interface DeletedAccountIdentityCleanup extends BrowserAccountIdentityCleanup {
   readonly denyAnonymousAnalytics: () => EffectType.Effect<void, unknown>;
-  readonly downgradeAnalytics: () => EffectType.Effect<void, unknown>;
+  readonly revokeAnalytics: () => EffectType.Effect<void, unknown>;
 }
 
 const denyAnonymousAnalytics = Clock.currentTimeMillis.pipe(
@@ -83,11 +83,11 @@ export const clearDeletedAccountBrowserIdentity = Effect.fn(
 )(function* (
   cleanup: DeletedAccountIdentityCleanup = {
     denyAnonymousAnalytics: () => denyAnonymousAnalytics,
-    downgradeAnalytics: () => downgradeToBaselineAnalytics(),
+    revokeAnalytics: () => revokeToBaselineAnalytics(),
     ...defaultBrowserAccountIdentityCleanup,
   }
 ) {
-  yield* cleanup.downgradeAnalytics().pipe(Effect.ignore);
+  yield* cleanup.revokeAnalytics().pipe(Effect.ignore);
   yield* cleanup.denyAnonymousAnalytics().pipe(Effect.ignore);
 
   yield* clearAccountBrowserIdentity(cleanup);

@@ -1,14 +1,8 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import {
-  authorizeAnalyticsIdentity,
-  authorizeAnonymousAnalyticsIdentity,
+  type AnalyticsIdentityAuthorization,
+  type AnalyticsTier,
   filterAuthorizedAnalyticsEvent,
-  getAnalyticsTier,
-  grantAnalyticsTier,
-  initializeAnalyticsIdentityAuthorization,
-  resetAnalyticsIdentity,
-  revokeAnalyticsIdentity,
-  revokeAnalyticsTier,
 } from "@repo/analytics/posthog/identity";
 import type { CaptureResult } from "posthog-js";
 
@@ -26,44 +20,59 @@ function createEvent(
   };
 }
 
+const tiers: readonly AnalyticsTier[] = ["baseline", "granted"];
+const authorizations: readonly AnalyticsIdentityAuthorization[] = [
+  { status: "unresolved" },
+  { status: "anonymous" },
+  { status: "identified", userId: USER_ID },
+];
+
 describe("PostHog browser identity gate", () => {
-  beforeEach(() => {
-    initializeAnalyticsIdentityAuthorization();
-  });
-
-  it("admits anonymous events before auth resolves for baseline counting", () => {
-    const anonymousEvent = createEvent();
-    const identifiedEvent = createEvent(USER_ID);
-
-    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBe(anonymousEvent);
-    expect(filterAuthorizedAnalyticsEvent(identifiedEvent)).toBeNull();
-    expect(filterAuthorizedAnalyticsEvent(null)).toBeNull();
-
-    authorizeAnonymousAnalyticsIdentity();
-
-    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBe(anonymousEvent);
-    expect(filterAuthorizedAnalyticsEvent(identifiedEvent)).toBeNull();
+  it.each(tiers)("admits anonymous events in every state (%s)", (tier) => {
+    for (const authorization of authorizations) {
+      expect(
+        filterAuthorizedAnalyticsEvent(createEvent(), authorization, tier)
+      ).toBeTruthy();
+    }
+    expect(
+      filterAuthorizedAnalyticsEvent(null, { status: "unresolved" }, tier)
+    ).toBeNull();
   });
 
   it("allows only the currently authorized identified user", () => {
-    const anonymousEvent = createEvent();
     const currentUserEvent = createEvent(USER_ID);
     const otherUserEvent = createEvent("user-2");
 
-    expect(filterAuthorizedAnalyticsEvent(currentUserEvent)).toBeNull();
-
-    authorizeAnalyticsIdentity(USER_ID);
-
-    expect(filterAuthorizedAnalyticsEvent(currentUserEvent)).toBe(
-      currentUserEvent
-    );
-    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBe(anonymousEvent);
-    expect(filterAuthorizedAnalyticsEvent(otherUserEvent)).toBeNull();
-
-    revokeAnalyticsIdentity();
-
-    expect(filterAuthorizedAnalyticsEvent(currentUserEvent)).toBeNull();
-    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBe(anonymousEvent);
+    for (const tier of tiers) {
+      expect(
+        filterAuthorizedAnalyticsEvent(
+          currentUserEvent,
+          { status: "unresolved" },
+          tier
+        )
+      ).toBeNull();
+      expect(
+        filterAuthorizedAnalyticsEvent(
+          currentUserEvent,
+          { status: "anonymous" },
+          tier
+        )
+      ).toBeNull();
+      expect(
+        filterAuthorizedAnalyticsEvent(
+          currentUserEvent,
+          { status: "identified", userId: USER_ID },
+          tier
+        )
+      ).toBe(currentUserEvent);
+      expect(
+        filterAuthorizedAnalyticsEvent(
+          otherUserEvent,
+          { status: "identified", userId: USER_ID },
+          tier
+        )
+      ).toBeNull();
+    }
   });
 
   it("minimizes baseline event URLs to origin plus pathname", () => {
@@ -73,9 +82,13 @@ describe("PostHog browser identity gate", () => {
       $referring_domain: "google.com",
     });
 
-    const admitted = filterAuthorizedAnalyticsEvent(event);
+    const admitted = filterAuthorizedAnalyticsEvent(
+      event,
+      { status: "anonymous" },
+      "baseline"
+    );
 
-    expect(admitted).not.toBeNull();
+    expect(admitted).not.toBe(event);
     expect(admitted?.properties.$current_url).toBe(
       "https://nakafa.com/en/search"
     );
@@ -88,62 +101,28 @@ describe("PostHog browser identity gate", () => {
       $current_url: "not a url",
     });
 
-    const admitted = filterAuthorizedAnalyticsEvent(event);
+    const admitted = filterAuthorizedAnalyticsEvent(
+      event,
+      { status: "anonymous" },
+      "baseline"
+    );
 
     expect(admitted?.properties.$current_url).toBeNull();
     expect(admitted?.properties.$referrer).toBeNull();
   });
 
   it("keeps full URLs once the granted tier is active", () => {
-    grantAnalyticsTier();
     const event = createEvent(undefined, "$pageview", {
       $current_url: "https://nakafa.com/en/search?q=consented",
       $referrer: "https://google.com/search?q=consented",
     });
 
-    const admitted = filterAuthorizedAnalyticsEvent(event);
-
-    expect(admitted?.properties.$current_url).toBe(
-      "https://nakafa.com/en/search?q=consented"
+    const admitted = filterAuthorizedAnalyticsEvent(
+      event,
+      { status: "anonymous" },
+      "granted"
     );
-    expect(admitted?.properties.$referrer).toBe(
-      "https://google.com/search?q=consented"
-    );
-  });
 
-  it("tracks the capture tier across grant and revoke transitions", () => {
-    expect(getAnalyticsTier()).toBe("baseline");
-
-    grantAnalyticsTier();
-    expect(getAnalyticsTier()).toBe("granted");
-
-    revokeAnalyticsTier();
-    expect(getAnalyticsTier()).toBe("baseline");
-  });
-
-  it("returns the gate to baseline when authorization restarts", () => {
-    grantAnalyticsTier();
-    authorizeAnalyticsIdentity(USER_ID);
-
-    initializeAnalyticsIdentityAuthorization();
-
-    expect(getAnalyticsTier()).toBe("baseline");
-    expect(filterAuthorizedAnalyticsEvent(createEvent(USER_ID))).toBeNull();
-  });
-
-  it("replaces analytics identity without changing capture consent", () => {
-    const client = { reset: vi.fn() };
-
-    resetAnalyticsIdentity(client, true);
-
-    expect(client.reset).toHaveBeenCalledExactlyOnceWith(true);
-  });
-
-  it("resets without forcing device rotation by default", () => {
-    const client = { reset: vi.fn() };
-
-    resetAnalyticsIdentity(client);
-
-    expect(client.reset).toHaveBeenCalledExactlyOnceWith(false);
+    expect(admitted).toBe(event);
   });
 });

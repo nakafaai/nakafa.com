@@ -3,11 +3,10 @@
 import { useNetwork } from "@mantine/hooks";
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import {
-  downgradeToBaselineAnalytics,
+  admitConsentedIdentity,
   enableBaselineAnalytics,
+  revokeToBaselineAnalytics,
   suspendBrowserAnalyticsIdentity,
-  synchronizeBrowserAnalyticsIdentity,
-  upgradeToConsentedAnalytics,
 } from "@repo/analytics/posthog/browser";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
@@ -160,9 +159,9 @@ export function AnalyticsConsentProvider({
     status: state.status,
   });
   useEffect(() => {
-    // The baseline client counts every visit cookielessly; a proven grant then
-    // upgrades the same client to full consented capture. Cleanup only revokes
-    // the identity authorization so SDK consent is never touched by lifecycle.
+    // The baseline client counts every visit cookielessly; a proven grant is
+    // admitted in one transition. Cleanup only suspends authorization so SDK
+    // consent is never touched by lifecycle.
     const analyticsIdentity = sessionPolicy.isRuntimeSuppressed
       ? null
       : createBrowserAnalyticsIdentity({
@@ -175,12 +174,8 @@ export function AnalyticsConsentProvider({
     const alignRuntime = enableBaselineAnalytics().pipe(
       Effect.andThen(
         analyticsIdentity
-          ? upgradeToConsentedAnalytics().pipe(
-              Effect.andThen(
-                synchronizeBrowserAnalyticsIdentity(analyticsIdentity)
-              )
-            )
-          : downgradeToBaselineAnalytics()
+          ? admitConsentedIdentity(analyticsIdentity)
+          : revokeToBaselineAnalytics()
       )
     );
     const runtimeFiber = Effect.runFork(
