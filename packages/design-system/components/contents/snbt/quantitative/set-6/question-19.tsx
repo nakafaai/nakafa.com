@@ -10,20 +10,24 @@ export function Graph({
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
   // Solves (1/2)^x - 3 = 2x + 6 and is included in the sampled curve.
   const intersectionX = -2.201_003_972_920_786_6;
-  const intersectionIndex = Math.round(((intersectionX + 4) * 49) / 6);
-  // Generate points for linear function: y = 2x + 6
-  // Range x: -4 to 2
-  const linearPoints = Array.from({ length: 50 }).map((_, i) => {
-    const x = -4 + (i * 6) / 49;
-    return { x, y: 2 * x + 6, z: 0 };
-  });
-
-  // Generate points for exponential function: y = (1/2)^x - 3
-  // Range x: -4 to 2
-  const exponentialPoints = Array.from({ length: 50 }).map((_, i) => {
-    const x = i === intersectionIndex ? intersectionX : -4 + (i * 6) / 49;
-    return { x, y: 0.5 ** x - 3, z: 0 };
-  });
+  const lineLabelX = -4 + (25 * 6) / 49;
+  const curveLabelX = -4 + (45 * 6) / 49;
+  const linearPoints = [-24, lineLabelX, 24].map((x) => ({
+    x,
+    y: 2 * x + 6,
+    z: 0,
+  }));
+  const exponentialInputs = Array.from(
+    { length: 1281 },
+    (_, i) => -8 + i * 0.025
+  );
+  exponentialInputs.push(intersectionX, curveLabelX);
+  exponentialInputs.sort((a, b) => a - b);
+  const exponentialPoints = exponentialInputs.map((x) => ({
+    x,
+    y: 0.5 ** x - 3,
+    z: 0,
+  }));
 
   return (
     <LineEquation
@@ -38,7 +42,7 @@ export function Graph({
           labels: [
             {
               text: <InlineMath math="y = 2x + 6" />,
-              at: 25,
+              at: 1,
               offset: [3, 0.5, 0],
             },
           ],
@@ -52,7 +56,7 @@ export function Graph({
           labels: [
             {
               text: <InlineMath math="y = \left(\frac{1}{2}\right)^x - 3" />,
-              at: 45,
+              at: exponentialInputs.indexOf(curveLabelX),
               offset: [1, 2, 0],
             },
           ],

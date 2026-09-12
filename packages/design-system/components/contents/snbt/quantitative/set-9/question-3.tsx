@@ -74,7 +74,8 @@ const answerData = [...questionData, ...answerSegments];
 export function Graph({ title, description, mode = "question" }: GraphProps) {
   return (
     <LineEquation
-      cameraPosition={[0, 0, 10]}
+      cameraPosition={[0.5, 0, 12.5]}
+      cameraTarget={[0.5, 0, 0]}
       data={mode === "answer" ? answerData : questionData}
       description={description}
       title={title}

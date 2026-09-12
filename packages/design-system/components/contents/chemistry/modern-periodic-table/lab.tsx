@@ -102,8 +102,8 @@ export function ModernPeriodicTableLab({
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <LabFact label={labels.focusLabel} value={selectedLabels.name} />
-          <LabFact label={labels.group} value={<InlineMath math="1-18" />} />
-          <LabFact label={labels.period} value={<InlineMath math="1-7" />} />
+          <LabFact label={labels.group} value="1–18" />
+          <LabFact label={labels.period} value="1–7" />
           <LabFact
             label={labels.atomicNumber}
             value={<InlineMath math="Z" />}

@@ -14,7 +14,6 @@ import {
   type SubatomicSceneColors,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { ReactNode } from "react";
 import { Vector3 } from "three";
@@ -66,7 +65,6 @@ const NUCLEON_POSITIONS = [
   { kind: "neutron", math: "n^0", position: [-0.48, -0.34, 0.04] },
   { kind: "proton", math: "p^+", position: [0.48, -0.34, 0.16] },
 ];
-const SUBATOMIC_LABEL_SIZE = THREE_FONT_SIZE.annotation;
 const ATOM_MAP_SCALE = 1.1;
 
 /**
@@ -179,6 +177,7 @@ function CathodeRayScene({ colors, labels }: SceneProps) {
             {labels.cathode} <InlineMath math="-" />
           </>
         }
+        labelY={-0.66}
         x={-2.1}
       />
       <Electrode
@@ -188,6 +187,7 @@ function CathodeRayScene({ colors, labels }: SceneProps) {
             {labels.anode} <InlineMath math="+" />
           </>
         }
+        labelY={0.75}
         x={-0.95}
       />
       <Plate color={colors.positive} label={labels.positivePlate} y={0.9} />
@@ -207,7 +207,7 @@ function CathodeRayScene({ colors, labels }: SceneProps) {
 
       <ThreeLabel
         color={colors.text}
-        fontSize={SUBATOMIC_LABEL_SIZE}
+        fontSize="annotation"
         position={[1.25, 0, 0.35]}
       >
         {labels.cathodeRay}
@@ -261,14 +261,14 @@ function GoldFoilScene({ colors, labels }: SceneProps) {
 
       <ThreeLabel
         color={colors.text}
-        fontSize={SUBATOMIC_LABEL_SIZE}
+        fontSize="annotation"
         position={[-1.9, 0.9, 1.05]}
       >
         {labels.alphaParticle}
       </ThreeLabel>
       <ThreeLabel
         color={colors.text}
-        fontSize={SUBATOMIC_LABEL_SIZE}
+        fontSize="annotation"
         position={[0.88, 0.98, 0.76]}
       >
         {labels.nucleus}
@@ -319,7 +319,7 @@ function AtomMapScene({ colors, labels }: SceneProps) {
 
       <ThreeLabel
         color={colors.text}
-        fontSize={SUBATOMIC_LABEL_SIZE}
+        fontSize="annotation"
         position={[-0.22, -0.72, 0.9]}
       >
         {labels.nucleus}
@@ -334,10 +334,12 @@ function AtomMapScene({ colors, labels }: SceneProps) {
 function Electrode({
   color,
   label,
+  labelY,
   x,
 }: {
   color: string;
   label: ReactNode;
+  labelY: number;
   x: number;
 }) {
   return (
@@ -345,7 +347,7 @@ function Electrode({
       <RoundedBox args={[0.16, 0.95, 0.16]} radius={0.035} smoothness={3}>
         <meshStandardMaterial color={color} roughness={0.45} />
       </RoundedBox>
-      <ThreeLabel color={color} fontSize="compact" position={[0, -0.66, 0.22]}>
+      <ThreeLabel color={color} fontSize="compact" position={[0, labelY, 0.22]}>
         {label}
       </ThreeLabel>
     </group>

@@ -8,11 +8,11 @@ export function QuestionGraph({
   title,
   description,
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
-  const step = 0.1;
-  const startExp = -1.5;
-  const endExp = 2.5;
-  const startLine = -1;
-  const endLine = 3.5;
+  const step = 0.025;
+  const startExp = -24;
+  const endExp = 8;
+  const startLine = -24;
+  const endLine = 24;
   // Solves 2^x + 2x - 6 = 0. Include D itself in the sampled curve.
   const intersectionX = 1.543_000_440_865_408_3;
   const indexD = Math.round((intersectionX - startExp) / step);
@@ -26,12 +26,11 @@ export function QuestionGraph({
   });
 
   // Function 2: y = -2x + 4
-  const linePoints = Array.from({
-    length: Math.floor((endLine - startLine) / step) + 1,
-  }).map((_, i) => {
-    const x = startLine + i * step;
-    return { x, y: -2 * x + 4, z: 0 };
-  });
+  const linePoints = [startLine, 2, 3.5, endLine].map((x) => ({
+    x,
+    y: -2 * x + 4,
+    z: 0,
+  }));
 
   // Calculate indices for labels
   // A: x = 0 on exp curve
@@ -39,7 +38,7 @@ export function QuestionGraph({
   // B: x = 1 on exp curve
   const indexB = Math.round((1 - startExp) / step);
   // C: x = 2 on line curve
-  const indexC = Math.round((2 - startLine) / step);
+  const indexC = 1;
 
   return (
     <LineEquation
@@ -64,11 +63,11 @@ export function QuestionGraph({
             {
               text: <InlineMath math="D" />,
               at: indexD,
-              offset: [-0.2, 0.5, 0],
+              offset: [-0.6, 0.5, 0],
             },
             {
               text: <InlineMath math="y = 2^x - 2" />,
-              at: expPoints.length - 1,
+              at: Math.round((2.5 - startExp) / step),
               offset: [1, 0.5, 0],
             },
           ],
@@ -82,11 +81,11 @@ export function QuestionGraph({
             {
               text: <InlineMath math="C" />,
               at: indexC,
-              offset: [0.3, 0.3, 0],
+              offset: [0.6, 0.3, 0],
             },
             {
               text: <InlineMath math="y = -2x + 4" />,
-              at: linePoints.length - 1,
+              at: 2,
               offset: [1, -0.5, 0],
             },
           ],

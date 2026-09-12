@@ -1,11 +1,16 @@
+import { useThree } from "@react-three/fiber";
 import {
+  GROUP_ONE_FOCUS_ID,
   getModernPeriodicTableCategoryColor,
   INNER_TRANSITION_FOCUS_ID,
   MAIN_PERIODIC_TABLE_ROWS,
+  METALLOID_FOCUS_ID,
   MODERN_PERIODIC_TABLE_FOCI,
   type ModernPeriodicTableFocusId,
   type ModernPeriodicTableLabLabels,
   type ModernPeriodicTableSceneColors,
+  NOBLE_GAS_FOCUS_ID,
+  PERIOD_THREE_FOCUS_ID,
   PERIODIC_SERIES_ROWS,
   type PeriodicElementEntry,
   SERIES_MARKER_CATEGORY_ID,
@@ -14,6 +19,7 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { isNarrowThreeScene } from "@repo/design-system/components/three/scene-frame";
 import type { ReactNode } from "react";
 
 const GROUP_COUNT = 18;
@@ -36,6 +42,16 @@ const TILE_LABEL_OUTLINE_WIDTH = 0.018;
 const TRANSITION_LABEL_SYMBOLS = ["Sc", "Fe", "Cu", "Ag", "Au", "Hg"];
 const INNER_TRANSITION_LABEL_SYMBOLS = ["La", "Lu", "Ac", "Lr"];
 const ALWAYS_VISIBLE_SYMBOLS = ["H", "He", "Na", "Mg", "Si", "Cl", "Ar"];
+// The highlighted tiles still show the full group. These spaced examples keep
+// its direction and membership readable when the entire table is narrow.
+const NARROW_LABEL_SYMBOLS = {
+  [GROUP_ONE_FOCUS_ID]: ["H", "Na", "Cs"],
+  [PERIOD_THREE_FOCUS_ID]: ["Na", "Al", "S", "Ar"],
+  [TRANSITION_FOCUS_ID]: ["Sc", "Fe", "Cu", "Au"],
+  [INNER_TRANSITION_FOCUS_ID]: [],
+  [METALLOID_FOCUS_ID]: ["B", "Ge", "Te"],
+  [NOBLE_GAS_FOCUS_ID]: ["He", "Ar", "Rn"],
+} satisfies Record<ModernPeriodicTableFocusId, string[]>;
 
 /**
  * Renders the 3D periodic-table model and highlights the active reading focus.
@@ -49,6 +65,8 @@ export function ModernPeriodicTableScene({
   focusId: ModernPeriodicTableFocusId;
   labels: ModernPeriodicTableLabLabels;
 }) {
+  const narrow = useThree((state) => isNarrowThreeScene(state.size, 1.15));
+
   return (
     <group>
       <GuideLabels colors={colors} labels={labels} />
@@ -60,6 +78,7 @@ export function ModernPeriodicTableScene({
             entry={entry}
             focusId={focusId}
             key={`${row.period}-${entry.symbol}`}
+            narrow={narrow}
             period={row.period}
           />
         ))
@@ -131,11 +150,13 @@ function MainTableTile({
   colors,
   entry,
   focusId,
+  narrow,
   period,
 }: {
   colors: ModernPeriodicTableSceneColors;
   entry: PeriodicElementEntry;
   focusId: ModernPeriodicTableFocusId;
+  narrow: boolean;
   period: number;
 }) {
   const highlighted = isEntryHighlighted(entry, focusId);
@@ -149,7 +170,7 @@ function MainTableTile({
       colors={colors}
       height={height}
       highlighted={highlighted}
-      label={getMainTileLabel(entry, focusId, highlighted)}
+      label={getMainTileLabel(entry, focusId, highlighted, narrow)}
       position={[x, height / 2, z]}
     />
   );
@@ -326,8 +347,17 @@ function isEntryHighlighted(
 function getMainTileLabel(
   entry: PeriodicElementEntry,
   focusId: ModernPeriodicTableFocusId,
-  highlighted: boolean
+  highlighted: boolean,
+  narrow: boolean
 ) {
+  if (narrow) {
+    return NARROW_LABEL_SYMBOLS[focusId].some(
+      (symbol) => symbol === entry.symbol
+    )
+      ? entry.symbol
+      : "";
+  }
+
   if (entry.category === SERIES_MARKER_CATEGORY_ID) {
     return highlighted ? entry.symbol : "";
   }

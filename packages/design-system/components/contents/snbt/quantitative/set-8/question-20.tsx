@@ -10,7 +10,8 @@ export function Graph({
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[0, 0.5, 22]}
+      cameraTarget={[0, 0.5, 0]}
       data={[
         // Triangle Q (Left)
         // Left side: (-8, -2) to (-5, 3)

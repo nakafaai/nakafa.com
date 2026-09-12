@@ -9,9 +9,9 @@ export function QuestionGraph({
   description,
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
   // Configuration
-  const step = 0.1;
-  const startY = -2.5; // Slightly beyond -2
-  const endY = 4.5; // Slightly beyond 4
+  const step = 0.05;
+  const startY = -8;
+  const endY = 10;
 
   // Function: x = -y^2 + 2y + 8
   const points = Array.from({
@@ -32,7 +32,8 @@ export function QuestionGraph({
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[3, 1, 18]}
+      cameraTarget={[3, 1, 0]}
       data={[
         {
           points,

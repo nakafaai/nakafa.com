@@ -8,23 +8,12 @@ import {
 import { PeriodicPropertiesScene } from "@repo/design-system/components/contents/chemistry/periodic-properties/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
-import {
-  isNarrowThreeScene,
-  threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { useTheme } from "next-themes";
 import { Suspense, useEffect } from "react";
 
-const CAMERA_POSITION = [0, 4.5, 7.4] satisfies [number, number, number];
+const CAMERA_POSITION = [0, 10, 3] satisfies [number, number, number];
 const CAMERA_TARGET = [-0.65, 0.45, 0.6] satisfies [number, number, number];
-const NARROW_CAMERA_POSITION = [0, 5.4, 9.2] satisfies [number, number, number];
-const NARROW_CAMERA_TARGET = [-0.7, 0.45, 0.6] satisfies [
-  number,
-  number,
-  number,
-];
-const NARROW_CANVAS_ASPECT_RATIO = 1.25;
-
 /**
  * Renders the periodic-properties trend model in a responsive 3D canvas.
  */
@@ -43,7 +32,13 @@ export function PeriodicPropertiesCanvas({
       <ThreeCanvas frameloop="demand">
         <Suspense>
           <PeriodicPropertiesRenderSync key={modeId} />
-          <ResponsivePeriodicPropertiesCamera />
+          <CameraControls
+            autoRotate={false}
+            cameraPosition={CAMERA_POSITION}
+            cameraTarget={CAMERA_TARGET}
+            fov={44}
+            framing="content"
+          />
           <ambientLight intensity={0.76} />
           <hemisphereLight
             color={colors.skyLight}
@@ -77,24 +72,4 @@ function PeriodicPropertiesRenderSync() {
   }, [invalidate]);
 
   return null;
-}
-
-/**
- * Keeps the model readable on narrow screens while leaving orbit and zoom on.
- */
-function ResponsivePeriodicPropertiesCamera() {
-  const size = useThree((state) => state.size);
-  const isNarrow = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO);
-  const cameraPosition = isNarrow ? NARROW_CAMERA_POSITION : CAMERA_POSITION;
-  const cameraTarget = isNarrow ? NARROW_CAMERA_TARGET : CAMERA_TARGET;
-
-  return (
-    <CameraControls
-      autoRotate={false}
-      cameraPosition={cameraPosition}
-      cameraTarget={cameraTarget}
-      fov={44}
-      framing="content"
-    />
-  );
 }
