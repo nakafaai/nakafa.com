@@ -1,3 +1,4 @@
+import { Predicate } from "effect";
 import type { CaptureResult } from "posthog-js";
 
 /**
@@ -23,12 +24,12 @@ export type AnalyticsIdentityAuthorization =
 function minimizeBaselineEventUrl(event: CaptureResult): CaptureResult {
   const currentUrl = event.properties.$current_url;
   const referrer = event.properties.$referrer;
-  if (typeof currentUrl !== "string" && typeof referrer === "undefined") {
+  if (!Predicate.isString(currentUrl) && Predicate.isUndefined(referrer)) {
     return event;
   }
 
   let nextCurrentUrl: string | null = null;
-  if (typeof currentUrl === "string" && URL.canParse(currentUrl)) {
+  if (Predicate.isString(currentUrl) && URL.canParse(currentUrl)) {
     const parsed = new URL(currentUrl);
     nextCurrentUrl = `${parsed.origin}${parsed.pathname}`;
   }
@@ -61,7 +62,7 @@ export function filterAuthorizedAnalyticsEvent(
   }
 
   const eventUserId = event.properties.$user_id;
-  if (typeof eventUserId === "string") {
+  if (Predicate.isString(eventUserId)) {
     return authorization.status === "identified" &&
       authorization.userId === eventUserId
       ? event
