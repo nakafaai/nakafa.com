@@ -50,6 +50,12 @@ describe("operational exception privacy", () => {
         source: "chat-api",
       }).name
     ).toBe("OperationalError(chat-api.save-message)");
+    expect(
+      createOperationalException(new Error("boom"), {
+        error_location: "saveTitle",
+        source: "chat-api",
+      }).name
+    ).toBe("OperationalError(chat-api.saveTitle)");
   });
 
   it("accepts only exact bounded operational context", () => {

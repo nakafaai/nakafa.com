@@ -60,15 +60,18 @@ const stackFramePattern = /^\s*at\s/;
  * Builds a stable exception name from the admitted origin so error tracking
  * groups events by their source instead of by minified stack frames.
  *
- * Only the developer-authored `source` and `operation` constants enter the
- * name, so the redaction of the message, cause, and payload still holds.
+ * The name appends the `operation` and `error_location` refinements when they
+ * are present, so seams that share one `source` still separate by call site.
+ * Only these developer-authored constants enter the name, so the redaction of
+ * the message, cause, and payload still holds.
  */
 function deriveOperationalExceptionName(
   properties: OperationalExceptionProperties
 ) {
-  const scope = properties.operation
-    ? `${properties.source}.${properties.operation}`
-    : properties.source;
+  const refinements = [properties.operation, properties.error_location].filter(
+    Predicate.isNotUndefined
+  );
+  const scope = [properties.source, ...refinements].join(".");
   return `${operationalExceptionName}(${scope})`;
 }
 
