@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   createOperationalException,
   decodeOperationalExceptionProperties,
+  operationalExceptionGrouping,
 } from "@repo/analytics/posthog/exception";
 import { Option } from "effect";
 
@@ -57,5 +58,23 @@ describe("operational exception privacy", () => {
         decodeOperationalExceptionProperties({ source: "x".repeat(129) })
       )
     ).toBe(true);
+  });
+
+  it("splits grouping by source and route", () => {
+    expect(operationalExceptionGrouping({ source: "sitemap-page" })).toEqual({
+      $exception_fingerprint: "OperationalError:sitemap-page",
+      $issue_name: "OperationalError: sitemap-page",
+    });
+    expect(
+      operationalExceptionGrouping({
+        route_path: "/llms.mdx/[...slug]",
+        source: "next-on-request-error",
+      })
+    ).toEqual({
+      $exception_fingerprint:
+        "OperationalError:next-on-request-error /llms.mdx/[...slug]",
+      $issue_name:
+        "OperationalError: next-on-request-error /llms.mdx/[...slug]",
+    });
   });
 });

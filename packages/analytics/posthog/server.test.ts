@@ -105,8 +105,12 @@ describe("PostHog server reporting", () => {
           message: "Operational exception",
           name: "OperationalError",
         }),
-        undefined,
-        properties
+        "request",
+        {
+          $exception_fingerprint: "OperationalError:request",
+          $issue_name: "OperationalError: request",
+          source: "request",
+        }
       );
       expect(postHogMocks.captureExceptionImmediate).toHaveBeenCalledTimes(3);
       expect(
@@ -115,6 +119,41 @@ describe("PostHog server reporting", () => {
       expect(
         JSON.stringify(postHogMocks.captureExceptionImmediate.mock.calls)
       ).not.toContain("object secret");
+    })
+  );
+
+  it.effect("splits issues by source and route with a stable identity", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("VERCEL_ENV", "production");
+      vi.stubEnv("NEXT_PHASE", "phase-production-server");
+      const { captureServerException } = yield* Effect.promise(
+        () => import("@repo/analytics/posthog/server")
+      );
+
+      yield* Effect.all(
+        [
+          captureServerException(new Error("a"), { source: "sitemap-page" }),
+          captureServerException(new Error("b"), {
+            route_path: "/llms.mdx/[...slug]",
+            source: "next-on-request-error",
+          }),
+        ],
+        { concurrency: 1 }
+      );
+
+      const [sitemapCall, requestCall] =
+        postHogMocks.captureExceptionImmediate.mock.calls;
+      expect(sitemapCall[1]).toBe("sitemap-page");
+      expect(sitemapCall[2].$exception_fingerprint).toBe(
+        "OperationalError:sitemap-page"
+      );
+      expect(requestCall[1]).toBe("next-on-request-error");
+      expect(requestCall[2].$exception_fingerprint).toBe(
+        "OperationalError:next-on-request-error /llms.mdx/[...slug]"
+      );
+      expect(sitemapCall[2].$exception_fingerprint).not.toBe(
+        requestCall[2].$exception_fingerprint
+      );
     })
   );
 

@@ -74,3 +74,24 @@ export function createOperationalException(error: unknown) {
   ].join("\n");
   return operationalError;
 }
+
+/**
+ * Builds PostHog grouping properties keyed by call site.
+ *
+ * The stripped exception carries a constant type, message, and analytics-module
+ * stack, so PostHog fingerprints every operational failure the same and merges
+ * unrelated call sites into one untriageable issue. A `source` fingerprint, with
+ * `route_path` when present, splits them apart, and the issue name makes each one
+ * readable in the issue list.
+ */
+export function operationalExceptionGrouping(
+  properties: OperationalExceptionProperties
+) {
+  const scope = properties.route_path
+    ? `${properties.source} ${properties.route_path}`
+    : properties.source;
+  return {
+    $exception_fingerprint: `${operationalExceptionName}:${scope}`,
+    $issue_name: `${operationalExceptionName}: ${scope}`,
+  };
+}

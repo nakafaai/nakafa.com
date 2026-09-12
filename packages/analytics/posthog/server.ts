@@ -5,6 +5,7 @@ import {
   createOperationalException,
   decodeOperationalExceptionProperties,
   type OperationalExceptionProperties,
+  operationalExceptionGrouping,
 } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
 import { Effect, Option, Schema } from "effect";
@@ -62,15 +63,17 @@ function getServerAnalytics() {
 }
 
 /**
- * Capture one operational exception without a user or analytics identity.
+ * Capture one operational exception grouped by its call site.
  *
- * The installed PostHog Node client creates a random per-event UUID and sets
- * `$process_person_profile = false` when `distinctId` is omitted. The client is
- * private to this module, so request identity cannot enter through SDK context.
+ * The `source` becomes the `distinctId`, so repeated failures from one server
+ * code path count as one identity instead of a fresh random UUID per event that
+ * inflates the affected-user count. The client keeps `personProfiles: "never"`,
+ * so no person profile is created. A per-source fingerprint and issue name split
+ * unrelated call sites into separate, triageable issues.
  *
  * Docs:
  * https://posthog.com/docs/error-tracking/capture
- * https://posthog.com/docs/error-tracking/installation/nextjs
+ * https://posthog.com/docs/error-tracking/fingerprints
  */
 export const captureServerException = Effect.fn(
   "Analytics.captureServerException"
@@ -86,6 +89,7 @@ export const captureServerException = Effect.fn(
   if (Option.isNone(decodedProperties)) {
     return;
   }
+  const properties = decodedProperties.value;
 
   const analytics = yield* Effect.try({
     try: getServerAnalytics,
@@ -95,8 +99,8 @@ export const captureServerException = Effect.fn(
     try: () =>
       analytics.captureExceptionImmediate(
         createOperationalException(error),
-        undefined,
-        decodedProperties.value
+        properties.source,
+        { ...properties, ...operationalExceptionGrouping(properties) }
       ),
     catch: captureError,
   });
