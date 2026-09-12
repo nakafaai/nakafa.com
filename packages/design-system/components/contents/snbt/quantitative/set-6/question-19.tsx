@@ -73,7 +73,7 @@ export function Graph({
           points: [{ x: 0, y: 6, z: 0 }],
           color: getColor("INDIGO"),
           showPoints: true,
-          labels: [{ text: <InlineMath math="B" />, offset: [0.5, 0, 0] }],
+          labels: [{ text: <InlineMath math="B" />, offset: [-0.75, -0.1, 0] }],
         },
         // Point C (-3, 0) - x-intercept of line
         {
