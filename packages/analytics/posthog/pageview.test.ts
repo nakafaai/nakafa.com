@@ -89,4 +89,24 @@ describe("explicit pageview tracking", () => {
 
     expect(client.capture).not.toHaveBeenCalled();
   });
+
+  it("reports history captures without capturing on install", () => {
+    const holder = { current: "https://nakafa.com/en" };
+    const { source } = createWindow(holder.current);
+    Object.defineProperty(source, "location", {
+      get: () => ({ href: holder.current }),
+    });
+    const client = { capture: vi.fn() };
+    const onHistoryCapture = vi.fn();
+
+    startPageviewTracking(source, client, onHistoryCapture);
+    expect(onHistoryCapture).not.toHaveBeenCalled();
+
+    holder.current = "https://nakafa.com/id";
+    source.history.pushState({}, "", "/id");
+    expect(onHistoryCapture).toHaveBeenCalledOnce();
+
+    source.history.replaceState({}, "", "/id");
+    expect(onHistoryCapture).toHaveBeenCalledOnce();
+  });
 });

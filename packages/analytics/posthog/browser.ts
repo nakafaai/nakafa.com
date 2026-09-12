@@ -61,7 +61,7 @@ const analyticsTier = MutableRef.make<AnalyticsTier>("baseline");
 const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
   status: "unresolved",
 });
-/** Fires the deferred landing view once: whoever admits first attributes it. */
+/** Fires the deferred landing view once: the first counted view consumes it. */
 const initialPageviewCaptured = MutableRef.make(false);
 
 /** Raised when the baseline client cannot initialize or upgrade. */
@@ -181,7 +181,11 @@ export const enableBaselineAnalytics = Effect.fn(
       catch: browserAnalyticsLoadFailure,
     });
     MutableRef.set(analyticsClient, client);
-    startPageviewTracking(window, client);
+    // A navigation that lands before the first settled admission counts
+    // instead, so the admission must not recount the same destination.
+    startPageviewTracking(window, client, () =>
+      MutableRef.set(initialPageviewCaptured, true)
+    );
   }).pipe(Effect.tapError(() => Effect.sync(revokeGate)));
 });
 

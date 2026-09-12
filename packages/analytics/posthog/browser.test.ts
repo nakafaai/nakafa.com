@@ -224,6 +224,22 @@ describe("two-tier PostHog browser runtime", () => {
     })
   );
 
+  it.effect("counts an intervening navigation instead of recounting it", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+
+      window.location.href = "https://nakafa.com/id";
+      window.history.pushState({}, "", "/id");
+      yield* analytics.admitConsentedIdentity(anonymousIdentity);
+
+      expect(client.opt_in_capturing).toHaveBeenCalledExactlyOnceWith({
+        captureEventName: false,
+      });
+      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+    })
+  );
+
   it.effect("routes automatic events through the live gate", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();

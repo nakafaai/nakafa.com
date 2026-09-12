@@ -12,12 +12,15 @@ export interface PageviewWindow {
  * Installs explicit history navigation tracking for one client.
  *
  * The landing view is deferred to the first settled admission so it carries
- * the resolved identity. Same-href replacements are skipped; runs for the
+ * the resolved identity. A navigation that lands first counts instead and
+ * reports through `onHistoryCapture`, so the admission never recounts the
+ * same destination. Same-href replacements are skipped; runs for the
  * application lifetime.
  */
 export function startPageviewTracking(
   source: PageviewWindow,
-  client: PageviewCaptureClient
+  client: PageviewCaptureClient,
+  onHistoryCapture?: () => void
 ) {
   let lastHref = source.location.href;
   const notify = () => {
@@ -27,6 +30,7 @@ export function startPageviewTracking(
     }
     lastHref = href;
     client.capture("$pageview");
+    onHistoryCapture?.();
   };
 
   const { history } = source;
