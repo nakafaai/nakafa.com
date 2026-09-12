@@ -72,7 +72,7 @@ export function Graph({ title, description }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[6, 4, 8]}
+      cameraPosition={[-7, 5, 9]}
       data={[
         // Cube Edges
         ...cubeEdges.map((edge) => ({
@@ -100,7 +100,7 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="DF" />,
               at: 1, // Midpoint index
-              offset: [0.5, 0.5, 0],
+              offset: [0.4, 0.8, 0],
             },
           ],
         },
@@ -115,7 +115,7 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="HF" />,
               at: 1, // Midpoint index
-              offset: [0, 0.5, 0],
+              offset: [-0.8, 0.5, 0],
             },
           ],
         },

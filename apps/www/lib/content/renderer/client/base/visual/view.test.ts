@@ -31,7 +31,7 @@ function scene(view: SpaceVisual["view"]): SpaceVisual {
 }
 
 describe("MathVisual camera direction", () => {
-  it("starts a plane directly in front of the authored center", () => {
+  it("starts a plane in front of its authored center with parallel projection", () => {
     const visual = {
       space: "plane",
       frame: {
@@ -52,7 +52,7 @@ describe("MathVisual camera direction", () => {
     expect(resolveMathView(visual)).toEqual({
       position: [0, 0, 15],
       target: [0, 0, 0],
-      projection: { kind: "perspective" },
+      projection: { kind: "orthographic" },
     });
   });
   it("uses equal camera directions for isometric views and lets measured subjects determine scale", () => {

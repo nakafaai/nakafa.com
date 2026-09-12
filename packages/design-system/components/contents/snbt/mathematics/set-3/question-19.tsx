@@ -61,9 +61,9 @@ const graphData = [
     color: getColor("TEAL"),
     showPoints: false,
     labels: [
-      { text: <InlineMath math="D" />, at: 0, offset: [0, -0.5, 0] },
-      { text: <InlineMath math="2\,\text{km}" />, at: 1, offset: [0, -0.8, 0] },
-      { text: <InlineMath math="C" />, at: 2, offset: [0, -0.5, 0] },
+      { text: <InlineMath math="D" />, at: 0, offset: [-0.1, -0.4, 0] },
+      { text: <InlineMath math="2\,\text{km}" />, at: 1, offset: [0, -1.1, 0] },
+      { text: <InlineMath math="C" />, at: 2, offset: [0.2, -0.4, 0] },
     ],
   },
   {
@@ -106,7 +106,8 @@ function scaleDistance(value: number) {
 export function Graph({ title, description }: GraphProps) {
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[3.9, 2.6, 12]}
+      cameraTarget={[3.9, 2.6, 0]}
       data={graphData}
       description={description}
       title={title}

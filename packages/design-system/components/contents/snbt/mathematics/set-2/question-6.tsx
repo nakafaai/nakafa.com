@@ -30,7 +30,8 @@ interface GraphProps {
 export function Graph({ description, title }: GraphProps) {
   return (
     <LineEquation
-      cameraPosition={[9, 6, 9]}
+      cameraPosition={[8, -6, 9]}
+      cameraTarget={[2, 2, 2]}
       data={[
         // Bottom Face
         {
@@ -39,7 +40,6 @@ export function Graph({ description, title }: GraphProps) {
           color: getColor("INDIGO"),
           labels: [
             { text: <InlineMath math="D" />, at: 0, offset: [-0.3, -0.3, 0] },
-            { text: <InlineMath math="4" />, at: 1, offset: [0, -0.3, 0] },
             { text: <InlineMath math="A" />, at: 2, offset: [0.3, -0.3, 0] },
           ],
         },
@@ -47,9 +47,6 @@ export function Graph({ description, title }: GraphProps) {
           ...hiddenPoints,
           points: [cubePointA, getMidpoint(cubePointA, cubePointB), cubePointB],
           color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="4" />, at: 1, offset: [0.3, 0, 0] },
-          ],
         },
         {
           ...hiddenPoints,
@@ -57,7 +54,6 @@ export function Graph({ description, title }: GraphProps) {
           color: getColor("INDIGO"),
           labels: [
             { text: <InlineMath math="B" />, at: 0, offset: [0.3, 0.3, 0] },
-            { text: <InlineMath math="4" />, at: 1, offset: [0, 0.3, 0] },
             { text: <InlineMath math="C" />, at: 2, offset: [-0.3, 0.3, 0] },
           ],
         },
@@ -65,9 +61,6 @@ export function Graph({ description, title }: GraphProps) {
           ...hiddenPoints,
           points: [cubePointC, getMidpoint(cubePointC, cubePointD), cubePointD],
           color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="4" />, at: 1, offset: [-0.3, 0, 0] },
-          ],
         },
 
         // Top Face
@@ -77,17 +70,13 @@ export function Graph({ description, title }: GraphProps) {
           color: getColor("INDIGO"),
           labels: [
             { text: <InlineMath math="H" />, at: 0, offset: [-0.3, -0.3, 0.3] },
-            { text: <InlineMath math="4" />, at: 1, offset: [0, -0.3, 0.3] },
-            { text: <InlineMath math="E" />, at: 2, offset: [0.3, -0.3, 0.3] },
+            { text: <InlineMath math="E" />, at: 2, offset: [0.9, -0.3, 0.3] },
           ],
         },
         {
           ...hiddenPoints,
           points: [cubePointE, getMidpoint(cubePointE, cubePointF), cubePointF],
           color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="4" />, at: 1, offset: [0.3, 0, 0.3] },
-          ],
         },
         {
           ...hiddenPoints,
@@ -111,9 +100,6 @@ export function Graph({ description, title }: GraphProps) {
           ...hiddenPoints,
           points: [cubePointG, getMidpoint(cubePointG, cubePointH), cubePointH],
           color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="4" />, at: 1, offset: [-0.3, 0, 0.3] },
-          ],
         },
 
         // Vertical Edges
@@ -129,25 +115,19 @@ export function Graph({ description, title }: GraphProps) {
           ...hiddenPoints,
           points: [cubePointA, getMidpoint(cubePointA, cubePointE), cubePointE],
           color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="4" />, at: 1, offset: [0.3, -0.3, 0] },
-          ],
         },
         {
           ...hiddenPoints,
           points: [cubePointB, getMidpoint(cubePointB, cubePointF), cubePointF],
           color: getColor("INDIGO"),
           labels: [
-            { text: <InlineMath math="4" />, at: 1, offset: [0.3, 0.3, 0] },
+            { text: <InlineMath math="4" />, at: 1, offset: [0.9, 0.1, -0.3] },
           ],
         },
         {
           ...hiddenPoints,
           points: [cubePointC, getMidpoint(cubePointC, cubePointG), cubePointG],
           color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="4" />, at: 1, offset: [-0.3, 0.3, 0] },
-          ],
         },
 
         // Diagonal BD
@@ -200,7 +180,7 @@ export function Graph({ description, title }: GraphProps) {
           points: [cubePointQ, getMidpoint(cubePointQ, cubePointO), cubePointO],
           color: getColor("ROSE"),
           labels: [
-            { text: <InlineMath math="y" />, at: 1, offset: [0.2, 0, 0] },
+            { text: <InlineMath math="y" />, at: 1, offset: [-0.4, -0.1, 0.1] },
             { text: <InlineMath math="O" />, at: 2, offset: [0.2, 0.2, 0] },
           ],
         },

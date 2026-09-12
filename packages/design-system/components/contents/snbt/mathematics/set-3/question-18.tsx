@@ -21,9 +21,9 @@ export function Graph({ title, description, labels }: GraphProps) {
   const buildingHeight = 16 / scale;
   const observationDistance = (16 * Math.sqrt(3)) / scale;
   const helicopterHeight = observationDistance * Math.tan(Math.PI / 4);
-  const shadowLength = 2;
-  const observerHeight = 2;
-  const totalGround = observationDistance + shadowLength;
+  const totalGround = 32 / scale;
+  const shadowLength = totalGround - observationDistance;
+  const observerHeight = 2 / scale;
   const groundPadding = totalGround * 0.1;
   const labelOffsetX = totalGround * 0.08;
   const labelOffsetY = buildingHeight * 0.5;
@@ -70,7 +70,8 @@ export function Graph({ title, description, labels }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 18]}
+      cameraPosition={[3.2, 2.8, 16]}
+      cameraTarget={[3.2, 2.8, 0]}
       data={[
         {
           points: [origin, buildingTop],
@@ -195,7 +196,7 @@ export function Graph({ title, description, labels }: GraphProps) {
             {
               text: <InlineMath math="45^\circ" />,
               at: arc45LabelIndex,
-              offset: [-labelOffsetX * 0.8, labelOffsetY * 0.15, 0],
+              offset: [-labelOffsetX * 0.8, labelOffsetY * 0.5, 0],
             },
           ],
         },

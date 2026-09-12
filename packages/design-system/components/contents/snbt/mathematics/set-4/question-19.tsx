@@ -45,15 +45,16 @@ const arcLabelIndex = Math.floor(arcPoints.length / 2);
 export function Graph({ title, description }: GraphProps) {
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[1, 2.3, 8.4]}
+      cameraTarget={[1, 2.3, 0]}
       data={[
         {
           points: [pointA, midpointAB, pointB],
           color: getColor("INDIGO"),
           showPoints: false,
           labels: [
-            { text: <InlineMath math="A" />, at: 0, offset: [-0.5, -0.5, 0] },
-            { text: <InlineMath math="B" />, at: 2, offset: [0.5, 0.5, 0] },
+            { text: <InlineMath math="A" />, at: 0, offset: [0.25, -0.35, 0] },
+            { text: <InlineMath math="B" />, at: 2, offset: [0.25, 0.25, 0] },
           ],
         },
         {
@@ -61,7 +62,7 @@ export function Graph({ title, description }: GraphProps) {
           color: getColor("EMERALD"),
           showPoints: false,
           labels: [
-            { text: <InlineMath math="C" />, at: 2, offset: [-0.6, 0.7, 0] },
+            { text: <InlineMath math="C" />, at: 2, offset: [-0.2, -0.35, 0] },
           ],
         },
         {
@@ -72,7 +73,7 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="BC = 500\,\text{m}" />,
               at: 1,
-              offset: [-1.3, 0.5, 0],
+              offset: [-1.15, 0.55, 0],
             },
           ],
         },
@@ -84,7 +85,7 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="60^\circ" />,
               at: arcLabelIndex,
-              offset: [0.6, 0.6, 0],
+              offset: [0.4, 0.2, 0],
             },
           ],
         },

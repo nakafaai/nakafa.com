@@ -109,7 +109,8 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[0, 0.5, 24]}
+      cameraTarget={[0, 0.5, 0]}
       data={data}
       description={description}
       title={title}

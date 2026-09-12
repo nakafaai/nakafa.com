@@ -18,7 +18,7 @@ interface GraphProps {
 export function Graph({ title, description, labels }: GraphProps) {
   // Constants
   // Real values: Height = 3000m
-  // Scale up for better visualization in cameraPosition [0, 0, 15]
+  // Scale real distances into graph units.
   const HEIGHT = 5.5;
 
   const ANGLE_1_DEG = 30;
@@ -102,7 +102,7 @@ export function Graph({ title, description, labels }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[0, 0, 16.5]}
       data={[
         // Ground Line (A to B)
         {
@@ -132,12 +132,12 @@ export function Graph({ title, description, labels }: GraphProps) {
             {
               text: labels.height,
               at: 1, // Midpoint
-              offset: [1, 0.5, 0], // Moved up to avoid X-axis overlap
+              offset: [-1.4, 0.5, 0], // Inside the initial vertical projection
             },
             {
               text: labels.initialPos,
               at: 2, // At C
-              offset: [1.5, 0.6, 0], // Shifted right to separate from Final Pos
+              offset: [-0.8, 1.1, 0], // Above the initial position, inside the view
             },
           ],
         },
@@ -156,7 +156,7 @@ export function Graph({ title, description, labels }: GraphProps) {
             {
               text: labels.finalPos,
               at: 1, // At E
-              offset: [-1.5, 0.6, 0], // Shifted left to separate from Initial Pos
+              offset: [-2, 0.8, 0], // Above and left of the final position
             },
           ],
         },

@@ -25,8 +25,8 @@ export function GraphSolution({
   const buildingHeight = 16 / scale; // AD
   const distanceAB = (16 * Math.sqrt(3)) / scale; // AB
   const helicopterHeight = distanceAB * Math.tan(Math.PI / 4); // AC
-  const shadowLength = 2; // BE (x)
-  const totalGround = distanceAB + shadowLength; // AE
+  const totalGround = 32 / scale; // AE
+  const shadowLength = totalGround - distanceAB; // BE (x)
   const labelOffsetX = totalGround * 0.08;
   const labelOffsetY = buildingHeight * 0.5;
   const angleRadius30 = distanceAB * 0.25;
@@ -74,11 +74,12 @@ export function GraphSolution({
 
   // Dimension line Y position
   const dimensionY = -labelOffsetY * 0.6;
-  const observerHeight = 2;
+  const observerHeight = 2 / scale;
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 18]}
+      cameraPosition={[3.2, 2.8, 16]}
+      cameraTarget={[3.2, 2.8, 0]}
       data={[
         // Vertical Line AC (A -> D -> C)
         {
@@ -99,7 +100,7 @@ export function GraphSolution({
             {
               text: labels.building,
               at: 1,
-              offset: [-labelOffsetX * 1.8, -labelOffsetY * 0.3, 0],
+              offset: [-labelOffsetX * 1.8, -labelOffsetY * 0.55, 0],
             },
             {
               text: <InlineMath math="D" />,
@@ -224,7 +225,7 @@ export function GraphSolution({
             {
               text: <InlineMath math="45^\circ" />,
               at: arc45LabelIndex,
-              offset: [-labelOffsetX * 0.8, labelOffsetY * 0.15, 0],
+              offset: [-labelOffsetX * 0.8, labelOffsetY * 0.5, 0],
             },
           ],
         },
