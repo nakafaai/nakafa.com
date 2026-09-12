@@ -41,9 +41,9 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "typescript",
     minimumDeclarations: 1,
   },
-  { approved: "16.3.4", dependency: "next", minimumDeclarations: 1 },
+  { approved: "16.3.5", dependency: "next", minimumDeclarations: 1 },
   {
-    approved: "16.3.4",
+    approved: "16.3.5",
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
@@ -156,8 +156,8 @@ export const REGISTRY_REVIEWS = [
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "next@latest",
-    "16.3.4",
-    "Stable 16.3.4 includes the AVIF security fix and native TypeScript CLI checks.",
+    "16.3.5",
+    "Stable 16.3.5 backports image cache hardening, standalone NFTs with adapters, CSP nonces for loading and template, and the use-cache prerender signal fix.",
   ],
   ["convex@latest", "1.45.0", "Convex acceptance uses an isolated deployment."],
   ["ai@latest", "7.0.93", "AI SDK packages move as one reviewed cohort."],
