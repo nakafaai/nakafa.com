@@ -1,4 +1,7 @@
 import { Illustration } from "@repo/design-system/components/contents/snbt/quantitative/set-3/question-13";
+import { Graph as Set9Question1Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-9/question-1";
+import { Graph as Set9Question2Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-9/question-2";
+import { Graph as Set9Question3Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-9/question-3";
 import { snbtQuantComponentNames } from "@repo/design-system/lib/markdown/names";
 import {
   LineEquation,
@@ -19,11 +22,6 @@ import {
   Set7Question14Graph,
 } from "@/lib/content/renderer/client/snbt/quant/set7";
 import { Set8Question20Graph } from "@/lib/content/renderer/client/snbt/quant/set8";
-import {
-  Set9Question1Graph,
-  Set9Question2Graph,
-  Set9Question3Graph,
-} from "@/lib/content/renderer/client/snbt/quant/set9";
 import {
   Set10Question1Graph,
   Set10Question2Graph,

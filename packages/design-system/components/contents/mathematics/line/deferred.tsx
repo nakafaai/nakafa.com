@@ -4,7 +4,8 @@ import type { LineSceneProps } from "@repo/design-system/components/contents/mat
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { lazy, Suspense, useState } from "react";
+import dynamic from "next/dynamic";
+import { useState } from "react";
 
 function ScenePlaceholder() {
   return (
@@ -19,12 +20,15 @@ function ScenePlaceholder() {
   );
 }
 
-// The intersection gate keeps WebGL off the server. React owns this lazy
-// boundary without adding a nested Next.js preload for the same scene.
-const LineScene = lazy(() =>
-  import("@repo/design-system/components/contents/mathematics/line/scene").then(
-    (module) => ({ default: module.LineScene })
-  )
+const LineScene = dynamic(
+  () =>
+    import(
+      "@repo/design-system/components/contents/mathematics/line/scene"
+    ).then((module) => module.LineScene),
+  {
+    loading: ScenePlaceholder,
+    ssr: false,
+  }
 );
 
 /** Loads the WebGL scene shortly before its card enters the viewport. */
@@ -39,9 +43,7 @@ export function DeferredLineScene(props: LineSceneProps) {
         once
         onIntersect={() => setShouldRender(true)}
       />
-      <Suspense fallback={<ScenePlaceholder />}>
-        {shouldRender ? <LineScene {...props} /> : <ScenePlaceholder />}
-      </Suspense>
+      {shouldRender ? <LineScene {...props} /> : <ScenePlaceholder />}
     </div>
   );
 }
