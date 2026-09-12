@@ -15,16 +15,16 @@
     "@repo/design-system": "workspace:*",
     "@repo/seo": "workspace:*",
     "effect": "catalog:",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "react-email": "6.9.3"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.7",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "@vitest/coverage-istanbul": "catalog:",
     "vitest": "catalog:"
   }

@@ -361,6 +361,22 @@ function TryoutSectionRuntimeContent({
     return <TryoutContentRefresh />;
   }
 
+  return (
+    <TryoutSectionRuntimeResolved
+      value={{ content: value.content, runtimeState: value.runtimeState }}
+    />
+  );
+}
+
+/** Reads the signed content promise unconditionally to satisfy React `use` rules. */
+function TryoutSectionRuntimeResolved({
+  value,
+}: {
+  value: {
+    content: Promise<TryoutRuntimeContent>;
+    runtimeState: TryoutSectionBodyValue["runtimeState"];
+  };
+}) {
   const content = use(value.content);
   if (content.questions.length === 0) {
     return <TryoutContentRefresh />;
