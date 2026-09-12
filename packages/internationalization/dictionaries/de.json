@@ -936,7 +936,7 @@
   "AnalyticsConsent": {
     "title": "Nutzungsdaten",
     "prompt-description": "Details zu teilen ist freiwillig.",
-    "description": "Erlaube Nakafa zu sehen, welche Funktionen du nutzt und was verbessert werden muss, ohne deinen Bildschirm aufzuzeichnen. Nakafa zählt Besuche immer anonym, ohne Cookies oder Konten, um die Seite zu betreiben. Wähle Erlauben nur, wenn du mindestens 18 bist oder mit 13 bis 17 die Zustimmung eines Elternteils oder Erziehungsberechtigten hast.",
+    "description": "Erlaube Nakafa zu sehen, welche Funktionen du nutzt und was verbessert werden muss, ohne deinen Bildschirm aufzuzeichnen. Nakafa zählt Besuche immer ohne Cookies oder Konten, um die Seite zu betreiben. Wähle Erlauben nur, wenn du mindestens 18 bist oder mit 13 bis 17 die Zustimmung eines Elternteils oder Erziehungsberechtigten hast.",
     "allow": "Erlauben",
     "decline": "Ablehnen",
     "manage": "Nutzungsdaten",

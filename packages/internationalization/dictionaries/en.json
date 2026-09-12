@@ -936,7 +936,7 @@
   "AnalyticsConsent": {
     "title": "Usage data",
     "prompt-description": "Sharing details is optional.",
-    "description": "Allow Nakafa to see which features you use and what needs fixing without recording your screen. Nakafa always counts anonymous visits, without cookies or accounts, to operate the site. Choose Allow only if you are 18 or older, or 13 to 17 with a parent or legal guardian's approval.",
+    "description": "Allow Nakafa to see which features you use and what needs fixing without recording your screen. Nakafa always counts visits, without cookies or accounts, to operate the site. Choose Allow only if you are 18 or older, or 13 to 17 with a parent or legal guardian's approval.",
     "allow": "Allow",
     "decline": "Decline",
     "manage": "Usage data",
