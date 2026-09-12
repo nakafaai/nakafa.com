@@ -10,7 +10,7 @@ export type CameraProjection =
       readonly far?: number;
       readonly kind: "orthographic";
       readonly near?: number;
-      /** Optional minimum; measured subjects determine the fitted height. */
+      /** Visible world height; a content fit may expand it when requested. */
       readonly viewHeight?: number;
     };
 

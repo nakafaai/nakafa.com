@@ -158,7 +158,7 @@ function ChargeScene({
       <Plate color={colors.negativePlate} label={labels.negativePlate} y={-1} />
 
       <Line color={colors.electronPath} lineWidth={5} points={ELECTRON_PATH} />
-      <Line color={colors.text} lineWidth={3} points={NEUTRON_PATH} />
+      <Line color={colors.neutron} lineWidth={3} points={NEUTRON_PATH} />
       <Line color={colors.protonPath} lineWidth={5} points={PROTON_PATH} />
 
       {CHARGE_PARTICLES.map((particle) => (
@@ -340,7 +340,7 @@ function ElectronRegionRing({
   return (
     <mesh rotation={rotation}>
       <torusGeometry args={[1.48, 0.01, 12, 96]} />
-      <meshStandardMaterial color={colors.text} opacity={0.2} transparent />
+      <meshStandardMaterial color={colors.electron} opacity={0.2} transparent />
     </mesh>
   );
 }

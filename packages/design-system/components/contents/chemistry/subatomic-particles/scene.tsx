@@ -254,7 +254,7 @@ function GoldFoilScene({ colors, labels }: SceneProps) {
         radius={0.16}
       />
       <Line
-        color={colors.text}
+        color={colors.gold}
         lineWidth={1}
         points={GOLD_NUCLEUS_POINTER_POINTS}
       />
@@ -397,7 +397,11 @@ function ElectronRegionRing({
   return (
     <mesh rotation={rotation}>
       <torusGeometry args={[1.45, 0.008, 12, 96]} />
-      <meshStandardMaterial color={colors.text} opacity={0.18} transparent />
+      <meshStandardMaterial
+        color={colors.electron}
+        opacity={0.18}
+        transparent
+      />
     </mesh>
   );
 }

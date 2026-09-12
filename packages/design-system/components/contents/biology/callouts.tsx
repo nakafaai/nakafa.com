@@ -7,6 +7,7 @@ import type {
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { COLORS } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
 const BIOLOGY_CALLOUT_ARROW_SIZE = 0.055;
@@ -96,7 +97,7 @@ function BiologyCallout({
       </ThreeLabel>
       <ArrowHelper
         arrowSize={BIOLOGY_CALLOUT_ARROW_SIZE}
-        color={color}
+        color={COLORS.SLATE}
         from={arrowStart}
         lineWidth={1.5}
         to={arrowEnd}

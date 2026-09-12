@@ -358,7 +358,7 @@ export function BacteriophageModel({
       <group position={[0, 0.26, 0]} rotation={[0.18, 0, -0.42]} scale={0.38}>
         <DnaDoubleHelix
           backboneColor={colors.genome}
-          pairColor={colors.arrow}
+          pairColor={colors.pathogen}
           pairLineWidth={0.8}
           radius={0.045}
           turns={1.15}
@@ -378,7 +378,7 @@ export function BacteriophageModel({
       </mesh>
       {PHAGE_FIBERS.map((points) => (
         <VirusTube
-          color={colors.arrow}
+          color={colors.pathogen}
           key={points.map((point) => point.join("-")).join("|")}
           points={points}
           radius={0.01}

@@ -5,7 +5,6 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { useCoordinateControls } from "@repo/design-system/components/three/controls";
-import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import {
   type CoordinateFrame,
   type CoordinatePoint,
@@ -14,7 +13,7 @@ import {
 import { CoordinateGrid } from "@repo/design-system/components/three/grid";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { getColor } from "@repo/design-system/lib/color";
+import { COLORS, getColor } from "@repo/design-system/lib/color";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
@@ -28,6 +27,8 @@ const CAMERA_POSITION_Z = 12;
 interface Props {
   /** Background color of the canvas */
   backgroundColor?: CSSProperties["backgroundColor"];
+  /** Explicit complete-content fit for finite illustrations. */
+  cameraFraming?: "content";
   /** Farthest orbit distance from the camera target. */
   cameraMaxDistance?: number;
   /** Nearest orbit distance from the camera target. */
@@ -66,9 +67,10 @@ export function CoordinateSystem({
   showZAxis = true,
   showOrigin = true,
   showLabels = true,
-  gridSize = 30,
-  size = 30,
+  gridSize = 100,
+  size = 100,
   backgroundColor = "transparent",
+  cameraFraming,
   cameraMaxDistance,
   cameraMinDistance,
   cameraPosition = [CAMERA_POSITION_X, CAMERA_POSITION_Y, CAMERA_POSITION_Z],
@@ -97,7 +99,6 @@ export function CoordinateSystem({
     };
   }, [isDarkTheme]);
 
-  const originColor = isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
   const axisFrame = useMemo(
     () => frame ?? createSymmetricFrame(size),
     [frame, size]
@@ -119,6 +120,7 @@ export function CoordinateSystem({
             autoRotate={play}
             cameraPosition={cameraPosition}
             cameraTarget={cameraTarget}
+            framing={cameraFraming}
             maxDistance={cameraMaxDistance}
             minDistance={cameraMinDistance}
             projection={cameraProjection}
@@ -153,8 +155,9 @@ export function CoordinateSystem({
 
             {/* Origin */}
             <Origin
-              color={originColor}
+              color={COLORS.SLATE}
               position={origin ? [origin.x, origin.y, origin.z] : undefined}
+              size={0.06}
               visible={showOrigin}
             />
           </CameraBounds>
