@@ -16,8 +16,10 @@ export const OperationalExceptionPropertiesSchema = Schema.Struct({
   convex_error_code: Schema.optional(shortTextSchema),
   cookie_name: Schema.optional(shortTextSchema),
   countryKey: Schema.optional(shortTextSchema),
+  error_code: Schema.optional(shortTextSchema),
   error_digest: Schema.optional(identityTextSchema),
   error_location: Schema.optional(shortTextSchema),
+  error_name: Schema.optional(shortTextSchema),
   gateway_error_type: Schema.optional(shortTextSchema),
   gateway_model_id: Schema.optional(identityTextSchema),
   gateway_retryable: Schema.optional(Schema.Boolean),
@@ -55,11 +57,48 @@ export function decodeOperationalExceptionProperties(properties: unknown) {
 const operationalExceptionMessage = "Operational exception";
 const operationalExceptionName = "OperationalError";
 const stackFramePattern = /^\s*at\s/;
+const maxDiscriminatorLength = 128;
+
+/** Reads the original error name as a bounded, message-free discriminator. */
+function readErrorName(error: unknown) {
+  if (!(error instanceof Error)) {
+    return;
+  }
+  const name = error.name.trim();
+  if (!name) {
+    return;
+  }
+  return name.slice(0, maxDiscriminatorLength);
+}
+
+/** Reads a bounded error code when the error carries a string one. */
+function readErrorCode(error: unknown) {
+  if (typeof error !== "object" || error === null || !("code" in error)) {
+    return;
+  }
+  const { code } = error as { code: unknown };
+  if (typeof code !== "string") {
+    return;
+  }
+  const trimmed = code.trim();
+  return trimmed ? trimmed.slice(0, maxDiscriminatorLength) : undefined;
+}
+
+/** Safe, message-free discriminators recorded beside a redacted exception. */
+export function operationalExceptionDiscriminators(error: unknown) {
+  const name = readErrorName(error);
+  const code = readErrorCode(error);
+  return {
+    ...(name === undefined ? {} : { error_name: name }),
+    ...(code === undefined ? {} : { error_code: code }),
+  } satisfies Partial<OperationalExceptionProperties>;
+}
 
 /** Removes messages, causes, and arbitrary payloads while retaining code frames. */
 export function createOperationalException(error: unknown) {
+  const name = readErrorName(error) ?? operationalExceptionName;
   const operationalError = new Error(operationalExceptionMessage);
-  operationalError.name = operationalExceptionName;
+  operationalError.name = name;
 
   if (!(error instanceof Error && error.stack)) {
     return operationalError;
@@ -69,7 +108,7 @@ export function createOperationalException(error: unknown) {
     .split("\n")
     .filter((line) => stackFramePattern.test(line));
   operationalError.stack = [
-    `${operationalExceptionName}: ${operationalExceptionMessage}`,
+    `${name}: ${operationalExceptionMessage}`,
     ...frames,
   ].join("\n");
   return operationalError;

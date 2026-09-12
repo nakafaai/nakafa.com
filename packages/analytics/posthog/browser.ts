@@ -7,6 +7,7 @@ import {
   createOperationalException,
   decodeOperationalExceptionProperties,
   type OperationalExceptionProperties,
+  operationalExceptionDiscriminators,
 } from "@repo/analytics/posthog/exception";
 import {
   authorizeAnalyticsIdentity,
@@ -319,6 +320,9 @@ export function captureException(
   }
   MutableRef.get(analyticsClient)?.captureException(
     createOperationalException(error),
-    decodedProperties.value
+    {
+      ...operationalExceptionDiscriminators(error),
+      ...decodedProperties.value,
+    }
   );
 }

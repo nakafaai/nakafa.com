@@ -5,6 +5,7 @@ import {
   createOperationalException,
   decodeOperationalExceptionProperties,
   type OperationalExceptionProperties,
+  operationalExceptionDiscriminators,
 } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
 import { Effect, Option, Schema } from "effect";
@@ -96,7 +97,10 @@ export const captureServerException = Effect.fn(
       analytics.captureExceptionImmediate(
         createOperationalException(error),
         undefined,
-        decodedProperties.value
+        {
+          ...operationalExceptionDiscriminators(error),
+          ...decodedProperties.value,
+        }
       ),
     catch: captureError,
   });
