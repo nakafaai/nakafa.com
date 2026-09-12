@@ -947,7 +947,7 @@
     "status-prompt": "No choice yet",
     "policy": "<privacy-policy>Privacy Policy</privacy-policy>",
     "load-error": "We could not load your choice. Usage sharing stays off while we retry.",
-    "runtime-error": "Your choice was saved, but usage sharing could not start. It stays off.",
+    "runtime-error": "Your choice was saved, but usage sharing could not be applied. It stays as it was.",
     "save-error": "We could not save your choice. Usage sharing stays off. Try again."
   },
   "School": {

@@ -947,7 +947,7 @@
     "status-prompt": "Noch keine Auswahl",
     "policy": "<privacy-policy>Datenschutzerklärung</privacy-policy>",
     "load-error": "Deine Auswahl konnte nicht geladen werden. Das Teilen bleibt ausgeschaltet, während wir es erneut versuchen.",
-    "runtime-error": "Deine Auswahl wurde gespeichert, aber das Teilen konnte nicht gestartet werden. Es bleibt ausgeschaltet.",
+    "runtime-error": "Deine Auswahl wurde gespeichert, konnte aber nicht angewendet werden. Der bisherige Status bleibt bestehen.",
     "save-error": "Deine Auswahl konnte nicht gespeichert werden. Das Teilen bleibt ausgeschaltet. Versuche es erneut."
   },
   "School": {

@@ -947,7 +947,7 @@
     "status-prompt": "Belum ada pilihan",
     "policy": "<privacy-policy>Kebijakan Privasi</privacy-policy>",
     "load-error": "Kami tidak dapat memuat pilihanmu. Pembagian data tetap nonaktif selama kami mencoba lagi.",
-    "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tidak dapat dimulai. Pembagian data tetap nonaktif.",
+    "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tidak dapat diterapkan. Statusnya tetap seperti semula.",
     "save-error": "Kami tidak dapat menyimpan pilihanmu. Pembagian data tetap nonaktif. Coba lagi."
   },
   "School": {
