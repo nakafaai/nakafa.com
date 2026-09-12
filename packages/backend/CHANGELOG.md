@@ -1,5 +1,15 @@
 # @repo/backend
 
+## 3.0.1
+
+### Patch Changes
+
+- Updated dependencies [[`09b9e89`](https://github.com/nakafaai/nakafa.com/commit/09b9e891f869f0226f04613fb437471514a777a3)]:
+  - @repo/analytics@0.1.1
+  - @repo/contents@2.0.1
+  - @repo/email@0.0.2
+  - @repo/ai@2.0.3
+
 ## 3.0.0
 
 ### Major Changes
