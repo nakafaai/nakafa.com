@@ -16,7 +16,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
 import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import Image from "next/image";
 import {
   type ComponentProps,

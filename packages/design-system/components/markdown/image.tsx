@@ -1,4 +1,4 @@
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import Image from "next/image";
 import { type ComponentProps, memo } from "react";
 

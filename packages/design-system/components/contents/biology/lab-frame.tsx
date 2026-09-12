@@ -28,7 +28,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
 import { Suspense, useState } from "react";

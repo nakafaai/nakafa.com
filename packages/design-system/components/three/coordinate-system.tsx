@@ -17,7 +17,7 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { getColor } from "@repo/design-system/lib/color";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTheme } from "next-themes";
 import { type CSSProperties, type ReactNode, Suspense, useMemo } from "react";
 

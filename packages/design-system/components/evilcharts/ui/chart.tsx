@@ -5,7 +5,7 @@ import {
   validateChartConfigColors,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { domAnimation, LazyMotion } from "motion/react";
 import {
   type ComponentProps,

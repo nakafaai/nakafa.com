@@ -17,7 +17,7 @@ import {
   persistSidebarState,
   SIDEBAR_COOKIE_NAME,
 } from "@repo/design-system/lib/sidebar/persistence";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { Effect } from "effect";
 import { type ComponentProps, useCallback, useMemo, useState } from "react";
 

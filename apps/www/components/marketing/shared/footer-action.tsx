@@ -13,8 +13,8 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
-import { cn } from "@repo/design-system/lib/utils";
 import { IconCircleFilled } from "@tabler/icons-react";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ComponentProps } from "react";

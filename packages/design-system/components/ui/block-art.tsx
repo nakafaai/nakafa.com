@@ -5,7 +5,7 @@ import { BlockArtCell } from "@repo/design-system/components/ui/block-art/cell";
 import { useBlockArtIdle } from "@repo/design-system/components/ui/block-art/idle";
 import { useBlockArtRipple } from "@repo/design-system/components/ui/block-art/ripple";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import {
   domAnimation,
   LazyMotion,

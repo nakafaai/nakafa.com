@@ -5,7 +5,7 @@ import {
   CodeBlockCopyButton,
   CodeBlockDownloadButton,
 } from "@repo/design-system/components/ai/code-block";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 
 interface MarkdownCodeBlockProps {
   readonly className?: string;

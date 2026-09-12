@@ -1,7 +1,7 @@
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type * as React from "react";
 
 function TooltipProvider({

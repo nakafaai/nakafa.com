@@ -6,7 +6,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import "@repo/design-system/styles/globals.css";
 import "@repo/design-system/styles/theme.css";
 import { useEffect } from "react";

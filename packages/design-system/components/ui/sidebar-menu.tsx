@@ -9,8 +9,8 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import type { ComponentProps, ReactElement } from "react";
 
 /** Renders the list container for sidebar menu items. */

@@ -11,7 +11,7 @@ import {
   readMarkdownNodeText,
 } from "@repo/design-system/components/markdown/react/node";
 import { readMermaidMetadata } from "@repo/design-system/lib/markdown/mermaid";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 

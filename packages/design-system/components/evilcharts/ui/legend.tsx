@@ -1,7 +1,7 @@
 import { useChart } from "@repo/design-system/components/evilcharts/ui/chart";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import { LegendItem } from "@repo/design-system/components/evilcharts/ui/legend-item";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type * as React from "react";
 import { type DefaultLegendContentProps, Legend } from "recharts";
 

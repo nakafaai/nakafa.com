@@ -5,7 +5,6 @@ import { DesignSystemProvider } from "@repo/design-system";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
-import { cn } from "@repo/design-system/lib/utils";
 import de from "@repo/internationalization/dictionaries/de.json";
 import en from "@repo/internationalization/dictionaries/en.json";
 import id from "@repo/internationalization/dictionaries/id.json";
@@ -14,6 +13,7 @@ import {
   previewRouting,
   routing,
 } from "@repo/internationalization/src/routing";
+import { cn } from "cn";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";

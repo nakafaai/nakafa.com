@@ -1,4 +1,4 @@
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 
 /** Shared sticky header surface; each route owns its heading and actions. */

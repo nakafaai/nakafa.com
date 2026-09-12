@@ -22,8 +22,8 @@ import {
   QuestionnaireTitle,
 } from "@repo/design-system/components/ui/questionnaire";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { cn } from "@repo/design-system/lib/utils";
 import { redirect, useRouter } from "@repo/internationalization/src/navigation";
+import { cn } from "cn";
 import { useMutation, useQuery } from "convex/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";

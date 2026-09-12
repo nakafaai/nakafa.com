@@ -11,7 +11,7 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ComponentProps } from "react";
 
 /** Renders the responsive sidebar panel around composed sidebar content. */

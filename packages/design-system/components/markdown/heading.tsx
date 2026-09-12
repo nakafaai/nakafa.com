@@ -1,11 +1,11 @@
 import { Link05Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { createHeadingId } from "@repo/design-system/lib/markdown/headings";
-import { cn } from "@repo/design-system/lib/utils";
 import type {
   HeadingProps,
   HeadingTag,
 } from "@repo/design-system/types/markdown";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 
 function extractTextFromNode(node: ReactNode): string {

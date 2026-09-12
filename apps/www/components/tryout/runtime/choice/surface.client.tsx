@@ -4,7 +4,7 @@ import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/choice-variant";
 import {

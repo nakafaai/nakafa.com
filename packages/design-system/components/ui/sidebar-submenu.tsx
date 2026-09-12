@@ -1,7 +1,7 @@
 "use client";
 
 import { useRender } from "@base-ui/react/use-render";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ComponentProps, ReactElement } from "react";
 
 /** Renders a nested sidebar menu with a visual parent-child guide. */

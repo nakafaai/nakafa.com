@@ -21,7 +21,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { languageIconMap } from "@repo/design-system/lib/code-block/icons";
 import { normalizeMermaidChart } from "@repo/design-system/lib/markdown/mermaid";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 
 interface Props {
   chart: string;

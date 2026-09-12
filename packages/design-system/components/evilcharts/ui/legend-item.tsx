@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import type { ChartLegendVariant } from "@repo/design-system/components/evilcharts/ui/legend";
 import { ChartSeriesCueIndicator } from "@repo/design-system/components/evilcharts/ui/series-cue-indicator";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type * as React from "react";
 import type * as RechartsPrimitive from "recharts";
 

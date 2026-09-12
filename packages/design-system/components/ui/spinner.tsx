@@ -1,6 +1,6 @@
 import { Loading03Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 
 interface SpinnerProps
   extends Omit<React.ComponentProps<typeof HugeIcons>, "icon"> {

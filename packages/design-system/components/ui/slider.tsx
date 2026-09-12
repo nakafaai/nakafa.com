@@ -1,7 +1,7 @@
 "use client";
 
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 
 /**
  * Renders a Base UI slider using the active shadcn base registry anatomy.

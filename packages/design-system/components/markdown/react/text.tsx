@@ -3,7 +3,7 @@ import { Heading } from "@repo/design-system/components/markdown/heading";
 import { MarkdownImage } from "@repo/design-system/components/markdown/image";
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import type { ReactMarkdownComponents } from "@repo/design-system/components/markdown/react/node";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 
 export const reactTextComponents: ReactMarkdownComponents = {
   a: ({ node: _node, ...props }) => <Anchor data-nakafa="anchor" {...props} />,
