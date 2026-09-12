@@ -66,6 +66,7 @@ overrides:
 
 allowBuilds:
   '@parcel/watcher': true
+  '@posthog/cli': true
   '@swc/core': true
   core-js: true
   core-js-pure: true

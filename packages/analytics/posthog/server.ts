@@ -3,6 +3,7 @@ import "server-only";
 import { keys } from "@repo/analytics/keys";
 import {
   createOperationalException,
+  createOperationalExceptionMetadata,
   decodeOperationalExceptionProperties,
   type OperationalExceptionProperties,
 } from "@repo/analytics/posthog/exception";
@@ -91,13 +92,16 @@ export const captureServerException = Effect.fn(
     try: getServerAnalytics,
     catch: captureError,
   });
+  const exception = createOperationalException(error);
   yield* Effect.tryPromise({
     try: () =>
-      analytics.captureExceptionImmediate(
-        createOperationalException(error),
-        undefined,
-        decodedProperties.value
-      ),
+      analytics.captureExceptionImmediate(exception, undefined, {
+        ...decodedProperties.value,
+        ...createOperationalExceptionMetadata(
+          exception.name,
+          decodedProperties.value
+        ),
+      }),
     catch: captureError,
   });
 });

@@ -31,6 +31,7 @@
     "@mdx-js/mdx": "3.1.1",
     "@nakafa/aksara-contracts": "0.38.0",
     "@paper-design/shaders-react": "^0.0.80",
+    "@posthog/nextjs-config": "^1.11.1",
     "@repo/ai": "workspace:*",
     "@repo/analytics": "workspace:*",
     "@repo/backend": "workspace:*",

@@ -5,6 +5,7 @@ import { keys } from "@repo/analytics/keys";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import {
   createOperationalException,
+  createOperationalExceptionMetadata,
   decodeOperationalExceptionProperties,
   type OperationalExceptionProperties,
 } from "@repo/analytics/posthog/exception";
@@ -317,8 +318,12 @@ export function captureException(
   if (Option.isNone(decodedProperties)) {
     return;
   }
-  MutableRef.get(analyticsClient)?.captureException(
-    createOperationalException(error),
-    decodedProperties.value
-  );
+  const exception = createOperationalException(error);
+  MutableRef.get(analyticsClient)?.captureException(exception, {
+    ...decodedProperties.value,
+    ...createOperationalExceptionMetadata(
+      exception.name,
+      decodedProperties.value
+    ),
+  });
 }

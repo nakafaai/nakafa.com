@@ -1,5 +1,10 @@
 import path from "node:path";
-import { postHogProxyKeys } from "@repo/analytics/keys";
+import { withPostHogConfig } from "@posthog/nextjs-config";
+import {
+  postHogProxyKeys,
+  postHogPublicKeys,
+  postHogSourceMapKeys,
+} from "@repo/analytics/keys";
 import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
 import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
 import {
@@ -226,4 +231,18 @@ const nextConfig = {
     },
   },
 } satisfies NextConfig;
-export default withNextIntl(nextConfig);
+const composedConfig = withNextIntl(nextConfig);
+// Source map upload runs only when the build environment supplies PostHog
+// credentials, so local, preview, and test builds stay unchanged and never fail
+// on a missing key. `withPostHogConfig` must remain the outermost wrapper for
+// Next.js to invoke its build hooks under Turbopack.
+// Docs: https://posthog.com/docs/error-tracking/upload-source-maps/nextjs
+const sourceMapKeys = postHogSourceMapKeys();
+export default sourceMapKeys.POSTHOG_API_KEY && sourceMapKeys.POSTHOG_PROJECT_ID
+  ? withPostHogConfig(composedConfig, {
+      host: postHogPublicKeys().NEXT_PUBLIC_POSTHOG_UI_HOST,
+      personalApiKey: sourceMapKeys.POSTHOG_API_KEY,
+      projectId: sourceMapKeys.POSTHOG_PROJECT_ID,
+      sourcemaps: { enabled: true },
+    })
+  : composedConfig;

@@ -9,6 +9,9 @@ const urlSchema = Schema.toStandardSchemaV1(
     Schema.check(Schema.makeFilter((value) => URL.canParse(value)))
   )
 );
+const optionalSecretSchema = Schema.toStandardSchemaV1(
+  Schema.UndefinedOr(Schema.Trimmed.check(Schema.isNonEmpty()))
+);
 /**
  * Validates the PostHog managed reverse proxy host read by Next config.
  */
@@ -19,6 +22,25 @@ export const postHogProxyKeys = () =>
     },
     runtimeEnv: {
       POSTHOG_PROXY_HOST: process.env.POSTHOG_PROXY_HOST,
+    },
+  });
+/**
+ * Validates the optional build-time credentials that authorize source map
+ * upload. Both are absent outside production, so the Next config leaves upload
+ * off rather than failing the build.
+ *
+ * References:
+ * https://posthog.com/docs/error-tracking/upload-source-maps/nextjs
+ */
+export const postHogSourceMapKeys = () =>
+  createEnv({
+    server: {
+      POSTHOG_API_KEY: optionalSecretSchema,
+      POSTHOG_PROJECT_ID: optionalSecretSchema,
+    },
+    runtimeEnv: {
+      POSTHOG_API_KEY: process.env.POSTHOG_API_KEY,
+      POSTHOG_PROJECT_ID: process.env.POSTHOG_PROJECT_ID,
     },
   });
 /** Validates public PostHog values used by browser analytics. */

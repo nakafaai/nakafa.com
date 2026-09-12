@@ -18,6 +18,7 @@ export const OperationalExceptionPropertiesSchema = Schema.Struct({
   countryKey: Schema.optional(shortTextSchema),
   error_digest: Schema.optional(identityTextSchema),
   error_location: Schema.optional(shortTextSchema),
+  error_name: Schema.optional(shortTextSchema),
   gateway_error_type: Schema.optional(shortTextSchema),
   gateway_model_id: Schema.optional(identityTextSchema),
   gateway_retryable: Schema.optional(Schema.Boolean),
@@ -55,11 +56,36 @@ export function decodeOperationalExceptionProperties(properties: unknown) {
 const operationalExceptionMessage = "Operational exception";
 const operationalExceptionName = "OperationalError";
 const stackFramePattern = /^\s*at\s/;
+// Admits only a bounded code identifier, so a message-shaped `name` (spaces,
+// an email address) never survives as the retained error class.
+const errorClassPattern = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
+const fingerprintSeparator = "|";
+const issueNameSeparator = " · ";
+const issueNameMaxLength = 200;
+// Bounded context that stays stable across a rebuild, so grouping no longer
+// depends on minified stack frames that change on every build.
+const fingerprintPropertyKeys = [
+  "source",
+  "route_path",
+  "render_source",
+  "error_digest",
+  "nextjs_digest",
+] as const;
+const issueNamePropertyKeys = new Set<string>(["source", "route_path"]);
+
+/** Returns the error class name when it is a safe, bounded identifier. */
+function getOperationalExceptionClass(error: unknown) {
+  if (error instanceof Error && errorClassPattern.test(error.name)) {
+    return error.name;
+  }
+  return operationalExceptionName;
+}
 
 /** Removes messages, causes, and arbitrary payloads while retaining code frames. */
 export function createOperationalException(error: unknown) {
+  const name = getOperationalExceptionClass(error);
   const operationalError = new Error(operationalExceptionMessage);
-  operationalError.name = operationalExceptionName;
+  operationalError.name = name;
 
   if (!(error instanceof Error && error.stack)) {
     return operationalError;
@@ -69,8 +95,46 @@ export function createOperationalException(error: unknown) {
     .split("\n")
     .filter((line) => stackFramePattern.test(line));
   operationalError.stack = [
-    `${operationalExceptionName}: ${operationalExceptionMessage}`,
+    `${name}: ${operationalExceptionMessage}`,
     ...frames,
   ].join("\n");
   return operationalError;
+}
+
+/**
+ * Builds bounded grouping metadata for one operational exception.
+ *
+ * The fingerprint and issue name come only from the retained error class
+ * (`createOperationalException` already resolved it into the exception name) and
+ * the allowed context, so the same fault groups into one issue across rebuilds
+ * and reads with a real title instead of the shared constant.
+ *
+ * Docs:
+ * https://posthog.com/docs/error-tracking/fingerprints
+ * https://posthog.com/docs/error-tracking/capture#customizing-exception-capture
+ */
+export function createOperationalExceptionMetadata(
+  errorName: string,
+  properties: OperationalExceptionProperties
+) {
+  const fingerprintParts = [errorName];
+  const issueNameParts = [errorName];
+  for (const key of fingerprintPropertyKeys) {
+    const value = properties[key];
+    if (typeof value !== "string" || value.length === 0) {
+      continue;
+    }
+    fingerprintParts.push(`${key}:${value}`);
+    if (issueNamePropertyKeys.has(key)) {
+      issueNameParts.push(value);
+    }
+  }
+
+  return {
+    $exception_fingerprint: fingerprintParts.join(fingerprintSeparator),
+    $issue_name: issueNameParts
+      .join(issueNameSeparator)
+      .slice(0, issueNameMaxLength),
+    error_name: errorName,
+  };
 }

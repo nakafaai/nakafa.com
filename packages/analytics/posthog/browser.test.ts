@@ -337,9 +337,14 @@ describe("consent-aware PostHog browser runtime", () => {
       expect(client.captureException).toHaveBeenCalledWith(
         expect.objectContaining({
           message: "Operational exception",
-          name: "OperationalError",
+          name: "Error",
         }),
-        { source: "browser-test" }
+        {
+          $exception_fingerprint: "Error|source:browser-test",
+          $issue_name: "Error · browser-test",
+          error_name: "Error",
+          source: "browser-test",
+        }
       );
       expect(JSON.stringify(client.captureException.mock.calls)).not.toContain(
         "user@example.com"

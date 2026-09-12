@@ -103,10 +103,15 @@ describe("PostHog server reporting", () => {
         1,
         expect.objectContaining({
           message: "Operational exception",
-          name: "OperationalError",
+          name: "Error",
         }),
         undefined,
-        properties
+        {
+          $exception_fingerprint: "Error|source:request",
+          $issue_name: "Error · request",
+          error_name: "Error",
+          source: "request",
+        }
       );
       expect(postHogMocks.captureExceptionImmediate).toHaveBeenCalledTimes(3);
       expect(
