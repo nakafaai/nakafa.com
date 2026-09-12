@@ -101,6 +101,7 @@ export function RelationVisualizer({
     <figure aria-label={accessibilityLabel}>
       <CoordinateSystem
         cameraPosition={[0, 3, 11]}
+        cameraProjection={{ kind: "orthographic" }}
         cameraTarget={[0, 3, 0]}
         showOrigin={false}
       >
