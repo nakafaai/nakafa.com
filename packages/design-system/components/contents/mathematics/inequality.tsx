@@ -42,7 +42,10 @@ export function Inequality({
         </CardHeader>
         <CardContent>
           <CoordinateSystem
-            cameraPosition={cameraPosition}
+            cameraPosition={
+              cameraPosition ??
+              (data.every((item) => item.is2D) ? [0, 0, 15] : undefined)
+            }
             cameraTarget={cameraTarget}
           >
             {data.map((item, index) => (

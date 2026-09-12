@@ -99,7 +99,11 @@ export function RelationVisualizer({
   ];
   return (
     <figure aria-label={accessibilityLabel}>
-      <CoordinateSystem cameraPosition={[0, 0, 15]} showOrigin={false}>
+      <CoordinateSystem
+        cameraPosition={[0, 3, 11]}
+        cameraTarget={[0, 3, 0]}
+        showOrigin={false}
+      >
         {/* Keep every element on its arrow row, above the X axis. */}
         <group position={[0, 3, 0]}>
           {sets.map((set) => (
