@@ -4,7 +4,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";

@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from "@hugeicons/react";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ComponentProps } from "react";
 
 export function HugeIcons({

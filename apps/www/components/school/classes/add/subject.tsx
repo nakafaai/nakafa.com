@@ -25,7 +25,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { subjectList } from "@/components/school/classes/data/subject";
 

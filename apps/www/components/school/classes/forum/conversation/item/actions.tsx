@@ -20,7 +20,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";

@@ -5,7 +5,7 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type * as React from "react";
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {

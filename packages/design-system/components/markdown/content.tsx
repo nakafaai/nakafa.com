@@ -2,7 +2,7 @@ import { reactMdxComponents } from "@repo/design-system/components/markdown/reac
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import { harden } from "rehype-harden";

@@ -24,7 +24,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { format } from "date-fns";

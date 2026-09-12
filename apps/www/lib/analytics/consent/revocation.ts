@@ -16,11 +16,9 @@ interface AccountAnalyticsConsentRevocationOptions {
     | Parameters<typeof revokeAccountAnalyticsGrant>[1]
     | null;
   readonly currentBrowserPrivacySignal: Effect.Effect<boolean>;
-  readonly explicitSaveRef: {
-    readonly current: AnalyticsConsentSessionOperation | null;
-  };
   readonly isOnline: boolean;
   readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
+  readonly readLatestSave: () => AnalyticsConsentSessionOperation | null;
   readonly setAccountConsent: Parameters<typeof revokeAccountAnalyticsGrant>[0];
   readonly setSessionOverrides: Dispatch<
     SetStateAction<AnalyticsConsentSessionOverrides>
@@ -32,9 +30,9 @@ interface AccountAnalyticsConsentRevocationOptions {
 export function useAccountAnalyticsConsentRevocation({
   currentAccountUserId,
   currentBrowserPrivacySignal,
-  explicitSaveRef,
   isOnline,
   promptIdentity,
+  readLatestSave,
   setAccountConsent,
   setSessionOverrides,
   shouldRevokeAccountGrant,
@@ -54,9 +52,10 @@ export function useAccountAnalyticsConsentRevocation({
     }
 
     const revocationOwner = Symbol("analytics consent revocation");
+    const latestSaveAtStart = readLatestSave();
     const explicitSaveOwnerAtStart =
-      explicitSaveRef.current?.promptIdentity === promptIdentity
-        ? explicitSaveRef.current.owner
+      latestSaveAtStart?.promptIdentity === promptIdentity
+        ? latestSaveAtStart.owner
         : null;
     revocationRef.current = { owner: revocationOwner, promptIdentity };
 
@@ -67,7 +66,7 @@ export function useAccountAnalyticsConsentRevocation({
     ) =>
       Effect.sync(() =>
         setSessionOverrides((current) => {
-          const latestExplicitSave = explicitSaveRef.current;
+          const latestExplicitSave = readLatestSave();
           if (
             !canCommitAnalyticsConsentRevocation({
               explicitSaveOwnerAtStart,
@@ -116,9 +115,9 @@ export function useAccountAnalyticsConsentRevocation({
   }, [
     currentAccountUserId,
     currentBrowserPrivacySignal,
-    explicitSaveRef,
     isOnline,
     promptIdentity,
+    readLatestSave,
     setAccountConsent,
     setSessionOverrides,
     shouldRevokeAccountGrant,

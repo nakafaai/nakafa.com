@@ -22,8 +22,8 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 
 import { AiChatModel } from "@/components/ai/chat-model";

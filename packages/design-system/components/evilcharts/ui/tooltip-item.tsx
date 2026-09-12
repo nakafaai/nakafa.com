@@ -5,7 +5,7 @@ import {
   getPayloadConfigEntry,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { Predicate } from "effect";
 import type * as React from "react";
 import type * as RechartsPrimitive from "recharts";

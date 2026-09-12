@@ -10,7 +10,7 @@ import {
   type PromptInputMessage,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { Effect, Fiber } from "effect";
 import {
   type ChangeEventHandler,

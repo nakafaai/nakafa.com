@@ -3,7 +3,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import { formatFileSize } from "@repo/design-system/lib/files/size";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Activity } from "react";

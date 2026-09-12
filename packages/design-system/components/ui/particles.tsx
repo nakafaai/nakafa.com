@@ -10,7 +10,7 @@ import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-muta
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react";
 

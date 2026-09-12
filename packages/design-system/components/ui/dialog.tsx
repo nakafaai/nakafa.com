@@ -5,7 +5,7 @@ import { CancelIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ComponentProps } from "react";
 
 const DialogCreateHandle = DialogPrimitive.createHandle;

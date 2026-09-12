@@ -5,8 +5,8 @@ import {
   type CodeBlockData,
   useCodeBlock,
 } from "@repo/design-system/lib/code-block/context";
-import { cn } from "@repo/design-system/lib/utils";
 import { cva } from "class-variance-authority";
+import { cn } from "cn";
 import type { HTMLAttributes, ReactNode } from "react";
 
 const codeBlockLineNumberVariants = cva(

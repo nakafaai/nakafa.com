@@ -1,5 +1,5 @@
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 
 /** Renders the unread marker between the last read post and the next unread post. */

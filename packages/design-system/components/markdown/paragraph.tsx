@@ -1,5 +1,5 @@
-import { cn } from "@repo/design-system/lib/utils";
 import type { ParagraphProps } from "@repo/design-system/types/markdown";
+import { cn } from "cn";
 
 export function Paragraph({ children, className, ...props }: ParagraphProps) {
   return (

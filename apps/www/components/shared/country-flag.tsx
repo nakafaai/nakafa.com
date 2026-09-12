@@ -1,4 +1,4 @@
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import deFlag from "country-flag-icons/string/3x2/DE";
 import gbFlag from "country-flag-icons/string/3x2/GB";
 import idFlag from "country-flag-icons/string/3x2/ID";

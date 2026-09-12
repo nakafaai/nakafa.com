@@ -3,7 +3,7 @@
 import { useRender } from "@base-ui/react/use-render";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ComponentProps, ReactElement } from "react";
 
 /** Renders a compact input aligned with the sidebar surface. */

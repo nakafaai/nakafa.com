@@ -1,5 +1,5 @@
 import type { BrushPointerBindings } from "@repo/design-system/components/evilcharts/ui/evil-brush-drag";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 
 interface EvilBrushHandleProps {
   bind: BrushPointerBindings;

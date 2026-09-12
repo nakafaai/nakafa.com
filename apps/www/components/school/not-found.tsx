@@ -1,7 +1,7 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 
 export function SchoolNotFound() {

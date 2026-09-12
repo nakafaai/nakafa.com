@@ -1,6 +1,6 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cn } from "@repo/design-system/lib/utils";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
+import { cn } from "cn";
 
 export function Anchor({
   href,

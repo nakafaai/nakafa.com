@@ -9,7 +9,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 

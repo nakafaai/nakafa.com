@@ -5,7 +5,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import Image from "next/image";
 import { createContext, use, useMemo, useState } from "react";
 

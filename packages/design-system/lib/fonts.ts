@@ -1,4 +1,4 @@
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { GeistMono } from "geist/font/mono";
 import {
   GeistPixelCircle,

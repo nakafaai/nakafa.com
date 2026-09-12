@@ -3,7 +3,7 @@ import { Heading } from "@repo/design-system/components/markdown/heading";
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { getGithubUrl } from "@/lib/utils/github";
 

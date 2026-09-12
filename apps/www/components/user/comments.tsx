@@ -25,7 +25,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";

@@ -3,7 +3,7 @@
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox";
 import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 
 function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
   return (

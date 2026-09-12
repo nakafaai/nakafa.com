@@ -18,7 +18,7 @@ import {
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 
 interface Props {

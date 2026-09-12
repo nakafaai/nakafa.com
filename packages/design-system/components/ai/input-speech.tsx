@@ -6,7 +6,7 @@ import {
   type PromptInputButtonProps,
 } from "@repo/design-system/components/ai/input-controls";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { Effect, Result, Schema } from "effect";
 import {
   type RefObject,

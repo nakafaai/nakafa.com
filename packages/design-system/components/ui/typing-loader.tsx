@@ -1,4 +1,4 @@
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 
 const DOT_DELAYS = [0, 250, 500];
 const DOT_SIZES = {

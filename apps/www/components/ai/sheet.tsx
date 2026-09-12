@@ -4,7 +4,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { Activity } from "react";
 import { useAi } from "@/components/ai/context/use-ai";

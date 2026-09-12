@@ -3,8 +3,8 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
-import { cn } from "@repo/design-system/lib/utils";
 import type { UIMessage } from "ai";
+import { cn } from "cn";
 import { type ComponentProps, type HTMLAttributes, memo } from "react";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {

@@ -1,8 +1,8 @@
 import { Mail01Icon, UserQuestion02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 
 export interface MarketingFaqItem {

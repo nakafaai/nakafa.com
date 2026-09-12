@@ -7,8 +7,8 @@ import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
-import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import type * as React from "react";
 import { createContext, use, useMemo } from "react";
 

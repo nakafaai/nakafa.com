@@ -4,7 +4,7 @@ import {
   InputGroup,
   InputGroupTextarea,
 } from "@repo/design-system/components/ui/input-group";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type {
   ClipboardEventHandler,
   ComponentProps,
