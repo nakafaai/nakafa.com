@@ -167,6 +167,7 @@ function ReactionTypeCameraControls() {
       cameraPosition={cameraPosition}
       cameraTarget={CHEMICAL_REACTION_TYPES_SCENE_VIEW.cameraTarget}
       fov={45}
+      framing="content"
     />
   );
 }

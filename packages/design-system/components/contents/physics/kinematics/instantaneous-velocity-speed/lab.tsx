@@ -130,6 +130,7 @@ export function InstantaneousVelocitySpeedLab({
                 enableRotate
                 enableZoom
                 fov={INSTANTANEOUS_SPEED_CAMERA.fov}
+                framing="content"
               />
               <InstantaneousVelocitySpeedScene motion={motion} />
             </Suspense>

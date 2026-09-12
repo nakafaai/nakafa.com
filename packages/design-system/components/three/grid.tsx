@@ -1,6 +1,6 @@
 "use client";
 
-import { Line } from "@react-three/drei";
+import { Grid, Line } from "@react-three/drei";
 import {
   type CoordinateFrame,
   type CoordinatePoint,
@@ -8,7 +8,7 @@ import {
   type GridPlaneGeometry,
 } from "@repo/design-system/components/three/frame";
 import { useMemo } from "react";
-import type { ColorRepresentation } from "three";
+import { type ColorRepresentation, DoubleSide } from "three";
 
 interface GridPlaneProps {
   readonly cellColor: ColorRepresentation;
@@ -57,15 +57,17 @@ function GridPlane({ cellColor, geometry, sectionColor }: GridPlaneProps) {
   ) : null;
 }
 
-/** Renders finite Cartesian grid lines without shader offsets, fading, or faces. */
+/** Keeps explicit mathematical frames finite and the general world continuous. */
 export function CoordinateGrid({
   cellColor,
   frame,
+  infinite = false,
   origin,
   sectionColor,
 }: {
   readonly cellColor: ColorRepresentation;
   readonly frame: CoordinateFrame;
+  readonly infinite?: boolean;
   readonly origin?: CoordinatePoint;
   readonly sectionColor: ColorRepresentation;
 }) {
@@ -73,6 +75,36 @@ export function CoordinateGrid({
     () => createGridGeometry(frame, origin),
     [frame, origin]
   );
+
+  if (infinite) {
+    return (
+      <group position={[origin?.x ?? 0, origin?.y ?? 0, origin?.z ?? 0]}>
+        {[
+          [Math.PI / 2, 0, 0],
+          [0, 0, 0],
+          [0, 0, Math.PI / 2],
+        ].map(([x, y, z]) => (
+          <Grid
+            args={[2, 2]}
+            cellColor={cellColor}
+            cellSize={1}
+            cellThickness={0.35}
+            fadeDistance={80}
+            fadeStrength={2}
+            followCamera
+            infiniteGrid
+            key={`${x}-${y}-${z}`}
+            material-depthWrite={false}
+            rotation={[x, y, z]}
+            sectionColor={sectionColor}
+            sectionSize={5}
+            sectionThickness={0.6}
+            side={DoubleSide}
+          />
+        ))}
+      </group>
+    );
+  }
 
   return (
     <>

@@ -97,9 +97,9 @@ export function ThreeLabel({
   color,
   fontSize = "annotation",
   gap = 0,
-  minimumFontSize = fontSize === "diagram"
-    ? THREE_DIAGRAM_MINIMUM_FONT_SIZE
-    : 0,
+  minimumFontSize = typeof fontSize === "number"
+    ? 0
+    : THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   maximumFontSize = minimumFontSize > 0
     ? THREE_DIAGRAM_MAXIMUM_FONT_SIZE
     : Number.POSITIVE_INFINITY,

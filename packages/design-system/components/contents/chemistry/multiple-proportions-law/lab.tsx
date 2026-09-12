@@ -145,6 +145,7 @@ function MultipleProportionsCameraControls() {
       cameraPosition={cameraPosition}
       cameraTarget={MULTIPLE_PROPORTIONS_SCENE_VIEW.cameraTarget}
       fov={42}
+      framing="content"
     />
   );
 }

@@ -16,13 +16,6 @@ import { Frustum, type Group, Matrix4, Vector2, Vector3 } from "three";
 const LABEL_EDGE_SPACE = 4;
 const LABEL_GAP = 12;
 
-/** Places a point-like axis label away from the framed subject. */
-function pointLabelOffset(coordinate: number, extent: number, margin: number) {
-  const preferred = coordinate < extent / 2 ? -LABEL_GAP : LABEL_GAP;
-  const center = coordinate + preferred;
-  return center < margin || center > extent - margin ? -preferred : preferred;
-}
-
 /** Intersects an axis segment with the six planes of the camera frustum. */
 function clipAxis(frustum: Frustum, from: Vector3, to: Vector3) {
   let minimum = 0;
@@ -108,22 +101,14 @@ function AxisLabel({
     const dx = (scratch.end.x - scratch.start.x) * size.width;
     const dy = (scratch.start.y - scratch.end.y) * size.height;
     const length = Math.hypot(dx, dy);
+    if (length <= 1) {
+      // An end-on axis has no visible direction. Its label returns as soon as
+      // orbiting reveals the axis instead of obscuring the plane's origin.
+      element.style.visibility = "hidden";
+      return;
+    }
     let normalX = (-dy / length) * LABEL_GAP;
     let normalY = (dx / length) * LABEL_GAP;
-    if (length <= 1) {
-      // An axis facing the camera projects to a point. Place its label away
-      // from the framed subject, whose bounds determine the viewport center.
-      normalX = pointLabelOffset(
-        ((scratch.end.x + 1) * size.width) / 2,
-        size.width,
-        marginX
-      );
-      normalY = pointLabelOffset(
-        ((1 - scratch.end.y) * size.height) / 2,
-        size.height,
-        marginY
-      );
-    }
     const horizontal = Math.max(0.1, 1 - (2 * marginX) / size.width);
     const vertical = Math.max(0.1, 1 - (2 * marginY) / size.height);
     let endpoint = maximum;

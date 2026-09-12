@@ -1,8 +1,8 @@
 "use client";
 
 import { Instance, Instances, Line } from "@react-three/drei";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  ORIGIN_COLOR,
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   THREE_FONT_SIZE,
 } from "@repo/design-system/components/three/data/constants";
@@ -14,9 +14,7 @@ import {
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
 import { COLORS } from "@repo/design-system/lib/color";
-import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { getCos, getRadians, getSin } from "@repo/math/angles";
-import { useTheme } from "next-themes";
 import { type ComponentProps, useMemo } from "react";
 import { Vector3 } from "three";
 
@@ -47,20 +45,12 @@ export function Triangle({
   size = 1,
   ...props
 }: Props & ComponentProps<"group">) {
-  const { resolvedTheme } = useTheme();
-
   const angleInRadians = getRadians(angle);
 
   // Create a right triangle with sides of variable length based on the angle
   const hypotenuse = size; // Scale the hypotenuse by the size parameter
   const adjacent = getCos(angle) * hypotenuse;
   const opposite = getSin(angle) * hypotenuse;
-
-  // Colors based on theme
-  const baseColor =
-    getThemeAppearance(resolvedTheme) === "dark"
-      ? ORIGIN_COLOR.LIGHT
-      : ORIGIN_COLOR.DARK;
 
   // Scale the vertex points based on triangle size
   const vertexSize =
@@ -158,7 +148,7 @@ export function Triangle({
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.adjacentLabelPos}
       >
-        {TRIANGLE_SIDES[0].symbol}
+        <InlineMath math={TRIANGLE_SIDES[0].symbol} />
       </ThreeLabel>
 
       <ThreeLabel
@@ -167,7 +157,7 @@ export function Triangle({
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.oppositeLabelPos}
       >
-        {TRIANGLE_SIDES[1].symbol}
+        <InlineMath math={TRIANGLE_SIDES[1].symbol} />
       </ThreeLabel>
 
       <ThreeLabel
@@ -177,7 +167,7 @@ export function Triangle({
         minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
         position={labelPositions.hypotenuseLabelPos}
       >
-        {TRIANGLE_SIDES[2].symbol}
+        <InlineMath math={TRIANGLE_SIDES[2].symbol} />
       </ThreeLabel>
 
       {/* Points at vertices - using instanced rendering */}
@@ -185,7 +175,7 @@ export function Triangle({
         <sphereGeometry
           args={[1, GRAPH_POINT_SEGMENTS, GRAPH_POINT_SEGMENTS]}
         />
-        <meshBasicMaterial color={baseColor} />
+        <meshBasicMaterial color={COLORS.SLATE} />
         {triangleVertices.map((vertex) => (
           <Instance
             key={vertex.key}

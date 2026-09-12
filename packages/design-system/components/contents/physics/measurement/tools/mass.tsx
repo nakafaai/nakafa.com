@@ -22,7 +22,6 @@ import {
   RULER_COLOR,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
@@ -178,14 +177,14 @@ export function MassScene({
       </group>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize="reading"
         position={[-MASS_ARM_LENGTH, 0.45, 1.05]}
       >
         {reading}
       </ThreeLabel>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize="reading"
         position={[MASS_ARM_LENGTH, 0.45, 1.05]}
       >
         <InlineMath math={referenceReading} />

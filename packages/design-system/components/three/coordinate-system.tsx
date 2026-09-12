@@ -67,7 +67,7 @@ export function CoordinateSystem({
   showZAxis = true,
   showOrigin = true,
   showLabels = true,
-  gridSize = 100,
+  gridSize,
   size = 100,
   backgroundColor = "transparent",
   cameraFraming,
@@ -104,7 +104,7 @@ export function CoordinateSystem({
     [frame, size]
   );
   const gridFrame = useMemo(
-    () => frame ?? createSymmetricFrame(gridSize),
+    () => frame ?? createSymmetricFrame(gridSize ?? 100),
     [frame, gridSize]
   );
 
@@ -168,6 +168,7 @@ export function CoordinateSystem({
               <CoordinateGrid
                 cellColor={gridColors.secondary}
                 frame={gridFrame}
+                infinite={!frame && gridSize === undefined}
                 origin={origin}
                 sectionColor={gridColors.main}
               />

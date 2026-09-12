@@ -8,7 +8,6 @@ import {
   TIME_FACE_COLOR,
   TIME_SCENE_SCALE,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useMemo } from "react";
 
@@ -84,7 +83,7 @@ export function TimeScene({
       </mesh>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.display}
+        fontSize="display"
         position={[0, -0.55, 0.25]}
       >
         {reading}

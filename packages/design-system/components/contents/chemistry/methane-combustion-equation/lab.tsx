@@ -348,6 +348,7 @@ function CombustionCamera() {
       cameraPosition={cameraPosition}
       cameraTarget={VIEW.cameraTarget}
       fov={42}
+      framing="content"
     />
   );
 }

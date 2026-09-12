@@ -24,6 +24,7 @@ import {
 } from "@/lib/content/renderer/capability";
 
 const COMPONENT_VERSION = 1;
+const LINE_EQUATION_VERSION = 2;
 
 /** Creates the current one-version capability for one physical registry. */
 function createCurrentCapability(componentNames: readonly string[]) {
@@ -47,10 +48,20 @@ function createCurrentDomainCapability(
     componentNames,
     COMPONENT_VERSION
   );
+  const authoringComponents = components.map((component) =>
+    component.name === mathematicsComponentNames.lineEquation
+      ? { ...component, version: LINE_EQUATION_VERSION }
+      : component
+  );
 
   return createDomainCapability(name, {
-    authoringComponents: components,
-    supportedComponents: components,
+    authoringComponents,
+    supportedComponents: [
+      ...components,
+      ...authoringComponents.filter(
+        ({ version }) => version !== COMPONENT_VERSION
+      ),
+    ],
   });
 }
 

@@ -214,6 +214,7 @@ function ResponsiveMeasurementCamera({
       cameraPosition={cameraPosition}
       cameraTarget={viewConfig.cameraTarget}
       fov={45}
+      framing="content"
     />
   );
 }

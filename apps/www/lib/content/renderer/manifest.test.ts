@@ -2,11 +2,16 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
+  RendererManifestComponentUnsupportedError,
+  verifyRendererManifestCompatibility,
+} from "@nakafa/aksara-contracts/renderer/compatibility";
+import {
   canonicalizeRendererManifestContract,
   RendererManifestEnvelopeSchema,
 } from "@nakafa/aksara-contracts/renderer/contract";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import {
+  createRendererManifest,
   validateLiveRendererManifestHash,
   validateRendererManifestHash,
 } from "@nakafa/aksara-contracts/renderer/manifest";
@@ -49,7 +54,17 @@ describe("renderer manifest", () => {
         () => import("@/lib/content/renderer/manifest")
       );
       const manifest = yield* rendererManifest;
-      const domains = manifest.domains.filter(({ name }) => name !== "site");
+      const domains = manifest.domains
+        .filter(({ name }) => name !== "site")
+        .map((domain) => ({
+          ...domain,
+          authoringComponents: domain.supportedComponents.filter(
+            ({ version }) => version === 1
+          ),
+          supportedComponents: domain.supportedComponents.filter(
+            ({ version }) => version === 1
+          ),
+        }));
       const publishedDomains = manifest.publishedDomains.filter(
         (name) => name !== "site"
       );
@@ -82,6 +97,68 @@ describe("renderer manifest", () => {
       );
       expect(Exit.isFailure(liveValidation)).toBe(true);
     })
+  );
+
+  it.effect(
+    "requires endpoint-aware lines while retaining older signed lines",
+    () =>
+      Effect.gen(function* () {
+        const { rendererManifest } = yield* Effect.promise(
+          () => import("@/lib/content/renderer/manifest")
+        );
+        const manifest = yield* rendererManifest;
+        const legacy = yield* createRendererManifest({
+          base: manifest.base,
+          publishedDomains: manifest.publishedDomains,
+          domains: manifest.domains.map((domain) => ({
+            ...domain,
+            authoringComponents: domain.supportedComponents.filter(
+              ({ version }) => version === 1
+            ),
+            supportedComponents: domain.supportedComponents.filter(
+              ({ version }) => version === 1
+            ),
+          })),
+        });
+        for (const domain of manifest.domains) {
+          if (
+            !domain.authoringComponents.some(
+              ({ name }) => name === "LineEquation"
+            )
+          ) {
+            continue;
+          }
+          expect(domain.authoringComponents).toContainEqual({
+            name: "LineEquation",
+            version: 2,
+          });
+          expect(domain.supportedComponents).toContainEqual({
+            name: "LineEquation",
+            version: 1,
+          });
+          expect(domain.supportedComponents).toContainEqual({
+            name: "LineEquation",
+            version: 2,
+          });
+        }
+        expect(
+          yield* verifyRendererManifestCompatibility({
+            frozen: legacy,
+            live: manifest,
+          })
+        ).toBe(manifest);
+        const error = yield* Effect.flip(
+          verifyRendererManifestCompatibility({
+            frozen: manifest,
+            live: legacy,
+          })
+        );
+        expect(error).toBeInstanceOf(RendererManifestComponentUnsupportedError);
+        expect(error).toMatchObject({
+          componentName: "LineEquation",
+          componentVersion: 2,
+        });
+      })
   );
 
   it.effect(
@@ -138,9 +215,9 @@ describe("renderer manifest", () => {
         );
 
         for (const domain of manifest.domains) {
-          const expectedDomainNames = domain.supportedComponents
-            .map(({ name }) => name)
-            .sort();
+          const expectedDomainNames = [
+            ...new Set(domain.supportedComponents.map(({ name }) => name)),
+          ].sort();
 
           expect(
             rendererDomainImplementations[domain.name]

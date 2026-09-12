@@ -6,6 +6,10 @@ import {
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import {
+  EndpointLine,
+  EndpointRing,
+} from "@repo/design-system/components/three/endpoint";
+import {
   GRAPH_ARROW_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
   getCurveDivisions,
@@ -13,6 +17,10 @@ import {
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { resolveArrowSize } from "@repo/design-system/lib/geometry/arrow";
+import {
+  type LineEndpoints,
+  resolveLineEndpoints,
+} from "@repo/design-system/lib/geometry/endpoint";
 import {
   type LineMarkerIndices,
   resolveLineMarkers,
@@ -124,6 +132,8 @@ export interface Props {
    * Higher values will create a smoother curve but may impact performance
    */
   curvePoints?: number;
+  /** Included or excluded first/last points, independent of sample markers. */
+  endpoints?: LineEndpoints;
   /**
    * Optional array of labels to render along the line. Each can specify the index of the point
    * at which to render (defaults to midpoint), optional offset, and text styling.
@@ -152,6 +162,7 @@ const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
 export function LineEquation({
   points,
   pointIndices,
+  endpoints,
   color = COLORS.AMBER,
   lineWidth = 2,
   showPoints = true,
@@ -165,10 +176,25 @@ export function LineEquation({
     [points]
   );
 
-  const markerPoints = useMemo(
-    () => Effect.runSync(resolveLineMarkers(vectorPoints, pointIndices)),
-    [pointIndices, vectorPoints]
+  const endpointMarkers = useMemo(
+    () => Effect.runSync(resolveLineEndpoints(vectorPoints, endpoints)),
+    [endpoints, vectorPoints]
   );
+  const markerPoints = useMemo(() => {
+    const selected = Effect.runSync(
+      resolveLineMarkers(vectorPoints, pointIndices)
+    );
+    const ordinary = showPoints
+      ? selected.filter(
+          (point) => !endpointMarkers.some((marker) => marker.point === point)
+        )
+      : [];
+    return ordinary.concat(
+      endpointMarkers
+        .filter((marker) => marker.state === "closed")
+        .map((marker) => marker.point)
+    );
+  }, [pointIndices, vectorPoints, showPoints, endpointMarkers]);
 
   // Define cone size (default to 0.5 if not provided in cone prop)
   const arrowSize = cone
@@ -316,12 +342,24 @@ export function LineEquation({
   return (
     <group frustumCulled>
       {/* Draw a line connecting the provided points */}
-      <Line
-        color={color}
-        frustumCulled
-        lineWidth={lineWidth}
-        points={linePoints}
-      />
+      {linePoints.length > 1 &&
+        (endpoints?.start === "open" || endpoints?.end === "open" ? (
+          <EndpointLine
+            color={color}
+            endpoints={endpoints}
+            frustumCulled
+            lineWidth={lineWidth}
+            points={linePoints}
+            radius={SPHERE_GEOMETRY_RADIUS}
+          />
+        ) : (
+          <Line
+            color={color}
+            frustumCulled
+            lineWidth={lineWidth}
+            points={linePoints}
+          />
+        ))}
 
       {/* Render the cone(s) if configured */}
       {!!coneData &&
@@ -344,7 +382,7 @@ export function LineEquation({
         frustumCulled
         geometry={pointGeom}
         material={pointMat}
-        visible={showPoints}
+        visible={markerPoints.length > 0}
       >
         {markerPoints.map((v, index) => (
           <Instance
@@ -354,6 +392,17 @@ export function LineEquation({
           />
         ))}
       </Instances>
+
+      {endpointMarkers
+        .filter((marker) => marker.state === "open")
+        .map((marker) => (
+          <EndpointRing
+            key={`open-${marker.index}`}
+            material={pointMat}
+            position={marker.point}
+            radius={SPHERE_GEOMETRY_RADIUS}
+          />
+        ))}
 
       {/* Render custom labels at specified indices */}
       {labelData.map((data) => (

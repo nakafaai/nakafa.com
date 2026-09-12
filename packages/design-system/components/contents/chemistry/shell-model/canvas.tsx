@@ -16,12 +16,8 @@ import {
 import { useTheme } from "next-themes";
 import { Suspense } from "react";
 
-const CAMERA_POSITION = [0, 3.4, 5.6] satisfies readonly [
-  number,
-  number,
-  number,
-];
-const NARROW_CAMERA_POSITION = [0, 4.2, 7.2] satisfies readonly [
+const CAMERA_POSITION = [0, 7, 3.5] satisfies readonly [number, number, number];
+const NARROW_CAMERA_POSITION = [0, 8, 4] satisfies readonly [
   number,
   number,
   number,
@@ -94,6 +90,7 @@ function ResponsiveShellModelCamera() {
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
       fov={45}
+      framing="content"
     />
   );
 }

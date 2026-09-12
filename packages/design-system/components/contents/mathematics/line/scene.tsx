@@ -21,6 +21,9 @@ export function LineScene({
       cameraPosition={cameraPosition}
       cameraProjection={isFrontalPlane ? { kind: "orthographic" } : undefined}
       cameraTarget={cameraTarget}
+      showOrigin={
+        !lines.some((line) => line.endpoints?.start || line.endpoints?.end)
+      }
       showZAxis={showZAxis}
     >
       {lines.map((line, index) => (

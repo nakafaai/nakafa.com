@@ -10,19 +10,9 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { Predicate } from "effect";
 import { type ReactNode, useMemo } from "react";
-import {
-  Color,
-  ConeGeometry,
-  MeshBasicMaterial,
-  Quaternion,
-  Vector3,
-} from "three";
+import { type Color, Quaternion, Vector3 } from "three";
 
 const ARROW_SEGMENT_OFFSET = 0.2;
-
-// Shared geometry and material caches
-const coneGeometryCache = new Map<string, ConeGeometry>();
-const materialCache = new Map<string, MeshBasicMaterial>();
 
 type LabelAnchorX = "left" | "center" | "right";
 type LabelPosition = "start" | "middle" | "end";
@@ -49,48 +39,6 @@ function getLabelPositionProgress(labelPosition: LabelPosition) {
   }
 
   return 1;
-}
-
-/**
- * Reuses cone geometry per arrow size to avoid repeated GPU resource work.
- *
- * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
- */
-function getSharedConeGeometry(size: number): ConeGeometry {
-  const key = `cone-${size}`;
-  if (!coneGeometryCache.has(key)) {
-    coneGeometryCache.set(
-      key,
-      new ConeGeometry(size / 2, size, GRAPH_ARROW_SEGMENTS, 1)
-    );
-  }
-  const geometry = coneGeometryCache.get(key);
-  if (!geometry) {
-    throw new Error(`Cone geometry not found for size: ${size}`);
-  }
-  return geometry;
-}
-
-/**
- * Reuses arrow materials by color so repeated vectors do not recompile materials.
- *
- * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
- */
-function getSharedMaterial(color: string | Color): MeshBasicMaterial {
-  const colorKey = color instanceof Color ? color.getHexString() : color;
-  if (!materialCache.has(colorKey)) {
-    materialCache.set(
-      colorKey,
-      new MeshBasicMaterial({
-        color: color instanceof Color ? color : new Color(color),
-      })
-    );
-  }
-  const material = materialCache.get(colorKey);
-  if (!material) {
-    throw new Error(`Material not found for color: ${colorKey}`);
-  }
-  return material;
 }
 
 interface Props {
@@ -135,7 +83,7 @@ interface Props {
 }
 
 /**
- * Renders a labeled 3D arrow with shared cone geometry and stable vector math.
+ * Renders a vector with a proportionate arrowhead ending at its exact tip.
  */
 export function ArrowHelper({
   from = [0, 0, 0],
@@ -143,7 +91,7 @@ export function ArrowHelper({
   color = COLORS.YELLOW,
   lineWidth = 2,
   showArrow = true,
-  arrowSize = 0.5,
+  arrowSize = 0.25,
   label,
   labelAnchorX = "left",
   labelOffset = [0, 0, 0],
@@ -188,40 +136,31 @@ export function ArrowHelper({
     return position.add(new Vector3(...labelOffset));
   }, [vectors, labelPoint, labelProgress, labelPosition, labelOffset]);
 
-  // Use shared geometry and material
-  const coneGeometry = useMemo(
-    () => (showArrow ? getSharedConeGeometry(arrowSize) : null),
-    [showArrow, arrowSize]
-  );
-
-  const material = useMemo(
-    () => (showArrow ? getSharedMaterial(color) : null),
-    [showArrow, color]
-  );
+  const headSize = showArrow ? Math.min(arrowSize, vectors.length * 0.2) : 0;
 
   // Define the shaft points - from the start point to just before the cone
   const shaftPoints = useMemo(
     () => [
       vectors.fromVec,
       new Vector3(
-        vectors.toVec.x - vectors.direction.x * arrowSize,
-        vectors.toVec.y - vectors.direction.y * arrowSize,
-        vectors.toVec.z - vectors.direction.z * arrowSize
+        vectors.toVec.x - vectors.direction.x * headSize,
+        vectors.toVec.y - vectors.direction.y * headSize,
+        vectors.toVec.z - vectors.direction.z * headSize
       ),
     ],
-    [vectors, arrowSize]
+    [vectors, headSize]
   );
 
   // Memoize cone position and quaternion
   const coneTransform = useMemo(() => {
-    if (!showArrow) {
+    if (headSize <= 0) {
       return null;
     }
 
     const position = new Vector3(
-      vectors.toVec.x - (vectors.direction.x * arrowSize) / 2,
-      vectors.toVec.y - (vectors.direction.y * arrowSize) / 2,
-      vectors.toVec.z - (vectors.direction.z * arrowSize) / 2
+      vectors.toVec.x - (vectors.direction.x * headSize) / 2,
+      vectors.toVec.y - (vectors.direction.y * headSize) / 2,
+      vectors.toVec.z - (vectors.direction.z * headSize) / 2
     );
 
     const quaternion = new Quaternion().setFromUnitVectors(
@@ -230,7 +169,7 @@ export function ArrowHelper({
     );
 
     return { position, quaternion };
-  }, [showArrow, vectors, arrowSize]);
+  }, [vectors, headSize]);
 
   return (
     <group frustumCulled {...props}>
@@ -243,14 +182,17 @@ export function ArrowHelper({
       />
 
       {/* Cone arrowhead with optimized segments */}
-      {!!showArrow && !!coneGeometry && !!material && !!coneTransform && (
+      {!!coneTransform && (
         <mesh
           frustumCulled
-          geometry={coneGeometry}
-          material={material}
           position={coneTransform.position}
           quaternion={coneTransform.quaternion}
-        />
+        >
+          <coneGeometry
+            args={[headSize / 4, headSize, GRAPH_ARROW_SEGMENTS, 1]}
+          />
+          <meshBasicMaterial color={color} />
+        </mesh>
       )}
 
       {/* Label text */}

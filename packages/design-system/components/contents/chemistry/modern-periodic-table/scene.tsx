@@ -27,9 +27,9 @@ const INACTIVE_TILE_HEIGHT = 0.08;
 const ACTIVE_TILE_HEIGHT = 0.34;
 const MAIN_LABEL_Z = -2.35;
 const SERIES_START_GROUP = 4;
-const SERIES_LANTHANIDE_Z = 2.22;
-const SERIES_ACTINIDE_Z = 2.76;
-const PERIOD_AXIS_LABEL_OFFSET = TILE_GAP * 2.45;
+const SERIES_LANTHANIDE_Z = 2.4;
+const SERIES_ACTINIDE_Z = 3.65;
+const PERIOD_AXIS_LABEL_OFFSET = TILE_GAP * 1.3;
 const TILE_LABEL_Y_OFFSET = 0.16;
 const TILE_LABEL_OUTLINE_WIDTH = 0.018;
 
@@ -95,26 +95,27 @@ function GuideLabels({
     <>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.diagram}
+        fontSize="diagram"
         position={[0, 0.62, MAIN_LABEL_Z - 0.34]}
       >
-        {labels.group} <InlineMath math="1-18" />
+        {labels.group} 1–18
       </ThreeLabel>
 
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize="reading"
         position={[getMainX(1) - PERIOD_AXIS_LABEL_OFFSET, 0.42, 0]}
+        rotation={-Math.PI / 2}
       >
-        {labels.period} <InlineMath math="1-7" />
+        {labels.period} 1–7
       </ThreeLabel>
 
       {PERIODIC_SERIES_ROWS.map((row, rowIndex) => (
         <ThreeLabel
           color={colors.text}
-          fontSize={THREE_FONT_SIZE.reading}
+          fontSize="reading"
           key={row.key}
-          position={[-4.08, 0.32, getSeriesZ(rowIndex)]}
+          position={[0, 0.32, getSeriesZ(rowIndex) + 0.5]}
         >
           {labels.seriesNames[row.key]}
         </ThreeLabel>
@@ -233,7 +234,11 @@ function PeriodicTile({
           outlineColor={labelOutlineColor}
           position={[0, height / 2 + TILE_LABEL_Y_OFFSET, 0]}
         >
-          <InlineMath math={label} />
+          {label.includes("-") ? (
+            label.replace("-", "–")
+          ) : (
+            <InlineMath math={`\\mathrm{${label}}`} />
+          )}
         </PeriodicTileLabel>
       )}
     </group>
@@ -260,6 +265,8 @@ function PeriodicTileLabel({
     <ThreeLabel
       color={color}
       fontSize={fontSize}
+      maximumFontSize={16}
+      minimumFontSize={10}
       outlineColor={outlineColor}
       outlineWidth={TILE_LABEL_OUTLINE_WIDTH}
       position={position}

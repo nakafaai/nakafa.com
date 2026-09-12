@@ -345,11 +345,7 @@ function Electrode({
       <RoundedBox args={[0.16, 0.95, 0.16]} radius={0.035} smoothness={3}>
         <meshStandardMaterial color={color} roughness={0.45} />
       </RoundedBox>
-      <ThreeLabel
-        color={color}
-        fontSize={THREE_FONT_SIZE.compact}
-        position={[0, -0.66, 0.22]}
-      >
+      <ThreeLabel color={color} fontSize="compact" position={[0, -0.66, 0.22]}>
         {label}
       </ThreeLabel>
     </group>
@@ -375,7 +371,7 @@ function Plate({
       </RoundedBox>
       <ThreeLabel
         color={color}
-        fontSize={THREE_FONT_SIZE.compact}
+        fontSize="compact"
         position={[0, y > 0 ? 0.27 : -0.27, 0.18]}
       >
         {label}

@@ -16,17 +16,17 @@ import {
 import { useTheme } from "next-themes";
 import { Suspense, useEffect } from "react";
 
-const CAMERA_POSITION = [0, 6.8, 7.6] satisfies readonly [
+const CAMERA_POSITION = [0, 10, 5.75] satisfies readonly [
   number,
   number,
   number,
 ];
-const NARROW_CAMERA_POSITION = [0, 8.6, 11.8] satisfies readonly [
+const NARROW_CAMERA_POSITION = [0, 12, 6.75] satisfies readonly [
   number,
   number,
   number,
 ];
-const CAMERA_TARGET = [0, 0, 0.35] satisfies readonly [number, number, number];
+const CAMERA_TARGET = [0, 0, 0.75] satisfies readonly [number, number, number];
 const NARROW_CANVAS_ASPECT_RATIO = 1.15;
 
 /**
@@ -105,6 +105,7 @@ function ResponsiveModernPeriodicTableCamera() {
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
       fov={42}
+      framing="content"
     />
   );
 }

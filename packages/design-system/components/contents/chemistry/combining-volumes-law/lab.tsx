@@ -143,6 +143,7 @@ function CombiningVolumesCameraControls() {
       cameraPosition={cameraPosition}
       cameraTarget={COMBINING_VOLUMES_SCENE_VIEW.cameraTarget}
       fov={42}
+      framing="content"
     />
   );
 }

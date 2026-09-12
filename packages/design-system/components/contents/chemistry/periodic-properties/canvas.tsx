@@ -94,6 +94,7 @@ function ResponsivePeriodicPropertiesCamera() {
       cameraPosition={cameraPosition}
       cameraTarget={cameraTarget}
       fov={44}
+      framing="content"
     />
   );
 }

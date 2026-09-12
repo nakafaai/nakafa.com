@@ -37,15 +37,15 @@ const VIRION_VIEW = {
   narrowCameraPosition: [2.25, 1.72, 3.15],
 } satisfies BiologySceneView;
 const MORPHOLOGY_VIEW = {
-  cameraPosition: [0, 1.04, 4.72],
+  cameraPosition: [0, 1.5, 5.8],
   cameraTarget: [0, -0.02, 0],
-  narrowCameraPosition: [0, 1.28, 5.55],
+  narrowCameraPosition: [0, 1.5, 6.2],
 } satisfies BiologySceneView;
 const MORPHOLOGY_LABEL_TARGETS = [
-  { id: "helical", labelPosition: [-2.2, -0.86, -0.52] },
-  { id: "polyhedral", labelPosition: [-0.72, -0.86, -0.16] },
-  { id: "enveloped", labelPosition: [0.86, -0.86, 0.18] },
-  { id: "complex", labelPosition: [2.24, -0.86, 0.52] },
+  { id: "helical", labelPosition: [-1.1, 0.26, 0.3] },
+  { id: "polyhedral", labelPosition: [1.1, 0.26, 0.3] },
+  { id: "enveloped", labelPosition: [-1.1, -1.72, 0.3] },
+  { id: "complex", labelPosition: [1.1, -1.72, 0.3] },
 ] as const;
 
 /**
@@ -137,21 +137,21 @@ function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
 }
 
 /**
- * Places the four common viral morphologies side by side without extra tabs.
+ * Compares the four viral morphologies in two rows, including on narrow screens.
  */
 function VirusMorphologyScene({ colors, item }: BiologySceneProps) {
   return (
     <group>
-      <group position={[-2.2, 0.08, -0.52]} rotation={[0.08, -0.24, 0.08]}>
+      <group position={[-1.1, 0.95, 0]} rotation={[0.08, -0.24, 0.08]}>
         <HelicalVirusModel colors={colors} scale={1.04} />
       </group>
-      <group position={[-0.72, 0.06, -0.16]} rotation={[0.18, 0.3, -0.08]}>
+      <group position={[1.1, 0.95, 0]} rotation={[0.18, 0.3, -0.08]}>
         <PolyhedralVirusModel colors={colors} scale={1.02} />
       </group>
-      <group position={[0.86, 0.07, 0.18]} rotation={[0.12, -0.25, 0]}>
+      <group position={[-1.1, -0.8, 0]} rotation={[0.12, -0.25, 0]}>
         <EnvelopedVirusModel colors={colors} scale={0.92} />
       </group>
-      <group position={[2.24, 0.02, 0.52]} rotation={[0.12, 0.22, -0.06]}>
+      <group position={[1.1, -0.8, 0]} rotation={[0.12, 0.22, -0.06]}>
         <BacteriophageModel colors={colors} scale={0.98} />
       </group>
       <BiologyCallouts

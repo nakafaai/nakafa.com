@@ -9,7 +9,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { ReactNode } from "react";
 
@@ -158,10 +158,10 @@ function TrendMarker({
         </mesh>
         <MarkerLabel
           colors={colors}
-          fontSize={THREE_FONT_SIZE.compact}
+          fontSize="compact"
           position={[0, radius, 0]}
         >
-          <InlineMath math={sample.symbol} />
+          <InlineMath math={`\\mathrm{${sample.symbol}}`} />
         </MarkerLabel>
       </group>
     );
@@ -187,10 +187,10 @@ function TrendMarker({
       </mesh>
       <MarkerLabel
         colors={colors}
-        fontSize={THREE_FONT_SIZE.annotation}
+        fontSize="annotation"
         position={[0, height + PILLAR_LABEL_OFFSET, 0]}
       >
-        <InlineMath math={sample.symbol} />
+        <InlineMath math={`\\mathrm{${sample.symbol}}`} />
       </MarkerLabel>
     </group>
   );
@@ -207,7 +207,7 @@ function MarkerLabel({
 }: {
   children: ReactNode;
   colors: PeriodicPropertiesSceneColors;
-  fontSize: number;
+  fontSize: ThreeFontSize;
   position: ScenePoint;
 }) {
   return (

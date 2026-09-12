@@ -159,6 +159,7 @@ export function ParabolicMovementAnalysisLab({
                 enableRotate
                 enableZoom
                 fov={PROJECTILE_SCENE.cameraFov}
+                framing="content"
                 maxPolarAngle={PROJECTILE_SCENE.maxPolarAngle}
               />
               <PirateProjectileScene motion={motion} />

@@ -14,8 +14,8 @@ import {
 
 const ROLE_VIEW = {
   cameraPosition: [0, 1.5, 3.18],
-  cameraTarget: [0, 0.08, 0.16],
-  narrowCameraPosition: [0, 1.82, 3.62],
+  cameraTarget: [0.25, 0.08, 0.16],
+  narrowCameraPosition: [0.25, 2.1, 4.5],
 } satisfies BiologySceneView;
 const TARGET_BACTERIA = [
   {
