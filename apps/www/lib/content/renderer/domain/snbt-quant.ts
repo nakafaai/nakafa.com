@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { NumberLine } from "@repo/design-system/components/contents/mathematics/number-line";
 import { Illustration } from "@repo/design-system/components/contents/snbt/quantitative/set-3/question-13";
 import { QuestionGraph as Set5Question9Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-5/question-9";
 import { QuestionGraph as Set5Question12Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-5/question-12";
@@ -13,12 +14,9 @@ import { Graph as Set9Question2Graph } from "@repo/design-system/components/cont
 import { Graph as Set9Question3Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-9/question-3";
 import { Graph as Set10Question1Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-10/question-1";
 import { Graph as Set10Question2Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-10/question-2";
+import { Graph as Set10Question8Graph } from "@repo/design-system/components/contents/snbt/quantitative/set-10/question-8";
 import { snbtQuantComponentNames } from "@repo/design-system/lib/markdown/names";
-import {
-  NumberLine,
-  UnitCircle,
-} from "@/lib/content/renderer/client/snbt/quant/basics";
-import { Set10Question8Graph } from "@/lib/content/renderer/client/snbt/quant/set10";
+import { UnitCircle } from "@/lib/content/renderer/client/snbt/quant/basics";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 export const domainRenderers = [
