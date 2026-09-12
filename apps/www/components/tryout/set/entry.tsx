@@ -208,7 +208,24 @@ function TryoutEntryRuntimeContent({
     return <TryoutContentRefresh />;
   }
 
+  return <TryoutEntryRuntimeResolved content={content} value={value} />;
+}
+
+/** Reads the signed content promise unconditionally to satisfy React `use` rules. */
+function TryoutEntryRuntimeResolved({
+  content,
+  value,
+}: {
+  content: Promise<TryoutRuntimeContent>;
+  value: TryoutInternalSetView;
+}) {
   const resolvedContent = use(content);
+  if (value.runtimeState.kind === "none") {
+    return null;
+  }
+  if (value.runtimeState.kind === "review") {
+    return <TryoutContentRefresh />;
+  }
   if (resolvedContent.questions.length === 0) {
     return <TryoutContentRefresh />;
   }
