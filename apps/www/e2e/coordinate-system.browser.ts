@@ -14,6 +14,7 @@ const TRIANGLE_ROUTE =
   "/en/subjects/mathematics/trigonometry/right-triangle-naming";
 const VISUAL_ASSERTION_TIMEOUT = 5000;
 const REQUIRED_STABLE_SAMPLES = 2;
+const HYPOTENUSE_LABEL = /^c$/;
 
 const waitForStableCanvas = Effect.fn("NakafaE2E.waitForStableCanvas")(
   function* (canvas: Locator) {
@@ -176,7 +177,9 @@ const expectBoundedTriangleZoom = Effect.fn(
   const scene = page.locator('[data-slot="triangle-scene"]');
   const card = page.locator('[data-slot="card"]').filter({ has: scene });
   const canvas = scene.locator("canvas");
-  const label = scene.getByText("c", { exact: true });
+  const label = scene
+    .locator(".katex-html")
+    .filter({ hasText: HYPOTENUSE_LABEL });
   // Reveal the content-visibility card before scrolling its deferred scene.
   yield* Effect.promise(() =>
     expect(async () => {

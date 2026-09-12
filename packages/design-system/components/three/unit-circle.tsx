@@ -3,7 +3,6 @@
 import { Line } from "@react-three/drei";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  ORIGIN_COLOR,
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   THREE_FONT_SIZE,
 } from "@repo/design-system/components/three/data/constants";
@@ -15,9 +14,7 @@ import {
 } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
-import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { getCos, getRadians, getSin } from "@repo/math/angles";
-import { useTheme } from "next-themes";
 import { useMemo } from "react";
 import { Vector3 } from "three";
 
@@ -48,8 +45,6 @@ const STATIC_CIRCLE_POINTS = createArcPoints(
  * Renders the interactive unit-circle scene with smooth circle and angle arcs.
  */
 export function UnitCircle({ angle = 45, showLabels = true, ...props }: Props) {
-  const { resolvedTheme } = useTheme();
-
   const angleInRadians = getRadians(angle);
   const sin = getSin(angle);
   const cos = getCos(angle);
@@ -60,11 +55,7 @@ export function UnitCircle({ angle = 45, showLabels = true, ...props }: Props) {
     [angleInRadians]
   );
 
-  // Colors based on theme
-  const circleColor =
-    getThemeAppearance(resolvedTheme) === "dark"
-      ? ORIGIN_COLOR.LIGHT
-      : ORIGIN_COLOR.DARK;
+  const circleColor = COLORS.PURPLE;
 
   // Pre-calculate positions
   const pointPosition = useMemo(() => new Vector3(cos, sin, 0), [cos, sin]);

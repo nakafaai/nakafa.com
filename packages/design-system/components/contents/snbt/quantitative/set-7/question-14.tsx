@@ -3,13 +3,10 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
-const f_points = Array.from({ length: 20 }, (_, i) => {
-  const x = -2 + i * 0.5;
-  return { x, y: 5 - x, z: 0 };
-});
+const f_points = [-24, -0.5, 0, 5, 24].map((x) => ({ x, y: 5 - x, z: 0 }));
 
-const g_points = Array.from({ length: 60 }, (_, i) => {
-  const x = -2 + i * 0.1;
+const g_points = Array.from({ length: 1281 }, (_, i) => {
+  const x = -24 + i * 0.025;
   return { x, y: 2 ** x - 1, z: 0 };
 });
 
@@ -28,7 +25,7 @@ export function Graph({
           labels: [
             {
               text: <InlineMath math="y = f(x)" />,
-              at: 3,
+              at: 1,
               offset: [0, -2, 0],
             },
             {
@@ -51,7 +48,7 @@ export function Graph({
           labels: [
             {
               text: <InlineMath math="y = g(x)" />,
-              at: g_points.length / 1.5,
+              at: g_points.findIndex((p) => p.x === 2),
               offset: [2, 1, 0],
             },
             {

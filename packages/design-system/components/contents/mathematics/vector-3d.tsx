@@ -51,6 +51,7 @@ export function Vector3d({
         </CardHeader>
         <CardContent>
           <CoordinateSystem
+            cameraFraming="content"
             cameraPosition={cameraPosition}
             cameraTarget={cameraTarget}
           >

@@ -1,11 +1,16 @@
+import { useThree } from "@react-three/fiber";
 import {
+  GROUP_ONE_FOCUS_ID,
   getModernPeriodicTableCategoryColor,
   INNER_TRANSITION_FOCUS_ID,
   MAIN_PERIODIC_TABLE_ROWS,
+  METALLOID_FOCUS_ID,
   MODERN_PERIODIC_TABLE_FOCI,
   type ModernPeriodicTableFocusId,
   type ModernPeriodicTableLabLabels,
   type ModernPeriodicTableSceneColors,
+  NOBLE_GAS_FOCUS_ID,
+  PERIOD_THREE_FOCUS_ID,
   PERIODIC_SERIES_ROWS,
   type PeriodicElementEntry,
   SERIES_MARKER_CATEGORY_ID,
@@ -27,15 +32,25 @@ const INACTIVE_TILE_HEIGHT = 0.08;
 const ACTIVE_TILE_HEIGHT = 0.34;
 const MAIN_LABEL_Z = -2.35;
 const SERIES_START_GROUP = 4;
-const SERIES_LANTHANIDE_Z = 2.22;
-const SERIES_ACTINIDE_Z = 2.76;
-const PERIOD_AXIS_LABEL_OFFSET = TILE_GAP * 2.45;
+const SERIES_LANTHANIDE_Z = 2.4;
+const SERIES_ACTINIDE_Z = 3.65;
+const PERIOD_AXIS_LABEL_OFFSET = TILE_GAP * 1.3;
 const TILE_LABEL_Y_OFFSET = 0.16;
 const TILE_LABEL_OUTLINE_WIDTH = 0.018;
 
 const TRANSITION_LABEL_SYMBOLS = ["Sc", "Fe", "Cu", "Ag", "Au", "Hg"];
 const INNER_TRANSITION_LABEL_SYMBOLS = ["La", "Lu", "Ac", "Lr"];
 const ALWAYS_VISIBLE_SYMBOLS = ["H", "He", "Na", "Mg", "Si", "Cl", "Ar"];
+// The highlighted tiles still show the full group. These spaced examples keep
+// its direction and membership readable when the entire table is narrow.
+const NARROW_LABEL_SYMBOLS = {
+  [GROUP_ONE_FOCUS_ID]: ["H", "Na", "Cs"],
+  [PERIOD_THREE_FOCUS_ID]: ["Na", "Al", "S", "Ar"],
+  [TRANSITION_FOCUS_ID]: ["Sc", "Fe", "Cu", "Au"],
+  [INNER_TRANSITION_FOCUS_ID]: [],
+  [METALLOID_FOCUS_ID]: ["B", "Ge", "Te"],
+  [NOBLE_GAS_FOCUS_ID]: ["He", "Ar", "Rn"],
+} satisfies Record<ModernPeriodicTableFocusId, string[]>;
 
 /**
  * Renders the 3D periodic-table model and highlights the active reading focus.
@@ -49,6 +64,8 @@ export function ModernPeriodicTableScene({
   focusId: ModernPeriodicTableFocusId;
   labels: ModernPeriodicTableLabLabels;
 }) {
+  const narrow = useThree((state) => state.size.width < 560);
+
   return (
     <group>
       <GuideLabels colors={colors} labels={labels} />
@@ -60,6 +77,7 @@ export function ModernPeriodicTableScene({
             entry={entry}
             focusId={focusId}
             key={`${row.period}-${entry.symbol}`}
+            narrow={narrow}
             period={row.period}
           />
         ))
@@ -95,26 +113,27 @@ function GuideLabels({
     <>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.diagram}
+        fontSize="diagram"
         position={[0, 0.62, MAIN_LABEL_Z - 0.34]}
       >
-        {labels.group} <InlineMath math="1-18" />
+        {labels.group} 1–18
       </ThreeLabel>
 
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize="reading"
         position={[getMainX(1) - PERIOD_AXIS_LABEL_OFFSET, 0.42, 0]}
+        rotation={-Math.PI / 2}
       >
-        {labels.period} <InlineMath math="1-7" />
+        {labels.period} 1–7
       </ThreeLabel>
 
       {PERIODIC_SERIES_ROWS.map((row, rowIndex) => (
         <ThreeLabel
           color={colors.text}
-          fontSize={THREE_FONT_SIZE.reading}
+          fontSize="reading"
           key={row.key}
-          position={[-4.08, 0.32, getSeriesZ(rowIndex)]}
+          position={[0, 0.32, getSeriesZ(rowIndex) + 0.5]}
         >
           {labels.seriesNames[row.key]}
         </ThreeLabel>
@@ -130,11 +149,13 @@ function MainTableTile({
   colors,
   entry,
   focusId,
+  narrow,
   period,
 }: {
   colors: ModernPeriodicTableSceneColors;
   entry: PeriodicElementEntry;
   focusId: ModernPeriodicTableFocusId;
+  narrow: boolean;
   period: number;
 }) {
   const highlighted = isEntryHighlighted(entry, focusId);
@@ -148,7 +169,7 @@ function MainTableTile({
       colors={colors}
       height={height}
       highlighted={highlighted}
-      label={getMainTileLabel(entry, focusId, highlighted)}
+      label={getMainTileLabel(entry, focusId, highlighted, narrow)}
       position={[x, height / 2, z]}
     />
   );
@@ -233,7 +254,11 @@ function PeriodicTile({
           outlineColor={labelOutlineColor}
           position={[0, height / 2 + TILE_LABEL_Y_OFFSET, 0]}
         >
-          <InlineMath math={label} />
+          {label.includes("-") ? (
+            label.replace("-", "–")
+          ) : (
+            <InlineMath math={`\\mathrm{${label}}`} />
+          )}
         </PeriodicTileLabel>
       )}
     </group>
@@ -260,6 +285,8 @@ function PeriodicTileLabel({
     <ThreeLabel
       color={color}
       fontSize={fontSize}
+      maximumFontSize={16}
+      minimumFontSize={10}
       outlineColor={outlineColor}
       outlineWidth={TILE_LABEL_OUTLINE_WIDTH}
       position={position}
@@ -319,8 +346,17 @@ function isEntryHighlighted(
 function getMainTileLabel(
   entry: PeriodicElementEntry,
   focusId: ModernPeriodicTableFocusId,
-  highlighted: boolean
+  highlighted: boolean,
+  narrow: boolean
 ) {
+  if (narrow) {
+    return NARROW_LABEL_SYMBOLS[focusId].some(
+      (symbol) => symbol === entry.symbol
+    )
+      ? entry.symbol
+      : "";
+  }
+
   if (entry.category === SERIES_MARKER_CATEGORY_ID) {
     return highlighted ? entry.symbol : "";
   }

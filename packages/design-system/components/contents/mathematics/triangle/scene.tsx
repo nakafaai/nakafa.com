@@ -13,13 +13,14 @@ export function TriangleScene({
 }: Pick<ComponentProps<typeof Triangle>, "angle" | "size">) {
   return (
     <CoordinateSystem
+      cameraFraming="content"
       cameraPosition={[0, 0, CAMERA_Z_POSITION]}
       cameraProjection={{ kind: "orthographic" }}
       showOrigin={false}
     >
       <Triangle
         angle={angle}
-        position={[1.5 * size, 1.5 * size, 0]}
+        position={[0.5 * size, 0.5 * size, 0]}
         size={size}
       />
     </CoordinateSystem>

@@ -197,8 +197,12 @@ function GasColumn({
         fontSize="compact"
         position={[0, -height / 2 - 0.24, 0.24]}
       >
-        <InlineMath math={gas.formulaLabel} />{" "}
-        <InlineMath math={`${gas.volumeUnits}`} /> {volumeUnit}
+        <span className="block">
+          <InlineMath math={gas.formulaLabel} />
+        </span>
+        <span className="block">
+          <InlineMath math={`${gas.volumeUnits}`} /> {volumeUnit}
+        </span>
       </ThreeLabel>
     </group>
   );

@@ -48,7 +48,8 @@ function generateArc(
 export function Graph({ title, description }: GraphProps) {
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[3.7, 2.1, 14]}
+      cameraTarget={[3.7, 2.1, 0]}
       data={[
         // Ground Line (A -> D -> B)
         {

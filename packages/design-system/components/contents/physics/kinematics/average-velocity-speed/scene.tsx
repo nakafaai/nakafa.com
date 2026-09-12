@@ -70,6 +70,7 @@ export function AverageMotionStage({
         enableRotate
         enableZoom
         fov={AVERAGE_VELOCITY_SPEED_CAMERA.fov}
+        framing="content"
       />
       <AverageMotionScene motion={motion} />
     </Suspense>

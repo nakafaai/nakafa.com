@@ -7,7 +7,6 @@ import type {
 } from "@repo/design-system/components/contents/physics/vector/concept/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 
 export function VectorConceptScene({
@@ -58,20 +57,26 @@ export function VectorConceptScene({
       />
 
       <ThreeLabel
+        anchorX="left"
         color={colors.leftVector}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize="reading"
         position={left.labelPoint}
       >
-        {labels.leftCable}{" "}
-        <InlineMath math={`${Math.round(left.tension)}\\,\\mathrm{N}`} />
+        <span className="block">{labels.leftCable}</span>
+        <span className="block">
+          <InlineMath math={`${Math.round(left.tension)}\\,\\mathrm{N}`} />
+        </span>
       </ThreeLabel>
       <ThreeLabel
+        anchorX="right"
         color={colors.rightVector}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize="reading"
         position={right.labelPoint}
       >
-        {labels.rightCable}{" "}
-        <InlineMath math={`${Math.round(right.tension)}\\,\\mathrm{N}`} />
+        <span className="block">{labels.rightCable}</span>
+        <span className="block">
+          <InlineMath math={`${Math.round(right.tension)}\\,\\mathrm{N}`} />
+        </span>
       </ThreeLabel>
     </group>
   );

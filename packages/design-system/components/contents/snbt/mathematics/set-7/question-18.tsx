@@ -52,7 +52,7 @@ export function Graph({ title, description, labels }: GraphProps) {
     z: (SURFACE_START.z + SURFACE_END.z) / 2,
   };
   const SURFACE_LABEL_POS = {
-    x: SURFACE_RANGE * 0.8, // 80% to the right
+    x: 2.2, // Keep the caption inside the pedagogical view.
     y: 0,
     z: 0,
   };
@@ -109,7 +109,8 @@ export function Graph({ title, description, labels }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[1.2, 0.6, 15]}
+      cameraTarget={[1.2, 0.6, 0]}
       data={[
         // Water Surface
         {

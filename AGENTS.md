@@ -99,8 +99,8 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Authored content follows the audited Aksara locale equivalent without fallback. Preserve reviewed facts, pedagogy, exercises, renderer contracts, and the language being assessed.
 - Learner-facing response labels arrive as rich Markdown strings from Aksara. Render plain text and prose mixed with math through the canonical design-system Markdown surface. In these strings, use no-space `$$...$$` for inline math and a fenced `math` block for display math. Do not add text-versus-math unions, response-content ASTs, or a second label renderer.
 - Lesson headings begin at `h2` and descend to `h3`. Exercise answers render below an app-owned `h3`, so authored answer sections begin at `h4` and may use `h5` for real nesting.
-- Use `InlineMath` and `BlockMath` for math, `MathContainer` for consecutive blocks when needed, and explicit `NumberLine` or `LineEquation` imports. Keep blank lines between prose and math blocks.
-- Authored MDX lives only in Aksara. Nakafa renderer work must preserve Aksara publication contracts.
+- Use `InlineMath` and `BlockMath` for math, `MathContainer` for consecutive blocks when needed, and the published `NumberLine` or `LineEquation` component names. Renderer code imports their owning implementation directly; authored MDX has no renderer imports. Keep blank lines between prose and math blocks.
+- Authored MDX lives only in Aksara. Nakafa renderer work must preserve Aksara publication contracts. Internal renderer changes use one current implementation and component set. Do not add per-component version bumps, dual registries, or compatibility adapters for additive props; deploy the matching renderer before publishing content that uses them.
 
 ## Commands And Verification
 

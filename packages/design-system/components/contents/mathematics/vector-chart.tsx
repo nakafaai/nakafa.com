@@ -60,6 +60,7 @@ export function VectorChart({ title, description, vectors }: Props) {
         </CardHeader>
         <CardContent>
           <CoordinateSystem
+            cameraFraming="content"
             cameraPosition={[0, 0, 15]}
             cameraProjection={{ kind: "orthographic" }}
             showOrigin={false}

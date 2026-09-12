@@ -5,6 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import {
   resolveThreeFontSize,
+  THREE_DIAGRAM_MAXIMUM_FONT_SIZE,
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
@@ -36,6 +37,8 @@ interface ThreeLabelProps {
   fontSize?: ThreeFontSize | number;
   /** Separation from the anchor in camera-facing world units. */
   gap?: number;
+  /** Upper rendered size keeps annotations subordinate to their geometry. */
+  maximumFontSize?: number;
   /** Minimum rendered font size in CSS pixels, independent of the world scale. */
   minimumFontSize?: number;
   /** Enables scene-aware depth occlusion for labels attached to geometry. */
@@ -94,9 +97,12 @@ export function ThreeLabel({
   color,
   fontSize = "annotation",
   gap = 0,
-  minimumFontSize = fontSize === "diagram"
-    ? THREE_DIAGRAM_MINIMUM_FONT_SIZE
-    : 0,
+  minimumFontSize = typeof fontSize === "number"
+    ? 0
+    : THREE_DIAGRAM_MINIMUM_FONT_SIZE,
+  maximumFontSize = minimumFontSize > 0
+    ? THREE_DIAGRAM_MAXIMUM_FONT_SIZE
+    : Number.POSITIVE_INFINITY,
   outlineColor,
   outlineWidth = 0,
   occlude,
@@ -129,7 +135,7 @@ export function ThreeLabel({
     if (!(element && object)) {
       return;
     }
-    if (minimumFontSize <= 0 || worldFontSize <= 0) {
+    if (worldFontSize <= 0) {
       element.style.scale = "1";
       return;
     }
@@ -142,10 +148,11 @@ export function ThreeLabel({
           (2 *
             Math.tan(MathUtils.degToRad(activeCamera.fov) / 2) *
             labelPosition.distanceTo(cameraPosition));
-    element.style.scale = `${Math.max(
-      1,
-      minimumFontSize / (worldFontSize * pixelsPerUnit)
-    )}`;
+    const naturalSize = worldFontSize * pixelsPerUnit;
+    element.style.scale = `${
+      MathUtils.clamp(naturalSize, minimumFontSize, maximumFontSize) /
+      naturalSize
+    }`;
   });
 
   // Position changes must also update the camera's label bounds.
@@ -234,7 +241,7 @@ export function ThreeLabel({
               ? `${outlineWidthEm}em ${outlineColor}`
               : undefined,
           color: labelColor,
-          fontFamily: "var(--font-mono)",
+          fontFamily: "var(--font-sans)",
           fontSize: LABEL_BASE_FONT_SIZE,
           lineHeight: 1,
           paintOrder: "stroke fill",

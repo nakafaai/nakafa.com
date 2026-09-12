@@ -36,7 +36,7 @@ export function Graph(
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 10]}
+      cameraPosition={[0, 0, 13.5]}
       data={[
         {
           points: horizontalPointsWithCenter,

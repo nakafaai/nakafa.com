@@ -40,6 +40,13 @@ describe("renderer manifest", () => {
         RENDERER_DOMAINS
       );
       expect(manifest.publishedDomains).toEqual(RENDERER_DOMAINS);
+      for (const registry of [manifest.base, ...manifest.domains]) {
+        expect(registry.authoringComponents).toEqual(
+          registry.supportedComponents
+        );
+        const names = registry.supportedComponents.map(({ name }) => name);
+        expect(new Set(names).size).toBe(names.length);
+      }
     })
   );
 

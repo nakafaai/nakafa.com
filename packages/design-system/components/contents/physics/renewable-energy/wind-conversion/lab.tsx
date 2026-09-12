@@ -88,6 +88,7 @@ export function WindEnergyConversionLab({
                 cameraPosition={[1.9, 1.5, 3.45]}
                 cameraTarget={[0.03, 0.72, 0.14]}
                 fov={34}
+                framing="content"
               />
               <ambientLight intensity={0.68} />
               <hemisphereLight

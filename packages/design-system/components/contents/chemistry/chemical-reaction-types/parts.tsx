@@ -174,7 +174,7 @@ export function Particle({
             CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO
           )}
         >
-          <InlineMath math={label} />
+          <InlineMath math={`\\mathrm{${label}}`} />
         </ChemistryParticleLabel>
       )}
     </group>

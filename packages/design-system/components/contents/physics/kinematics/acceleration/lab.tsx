@@ -125,6 +125,7 @@ export function AccelerationLab({
                 enableRotate
                 enableZoom
                 fov={ACCELERATION_LAB_SCENE.cameraFov}
+                framing="content"
               />
               <SpaceFlightScene motion={motion} />
             </Suspense>

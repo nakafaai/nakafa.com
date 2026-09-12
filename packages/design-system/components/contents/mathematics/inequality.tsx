@@ -16,6 +16,8 @@ import {
 import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
+  cameraPosition?: ComponentProps<typeof CoordinateSystem>["cameraPosition"];
+  cameraTarget?: ComponentProps<typeof CoordinateSystem>["cameraTarget"];
   data: ComponentProps<typeof Inequality3D>[];
   description: ReactNode;
   title: ReactNode;
@@ -24,7 +26,21 @@ interface Props {
  * Renders one card-wrapped inequality visualization with a shared coordinate
  * system shell.
  */
-export function Inequality({ title, description, data }: Props) {
+export function Inequality({
+  title,
+  description,
+  data,
+  cameraPosition,
+  cameraTarget,
+}: Props) {
+  const isPlanar = data.every((item) => item.is2D);
+  const position: Props["cameraPosition"] =
+    cameraPosition ?? (isPlanar ? [0, 0, 15] : undefined);
+  const isFrontalPlane =
+    isPlanar &&
+    position?.[0] === (cameraTarget?.[0] ?? 0) &&
+    position?.[1] === (cameraTarget?.[1] ?? 0);
+
   return (
     <CoordinateProvider>
       <Card className="content-auto-card">
@@ -34,9 +50,11 @@ export function Inequality({ title, description, data }: Props) {
         </CardHeader>
         <CardContent>
           <CoordinateSystem
-            cameraPosition={
-              data.every((item) => item.is2D) ? [0, 0, 15] : undefined
+            cameraPosition={position}
+            cameraProjection={
+              isFrontalPlane ? { kind: "orthographic" } : undefined
             }
+            cameraTarget={cameraTarget}
           >
             {data.map((item, index) => (
               <Inequality3D

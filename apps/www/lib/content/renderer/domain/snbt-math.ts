@@ -1,31 +1,21 @@
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { Graph as Set2Question6Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-2/question-6";
+import { Graph as Set2Question19Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-2/question-19";
+import { Graph as Set3Question18Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-3/question-18";
+import { GraphSolution as Set3Question18GraphSolution } from "@repo/design-system/components/contents/snbt/mathematics/set-3/question-18/solution";
+import { Graph as Set3Question19Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-3/question-19";
+import { Graph as Set4Question4Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-4/question-4";
+import { Graph as Set4Question5Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-4/question-5";
+import { Graph as Set4Question18Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-4/question-18";
+import { Graph as Set4Question19Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-4/question-19";
+import { Graph as Set6Question5Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-6/question-5";
+import { Graph as Set6Question18Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-6/question-18";
+import { Graph as Set6Question19Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-6/question-19";
+import { Graph as Set7Question4Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-7/question-4";
+import { Graph as Set7Question18Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-7/question-18";
+import { Graph as Set7Question19Graph } from "@repo/design-system/components/contents/snbt/mathematics/set-7/question-19";
 import { snbtMathComponentNames } from "@repo/design-system/lib/markdown/names";
-import { LineEquation } from "@/lib/content/renderer/client/snbt/math/equation";
 import { NumberLine } from "@/lib/content/renderer/client/snbt/math/number";
-import {
-  Set2Question6Graph,
-  Set2Question19Graph,
-} from "@/lib/content/renderer/client/snbt/math/set2";
-import {
-  Set3Question18Graph,
-  Set3Question18GraphSolution,
-  Set3Question19Graph,
-} from "@/lib/content/renderer/client/snbt/math/set3";
-import {
-  Set4Question4Graph,
-  Set4Question5Graph,
-  Set4Question18Graph,
-  Set4Question19Graph,
-} from "@/lib/content/renderer/client/snbt/math/set4";
-import {
-  Set6Question5Graph,
-  Set6Question18Graph,
-  Set6Question19Graph,
-} from "@/lib/content/renderer/client/snbt/math/set6";
-import {
-  Set7Question4Graph,
-  Set7Question18Graph,
-  Set7Question19Graph,
-} from "@/lib/content/renderer/client/snbt/math/set7";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 export const domainRenderers = [

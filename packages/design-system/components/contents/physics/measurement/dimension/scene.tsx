@@ -10,7 +10,6 @@ import {
   VOLUME_MODE_ID,
 } from "@repo/design-system/components/contents/physics/measurement/dimension/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { DoubleSide } from "three";
 
@@ -45,7 +44,7 @@ export function DimensionScene({
 
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.display}
+        fontSize="display"
         position={[0, 1.35, 1.05]}
       >
         <InlineMath math={powerLabel} />

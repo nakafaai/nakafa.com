@@ -1,6 +1,9 @@
 import "server-only";
 
-import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
+import {
+  RENDERER_DOMAINS,
+  type RendererDomain,
+} from "@nakafa/aksara-contracts/renderer/domain";
 import { createRendererManifest } from "@nakafa/aksara-contracts/renderer/manifest";
 import {
   aiDsComponentNames,
@@ -17,41 +20,25 @@ import {
   snbtQuantComponentNames,
   tkaMathComponentNames,
 } from "@repo/design-system/lib/markdown/names";
-import {
-  createComponentCapability,
-  createComponentRequirements,
-  createDomainCapability,
-} from "@/lib/content/renderer/capability";
 
-const COMPONENT_VERSION = 1;
-
-/** Creates the current one-version capability for one physical registry. */
+/** One current component set shared by publication and rendering. */
 function createCurrentCapability(componentNames: readonly string[]) {
-  const components = createComponentRequirements(
-    componentNames,
-    COMPONENT_VERSION
-  );
+  const components = [...componentNames]
+    .sort()
+    .map((name) => ({ name, version: 1 }));
 
-  return createComponentCapability({
+  return {
     authoringComponents: components,
     supportedComponents: components,
-  });
+  };
 }
 
-/** Creates one current route-domain capability without coupling future versions. */
+/** Binds a physical registry to its current route domain. */
 function createCurrentDomainCapability(
-  name: Parameters<typeof createDomainCapability>[0],
+  name: RendererDomain,
   componentNames: readonly string[]
 ) {
-  const components = createComponentRequirements(
-    componentNames,
-    COMPONENT_VERSION
-  );
-
-  return createDomainCapability(name, {
-    authoringComponents: components,
-    supportedComponents: components,
-  });
+  return { name, ...createCurrentCapability(componentNames) };
 }
 
 /** Authenticated renderer envelope derived without loading React implementations. */

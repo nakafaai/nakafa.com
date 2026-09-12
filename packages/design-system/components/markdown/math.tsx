@@ -71,9 +71,6 @@ function KatexMarkup({
 
   return (
     <span
-      // Grid preserves the formula baseline when its contents need to scroll.
-      // https://www.w3.org/TR/css-grid-2/#grid-baselines
-      className="inline-grid max-w-full overflow-x-auto"
       // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
       dangerouslySetInnerHTML={{ __html: html }}
       data-testid="katex"

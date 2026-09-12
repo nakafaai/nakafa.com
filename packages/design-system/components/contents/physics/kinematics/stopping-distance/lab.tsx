@@ -168,6 +168,7 @@ function StoppingDistanceCamera() {
       enableRotate
       enableZoom
       fov={44}
+      framing="content"
     />
   );
 }

@@ -169,6 +169,7 @@ function CircularMotionCamera() {
       enableRotate
       enableZoom
       fov={43}
+      framing="content"
     />
   );
 }

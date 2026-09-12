@@ -10,7 +10,6 @@ import {
   RULER_STEP_CM,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useMemo } from "react";
 
@@ -75,14 +74,14 @@ export function LengthScene({
 
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize="reading"
         position={[RULER_START_X - 0.35, 0.64, 1]}
       >
         <InlineMath math="0" />
       </ThreeLabel>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize="reading"
         position={[readingLabelX, 0.92, 1]}
       >
         {reading}

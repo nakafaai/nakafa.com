@@ -74,6 +74,7 @@ export function MathScene({ labels, scene }: MathSceneProps) {
   );
   return (
     <CoordinateSystem
+      cameraFraming={scene.view.kind === "camera" ? undefined : "content"}
       cameraPosition={view.position}
       cameraProjection={view.projection}
       cameraTarget={view.target}

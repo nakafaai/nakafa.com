@@ -77,6 +77,8 @@ interface CameraControlsProps {
   enableRotate?: boolean;
   enableZoom?: boolean;
   fov?: number;
+  /** Fits every finite subject only when the illustration explicitly needs it. */
+  framing?: "content";
   maxAzimuthAngle?: number;
   /** Optional tighter dolly bound within the scene's initial framing limit. */
   maxDistance?: number;
@@ -95,6 +97,7 @@ export function CameraControls(props: CameraControlsProps) {
     enablePan = true,
     enableRotate = true,
     enableZoom = true,
+    framing: framingMode,
     fov = 50,
     maxAzimuthAngle,
     maxDistance,
@@ -117,6 +120,7 @@ export function CameraControls(props: CameraControlsProps) {
     camera: ComponentRef<typeof OrbitControls>["object"];
     position: Vector3;
     target: Vector3;
+    zoom: number;
   } | null>(null);
   const pointerActive = useRef(false);
   const settling = useRef(false);
@@ -152,22 +156,79 @@ export function CameraControls(props: CameraControlsProps) {
     ) => {
       const object = controls.object;
       const initialized = initialPose.current;
-      if (
-        lastFit.current?.camera === object ||
-        (initialized?.camera === object &&
-          initialized.position.equals(position) &&
-          initialized.target.equals(target))
-      ) {
+      if (lastFit.current?.camera === object) {
         return;
       }
-      // Empty scenes still need an authored pose. Remember its values so
-      // later grid, viewport, and React updates preserve the user's orbit.
-      object.position.copy(position);
-      controls.target.copy(target);
-      initialPose.current = { camera: object, position, target };
+      const unchanged =
+        initialized?.camera === object &&
+        initialized.position.equals(position) &&
+        initialized.target.equals(target);
+      const distance = position.distanceTo(target);
+      const limits = resolveCameraDistanceLimits({
+        position: position.toArray(),
+        target: target.toArray(),
+        minDistance,
+        maxDistance,
+      });
+      const zoom = resolveOrthographicZoom(
+        projectionHeight ||
+          2 * distance * Math.tan((projectionFov * Math.PI) / 360),
+        viewportHeight
+      );
+      if (!unchanged) {
+        object.position.copy(position);
+        controls.target.copy(target);
+      }
+      if (object instanceof ThreeOrthographicCamera) {
+        object.zoom =
+          zoom.zoom * (unchanged ? object.zoom / initialized.zoom : 1);
+        controls.minZoom = zoom.minZoom;
+        controls.maxZoom = zoom.maxZoom;
+      }
+      controls.minDistance = limits.minDistance;
+      controls.maxDistance = limits.maxDistance;
+      object.near = projectionNear ?? 0.01;
+      object.far = projectionFar ?? 1000;
+      object.updateProjectionMatrix();
+      initialPose.current = {
+        camera: object,
+        position,
+        target,
+        zoom: zoom.zoom,
+      };
       controls.update();
+      if (!unchanged) {
+        controls.saveState();
+      }
       invalidate();
     };
+
+    const authoredPosition = new Vector3(
+      cameraPositionX,
+      cameraPositionY,
+      cameraPositionZ
+    );
+    const authoredTarget = new Vector3(
+      cameraTargetX,
+      cameraTargetY,
+      cameraTargetZ
+    );
+    if (framingMode !== "content") {
+      if (lastFit.current?.camera === camera) {
+        lastFit.current = null;
+        initialPose.current = null;
+      }
+      const applyPose = () => {
+        const controls = controlsRef.current;
+        if (controls?.object === camera) {
+          initializePose(controls, authoredPosition, authoredTarget);
+        }
+      };
+      applyPose();
+      const unsubscribe = framing.subscribe(applyPose);
+      framing.invalidate();
+      return unsubscribe;
+    }
 
     // Sampling and imperative Three.js updates run only at this React boundary.
     // The registry batches geometry, font, and viewport changes into one frame.
@@ -183,16 +244,6 @@ export function CameraControls(props: CameraControlsProps) {
         pendingFit.current = true;
         return;
       }
-      const authoredPosition = new Vector3(
-        cameraPositionX,
-        cameraPositionY,
-        cameraPositionZ
-      );
-      const authoredTarget = new Vector3(
-        cameraTargetX,
-        cameraTargetY,
-        cameraTargetZ
-      );
       const measurement = Effect.runSync(
         measureCameraBounds({
           labels: framing.labels,
@@ -305,6 +356,7 @@ export function CameraControls(props: CameraControlsProps) {
     cameraTargetY,
     cameraTargetZ,
     framing,
+    framingMode,
     invalidate,
     maxDistance,
     minDistance,

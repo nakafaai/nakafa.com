@@ -6,7 +6,6 @@ import type {
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -21,9 +20,6 @@ const SHELL_RENDER_CONFIG = [
 const ELECTRON_RADIUS = 0.07;
 const OUTER_ELECTRON_RADIUS = 0.085;
 const NUCLEUS_RADIUS = 0.44;
-const NUCLEUS_LABEL_SURFACE_OFFSET_RATIO = 1.06;
-const NUCLEUS_SYMBOL_Y = 0.07;
-const NUCLEUS_ATOMIC_NUMBER_Y = -0.18;
 const NUCLEUS_LABEL_OUTLINE_WIDTH = 0.012;
 
 /**
@@ -122,35 +118,17 @@ function NucleusLabel({
   sample: ShellModelSample;
 }) {
   return (
-    <>
-      <ThreeLabel
-        color={colors.sphereText}
-        fontSize={THREE_FONT_SIZE.display}
-        outlineColor={colors.sphereTextOutline}
-        outlineWidth={NUCLEUS_LABEL_OUTLINE_WIDTH}
-        position={[
-          0,
-          NUCLEUS_SYMBOL_Y,
-          NUCLEUS_RADIUS * NUCLEUS_LABEL_SURFACE_OFFSET_RATIO,
-        ]}
-      >
-        <InlineMath math={sample.symbol} />
-      </ThreeLabel>
-
-      <ThreeLabel
-        color={colors.sphereText}
-        fontSize={THREE_FONT_SIZE.annotation}
-        outlineColor={colors.sphereTextOutline}
-        outlineWidth={NUCLEUS_LABEL_OUTLINE_WIDTH}
-        position={[
-          0,
-          NUCLEUS_ATOMIC_NUMBER_Y,
-          NUCLEUS_RADIUS * NUCLEUS_LABEL_SURFACE_OFFSET_RATIO,
-        ]}
-      >
-        <InlineMath math={`Z = ${sample.atomicNumber}`} />
-      </ThreeLabel>
-    </>
+    <ThreeLabel
+      color={colors.sphereText}
+      fontSize="reading"
+      outlineColor={colors.sphereTextOutline}
+      outlineWidth={NUCLEUS_LABEL_OUTLINE_WIDTH}
+      position={[0, 0, 0]}
+    >
+      <InlineMath
+        math={`{}_{${sample.atomicNumber}}\\mathrm{${sample.symbol}}`}
+      />
+    </ThreeLabel>
   );
 }
 
@@ -184,10 +162,10 @@ function ShellRing({
       </mesh>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize="reading"
         position={[radius + 0.24, 0.12, 0.12]}
       >
-        <InlineMath math={shellKey} />
+        <InlineMath math={`\\mathrm{${shellKey}}`} />
       </ThreeLabel>
     </group>
   );

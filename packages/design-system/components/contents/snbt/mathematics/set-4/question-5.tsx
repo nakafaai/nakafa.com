@@ -43,7 +43,7 @@ export function Graph({ title, description }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[5, 3, 7]}
+      cameraPosition={[-3.4, 4.5, 6]}
       data={[
         // Bottom Face Edges
         {
@@ -76,11 +76,6 @@ export function Graph({ title, description }: GraphProps) {
               at: 2,
               offset: [0.2, -0.2, -0.2],
             },
-            {
-              text: <InlineMath math="l" />,
-              at: 1,
-              offset: [0.4, 0, 0],
-            },
           ],
         },
         {
@@ -101,7 +96,7 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="l" />,
               at: 1,
-              offset: [-0.4, 0, 0],
+              offset: [-0.55, 0, 0.2],
             },
           ],
         },
@@ -167,13 +162,6 @@ export function Graph({ title, description }: GraphProps) {
         {
           ...common,
           points: [C, getMidpoint(C, G), G],
-          labels: [
-            {
-              text: <InlineMath math="t" />,
-              at: 1,
-              offset: [0.2, 0, 0],
-            },
-          ],
         },
 
         // Plane ADGF (Diagonal Plane) - Highlighted

@@ -13,13 +13,16 @@ export const THREE_FONT_SIZE = {
   annotation: 0.14,
   reading: 0.24,
   display: 0.34,
-  diagram: 0.5,
+  diagram: 0.2,
 };
 
 export type ThreeFontSize = keyof typeof THREE_FONT_SIZE;
 
 /** Minimum diagram-label font size in CSS pixels at the camera boundary. */
 export const THREE_DIAGRAM_MINIMUM_FONT_SIZE = 14;
+
+/** Upper reading size for diagram annotations while zoom remains interactive. */
+export const THREE_DIAGRAM_MAXIMUM_FONT_SIZE = 22;
 
 const PARTICLE_LABEL_FONT_RATIO = 0.72;
 

@@ -50,7 +50,10 @@ export function resolveMathView(
     ],
     target: tuple(target),
     projection: {
-      kind: scene.view.kind === "isometric" ? "orthographic" : "perspective",
+      kind:
+        scene.space === "plane" || scene.view.kind === "isometric"
+          ? "orthographic"
+          : "perspective",
     },
   };
 }

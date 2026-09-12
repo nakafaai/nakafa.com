@@ -80,7 +80,8 @@ export function Graph({ title, description }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[0, 8, 15]}
+      cameraPosition={[0.4, 13.5, 17]}
+      cameraTarget={[0.4, 0.5, 0]}
       data={[
         // --- Cone 1 ---
         {
@@ -106,12 +107,12 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="h_1" />,
               at: 0,
-              offset: [0.2, H1 / 2, 0],
+              offset: [-1.25, H1 / 2, 0],
             },
             {
               text: <InlineMath math="P_1" />,
               at: 0,
-              offset: [0, -0.5, 0],
+              offset: [0, -1.8, 0],
             },
           ],
         },
@@ -125,7 +126,7 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="R_1" />,
               at: 0,
-              offset: [R1 / 2, -0.5, 0],
+              offset: [R1 / 2 + 0.4, -1.15, 0],
             },
           ],
         },
@@ -154,12 +155,12 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="h_2" />,
               at: 0,
-              offset: [0.2, H2 / 2, 0],
+              offset: [-1.25, H2 / 2, 0],
             },
             {
               text: <InlineMath math="P_2" />,
               at: 0,
-              offset: [0, -0.5, 0],
+              offset: [0, -1.8, 0],
             },
           ],
         },
@@ -173,7 +174,7 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="R_2" />,
               at: 0,
-              offset: [R2 / 2, -0.5, 0],
+              offset: [R2 / 2 + 0.4, -1.15, 0],
             },
           ],
         },

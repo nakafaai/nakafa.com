@@ -89,7 +89,8 @@ export function Graph({ title, description, label }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 12]}
+      cameraPosition={[0, -0.2, 16]}
+      cameraTarget={[0, -0.2, 0]}
       data={[
         // Horizontal line of sight (for angle of depression)
         {
@@ -246,7 +247,7 @@ export function Graph({ title, description, label }: GraphProps) {
             {
               text: <InlineMath math="B" />,
               at: 0,
-              offset: [-0.5, -0.5, 0],
+              offset: [0, -1.15, 0],
             },
           ],
         },
@@ -259,7 +260,7 @@ export function Graph({ title, description, label }: GraphProps) {
             {
               text: <InlineMath math="C" />,
               at: 0,
-              offset: [0.5, -0.5, 0],
+              offset: [0, -1.15, 0],
             },
           ],
         },

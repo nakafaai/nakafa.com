@@ -14,7 +14,6 @@ import {
   type SubatomicParticlePropertiesSceneLabels,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { ReactNode } from "react";
 import { Vector3 } from "three";
@@ -158,7 +157,7 @@ function ChargeScene({
       <Plate color={colors.negativePlate} label={labels.negativePlate} y={-1} />
 
       <Line color={colors.electronPath} lineWidth={5} points={ELECTRON_PATH} />
-      <Line color={colors.text} lineWidth={3} points={NEUTRON_PATH} />
+      <Line color={colors.neutron} lineWidth={3} points={NEUTRON_PATH} />
       <Line color={colors.protonPath} lineWidth={5} points={PROTON_PATH} />
 
       {CHARGE_PARTICLES.map((particle) => (
@@ -174,21 +173,21 @@ function ChargeScene({
 
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.compact}
+        fontSize="compact"
         position={[2.48, 0.82, 0.24]}
       >
         {labels.electron}
       </ThreeLabel>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.compact}
+        fontSize="compact"
         position={[2.48, 0.08, 0.24]}
       >
         {labels.neutron}
       </ThreeLabel>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.compact}
+        fontSize="compact"
         position={[2.48, -0.82, 0.24]}
       >
         {labels.proton}
@@ -221,7 +220,7 @@ function MassScene({
           </RoundedBox>
           <ThreeLabel
             color={colors.text}
-            fontSize={THREE_FONT_SIZE.compact}
+            fontSize="compact"
             position={[0, -0.88, 0.38]}
           >
             {labels[bar.label]}
@@ -283,14 +282,14 @@ function LocationScene({
 
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.compact}
+        fontSize="compact"
         position={[0, -0.74, 0.82]}
       >
         {labels.nucleus}
       </ThreeLabel>
       <ThreeLabel
         color={colors.text}
-        fontSize={THREE_FONT_SIZE.compact}
+        fontSize="compact"
         position={[0, 1.7, 0.18]}
       >
         {labels.electronRegion}
@@ -318,7 +317,7 @@ function Plate({
       </RoundedBox>
       <ThreeLabel
         color={color}
-        fontSize={THREE_FONT_SIZE.compact}
+        fontSize="compact"
         position={[0, y > 0 ? 0.28 : -0.28, 0.2]}
       >
         {label}
@@ -340,7 +339,7 @@ function ElectronRegionRing({
   return (
     <mesh rotation={rotation}>
       <torusGeometry args={[1.48, 0.01, 12, 96]} />
-      <meshStandardMaterial color={colors.text} opacity={0.2} transparent />
+      <meshStandardMaterial color={colors.electron} opacity={0.2} transparent />
     </mesh>
   );
 }

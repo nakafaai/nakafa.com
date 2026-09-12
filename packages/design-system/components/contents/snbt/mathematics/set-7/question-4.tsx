@@ -54,7 +54,7 @@ const diagonals = [
 export function Graph({ title, description }: GraphProps) {
   return (
     <LineEquation
-      cameraPosition={[8, 6, 10]}
+      cameraPosition={[-8, 5, 10]}
       data={[
         // Cube Edges
         ...cubeEdges.map((edge) => ({
@@ -82,7 +82,7 @@ export function Graph({ title, description }: GraphProps) {
             {
               text: <InlineMath math="\frac{5}{2}\,\text{m}" />,
               at: 1,
-              offset: [1, 0, 0],
+              offset: [-1.2, 0, -0.5],
             },
           ],
         },

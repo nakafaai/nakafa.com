@@ -49,7 +49,7 @@ const questionData = [
     showPoints: true,
     labels: [
       { text: <InlineMath math="25^\circ" />, at: 0, offset: [-2, -0.5, 0] },
-      { text: <InlineMath math="\alpha" />, at: 1, offset: [1, 0, 0] },
+      { text: <InlineMath math="\alpha" />, at: 1, offset: [1.45, -0.6, 0] },
       { text: <InlineMath math="135^\circ" />, at: 2, offset: [1, 0.5, 0] },
     ],
   },
@@ -74,7 +74,8 @@ const answerData = [...questionData, ...answerSegments];
 export function Graph({ title, description, mode = "question" }: GraphProps) {
   return (
     <LineEquation
-      cameraPosition={[0, 0, 10]}
+      cameraPosition={[0.5, 0, 12.5]}
+      cameraTarget={[0.5, 0, 0]}
       data={mode === "answer" ? answerData : questionData}
       description={description}
       title={title}
