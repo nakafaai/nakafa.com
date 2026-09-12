@@ -17,6 +17,120 @@ import {
 const points = [new Vector3(0, 0, 0), new Vector3(2, 0, 0)];
 
 describe("mathematical branch endpoints", () => {
+  it.each([1, 2 / 3])(
+    "keeps a 4px round cap outside an open ring at zoom %s",
+    (zoom) => {
+      const height = 294;
+      const pixelsPerUnit =
+        (height / (24 * Math.tan((25 * Math.PI) / 180))) * zoom;
+      const camera = new OrthographicCamera(-147, 147, 147, -147, 0.01, 1000);
+      camera.zoom = pixelsPerUnit;
+      camera.position.z = 12;
+      camera.updateProjectionMatrix();
+      camera.updateMatrixWorld();
+      const clipped = clipOpenLineEnds(
+        points,
+        { start: "open", end: "open" },
+        camera,
+        0.1,
+        new Matrix4(),
+        {
+          width: height,
+          height,
+          lineWidth: 4,
+        }
+      );
+      for (const index of [0, 1]) {
+        const center = points[index].clone().project(camera);
+        const tip = clipped[index].clone().project(camera);
+        const centerDistance = (center.distanceTo(tip) * height) / 2;
+        expect(centerDistance - 2).toBeGreaterThanOrEqual(
+          0.1 * pixelsPerUnit - 1e-8
+        );
+        expect(centerDistance - 2).toBeCloseTo(0.1 * pixelsPerUnit, 5);
+      }
+      expect(
+        clipOpenLineEnds(
+          points,
+          { start: "open" },
+          camera,
+          0.1,
+          new Matrix4(),
+          {
+            width: height,
+            height,
+            lineWidth: 0,
+          }
+        )[0].x
+      ).toBeCloseTo(0.1, 12);
+    }
+  );
+
+  it.each([
+    [12, 0.1, 0.1],
+    [7, 3, 10],
+  ])("keeps a round cap outside a scaled ring from camera %j", (x, y, z) => {
+    const width = 672;
+    const height = 470;
+    const camera = new PerspectiveCamera(50, width / height, 0.01, 1000);
+    camera.position.set(x, y, z);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+    const authored = [
+      new Vector3(),
+      new Vector3(0.001, 0.001, 0),
+      new Vector3(2, 1, 0),
+    ];
+    const world = new Matrix4().compose(
+      new Vector3(),
+      new Quaternion(),
+      new Vector3(2, 0.75, 1.5)
+    );
+    const clipped = clipOpenLineEnds(
+      authored,
+      { start: "open" },
+      camera,
+      0.1,
+      world,
+      { width, height, lineWidth: 4 }
+    );
+    const tip = clipped[0].clone().applyMatrix4(world).project(camera);
+    const center = authored[0].clone().project(camera);
+    const right = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+    const up = new Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+    const rx = right.multiplyScalar(0.2).project(camera).x - center.x;
+    const ry = up.multiplyScalar(0.075).project(camera).y - center.y;
+    let clearance = Number.POSITIVE_INFINITY;
+    for (let sample = 0; sample < 720; sample += 1) {
+      const angle = (sample * Math.PI) / 360;
+      clearance = Math.min(
+        clearance,
+        Math.hypot(
+          ((tip.x - center.x - rx * Math.cos(angle)) * width) / 2,
+          ((tip.y - center.y - ry * Math.sin(angle)) * height) / 2
+        )
+      );
+    }
+    expect(clearance).toBeGreaterThanOrEqual(2 - 1e-5);
+    expect(clearance).toBeLessThan(2.01);
+    expect(clipped).toHaveLength(2);
+    expect(
+      clipOpenLineEnds(
+        authored.slice(0, 2),
+        { start: "open" },
+        camera,
+        0.1,
+        world,
+        { width, height, lineWidth: 4 }
+      )
+    ).toEqual([]);
+    expect(authored.map((point) => point.toArray())).toEqual([
+      [0, 0, 0],
+      [0.001, 0.001, 0],
+      [2, 1, 0],
+    ]);
+  });
+
   it.effect("preserves exact authored endpoint identity and membership", () =>
     Effect.gen(function* () {
       const endpoints = yield* resolveLineEndpoints(points, {

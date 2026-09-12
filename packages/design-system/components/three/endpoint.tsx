@@ -21,26 +21,31 @@ export function EndpointLine({
   points,
   endpoints,
   radius,
+  lineWidth = 1,
   ...props
 }: Omit<ComponentProps<typeof Line>, "points"> & {
   points: readonly Vector3[];
   endpoints: LineEndpoints;
   radius: number;
 }) {
+  const strokeWidth = props.linewidth ?? lineWidth;
   const line = useRef<ComponentRef<typeof Line>>(null);
   const previous = useMemo(
     () => ({
       points,
       endpoints,
       radius,
+      lineWidth: strokeWidth,
+      width: 0,
+      height: 0,
       view: new Matrix4().multiplyScalar(0),
       projection: new Matrix4().multiplyScalar(0),
       world: new Matrix4().multiplyScalar(0),
     }),
-    [points, endpoints, radius]
+    [points, endpoints, radius, strokeWidth]
   );
 
-  useFrame(({ camera }) => {
+  useFrame(({ camera, size }) => {
     if (!line.current) {
       return;
     }
@@ -49,19 +54,24 @@ export function EndpointLine({
     if (
       previous.view.equals(camera.matrixWorldInverse) &&
       previous.projection.equals(camera.projectionMatrix) &&
-      previous.world.equals(line.current.matrixWorld)
+      previous.world.equals(line.current.matrixWorld) &&
+      previous.width === size.width &&
+      previous.height === size.height
     ) {
       return;
     }
     previous.view.copy(camera.matrixWorldInverse);
     previous.projection.copy(camera.projectionMatrix);
     previous.world.copy(line.current.matrixWorld);
+    previous.width = size.width;
+    previous.height = size.height;
     const clipped = clipOpenLineEnds(
       previous.points,
       previous.endpoints,
       camera,
       previous.radius,
-      previous.world
+      previous.world,
+      { width: size.width, height: size.height, lineWidth: previous.lineWidth }
     );
     line.current.visible = clipped.length > 1;
     if (clipped.length < 2) {
@@ -85,7 +95,7 @@ export function EndpointLine({
     }
   });
 
-  return <Line {...props} points={points} ref={line} />;
+  return <Line {...props} lineWidth={lineWidth} points={points} ref={line} />;
 }
 
 /** Faces the camera in world space while retaining inherited marker scale. */
