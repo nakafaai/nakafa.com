@@ -94,7 +94,7 @@ export const captureServerException = Effect.fn(
   yield* Effect.tryPromise({
     try: () =>
       analytics.captureExceptionImmediate(
-        createOperationalException(error),
+        createOperationalException(error, decodedProperties.value),
         undefined,
         decodedProperties.value
       ),
