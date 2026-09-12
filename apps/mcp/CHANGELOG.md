@@ -1,5 +1,12 @@
 # mcp
 
+## 2.0.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @repo/backend@3.0.1
+
 ## 2.0.0
 
 ### Major Changes
