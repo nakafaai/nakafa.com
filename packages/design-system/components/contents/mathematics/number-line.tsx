@@ -199,7 +199,7 @@ export function NumberLine({
               >
                 {!!segment.label && (
                   <div
-                    className="absolute top-0 -translate-x-1/2 font-medium text-sm"
+                    className="absolute top-0 -translate-x-1/2 whitespace-nowrap font-medium text-sm"
                     style={{ left: `${segment.startPos + segment.width / 2}%` }}
                   >
                     {segment.label}
