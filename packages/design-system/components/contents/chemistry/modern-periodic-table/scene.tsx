@@ -19,7 +19,6 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene-frame";
 import type { ReactNode } from "react";
 
 const GROUP_COUNT = 18;
@@ -65,7 +64,7 @@ export function ModernPeriodicTableScene({
   focusId: ModernPeriodicTableFocusId;
   labels: ModernPeriodicTableLabLabels;
 }) {
-  const narrow = useThree((state) => isNarrowThreeScene(state.size, 1.15));
+  const narrow = useThree((state) => state.size.width < 560);
 
   return (
     <group>

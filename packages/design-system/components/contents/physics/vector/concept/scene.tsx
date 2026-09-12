@@ -62,8 +62,10 @@ export function VectorConceptScene({
         fontSize="reading"
         position={left.labelPoint}
       >
-        {labels.leftCable}{" "}
-        <InlineMath math={`${Math.round(left.tension)}\\,\\mathrm{N}`} />
+        <span className="block">{labels.leftCable}</span>
+        <span className="block">
+          <InlineMath math={`${Math.round(left.tension)}\\,\\mathrm{N}`} />
+        </span>
       </ThreeLabel>
       <ThreeLabel
         anchorX="right"
@@ -71,8 +73,10 @@ export function VectorConceptScene({
         fontSize="reading"
         position={right.labelPoint}
       >
-        {labels.rightCable}{" "}
-        <InlineMath math={`${Math.round(right.tension)}\\,\\mathrm{N}`} />
+        <span className="block">{labels.rightCable}</span>
+        <span className="block">
+          <InlineMath math={`${Math.round(right.tension)}\\,\\mathrm{N}`} />
+        </span>
       </ThreeLabel>
     </group>
   );
