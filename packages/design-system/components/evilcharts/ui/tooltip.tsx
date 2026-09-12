@@ -6,7 +6,7 @@ import {
   TooltipLabel,
   type TooltipLabelProps,
 } from "@repo/design-system/components/evilcharts/ui/tooltip-item";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type * as React from "react";
 import { type DefaultTooltipContentProps, Tooltip } from "recharts";
 import type {

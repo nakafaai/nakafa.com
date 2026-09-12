@@ -12,8 +12,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { cn } from "@repo/design-system/lib/utils";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 
 interface Props {

@@ -8,7 +8,7 @@ import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/c
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import { EvilBrushControls } from "@repo/design-system/components/evilcharts/ui/evil-brush-controls";
 import { useBrushSelection } from "@repo/design-system/components/evilcharts/ui/evil-brush-selection";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import {
   Suspense,
   useDeferredValue,

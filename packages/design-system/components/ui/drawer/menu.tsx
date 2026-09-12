@@ -9,8 +9,8 @@ import { useRender } from "@base-ui/react/use-render";
 import { ArrowRight01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { DrawerTrigger } from "@repo/design-system/components/ui/drawer";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import type * as React from "react";
 
 const drawerMenuItemVariants = cva(

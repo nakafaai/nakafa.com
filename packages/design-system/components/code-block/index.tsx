@@ -5,7 +5,7 @@ import {
   CodeBlockContext,
   type CodeBlockData,
 } from "@repo/design-system/lib/code-block/context";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { HTMLAttributes } from "react";
 import { useMemo } from "react";
 

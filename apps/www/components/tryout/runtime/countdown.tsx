@@ -4,7 +4,7 @@ import {
   NumberFormat,
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { Fragment } from "react";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";

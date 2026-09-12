@@ -2,8 +2,8 @@
 
 import { Label } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (

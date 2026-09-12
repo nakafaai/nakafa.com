@@ -8,7 +8,7 @@ import {
 import { useClipboard } from "@mantine/hooks";
 import { Action, Actions } from "@repo/design-system/components/ai/actions";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 
 import { useChat } from "@/components/ai/context/use-chat";

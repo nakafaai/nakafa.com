@@ -23,9 +23,9 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
-import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
+import { cn } from "cn";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type * as React from "react";

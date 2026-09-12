@@ -2,7 +2,7 @@
 
 import { MinusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { OTPInput, OTPInputContext } from "input-otp";
 import { use } from "react";
 

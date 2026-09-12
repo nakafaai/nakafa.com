@@ -4,7 +4,7 @@ import { useRender } from "@base-ui/react/use-render";
 import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { createContext, use, useCallback, useMemo, useState } from "react";
 
 interface StepperContextValue {

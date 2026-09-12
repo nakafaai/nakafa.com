@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ComponentProps } from "react";
 
 export type ActionsProps = ComponentProps<typeof ButtonGroup>;

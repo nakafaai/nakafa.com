@@ -2,8 +2,8 @@ import {
   ScrollArea,
   ScrollBar,
 } from "@repo/design-system/components/ui/scroll-area";
-import { cn } from "@repo/design-system/lib/utils";
 import { cva } from "class-variance-authority";
+import { cn } from "cn";
 import katex from "katex";
 import { Children, type HTMLAttributes, isValidElement } from "react";
 

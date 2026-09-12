@@ -9,7 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day-key";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { type ComponentProps, type Ref, useCallback } from "react";
 import {
   type DayButton,

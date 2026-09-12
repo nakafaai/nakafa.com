@@ -6,8 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { cn } from "@repo/design-system/lib/utils";
 import { cva } from "class-variance-authority";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {

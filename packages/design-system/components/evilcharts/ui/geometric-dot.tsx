@@ -1,5 +1,5 @@
 import type { ChartDotVariant } from "@repo/design-system/lib/charts/series-cue";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { memo } from "react";
 
 type GeometricDotType = Extract<

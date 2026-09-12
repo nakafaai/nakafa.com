@@ -9,7 +9,6 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { filterWhitespaceNodes } from "@repo/design-system/lib/markdown/children";
-import { cn } from "@repo/design-system/lib/utils";
 import type {
   BlockquoteProps,
   CodeProps,
@@ -28,6 +27,7 @@ import type {
   TableProps,
   TableRowProps,
 } from "@repo/design-system/types/markdown";
+import { cn } from "cn";
 import { type ComponentPropsWithoutRef, isValidElement } from "react";
 
 type ContentLayoutProps = ComponentPropsWithoutRef<"div">;

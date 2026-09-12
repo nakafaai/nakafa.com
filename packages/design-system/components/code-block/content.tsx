@@ -2,7 +2,7 @@
 
 import { captureException } from "@repo/analytics/posthog/browser";
 import { highlightCode } from "@repo/design-system/lib/code-block/highlight";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { Effect, Fiber } from "effect";
 import type { HTMLAttributes } from "react";
 import { Fragment, useEffect, useMemo, useState } from "react";

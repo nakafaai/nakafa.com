@@ -6,8 +6,8 @@ import {
   renderMermaid,
 } from "@repo/design-system/lib/mermaid/render";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { cn } from "@repo/design-system/lib/utils";
 import { createStableId } from "@repo/utilities/helper";
+import { cn } from "cn";
 import { Effect, Fiber } from "effect";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";

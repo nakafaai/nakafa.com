@@ -20,7 +20,7 @@ import {
   useCodeBlock,
 } from "@repo/design-system/lib/code-block/context";
 import { filenameIconMap } from "@repo/design-system/lib/code-block/icons";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 

@@ -18,8 +18,8 @@ import {
   useOptionalPromptInputController,
   usePromptInputAttachments,
 } from "@repo/design-system/lib/prompt-input/context";
-import { cn } from "@repo/design-system/lib/utils";
 import type { ChatStatus } from "ai";
+import { cn } from "cn";
 import {
   type ChangeEvent,
   Children,

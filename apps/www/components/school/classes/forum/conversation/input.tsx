@@ -14,8 +14,8 @@ import {
 } from "@repo/design-system/components/ui/input-group";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
-import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
+import { cn } from "cn";
 import { useMutation } from "convex/react";
 import { Effect, Schema } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";

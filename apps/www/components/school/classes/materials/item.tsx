@@ -28,8 +28,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { cn } from "@repo/design-system/lib/utils";
 import { usePathname } from "@repo/internationalization/src/navigation";
+import { cn } from "cn";
 import { formatDistanceToNow } from "date-fns";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";

@@ -5,7 +5,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar-content";
 import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { HeaderMenu } from "@/components/sidebar/header-menu";
 import { NavExplore } from "@/components/sidebar/nav-explore";

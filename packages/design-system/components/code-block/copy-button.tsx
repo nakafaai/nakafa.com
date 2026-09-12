@@ -10,7 +10,7 @@ import type {
 } from "@repo/design-system/lib/code-block/clipboard";
 import { writeCodeToClipboard } from "@repo/design-system/lib/code-block/clipboard";
 import { useCodeBlock } from "@repo/design-system/lib/code-block/context";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { Duration, Effect, Fiber } from "effect";
 import type { ComponentProps } from "react";
 import { useEffect, useRef, useState } from "react";

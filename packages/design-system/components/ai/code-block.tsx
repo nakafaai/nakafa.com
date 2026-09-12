@@ -16,7 +16,7 @@ import { writeCodeToClipboard } from "@repo/design-system/lib/code-block/clipboa
 import { languageIconMap } from "@repo/design-system/lib/code-block/icons";
 import { getCodeFileExtension } from "@repo/design-system/lib/code-block/language-extension";
 import { downloadFile } from "@repo/design-system/lib/files/download";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import { Effect } from "effect";
 import {
   type ComponentProps,

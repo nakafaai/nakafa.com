@@ -10,7 +10,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { getPowerPreference } from "@repo/design-system/lib/device";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "cn";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useLayoutEffect, useState } from "react";
