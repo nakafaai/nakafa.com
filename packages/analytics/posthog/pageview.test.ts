@@ -21,13 +21,13 @@ function createWindow(href: string) {
 }
 
 describe("explicit pageview tracking", () => {
-  it("captures the initial view once", () => {
+  it("installs tracking without capturing the landing view", () => {
     const { source } = createWindow("https://nakafa.com/en");
     const client = { capture: vi.fn() };
 
     startPageviewTracking(source, client);
 
-    expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+    expect(client.capture).not.toHaveBeenCalled();
   });
 
   it("captures pushState navigations to a new href", () => {
@@ -44,8 +44,7 @@ describe("explicit pageview tracking", () => {
     source.history.pushState({}, "", "/id");
 
     expect(originalPush).toHaveBeenCalledOnce();
-    expect(client.capture).toHaveBeenCalledTimes(2);
-    expect(client.capture).toHaveBeenNthCalledWith(2, "$pageview");
+    expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
   });
 
   it("captures replaceState navigations to a new href", () => {
@@ -60,7 +59,7 @@ describe("explicit pageview tracking", () => {
     holder.current = "https://nakafa.com/en/search?q=nakafa";
     source.history.replaceState({}, "", "/en/search?q=nakafa");
 
-    expect(client.capture).toHaveBeenCalledTimes(2);
+    expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
   });
 
   it("captures back and forward traversals", () => {
@@ -77,7 +76,7 @@ describe("explicit pageview tracking", () => {
       listener();
     }
 
-    expect(client.capture).toHaveBeenCalledTimes(2);
+    expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
   });
 
   it("skips same-href replacements without capturing", () => {
@@ -88,6 +87,6 @@ describe("explicit pageview tracking", () => {
     source.history.replaceState({}, "", "/en");
     source.history.pushState({}, "", "/en");
 
-    expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+    expect(client.capture).not.toHaveBeenCalled();
   });
 });

@@ -89,7 +89,7 @@ describe("two-tier PostHog browser runtime", () => {
     })
   );
 
-  it.effect("initializes the cookieless baseline with explicit pageviews", () =>
+  it.effect("initializes the cookieless baseline without capturing yet", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
 
@@ -113,13 +113,13 @@ describe("two-tier PostHog browser runtime", () => {
       expect(client.init.mock.calls[0]?.[1]).not.toHaveProperty(
         "property_denylist"
       );
-      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+      expect(client.capture).not.toHaveBeenCalled();
       expect(client.opt_in_capturing).not.toHaveBeenCalled();
       expect(client.opt_out_capturing).not.toHaveBeenCalled();
     })
   );
 
-  it.effect("reuses an initialized baseline without tracking twice", () =>
+  it.effect("reuses an initialized baseline without capturing yet", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       const loadCount = yield* Ref.make(0);
@@ -132,7 +132,7 @@ describe("two-tier PostHog browser runtime", () => {
 
       expect(yield* Ref.get(loadCount)).toBe(1);
       expect(client.init).toHaveBeenCalledOnce();
-      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+      expect(client.capture).not.toHaveBeenCalled();
     })
   );
 
@@ -357,7 +357,7 @@ describe("two-tier PostHog browser runtime", () => {
         .pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
-      expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+      expect(client.capture).not.toHaveBeenCalled();
       expect(client.opt_out_capturing).toHaveBeenCalledOnce();
       expect(client.reset).toHaveBeenCalledExactlyOnceWith(true);
 

@@ -6,10 +6,14 @@ const HOMEPAGE_MAX_ENCODED_BYTES = 1_168_654;
 const HOMEPAGE_MAX_DECODED_BYTES = 3_809_519;
 
 // Exact-head CI measured the required normal-prefetch graph three times at
-// 1,003,135 encoded and 3,082,881 decoded bytes. These rounded limits retain a
-// roughly six-percent regression margin while preserving App Shell prefetch.
-const QURAN_MAX_ENCODED_BYTES = 1_065_000;
-const QURAN_MAX_DECODED_BYTES = 3_270_000;
+// 1,003,135 encoded and 3,082,881 decoded bytes. The always-on analytics
+// baseline loads the PostHog SDK on every visit (cookieless counting for
+// undecided and declined visitors), which remeasured the graph at 1,126,805
+// encoded and 3,467,447 decoded bytes. These rounded limits retain a roughly
+// six-percent regression margin over the new baseline while preserving App
+// Shell prefetch.
+const QURAN_MAX_ENCODED_BYTES = 1_195_000;
+const QURAN_MAX_DECODED_BYTES = 3_676_000;
 
 const routeBudgets = [
   {

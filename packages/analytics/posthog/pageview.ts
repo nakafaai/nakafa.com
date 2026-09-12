@@ -9,13 +9,13 @@ export interface PageviewWindow {
 }
 
 /**
- * Captures one pageview now and on every subsequent history navigation.
+ * Installs explicit history navigation tracking for one client.
  *
- * Explicit tracking replaces the SDK automatic pageview so each capture lands
- * exactly once, after identity is known: no duplicates on consent transitions
- * and no anonymous-then-identified double count for one view. Same-href
- * replacements are skipped. Runs for the application lifetime; the provider
- * never restarts it.
+ * The landing view is intentionally not captured here: it fires on the first
+ * settled admission (see browser analytics transitions) so the counted view
+ * carries the resolved identity instead of a premature anonymous baseline.
+ * Same-href replacements are skipped. Runs for the application lifetime; the
+ * provider never restarts it.
  */
 export function startPageviewTracking(
   source: PageviewWindow,
@@ -43,5 +43,4 @@ export function startPageviewTracking(
     notify();
   };
   source.addEventListener("popstate", notify);
-  client.capture("$pageview");
 }

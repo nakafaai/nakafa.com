@@ -61,6 +61,15 @@ const analyticsTier = MutableRef.make<AnalyticsTier>("baseline");
 const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
   status: "unresolved",
 });
+/**
+ * Tracks whether the deferred landing view has fired for the loaded client.
+ *
+ * The baseline enables immediately so the SDK warms up, but the first
+ * `$pageview` waits for the first settled admission. Whoever admits first —
+ * a grant or a baseline return — attributes that single view, and later
+ * transitions never recount it.
+ */
+const initialPageviewCaptured = MutableRef.make(false);
 
 /** Raised when the baseline client cannot initialize or upgrade. */
 export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<BrowserAnalyticsLoadFailed>()(
@@ -93,14 +102,23 @@ const restoreBaselineSdk = (client: BrowserAnalyticsClient) =>
     catch: browserAnalyticsLoadFailure,
   });
 
+/** Captures the deferred landing view exactly once per loaded client. */
+function captureInitialPageview(client: BrowserAnalyticsClient) {
+  if (MutableRef.get(initialPageviewCaptured)) {
+    return;
+  }
+  client.capture("$pageview");
+  MutableRef.set(initialPageviewCaptured, true);
+}
+
 /**
  * Loads the always-on baseline client without changing capture consent.
  *
  * With `cookieless_mode: "on_reject"` plus opting out by default, undecided
  * and declined visitors are counted through PostHog's server-side hash while
- * nothing is stored in the browser. Pageviews are captured explicitly (initial
- * plus history navigations) so each view lands exactly once, after identity
- * is known — never duplicated across consent transitions.
+ * nothing is stored in the browser. History tracking is installed here, but
+ * the landing view waits for the first settled admission so it carries the
+ * resolved identity — never a premature anonymous baseline.
  *
  * References:
  * https://posthog.com/tutorials/cookieless-tracking
@@ -216,9 +234,9 @@ function synchronizeIdentity(
  * Upgrades one baseline client to a consented identity in a single transition.
  *
  * Upgrade and identity sync move together so callers can never opt in without
- * authorizing identity. No pageview fires here: the load or navigation that
- * is already counted keeps the count exact, and the next navigation captures
- * under the consented identity.
+ * authorizing identity. The deferred landing view fires here when this is the
+ * first settled admission; later re-syncs never recount it, and the next
+ * navigation captures under the consented identity.
  */
 export const admitConsentedIdentity = Effect.fn(
   "Analytics.admitConsentedIdentity"
@@ -242,6 +260,7 @@ export const admitConsentedIdentity = Effect.fn(
   yield* Effect.try({
     try: () => {
       synchronizeIdentity(client, identity);
+      captureInitialPageview(client);
     },
     catch: browserAnalyticsLoadFailure,
   }).pipe(
@@ -262,22 +281,39 @@ export const admitConsentedIdentity = Effect.fn(
  * granted only revoke the gate, unless the SDK itself reports a persisted
  * opt-in (a stale grant from an earlier session), which is reconciled the
  * same way. Recording an explicit opt-out for merely undecided visitors would
- * corrupt their pending consent state, so that path stays untouched. No
- * pageview fires here: the counted view keeps the count exact.
+ * corrupt their pending consent state, so that path stays untouched. The
+ * deferred landing view fires here when this is the first settled admission;
+ * later transitions never recount it.
  */
 export const revokeToBaselineAnalytics = Effect.fn(
   "Analytics.revokeToBaselineAnalytics"
 )(function* () {
   const client = MutableRef.get(analyticsClient);
-  const wasGranted = MutableRef.get(analyticsTier) === "granted";
-  const hasPersistedOptIn = client?.get_explicit_consent_status() === "granted";
-  if (!(client && (wasGranted || hasPersistedOptIn))) {
+  if (!client) {
     revokeGate();
+    return;
+  }
+
+  const wasGranted = MutableRef.get(analyticsTier) === "granted";
+  const hasPersistedOptIn = yield* Effect.try({
+    try: () => client.get_explicit_consent_status() === "granted",
+    catch: browserAnalyticsLoadFailure,
+  });
+  if (!(wasGranted || hasPersistedOptIn)) {
+    revokeGate();
+    yield* Effect.try({
+      try: () => captureInitialPageview(client),
+      catch: browserAnalyticsLoadFailure,
+    });
     return;
   }
 
   yield* restoreBaselineSdk(client);
   revokeGate();
+  yield* Effect.try({
+    try: () => captureInitialPageview(client),
+    catch: browserAnalyticsLoadFailure,
+  });
 });
 
 /** Revokes identity authorization without touching SDK consent or identity. */
