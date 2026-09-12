@@ -9,64 +9,28 @@ import {
   type OperationalExceptionProperties,
 } from "@repo/analytics/posthog/exception";
 import {
-  authorizeAnalyticsIdentity,
-  authorizeAnonymousAnalyticsIdentity,
+  type AnalyticsIdentityAuthorization,
+  type AnalyticsTier,
   filterAuthorizedAnalyticsEvent,
-  initializeAnalyticsIdentityAuthorization,
-  resetAnalyticsIdentity,
-  revokeAnalyticsIdentity,
 } from "@repo/analytics/posthog/identity";
+import { startPageviewTracking } from "@repo/analytics/posthog/pageview";
 import { Effect, MutableRef, Option, Schema } from "effect";
-import type { Properties } from "posthog-js";
+import type { PostHog } from "posthog-js";
 
-interface BrowserAnalyticsClient {
-  captureException: (error: unknown, properties?: Properties) => unknown;
-  get_property: (key: string) => unknown;
-  has_opted_out_capturing: () => boolean;
-  identify: (userId: string, properties: Properties) => void;
-  init: (
-    token: string,
-    config: {
-      readonly advanced_disable_flags: true;
-      readonly api_host: string;
-      readonly autocapture: false;
-      readonly before_send: typeof filterAuthorizedAnalyticsEvent;
-      readonly capture_dead_clicks: false;
-      readonly capture_exceptions: false;
-      readonly capture_heatmaps: false;
-      readonly capture_pageleave: false;
-      readonly capture_performance: false;
-      readonly capture_pageview: false;
-      readonly defaults: "2026-01-30";
-      readonly disable_conversations: true;
-      readonly disableDeviceModel: true;
-      readonly disable_external_dependency_loading: true;
-      readonly disable_product_tours: true;
-      readonly disable_session_recording: true;
-      readonly disable_surveys: true;
-      readonly disable_web_experiments: true;
-      readonly enable_recording_console_log: false;
-      readonly mask_all_element_attributes: true;
-      readonly mask_all_text: true;
-      readonly opt_out_capturing_by_default: true;
-      readonly opt_out_persistence_by_default: true;
-      readonly persistence: "localStorage";
-      readonly person_profiles: "identified_only";
-      readonly property_denylist: string[];
-      readonly rageclick: false;
-      readonly request_batching: false;
-      readonly respect_dnt: true;
-      readonly save_campaign_params: false;
-      readonly save_referrer: false;
-      readonly ui_host: string;
-    }
-  ) => unknown;
-  opt_in_capturing: (options: { readonly captureEventName: false }) => void;
-  opt_out_capturing: () => void;
-  register: (properties: Properties) => void;
-  reset: (resetDeviceId?: boolean) => void;
-  setPersonProperties: (properties: Properties) => void;
-}
+export type BrowserAnalyticsClient = Pick<
+  PostHog,
+  | "capture"
+  | "captureException"
+  | "get_explicit_consent_status"
+  | "get_property"
+  | "identify"
+  | "init"
+  | "opt_in_capturing"
+  | "opt_out_capturing"
+  | "register"
+  | "reset"
+  | "setPersonProperties"
+>;
 
 interface BrowserAnalyticsLoader {
   readonly load: Effect.Effect<BrowserAnalyticsClient, unknown>;
@@ -93,35 +57,14 @@ const browserAnalyticsLoadFailedCode = "BROWSER_ANALYTICS_LOAD_FAILED";
 const analyticsClient = MutableRef.make<BrowserAnalyticsClient | undefined>(
   undefined
 );
-const analyticsEnabled = MutableRef.make(false);
-const privateAutomaticEventProperties = [
-  "$browser",
-  "$browser_language",
-  "$browser_language_prefix",
-  "$browser_version",
-  "$current_url",
-  "$device",
-  "$device_model",
-  "$device_type",
-  "$host",
-  "$initialization_time",
-  "$os",
-  "$os_version",
-  "$pathname",
-  "$raw_user_agent",
-  "$referrer",
-  "$referring_domain",
-  "$screen_height",
-  "$screen_width",
-  "$session_id",
-  "$timezone",
-  "$timezone_offset",
-  "$viewport_height",
-  "$viewport_width",
-  "$window_id",
-];
+const analyticsTier = MutableRef.make<AnalyticsTier>("baseline");
+const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
+  status: "unresolved",
+});
+/** Fires the deferred landing view once: the first counted view consumes it. */
+const initialPageviewCaptured = MutableRef.make(false);
 
-/** Raised when a consented browser cannot initialize the analytics SDK. */
+/** Raised when the baseline client cannot initialize or upgrade. */
 export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<BrowserAnalyticsLoadFailed>()(
   "BrowserAnalyticsLoadFailed",
   { code: Schema.Literal(browserAnalyticsLoadFailedCode) }
@@ -136,23 +79,53 @@ const defaultBrowserAnalyticsLoader: BrowserAnalyticsLoader = {
   ),
 };
 
-/** Loads and enables PostHog only after the caller has resolved consent. */
-export const enableBrowserAnalytics = Effect.fn(
-  "Analytics.enableBrowserAnalytics"
+/** Returns the gate to baseline and revokes identity without SDK calls. */
+function revokeGate() {
+  MutableRef.set(analyticsTier, "baseline");
+  MutableRef.set(identityAuthorization, { status: "unresolved" });
+}
+
+/** Returns one client to baseline capture without admitting new identity. */
+const restoreBaselineSdk = (client: BrowserAnalyticsClient) =>
+  Effect.try({
+    try: () => {
+      client.opt_out_capturing();
+      client.reset(true);
+    },
+    catch: browserAnalyticsLoadFailure,
+  });
+
+/** Captures the deferred landing view exactly once per loaded client. */
+function captureInitialPageview(client: BrowserAnalyticsClient) {
+  if (MutableRef.get(initialPageviewCaptured)) {
+    return;
+  }
+  client.capture("$pageview");
+  MutableRef.set(initialPageviewCaptured, true);
+}
+
+/**
+ * Loads the always-on baseline client without changing capture consent.
+ *
+ * With `cookieless_mode: "on_reject"` plus opting out by default, undecided
+ * and declined visitors are counted through PostHog's server-side hash while
+ * nothing is stored in the browser. History tracking installs here; the
+ * landing view waits for the first settled admission (see below).
+ *
+ * References:
+ * https://posthog.com/tutorials/cookieless-tracking
+ * https://posthog.com/docs/libraries/js/config
+ */
+export const enableBaselineAnalytics = Effect.fn(
+  "Analytics.enableBaselineAnalytics"
 )(function* (loader: BrowserAnalyticsLoader = defaultBrowserAnalyticsLoader) {
-  MutableRef.set(analyticsEnabled, true);
   return yield* Effect.gen(function* () {
-    const existingClient = MutableRef.get(analyticsClient);
-    if (existingClient) {
-      yield* Effect.try({
-        try: () => existingClient.opt_in_capturing({ captureEventName: false }),
-        catch: browserAnalyticsLoadFailure,
-      });
+    if (MutableRef.get(analyticsClient)) {
       return;
     }
 
-    initializeAnalyticsIdentityAuthorization();
-    const client = yield* loader.load.pipe(
+    revokeGate();
+    const client: BrowserAnalyticsClient = yield* loader.load.pipe(
       Effect.mapError(browserAnalyticsLoadFailure)
     );
     const runtimeKeys = yield* Effect.try({
@@ -166,14 +139,23 @@ export const enableBrowserAnalytics = Effect.fn(
           advanced_disable_flags: true,
           api_host: POSTHOG_PROXY_PATH,
           autocapture: false,
-          before_send: filterAuthorizedAnalyticsEvent,
+          before_send: (event) =>
+            filterAuthorizedAnalyticsEvent(
+              event,
+              MutableRef.get(identityAuthorization),
+              MutableRef.get(analyticsTier)
+            ),
           capture_dead_clicks: false,
           capture_exceptions: false,
           capture_heatmaps: false,
           capture_pageleave: false,
           capture_performance: false,
           capture_pageview: false,
+          cookieless_mode: "on_reject",
           defaults: "2026-01-30",
+          // Plain JSON bodies keep ingestion inspectable in tests and
+          // debugging; pageview payloads are too small to need gzip.
+          disable_compression: true,
           disable_conversations: true,
           disableDeviceModel: true,
           disable_external_dependency_loading: true,
@@ -188,106 +170,154 @@ export const enableBrowserAnalytics = Effect.fn(
           opt_out_persistence_by_default: true,
           persistence: "localStorage",
           person_profiles: "identified_only",
-          property_denylist: privateAutomaticEventProperties,
           rageclick: false,
           request_batching: false,
           respect_dnt: true,
-          save_campaign_params: false,
-          save_referrer: false,
+          save_campaign_params: true,
+          save_referrer: true,
           ui_host: runtimeKeys.NEXT_PUBLIC_POSTHOG_UI_HOST,
         });
-        client.reset(true);
       },
       catch: browserAnalyticsLoadFailure,
     });
     MutableRef.set(analyticsClient, client);
+    // A navigation that lands before the first settled admission counts
+    // instead, so the admission must not recount the same destination.
+    startPageviewTracking(window, client, () =>
+      MutableRef.set(initialPageviewCaptured, true)
+    );
+  }).pipe(Effect.tapError(() => Effect.sync(revokeGate)));
+});
 
-    if (!MutableRef.get(analyticsEnabled)) {
-      yield* Effect.try({
-        try: () => client.opt_out_capturing(),
-        catch: browserAnalyticsLoadFailure,
-      });
-      return;
+/** Aligns a granted client with the only browser identity it may capture. */
+function synchronizeIdentity(
+  client: BrowserAnalyticsClient,
+  identity: BrowserAnalyticsIdentity
+) {
+  const trackedUserId = client.get_property("$user_id");
+  if (identity.status === "anonymous") {
+    if (trackedUserId) {
+      client.reset(false);
     }
 
+    client.register(createConsentEventProperties(identity, "anonymous"));
+    MutableRef.set(identityAuthorization, { status: "anonymous" });
+    return;
+  }
+
+  if (trackedUserId && trackedUserId !== identity.userId) {
+    client.reset(false);
+  }
+
+  const roleProperties = identity.role ? { role: identity.role } : {};
+  const personProperties = {
+    plan: identity.plan,
+    ...roleProperties,
+  };
+  client.register(createConsentEventProperties(identity, "account"));
+  MutableRef.set(identityAuthorization, {
+    status: "identified",
+    userId: identity.userId,
+  });
+  if (trackedUserId === identity.userId) {
+    client.setPersonProperties(personProperties);
+    return;
+  }
+  client.identify(identity.userId, personProperties);
+}
+
+/**
+ * Upgrades one baseline client to a consented identity in a single transition.
+ *
+ * Upgrade and identity sync move together so callers can never opt in without
+ * authorizing identity. The landing view fires here on first admission only.
+ */
+export const admitConsentedIdentity = Effect.fn(
+  "Analytics.admitConsentedIdentity"
+)(function* (identity: BrowserAnalyticsIdentity) {
+  const client = MutableRef.get(analyticsClient);
+  if (!client) {
+    return yield* new BrowserAnalyticsLoadFailed({
+      code: browserAnalyticsLoadFailedCode,
+    });
+  }
+
+  const transitioned = MutableRef.get(analyticsTier) !== "granted";
+  if (transitioned) {
     yield* Effect.try({
       try: () => client.opt_in_capturing({ captureEventName: false }),
       catch: browserAnalyticsLoadFailure,
     });
-  }).pipe(Effect.tapError(() => disableBrowserAnalytics()));
+    MutableRef.set(analyticsTier, "granted");
+  }
+
+  yield* Effect.try({
+    try: () => {
+      synchronizeIdentity(client, identity);
+      captureInitialPageview(client);
+    },
+    catch: browserAnalyticsLoadFailure,
+  }).pipe(
+    Effect.tapError(() =>
+      Effect.sync(revokeGate).pipe(
+        Effect.andThen(restoreBaselineSdk(client).pipe(Effect.ignore))
+      )
+    )
+  );
 });
 
-/** Stops future capture and clears all PostHog browser identity state. */
-export const disableBrowserAnalytics = Effect.fn(
-  "Analytics.disableBrowserAnalytics"
+/**
+ * Returns one granted client to the always-on baseline tier in transition.
+ *
+ * The gate flips only after the SDK confirms the return, so a throwing
+ * opt-out surfaces instead of stranding an opted-in SDK. Never-granted
+ * callers only revoke the gate (persisted opt-ins reconciled the same way);
+ * merely undecided visitors record nothing. The landing view fires here on
+ * first admission only.
+ */
+export const revokeToBaselineAnalytics = Effect.fn(
+  "Analytics.revokeToBaselineAnalytics"
 )(function* () {
-  MutableRef.set(analyticsEnabled, false);
-  revokeAnalyticsIdentity();
-
   const client = MutableRef.get(analyticsClient);
   if (!client) {
+    revokeGate();
     return;
   }
 
-  yield* Effect.try({
-    try: () => {
-      client.opt_out_capturing();
-      client.reset(true);
-    },
+  const wasGranted = MutableRef.get(analyticsTier) === "granted";
+  const hasPersistedOptIn = yield* Effect.try({
+    try: () => client.get_explicit_consent_status() === "granted",
     catch: browserAnalyticsLoadFailure,
-  }).pipe(Effect.ignore);
-});
-
-/** Aligns an enabled client with the only browser identity it may capture. */
-export const synchronizeBrowserAnalyticsIdentity = Effect.fn(
-  "Analytics.synchronizeBrowserAnalyticsIdentity"
-)(function* (identity: BrowserAnalyticsIdentity) {
-  const client = MutableRef.get(analyticsClient);
-  if (!(client && MutableRef.get(analyticsEnabled))) {
+  });
+  if (!(wasGranted || hasPersistedOptIn)) {
+    revokeGate();
+    yield* Effect.try({
+      try: () => captureInitialPageview(client),
+      catch: browserAnalyticsLoadFailure,
+    });
     return;
   }
 
+  yield* restoreBaselineSdk(client);
+  revokeGate();
   yield* Effect.try({
-    try: () => {
-      const trackedUserId = client.get_property("$user_id");
-      if (identity.status === "anonymous") {
-        if (trackedUserId) {
-          resetAnalyticsIdentity(client);
-        }
-
-        client.register(createConsentEventProperties(identity, "anonymous"));
-        authorizeAnonymousAnalyticsIdentity();
-        return;
-      }
-
-      if (trackedUserId && trackedUserId !== identity.userId) {
-        resetAnalyticsIdentity(client);
-      }
-
-      const roleProperties = identity.role ? { role: identity.role } : {};
-      const personProperties = {
-        plan: identity.plan,
-        ...roleProperties,
-      };
-      client.register(createConsentEventProperties(identity, "account"));
-      authorizeAnalyticsIdentity(identity.userId);
-      if (trackedUserId === identity.userId) {
-        client.setPersonProperties(personProperties);
-        return;
-      }
-      client.identify(identity.userId, personProperties);
-    },
+    try: () => captureInitialPageview(client),
     catch: browserAnalyticsLoadFailure,
-  }).pipe(Effect.tapError(() => disableBrowserAnalytics()));
+  });
 });
 
-/** Adds the exact affirmative decision provenance to every admitted event. */
+/** Revokes identity authorization without touching SDK consent or identity. */
+export function suspendBrowserAnalyticsIdentity() {
+  MutableRef.set(identityAuthorization, { status: "unresolved" });
+}
+
+/** Adds the exact affirmative decision provenance to every granted event. */
 function createConsentEventProperties(
   identity: BrowserAnalyticsIdentity,
   scope: "account" | "anonymous"
 ) {
   return {
-    $geoip_disable: true,
+    $geoip_disable: false,
     consent_decided_at: new Date(identity.consentDecidedAt).toISOString(),
     consent_decision: "granted",
     consent_mechanism: identity.consentMechanism,
@@ -298,21 +328,24 @@ function createConsentEventProperties(
 
 /** Clears a signed-out account identity without loading the analytics SDK. */
 export function resetBrowserAnalyticsIdentity(resetDeviceId = false) {
-  revokeAnalyticsIdentity();
+  MutableRef.set(identityAuthorization, { status: "unresolved" });
   const client = MutableRef.get(analyticsClient);
   if (client) {
-    resetAnalyticsIdentity(client, resetDeviceId);
+    client.reset(resetDeviceId);
   }
 }
 
-/** Captures one handled client exception without ever loading the SDK. */
+/**
+ * Captures one handled client exception through the always-on baseline.
+ *
+ * The minimized operational payload carries no identity or user content, so
+ * scrubbed reliability reporting stays available in every consent state. The
+ * baseline before_send gate additionally minimizes event URLs.
+ */
 export function captureException(
   error: unknown,
   properties: OperationalExceptionProperties
 ) {
-  if (!MutableRef.get(analyticsEnabled)) {
-    return;
-  }
   const decodedProperties = decodeOperationalExceptionProperties(properties);
   if (Option.isNone(decodedProperties)) {
     return;

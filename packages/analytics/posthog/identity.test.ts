@@ -1,105 +1,128 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import {
-  authorizeAnalyticsIdentity,
-  authorizeAnonymousAnalyticsIdentity,
+  type AnalyticsIdentityAuthorization,
+  type AnalyticsTier,
   filterAuthorizedAnalyticsEvent,
-  initializeAnalyticsIdentityAuthorization,
-  resetAnalyticsIdentity,
-  revokeAnalyticsIdentity,
 } from "@repo/analytics/posthog/identity";
 import type { CaptureResult } from "posthog-js";
 
 const USER_ID = "user-1";
 
-function createEvent(userId?: string): CaptureResult {
+function createEvent(
+  userId?: string,
+  event = "$pageview",
+  properties: Record<string, unknown> = {}
+): CaptureResult {
   return {
-    event: "$pageview",
-    properties: userId ? { $user_id: userId } : {},
+    event,
+    properties: userId ? { $user_id: userId, ...properties } : properties,
     uuid: "019fa44c-02be-7cd0-a4ed-61a7af8e0620",
   };
 }
 
+const tiers: readonly AnalyticsTier[] = ["baseline", "granted"];
+const authorizations: readonly AnalyticsIdentityAuthorization[] = [
+  { status: "unresolved" },
+  { status: "anonymous" },
+  { status: "identified", userId: USER_ID },
+];
+
 describe("PostHog browser identity gate", () => {
-  beforeEach(() => {
-    initializeAnalyticsIdentityAuthorization();
-  });
-
-  it("drops every event until auth resolves anonymously", () => {
-    const anonymousEvent = createEvent();
-    const identifiedEvent = createEvent(USER_ID);
-
-    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBeNull();
-    expect(filterAuthorizedAnalyticsEvent(identifiedEvent)).toBeNull();
-    expect(filterAuthorizedAnalyticsEvent(null)).toBeNull();
-
-    authorizeAnonymousAnalyticsIdentity();
-
-    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBe(anonymousEvent);
-    expect(filterAuthorizedAnalyticsEvent(identifiedEvent)).toBeNull();
+  it.each(tiers)("admits anonymous events in every state (%s)", (tier) => {
+    for (const authorization of authorizations) {
+      expect(
+        filterAuthorizedAnalyticsEvent(createEvent(), authorization, tier)
+      ).toBeTruthy();
+    }
+    expect(
+      filterAuthorizedAnalyticsEvent(null, { status: "unresolved" }, tier)
+    ).toBeNull();
   });
 
   it("allows only the currently authorized identified user", () => {
-    const anonymousEvent = createEvent();
     const currentUserEvent = createEvent(USER_ID);
     const otherUserEvent = createEvent("user-2");
 
-    expect(filterAuthorizedAnalyticsEvent(currentUserEvent)).toBeNull();
-
-    authorizeAnalyticsIdentity(USER_ID);
-
-    expect(filterAuthorizedAnalyticsEvent(currentUserEvent)).toBe(
-      currentUserEvent
-    );
-    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBeNull();
-    expect(filterAuthorizedAnalyticsEvent(otherUserEvent)).toBeNull();
-
-    revokeAnalyticsIdentity();
-
-    expect(filterAuthorizedAnalyticsEvent(currentUserEvent)).toBeNull();
+    for (const tier of tiers) {
+      expect(
+        filterAuthorizedAnalyticsEvent(
+          currentUserEvent,
+          { status: "unresolved" },
+          tier
+        )
+      ).toBeNull();
+      expect(
+        filterAuthorizedAnalyticsEvent(
+          currentUserEvent,
+          { status: "anonymous" },
+          tier
+        )
+      ).toBeNull();
+      expect(
+        filterAuthorizedAnalyticsEvent(
+          currentUserEvent,
+          { status: "identified", userId: USER_ID },
+          tier
+        )
+      ).toBe(currentUserEvent);
+      expect(
+        filterAuthorizedAnalyticsEvent(
+          otherUserEvent,
+          { status: "identified", userId: USER_ID },
+          tier
+        )
+      ).toBeNull();
+    }
   });
 
-  it("replaces analytics identity while preserving capture consent", () => {
-    const optedOutClient = {
-      get_property: () => "deleted-user",
-      has_opted_out_capturing: () => true,
-      opt_in_capturing: vi.fn(),
-      opt_out_capturing: vi.fn(),
-      reset: vi.fn(),
-    };
-
-    resetAnalyticsIdentity(optedOutClient, true);
-
-    expect(optedOutClient.reset).toHaveBeenCalledExactlyOnceWith(true);
-    expect(optedOutClient.opt_in_capturing).not.toHaveBeenCalled();
-    expect(optedOutClient.opt_out_capturing).toHaveBeenCalledOnce();
-    expect(
-      optedOutClient.opt_out_capturing.mock.invocationCallOrder[0]
-    ).toBeLessThan(optedOutClient.reset.mock.invocationCallOrder[0] ?? 0);
-  });
-
-  it("replaces a capturing identity without exposing reset state", () => {
-    const capturingClient = {
-      get_property: () => "deleted-user",
-      has_opted_out_capturing: () => false,
-      opt_in_capturing: vi.fn(),
-      opt_out_capturing: vi.fn(),
-      reset: vi.fn(),
-    };
-
-    resetAnalyticsIdentity(capturingClient);
-
-    expect(capturingClient.reset).toHaveBeenCalledExactlyOnceWith(false);
-    expect(capturingClient.opt_in_capturing).toHaveBeenCalledExactlyOnceWith({
-      captureEventName: false,
+  it("minimizes baseline event URLs to origin plus pathname", () => {
+    const event = createEvent(undefined, "$pageview", {
+      $current_url: "https://nakafa.com/en/search?q=user+query#results",
+      $referrer: "https://google.com/search?q=leaked",
+      $referring_domain: "google.com",
     });
-    expect(capturingClient.opt_out_capturing).toHaveBeenCalledOnce();
-    const optOutOrder =
-      capturingClient.opt_out_capturing.mock.invocationCallOrder[0] ?? 0;
-    const resetOrder = capturingClient.reset.mock.invocationCallOrder[0] ?? 0;
-    const optInOrder =
-      capturingClient.opt_in_capturing.mock.invocationCallOrder[0] ?? 0;
 
-    expect(optOutOrder).toBeLessThan(resetOrder);
-    expect(resetOrder).toBeLessThan(optInOrder);
+    const admitted = filterAuthorizedAnalyticsEvent(
+      event,
+      { status: "anonymous" },
+      "baseline"
+    );
+
+    expect(admitted).not.toBe(event);
+    expect(admitted?.properties.$current_url).toBe(
+      "https://nakafa.com/en/search"
+    );
+    expect(admitted?.properties.$referrer).toBeNull();
+    expect(admitted?.properties.$referring_domain).toBe("google.com");
+  });
+
+  it("drops unparseable baseline URLs instead of leaking them", () => {
+    const event = createEvent(undefined, "$pageview", {
+      $current_url: "not a url",
+    });
+
+    const admitted = filterAuthorizedAnalyticsEvent(
+      event,
+      { status: "anonymous" },
+      "baseline"
+    );
+
+    expect(admitted?.properties.$current_url).toBeNull();
+    expect(admitted?.properties.$referrer).toBeNull();
+  });
+
+  it("keeps full URLs once the granted tier is active", () => {
+    const event = createEvent(undefined, "$pageview", {
+      $current_url: "https://nakafa.com/en/search?q=consented",
+      $referrer: "https://google.com/search?q=consented",
+    });
+
+    const admitted = filterAuthorizedAnalyticsEvent(
+      event,
+      { status: "anonymous" },
+      "granted"
+    );
+
+    expect(admitted).toBe(event);
   });
 });

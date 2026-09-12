@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Predicate, Schema } from "effect";
 
 const shortTextSchema = Schema.String.check(Schema.isMaxLength(128));
 const identityTextSchema = Schema.String.check(Schema.isMaxLength(512));
@@ -61,7 +61,7 @@ export function createOperationalException(error: unknown) {
   const operationalError = new Error(operationalExceptionMessage);
   operationalError.name = operationalExceptionName;
 
-  if (!(error instanceof Error && error.stack)) {
+  if (!(Predicate.isError(error) && error.stack)) {
     return operationalError;
   }
 
