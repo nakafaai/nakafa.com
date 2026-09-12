@@ -56,10 +56,30 @@ const operationalExceptionMessage = "Operational exception";
 const operationalExceptionName = "OperationalError";
 const stackFramePattern = /^\s*at\s/;
 
+/**
+ * Builds a stable exception name from the admitted origin so error tracking
+ * groups events by their source instead of by minified stack frames.
+ *
+ * Only the developer-authored `source` and `operation` constants enter the
+ * name, so the redaction of the message, cause, and payload still holds.
+ */
+function deriveOperationalExceptionName(
+  properties: OperationalExceptionProperties
+) {
+  const scope = properties.operation
+    ? `${properties.source}.${properties.operation}`
+    : properties.source;
+  return `${operationalExceptionName}(${scope})`;
+}
+
 /** Removes messages, causes, and arbitrary payloads while retaining code frames. */
-export function createOperationalException(error: unknown) {
+export function createOperationalException(
+  error: unknown,
+  properties: OperationalExceptionProperties
+) {
+  const name = deriveOperationalExceptionName(properties);
   const operationalError = new Error(operationalExceptionMessage);
-  operationalError.name = operationalExceptionName;
+  operationalError.name = name;
 
   if (!(error instanceof Error && error.stack)) {
     return operationalError;
@@ -69,7 +89,7 @@ export function createOperationalException(error: unknown) {
     .split("\n")
     .filter((line) => stackFramePattern.test(line));
   operationalError.stack = [
-    `${operationalExceptionName}: ${operationalExceptionMessage}`,
+    `${name}: ${operationalExceptionMessage}`,
     ...frames,
   ].join("\n");
   return operationalError;

@@ -337,7 +337,7 @@ describe("consent-aware PostHog browser runtime", () => {
       expect(client.captureException).toHaveBeenCalledWith(
         expect.objectContaining({
           message: "Operational exception",
-          name: "OperationalError",
+          name: "OperationalError(browser-test)",
         }),
         { source: "browser-test" }
       );

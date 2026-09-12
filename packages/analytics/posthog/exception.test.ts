@@ -13,26 +13,43 @@ describe("operational exception privacy", () => {
       "    at submit (/app/chunk.js:10:5)",
     ].join("\n");
 
-    const operational = createOperationalException(input);
+    const operational = createOperationalException(input, {
+      source: "chat-api",
+    });
 
-    expect(operational.name).toBe("OperationalError");
+    expect(operational.name).toBe("OperationalError(chat-api)");
     expect(operational.message).toBe("Operational exception");
     expect(operational.stack).toBe(
-      "OperationalError: Operational exception\n    at submit (/app/chunk.js:10:5)"
+      "OperationalError(chat-api): Operational exception\n    at submit (/app/chunk.js:10:5)"
     );
     expect(JSON.stringify(operational)).not.toContain("user@example.com");
   });
 
   it("does not serialize arbitrary non-error payloads", () => {
-    const operational = createOperationalException({
-      message: "secret user@example.com",
-    });
+    const operational = createOperationalException(
+      { message: "secret user@example.com" },
+      { source: "chat-api" }
+    );
 
     expect(operational).toMatchObject({
       message: "Operational exception",
-      name: "OperationalError",
+      name: "OperationalError(chat-api)",
     });
     expect(JSON.stringify(operational)).not.toContain("user@example.com");
+  });
+
+  it("names the exception after its origin so grouping is stable", () => {
+    expect(
+      createOperationalException(new Error("boom"), {
+        source: "next-on-request-error",
+      }).name
+    ).toBe("OperationalError(next-on-request-error)");
+    expect(
+      createOperationalException(new Error("boom"), {
+        operation: "save-message",
+        source: "chat-api",
+      }).name
+    ).toBe("OperationalError(chat-api.save-message)");
   });
 
   it("accepts only exact bounded operational context", () => {
