@@ -8,14 +8,11 @@ import { expect } from "@playwright/test";
 import { Effect } from "effect";
 
 /**
- * Headed-Chrome user agent mirrored from the Playwright browser without the
- * automation token.
+ * Headed-Chrome identity without the automation markers.
  *
- * PostHog's browser SDK silently drops every capture when it detects an
- * automated visitor (`HeadlessChrome` in the user agent or brands, or
- * `navigator.webdriver`), so analytics suites would observe zero ingest
- * without this disguise. The version is cosmetic; only the absence of the
- * automation markers matters.
+ * PostHog drops bot-flagged captures silently (`HeadlessChrome` UA/brands,
+ * `navigator.webdriver`), which would zero out analytics suites. Versions
+ * are cosmetic.
  *
  * References:
  * https://posthog.com/docs/libraries/js/config#opt_out_useragent_filter
@@ -43,8 +40,7 @@ export const withBrowserContext = Effect.fn("NakafaE2E.withBrowserContext")(
           userAgent: REAL_USER_AGENT,
           ...options,
         });
-        // Hide every automation marker alongside the user agent above so
-        // first-party analytics behave exactly as for a real visitor.
+        // Automation markers hidden so ingest behaves as in production.
         await context.addInitScript(
           ({ brands }: { brands: typeof REAL_USER_AGENT_BRANDS }) => {
             Object.defineProperty(navigator, "webdriver", {

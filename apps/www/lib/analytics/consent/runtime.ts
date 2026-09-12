@@ -32,13 +32,10 @@ interface AnalyticsRuntimeAlignmentOptions {
 /**
  * Owns the baseline-to-granted runtime alignment for one consent state.
  *
- * The baseline client loads on every visit so the SDK warms up, but the
- * landing view waits for a settled (non-pending) state: a returning grant is
- * then attributed instead of counted as an anonymous baseline. Transient SDK
- * failures retry twice with backoff before surfacing; the error clears on the
- * next successful alignment. Preview children never load the SDK because
- * their proxy rewrites do not exist. Cleanup only suspends authorization so
- * SDK consent is never touched by lifecycle.
+ * The baseline warms up on load; the landing view waits for a settled state
+ * so returning grants are attributed. Transient failures retry with backoff
+ * before surfacing. Preview children skip the SDK; cleanup only suspends
+ * authorization, never SDK consent.
  */
 export function useAnalyticsRuntimeAlignment({
   accountConsent,
@@ -65,10 +62,8 @@ export function useAnalyticsRuntimeAlignment({
           status,
           user,
         });
-    // Pending states carry no proven identity yet: warm up the baseline
-    // client but hold the landing view until the first settled admission
-    // attributes it. Admitting now would lock in an anonymous baseline for
-    // returning granted visitors.
+    // Pending proves no identity yet: warm up only, or a returning grant
+    // would lock in as an anonymous baseline.
     let transition: Effect.Effect<void, BrowserAnalyticsLoadFailed>;
     if (analyticsIdentity) {
       transition = admitConsentedIdentity(analyticsIdentity);

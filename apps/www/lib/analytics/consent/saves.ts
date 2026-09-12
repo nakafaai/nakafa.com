@@ -19,21 +19,14 @@ type DecisionHookOptions = Omit<
 /**
  * Owns the in-flight explicit-save fiber lifecycle for one consent controller.
  *
- * The latest-save ref never crosses render: it is read and written only from
- * event handlers and effects owned by this hook. The callbacks below close
- * over stable refs only, so React Compiler memoization keeps their identity
- * across renders (options are read through the mirror ref) and consumer
- * effects only re-run when the prompt identity actually departs — never
- * because a parent re-rendered after recording pending state.
+ * Callbacks close over stable refs only, so their identity survives renders
+ * and consumer effects rerun solely on prompt changes. Options mirror
+ * post-commit because render-time ref writes are banned.
  */
 export function useAnalyticsConsentDecision(options: DecisionHookOptions) {
   const latestSaveRef = useRef<AnalyticsConsentSave | null>(null);
   const optionsRef = useRef(options);
-  // Mirror after commit (never during render): callbacks below always read
-  // the latest committed options. Event handlers run post-commit, and this
-  // effect is registered before consumer effects, so cleanups observe the
-  // fresh mirror too. setSessionOverrides itself is a stable setState
-  // dispatcher regardless.
+  // Post-commit mirror: handlers and later cleanups read fresh options.
   useEffect(() => {
     optionsRef.current = options;
   });
@@ -54,7 +47,9 @@ export function useAnalyticsConsentDecision(options: DecisionHookOptions) {
     };
   }
 
-  function interruptDepartedSave(departedIdentity: AnalyticsConsentPromptIdentity) {
+  function interruptDepartedSave(
+    departedIdentity: AnalyticsConsentPromptIdentity
+  ) {
     const activeSave = latestSaveRef.current;
     if (activeSave?.promptIdentity !== departedIdentity) {
       return;

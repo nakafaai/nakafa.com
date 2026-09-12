@@ -61,14 +61,7 @@ const analyticsTier = MutableRef.make<AnalyticsTier>("baseline");
 const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
   status: "unresolved",
 });
-/**
- * Tracks whether the deferred landing view has fired for the loaded client.
- *
- * The baseline enables immediately so the SDK warms up, but the first
- * `$pageview` waits for the first settled admission. Whoever admits first —
- * a grant or a baseline return — attributes that single view, and later
- * transitions never recount it.
- */
+/** Fires the deferred landing view once: whoever admits first attributes it. */
 const initialPageviewCaptured = MutableRef.make(false);
 
 /** Raised when the baseline client cannot initialize or upgrade. */
@@ -116,9 +109,8 @@ function captureInitialPageview(client: BrowserAnalyticsClient) {
  *
  * With `cookieless_mode: "on_reject"` plus opting out by default, undecided
  * and declined visitors are counted through PostHog's server-side hash while
- * nothing is stored in the browser. History tracking is installed here, but
- * the landing view waits for the first settled admission so it carries the
- * resolved identity — never a premature anonymous baseline.
+ * nothing is stored in the browser. History tracking installs here; the
+ * landing view waits for the first settled admission (see below).
  *
  * References:
  * https://posthog.com/tutorials/cookieless-tracking
@@ -234,9 +226,7 @@ function synchronizeIdentity(
  * Upgrades one baseline client to a consented identity in a single transition.
  *
  * Upgrade and identity sync move together so callers can never opt in without
- * authorizing identity. The deferred landing view fires here when this is the
- * first settled admission; later re-syncs never recount it, and the next
- * navigation captures under the consented identity.
+ * authorizing identity. The landing view fires here on first admission only.
  */
 export const admitConsentedIdentity = Effect.fn(
   "Analytics.admitConsentedIdentity"
@@ -275,15 +265,11 @@ export const admitConsentedIdentity = Effect.fn(
 /**
  * Returns one granted client to the always-on baseline tier in transition.
  *
- * The gate flips only after the SDK confirms the return: a throwing opt-out
- * surfaces the typed failure so the provider reports it and retries, instead
- * of leaving an opted-in SDK behind a baseline gate. Callers that never
- * granted only revoke the gate, unless the SDK itself reports a persisted
- * opt-in (a stale grant from an earlier session), which is reconciled the
- * same way. Recording an explicit opt-out for merely undecided visitors would
- * corrupt their pending consent state, so that path stays untouched. The
- * deferred landing view fires here when this is the first settled admission;
- * later transitions never recount it.
+ * The gate flips only after the SDK confirms the return, so a throwing
+ * opt-out surfaces instead of stranding an opted-in SDK. Never-granted
+ * callers only revoke the gate (persisted opt-ins reconciled the same way);
+ * merely undecided visitors record nothing. The landing view fires here on
+ * first admission only.
  */
 export const revokeToBaselineAnalytics = Effect.fn(
   "Analytics.revokeToBaselineAnalytics"

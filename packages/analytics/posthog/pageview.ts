@@ -11,11 +11,9 @@ export interface PageviewWindow {
 /**
  * Installs explicit history navigation tracking for one client.
  *
- * The landing view is intentionally not captured here: it fires on the first
- * settled admission (see browser analytics transitions) so the counted view
- * carries the resolved identity instead of a premature anonymous baseline.
- * Same-href replacements are skipped. Runs for the application lifetime; the
- * provider never restarts it.
+ * The landing view is deferred to the first settled admission so it carries
+ * the resolved identity. Same-href replacements are skipped; runs for the
+ * application lifetime.
  */
 export function startPageviewTracking(
   source: PageviewWindow,
