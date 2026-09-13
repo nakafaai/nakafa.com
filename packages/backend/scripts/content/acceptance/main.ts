@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/build";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { Effect, FileSystem } from "effect";
 
 const main = Effect.gen(function* () {
@@ -29,4 +30,4 @@ const main = Effect.gen(function* () {
   );
 });
 
-runMain(main.pipe(Effect.scoped, Effect.provide(layer)));
+runMain(withTerminal(main).pipe(Effect.provide(layer)));
