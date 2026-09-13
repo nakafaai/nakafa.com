@@ -7,6 +7,24 @@ import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/loca
 import { Effect, FileSystem, Schedule, Stream } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 
+/** Keeps terminal hangup on NodeRuntime's graceful interruption path until cleanup finishes. */
+export const withTerminal = Effect.fn("contentAcceptance.withTerminal")(
+  function* <A, E, R>(program: Effect.Effect<A, E, R>) {
+    yield* Effect.acquireRelease(
+      Effect.sync(() => {
+        // pnpm may exit before this process, causing its terminal to hang up.
+        const interrupt = () => process.emit("SIGINT");
+        process.on("SIGHUP", interrupt);
+        return interrupt;
+      }),
+      (interrupt) =>
+        Effect.sync(() => process.removeListener("SIGHUP", interrupt))
+    );
+    return yield* program;
+  },
+  Effect.scoped
+);
+
 /** Runs application tools while keeping private signing and cloud deployment credentials out. */
 export const runBuildCommand = Effect.fn("contentAcceptance.runBuildCommand")(
   function* (

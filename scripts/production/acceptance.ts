@@ -140,8 +140,8 @@ const resolveProductionAcceptance = Effect.fn(
   "ProductionAcceptance.resolveDecision"
 )(function* (repositoryRoot: string, environment: RevisionEnvironment) {
   const config = yield* Config.all({
-    base: Config.nonEmptyString(environment.base),
-    head: Config.nonEmptyString(environment.head),
+    base: Config.NonEmptyString(environment.base),
+    head: Config.NonEmptyString(environment.head),
   }).pipe(
     Effect.mapError(
       (cause) =>
@@ -177,7 +177,7 @@ const resolveProductionAcceptance = Effect.fn(
 export const writeProductionAcceptanceDecision = Effect.fn(
   "ProductionAcceptance.writeDecision"
 )(function* (repositoryRoot: string) {
-  const output = yield* Config.nonEmptyString("GITHUB_OUTPUT").pipe(
+  const output = yield* Config.NonEmptyString("GITHUB_OUTPUT").pipe(
     Effect.mapError(
       (cause) =>
         new ProductionAcceptanceError({

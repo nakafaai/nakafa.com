@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@hugeicons/core-free-icons": "^4.3.0",
-    "@nakafa/aksara-contracts": "0.38.0",
+    "@hugeicons/core-free-icons": "^4.3.2",
+    "@nakafa/aksara-contracts": "0.39.0",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/math": "workspace:*",

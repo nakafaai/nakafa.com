@@ -79,8 +79,15 @@ const verifyPublishedTrustLesson = Effect.fn(
     exact: true,
     name: messages.Common.angle,
   });
-  yield* Effect.promise(() => angle.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => expect(angle).toHaveValue("30"));
+  // Reveal the deferred number field after hydration; the client render
+  // replaces the pre-hydration node, so the reveal must be retried.
+  yield* Effect.promise(() =>
+    expect(async () => {
+      await angle.scrollIntoViewIfNeeded();
+      await expect(angle).toBeVisible();
+      await expect(angle).toHaveValue("30");
+    }).toPass({ timeout: 30_000 })
+  );
   yield* Effect.promise(() =>
     expect(angle).toHaveAttribute(
       "aria-roledescription",
@@ -207,7 +214,6 @@ test("published unit-circle controls preserve finite angles after clearing", asy
               exact: true,
               name: messages.Common.angle,
             });
-            yield* Effect.promise(() => expect(angles).toHaveCount(2));
             // This signed lesson teaches the triangle before the unit circle.
             const angle = angles.last();
             const circle = article
@@ -219,9 +225,18 @@ test("published unit-circle controls preserve finite angles after clearing", asy
                 }),
               })
               .last();
-            yield* Effect.promise(() => expect(circle).toHaveCount(1));
-            yield* Effect.promise(() => angle.scrollIntoViewIfNeeded());
-            yield* Effect.promise(() => expect(angle).toHaveValue("30"));
+            // Reveal the deferred card after hydration before editing; the
+            // client render replaces the pre-hydration node, so the reveal
+            // must be retried until the unit-circle field is live.
+            yield* Effect.promise(() =>
+              expect(async () => {
+                await expect(angles).toHaveCount(2);
+                await expect(circle).toHaveCount(1);
+                await angle.scrollIntoViewIfNeeded();
+                await expect(angle).toBeVisible();
+                await expect(angle).toHaveValue("30");
+              }).toPass({ timeout: 30_000 })
+            );
             yield* verifyAngleEditing(circle, angle, locale, "circle");
           })
         )

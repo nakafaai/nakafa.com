@@ -156,7 +156,7 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
       ...(yield* reviewRegistryDependencies(root, run, writeOutputMessage))
     );
 
-    const token = yield* Config.option(Config.redacted("GITHUB_TOKEN"));
+    const token = yield* Config.option(Config.Redacted("GITHUB_TOKEN"));
     const actionReviews = yield* githubActionReleaseReviews();
     const actionChecks = yield* Effect.forEach(
       actionReviews,

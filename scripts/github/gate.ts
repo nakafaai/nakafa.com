@@ -71,7 +71,7 @@ export const validateGate = Effect.fn("CiGate.validate")(function* (
 });
 
 const decodeConfig = <S extends Schema.Constraint>(name: string, schema: S) =>
-  Config.nonEmptyString(name).pipe(
+  Config.NonEmptyString(name).pipe(
     Effect.flatMap(Schema.decodeUnknownEffect(schema)),
     Effect.mapError(
       (cause) =>
@@ -97,8 +97,8 @@ export const runGate = Effect.fn("CiGate.run")(function* (roleInput: unknown) {
     decodeConfig("SCOPE_OUTCOME", GateOutcomeSchema),
   ]);
   const flags = yield* Config.all({
-    productionRequired: Config.boolean("PRODUCTION_REQUIRED"),
-    trusted: Config.boolean("TRUSTED_CANDIDATE"),
+    productionRequired: Config.Boolean("PRODUCTION_REQUIRED"),
+    trusted: Config.Boolean("TRUSTED_CANDIDATE"),
   }).pipe(
     Effect.mapError(
       (cause) =>

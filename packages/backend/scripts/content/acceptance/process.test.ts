@@ -8,6 +8,7 @@ import {
   localConvexEnvironment,
   runBuildCommand,
   withLocalBackend,
+  withTerminal,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
 import {
@@ -81,6 +82,33 @@ function spawner(
 
 describe("application process ownership", () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  it.live(
+    "handles hangup through the finalizer and then releases its listener",
+    () =>
+      Effect.gen(function* () {
+        const previous = process.listeners("SIGHUP");
+        const interrupt = vi.spyOn(process, "emit").mockReturnValue(process);
+        yield* withTerminal(
+          Effect.gen(function* () {
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                const listeners = process
+                  .listeners("SIGHUP")
+                  .filter((listener) => !previous.includes(listener));
+                expect(listeners).toHaveLength(1);
+                for (const listener of listeners) {
+                  listener("SIGHUP");
+                }
+                expect(interrupt).toHaveBeenCalledWith("SIGINT");
+              })
+            );
+            return yield* acceptanceRuntimeError("interrupted operation");
+          })
+        ).pipe(Effect.flip);
+        expect(process.listeners("SIGHUP")).toEqual(previous);
+      }).pipe(Effect.ensuring(Effect.sync(() => vi.restoreAllMocks())))
+  );
 
   for (const outcome of ["success", "failure", "interruption"]) {
     it.live(`closes its local child after application ${outcome}`, () =>

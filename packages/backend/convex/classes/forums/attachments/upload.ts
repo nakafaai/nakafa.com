@@ -34,7 +34,7 @@ export const createForumAttachmentUploadUrl = Effect.fn(
   uploadId: Id<"schoolClassForumPendingUploads">,
   uploadToken: string
 ) {
-  const siteUrl = yield* Config.url("CONVEX_SITE_URL").pipe(
+  const siteUrl = yield* Config.URL("CONVEX_SITE_URL").pipe(
     Effect.mapError(
       () =>
         new ForumAttachmentUploadConfigError({

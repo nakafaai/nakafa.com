@@ -41,7 +41,7 @@ const withDefaultOnce = <A>(flag: Flag.Flag<A>, fallback: A) =>
   optionalOnce(flag).pipe(Flag.map(Option.getOrElse(() => fallback)));
 
 const optionalLocale = () =>
-  Flag.string(FLAG_NAME.locale).pipe(
+  Flag.String(FLAG_NAME.locale).pipe(
     Flag.withSchema(LocaleInputSchema),
     optionalOnce,
     Flag.withDescription("Restrict results to one content locale")
@@ -54,13 +54,13 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
       "Nakafa CLI for the public REST API and MCP server"
     ),
     Command.withSharedFlags({
-      apiBase: Flag.string(FLAG_NAME.apiBase).pipe(
+      apiBase: Flag.String(FLAG_NAME.apiBase).pipe(
         Flag.withSchema(ApiBaseSchema),
         Flag.map((value) => new URL(value).origin),
         (flag) => withDefaultOnce(flag, NAKAFA_API_BASE_URL),
         Flag.withDescription("Override the public Nakafa API origin")
       ),
-      pretty: Flag.boolean(FLAG_NAME.pretty).pipe(
+      pretty: Flag.Boolean(FLAG_NAME.pretty).pipe(
         Flag.withAlias("p"),
         (flag) => withDefaultOnce(flag, false),
         Flag.withDescription("Indent JSON output")
@@ -87,22 +87,22 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   const search = Command.make(
     COMMAND_NAME.search,
     {
-      limit: Flag.integer(FLAG_NAME.limit).pipe(
+      limit: Flag.Int(FLAG_NAME.limit).pipe(
         Flag.withSchema(SearchLimitSchema),
         optionalOnce,
         Flag.withDescription("Maximum number of search results")
       ),
       locale: optionalLocale(),
-      offset: Flag.integer(FLAG_NAME.offset).pipe(
+      offset: Flag.Int(FLAG_NAME.offset).pipe(
         Flag.withSchema(SearchOffsetSchema),
         optionalOnce,
         Flag.withDescription("Search result offset")
       ),
-      query: Argument.string("query").pipe(
+      query: Argument.String("query").pipe(
         Argument.variadic({ min: 1 }),
         Argument.withDescription("Search query")
       ),
-      section: Flag.string(FLAG_NAME.section).pipe(
+      section: Flag.String(FLAG_NAME.section).pipe(
         Flag.withSchema(SectionInputSchema),
         optionalOnce,
         Flag.withDescription("Restrict results to one content section")
@@ -122,7 +122,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   const get = Command.make(
     COMMAND_NAME.get,
     {
-      ref: Argument.string("content-ref").pipe(
+      ref: Argument.String("content-ref").pipe(
         Argument.withDescription("Canonical URL or Nakafa content reference")
       ),
     },
@@ -142,23 +142,23 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   const quran = Command.make(
     COMMAND_NAME.quran,
     {
-      fromVerse: Flag.integer(FLAG_NAME.fromVerse).pipe(
+      fromVerse: Flag.Int(FLAG_NAME.fromVerse).pipe(
         Flag.withSchema(PositiveIntegerSchema),
         optionalOnce,
         Flag.withDescription("First verse to include")
       ),
-      includeTafsir: Flag.boolean(FLAG_NAME.tafsir).pipe(
+      includeTafsir: Flag.Boolean(FLAG_NAME.tafsir).pipe(
         (flag) => withDefaultOnce(flag, false),
         Flag.withDescription("Include the published tafsir")
       ),
       locale: optionalLocale(),
-      surah: Argument.integer("surah").pipe(
+      surah: Argument.Int("surah").pipe(
         Argument.withSchema(
           NakafaAgentQuranReferenceOptionsSchema.fields.surah
         ),
         Argument.withDescription("Surah number")
       ),
-      toVerse: Flag.integer(FLAG_NAME.toVerse).pipe(
+      toVerse: Flag.Int(FLAG_NAME.toVerse).pipe(
         Flag.withSchema(PositiveIntegerSchema),
         optionalOnce,
         Flag.withDescription("Last verse to include")

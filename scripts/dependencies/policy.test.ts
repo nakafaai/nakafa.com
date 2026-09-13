@@ -50,21 +50,21 @@ function validInput() {
   return {
     manifests,
     rootManifest: {
-      devEngines: { runtime: { version: "24.20.0" } },
-      packageManager: "pnpm@11.25.0",
+      devEngines: { runtime: { version: "24.21.0" } },
+      packageManager: "pnpm@11.27.0",
     },
     workspace: {
       catalog: {
-        "@effect/platform-node": "4.0.0-rc.112",
-        "@effect/vitest": "4.0.0-rc.112",
-        "@vitest/coverage-istanbul": "4.1.11",
-        "@vitest/ui": "4.1.11",
-        effect: "4.0.0-rc.112",
+        "@effect/platform-node": "4.0.0-rc.115",
+        "@effect/vitest": "4.0.0-rc.115",
+        "@vitest/coverage-istanbul": "5.0.0",
+        "@vitest/ui": "5.0.0",
+        effect: "4.0.0-rc.115",
         typescript: "7.0.2",
-        vitest: "4.1.11",
+        vitest: "5.0.0",
       },
       overrides: {
-        "@effect/platform-node-shared": "4.0.0-rc.112",
+        "@effect/platform-node-shared": "4.0.0-rc.115",
       },
       update: { ignoreDeps },
     },
@@ -121,7 +121,7 @@ describe("dependency policy", () => {
     if (!firstManifest) {
       return;
     }
-    firstManifest.manifest.dependencies.effect = "4.0.0-rc.112";
+    firstManifest.manifest.dependencies.effect = "4.0.0-rc.115";
     firstManifest.manifest.dependencies["@effect/platform"] = "0.97.1";
     if (firstManifest.manifest.scripts) {
       firstManifest.manifest.scripts.doctor = "pnpm dlx react-doctor@0.9.5";
@@ -157,7 +157,7 @@ describe("dependency policy", () => {
         {
           manifest: {
             dependencies: { effect: "catalog:" },
-            peerDependencies: { effect: "4.0.0-rc.112" },
+            peerDependencies: { effect: "4.0.0-rc.115" },
           },
           path: "package.json",
         },

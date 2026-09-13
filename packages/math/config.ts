@@ -12,7 +12,7 @@ export const CAS_ENV = {
  * - Effect Config: https://effect.website/docs/configuration/
  * - Effect Redacted: https://effect.website/docs/data-types/redacted/
  */
-export const casUrl = Config.string(CAS_ENV.url);
+export const casUrl = Config.String(CAS_ENV.url);
 
 /**
  * Redacted CAS bearer token so logs and errors do not expose secrets.
@@ -21,4 +21,4 @@ export const casUrl = Config.string(CAS_ENV.url);
  * - Effect Config: https://effect.website/docs/configuration/
  * - Effect Redacted: https://effect.website/docs/data-types/redacted/
  */
-export const casApiKey = Config.redacted(CAS_ENV.apiKey);
+export const casApiKey = Config.Redacted(CAS_ENV.apiKey);

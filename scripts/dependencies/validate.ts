@@ -125,20 +125,20 @@ export function validateDependencyPolicy({
     );
   }
 
-  if (workspace.catalog?.effect !== "4.0.0-rc.112") {
-    problems.push("The Effect catalog must be exactly 4.0.0-rc.112.");
+  if (workspace.catalog?.effect !== "4.0.0-rc.115") {
+    problems.push("The Effect catalog must be exactly 4.0.0-rc.115.");
   }
-  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.112") {
-    problems.push("The platform-node catalog must match Effect RC 112.");
+  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.115") {
+    problems.push("The platform-node catalog must match Effect RC 115.");
   }
-  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.112") {
-    problems.push("The Effect Vitest catalog must match Effect RC 112.");
+  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.115") {
+    problems.push("The Effect Vitest catalog must match Effect RC 115.");
   }
   if (
-    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.112"
+    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.115"
   ) {
     problems.push(
-      "The platform-node-shared override must match Effect RC 112."
+      "The platform-node-shared override must match Effect RC 115."
     );
   }
   if (workspace.catalog?.typescript !== "7.0.2") {
@@ -149,17 +149,17 @@ export function validateDependencyPolicy({
     "@vitest/coverage-istanbul",
     "@vitest/ui",
   ]) {
-    if (workspace.catalog?.[dependency] !== "4.1.11") {
+    if (workspace.catalog?.[dependency] !== "5.0.0") {
       problems.push(
-        `${dependency} must match the supported Vitest 4.1.11 cohort.`
+        `${dependency} must match the supported Vitest 5.0.0 cohort.`
       );
     }
   }
-  if (rootManifest.packageManager !== "pnpm@11.25.0") {
-    problems.push("packageManager must be pnpm@11.25.0.");
+  if (rootManifest.packageManager !== "pnpm@11.27.0") {
+    problems.push("packageManager must be pnpm@11.27.0.");
   }
-  if (rootManifest.devEngines?.runtime?.version !== "24.20.0") {
-    problems.push("The managed Node runtime must be 24.20.0.");
+  if (rootManifest.devEngines?.runtime?.version !== "24.21.0") {
+    problems.push("The managed Node runtime must be 24.21.0.");
   }
   return problems;
 }

@@ -12,7 +12,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-  "basedpyright>=1.34.0",
+  # 1.40 widens SymPy 1.14 factor(Expr) to Basic, rejecting valid scalar algebra.
+  "basedpyright==1.39.10",
   "httpx2>=2.2.0",
   "pytest>=9.0.0",
   "pytest-cov>=7.0.0",
