@@ -1,5 +1,5 @@
 import { assert, describe, expect, it } from "@effect/vitest";
-import { api } from "@repo/backend/convex/_generated/api";
+import { internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import { Effect } from "effect";
@@ -24,7 +24,7 @@ describe("tryouts/maintenance/retire", () => {
         let drained = false;
         while (processed < MAX_BATCHES) {
           const hasMore = await t.mutation(
-            api.tryouts.maintenance.retire.retireFrozenTryouts,
+            internal.tryouts.maintenance.retire.retireFrozenTryouts,
             { userId: seeded.identity.userId }
           );
           processed += 1;
