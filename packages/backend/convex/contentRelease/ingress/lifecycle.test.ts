@@ -5,10 +5,6 @@ import {
   Ed25519SignatureSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import {
-  ContentReleaseManifestSchema,
-  RollbackSignedContentReleaseSchema,
-} from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import type {
   ActionCtx,
@@ -24,6 +20,10 @@ import {
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  insertActivationPair,
+  makeActivationPair,
+} from "@repo/backend/test/content/activation";
+import {
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
   testEmptyManifest,
@@ -31,7 +31,6 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import { insertSignedCandidate } from "@repo/backend/test/content/stage";
-import { insertActivationPair, makeActivationPair } from "@repo/backend/test/content/activation";
 import { completeContentProof } from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
@@ -156,15 +155,27 @@ const runLifecycle = Effect.fn("test.contentRelease.runLifecycle")(function* <
 });
 
 describe("content release lifecycle ingress", () => {
-  it.effect("returns in-progress verification without claiming terminal proof", () =>
-    Effect.gen(function* () {
-      const t = convexTest(schema, convexModules);
-      const result = yield* runLifecycle(t, (ctx) => {
-        vi.spyOn(ctx, "runMutation").mockResolvedValue({ phase: "verifying" });
-        return advancePublication(ctx, { operation: "verify", release });
-      });
-      expect(result).toEqual({ ok: true, operation: "verify", value: { manifestHash: release.manifestHash, phase: "verifying", releaseId } });
-    })
+  it.effect(
+    "returns in-progress verification without claiming terminal proof",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const result = yield* runLifecycle(t, (ctx) => {
+          vi.spyOn(ctx, "runMutation").mockResolvedValue({
+            phase: "verifying",
+          });
+          return advancePublication(ctx, { operation: "verify", release });
+        });
+        expect(result).toEqual({
+          ok: true,
+          operation: "verify",
+          value: {
+            manifestHash: release.manifestHash,
+            phase: "verifying",
+            releaseId,
+          },
+        });
+      })
   );
 
   it.effect(

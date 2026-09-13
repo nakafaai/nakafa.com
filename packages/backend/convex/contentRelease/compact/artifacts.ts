@@ -35,13 +35,14 @@ export const compactArtifacts = Effect.fn("contentRelease.compactArtifacts")(
   }
 );
 
-/** Temporary owning deletion seam shared by the reviewed retirement page. */
-export const compactArtifact = Effect.fn("contentRelease.compactArtifact")(
-  function* (ctx: MutationCtx, artifact: Doc<"contentArtifacts">) {
-    if (yield* isArtifactReferenced(ctx, artifact.artifactHash)) {
-      return 0;
-    }
-    yield* Effect.promise(() => ctx.db.delete("contentArtifacts", artifact._id));
-    return 1;
+/** Deletes one unreferenced artifact without changing its retention owner. */
+const compactArtifact = Effect.fn("contentRelease.compactArtifact")(function* (
+  ctx: MutationCtx,
+  artifact: Doc<"contentArtifacts">
+) {
+  if (yield* isArtifactReferenced(ctx, artifact.artifactHash)) {
+    return 0;
   }
-);
+  yield* Effect.promise(() => ctx.db.delete("contentArtifacts", artifact._id));
+  return 1;
+});

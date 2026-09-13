@@ -1,5 +1,5 @@
 import {
-  RollbackRecordSchema,
+  type RollbackRecord,
   type RollbackState,
   type RollbackUpsertState,
   RollbackUpsertStateSchema,
@@ -231,21 +231,12 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
 /** Builds one exact current-to-prior transition from immutable stored state. */
 export const rollbackRecord = Effect.fn("contentRelease.rollbackRecord")(
   function* (ctx: QueryCtx, row: Doc<"contentItems">) {
-    return yield* Schema.decodeEffect(RollbackRecordSchema)(
-      {
-        current: yield* currentState(ctx, row),
-        index: row.index,
-        prior: yield* priorState(ctx, row),
-      },
-      { onExcessProperty: "error" }
-    ).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Rollback transition ${row.releaseId}/${row.index} is inconsistent.`,
-          })
-      )
-    );
+    // Both states are already schema-decoded and index shares the stored item
+    // schema, so the transition needs no second decode.
+    return {
+      current: yield* currentState(ctx, row),
+      index: row.index,
+      prior: yield* priorState(ctx, row),
+    } satisfies RollbackRecord;
   }
 );

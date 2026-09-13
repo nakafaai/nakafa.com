@@ -144,13 +144,14 @@ const validateBodyChunk = Effect.fn("contentRelease.validateRollbackChunk")(
     limit: number,
     total: number
   ) {
-    const firstIndex = chunk.records[0]?.index ?? afterIndex + 1;
+    const first = chunk.records[0];
     if (
+      !first ||
       chunk.rollbackOf !== request.rollbackOf ||
       chunk.rollbackOfManifestHash !== request.rollbackOfManifestHash ||
       chunk.total !== total ||
       chunk.records.length > limit ||
-      firstIndex !== afterIndex + 1
+      first.index !== afterIndex + 1
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -173,13 +174,14 @@ const validateRouteChunk = Effect.fn("contentRelease.validateRouteChunk")(
     limit: number,
     total: number
   ) {
-    const firstIndex = chunk.records[0]?.current.index ?? afterIndex + 1;
+    const first = chunk.records[0];
     if (
+      !first ||
       chunk.rollbackOf !== request.rollbackOf ||
       chunk.rollbackOfManifestHash !== request.rollbackOfManifestHash ||
       chunk.total !== total ||
       chunk.records.length > limit ||
-      firstIndex !== afterIndex + 1
+      first.current.index !== afterIndex + 1
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

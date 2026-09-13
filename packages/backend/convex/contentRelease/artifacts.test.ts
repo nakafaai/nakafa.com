@@ -87,39 +87,47 @@ describe("contentRelease/artifacts", () => {
     expect(state.release?.stagedArtifacts).toBe(1);
   });
 
-  it("limits retained artifact requirements to recovery storage", async () => {
-    const current = await Effect.runPromise(
-      decodeArtifactJson(testArtifactJson())
-    );
-    const retained = {
-      ...current,
-      payload: {
-        ...current.payload,
-        requiredComponents: [{ name: "p", version: 1 }],
-      },
-    };
-    for (const role of ["candidate", "recovery"] as const) {
-      const t = convexTest(schema, convexModules);
-      await t.mutation((ctx) => insertTestRelease(ctx, { role }));
-      await stageItem(t);
-      const result = stage(t, [JSON.stringify(retained)]);
-      if (role === "candidate") {
-        await expect(result).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_UNSUPPORTED" },
-        });
-        expect(
-          await t.run((ctx) => ctx.db.query("contentArtifacts").unique())
-        ).toBeNull();
-        continue;
+  it.effect("limits retained artifact requirements to recovery storage", () =>
+    Effect.gen(function* () {
+      const current = yield* decodeArtifactJson(testArtifactJson());
+      const retained = {
+        ...current,
+        payload: {
+          ...current.payload,
+          requiredComponents: [{ name: "p", version: 1 }],
+        },
+      };
+      for (const role of ["candidate", "recovery"] as const) {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => insertTestRelease(ctx, { role }))
+        );
+        yield* Effect.promise(() => stageItem(t));
+        const result = stage(t, [JSON.stringify(retained)]);
+        if (role === "candidate") {
+          yield* Effect.promise(() =>
+            expect(result).rejects.toMatchObject({
+              data: { code: "CONTENT_RELEASE_UNSUPPORTED" },
+            })
+          );
+          expect(
+            yield* Effect.promise(() =>
+              t.run((ctx) => ctx.db.query("contentArtifacts").unique())
+            )
+          ).toBeNull();
+          continue;
+        }
+        yield* Effect.promise(() =>
+          expect(result).resolves.toMatchObject({ created: 1, unchanged: 0 })
+        );
+        const stored = yield* Effect.promise(() =>
+          t.run((ctx) => ctx.db.query("contentArtifacts").unique())
+        );
+        expect(stored?.artifactHash).toBe(retained.artifactHash);
+        expect(stored && JSON.parse(stored.artifactJson)).toEqual(retained);
       }
-      await expect(result).resolves.toMatchObject({ created: 1, unchanged: 0 });
-      const stored = await t.run((ctx) =>
-        ctx.db.query("contentArtifacts").unique()
-      );
-      expect(stored?.artifactHash).toBe(retained.artifactHash);
-      expect(stored && JSON.parse(stored.artifactJson)).toEqual(retained);
-    }
-  });
+    })
+  );
 
   it("reuses identical stored bytes and only extends shorter retention", async () => {
     for (const retainUntil of [0, Number.MAX_SAFE_INTEGER]) {

@@ -8,8 +8,12 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { recomputeProgram, verifyArtifactBatchProgram } from "@repo/backend/convex/contentRelease/proof/verify";
+import {
+  recomputeProgram,
+  verifyArtifactBatchProgram,
+} from "@repo/backend/convex/contentRelease/proof/verify";
 import { encodeArtifactJson } from "@repo/backend/convex/contentRelease/wire";
 import {
   getUnknownErrorMessage,
@@ -25,16 +29,15 @@ import {
   testProofRenderer,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
-import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { insertDeleteRelease } from "@repo/backend/test/content/recompute";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
+import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import {
-  recomputeContentProof,
   prepareContentProof,
+  recomputeContentProof,
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { getFunctionName } from "convex/server";
-import { internal } from "@repo/backend/convex/_generated/api";
 import { convexTest, type TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
@@ -83,8 +86,17 @@ const runProof = Effect.fn("contentRelease.proof.verify.test.runProof")(
 );
 
 /** Inserts one authenticated candidate using the canonical technical fixture. */
-const insertRelease = Effect.fn("contentRelease.proof.verify.test.insertRelease")(
-  (ctx: MutationCtx) => Effect.promise(() => insertSignedCandidate(ctx, releaseId, signedRelease, JSON.stringify(TEST_PROOF_RENDERER)))
+const insertRelease = Effect.fn(
+  "contentRelease.proof.verify.test.insertRelease"
+)((ctx: MutationCtx) =>
+  Effect.promise(() =>
+    insertSignedCandidate(
+      ctx,
+      releaseId,
+      signedRelease,
+      JSON.stringify(TEST_PROOF_RENDERER)
+    )
+  )
 );
 
 /** Changes only the stored signature while preserving its claimed identity. */
@@ -167,36 +179,100 @@ describe("contentRelease/proof/verify", () => {
     await t.mutation((ctx) => runConvexProgram(insertRelease(ctx)));
     await prepareContentProof(t, releaseId);
     await t.mutation((ctx) => runConvexProgram(driftStoredRenderer(ctx)));
-    await expect(t.action((ctx) => runConvexProgram(verifyArtifactBatchProgram(ctx, manifestHash, releaseId, 0).pipe(Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER))))).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_UNSUPPORTED" } });
+    await expect(
+      t.action((ctx) =>
+        runConvexProgram(
+          verifyArtifactBatchProgram(ctx, manifestHash, releaseId, 0).pipe(
+            Effect.provideService(
+              ContentVerificationKeyResolver,
+              TEST_KEY_RESOLVER
+            )
+          )
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_UNSUPPORTED" } });
   });
 
-  it.each([null, "stalled-cursor"])("rejects non-advancing route catalog evidence at %s", async (cursor) => {
-    const t = createProofTest();
-    await t.mutation((ctx) => runConvexProgram(insertRelease(ctx)));
-    await prepareContentProof(t, releaseId);
-    await expect(t.action((ctx) => {
-      const runQuery = ctx.runQuery;
-      vi.spyOn(ctx, "runQuery").mockImplementation((reference, args) => {
-        if (getFunctionName(reference) === "contentRelease/proof/routes:routes") {
-          return Promise.resolve({ checked: 1, done: false, nextCursor: cursor });
-        }
-        return runQuery(reference, args);
+  it.each([null, "stalled-cursor"])(
+    "rejects non-advancing route catalog evidence at %s",
+    async (cursor) => {
+      const t = createProofTest();
+      await t.mutation((ctx) => runConvexProgram(insertRelease(ctx)));
+      await prepareContentProof(t, releaseId);
+      await expect(
+        t.action((ctx) => {
+          const runQuery = ctx.runQuery;
+          vi.spyOn(ctx, "runQuery").mockImplementation((...callArgs) => {
+            const [reference, args] = callArgs;
+            if (
+              getFunctionName(reference) ===
+              "contentRelease/proof/routes:routes"
+            ) {
+              return Promise.resolve({
+                checked: 1,
+                done: false,
+                nextCursor: cursor,
+              });
+            }
+            return runQuery(reference, args);
+          });
+          return runConvexProgram(
+            recomputeProgram(ctx, manifestHash, releaseId, 0).pipe(
+              Effect.provideService(
+                ContentVerificationKeyResolver,
+                TEST_KEY_RESOLVER
+              )
+            )
+          );
+        })
+      ).rejects.toMatchObject({
+        data: {
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("stopped advancing"),
+        },
       });
-      return runConvexProgram(recomputeProgram(ctx, manifestHash, releaseId, 0).pipe(Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)));
-    })).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY", message: expect.stringContaining("stopped advancing") } });
-  });
+    }
+  );
 
   it("rejects artifact-worker totals that disagree with the authenticated streams", async () => {
     const t = createProofTest();
     await t.mutation((ctx) => runConvexProgram(insertRelease(ctx)));
     await prepareContentProof(t, releaseId);
-    await expect(t.action((ctx) => runConvexProgram(recomputeProgram(ctx, manifestHash, releaseId, 1).pipe(Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER))))).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY", message: expect.stringContaining("counters do not match") } });
+    await expect(
+      t.action((ctx) =>
+        runConvexProgram(
+          recomputeProgram(ctx, manifestHash, releaseId, 1).pipe(
+            Effect.provideService(
+              ContentVerificationKeyResolver,
+              TEST_KEY_RESOLVER
+            )
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: expect.stringContaining("counters do not match"),
+      },
+    });
   });
 
   it("authenticates registered worker actions at their actual production boundary", async () => {
     const t = createProofTest();
-    await expect(t.action(internal.contentRelease.proof.verify.verifyArtifacts, { batchIndex: 0, manifestHash, releaseId })).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
-    await expect(t.action(internal.contentRelease.proof.verify.verifyRelease, { manifestHash, releaseId, verifiedArtifacts: 0 })).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+    await expect(
+      t.action(internal.contentRelease.proof.verify.verifyArtifacts, {
+        batchIndex: 0,
+        manifestHash,
+        releaseId,
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+    await expect(
+      t.action(internal.contentRelease.proof.verify.verifyRelease, {
+        manifestHash,
+        releaseId,
+        verifiedArtifacts: 0,
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
   });
 
   it.effect(
@@ -287,7 +363,9 @@ describe("contentRelease/proof/verify", () => {
       function* () {
         const t = createProofTest();
         const hash = yield* Effect.promise(() =>
-          t.mutation((ctx) => runConvexProgram(insertDeleteRelease(ctx, 129, releaseId)))
+          t.mutation((ctx) =>
+            runConvexProgram(insertDeleteRelease(ctx, 129, releaseId))
+          )
         );
 
         const proof = yield* runProof(t, { hash });
