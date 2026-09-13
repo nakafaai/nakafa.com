@@ -4,7 +4,7 @@ import {
   loadRelease,
   loadState,
 } from "@repo/backend/convex/contentRelease/model";
-import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
+import { readReleaseRetention } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
 
 /** Checks permanent try-out state that still requires one snapshot. */
@@ -56,9 +56,9 @@ const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
     );
     for (const releaseId of [...ids]) {
       const release = yield* loadRelease(ctx, releaseId);
-      const signed = yield* decodeReleaseJson(release.releaseJson);
-      if (signed.manifest.baseReleaseId !== null) {
-        ids.add(signed.manifest.baseReleaseId);
+      const retention = yield* readReleaseRetention(release.releaseJson);
+      if (retention.manifest.baseReleaseId !== null) {
+        ids.add(retention.manifest.baseReleaseId);
       }
     }
     return ids;
@@ -82,8 +82,8 @@ export const isSnapshotReferenced = Effect.fn(
   const releaseIds = yield* protectedReleases(ctx);
   for (const releaseId of releaseIds) {
     const release = yield* loadRelease(ctx, releaseId);
-    const signed = yield* decodeReleaseJson(release.releaseJson);
-    const state = signed.manifest.snapshots[family];
+    const retention = yield* readReleaseRetention(release.releaseJson);
+    const state = retention.manifest.snapshots[family];
     if (
       state.baseSnapshotId === snapshotId ||
       state.resultSnapshotId === snapshotId

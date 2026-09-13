@@ -129,6 +129,35 @@ describe("contentRelease/compact/state", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
   });
 
+  it("resolves a protected floor when the base stored a manifest the content contract rejects", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      const base = compactionIdentity(1);
+      const active = compactionIdentity(2);
+      await insertCompletedRelease(ctx, base);
+      await insertCompletedRelease(ctx, active, base);
+      await insertTestState(ctx, { active, nextSequence: 3 });
+      const row = await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (q) => q.eq("releaseId", base.releaseId))
+        .unique();
+      assert.ok(row);
+      const stored = JSON.parse(row.releaseJson);
+      await ctx.db.patch("contentReleases", row._id, {
+        releaseJson: JSON.stringify({
+          ...stored,
+          manifest: {
+            ...stored.manifest,
+            rendererContractVersion: "1.0.0",
+          },
+        }),
+      });
+    });
+    expect(
+      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
+    ).toMatchObject({ complete: false, cycle: { floor: 1 } });
+  });
+
   it("rejects invalid completed release sequences outside active slots", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {

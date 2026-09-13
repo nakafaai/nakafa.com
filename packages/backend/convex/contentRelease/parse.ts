@@ -71,6 +71,62 @@ export const decodeReleaseJson = Effect.fn("contentRelease.decodeReleaseJson")(
       )
     )
 );
+
+/** One release snapshot transition as retention reachability needs it. */
+const ReleaseRetentionSnapshotSchema = Schema.Struct({
+  baseSnapshotId: Schema.NullOr(Schema.String),
+  resultSnapshotId: Schema.NullOr(Schema.String),
+});
+
+/** Exact release facts that decide which history must stay reachable. */
+const ReleaseRetentionSchema = Schema.Struct({
+  manifest: Schema.Struct({
+    baseManifestHash: Schema.NullOr(Schema.String),
+    baseReleaseId: Schema.NullOr(Schema.String),
+    snapshots: Schema.Struct({
+      program: ReleaseRetentionSnapshotSchema,
+      quran: ReleaseRetentionSnapshotSchema,
+      tryout: ReleaseRetentionSnapshotSchema,
+    }),
+  }).pipe(
+    Schema.check(
+      Schema.makeFilter(
+        (manifest) =>
+          (manifest.baseReleaseId === null) ===
+          (manifest.baseManifestHash === null),
+        { message: "Expected a complete release base identity." }
+      )
+    )
+  ),
+  manifestHash: Schema.String,
+});
+
+/**
+ * Projects one stored release onto the reachability facts history retention
+ * needs. Retention must reason about every release it has ever stored, so this
+ * projection ignores unknown manifest fields instead of validating the content
+ * contract: a contract generation may change shape without stranding the
+ * cleaner that retires old history. A release that lost its retention metadata
+ * still fails closed.
+ */
+export const readReleaseRetention = Effect.fn(
+  "contentRelease.readReleaseRetention"
+)((source: string) =>
+  parseStoredJson(source, "Signed release").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(ReleaseRetentionSchema, {
+        onExcessProperty: "ignore",
+      })
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Signed release lost its retention metadata.",
+        })
+    )
+  )
+);
 /** Strictly decodes one ordered release item from canonical storage JSON. */
 export const decodeItemJson = Effect.fn("contentRelease.decodeItemJson")(
   (source: string) =>

@@ -5,7 +5,7 @@ import {
   ensureState,
   loadRelease,
 } from "@repo/backend/convex/contentRelease/model";
-import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
+import { readReleaseRetention } from "@repo/backend/convex/contentRelease/parse";
 import {
   COMPACTION_PAGE_BYTES,
   ROLLBACK_RETENTION_MS,
@@ -71,26 +71,26 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
     release: Doc<"contentReleases">,
     identity?: SlotIdentity
   ) {
-    const signed = yield* decodeReleaseJson(release.releaseJson);
+    const retention = yield* readReleaseRetention(release.releaseJson);
     if (
       !isSequence(release.sequence) ||
       (identity !== undefined &&
         (release.sequence !== identity.sequence ||
-          signed.manifestHash !== identity.manifestHash))
+          retention.manifestHash !== identity.manifestHash))
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Content release ${release.releaseId} lost its exact protected identity.`
       );
     }
-    const baseId = signed.manifest.baseReleaseId;
-    const baseHash = signed.manifest.baseManifestHash;
+    const baseId = retention.manifest.baseReleaseId;
+    const baseHash = retention.manifest.baseManifestHash;
     if (baseId === null || baseHash === null) {
       return [release.sequence];
     }
     const base = yield* loadRelease(ctx, baseId);
-    const baseSigned = yield* decodeReleaseJson(base.releaseJson);
-    if (!isSequence(base.sequence) || baseSigned.manifestHash !== baseHash) {
+    const baseRetention = yield* readReleaseRetention(base.releaseJson);
+    if (!isSequence(base.sequence) || baseRetention.manifestHash !== baseHash) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Content release ${release.releaseId} lost its exact protected base.`
