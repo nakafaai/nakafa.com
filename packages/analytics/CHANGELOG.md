@@ -1,5 +1,13 @@
 # @repo/analytics
 
+## 0.1.1
+
+### Patch Changes
+
+- [#632](https://github.com/nakafaai/nakafa.com/pull/632) [`aa96d01`](https://github.com/nakafaai/nakafa.com/commit/aa96d01b64e07adefef78fd7ad1bf7a3ec560777) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Name operational exceptions after their admitted origin so error tracking groups by call site instead of minified frames. `createOperationalException` derives `OperationalError(source)`, refined by the `operation` and `error_location` constants when present, from the already-decoded properties; messages, causes, and payloads stay redacted and only developer-authored constants enter the name.
+
+- [#617](https://github.com/nakafaai/nakafa.com/pull/617) [`09b9e89`](https://github.com/nakafaai/nakafa.com/commit/09b9e891f869f0226f04613fb437471514a777a3) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Deepen the browser analytics gate into a single transition table with SDK-derived types and explicit pageviews. The gate module owns baseline, grant admission, and baseline revocation atomically, so callers can never opt in without authorizing identity. The hand-written PostHog client mirror is replaced with types picked from the installed SDK, and automatic pageviews give way to explicit initial-plus-history capture: each view lands exactly once, after identity is known, with no duplicate on consent transitions. Undecided, declined, and DNT visitors stay counted through cookieless baseline capture with minimized URLs.
+
 ## 0.1.0
 
 ### Minor Changes

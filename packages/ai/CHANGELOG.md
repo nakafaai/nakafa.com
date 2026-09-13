@@ -1,5 +1,12 @@
 # @repo/ai
 
+## 2.0.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @repo/contents@2.0.1
+
 ## 2.0.2
 
 ### Patch Changes
