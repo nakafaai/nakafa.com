@@ -13000,16 +13000,6 @@ export declare const internal: {
     };
   };
   tryouts: {
-    maintenance: {
-      retire: {
-        retireFrozenTryouts: FunctionReference<
-          "mutation",
-          "internal",
-          { userId: Id<"users"> },
-          boolean
-        >;
-      };
-    };
     mutations: {
       expiry: {
         attempt: FunctionReference<
