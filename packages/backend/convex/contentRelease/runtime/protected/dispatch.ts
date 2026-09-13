@@ -1,6 +1,4 @@
 "use node";
-import { ProtectedContentRuntimeResponseSchema } from "@nakafa/aksara-contracts/adoption/runtime";
-
 import {
   MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
   MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
@@ -9,6 +7,7 @@ import {
 import {
   decodeProtectedContentRuntimeRequest,
   type ProtectedContentRuntimeRequest,
+  ProtectedContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";

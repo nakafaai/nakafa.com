@@ -92,83 +92,13 @@ describe("contentRelease/parse", () => {
       })
   );
 
-  it.live(
-    "preserves retained signed fields through V8 decoding and storage",
-    () =>
-      Effect.gen(function* () {
-        const currentArtifact = yield* decodeArtifactJson(testArtifactJson());
-        const currentRelease = yield* decodeReleaseJson(testReleaseJson());
-        const currentProof = yield* decodeProofJson(testProofJson());
-        const retainedArtifact = {
-          ...currentArtifact,
-          payload: {
-            ...currentArtifact.payload,
-            requiredComponents: [{ name: "p", version: 1 }],
-          },
-        };
-        const retainedRelease = {
-          ...currentRelease,
-          manifest: {
-            ...currentRelease.manifest,
-            rendererContractVersion: "1.0.0",
-          },
-        };
-        const retainedRenderer = {
-          base: {
-            authoringComponents: [{ name: "p", version: 1 }],
-            supportedComponents: [{ name: "p", version: 1 }],
-          },
-          domains: [
-            {
-              name: "mathematics",
-              authoringComponents: [],
-              supportedComponents: [],
-            },
-          ],
-          format: "nakafa-mdx-renderer-v1",
-          hash: TEST_DIGEST,
-          publishedDomains: ["mathematics"],
-          rendererContractVersion: "1.0.0",
-        };
-        const retainedProof = {
-          ...currentProof,
-          rendererContractVersion: "1.0.0",
-        };
-
-        const artifact = yield* decodeArtifactJson(
-          JSON.stringify(retainedArtifact)
-        );
-        const release = yield* decodeReleaseJson(
-          JSON.stringify(retainedRelease)
-        );
-        const renderer = yield* decodeRendererJson(
-          JSON.stringify(retainedRenderer)
-        );
-        const proof = yield* decodeProofJson(JSON.stringify(retainedProof));
-
-        expect(JSON.parse(encodeArtifactJson(artifact))).toEqual(
-          retainedArtifact
-        );
-        expect(JSON.parse(encodeReleaseJson(release))).toEqual(retainedRelease);
-        expect(JSON.parse(encodeRendererJson(renderer))).toEqual(
-          retainedRenderer
-        );
-        expect(proof).toEqual(retainedProof);
-        expect(artifact.artifactHash).toBe(currentArtifact.artifactHash);
-        expect(artifact.signature).toBe(currentArtifact.signature);
-      })
-  );
-
-  it.live("rejects unknown fields in a retained artifact", () =>
+  it.live("rejects unknown fields in a signed artifact", () =>
     Effect.gen(function* () {
       const current = yield* decodeArtifactJson(testArtifactJson());
       const rejected = yield* decodeArtifactJson(
         JSON.stringify({
           ...current,
-          payload: {
-            ...current.payload,
-            requiredComponents: [{ name: "p", version: 1, ignored: true }],
-          },
+          payload: { ...current.payload, ignored: true },
         })
       ).pipe(Effect.flip);
 

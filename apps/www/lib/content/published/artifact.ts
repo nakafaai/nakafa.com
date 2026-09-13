@@ -11,14 +11,9 @@ import "server-only";
 // https://mdxjs.com/packages/mdx/#run
 // react-doctor-disable-next-line react-doctor/mdx-ssr-execution-risk
 import { run } from "@mdx-js/mdx";
-import type {
-  RendererManifestEnvelope,
-  SignedContentArtifact,
-} from "@nakafa/aksara-contracts/adoption/schema";
-import {
-  selectVerifiedArtifactRenderer,
-  verifySignedContentArtifact,
-} from "@nakafa/aksara-contracts/adoption/verify";
+import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
+import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
+import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
 
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Effect } from "effect";
@@ -81,8 +76,7 @@ const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
 export const evaluateVerifiedArtifact = Effect.fn(
   "NakafaContent.evaluateVerifiedArtifact"
 )(function* (input: EvaluateArtifactInput) {
-  const selection = yield* selectVerifiedArtifactRenderer(input.artifact);
-  const components = yield* resolveRendererComponents(selection);
+  const components = yield* resolveRendererComponents(input.artifact.payload);
   const Content = yield* evaluateCompiledCode({
     compiledCode: input.artifact.payload.compiledCode,
     components,

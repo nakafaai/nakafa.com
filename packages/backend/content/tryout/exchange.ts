@@ -1,8 +1,9 @@
-import type { ProtectedContentRuntimeFound } from "@nakafa/aksara-contracts/adoption/runtime";
-import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/adoption/verify";
-
 import { CorpusSourcePathSchema } from "@nakafa/aksara-contracts/ids";
-import type { ProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import type {
+  ProtectedContentRuntimeFound,
+  ProtectedContentRuntimeRequest,
+} from "@nakafa/aksara-contracts/runtime/protected/spec";
+import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
 
 import type { ProtectedRuntimeBatchRow } from "@repo/backend/content/tryout/protected";
 import {

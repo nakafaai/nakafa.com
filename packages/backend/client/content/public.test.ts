@@ -1,10 +1,10 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/adoption/public";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
+import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import {
   ContentRuntimeFailureError,
   ContentRuntimeMissingError,
@@ -48,7 +48,7 @@ const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const verifyMock = vi.hoisted(() => vi.fn());
 
 vi.mock("server-only", () => ({}));
-vi.mock("@nakafa/aksara-contracts/adoption/public", () => ({
+vi.mock("@nakafa/aksara-contracts/runtime/verify", () => ({
   verifyContentRuntimeExchange: verifyMock,
 }));
 

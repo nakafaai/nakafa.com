@@ -1,12 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import {
   isRollbackUpsert,
+  MAX_ROLLBACK_PAGE_BYTES,
   RollbackPageSchema,
   type RollbackRecord,
-  SignedContentArtifactSchema,
-} from "@nakafa/aksara-contracts/adoption/schema";
-import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
-import { MAX_ROLLBACK_PAGE_BYTES } from "@nakafa/aksara-contracts/release/rollback/spec";
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import { RoutePageSchema } from "@nakafa/aksara-contracts/release/route/page";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { PublicationRequestSchema } from "@nakafa/aksara-contracts/transport/request";
@@ -350,7 +350,7 @@ function inflateRecord(record: RollbackRecord, byteLength: number) {
     ...record,
     current: {
       ...current,
-      artifact: Schema.decodeUnknownSync(SignedContentArtifactSchema)({
+      artifact: Schema.decodeSync(SignedContentArtifactSchema)({
         ...current.artifact,
         payload: {
           ...current.artifact.payload,

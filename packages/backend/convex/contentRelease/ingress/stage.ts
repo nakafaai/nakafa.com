@@ -1,11 +1,9 @@
 "use node";
-import type {
-  PublicationRequest,
-  StageOperation,
-} from "@nakafa/aksara-contracts/adoption/transport";
-import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/adoption/verify";
+import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
 
 import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
+import type { StageOperation } from "@nakafa/aksara-contracts/transport/group";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
@@ -85,7 +83,7 @@ const artifactBatchReference = makeFunctionReference<
   { artifactJson: string[]; batchIndex: number; releaseId: string },
   StageReceipt
 >("contentRelease/artifacts:stageArtifactBatch");
-/** Authenticates candidate and retained recovery artifacts against their keys. */
+/** Authenticates candidate and recovery artifacts against their keys. */
 const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
   function* (
     ctx: ActionCtx,

@@ -1,9 +1,9 @@
 import "server-only";
-import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/adoption/runtime";
 
 import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
+import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
 
 import {
   readPublicContent,

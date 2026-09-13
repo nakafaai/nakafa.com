@@ -1,15 +1,15 @@
 import {
   canonicalizeSignedContentArtifact,
-  type RendererManifestEnvelopeSchema,
   type SignedContentArtifactSchema,
-  type SignedContentReleaseSchema,
-} from "@nakafa/aksara-contracts/adoption/schema";
-
+} from "@nakafa/aksara-contracts/content";
 import {
   type ContentProjection,
   canonicalizeContentProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
-import type { ContentReleaseItemSchema } from "@nakafa/aksara-contracts/release";
+import type {
+  ContentReleaseItemSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
 import { canonicalizeContentReleaseItem } from "@nakafa/aksara-contracts/release/canonical";
 import {
   type ContentRouteItemSchema,
@@ -20,6 +20,7 @@ import {
   type ContentSnapshotRowSchema,
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 
 import type { SignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 

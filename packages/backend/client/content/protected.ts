@@ -1,16 +1,15 @@
 import "server-only";
-import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/adoption/protected";
-import {
-  decodeProtectedContentRuntimeResponse,
-  type ProtectedContentRuntimeResponse,
-} from "@nakafa/aksara-contracts/adoption/runtime";
-
 import {
   MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
   MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
 } from "@nakafa/aksara-contracts/runtime/protected/limits";
-import type { ProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import {
+  decodeProtectedContentRuntimeRequest,
+  decodeProtectedContentRuntimeResponse,
+  type ProtectedContentRuntimeRequest,
+  type ProtectedContentRuntimeResponse,
+} from "@nakafa/aksara-contracts/runtime/protected/spec";
+import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/protected/verify";
 
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {

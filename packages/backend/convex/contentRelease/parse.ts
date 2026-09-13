@@ -1,16 +1,12 @@
-import {
-  ReleaseVerificationEvidenceSchema,
-  RendererManifestEnvelopeSchema,
-  SignedContentArtifactSchema,
-  SignedContentReleaseSchema,
-} from "@nakafa/aksara-contracts/adoption/schema";
-
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
 import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import { quranSourceFileCount } from "@nakafa/aksara-contracts/quran/source";
 import {
   ContentReleaseItemSchema,
   PublicationReceiptSchema,
+  ReleaseVerificationEvidenceSchema,
+  SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
@@ -18,6 +14,7 @@ import {
   ContentSnapshotManifestSchema,
   ContentSnapshotRowSchema,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";

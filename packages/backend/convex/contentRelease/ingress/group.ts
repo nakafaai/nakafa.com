@@ -1,7 +1,7 @@
 "use node";
 
-import type { StageGroupRequest } from "@nakafa/aksara-contracts/adoption/transport";
 import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
+import type { StageGroupRequest } from "@nakafa/aksara-contracts/transport/group";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/stage";
 import { Effect } from "effect";

@@ -1,7 +1,6 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { RetainedRendererComponentUnsupportedError } from "@nakafa/aksara-contracts/adoption/schema";
 import {
   ArtifactPayloadFieldByteLimitError,
   ArtifactRendererComponentMissingError,
@@ -41,14 +40,6 @@ describe("contentRelease/proof/failure", () => {
         new ArtifactRendererComponentMissingError({
           componentName: "TechnicalComponent",
           contentKey,
-        }),
-        "CONTENT_RELEASE_UNSUPPORTED",
-      ],
-      [
-        new RetainedRendererComponentUnsupportedError({
-          componentName: "TechnicalComponent",
-          contentKey,
-          version: 2,
         }),
         "CONTENT_RELEASE_UNSUPPORTED",
       ],

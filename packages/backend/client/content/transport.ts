@@ -1,8 +1,6 @@
 import "server-only";
-import type {
-  ProtectedContentRuntimeResponse,
-  PublicContentRuntimeResponse,
-} from "@nakafa/aksara-contracts/adoption/runtime";
+import type { ProtectedContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import type { PublicContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/spec";
 
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {

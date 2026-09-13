@@ -1,6 +1,6 @@
 "use node";
-import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/adoption/schema";
-import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/adoption/verify";
+import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
+import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
 
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {

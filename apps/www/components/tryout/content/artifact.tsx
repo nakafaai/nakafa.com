@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { ProtectedContentRuntimeItem } from "@nakafa/aksara-contracts/adoption/runtime";
+import type { ProtectedContentRuntimeItem } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { Effect } from "effect";
 import type {
   RenderedTryoutContentEntry,

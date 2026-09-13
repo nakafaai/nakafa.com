@@ -1,10 +1,7 @@
 "use node";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/adoption/transport";
-import {
-  validateRendererManifestHash,
-  verifySignedContentRelease,
-} from "@nakafa/aksara-contracts/adoption/verify";
-
+import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
+import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type {
   ActivationResult,
