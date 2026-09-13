@@ -1,6 +1,4 @@
 "use node";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/adoption/transport";
-
 import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import { verifyProgramSnapshotHash } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { verifyProgramSnapshotRowHash } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
@@ -11,6 +9,7 @@ import type {
   ContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 
+import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";

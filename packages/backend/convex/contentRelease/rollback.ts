@@ -1,13 +1,11 @@
-import {
-  canonicalizeRollbackPage,
-  type RollbackPage,
-  type RollbackRecord,
-} from "@nakafa/aksara-contracts/adoption/schema";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
+  canonicalizeRollbackPage,
   MAX_ROLLBACK_PAGE_BYTES,
   MAX_ROLLBACK_PAGE_RECORDS,
+  type RollbackPage,
   RollbackPageRequestSchema,
+  type RollbackRecord,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   MAX_ROUTE_PAGE_RECORDS,

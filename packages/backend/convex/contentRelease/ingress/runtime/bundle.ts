@@ -1,8 +1,7 @@
 "use node";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/adoption/transport";
-import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/adoption/verify";
-
+import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import { verifyTryoutRuntimeBundleSource } from "@nakafa/aksara-contracts/tryout/runtime/source";
+import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
 
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";

@@ -1,11 +1,8 @@
 "use node";
-import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/adoption/schema";
-import {
-  validateRendererManifestHash,
-  verifySignedContentRelease,
-} from "@nakafa/aksara-contracts/adoption/verify";
-
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
+import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
+import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";

@@ -113,9 +113,10 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 
 ## Vercel Cost And Deployment Policy
 
-- Vercel Preview deployments are prohibited for all Nakafa projects. Never call a Vercel deploy connector or CLI for a feature branch or pull request, and never require a Preview URL as a gate.
+- Vercel Preview deployments are prohibited for all Nakafa projects. Never create a Vercel Preview for a feature branch or pull request through a connector or the CLI, and never require a Preview URL as a gate.
 - Verify feature work with local production builds and starts, exact-head GitHub CI, Browser or Playwright, and isolated Convex Agent Mode deployments where needed.
-- Production deploys only after a protected merge to `main` through the existing Git integration. Keep Vercel branch configuration restricted to `main`.
+- Vercel production deploys happen only after a protected merge to `main`, through the existing Git integration. Keep Vercel branch configuration restricted to `main`.
+- Convex production functions may be deployed directly with `pnpm --dir packages/backend exec convex deploy --yes` when the operator holds a production deploy key.
 - Do not enable external Turborepo Remote Cache for the signed `www` production build until every server-side environment input and signed-content generation input is included in the task hash.
 - Cancel any accidental Preview immediately and remove every task-owned Preview artifact during cleanup.
 

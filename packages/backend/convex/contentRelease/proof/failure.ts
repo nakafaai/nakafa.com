@@ -1,4 +1,3 @@
-import { RetainedRendererComponentUnsupportedError } from "@nakafa/aksara-contracts/adoption/schema";
 import {
   ArtifactPayloadFieldByteLimitError,
   ArtifactRendererComponentMissingError,
@@ -19,8 +18,7 @@ function isUnsupported(error: unknown) {
     error instanceof SigningKeyResolutionError ||
     error instanceof PublicKeyParseError ||
     error instanceof PublicKeyTypeError ||
-    error instanceof ArtifactRendererComponentMissingError ||
-    error instanceof RetainedRendererComponentUnsupportedError
+    error instanceof ArtifactRendererComponentMissingError
   );
 }
 

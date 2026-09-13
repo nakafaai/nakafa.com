@@ -1,8 +1,5 @@
 import "server-only";
-import {
-  RetainedRendererComponentUnsupportedError,
-  type SignedContentArtifact,
-} from "@nakafa/aksara-contracts/adoption/schema";
+import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 
 import { Effect } from "effect";
 import { applyImmutableContentCache } from "@/lib/content/cache";
@@ -31,7 +28,6 @@ export const readRenderedBody = Effect.fn("NakafaContent.readRenderedBody")(
       try: () => renderVerifiedBody(artifact),
       catch: (cause) =>
         cause instanceof ContentExecutionError ||
-        cause instanceof RetainedRendererComponentUnsupportedError ||
         cause instanceof RendererComponentCollision ||
         cause instanceof RendererImplementationMissing
           ? cause

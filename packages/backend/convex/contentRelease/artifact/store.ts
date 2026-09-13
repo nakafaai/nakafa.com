@@ -1,5 +1,4 @@
-import type { SignedContentArtifact } from "@nakafa/aksara-contracts/adoption/schema";
-
+import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";

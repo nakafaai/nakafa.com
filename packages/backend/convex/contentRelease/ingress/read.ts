@@ -1,5 +1,5 @@
 "use node";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/adoption/transport";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
