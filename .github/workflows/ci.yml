@@ -74,7 +74,7 @@ jobs:
     name: Quality
     needs: scope
     # The advisory registry is live state, so every current tree runs the audit.
-    if: always() && needs.scope.result == 'success'
+    if: ${{ !cancelled() && needs.scope.result == 'success' }}
     runs-on: ubuntu-latest
     # Keep bounded fail-closed advisory retries inside the aggregate job budget.
     timeout-minutes: 15
@@ -110,7 +110,7 @@ jobs:
     # they contain production-relevant changes. Test-only candidates retain
     # Quality while Production is skipped.
     needs: scope
-    if: always() && needs.scope.result == 'success' && needs.scope.outputs.required == 'true' && needs.scope.outputs.trusted == 'true'
+    if: ${{ !cancelled() && needs.scope.result == 'success' && needs.scope.outputs.required == 'true' && needs.scope.outputs.trusted == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -237,7 +237,7 @@ jobs:
 
   doctor:
     name: Doctor
-    if: always()
+    if: ${{ !cancelled() }}
     needs: scope
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -278,7 +278,7 @@ jobs:
 
   required:
     name: Required
-    if: always()
+    if: ${{ !cancelled() }}
     needs: [scope, quality, production, doctor]
     runs-on: ubuntu-latest
     timeout-minutes: 8

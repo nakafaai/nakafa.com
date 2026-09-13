@@ -1,4 +1,5 @@
-import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
+import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/adoption/schema";
+
 import { verifyTryoutRuntimeBundleSource } from "@nakafa/aksara-contracts/tryout/runtime/source";
 import type { SignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";

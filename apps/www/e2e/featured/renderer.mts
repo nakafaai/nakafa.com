@@ -37,9 +37,9 @@ const verifyFeaturedRenderer = Effect.fn(
   assert(item, "The featured signed snapshot returned no question artifact.");
 
   // The protected exchange verifies compatibility with both signed and live manifests.
-  const requiredRendererNames = item.artifact.payload.requiredComponents
-    .map(({ name }) => name)
-    .sort();
+  const requiredRendererNames = [
+    ...item.artifact.payload.requiredComponents,
+  ].sort();
 
   return {
     contentKey: item.artifact.payload.contentKey,

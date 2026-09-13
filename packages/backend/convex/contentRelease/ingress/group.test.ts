@@ -87,7 +87,7 @@ describe("content release staging groups", () => {
           yield* Effect.promise(() =>
             t.action((ctx) =>
               runConvexProgram(
-                stagePublicationGroup(ctx, request, TEST_KEY_ID).pipe(
+                stagePublicationGroup(ctx, request).pipe(
                   Effect.provideService(
                     ContentVerificationKeyResolver,
                     TEST_KEY_RESOLVER

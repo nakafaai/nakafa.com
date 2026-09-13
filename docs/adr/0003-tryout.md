@@ -77,9 +77,9 @@ queries, fallback indexes, and duplicate state shapes are not supported.
 
 Retained attempts read their immutable signed catalog, placement, artifact,
 release, renderer, and snapshot bytes through the same canonical contracts as
-active content. Historical review preserves the exact signed identities frozen
-at attempt start and fails closed when those bytes violate the canonical
-contract. Historical decoders, fallback transformations, and separate recovery
+active content. Historical review preserves the authored content, responses, and scoring data
+frozen at attempt start. It authenticates their stored signed identities and
+fails closed when those bytes violate the canonical contract. Historical decoders, fallback transformations, and separate recovery
 projection contracts are not supported.
 
 Section completion, attempt completion, and expiry load bounded indexed
@@ -92,7 +92,7 @@ transaction.
 Current attempt pages resolve the latest attempt through the one compact,
 indexed progress row, then fail closed unless its duplicated identity, attempt
 number, status, status rank, and latest attempt row agree. Historical review
-pages continue to render the exact signed snapshot frozen at attempt start.
+pages continue to render their stored immutable snapshot.
 Restart actions and retained-route destinations resolve separately from the
 active signed catalog in the same Convex query transaction, so a catalog rename
 or entry revision cannot silently change the frozen review or send a new attempt

@@ -15,7 +15,7 @@ vi.mock("@/lib/content/preview/config", async (importOriginal) => ({
   readPreviewConfig: vi.fn(),
 }));
 
-const target = "http://127.0.0.1:4000/v1/events";
+const target = "http://127.0.0.1:4000/events";
 const configMock = vi.mocked(readPreviewConfig);
 const route = {
   appLocale: previewRoute.appLocale,

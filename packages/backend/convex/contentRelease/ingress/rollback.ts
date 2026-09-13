@@ -1,20 +1,22 @@
 "use node";
-import { verifySignedContentArtifactIntegrity } from "@nakafa/aksara-contracts/artifact/integrity";
 import {
   canonicalizeRollbackPage,
   canonicalizeRollbackRecord,
   isRollbackUpsert,
-  MAX_ROLLBACK_PAGE_BYTES,
   type RollbackPage,
   RollbackPageSchema,
   type RollbackRecord,
-} from "@nakafa/aksara-contracts/release/rollback/spec";
+} from "@nakafa/aksara-contracts/adoption/schema";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/adoption/transport";
+import { verifySignedContentArtifactIntegrity } from "@nakafa/aksara-contracts/adoption/verify";
+
+import { MAX_ROLLBACK_PAGE_BYTES } from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   type RoutePage,
   RoutePageSchema,
   type RouteRollbackRecord,
 } from "@nakafa/aksara-contracts/release/route/page";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   ReleaseError,
@@ -142,13 +144,14 @@ const validateBodyChunk = Effect.fn("contentRelease.validateRollbackChunk")(
     limit: number,
     total: number
   ) {
-    const firstIndex = chunk.records[0]?.index ?? afterIndex + 1;
+    const first = chunk.records[0];
     if (
+      !first ||
       chunk.rollbackOf !== request.rollbackOf ||
       chunk.rollbackOfManifestHash !== request.rollbackOfManifestHash ||
       chunk.total !== total ||
       chunk.records.length > limit ||
-      firstIndex !== afterIndex + 1
+      first.index !== afterIndex + 1
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -171,13 +174,14 @@ const validateRouteChunk = Effect.fn("contentRelease.validateRouteChunk")(
     limit: number,
     total: number
   ) {
-    const firstIndex = chunk.records[0]?.current.index ?? afterIndex + 1;
+    const first = chunk.records[0];
     if (
+      !first ||
       chunk.rollbackOf !== request.rollbackOf ||
       chunk.rollbackOfManifestHash !== request.rollbackOfManifestHash ||
       chunk.total !== total ||
       chunk.records.length > limit ||
-      firstIndex !== afterIndex + 1
+      first.current.index !== afterIndex + 1
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

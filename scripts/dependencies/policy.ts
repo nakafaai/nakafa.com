@@ -6,7 +6,7 @@ interface DependencyHold {
   readonly minimumDeclarations?: number;
 }
 
-export const CONTRACT_VERSION = "0.39.0";
+export const CONTRACT_PACKAGE_VERSION = "0.40.0";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "19.2.8", dependency: "react", minimumDeclarations: 1 },
@@ -90,7 +90,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: CONTRACT_VERSION,
+    approved: CONTRACT_PACKAGE_VERSION,
     declarationPaths: [
       "apps/www/package.json",
       "packages/ai/package.json",
@@ -180,7 +180,7 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    CONTRACT_VERSION,
+    CONTRACT_PACKAGE_VERSION,
     "Signed content contracts move with the exact Effect peer cohort.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],

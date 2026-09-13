@@ -10,29 +10,29 @@ import { ROLLBACK_RETENTION_MS } from "@repo/backend/convex/contentRelease/spec"
 import { Effect } from "effect";
 
 /** Reads one resumable or newly expired immutable snapshot. */
-const loadExpiredSnapshot = Effect.fn("contentRelease.loadExpiredSnapshot")(
-  function* (ctx: MutationCtx, cutoff: number) {
-    const retry = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentSnapshots")
-        .withIndex("by_cleanupRetryAt_and_family_and_snapshotId", (query) =>
-          query.gt("cleanupRetryAt", undefined).lte("cleanupRetryAt", cutoff)
-        )
-        .first()
-    );
-    if (retry) {
-      return retry;
-    }
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("contentSnapshots")
-        .withIndex("by_retainUntil_and_family_and_snapshotId", (query) =>
-          query.lte("retainUntil", cutoff)
-        )
-        .first()
-    );
+export const loadExpiredSnapshot = Effect.fn(
+  "contentRelease.loadExpiredSnapshot"
+)(function* (ctx: MutationCtx, cutoff: number) {
+  const retry = yield* Effect.promise(() =>
+    ctx.db
+      .query("contentSnapshots")
+      .withIndex("by_cleanupRetryAt_and_family_and_snapshotId", (query) =>
+        query.gt("cleanupRetryAt", undefined).lte("cleanupRetryAt", cutoff)
+      )
+      .first()
+  );
+  if (retry) {
+    return retry;
   }
-);
+  return yield* Effect.promise(() =>
+    ctx.db
+      .query("contentSnapshots")
+      .withIndex("by_retainUntil_and_family_and_snapshotId", (query) =>
+        query.lte("retainUntil", cutoff)
+      )
+      .first()
+  );
+});
 
 /** Persists one incomplete physical cleanup page. */
 const persistCleanup = Effect.fn("contentRelease.persistSnapshotCleanup")(

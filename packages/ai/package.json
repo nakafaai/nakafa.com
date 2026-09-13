@@ -14,7 +14,7 @@
     "@ai-sdk/gateway": "4.0.80",
     "@ai-sdk/google": "4.0.69",
     "@mendable/firecrawl-js": "^4.39.0",
-    "@nakafa/aksara-contracts": "0.39.0",
+    "@nakafa/aksara-contracts": "0.40.0",
     "@repo/contents": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",

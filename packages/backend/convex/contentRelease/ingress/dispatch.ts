@@ -1,7 +1,9 @@
 "use node";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/adoption/transport";
+
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+
 import {
   activeContentSigningKeyId,
   contentKeyResolver,

@@ -1,9 +1,19 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { encodeTryoutRuntimeBundleJson } from "@repo/backend/convex/contentRelease/wire";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  stageTryoutRuntimeBundleProgram,
+  storeAuthenticatedTryoutRuntimeBundle,
+} from "@repo/backend/convex/tryouts/runtime/signed";
+import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { storeRuntimeFixture } from "@repo/backend/test/runtime/bundle";
-import { makeRuntimeIngressFixture } from "@repo/backend/test/runtime/ingress";
+import {
+  makeRuntimeIngressFixture,
+  makeRuntimeIngressRenderer,
+} from "@repo/backend/test/runtime/ingress";
 import { convexTest } from "convex-test";
 import { Cause, Effect, Exit } from "effect";
 
@@ -19,6 +29,64 @@ const failureCause = Effect.fn("test.runtime.failureCause")(function* (
 });
 
 describe("tryouts/runtime signed storage", () => {
+  it.effect("rejects a renderer that does not match the bundle payload", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const fixture = yield* makeRuntimeIngressFixture();
+
+      const message = yield* failureCause(
+        Effect.promise(() =>
+          t.mutation((ctx) =>
+            runConvexProgram(
+              storeAuthenticatedTryoutRuntimeBundle(
+                ctx,
+                fixture.bundle,
+                makeRuntimeIngressRenderer()
+              )
+            )
+          )
+        )
+      );
+
+      expect(message).toContain("has incoherent renderer or snapshot bytes");
+    })
+  );
+
+  it.effect(
+    "rejects a staged bundle whose renderer is not its signed source",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const fixture = yield* makeRuntimeIngressFixture();
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertSignedCandidate(
+              ctx,
+              fixture.release.manifest.releaseId,
+              fixture.release,
+              JSON.stringify(fixture.rendererManifest)
+            )
+          )
+        );
+
+        const message = yield* failureCause(
+          Effect.promise(() =>
+            t.mutation((ctx) =>
+              runConvexProgram(
+                stageTryoutRuntimeBundleProgram(
+                  ctx,
+                  encodeTryoutRuntimeBundleJson(fixture.bundle),
+                  JSON.stringify(makeRuntimeIngressRenderer())
+                )
+              )
+            )
+          )
+        );
+
+        expect(message).toContain("does not match its staged source release");
+      })
+  );
+
   it.effect("reuses one immutable pair across signed source releases", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);

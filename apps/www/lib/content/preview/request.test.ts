@@ -11,11 +11,11 @@ import {
   MAX_PREVIEW_MANIFEST_BYTES,
 } from "@/lib/content/preview/request";
 
-const target = "http://127.0.0.1:4000/v1/manifest";
+const target = "http://127.0.0.1:4000/manifest";
 const config: PreviewConfig = {
-  eventsPath: "/v1/events",
+  eventsPath: "/events",
   keyId: SigningKeyIdSchema.make("local-preview"),
-  manifestPath: "/v1/manifest",
+  manifestPath: "/manifest",
   origin: new URL("http://127.0.0.1:4000/"),
   publicKey: "test-public-key",
   token: Redacted.make("secret-token"),
@@ -93,8 +93,8 @@ describe("local preview JSON requests", () => {
 
   it.effect.each([
     "//attacker.test/steal",
-    "/v1/artifacts/%2e%2e%2fmanifest",
-    `/v1/artifacts/sha256%3a${"a".repeat(64)}`,
+    "/artifacts/%2e%2e%2fmanifest",
+    `/artifacts/sha256%3a${"a".repeat(64)}`,
   ])("rejects non-contract path %s before sending its bearer token", (path) =>
     Effect.gen(function* () {
       const fetcher = vi.fn<typeof fetch>();
@@ -120,7 +120,7 @@ describe("local preview JSON requests", () => {
     "sends the bearer token only to an exact content-addressed artifact",
     () =>
       Effect.gen(function* () {
-        const artifactPath = `/v1/artifacts/sha256%3A${"a".repeat(64)}`;
+        const artifactPath = `/artifacts/sha256%3A${"a".repeat(64)}`;
         const artifactTarget = `http://127.0.0.1:4000${artifactPath}`;
         const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
           response("{}", {

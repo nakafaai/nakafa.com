@@ -266,7 +266,7 @@ describe("contentRelease/manifest", () => {
     await expect(
       oversized.mutation(stageRelease, {
         releaseJson: candidateJson(),
-        rendererJson: testRendererJson(TEST_DIGEST, `A${"a".repeat(270_000)}`),
+        rendererJson: testRendererJson(TEST_DIGEST, `A${"a".repeat(540_000)}`),
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
 

@@ -8,6 +8,7 @@ import {
   expect,
   it,
 } from "@effect/vitest";
+import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/adoption/protected";
 import {
   ContentKeySchema,
   ReleaseIdSchema,
@@ -20,7 +21,6 @@ import {
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { ProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/protected/verify";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import {
   ContentRuntimeFailureError,
@@ -118,7 +118,7 @@ vi.mock("@repo/backend/content/trust", async () => {
   );
   return { contentKeyResolver: TEST_KEY_RESOLVER };
 });
-vi.mock("@nakafa/aksara-contracts/runtime/protected/verify", () => ({
+vi.mock("@nakafa/aksara-contracts/adoption/protected", () => ({
   verifyProtectedContentRuntimeExchange: verifyMock,
 }));
 

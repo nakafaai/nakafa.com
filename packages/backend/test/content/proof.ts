@@ -39,7 +39,6 @@ import { canonicalizeContentReleaseSigningInput } from "@nakafa/aksara-contracts
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   canonicalizeRendererManifestContract,
-  RENDERER_CONTRACT_VERSION,
   RENDERER_MANIFEST_FORMAT,
   type RendererManifestEnvelope,
   RendererManifestEnvelopeSchema,
@@ -89,16 +88,12 @@ export function testProofRenderer(
   componentName = "p",
   publishedDomains: readonly RendererDomain[] = RENDERER_DOMAINS
 ) {
-  const components = [{ name: componentName, version: 1 }];
+  const components = [componentName];
   const contract = {
-    base: {
-      authoringComponents: components,
-      supportedComponents: components,
-    },
+    base: components,
     domains: RENDERER_DOMAINS.map((name) => ({
-      authoringComponents: [],
       name,
-      supportedComponents: [],
+      components: [],
     })),
     publishedDomains: [...publishedDomains].sort(),
   };
@@ -111,7 +106,6 @@ export function testProofRenderer(
     ...contract,
     format: RENDERER_MANIFEST_FORMAT,
     hash,
-    rendererContractVersion: RENDERER_CONTRACT_VERSION,
   });
 }
 export const TEST_PROOF_RENDERER = testProofRenderer();
@@ -201,7 +195,6 @@ export function testEmptyManifest(releaseId: ReleaseId) {
     projectionCount: 0,
     projectionDigest: projections.digest,
     releaseId,
-    rendererContractVersion: TEST_PROOF_RENDERER.rendererContractVersion,
     rendererManifestHash: TEST_PROOF_RENDERER.hash,
     resultCount: 0,
     resultDigest: EMPTY_RESULT_CATALOG_DIGEST,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { decodeArtifactJson } from "@repo/backend/convex/contentRelease/parse";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
@@ -14,6 +15,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest, type TestConvex } from "convex-test";
+import { Effect } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
@@ -84,6 +86,48 @@ describe("contentRelease/artifacts", () => {
     });
     expect(state.release?.stagedArtifacts).toBe(1);
   });
+
+  it.effect("limits retained artifact requirements to recovery storage", () =>
+    Effect.gen(function* () {
+      const current = yield* decodeArtifactJson(testArtifactJson());
+      const retained = {
+        ...current,
+        payload: {
+          ...current.payload,
+          requiredComponents: [{ name: "p", version: 1 }],
+        },
+      };
+      for (const role of ["candidate", "recovery"] as const) {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => insertTestRelease(ctx, { role }))
+        );
+        yield* Effect.promise(() => stageItem(t));
+        const result = stage(t, [JSON.stringify(retained)]);
+        if (role === "candidate") {
+          yield* Effect.promise(() =>
+            expect(result).rejects.toMatchObject({
+              data: { code: "CONTENT_RELEASE_UNSUPPORTED" },
+            })
+          );
+          expect(
+            yield* Effect.promise(() =>
+              t.run((ctx) => ctx.db.query("contentArtifacts").unique())
+            )
+          ).toBeNull();
+          continue;
+        }
+        yield* Effect.promise(() =>
+          expect(result).resolves.toMatchObject({ created: 1, unchanged: 0 })
+        );
+        const stored = yield* Effect.promise(() =>
+          t.run((ctx) => ctx.db.query("contentArtifacts").unique())
+        );
+        expect(stored?.artifactHash).toBe(retained.artifactHash);
+        expect(stored && JSON.parse(stored.artifactJson)).toEqual(retained);
+      }
+    })
+  );
 
   it("reuses identical stored bytes and only extends shorter retention", async () => {
     for (const retainUntil of [0, Number.MAX_SAFE_INTEGER]) {

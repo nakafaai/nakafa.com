@@ -1,9 +1,15 @@
 "use node";
+import {
+  ContentReleaseCurrentSchema,
+  RecoveryLookupSchema,
+} from "@nakafa/aksara-contracts/adoption/schema";
+import {
+  verifyContentReleaseBundle,
+  verifySignedTryoutRuntimeBundle,
+} from "@nakafa/aksara-contracts/adoption/verify";
+
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import { RecoveryLookupSchema } from "@nakafa/aksara-contracts/release/current/evidence";
-import { ContentReleaseCurrentSchema } from "@nakafa/aksara-contracts/release/current/state";
-import { verifyContentReleaseBundle } from "@nakafa/aksara-contracts/release/verify";
-import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
+
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   ReleaseError,

@@ -97,7 +97,7 @@ export const selectRendererImplementations = Effect.fn(
     rendererDomainImplementations[selection.rendererDomain];
 
   const selected: SelectedRenderer[] = [];
-  for (const { name } of selection.requiredComponents) {
+  for (const name of selection.requiredComponents) {
     const isSemantic = semanticNames.has(name);
     const baseImplementations = findImplementations(name, baseRenderers);
     const domainImplementations = findImplementations(name, domainRenderers);

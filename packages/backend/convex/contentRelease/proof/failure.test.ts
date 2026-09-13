@@ -1,12 +1,11 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { RetainedRendererComponentUnsupportedError } from "@nakafa/aksara-contracts/adoption/schema";
 import {
   ArtifactPayloadFieldByteLimitError,
   ArtifactRendererComponentMissingError,
-  ArtifactRendererVersionUnsupportedError,
   ArtifactVerificationByteLimitError,
-  RendererContractVersionMismatchError,
 } from "@nakafa/aksara-contracts/artifact/spec";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
@@ -39,13 +38,6 @@ describe("contentRelease/proof/failure", () => {
         "CONTENT_RELEASE_UNSUPPORTED",
       ],
       [
-        new RendererContractVersionMismatchError({
-          actualVersion: "2.0.0",
-          expectedVersion: "1.0.0",
-        }),
-        "CONTENT_RELEASE_UNSUPPORTED",
-      ],
-      [
         new ArtifactRendererComponentMissingError({
           componentName: "TechnicalComponent",
           contentKey,
@@ -53,10 +45,10 @@ describe("contentRelease/proof/failure", () => {
         "CONTENT_RELEASE_UNSUPPORTED",
       ],
       [
-        new ArtifactRendererVersionUnsupportedError({
+        new RetainedRendererComponentUnsupportedError({
           componentName: "TechnicalComponent",
           contentKey,
-          requiredVersion: 2,
+          version: 2,
         }),
         "CONTENT_RELEASE_UNSUPPORTED",
       ],

@@ -64,18 +64,16 @@ export function testRendererJson(
   hash: string = TEST_DIGEST,
   componentName = "p"
 ) {
-  const base = [{ name: componentName, version: 1 }];
+  const base = [componentName];
   return JSON.stringify({
-    base: { authoringComponents: base, supportedComponents: base },
+    base,
     domains: RENDERER_DOMAINS.map((name) => ({
-      authoringComponents: [],
+      components: [],
       name,
-      supportedComponents: [],
     })),
-    format: "nakafa-mdx-renderer-v1",
+    format: "nakafa-mdx-renderer",
     hash,
     publishedDomains: ["mathematics"],
-    rendererContractVersion: "1.0.0",
   });
 }
 interface ReleaseOptions {
@@ -159,7 +157,6 @@ export function testReleaseJson({
       projectionCount,
       projectionDigest: TEST_DIGEST,
       releaseId,
-      rendererContractVersion: "1.0.0",
       rendererManifestHash: rendererHash,
       resultCount,
       resultDigest,

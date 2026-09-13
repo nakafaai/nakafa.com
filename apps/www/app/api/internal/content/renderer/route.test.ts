@@ -14,19 +14,14 @@ import { NextRequest } from "next/server";
 const nonce = PreviewRendererNonceSchema.make("n".repeat(43));
 const secret = PreviewRendererSecretSchema.make("s".repeat(43));
 const manifest = {
-  base: {
-    authoringComponents: [{ name: "BlockMath", version: 1 }],
-    supportedComponents: [{ name: "BlockMath", version: 1 }],
-  },
+  base: ["BlockMath"],
   domains: RENDERER_DOMAINS.map((name) => ({
-    authoringComponents: [],
     name,
-    supportedComponents: [],
+    components: [],
   })),
-  format: "nakafa-mdx-renderer-v1",
+  format: "nakafa-mdx-renderer",
   hash: `sha256:${"a".repeat(64)}`,
   publishedDomains: ["mathematics"],
-  rendererContractVersion: "1.0.0",
 };
 
 vi.mock("@repo/next-config/keys", () => ({

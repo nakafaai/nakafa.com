@@ -44,7 +44,6 @@ function matchesManifest(
     manifest.routeCount === proof.routeCount &&
     manifest.routeCount === proof.stagedRoutes &&
     manifest.routeDigest === proof.routeDigest &&
-    manifest.rendererContractVersion === proof.rendererContractVersion &&
     manifest.rendererManifestHash === proof.rendererManifestHash &&
     manifest.resultCount === proof.resultCount &&
     manifest.resultDigest === proof.resultDigest &&

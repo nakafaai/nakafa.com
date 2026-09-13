@@ -36,7 +36,7 @@ describe("renderer components", () => {
         const components = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "snbt-plain",
-          requiredComponents: [{ name: "InlineMath", version: 1 }],
+          requiredComponents: ["InlineMath"],
         });
 
         expect(components).toMatchObject(semanticMdxComponents);
@@ -58,7 +58,7 @@ describe("renderer components", () => {
         const failure = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "site",
-          requiredComponents: [{ name: "MissingRenderer", version: 1 }],
+          requiredComponents: ["MissingRenderer"],
         }).pipe(Effect.flip);
 
         expect(failure).toMatchObject({
@@ -85,7 +85,7 @@ describe("renderer components", () => {
         const failure = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "site",
-          requiredComponents: [{ name: "p", version: 1 }],
+          requiredComponents: ["p"],
         }).pipe(Effect.flip);
 
         expect(failure).toMatchObject({
@@ -110,7 +110,7 @@ describe("renderer components", () => {
       const failure = yield* resolveRendererComponents({
         contentKey,
         rendererDomain: "site",
-        requiredComponents: [{ name: "InlineMath", version: 1 }],
+        requiredComponents: ["InlineMath"],
       }).pipe(Effect.flip);
 
       expect(failure).toMatchObject({
@@ -140,7 +140,7 @@ describe("renderer components", () => {
         const failure = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "site",
-          requiredComponents: [{ name: "SiteWidget", version: 1 }],
+          requiredComponents: ["SiteWidget"],
         }).pipe(Effect.flip);
 
         expect(failure).toMatchObject({
@@ -160,7 +160,7 @@ describe("renderer components", () => {
       const components = yield* resolveRendererComponents({
         contentKey,
         rendererDomain: "mathematics",
-        requiredComponents: [{ name: "Triangle", version: 1 }],
+        requiredComponents: ["Triangle"],
       });
 
       expect(Object.keys(components).sort()).toEqual(
@@ -178,7 +178,7 @@ describe("renderer components", () => {
       const failure = yield* resolveRendererComponents({
         contentKey,
         rendererDomain: "site",
-        requiredComponents: [{ name: "Triangle", version: 1 }],
+        requiredComponents: ["Triangle"],
       }).pipe(Effect.flip);
 
       expect(failure).toMatchObject({

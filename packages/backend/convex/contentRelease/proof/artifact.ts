@@ -1,10 +1,7 @@
 "use node";
+import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/adoption/schema";
+import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/adoption/verify";
 
-import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
-import type {
-  RendererContractVersion,
-  RendererManifestEnvelope,
-} from "@nakafa/aksara-contracts/renderer/contract";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   decodeArtifactJson,
@@ -20,8 +17,7 @@ export const verifyArtifactBatch = Effect.fn(
 )(function* (
   rows: ArtifactProofPage["rows"],
   releaseId: string,
-  renderer: RendererManifestEnvelope,
-  rendererContractVersion: RendererContractVersion
+  renderer: RendererManifestEnvelope
 ) {
   return yield* Stream.fromIterable(rows).pipe(
     Stream.runFoldEffect(
@@ -38,7 +34,6 @@ export const verifyArtifactBatch = Effect.fn(
           const artifact = yield* decodeArtifactJson(row.artifactJson);
           const verified = yield* verifySignedContentArtifact({
             artifact,
-            rendererContractVersion,
             rendererManifest: renderer,
           }).pipe(Effect.mapError(contractFailure));
           if (

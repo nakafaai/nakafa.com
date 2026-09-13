@@ -39,7 +39,6 @@ describe("authenticated artifact execution", () => {
         const artifact = testSignedArtifact("site", { compiledCode, rawMdx });
         const rendered = yield* executeSignedArtifact({
           artifact,
-          rendererContractVersion: TEST_PROOF_RENDERER.rendererContractVersion,
           rendererManifest: TEST_PROOF_RENDERER,
         }).pipe(
           Effect.provideService(
@@ -68,7 +67,6 @@ describe("authenticated artifact execution", () => {
         const artifact = testSignedArtifact("site", { compiledCode });
         const failure = yield* executeSignedArtifact({
           artifact,
-          rendererContractVersion: TEST_PROOF_RENDERER.rendererContractVersion,
           rendererManifest: TEST_PROOF_RENDERER,
         }).pipe(
           Effect.provideService(
@@ -96,7 +94,6 @@ describe("authenticated artifact execution", () => {
             compiledCode: "throw new TypeError('unverified code');",
           },
         },
-        rendererContractVersion: TEST_PROOF_RENDERER.rendererContractVersion,
         rendererManifest: TEST_PROOF_RENDERER,
       }).pipe(
         Effect.provideService(

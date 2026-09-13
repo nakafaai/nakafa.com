@@ -1,9 +1,10 @@
+import { PublicContentRuntimeResponseSchema } from "@nakafa/aksara-contracts/adoption/runtime";
+
 import {
   decodePublicContentRuntimeRequest,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
   type PublicContentRuntimeRequest,
-  PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import {
   decodePublicRuntimeRow,

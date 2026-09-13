@@ -86,6 +86,56 @@ function readRoutes(
 }
 
 describe("contentRelease/rollback", () => {
+  it("rejects malformed route requests before looking up publication state", async () => {
+    const t = convexTest(schema, convexModules);
+    await expect(readRoutes(t, -2, 0)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+  });
+
+  it("rejects a missing route index instead of returning a partial inverse", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 0, 2);
+      await insertRoute(ctx, {
+        contentKey: "test:current",
+        index: 1,
+        publicPath: "test/gap",
+      });
+    });
+    await expect(readRoutes(t, -1, 2)).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: expect.stringContaining("not contiguous"),
+      },
+    });
+  });
+
+  it("rejects a prior route whose stored owner is not a content identity", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 0, 1);
+      await insertRoute(ctx, {
+        contentKey: "",
+        index: 0,
+        publicPath: "test/prior",
+        releaseId: "release-base",
+        sequence: 0,
+      });
+      await insertRoute(ctx, {
+        contentKey: "test:current",
+        index: 0,
+        publicPath: "test/prior",
+      });
+    });
+    await expect(readRoutes(t, -1, 1)).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: expect.stringContaining("lost its content identity"),
+      },
+    });
+  });
+
   it("returns exact current-to-prior records in bounded pages", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
