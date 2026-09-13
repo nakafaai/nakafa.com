@@ -103,7 +103,7 @@ describe("PostHog server reporting", () => {
         1,
         expect.objectContaining({
           message: "Operational exception",
-          name: "OperationalError",
+          name: "OperationalError(request)",
         }),
         undefined,
         properties

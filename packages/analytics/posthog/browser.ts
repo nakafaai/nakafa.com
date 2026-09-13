@@ -351,7 +351,7 @@ export function captureException(
     return;
   }
   MutableRef.get(analyticsClient)?.captureException(
-    createOperationalException(error),
+    createOperationalException(error, decodedProperties.value),
     decodedProperties.value
   );
 }
