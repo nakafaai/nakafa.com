@@ -12,6 +12,10 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  compactionIdentity,
+  insertCompletedRelease,
+} from "@repo/backend/test/content/compact";
 import { TEST_ARTIFACT_HASH } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
@@ -75,6 +79,72 @@ describe("contentRelease/snapshot/retention", () => {
               candidateManifestHash: undefined,
               candidateReleaseId: undefined,
               candidateSequence: undefined,
+            });
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            candidate.mutation((ctx) =>
+              runConvexProgram(
+                isSnapshotReferenced(ctx, "program", data.snapshotId)
+              )
+            )
+          ).resolves.toBe(true)
+        );
+      })
+  );
+
+  it.effect(
+    "keeps a snapshot reachable when a retained release stored unknown manifest fields",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const candidate = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          candidate.mutation(async (ctx) => {
+            await insertTestRelease(ctx, { snapshots: data.snapshots });
+            const release = await ctx.db.query("contentReleases").unique();
+            if (!release) {
+              throw new Error("Expected candidate snapshot release.");
+            }
+            const stored = JSON.parse(release.releaseJson);
+            await ctx.db.patch("contentReleases", release._id, {
+              releaseJson: JSON.stringify({
+                ...stored,
+                manifest: {
+                  ...stored.manifest,
+                  rendererContractVersion: "1.0.0",
+                },
+              }),
+            });
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            candidate.mutation((ctx) =>
+              runConvexProgram(
+                isSnapshotReferenced(ctx, "program", data.snapshotId)
+              )
+            )
+          ).resolves.toBe(true)
+        );
+      })
+  );
+
+  it.effect(
+    "keeps a snapshot reachable when the retained release declares a direct base",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const base = compactionIdentity(1);
+        const candidate = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          candidate.mutation(async (ctx) => {
+            await insertCompletedRelease(ctx, base);
+            await insertTestRelease(ctx, {
+              originReleaseId: base.releaseId,
+              sequence: 2,
+              snapshots: data.snapshots,
             });
           })
         );

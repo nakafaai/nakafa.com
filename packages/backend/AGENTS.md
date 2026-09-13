@@ -67,6 +67,14 @@ Do not leave one-off migration, backfill, repair, maintenance, dead, redundant,
 or legacy code/data paths behind. After verifying dev and prod data, delete the
 obsolete Convex function and its tests before considering the work complete.
 
+History retention and compaction decide which stored releases must stay
+reachable, so they read reachability metadata (release identity, base identity,
+and snapshot transitions) through a projection that tolerates unknown manifest
+fields. They never parse the signed content contract, because a contract
+generation change must not be able to strand the cleaner that retires old
+history. Content readers stay strict, and a missing reachability fact still
+fails closed.
+
 Every public Convex function used by a deployed client is a rollout contract.
 Renames and removals use expand, switch, observe, contract: deploy the successor
 while the predecessor remains, switch every consumer, verify the predecessor
