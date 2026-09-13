@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -108,8 +108,6 @@ async function insertForumPost(
 ) {
   const createdAt = FORUM_CREATED_AT + sequence * 1000;
 
-  vi.setSystemTime(new Date(createdAt));
-
   return await ctx.db.insert("schoolClassForumPosts", {
     body: `post-${sequence}`,
     classId,
@@ -166,10 +164,6 @@ async function seedForum() {
     t,
   };
 }
-
-afterEach(() => {
-  vi.useRealTimers();
-});
 
 describe("classes/forums/queries/pages", () => {
   it("returns the full transcript in ascending order with unread metadata", async () => {

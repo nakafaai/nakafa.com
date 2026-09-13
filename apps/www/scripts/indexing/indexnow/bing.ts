@@ -17,7 +17,7 @@ const BingQuotaMessageSchema = Schema.Struct({
 const decodeBingQuotaMessage = Schema.decodeUnknownEffect(
   Schema.fromJsonString(BingQuotaMessageSchema)
 );
-const bingWebmasterApiKey = Config.string("BING_WEBMASTER_API_KEY").pipe(
+const bingWebmasterApiKey = Config.String("BING_WEBMASTER_API_KEY").pipe(
   Config.option
 );
 /** Reads the optional Bing Webmaster API key from the CLI environment. */

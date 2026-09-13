@@ -16,7 +16,7 @@
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@vitest/coverage-istanbul": "catalog:",
-    "next": "16.3.4",
+    "next": "16.3.5",
     "vitest": "catalog:"
   }
 }

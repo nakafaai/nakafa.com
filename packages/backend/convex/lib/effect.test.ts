@@ -37,7 +37,7 @@ describe("lib/effect", () => {
 
   it.effect("loads the native environment for each invocation", () =>
     Effect.gen(function* () {
-      const configuredValue = Config.string("BOUNDARY_CONFIG_VALUE").pipe(
+      const configuredValue = Config.String("BOUNDARY_CONFIG_VALUE").pipe(
         Effect.mapError(
           () =>
             new BoundaryFailure({
@@ -92,8 +92,8 @@ describe("lib/effect", () => {
       });
       const configuredValues = Config.all({
         host: Config.schema(Schema.URL, "HOST").pipe(Config.nested("BOUNDARY")),
-        empty: Config.option(Config.string("BOUNDARY_EMPTY")),
-        missing: Config.option(Config.string("BOUNDARY_MISSING")),
+        empty: Config.option(Config.String("BOUNDARY_EMPTY")),
+        missing: Config.option(Config.String("BOUNDARY_MISSING")),
       }).pipe(
         Effect.mapError(
           () =>

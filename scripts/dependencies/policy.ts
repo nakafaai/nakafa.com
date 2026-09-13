@@ -6,9 +6,18 @@ interface DependencyHold {
   readonly minimumDeclarations?: number;
 }
 
-export const CONTRACT_VERSION = "0.38.0";
+export const CONTRACT_VERSION = "0.39.0";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
+  { approved: "19.2.8", dependency: "react", minimumDeclarations: 1 },
+  { approved: "19.2.8", dependency: "react-dom", minimumDeclarations: 1 },
+  { approved: "19.2.18", dependency: "@types/react", minimumDeclarations: 1 },
+  {
+    approved: "19.2.7",
+    dependency: "@types/react-dom",
+    minimumDeclarations: 1,
+  },
+  { approved: "11.17.2", dependency: "mermaid", minimumDeclarations: 1 },
   {
     approved: "catalog:",
     dependency: "effect",
@@ -32,7 +41,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.41.0",
+    approved: "0.45.0",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -41,40 +50,40 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "typescript",
     minimumDeclarations: 1,
   },
-  { approved: "16.3.4", dependency: "next", minimumDeclarations: 1 },
+  { approved: "16.3.5", dependency: "next", minimumDeclarations: 1 },
   {
-    approved: "16.3.4",
+    approved: "16.3.5",
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
   { approved: "1.45.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.93", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "7.0.99", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.96",
+    approved: "4.0.102",
     dependency: "@ai-sdk/react",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.64",
+    approved: "4.0.69",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.75",
+    approved: "4.0.80",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
   {
-    approved: "1.0.15",
+    approved: "1.0.19",
     dependency: "@ai-sdk/devtools",
     minimumDeclarations: 1,
   },
   {
-    approved: "1.6.30",
+    approved: "1.6.31",
     dependency: "better-auth",
     minimumDeclarations: 1,
   },
-  { approved: "1.6.30", dependency: "auth", minimumDeclarations: 1 },
+  { approved: "1.6.31", dependency: "auth", minimumDeclarations: 1 },
   {
     approved: "0.12.5",
     dependency: "@convex-dev/better-auth",
@@ -93,16 +102,16 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@nakafa/aksara-contracts",
   },
   {
-    approved: "2.5.12",
+    approved: "2.5.13",
     dependency: "@biomejs/biome",
     minimumDeclarations: 1,
   },
   {
-    approved: "24.13.3",
+    approved: "24.13.4",
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "7.11.0", dependency: "ultracite", minimumDeclarations: 1 },
+  { approved: "7.11.1", dependency: "ultracite", minimumDeclarations: 1 },
   { approved: "2.10.12", dependency: "turbo", minimumDeclarations: 1 },
   {
     approved: "2.10.12",
@@ -113,40 +122,61 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
 
 export const REGISTRY_REVIEWS = [
   [
+    "react@latest",
+    "19.3.0",
+    "Fiber 9.7.0 requires React below 19.3 and bundles the 19.2 reconciler.",
+  ],
+  [
+    "react-dom@latest",
+    "19.3.0",
+    "React DOM stays on the same supported 19.2.8 runtime.",
+  ],
+  [
+    "@types/react@latest",
+    "19.3.0",
+    "React declarations stay on the supported 19.2 runtime line.",
+  ],
+  [
+    "@types/react-dom@latest",
+    "19.3.0",
+    "React DOM declarations stay on the supported 19.2 runtime line.",
+  ],
+  [
+    "mermaid@latest",
+    "12.0.0",
+    "Mermaid 12 requires Safari 17.4 while Nakafa supports the Next.js Safari 16.4 browser floor.",
+  ],
+  [
     "effect@rc",
-    "4.0.0-rc.112",
-    "Signed content contracts require the exact RC112 cohort.",
+    "4.0.0-rc.115",
+    "Signed content contracts require the exact RC115 cohort.",
   ],
   [
     "@effect/platform-node@rc",
-    "4.0.0-rc.112",
+    "4.0.0-rc.115",
     "The platform package must match the Effect cohort.",
   ],
   [
     "@effect/platform-node-shared@rc",
-    "4.0.0-rc.112",
+    "4.0.0-rc.115",
     "The transitive platform package must match the Effect cohort.",
   ],
   [
     "@effect/vitest@rc",
-    "4.0.0-rc.112",
+    "4.0.0-rc.115",
     "The test adapter must match the Effect cohort.",
   ],
-  ["@effect/tsgo@latest", "0.41.0", "Compiler patching moves with TypeScript."],
-  [
-    "vitest@latest",
-    "5.0.0",
-    "The Effect RC112 adapter requires Vitest below version 5.",
-  ],
+  ["@effect/tsgo@latest", "0.45.0", "Compiler patching moves with TypeScript."],
+  ["vitest@latest", "5.0.0", "The Effect RC115 adapter requires Vitest 5."],
   [
     "@vitest/coverage-istanbul@latest",
     "5.0.0",
-    "Coverage must match the supported Vitest 4.1.11 runner.",
+    "Coverage must match the supported Vitest 5.0.0 runner.",
   ],
   [
     "@vitest/ui@latest",
     "5.0.0",
-    "The test UI must match the supported Vitest 4.1.11 runner.",
+    "The test UI must match the supported Vitest 5.0.0 runner.",
   ],
   [
     "@nakafa/aksara-contracts@latest",
@@ -156,48 +186,48 @@ export const REGISTRY_REVIEWS = [
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "next@latest",
-    "16.3.4",
-    "Stable 16.3.4 includes the AVIF security fix and native TypeScript CLI checks.",
+    "16.3.5",
+    "Stable 16.3.5 backports image cache hardening, standalone NFTs with adapters, CSP nonces for loading and template, and the use-cache prerender signal fix.",
   ],
   ["convex@latest", "1.45.0", "Convex acceptance uses an isolated deployment."],
-  ["ai@latest", "7.0.93", "AI SDK packages move as one reviewed cohort."],
+  ["ai@latest", "7.0.99", "AI SDK packages move as one reviewed cohort."],
   [
     "@ai-sdk/react@latest",
-    "4.0.96",
+    "4.0.102",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/google@latest",
-    "4.0.64",
+    "4.0.69",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.75",
+    "4.0.80",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/devtools@latest",
-    "1.0.15",
+    "1.0.19",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "better-auth@latest",
-    "1.7.3",
-    "Better Auth remains on 1.6.30 because the Convex adapter rejects 1.7.",
+    "1.7.4",
+    "The Convex adapter requires the Better Auth 1.6 line. Its optional Vitest peer stops at 4, but only unused test-utils import Vitest; Nakafa auth runtime tests pass on 5.",
   ],
   [
     "@convex-dev/better-auth@latest",
     "0.12.5",
     "The adapter defines the accepted Better Auth peer range.",
   ],
-  ["@biomejs/biome@latest", "2.5.12", "Formatting is reviewed with Ultracite."],
-  ["ultracite@latest", "7.11.0", "Formatting is reviewed with Biome."],
-  ["@types/node@24", "24.13.3", "Declarations remain on the Node 24 line."],
-  ["node@24", "24.20.0", "The repository supports the Node 24 runtime line."],
+  ["@biomejs/biome@latest", "2.5.13", "Formatting is reviewed with Ultracite."],
+  ["ultracite@latest", "7.11.1", "Formatting is reviewed with Biome."],
+  ["@types/node@24", "24.13.4", "Declarations remain on the Node 24 line."],
+  ["node@24", "24.21.0", "The repository supports the Node 24 runtime line."],
   [
     "pnpm@latest",
-    "12.3.4",
+    "12.4.1",
     "OSV Scanner 2.5.1 skips the application graph after pnpm 12 adds a package-manager YAML document.",
   ],
   [

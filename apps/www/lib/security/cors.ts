@@ -8,10 +8,10 @@ const developmentOrigins = new Set([
   "http://localhost:3002",
 ]);
 const corsEnvironment = Config.all({
-  nodeEnvironment: Config.string("NODE_ENV").pipe(
+  nodeEnvironment: Config.String("NODE_ENV").pipe(
     Config.withDefault("production")
   ),
-  vercelTargetEnvironment: Config.string("VERCEL_TARGET_ENV").pipe(
+  vercelTargetEnvironment: Config.String("VERCEL_TARGET_ENV").pipe(
     Config.withDefault("")
   ),
 });

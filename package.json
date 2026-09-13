@@ -51,17 +51,17 @@
     "version-packages": "changeset version"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.12",
+    "@biomejs/biome": "2.5.13",
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.2",
     "@effect/platform-node": "catalog:",
-    "@effect/tsgo": "0.41.0",
+    "@effect/tsgo": "0.45.0",
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@sigstore/bundle": "5.0.0",
     "@turbo/gen": "2.10.12",
-    "@types/node": "24.13.3",
+    "@types/node": "24.13.4",
     "@vercel/config": "^0.7.0",
     "afdocs": "0.20.0",
     "effect": "catalog:",
@@ -70,18 +70,18 @@
     "sigstore": "5.0.0",
     "turbo": "2.10.12",
     "typescript": "catalog:",
-    "ultracite": "7.11.0",
+    "ultracite": "7.11.1",
     "vitest": "catalog:",
-    "yaml": "2.9.0"
+    "yaml": "2.9.1"
   },
-  "packageManager": "pnpm@11.25.0",
+  "packageManager": "pnpm@11.27.0",
   "engines": {
     "node": ">=24.0.0 <25.0.0"
   },
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "24.20.0",
+      "version": "24.21.0",
       "onFail": "download"
     }
   }

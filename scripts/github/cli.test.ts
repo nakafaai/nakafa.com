@@ -192,6 +192,26 @@ describe("CLI workflow policy", () => {
           "CLI publish job is missing required contract: for attempt in {1..5}"
         )
       );
+
+      const unreviewedStepOption = source.replace(
+        "      - name: Verify and publish exact archive",
+        "      - name: Verify and publish exact archive\n        continue-on-error: true"
+      );
+      assert.ok(
+        validateCliWorkflow(unreviewedStepOption).includes(
+          "CLI publication must match the exact trusted job."
+        )
+      );
+
+      const unreviewedJobOption = source.replace(
+        "    name: Publish\n",
+        "    name: Publish\n    continue-on-error: true\n"
+      );
+      assert.ok(
+        validateCliWorkflow(unreviewedJobOption).includes(
+          "CLI publication must match the exact trusted job."
+        )
+      );
     }).pipe(Effect.provide(NodeServices.layer))
   );
 

@@ -55,7 +55,7 @@ const backendEnvPath = resolve(
 );
 const readBackendEnv = Effect.fn("customers.readBackendEnv")(function* () {
   if (!existsSync(backendEnvPath)) {
-    return new Map<string, string>();
+    return {};
   }
   const content = yield* Effect.try({
     try: () => readFileSync(backendEnvPath, "utf8"),
@@ -67,13 +67,7 @@ const readBackendEnv = Effect.fn("customers.readBackendEnv")(function* () {
     catch: (error) =>
       new CustomerConvexConfigError({ message: getUnknownMessage(error) }),
   });
-  const values = new Map<string, string>();
-  for (const [name, value] of Object.entries(parsed)) {
-    if (value !== undefined) {
-      values.set(name, value);
-    }
-  }
-  return values;
+  return parsed;
 });
 /** Loads backend-local Convex configuration with shell variables taking priority. */
 export const loadCustomerEnvProvider = Effect.fn(
@@ -81,16 +75,13 @@ export const loadCustomerEnvProvider = Effect.fn(
 )(function* () {
   const shell = ConfigProvider.fromEnv();
   const backend = yield* readBackendEnv();
-  return ConfigProvider.orElse(
-    shell,
-    ConfigProvider.fromEnvRecord(Object.fromEntries(backend))
-  );
+  return ConfigProvider.orElse(shell, ConfigProvider.fromEnvRecord(backend));
 });
 const getConvexUrl = Effect.fn("customers.getConvexUrl")(function* (
   prod: boolean
 ) {
   const name = prod ? "CONVEX_PROD_URL" : "CONVEX_URL";
-  return yield* Config.nonEmptyString(name).pipe(
+  return yield* Config.NonEmptyString(name).pipe(
     Effect.mapError(
       () =>
         new CustomerConvexConfigError({
@@ -141,7 +132,7 @@ export const getCustomerConvexConfig = Effect.fn(
 )(function* (prod: boolean) {
   const url = yield* getConvexUrl(prod);
   const deployKey = yield* Config.option(
-    Config.nonEmptyString("CONVEX_DEPLOY_KEY")
+    Config.NonEmptyString("CONVEX_DEPLOY_KEY")
   );
   if (Option.isSome(deployKey)) {
     return { accessToken: deployKey.value, url };

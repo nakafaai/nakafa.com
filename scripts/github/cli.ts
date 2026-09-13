@@ -2,30 +2,39 @@ import { createHash } from "node:crypto";
 import { Effect, Option, Schema } from "effect";
 import { parseDocument } from "yaml";
 
-const WorkflowStepSchema = Schema.Struct({
-  env: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-  run: Schema.optional(Schema.String),
-  uses: Schema.optional(Schema.String),
-  with: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-});
+const WorkflowStepSchema = Schema.StructWithRest(
+  Schema.Struct({
+    env: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+    run: Schema.optional(Schema.String),
+    uses: Schema.optional(Schema.String),
+    with: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+  }),
+  [Schema.Record(Schema.String, Schema.Unknown)]
+);
 
-const WorkflowJobSchema = Schema.Struct({
-  environment: Schema.optional(Schema.String),
-  if: Schema.optional(Schema.String),
-  needs: Schema.optional(
-    Schema.Union([Schema.String, Schema.Array(Schema.String)])
-  ),
-  outputs: Schema.optional(Schema.Record(Schema.String, Schema.String)),
-  permissions: Schema.optional(Schema.Record(Schema.String, Schema.String)),
-  steps: Schema.Array(WorkflowStepSchema),
-});
+const WorkflowJobSchema = Schema.StructWithRest(
+  Schema.Struct({
+    environment: Schema.optional(Schema.String),
+    if: Schema.optional(Schema.String),
+    needs: Schema.optional(
+      Schema.Union([Schema.String, Schema.Array(Schema.String)])
+    ),
+    outputs: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+    permissions: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+    steps: Schema.Array(WorkflowStepSchema),
+  }),
+  [Schema.Record(Schema.String, Schema.Unknown)]
+);
 
-const CliWorkflowSchema = Schema.Struct({
-  defaults: Schema.optional(Schema.Unknown),
-  env: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-  jobs: Schema.Record(Schema.String, WorkflowJobSchema),
-  permissions: Schema.Record(Schema.String, Schema.String),
-});
+const CliWorkflowSchema = Schema.StructWithRest(
+  Schema.Struct({
+    defaults: Schema.optional(Schema.Unknown),
+    env: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+    jobs: Schema.Record(Schema.String, WorkflowJobSchema),
+    permissions: Schema.Record(Schema.String, Schema.String),
+  }),
+  [Schema.Record(Schema.String, Schema.Unknown)]
+);
 
 type WorkflowJob = Schema.Schema.Type<typeof WorkflowJobSchema>;
 
@@ -35,10 +44,10 @@ const UPLOAD_ACTION =
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a";
 /** Digest of the decoded publish job after a complete OIDC boundary review. */
 const TRUSTED_PUBLISH_SHA256 =
-  "1e72f0579e34d12a8a6bdc5b7fa821403947e03f39a207156bc669b73f2cff6f";
+  "d988620486eb3377efba2610c9dd5edbda0146d47c49cbc7a39616bc919924b8";
 /** Digest of the decoded verification job after a complete execution review. */
 const TRUSTED_VERIFY_SHA256 =
-  "d62e30f492daadf91bee09ca4fdf729c9dc1b6763a5206cc441775430be224be";
+  "5bd8ae7a5a7be3c859bca497b1b921efc06675325107c07abd5976586c2ff92a";
 const REQUIRED_BUILD_SOURCE = [
   "pnpm test:scripts",
   "pnpm --filter @nakafa/cli typecheck",
@@ -147,9 +156,7 @@ function decodeWorkflow(source: string) {
   if (document.errors.length > 0) {
     return Option.none();
   }
-  return Schema.decodeUnknownOption(CliWorkflowSchema, {
-    onExcessProperty: "preserve",
-  })(document.toJS());
+  return Schema.decodeUnknownOption(CliWorkflowSchema)(document.toJS());
 }
 
 function requireSource(
@@ -255,7 +262,7 @@ function executionBoundaryProblems(
     ["verification", verify],
   ] as const) {
     const setup = job.steps.find(({ uses }) => uses === SETUP_NODE_ACTION);
-    if (setup?.with?.["node-version"] !== "24.20.0") {
+    if (setup?.with?.["node-version"] !== "24.21.0") {
       problems.push(`CLI ${owner} must use the repository Node runtime.`);
     }
     if (setup?.with?.["package-manager-cache"] !== false) {

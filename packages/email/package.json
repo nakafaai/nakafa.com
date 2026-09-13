@@ -10,14 +10,14 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@nakafa/aksara-contracts": "0.38.0",
+    "@nakafa/aksara-contracts": "0.39.0",
     "@react-email/render": "2.1.0",
     "@repo/design-system": "workspace:*",
     "@repo/seo": "workspace:*",
     "effect": "catalog:",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-email": "6.9.3"
+    "react-email": "6.9.5"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
