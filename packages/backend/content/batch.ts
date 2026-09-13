@@ -1,9 +1,12 @@
 import {
+  type PublicContentRuntimeResponse,
+  PublicContentRuntimeResponseSchema,
+} from "@nakafa/aksara-contracts/adoption/runtime";
+
+import {
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
   PublicContentRuntimeRequestSchema,
-  type PublicContentRuntimeResponse,
-  PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import { Schema } from "effect";
 /** Maximum exact Aksara public exchanges resolved by one batch transaction. */

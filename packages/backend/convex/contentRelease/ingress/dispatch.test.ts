@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { dispatchHandler } from "@repo/backend/convex/contentRelease/ingress/dispatch";
@@ -19,6 +20,7 @@ import {
 import {
   TEST_PROOF_RENDERER,
   testProofRenderer,
+  testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import {
   insertAbortedRelease,
@@ -41,6 +43,12 @@ vi.mock("@repo/backend/content/trust", async () => {
 });
 
 describe("content publication Node dispatch", () => {
+  it("reports explicit active absence when a candidate assumes a nonexistent base", async () => {
+    const t = convexTest(schema, convexModules);
+    const release = testSignedRelease({ ...ingressRelease.manifest, baseReleaseId: ReleaseIdSchema.make("release-missing-base"), baseManifestHash: ingressRelease.manifestHash, baseActiveAppLocales: ingressRelease.manifest.activeAppLocales });
+    await expect(sendPublication(t, { operation: "stageRelease", release, rendererManifest: TEST_PROOF_RENDERER })).resolves.toMatchObject({ ok: false, failure: { kind: "stale-base", activeReleaseId: null } });
+  });
+
   it("publishes one authenticated release through every lifecycle boundary", async () => {
     const t = convexTest(schema, convexModules);
     const candidateResponses = await publishIngressCandidate(t);

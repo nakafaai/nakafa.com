@@ -101,52 +101,51 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
 );
 
 /** Computes the earliest sequence protected by slots and known-good history. */
-const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
-  ctx: MutationCtx,
-  state: Doc<"contentState">
-) {
-  const slots = yield* Effect.all([
-    slotIdentity(
-      "active",
-      state.activeManifestHash,
-      state.activeReleaseId,
-      state.activeSequence
-    ),
-    slotIdentity(
-      "candidate",
-      state.candidateManifestHash,
-      state.candidateReleaseId,
-      state.candidateSequence
-    ),
-    slotIdentity(
-      "recovery",
-      state.recoveryManifestHash,
-      state.recoveryReleaseId,
-      state.recoverySequence
-    ),
-  ]);
-  const slotSequences = yield* Effect.forEach(slots, (slot) =>
-    slot === null
-      ? Effect.succeed([])
-      : loadRelease(ctx, slot.releaseId).pipe(
-          Effect.flatMap((release) => protectedRelease(ctx, release, slot))
+export const protectedFloor = Effect.fn("contentRelease.protectedFloor")(
+  function* (ctx: MutationCtx, state: Doc<"contentState">) {
+    const slots = yield* Effect.all([
+      slotIdentity(
+        "active",
+        state.activeManifestHash,
+        state.activeReleaseId,
+        state.activeSequence
+      ),
+      slotIdentity(
+        "candidate",
+        state.candidateManifestHash,
+        state.candidateReleaseId,
+        state.candidateSequence
+      ),
+      slotIdentity(
+        "recovery",
+        state.recoveryManifestHash,
+        state.recoveryReleaseId,
+        state.recoverySequence
+      ),
+    ]);
+    const slotSequences = yield* Effect.forEach(slots, (slot) =>
+      slot === null
+        ? Effect.succeed([])
+        : loadRelease(ctx, slot.releaseId).pipe(
+            Effect.flatMap((release) => protectedRelease(ctx, release, slot))
+          )
+    );
+    const completed = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentReleases")
+        .withIndex("by_status_and_sequence", (query) =>
+          query.eq("status", "completed")
         )
-  );
-  const completed = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentReleases")
-      .withIndex("by_status_and_sequence", (query) =>
-        query.eq("status", "completed")
-      )
-      .order("desc")
-      .take(2)
-  );
-  const completedSequences = yield* Effect.forEach(completed, (release) =>
-    protectedRelease(ctx, release)
-  );
-  const sequences = [...slotSequences.flat(), ...completedSequences.flat()];
-  return sequences.length === 0 ? state.nextSequence : Math.min(...sequences);
-});
+        .order("desc")
+        .take(2)
+    );
+    const completedSequences = yield* Effect.forEach(completed, (release) =>
+      protectedRelease(ctx, release)
+    );
+    const sequences = [...slotSequences.flat(), ...completedSequences.flat()];
+    return sequences.length === 0 ? state.nextSequence : Math.min(...sequences);
+  }
+);
 
 /** Advances through only a bounded old release window before a protected floor. */
 const retainedFloor = Effect.fn("contentRelease.retainedFloor")(function* (

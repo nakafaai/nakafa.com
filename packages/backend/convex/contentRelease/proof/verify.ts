@@ -1,10 +1,13 @@
 "use node";
+import {
+  validateRendererManifestHash,
+  verifySignedContentRelease,
+} from "@nakafa/aksara-contracts/adoption/verify";
 
 import type { ReleaseVerificationEvidence } from "@nakafa/aksara-contracts/release";
 import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result/digest";
 import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/route/verify";
-import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
-import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
+
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
@@ -29,7 +32,6 @@ import {
   readResultStream,
   readRouteStream,
 } from "@repo/backend/convex/contentRelease/proof/stream";
-import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import type {
   progressValidator,
   statusValidator,
@@ -87,7 +89,7 @@ const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
     const renderer = yield* validateRendererManifestHash(storedRenderer).pipe(
       Effect.mapError(contractFailure)
     );
-    if (!hasRendererIdentity(release.manifest, renderer)) {
+    if (release.manifest.rendererManifestHash !== renderer.hash) {
       return yield* releaseFail(
         "CONTENT_RELEASE_UNSUPPORTED",
         `Content release ${releaseId} no longer matches its frozen renderer.`
@@ -150,19 +152,14 @@ export const verifyArtifactBatchProgram = Effect.fn(
   releaseId: string,
   batchIndex: number
 ) {
-  const { release, renderer } = yield* loadProofIdentity(
-    ctx,
-    manifestHash,
-    releaseId
-  );
+  const { renderer } = yield* loadProofIdentity(ctx, manifestHash, releaseId);
   const page = yield* callInternal(() =>
     ctx.runQuery(artifactBatchReference, { batchIndex, releaseId })
   );
   const verifiedArtifacts = yield* verifyArtifactBatch(
     page.rows,
     releaseId,
-    renderer,
-    release.manifest.rendererContractVersion
+    renderer
   );
   return { batchIndex: page.batchIndex, verifiedArtifacts };
 });
@@ -243,7 +240,6 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       projectionCount: release.manifest.projectionCount,
       projectionDigest: release.manifest.projectionDigest,
       releaseId: release.manifest.releaseId,
-      rendererContractVersion: release.manifest.rendererContractVersion,
       rendererManifestHash: release.manifest.rendererManifestHash,
       resultCount: result.count,
       resultDigest: result.digest,

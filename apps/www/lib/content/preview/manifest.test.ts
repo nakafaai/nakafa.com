@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { readPreviewManifestForPrerender } from "@/lib/content/preview/manifest";
 import { makePendingManifest } from "@/test/content-preview";
 
-const target = "http://127.0.0.1:4000/v1/manifest";
+const target = "http://127.0.0.1:4000/manifest";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -13,9 +13,9 @@ afterEach(() => {
 
 /** Installs one complete test-only child environment. */
 function stubPreviewEnvironment() {
-  vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/v1/events");
+  vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/events");
   vi.stubEnv("AKSARA_PREVIEW_KEY_ID", "local-preview");
-  vi.stubEnv("AKSARA_PREVIEW_MANIFEST_PATH", "/v1/manifest");
+  vi.stubEnv("AKSARA_PREVIEW_MANIFEST_PATH", "/manifest");
   vi.stubEnv("AKSARA_PREVIEW_ORIGIN", "http://127.0.0.1:4000/");
   vi.stubEnv(
     "AKSARA_PREVIEW_PUBLIC_KEY",

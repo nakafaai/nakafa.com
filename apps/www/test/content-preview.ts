@@ -229,9 +229,9 @@ export const previewDocument = Schema.decodeSync(MaterialPreviewDocumentSchema)(
 
 /** Complete loopback configuration with redacted test-only credentials. */
 export const previewConfig: PreviewConfig = {
-  eventsPath: "/v1/events",
+  eventsPath: "/events",
   keyId: previewKeyId,
-  manifestPath: "/v1/manifest",
+  manifestPath: "/manifest",
   origin: new URL("http://127.0.0.1:4000/"),
   publicKey: "test-public-key",
   token: Redacted.make("test-token"),
@@ -288,7 +288,7 @@ export function makeReadyManifest(rendererManifestHash: Sha256Hash) {
       artifacts: [
         {
           artifactHash: previewArtifactHash,
-          artifactPath: `/v1/artifacts/${encodeURIComponent(previewArtifactHash)}`,
+          artifactPath: `/artifacts/${encodeURIComponent(previewArtifactHash)}`,
           projection: previewProjection,
         },
       ],

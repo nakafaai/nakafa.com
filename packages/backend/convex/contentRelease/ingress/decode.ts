@@ -1,4 +1,9 @@
-import type { StageOperation } from "@nakafa/aksara-contracts/transport/group";
+import {
+  decodePublicationRequest,
+  type PublicationRequest,
+  type StageOperation,
+} from "@nakafa/aksara-contracts/adoption/transport";
+
 import {
   MAX_ARTIFACT_BATCH_BYTES,
   MAX_ITEM_BATCH_BYTES,
@@ -8,10 +13,7 @@ import {
   MAX_SNAPSHOT_BATCH_BYTES,
   MAX_STAGE_GROUP_BYTES,
 } from "@nakafa/aksara-contracts/transport/limits";
-import {
-  decodePublicationRequest,
-  type PublicationRequest,
-} from "@nakafa/aksara-contracts/transport/request";
+
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 

@@ -151,7 +151,6 @@ export async function insertProtectedRuntime(
   }
   const signedRelease = testSignedRelease({
     ...storedRelease.manifest,
-    rendererContractVersion: TEST_PROOF_RENDERER.rendererContractVersion,
     rendererManifestHash: TEST_PROOF_RENDERER.hash,
   });
   const bundle = testSignedTryoutRuntimeBundle({

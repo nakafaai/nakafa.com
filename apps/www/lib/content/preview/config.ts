@@ -18,10 +18,10 @@ const PreviewTokenSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
   Schema.check(Schema.isMaxLength(4096))
 );
 const PreviewArtifactPathSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^\/v1\/artifacts\/sha256%3A[0-9a-f]{64}$/u))
+  Schema.check(Schema.isPattern(/^\/artifacts\/sha256%3A[0-9a-f]{64}$/u))
 );
-const PreviewEventsPathSchema = Schema.Literal("/v1/events");
-const PreviewManifestPathSchema = Schema.Literal("/v1/manifest");
+const PreviewEventsPathSchema = Schema.Literal("/events");
+const PreviewManifestPathSchema = Schema.Literal("/manifest");
 const PreviewPathSchema = Schema.Union([
   PreviewEventsPathSchema,
   PreviewManifestPathSchema,
@@ -49,9 +49,9 @@ const PreviewRendererEnvironmentSchema = Schema.Struct({
 });
 /** Complete ephemeral connection passed by the Aksara CLI child process. */
 export interface PreviewConfig {
-  readonly eventsPath: "/v1/events";
+  readonly eventsPath: "/events";
   readonly keyId: SigningKeyId;
-  readonly manifestPath: "/v1/manifest";
+  readonly manifestPath: "/manifest";
   readonly origin: URL;
   readonly publicKey: string;
   readonly token: Redacted.Redacted<string>;

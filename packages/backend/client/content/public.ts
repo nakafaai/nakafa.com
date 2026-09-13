@@ -1,13 +1,17 @@
 import "server-only";
+import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/adoption/public";
+import {
+  decodePublicContentRuntimeResponse,
+  type PublicContentRuntimeResponse,
+} from "@nakafa/aksara-contracts/adoption/runtime";
+
 import {
   decodePublicContentRuntimeRequest,
-  decodePublicContentRuntimeResponse,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
   type PublicContentRuntimeRequest,
-  type PublicContentRuntimeResponse,
 } from "@nakafa/aksara-contracts/runtime/spec";
-import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
+
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   ContentRuntimeFailureError,

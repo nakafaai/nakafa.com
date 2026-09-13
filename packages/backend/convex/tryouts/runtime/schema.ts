@@ -208,6 +208,9 @@ const tables = {
     sourceRevision: v.string(),
     contentHash: v.string(),
   })
+    // Temporary retirement reference guards; remove with contentRelease/retirement.
+    .index("by_questionArtifactHash", ["questionArtifactHash"])
+    .index("by_answerArtifactHash", ["answerArtifactHash"])
     .index("by_tryoutAttemptId_and_questionOrder", [
       "tryoutAttemptId",
       "questionOrder",
@@ -255,6 +258,8 @@ const tables = {
     publishedScore: v.number(),
     finalizedAt: v.number(),
   })
+    // Temporary retirement reference guard; remove with contentRelease/retirement.
+    .index("by_tryoutSnapshotId", ["tryoutSnapshotId"])
     .index("by_scaleVersionId", ["scaleVersionId"])
     .index("by_tryoutAttemptId", ["tryoutAttemptId"])
     .index("by_userId_and_finalizedAt", ["userId", "finalizedAt"]),

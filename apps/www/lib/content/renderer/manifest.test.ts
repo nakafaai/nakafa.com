@@ -1,17 +1,9 @@
-import { createHash } from "node:crypto";
 import { describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import {
-  canonicalizeRendererManifestContract,
-  RendererManifestEnvelopeSchema,
-} from "@nakafa/aksara-contracts/renderer/contract";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
-import {
-  validateLiveRendererManifestHash,
-  validateRendererManifestHash,
-} from "@nakafa/aksara-contracts/renderer/manifest";
+import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
-import { Effect, Exit, Schema } from "effect";
+import { Effect } from "effect";
 import { baseRenderers } from "@/lib/content/renderer/domain/base";
 import { rendererDomainImplementations } from "@/lib/content/renderer/selection";
 
@@ -40,54 +32,12 @@ describe("renderer manifest", () => {
         RENDERER_DOMAINS
       );
       expect(manifest.publishedDomains).toEqual(RENDERER_DOMAINS);
-      for (const registry of [manifest.base, ...manifest.domains]) {
-        expect(registry.authoringComponents).toEqual(
-          registry.supportedComponents
-        );
-        const names = registry.supportedComponents.map(({ name }) => name);
+      for (const names of [
+        manifest.base,
+        ...manifest.domains.map(({ components }) => components),
+      ]) {
         expect(new Set(names).size).toBe(names.length);
       }
-    })
-  );
-
-  it.effect("accepts historical domain subsets only as frozen evidence", () =>
-    Effect.gen(function* () {
-      const { rendererManifest } = yield* Effect.promise(
-        () => import("@/lib/content/renderer/manifest")
-      );
-      const manifest = yield* rendererManifest;
-      const domains = manifest.domains.filter(({ name }) => name !== "site");
-      const publishedDomains = manifest.publishedDomains.filter(
-        (name) => name !== "site"
-      );
-      const canonicalContract = canonicalizeRendererManifestContract({
-        base: manifest.base,
-        domains,
-        publishedDomains,
-      });
-      const hash = `sha256:${createHash("sha256")
-        .update(canonicalContract)
-        .digest("hex")}`;
-      const historicalManifest = yield* Schema.decodeEffect(
-        RendererManifestEnvelopeSchema
-      )({
-        ...manifest,
-        domains,
-        hash,
-        publishedDomains,
-      });
-
-      expect(historicalManifest.hash).toBe(
-        "sha256:498f63f26201b30b93d4972292b4cd4489b05b1e216529081da1b7a01e3d0483"
-      );
-      expect(yield* validateRendererManifestHash(historicalManifest)).toEqual(
-        historicalManifest
-      );
-
-      const liveValidation = yield* Effect.exit(
-        validateLiveRendererManifestHash(historicalManifest)
-      );
-      expect(Exit.isFailure(liveValidation)).toBe(true);
     })
   );
 
@@ -107,18 +57,13 @@ describe("renderer manifest", () => {
         const contentKey = ContentKeySchema.make("test:renderer-manifest");
 
         for (const domain of manifest.domains) {
-          const requiredComponents = [
-            ...manifest.base.supportedComponents,
-            ...domain.supportedComponents,
-          ];
+          const requiredComponents = [...manifest.base, ...domain.components];
           const components = yield* resolveRendererComponents({
             contentKey,
             rendererDomain: domain.name,
             requiredComponents,
           });
-          const expectedNames = [
-            ...new Set(requiredComponents.map(({ name }) => name)),
-          ].sort();
+          const expectedNames = [...new Set(requiredComponents)].sort();
 
           expect(Object.keys(components).sort()).toEqual(expectedNames);
         }
@@ -135,8 +80,7 @@ describe("renderer manifest", () => {
         );
         const manifest = yield* rendererManifest;
         const semanticNames = new Set<string>(semanticComponentNames);
-        const expectedBaseNames = manifest.base.supportedComponents
-          .map(({ name }) => name)
+        const expectedBaseNames = manifest.base
           .filter((name) => !semanticNames.has(name))
           .sort();
 
@@ -145,9 +89,7 @@ describe("renderer manifest", () => {
         );
 
         for (const domain of manifest.domains) {
-          const expectedDomainNames = domain.supportedComponents
-            .map(({ name }) => name)
-            .sort();
+          const expectedDomainNames = [...domain.components].sort();
 
           expect(
             rendererDomainImplementations[domain.name]

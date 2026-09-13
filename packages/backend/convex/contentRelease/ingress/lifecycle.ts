@@ -1,8 +1,10 @@
 "use node";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/adoption/transport";
+import {
+  validateRendererManifestHash,
+  verifySignedContentRelease,
+} from "@nakafa/aksara-contracts/adoption/verify";
 
-import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
-import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type {
   ActivationResult,
@@ -20,7 +22,6 @@ import {
 } from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import type { proofPollValidator } from "@repo/backend/convex/contentRelease/proof/spec";
-import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import type { abortReceiptValidator } from "@repo/backend/convex/contentRelease/spec";
 import { makeFunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
@@ -111,7 +112,7 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   const validated = yield* validateRendererManifestHash(renderer).pipe(
     Effect.mapError(contractFailure)
   );
-  if (!hasRendererIdentity(release.manifest, validated)) {
+  if (release.manifest.rendererManifestHash !== validated.hash) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Lifecycle renderer does not match the signed release."

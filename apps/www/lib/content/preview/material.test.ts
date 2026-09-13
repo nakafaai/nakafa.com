@@ -191,7 +191,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
         expect(fetchMock).toHaveBeenNthCalledWith(
           2,
           config,
-          `/v1/artifacts/${encodeURIComponent(artifactHash)}`,
+          `/artifacts/${encodeURIComponent(artifactHash)}`,
           expect.any(Number)
         );
         expect(executeMock).toHaveBeenCalledWith(

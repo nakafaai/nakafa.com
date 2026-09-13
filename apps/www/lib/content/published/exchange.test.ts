@@ -32,7 +32,6 @@ const runtimeEnv = vi.hoisted(() => ({
 }));
 const liveRenderer = vi.hoisted(() => ({
   hash: `sha256:${"e".repeat(64)}`,
-  rendererContractVersion: "1.0.0",
 }));
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
 const appLocale: PublishedContentInput["appLocale"] =

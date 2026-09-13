@@ -1,20 +1,22 @@
 "use node";
-import { verifySignedContentArtifactIntegrity } from "@nakafa/aksara-contracts/artifact/integrity";
 import {
   canonicalizeRollbackPage,
   canonicalizeRollbackRecord,
   isRollbackUpsert,
-  MAX_ROLLBACK_PAGE_BYTES,
   type RollbackPage,
   RollbackPageSchema,
   type RollbackRecord,
-} from "@nakafa/aksara-contracts/release/rollback/spec";
+} from "@nakafa/aksara-contracts/adoption/schema";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/adoption/transport";
+import { verifySignedContentArtifactIntegrity } from "@nakafa/aksara-contracts/adoption/verify";
+
+import { MAX_ROLLBACK_PAGE_BYTES } from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   type RoutePage,
   RoutePageSchema,
   type RouteRollbackRecord,
 } from "@nakafa/aksara-contracts/release/route/page";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   ReleaseError,

@@ -1,7 +1,6 @@
-import type {
-  PublicContentRuntimeRequest,
-  PublicContentRuntimeResponse,
-} from "@nakafa/aksara-contracts/runtime/spec";
+import type { PublicContentRuntimeResponse } from "@nakafa/aksara-contracts/adoption/runtime";
+
+import type { PublicContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/spec";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import {
   MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES,

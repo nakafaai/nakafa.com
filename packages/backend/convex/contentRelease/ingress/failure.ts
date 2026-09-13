@@ -1,6 +1,8 @@
+import type { PublicationRequest } from "@nakafa/aksara-contracts/adoption/transport";
+
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import type { PublicationFailure } from "@nakafa/aksara-contracts/transport/failure";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+
 import type { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
 

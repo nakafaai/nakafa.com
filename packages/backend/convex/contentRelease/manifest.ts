@@ -16,7 +16,6 @@ import {
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { completedReceipt } from "@repo/backend/convex/contentRelease/receipt";
-import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import {
   deriveReleaseFamilies,
   hasExactFamilies,
@@ -130,7 +129,7 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
   const renderer = yield* decodeRendererJson(rendererJson);
   const canonicalRelease = encodeReleaseJson(signed);
   const canonicalRenderer = encodeRendererJson(renderer);
-  if (!hasRendererIdentity(signed.manifest, renderer)) {
+  if (signed.manifest.rendererManifestHash !== renderer.hash) {
     return yield* releaseFail(
       "CONTENT_RELEASE_UNSUPPORTED",
       `Content release ${signed.manifest.releaseId} does not bind its renderer.`

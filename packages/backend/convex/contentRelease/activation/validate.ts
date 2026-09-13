@@ -13,7 +13,6 @@ import {
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { validateRecoveryRelation } from "@repo/backend/convex/contentRelease/recovery";
-import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import { encodeRendererJson } from "@repo/backend/convex/contentRelease/wire";
 import { Effect } from "effect";
 
@@ -37,7 +36,7 @@ export const validateActivationRenderer = Effect.fn(
   const renderer = yield* decodeRendererJson(currentRendererJson);
   if (
     encodeRendererJson(renderer) !== storedRendererJson ||
-    !hasRendererIdentity(signed.manifest, renderer)
+    signed.manifest.rendererManifestHash !== renderer.hash
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_UNSUPPORTED",

@@ -11,12 +11,15 @@ import "server-only";
 // https://mdxjs.com/packages/mdx/#run
 // react-doctor-disable-next-line react-doctor/mdx-ssr-execution-risk
 import { run } from "@mdx-js/mdx";
-import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
-import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 import type {
-  RendererContractVersion,
   RendererManifestEnvelope,
-} from "@nakafa/aksara-contracts/renderer/contract";
+  SignedContentArtifact,
+} from "@nakafa/aksara-contracts/adoption/schema";
+import {
+  selectVerifiedArtifactRenderer,
+  verifySignedContentArtifact,
+} from "@nakafa/aksara-contracts/adoption/verify";
+
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Effect } from "effect";
 import type { ComponentType } from "react";
@@ -27,7 +30,6 @@ import { resolveRendererComponents } from "@/lib/content/renderer/components";
 /** Inputs required to authenticate and execute one trusted content artifact. */
 interface ExecuteArtifactInput {
   readonly artifact: unknown;
-  readonly rendererContractVersion: RendererContractVersion;
   readonly rendererManifest: RendererManifestEnvelope;
 }
 
@@ -79,7 +81,8 @@ const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
 export const evaluateVerifiedArtifact = Effect.fn(
   "NakafaContent.evaluateVerifiedArtifact"
 )(function* (input: EvaluateArtifactInput) {
-  const components = yield* resolveRendererComponents(input.artifact.payload);
+  const selection = yield* selectVerifiedArtifactRenderer(input.artifact);
+  const components = yield* resolveRendererComponents(selection);
   const Content = yield* evaluateCompiledCode({
     compiledCode: input.artifact.payload.compiledCode,
     components,
@@ -103,7 +106,6 @@ export const executeSignedArtifact = Effect.fn(
 )(function* (input: ExecuteArtifactInput) {
   const artifact = yield* verifySignedContentArtifact({
     artifact: input.artifact,
-    rendererContractVersion: input.rendererContractVersion,
     rendererManifest: input.rendererManifest,
   });
   return yield* evaluateVerifiedArtifact({ artifact });

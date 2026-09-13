@@ -1,10 +1,12 @@
+import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/adoption/runtime";
+
 import { CorpusSourcePathSchema } from "@nakafa/aksara-contracts/ids";
 import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizeContentProjection,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
-import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
+
 import { PUBLIC_CONTENT_RUNTIME_BATCH_SIZE } from "@repo/backend/content/batch";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { resolveActiveRoute } from "@repo/backend/content/publication/route";

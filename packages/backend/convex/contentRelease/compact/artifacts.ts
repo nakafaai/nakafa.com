@@ -1,3 +1,4 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { isArtifactReferenced } from "@repo/backend/convex/contentRelease/retention";
 import {
@@ -24,18 +25,23 @@ export const compactArtifacts = Effect.fn("contentRelease.compactArtifacts")(
     );
     let deleted = 0;
     for (const artifact of page.page) {
-      if (yield* isArtifactReferenced(ctx, artifact.artifactHash)) {
-        continue;
-      }
-      yield* Effect.promise(() =>
-        ctx.db.delete("contentArtifacts", artifact._id)
-      );
-      deleted += 1;
+      deleted += yield* compactArtifact(ctx, artifact);
     }
     return {
       cursor: page.isDone ? null : page.continueCursor,
       deleted,
       done: page.isDone,
     };
+  }
+);
+
+/** Temporary owning deletion seam shared by the reviewed retirement page. */
+export const compactArtifact = Effect.fn("contentRelease.compactArtifact")(
+  function* (ctx: MutationCtx, artifact: Doc<"contentArtifacts">) {
+    if (yield* isArtifactReferenced(ctx, artifact.artifactHash)) {
+      return 0;
+    }
+    yield* Effect.promise(() => ctx.db.delete("contentArtifacts", artifact._id));
+    return 1;
   }
 );

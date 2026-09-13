@@ -4,7 +4,6 @@ import {
   decodeReleaseJson,
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
-import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import { v } from "convex/values";
 import { Effect, Option } from "effect";
 
@@ -38,7 +37,7 @@ export const loadActiveIdentity = Effect.fn(
     release.status !== "completed" ||
     release.sequence !== state.activeSequence ||
     signed.manifestHash !== state.activeManifestHash ||
-    !hasRendererIdentity(signed.manifest, renderer)
+    signed.manifest.rendererManifestHash !== renderer.hash
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

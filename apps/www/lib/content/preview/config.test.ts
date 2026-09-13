@@ -17,9 +17,9 @@ afterEach(() => {
 
 /** Installs one complete test-only child environment. */
 function stubPreviewEnvironment() {
-  vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/v1/events");
+  vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/events");
   vi.stubEnv("AKSARA_PREVIEW_KEY_ID", "local-preview");
-  vi.stubEnv("AKSARA_PREVIEW_MANIFEST_PATH", "/v1/manifest");
+  vi.stubEnv("AKSARA_PREVIEW_MANIFEST_PATH", "/manifest");
   vi.stubEnv("AKSARA_PREVIEW_ORIGIN", "http://127.0.0.1:4000/");
   vi.stubEnv(
     "AKSARA_PREVIEW_PUBLIC_KEY",
@@ -162,7 +162,7 @@ describe("local preview configuration", () => {
       Effect.gen(function* () {
         vi.stubEnv("NODE_ENV", "development");
         stubPreviewEnvironment();
-        vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/v1/manifest");
+        vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/manifest");
 
         expect(yield* readPreviewConfig().pipe(Effect.flip)).toMatchObject({
           _tag: "PreviewConfigError",
@@ -196,7 +196,7 @@ describe("local preview configuration", () => {
       });
       const originMismatch = yield* previewUrl(
         { ...previewConfig, origin },
-        "/v1/manifest"
+        "/manifest"
       ).pipe(Effect.flip);
 
       expect(networkPath._tag).toBe("PreviewConfigError");
@@ -208,27 +208,27 @@ describe("local preview configuration", () => {
     "accepts only the two provider endpoints and exact artifact address",
     () =>
       Effect.gen(function* () {
-        const artifactPath = `/v1/artifacts/sha256%3A${"a".repeat(64)}`;
+        const artifactPath = `/artifacts/sha256%3A${"a".repeat(64)}`;
         const accepted = yield* Effect.forEach(
-          ["/v1/events", "/v1/manifest", artifactPath],
+          ["/events", "/manifest", artifactPath],
           (path) => previewUrl(previewConfig, path)
         );
 
         expect(accepted.map((url) => url.pathname)).toEqual([
-          "/v1/events",
-          "/v1/manifest",
+          "/events",
+          "/manifest",
           artifactPath,
         ]);
       })
   );
 
   it.effect.each([
-    "/v1/unknown",
-    `/v1/artifacts/sha256%3a${"a".repeat(64)}`,
-    `/v1/artifacts/sha256%3A${"A".repeat(64)}`,
-    `/v1/artifacts/sha256%3A${"a".repeat(63)}`,
-    "/v1/artifacts/%2e%2e%2fmanifest",
-    "/v1/manifest?next=artifact",
+    "/unknown",
+    `/artifacts/sha256%3a${"a".repeat(64)}`,
+    `/artifacts/sha256%3A${"A".repeat(64)}`,
+    `/artifacts/sha256%3A${"a".repeat(63)}`,
+    "/artifacts/%2e%2e%2fmanifest",
+    "/manifest?next=artifact",
   ])("rejects non-contract provider path %s", (path) =>
     Effect.gen(function* () {
       expect(

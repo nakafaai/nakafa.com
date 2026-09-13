@@ -1,9 +1,8 @@
+import { RetainedRendererComponentUnsupportedError } from "@nakafa/aksara-contracts/adoption/schema";
 import {
   ArtifactPayloadFieldByteLimitError,
   ArtifactRendererComponentMissingError,
-  ArtifactRendererVersionUnsupportedError,
   ArtifactVerificationByteLimitError,
-  RendererContractVersionMismatchError,
 } from "@nakafa/aksara-contracts/artifact/spec";
 import {
   PublicKeyParseError,
@@ -20,9 +19,8 @@ function isUnsupported(error: unknown) {
     error instanceof SigningKeyResolutionError ||
     error instanceof PublicKeyParseError ||
     error instanceof PublicKeyTypeError ||
-    error instanceof RendererContractVersionMismatchError ||
     error instanceof ArtifactRendererComponentMissingError ||
-    error instanceof ArtifactRendererVersionUnsupportedError
+    error instanceof RetainedRendererComponentUnsupportedError
   );
 }
 

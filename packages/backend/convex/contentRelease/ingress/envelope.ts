@@ -1,9 +1,12 @@
 "use node";
+import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/adoption/schema";
+import {
+  validateRendererManifestHash,
+  verifySignedContentRelease,
+} from "@nakafa/aksara-contracts/adoption/verify";
 
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
-import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
-import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
+
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
@@ -12,7 +15,6 @@ import {
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
-import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import type { releaseRoleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { makeFunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
@@ -43,7 +45,7 @@ export const validateReleaseRenderer = Effect.fn(
   const renderer = yield* validateRendererManifestHash(rendererInput).pipe(
     Effect.mapError(contractFailure)
   );
-  if (!hasRendererIdentity(signed.manifest, renderer)) {
+  if (signed.manifest.rendererManifestHash !== renderer.hash) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Signed release does not own the supplied renderer snapshot."

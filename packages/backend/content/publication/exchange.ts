@@ -1,9 +1,11 @@
+import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/adoption/runtime";
+
 import {
   CorpusSourcePathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
-import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
+
 import type {
   PublicRuntimeRow,
   readSelectedPublicRuntime,

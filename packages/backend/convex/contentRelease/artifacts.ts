@@ -1,5 +1,7 @@
-import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
-import { StageArtifactBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
+import type { SignedContentArtifact } from "@nakafa/aksara-contracts/adoption/schema";
+
+import { StageArtifactBatchInputSchema } from "@nakafa/aksara-contracts/adoption/transport";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
   MAX_ARTIFACT_BATCH_BYTES,
   MAX_ARTIFACT_BATCH_COUNT,
@@ -146,6 +148,17 @@ const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(function* (
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       `Content release ${releaseId} no longer accepts artifact batches.`
+    );
+  }
+  if (
+    release.role === "candidate" &&
+    artifacts.some(
+      (artifact) => !Schema.is(SignedContentArtifactSchema)(artifact)
+    )
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_UNSUPPORTED",
+      "Retained renderer requirements are accepted only in recovery artifacts."
     );
   }
   const existing = yield* Effect.promise(() =>
