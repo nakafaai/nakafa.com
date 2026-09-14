@@ -360,6 +360,40 @@ describe("contentRelease/rollback", () => {
     });
   });
 
+  it("reports a prior version signed under a retired contract as unsupported", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 1);
+      await insertRollbackItem(ctx, 0, true);
+      const prior = await ctx.db
+        .query("contentArtifacts")
+        .withIndex("by_artifactHash", (query) =>
+          query.eq("artifactHash", rollbackArtifactHash(0, "prior"))
+        )
+        .unique();
+      if (!prior) {
+        throw new Error("Expected prior artifact.");
+      }
+      const stored = JSON.parse(prior.artifactJson);
+      await ctx.db.patch("contentArtifacts", prior._id, {
+        artifactJson: JSON.stringify({
+          ...stored,
+          payload: {
+            ...stored.payload,
+            requiredComponents: [{ name: "InlineMath", version: 1 }],
+          },
+        }),
+      });
+    });
+
+    await expect(readPage(t, -1, 1)).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_UNSUPPORTED",
+        message: `Rollback state ${TEST_RELEASE_ID}/0/prior cannot read artifact ${rollbackArtifactHash(0, "prior")}, which was signed under a retired content contract. Publish a new release instead of rolling back across the contract change.`,
+      },
+    });
+  });
+
   it("stops before body records exceed the transport ceiling", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {

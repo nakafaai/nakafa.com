@@ -20,6 +20,7 @@ import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
+import { requireCurrentArtifact } from "@repo/backend/convex/contentRelease/generation";
 import { loadExactVersion } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeArtifactJson,
@@ -52,6 +53,7 @@ const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
         `Rollback state ${identity} lost artifact ${artifactHash}.`
       );
     }
+    yield* requireCurrentArtifact(stored.artifactJson, identity, artifactHash);
     return yield* decodeArtifactJson(stored.artifactJson);
   }
 );
