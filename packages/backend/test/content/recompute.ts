@@ -11,6 +11,7 @@ import {
   RollbackSnapshotEntrySchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
@@ -73,6 +74,7 @@ export const insertDeleteRelease = Effect.fn(
   const now = Date.UTC(2026, 6, 22, 12, 0, 0);
   yield* Effect.promise(() =>
     ctx.db.insert("contentReleases", {
+      ...releaseReachability(signed),
       baseFamilies: [],
       checkedIndex: -1,
       checkedItems: 0,

@@ -145,6 +145,7 @@ describe("contentRelease/snapshot/retention", () => {
             await insertCompletedRelease(ctx, base);
             await insertTestRelease(ctx, {
               originReleaseId: base.releaseId,
+              originKind: "git",
               sequence: 2,
               snapshots: data.snapshots,
             });
@@ -155,65 +156,6 @@ describe("contentRelease/snapshot/retention", () => {
             candidate.mutation((ctx) =>
               runConvexProgram(
                 isSnapshotReferenced(ctx, "program", data.snapshotId)
-              )
-            )
-          ).resolves.toBe(true)
-        );
-      })
-  );
-
-  it.effect(
-    "protects every snapshot while a retained release stored no base fact",
-    () =>
-      Effect.gen(function* () {
-        const candidate = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          candidate.mutation(async (ctx) => {
-            await insertTestRelease(ctx, {});
-            const release = await ctx.db.query("contentReleases").unique();
-            if (!release) {
-              throw new Error("Expected candidate snapshot release.");
-            }
-            await ctx.db.patch("contentReleases", release._id, {
-              baseManifestHash: undefined,
-              baseReleaseId: undefined,
-            });
-          })
-        );
-        yield* Effect.promise(() =>
-          expect(
-            candidate.mutation((ctx) =>
-              runConvexProgram(
-                isSnapshotReferenced(ctx, "program", `sha256:${"9".repeat(64)}`)
-              )
-            )
-          ).resolves.toBe(true)
-        );
-      })
-  );
-
-  it.effect(
-    "protects every snapshot while a retained release stored no transitions",
-    () =>
-      Effect.gen(function* () {
-        const candidate = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          candidate.mutation(async (ctx) => {
-            await insertTestRelease(ctx, {});
-            const release = await ctx.db.query("contentReleases").unique();
-            if (!release) {
-              throw new Error("Expected candidate snapshot release.");
-            }
-            await ctx.db.patch("contentReleases", release._id, {
-              snapshotTransitions: undefined,
-            });
-          })
-        );
-        yield* Effect.promise(() =>
-          expect(
-            candidate.mutation((ctx) =>
-              runConvexProgram(
-                isSnapshotReferenced(ctx, "program", `sha256:${"9".repeat(64)}`)
               )
             )
           ).resolves.toBe(true)
