@@ -156,10 +156,7 @@ function createAppHeaders() {
       source: "/:path*",
       headers: [
         ...createSecurityHeaders({
-          additionalConnectSources: [
-            "https://raw.githubusercontent.com",
-            ...localConvexConnectSources,
-          ],
+          additionalConnectSources: [...localConvexConnectSources],
         }),
         ...AGENT_DISCOVERY_HEADERS,
       ],

@@ -5,12 +5,28 @@ import {
   AGENT_MARKDOWN_DIRECTIVE,
   buildHeader,
   formatRouteTitle,
+  getLlmsMarkdownPath,
   getLocaleLabel,
   getMdxDescription,
   stripLlmsRouteExtension,
 } from "@/lib/llms/format";
 
 describe("llms formatting helpers", () => {
+  it("builds one same-origin markdown route from a published path", () => {
+    expect(
+      getLlmsMarkdownPath({
+        locale: "en",
+        publicPath: "subjects/mathematics/analytic-geometry/hyperbola",
+      })
+    ).toBe("/en/subjects/mathematics/analytic-geometry/hyperbola.md");
+    expect(
+      getLlmsMarkdownPath({
+        locale: "id",
+        publicPath: "///articles/education///",
+      })
+    ).toBe("/id/articles/education.md");
+  });
+
   it("builds markdown headers with optional source metadata", () => {
     expect(
       buildHeader({

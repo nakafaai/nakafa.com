@@ -6,7 +6,7 @@ import {
   type LlmsSection,
   SECTION_LABELS,
 } from "@/lib/llms/constants";
-import { formatRouteTitle } from "@/lib/llms/format";
+import { formatRouteTitle, getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
 const derivedSiteRoutes = ["/curricula"] as const;
@@ -102,7 +102,10 @@ export function buildPublishedContentLlmsEntries({
         ...(row.description === undefined
           ? {}
           : { description: row.description }),
-        href: `${BASE_URL}/${locale}${route}.md`,
+        href: `${BASE_URL}${getLlmsMarkdownPath({
+          locale,
+          publicPath: row.publicPath,
+        })}`,
         route,
         section,
         segments: row.publicPath.split("/"),

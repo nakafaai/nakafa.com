@@ -6,8 +6,7 @@ import {
   OpenContentCopyError,
 } from "@/components/shared/open-content/copy";
 
-const SOURCE_URL =
-  "https://raw.githubusercontent.com/nakafaai/aksara/revision/source.mdx";
+const SOURCE_PATH = "/en/subjects/mathematics/analytic-geometry/hyperbola.md";
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -22,16 +21,16 @@ describe("copyOpenContent", () => {
       expect(writeClipboard).toHaveBeenCalledWith("## Preview");
     })
   );
-  it.effect("fetches one immutable published source only when copying", () =>
+  it.effect("fetches the first-party markdown source only when copying", () =>
     Effect.gen(function* () {
       const fetchMock = vi.fn(() =>
         Promise.resolve(new Response("## Published", { status: 200 }))
       );
       const writeClipboard = vi.fn(() => Promise.resolve());
       vi.stubGlobal("fetch", fetchMock);
-      yield* copyOpenContent({ copySourceUrl: SOURCE_URL, writeClipboard });
+      yield* copyOpenContent({ copySourceUrl: SOURCE_PATH, writeClipboard });
       expect(fetchMock).toHaveBeenCalledOnce();
-      expect(fetchMock).toHaveBeenCalledWith(SOURCE_URL, {
+      expect(fetchMock).toHaveBeenCalledWith(SOURCE_PATH, {
         signal: expect.any(AbortSignal),
       });
       expect(writeClipboard).toHaveBeenCalledWith("## Published");
@@ -50,7 +49,10 @@ describe("copyOpenContent", () => {
         vi.fn(() => Promise.reject(new Error("offline")))
       );
       yield* expectCopyFailure(
-        copyOpenContent({ copySourceUrl: SOURCE_URL, writeClipboard: vi.fn() }),
+        copyOpenContent({
+          copySourceUrl: SOURCE_PATH,
+          writeClipboard: vi.fn(),
+        }),
         "OPEN_CONTENT_SOURCE_FETCH_FAILED"
       );
     })
@@ -66,7 +68,10 @@ describe("copyOpenContent", () => {
         })
       );
       const fiber = yield* expectCopyFailure(
-        copyOpenContent({ copySourceUrl: SOURCE_URL, writeClipboard: vi.fn() }),
+        copyOpenContent({
+          copySourceUrl: SOURCE_PATH,
+          writeClipboard: vi.fn(),
+        }),
         "OPEN_CONTENT_SOURCE_FETCH_FAILED"
       ).pipe(Effect.forkChild);
 
@@ -85,7 +90,10 @@ describe("copyOpenContent", () => {
         vi.fn(() => Promise.resolve(new Response(null, { status: 404 })))
       );
       yield* expectCopyFailure(
-        copyOpenContent({ copySourceUrl: SOURCE_URL, writeClipboard: vi.fn() }),
+        copyOpenContent({
+          copySourceUrl: SOURCE_PATH,
+          writeClipboard: vi.fn(),
+        }),
         "OPEN_CONTENT_SOURCE_REJECTED"
       );
     })
@@ -102,7 +110,10 @@ describe("copyOpenContent", () => {
         )
       );
       yield* expectCopyFailure(
-        copyOpenContent({ copySourceUrl: SOURCE_URL, writeClipboard: vi.fn() }),
+        copyOpenContent({
+          copySourceUrl: SOURCE_PATH,
+          writeClipboard: vi.fn(),
+        }),
         "OPEN_CONTENT_SOURCE_READ_FAILED"
       );
     })
@@ -114,7 +125,10 @@ describe("copyOpenContent", () => {
         vi.fn(() => Promise.resolve(new Response("  \n", { status: 200 })))
       );
       yield* expectCopyFailure(
-        copyOpenContent({ copySourceUrl: SOURCE_URL, writeClipboard: vi.fn() }),
+        copyOpenContent({
+          copySourceUrl: SOURCE_PATH,
+          writeClipboard: vi.fn(),
+        }),
         "OPEN_CONTENT_SOURCE_EMPTY"
       );
     })

@@ -19,7 +19,8 @@ import {
   type MaterialPreviewContent,
   readMaterialPreview,
 } from "@/lib/content/preview/material";
-import { getAksaraUrl, getRawAksaraUrl } from "@/lib/utils/github";
+import { getLlmsMarkdownPath } from "@/lib/llms/format";
+import { getAksaraUrl } from "@/lib/utils/github";
 
 interface PreviewOwner {
   readonly appLocale: Locale;
@@ -172,9 +173,9 @@ export async function readMaterialPage(
     body: published.rawMdx,
     children: published.body,
     copySourceUrl: published.sourceRevision
-      ? getRawAksaraUrl({
-          path: published.sourcePath,
-          revision: published.sourceRevision,
+      ? getLlmsMarkdownPath({
+          locale: owner.locale,
+          publicPath: owner.publicPath,
         })
       : null,
     kind: owner.kind,

@@ -32,6 +32,7 @@ import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery
 import { getQuranReferences } from "@/lib/content/quran/references";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
@@ -232,7 +233,10 @@ async function CachedSurahShell({
           <LayoutMaterialContent>
             <QuranSurahHeader
               arabic={surahData.name.arabic}
-              copySourceUrl={`https://nakafa.com/${locale}/quran/${surah}.md`}
+              copySourceUrl={getLlmsMarkdownPath({
+                locale,
+                publicPath: `quran/${surah}`,
+              })}
               meaning={description}
               meaningLanguage={descriptionLanguage}
               quranLabel={t("quran")}
