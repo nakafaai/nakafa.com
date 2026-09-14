@@ -86,29 +86,32 @@ const readJsonLdDates = Effect.fn("NakafaE2E.readJsonLdDates")(function* (
     catch: () => contentDateError(href, "publication date schema"),
     try: () => import("@nakafa/aksara-contracts/date"),
   });
-  const raw = yield* Effect.tryPromise({
+  const nodes = yield* Effect.tryPromise({
     catch: () => contentDateError(href, `${jsonLdType} JSON-LD`),
     try: () =>
       page
         .locator('script[type="application/ld+json"]')
-        .evaluateAll((scripts, expectedType) => {
-          for (const script of scripts) {
-            const value: unknown = JSON.parse(script.textContent ?? "null");
-            if (
-              !Predicate.isObject(value) ||
-              Reflect.get(value, "@type") !== expectedType
-            ) {
-              continue;
-            }
-            const dateModified = Reflect.get(value, "dateModified");
-            const datePublished = Reflect.get(value, "datePublished");
-            return dateModified === undefined
-              ? { datePublished }
-              : { dateModified, datePublished };
-          }
-          return null;
-        }, jsonLdType),
+        .evaluateAll((scripts) =>
+          scripts.map((script) => JSON.parse(script.textContent ?? "null"))
+        ),
   });
+
+  // The page context only exposes browser globals, so the narrow stays here.
+  const [node] = nodes.filter(
+    (value: unknown) =>
+      Predicate.isObject(value) && Reflect.get(value, "@type") === jsonLdType
+  );
+
+  if (node === undefined) {
+    return yield* contentDateError(href, `${jsonLdType} JSON-LD dates`);
+  }
+
+  const dateModified = Reflect.get(node, "dateModified");
+  const datePublished = Reflect.get(node, "datePublished");
+  const raw =
+    dateModified === undefined
+      ? { datePublished }
+      : { dateModified, datePublished };
 
   return yield* Schema.decodeUnknownEffect(PublicationDatesSchema)(raw).pipe(
     Effect.mapError(() => contentDateError(href, `${jsonLdType} JSON-LD dates`))
