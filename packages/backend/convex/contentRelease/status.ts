@@ -8,6 +8,7 @@ import {
   validateAbortedRelease,
 } from "@repo/backend/convex/contentRelease/abort";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { requireCurrentRelease } from "@repo/backend/convex/contentRelease/generation";
 import {
   loadRelease,
   loadState,
@@ -157,6 +158,7 @@ const statusProgram = Effect.fn("contentRelease.status")(function* (
       releaseId,
     } satisfies ReleaseStatus;
   }
+  yield* requireCurrentRelease(release.releaseJson, releaseId);
   const signed = yield* decodeReleaseJson(release.releaseJson);
   if (signed.manifestHash !== manifestHash) {
     return yield* releaseFail(
