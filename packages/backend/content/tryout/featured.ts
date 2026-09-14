@@ -1,23 +1,32 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
-import type { TryoutSection } from "@nakafa/aksara-contracts/tryout/catalog";
-import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
-import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import {
-  indexPublishedCatalog,
-  type PublishedCatalogIndex,
-  readPublishedSetSections,
-} from "@repo/backend/content/tryout/hierarchy";
-import { readTryoutSection } from "@repo/backend/content/tryout/section";
+  type AppLocale,
+  type AppLocaleCode,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
+import {
+  type TryoutSection,
+  type TryoutSet,
+  TryoutSetSchema,
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
+import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
+import {
+  readTryoutSection,
+  readTryoutSectionRow,
+} from "@repo/backend/content/tryout/section";
+import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { tryoutResponseSpecValidator } from "@repo/backend/convex/tryouts/response/model";
 import {
   type TryoutQuestionSelector,
   tryoutQuestionSelectorValidator,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { v } from "convex/values";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 /**
  * Public model for the signed landing demo, including its visible answer feedback.
@@ -48,10 +57,23 @@ export const LANDING_FEATURED_TRYOUT = {
 /** Selects the stable authored question for the public landing demo. */
 export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
   function* (locale: AppLocaleCode) {
-    const catalog = yield* loadTryoutCatalog(locale);
-    const index = yield* indexPublishedCatalog(catalog);
-    const section = yield* readLandingFeaturedSection(index, locale);
-    const source = yield* readTryoutSection({
+    const owner = yield* loadTryoutOwner();
+    const { snapshotId } = owner;
+    const appLocale = AppLocaleSchema.make(locale);
+    const target = LANDING_FEATURED_TRYOUT;
+    const setIdentity = yield* readLandingFeaturedParents(
+      snapshotId,
+      appLocale
+    );
+    const set = yield* Schema.decodeUnknownEffect(TryoutSetSchema)(
+      yield* readFeaturedRow(snapshotId, setIdentity, "set")
+    ).pipe(Effect.orDie);
+    const section = yield* readLandingFeaturedSection(
+      snapshotId,
+      setIdentity,
+      set
+    );
+    const resolved = yield* readTryoutSection({
       countryKey: section.countryKey,
       examKey: section.examKey,
       locale,
@@ -59,25 +81,25 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       setKey: section.setKey,
       trackKey: section.trackKey,
     });
-    const placement = source.placements.find(
-      ({ row }) =>
-        row.questionContentKey === LANDING_FEATURED_TRYOUT.questionContentKey
+    const placement = resolved.placements.find(
+      ({ row }) => row.questionContentKey === target.questionContentKey
     )?.row;
-    if (!(placement && catalog.activeReleaseId && catalog.bundleHash)) {
+    const bundleHash = owner.active.release.tryoutRuntimeBundleHash ?? null;
+    if (!(placement && bundleHash)) {
       return yield* missingFeaturedTryout("question");
     }
 
     const question: TryoutQuestionSelector = {
       appLocale: locale,
       artifactHash: placement.questionArtifactHash,
-      bundleHash: catalog.bundleHash,
+      bundleHash,
       contentHash: placement.contentHash,
       contentKey: placement.questionContentKey,
       delivery: "authenticated",
       questionOrder: placement.questionOrder,
       sectionKey: placement.sectionKey,
-      snapshotReleaseId: catalog.activeReleaseId,
-      snapshotId: catalog.snapshotId,
+      snapshotReleaseId: owner.active.releaseId,
+      snapshotId,
       sourcePath: placement.questionSourcePath,
       sourceRevision: placement.sourceRevision,
     };
@@ -89,72 +111,111 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
   }
 );
 
-/** Resolves the stable landing section without depending on catalog order. */
-const readLandingFeaturedSection = Effect.fn(
-  "tryouts.catalog.readLandingFeaturedSection"
-)(function* (index: PublishedCatalogIndex, locale: AppLocaleCode) {
+/** Reads the pinned landing ancestry and returns its signed set identity. */
+const readLandingFeaturedParents = Effect.fn(
+  "tryouts.catalog.readLandingFeaturedParents"
+)(function* (snapshotId: string, appLocale: AppLocale) {
   const target = LANDING_FEATURED_TRYOUT;
-  const country = index.countries.find(
-    (row) => row.appLocale === locale && row.countryKey === target.countryKey
+  yield* readFeaturedRow(
+    snapshotId,
+    tryoutCatalogNodeIdentity({
+      appLocale,
+      countryKey: target.countryKey,
+      kind: "country",
+    }),
+    "country"
   );
-  if (!country) {
-    return yield* missingFeaturedTryout("country");
-  }
-
-  const exam = index.exams.find(
-    (row) =>
-      row.appLocale === locale &&
-      row.countryKey === country.countryKey &&
-      row.examKey === target.examKey
+  yield* readFeaturedRow(
+    snapshotId,
+    tryoutCatalogNodeIdentity({
+      appLocale,
+      countryKey: target.countryKey,
+      examKey: target.examKey,
+      kind: "exam",
+    }),
+    "exam"
   );
-  if (!exam) {
-    return yield* missingFeaturedTryout("exam");
-  }
-
-  const track = index.tracks.find(
-    (row) =>
-      row.appLocale === locale &&
-      row.countryKey === exam.countryKey &&
-      row.examKey === exam.examKey &&
-      row.trackKey === target.trackKey
+  yield* readFeaturedRow(
+    snapshotId,
+    tryoutCatalogNodeIdentity({
+      appLocale,
+      countryKey: target.countryKey,
+      examKey: target.examKey,
+      kind: "track",
+      trackKey: target.trackKey,
+    }),
+    "track"
   );
-  if (!track) {
-    return yield* missingFeaturedTryout("track");
-  }
-
-  const sets = index.sets.filter(
-    (row) =>
-      row.appLocale === locale &&
-      row.countryKey === track.countryKey &&
-      row.examKey === track.examKey &&
-      row.trackKey === track.trackKey
-  );
-  if (sets.length !== track.setCount) {
-    return yield* missingFeaturedTryout("set");
-  }
-
-  const set = sets.find((row) => row.setKey === target.setKey);
-  if (!set) {
-    return yield* missingFeaturedTryout("set");
-  }
-
-  const sections = yield* readPublishedSetSections(index, set);
-  const section = sections.find(
-    (row) =>
-      row.appLocale === locale &&
-      row.sectionKey === target.sectionKey &&
-      row.visibility === "visible"
-  );
-  if (!section) {
-    return yield* missingFeaturedTryout("section");
-  }
-  return section;
+  return tryoutCatalogNodeIdentity({
+    appLocale,
+    countryKey: target.countryKey,
+    examKey: target.examKey,
+    kind: "set",
+    setKey: target.setKey,
+    trackKey: target.trackKey,
+  });
 });
 
-/** Creates one fail-closed integrity error for an incomplete featured path. */
-function missingFeaturedTryout(
-  kind: "country" | "exam" | "question" | "section" | "set" | "track"
+/** Reads one verified catalog row by its authored identity. */
+const readFeaturedRow = Effect.fn("tryouts.catalog.readFeaturedRow")(function* (
+  snapshotId: string,
+  identity: string,
+  kind: FeaturedMissingKind
 ) {
+  const source = yield* TryoutSource;
+  const stored = Option.getOrNull(yield* source.identity(snapshotId, identity));
+  if (!stored) {
+    return yield* missingFeaturedTryout(kind);
+  }
+  return yield* verifyTryoutCatalog(stored, snapshotId);
+});
+
+/** Resolves the pinned landing section from its signed set inventory. */
+const readLandingFeaturedSection = Effect.fn(
+  "tryouts.catalog.readLandingFeaturedSection"
+)(function* (snapshotId: string, setIdentity: string, set: TryoutSet) {
+  const target = LANDING_FEATURED_TRYOUT;
+  const source = yield* TryoutSource;
+  const storedSections = yield* source.sections(
+    snapshotId,
+    setIdentity,
+    set.sectionCount + 1
+  );
+  const sections = yield* Effect.forEach(storedSections, (stored) =>
+    readTryoutSectionRow(snapshotId, stored)
+  );
+  const section = sections.find(
+    ({ row }) =>
+      row.sectionKey === target.sectionKey && row.visibility === "visible"
+  );
+  const questionCount = sections.reduce(
+    (total, { row }) => total + row.questionCount,
+    0
+  );
+  const visibleCount = sections.filter(
+    ({ row }) => row.visibility === "visible"
+  ).length;
+  if (
+    sections.length !== set.sectionCount ||
+    questionCount !== set.questionCount ||
+    visibleCount !== set.visibleSectionCount ||
+    !section
+  ) {
+    return yield* missingFeaturedTryout("section");
+  }
+  return section.row;
+});
+
+type FeaturedMissingKind =
+  | "country"
+  | "exam"
+  | "question"
+  | "section"
+  | "set"
+  | "track";
+
+/** Creates one fail-closed integrity error for an incomplete featured path. */
+function missingFeaturedTryout(kind: FeaturedMissingKind) {
   return releaseFail(
     "CONTENT_RELEASE_INTEGRITY",
     `The active try-out publication has no featured ${kind}.`
