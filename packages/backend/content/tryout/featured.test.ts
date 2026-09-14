@@ -119,7 +119,7 @@ function makeCategoryPlacement(locale: ActiveAppLocaleCode) {
 }
 
 describe("tryouts/catalog/featured", () => {
-  it.effect.each(["country", "exam", "track", "set"] as const)(
+  it.effect.each(["country", "exam", "track", "set", "section"] as const)(
     "rejects a publication missing its featured %s",
     (kind) =>
       Effect.gen(function* () {
