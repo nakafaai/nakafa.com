@@ -265,4 +265,29 @@ describe("contentRelease/status", () => {
       },
     });
   });
+
+  it("reports a release signed under a retired contract as unsupported", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertTestRelease(ctx);
+      const release = await requireRelease(ctx);
+      const stored = JSON.parse(testReleaseJson());
+      await ctx.db.patch(release._id, {
+        releaseJson: JSON.stringify({
+          ...stored,
+          manifest: {
+            ...stored.manifest,
+            rendererContractVersion: "1.0.0",
+          },
+        }),
+      });
+    });
+
+    await expect(getStatus(t)).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_UNSUPPORTED",
+        message: `Content release ${TEST_RELEASE_ID} was signed under a retired content contract, so this deployment cannot read it. Republish the content to inspect that release again.`,
+      },
+    });
+  });
 });
