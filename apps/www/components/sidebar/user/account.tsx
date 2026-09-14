@@ -4,7 +4,6 @@ import {
   FileValidationIcon,
   LockIcon,
   Logout01Icon,
-  MessageMultiple02Icon,
   MoreVerticalIcon,
   Settings01Icon,
   UserIcon,
@@ -139,13 +138,6 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
             >
               <HugeIcons icon={UserIcon} />
               {t("profile")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => router.push(`/user/${user.appUser._id}/chat`)}
-            >
-              <HugeIcons icon={MessageMultiple02Icon} />
-              {t("chat")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
