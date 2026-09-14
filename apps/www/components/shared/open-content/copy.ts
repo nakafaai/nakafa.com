@@ -72,15 +72,16 @@ export const copyOpenContent = Effect.fn("www.openContent.copy")(function* (
   input: CopyOpenContentInput
 ) {
   const source = yield* readOpenContentCopySource(input).pipe(
-    Effect.timeout(COPY_SOURCE_TIMEOUT),
-    Effect.catchTag("TimeoutError", () =>
-      Effect.fail(
-        new OpenContentCopyError({
-          code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
-          message: "The reviewed content source request timed out.",
-        })
-      )
-    )
+    Effect.timeoutOrElse({
+      duration: COPY_SOURCE_TIMEOUT,
+      orElse: () =>
+        Effect.fail(
+          new OpenContentCopyError({
+            code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
+            message: "The reviewed content source request timed out.",
+          })
+        ),
+    })
   );
   yield* Effect.tryPromise({
     catch: () =>

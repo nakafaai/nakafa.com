@@ -992,9 +992,6 @@ importers:
 
   packages/math:
     dependencies:
-      '@t3-oss/env-core':
-        specifier: ^0.13.11
-        version: 0.13.11(typescript@7.0.2)(zod@4.4.3)
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.115
@@ -1054,9 +1051,6 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.115
-      lodash.merge:
-        specifier: ^4.6.2
-        version: 4.6.2
       next:
         specifier: 16.3.5
         version: 16.3.5(@babel/core@8.0.5)(@playwright/test@1.63.0)(@types/node@24.13.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1079,9 +1073,6 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      '@types/lodash.merge':
-        specifier: ^4.6.9
-        version: 4.6.9
       '@vitest/coverage-istanbul':
         specifier: 'catalog:'
         version: 5.0.0(vitest@5.0.0)
@@ -3875,12 +3866,6 @@ packages:
   '@types/katex@0.16.8':
     resolution: {integrity: sha512-trgaNyfU+Xh2Tc+ABIb44a5AYUpicB3uwirOioeOkNPPbmgRNtcWyDeeFRzjPZENO9Vq8gvVqfhaaXWLlevVwg==}
 
-  '@types/lodash.merge@4.6.9':
-    resolution: {integrity: sha512-23sHDPmzd59kUgWyKGiOMO2Qb9YtqRO/x4IhkgNUiPQ1+5MUVqi6bCZeq9nBJ17msjIMbEIO5u+XW4Kz6aGUhQ==}
-
-  '@types/lodash@4.17.25':
-    resolution: {integrity: sha512-+K1NIO8I+F9/wNulfVvu23QYd0Pe9/OCqRrim4NoYIf1VoEDL90Ve4ClzpyqBLc7NpGGWRvYNCKZ1BE/Jpf8dQ==}
-
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
 
@@ -5755,9 +5740,6 @@ packages:
 
   lodash-es@4.18.1:
     resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
-
-  lodash.merge@4.6.2:
-    resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
@@ -10162,12 +10144,6 @@ snapshots:
 
   '@types/katex@0.16.8': {}
 
-  '@types/lodash.merge@4.6.9':
-    dependencies:
-      '@types/lodash': 4.17.25
-
-  '@types/lodash@4.17.25': {}
-
   '@types/mdast@4.0.4':
     dependencies:
       '@types/unist': 3.0.3
@@ -12058,8 +12034,6 @@ snapshots:
   lilconfig@2.1.0: {}
 
   lodash-es@4.18.1: {}
-
-  lodash.merge@4.6.2: {}
 
   lodash@4.18.1: {}
 
