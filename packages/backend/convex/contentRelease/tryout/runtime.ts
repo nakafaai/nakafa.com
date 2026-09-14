@@ -9,7 +9,6 @@ import {
   loadRelease,
   loadState,
 } from "@repo/backend/convex/contentRelease/model";
-import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import { loadTryoutRuntimeBundle } from "@repo/backend/convex/tryouts/runtime/signed";
 import { Effect } from "effect";
 
@@ -28,16 +27,23 @@ const releaseRetainsRuntime = Effect.fn(
   row: Doc<"tryoutRuntimeBundles">
 ) {
   const release = yield* loadRelease(ctx, releaseId);
-  const signed = yield* decodeReleaseJson(release.releaseJson);
-  const transition = signed.manifest.snapshots.tryout;
-  if (signed.manifest.rendererManifestHash !== row.rendererManifestHash) {
+  const { originKind, rendererManifestHash, snapshotTransitions } = release;
+  if (
+    originKind === undefined ||
+    rendererManifestHash === undefined ||
+    snapshotTransitions === undefined
+  ) {
+    return true;
+  }
+  const transition = snapshotTransitions.tryout;
+  if (rendererManifestHash !== row.rendererManifestHash) {
     return false;
   }
   if (transition.resultSnapshotId === row.snapshotId) {
     return true;
   }
   return (
-    signed.manifest.origin.kind === "git" &&
+    originKind === "git" &&
     transition.mode === "replace" &&
     transition.baseSnapshotId === row.snapshotId
   );

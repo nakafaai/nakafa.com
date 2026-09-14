@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   hasSnapshotArtifactReference,
@@ -18,6 +19,7 @@ import {
 } from "@repo/backend/test/content/compact";
 import { TEST_ARTIFACT_HASH } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
+import { insertZeroRelease } from "@repo/backend/test/content/state";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { makeTryoutPlacementRow } from "@repo/backend/test/tryout/snapshot";
 import {
@@ -145,6 +147,117 @@ describe("contentRelease/snapshot/retention", () => {
               originReleaseId: base.releaseId,
               sequence: 2,
               snapshots: data.snapshots,
+            });
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            candidate.mutation((ctx) =>
+              runConvexProgram(
+                isSnapshotReferenced(ctx, "program", data.snapshotId)
+              )
+            )
+          ).resolves.toBe(true)
+        );
+      })
+  );
+
+  it.effect(
+    "protects every snapshot while a retained release stored no base fact",
+    () =>
+      Effect.gen(function* () {
+        const candidate = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          candidate.mutation(async (ctx) => {
+            await insertTestRelease(ctx, {});
+            const release = await ctx.db.query("contentReleases").unique();
+            if (!release) {
+              throw new Error("Expected candidate snapshot release.");
+            }
+            await ctx.db.patch("contentReleases", release._id, {
+              baseManifestHash: undefined,
+              baseReleaseId: undefined,
+            });
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            candidate.mutation((ctx) =>
+              runConvexProgram(
+                isSnapshotReferenced(ctx, "program", `sha256:${"9".repeat(64)}`)
+              )
+            )
+          ).resolves.toBe(true)
+        );
+      })
+  );
+
+  it.effect(
+    "protects every snapshot while a retained release stored no transitions",
+    () =>
+      Effect.gen(function* () {
+        const candidate = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          candidate.mutation(async (ctx) => {
+            await insertTestRelease(ctx, {});
+            const release = await ctx.db.query("contentReleases").unique();
+            if (!release) {
+              throw new Error("Expected candidate snapshot release.");
+            }
+            await ctx.db.patch("contentReleases", release._id, {
+              snapshotTransitions: undefined,
+            });
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            candidate.mutation((ctx) =>
+              runConvexProgram(
+                isSnapshotReferenced(ctx, "program", `sha256:${"9".repeat(64)}`)
+              )
+            )
+          ).resolves.toBe(true)
+        );
+      })
+  );
+
+  it.effect(
+    "keeps a snapshot reachable through a stored direct base transition",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const base = {
+          manifestHash: `sha256:${"b".repeat(64)}`,
+          releaseId: "release-retention-base",
+          sequence: 1,
+        } as const;
+        const candidate = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          candidate.mutation(async (ctx) => {
+            await insertZeroRelease(ctx, {
+              ...base,
+              ownership: { base: [], result: [] },
+              role: "candidate",
+              snapshots: data.snapshots,
+              status: "completed",
+            });
+            await insertTestRelease(ctx, {
+              releaseId: "release-retention-child",
+              sequence: 2,
+              snapshots: inheritContentSnapshots(null),
+            });
+            const child = await ctx.db
+              .query("contentReleases")
+              .withIndex("by_releaseId", (query) =>
+                query.eq("releaseId", "release-retention-child")
+              )
+              .unique();
+            if (!child) {
+              throw new Error("Expected base-release child fixture.");
+            }
+            await ctx.db.patch("contentReleases", child._id, {
+              baseManifestHash: base.manifestHash,
+              baseReleaseId: base.releaseId,
             });
           })
         );

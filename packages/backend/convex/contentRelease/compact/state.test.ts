@@ -1,7 +1,6 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { ensureCompaction } from "@repo/backend/convex/contentRelease/compact/state";
-import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -83,6 +82,128 @@ describe("contentRelease/compact/state", () => {
     ).toMatchObject({ complete: false, cycle: { floor: 1 } });
   });
 
+  it("protects all stored history when a slot release lost its manifest identity", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      const base = compactionIdentity(1);
+      const active = compactionIdentity(2);
+      await insertCompletedRelease(ctx, base);
+      await insertCompletedRelease(ctx, active, base);
+      await insertTestState(ctx, { active, nextSequence: 3 });
+      const row = await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (q) => q.eq("releaseId", active.releaseId))
+        .unique();
+      assert.ok(row);
+      await ctx.db.patch("contentReleases", row._id, {
+        manifestHash: undefined,
+      });
+    });
+    expect(
+      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
+    ).toMatchObject({ complete: false, cycle: { floor: 1 } });
+  });
+
+  it("protects all stored history when a slot release lost its base facts", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      const base = compactionIdentity(1);
+      const active = compactionIdentity(2);
+      await insertCompletedRelease(ctx, base);
+      await insertCompletedRelease(ctx, active, base);
+      await insertTestState(ctx, { active, nextSequence: 3 });
+      const row = await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (q) => q.eq("releaseId", active.releaseId))
+        .unique();
+      assert.ok(row);
+      await ctx.db.patch("contentReleases", row._id, {
+        baseManifestHash: undefined,
+        baseReleaseId: undefined,
+      });
+    });
+    expect(
+      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
+    ).toMatchObject({ complete: false, cycle: { floor: 1 } });
+  });
+
+  it("protects all stored history when the direct base release lost its manifest identity", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      const base = compactionIdentity(1);
+      const active = compactionIdentity(2);
+      await insertCompletedRelease(ctx, base);
+      await insertCompletedRelease(ctx, active, base);
+      await insertTestState(ctx, { active, nextSequence: 3 });
+      const row = await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (q) => q.eq("releaseId", base.releaseId))
+        .unique();
+      assert.ok(row);
+      await ctx.db.patch("contentReleases", row._id, {
+        manifestHash: undefined,
+      });
+    });
+    expect(
+      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
+    ).toMatchObject({ complete: false, cycle: { floor: 1 } });
+  });
+
+  it("rejects a slot identity whose manifest hash drifted from the stored release", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      const base = compactionIdentity(1);
+      const active = compactionIdentity(2);
+      await insertCompletedRelease(ctx, base);
+      await insertCompletedRelease(ctx, active, base);
+      await insertTestState(ctx, { active, nextSequence: 3 });
+      const state = await ctx.db.query("contentState").unique();
+      assert.ok(state);
+      await ctx.db.patch("contentState", state._id, {
+        activeManifestHash: `sha256:${"e".repeat(64)}`,
+      });
+    });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
+  it("fails closed while a slot references a missing release and no history exists", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      insertTestState(ctx, {
+        active: {
+          manifestHash: `sha256:${"a".repeat(64)}`,
+          releaseId: "release-missing",
+          sequence: 1,
+        },
+        nextSequence: 2,
+      })
+    );
+    expect(
+      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
+    ).toMatchObject({ complete: false, cycle: { floor: 2 } });
+  });
+
+  it("fails closed to the earliest stored release when a slot release is missing", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      const base = compactionIdentity(1);
+      await insertCompletedRelease(ctx, base);
+      await insertTestState(ctx, {
+        active: {
+          manifestHash: `sha256:${"a".repeat(64)}`,
+          releaseId: "release-missing",
+          sequence: 1,
+        },
+        nextSequence: 3,
+      });
+    });
+    expect(
+      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
+    ).toMatchObject({ complete: false, cycle: { floor: 1 } });
+  });
+
   it.each([
     "active-sequence",
     "base-sequence",
@@ -109,18 +230,9 @@ describe("contentRelease/compact/state", () => {
       if (mutation === "active-sequence" || mutation === "base-sequence") {
         await ctx.db.patch("contentReleases", row._id, { sequence: 0 });
       } else {
-        const signed = await runConvexProgram(
-          decodeReleaseJson(row.releaseJson)
-        );
         await ctx.db.patch("contentReleases", row._id, {
-          releaseJson: JSON.stringify({
-            ...signed,
-            manifest: {
-              ...signed.manifest,
-              baseManifestHash:
-                mutation === "partial-base" ? null : `sha256:${"f".repeat(64)}`,
-            },
-          }),
+          baseManifestHash:
+            mutation === "partial-base" ? null : `sha256:${"f".repeat(64)}`,
         });
       }
     });

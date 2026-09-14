@@ -1,16 +1,18 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  type ReleaseError,
+  releaseFail,
+} from "@repo/backend/convex/contentRelease/error";
 import {
   ensureState,
   loadRelease,
 } from "@repo/backend/convex/contentRelease/model";
-import { readReleaseRetention } from "@repo/backend/convex/contentRelease/parse";
 import {
   COMPACTION_PAGE_BYTES,
   ROLLBACK_RETENTION_MS,
 } from "@repo/backend/convex/contentRelease/spec";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 const RELEASE_SCAN_COUNT = 32;
 
@@ -71,34 +73,75 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
     release: Doc<"contentReleases">,
     identity?: SlotIdentity
   ) {
-    const retention = yield* readReleaseRetention(release.releaseJson);
+    const { sequence } = release;
     if (
-      !isSequence(release.sequence) ||
-      (identity !== undefined &&
-        (release.sequence !== identity.sequence ||
-          retention.manifestHash !== identity.manifestHash))
+      !isSequence(sequence) ||
+      (identity !== undefined && sequence !== identity.sequence)
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Content release ${release.releaseId} lost its exact protected identity.`
       );
     }
-    const baseId = retention.manifest.baseReleaseId;
-    const baseHash = retention.manifest.baseManifestHash;
-    if (baseId === null || baseHash === null) {
-      return [release.sequence];
+    if (release.manifestHash === undefined) {
+      return Option.none<readonly number[]>();
     }
-    const base = yield* loadRelease(ctx, baseId);
-    const baseRetention = yield* readReleaseRetention(base.releaseJson);
-    if (!isSequence(base.sequence) || baseRetention.manifestHash !== baseHash) {
+    if (
+      identity !== undefined &&
+      release.manifestHash !== identity.manifestHash
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${release.releaseId} lost its exact protected identity.`
+      );
+    }
+    const baseId = release.baseReleaseId;
+    const baseHash = release.baseManifestHash;
+    if (baseId === undefined || baseHash === undefined) {
+      return Option.none<readonly number[]>();
+    }
+    if ((baseId === null) !== (baseHash === null)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Content release ${release.releaseId} lost its exact protected base.`
       );
     }
-    return [release.sequence, base.sequence];
+    if (baseId === null || baseHash === null) {
+      return Option.some([sequence]);
+    }
+    const base = yield* loadRelease(ctx, baseId);
+    if (!isSequence(base.sequence)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${release.releaseId} lost its exact protected base.`
+      );
+    }
+    if (base.manifestHash === undefined) {
+      return Option.none<readonly number[]>();
+    }
+    if (base.manifestHash !== baseHash) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${release.releaseId} lost its exact protected base.`
+      );
+    }
+    return Option.some([sequence, base.sequence]);
   }
 );
+
+/** Protects all stored history when one reachability fact is unprovable. */
+const earliestStoredSequence = Effect.fn(
+  "contentRelease.earliestStoredSequence"
+)(function* (ctx: MutationCtx, state: Doc<"contentState">) {
+  const earliest = yield* Effect.promise(() =>
+    ctx.db
+      .query("contentReleases")
+      .withIndex("by_sequence")
+      .order("asc")
+      .first()
+  );
+  return earliest?.sequence ?? state.nextSequence;
+});
 
 /** Computes the earliest sequence protected by slots and known-good history. */
 const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
@@ -127,9 +170,16 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
   ]);
   const slotSequences = yield* Effect.forEach(slots, (slot) =>
     slot === null
-      ? Effect.succeed([])
+      ? Effect.succeedSome<readonly number[]>([])
       : loadRelease(ctx, slot.releaseId).pipe(
-          Effect.flatMap((release) => protectedRelease(ctx, release, slot))
+          Effect.flatMap((release) => protectedRelease(ctx, release, slot)),
+          // A missing slot release is an unprovable reachability fact: never
+          // break compaction, protect the stored history instead.
+          Effect.catchTag("ReleaseError", (error: ReleaseError) =>
+            error.code === "CONTENT_RELEASE_MISSING"
+              ? Effect.succeed(Option.none<readonly number[]>())
+              : Effect.fail(error)
+          )
         )
   );
   const completed = yield* Effect.promise(() =>
@@ -144,7 +194,13 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
   const completedSequences = yield* Effect.forEach(completed, (release) =>
     protectedRelease(ctx, release)
   );
-  const sequences = [...slotSequences.flat(), ...completedSequences.flat()];
+  const sequences: number[] = [];
+  for (const entry of [...slotSequences, ...completedSequences]) {
+    if (Option.isNone(entry)) {
+      return yield* earliestStoredSequence(ctx, state);
+    }
+    sequences.push(...entry.value);
+  }
   return sequences.length === 0 ? state.nextSequence : Math.min(...sequences);
 });
 

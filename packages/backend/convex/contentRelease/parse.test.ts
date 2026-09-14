@@ -14,7 +14,6 @@ import {
   decodeSnapshotJson,
   decodeTryoutRuntimeBundleJson,
   parseStoredJson,
-  readReleaseRetention,
 } from "@repo/backend/convex/contentRelease/parse";
 import {
   encodeArtifactJson,
@@ -149,7 +148,7 @@ describe("contentRelease/parse", () => {
   );
 
   it.live(
-    "projects retention metadata from a manifest the content contract rejects",
+    "keeps rejecting a manifest the content contract does not recognize",
     () =>
       Effect.gen(function* () {
         const stored = JSON.parse(
@@ -159,56 +158,14 @@ describe("contentRelease/parse", () => {
           ...stored.manifest,
           rendererContractVersion: "1.0.0",
         };
-        const historical = JSON.stringify({ ...stored, manifest });
 
         // The content contract keeps rejecting unknown manifest fields.
         expect(
-          yield* decodeReleaseJson(historical).pipe(Effect.flip)
+          yield* decodeReleaseJson(
+            JSON.stringify({ ...stored, manifest })
+          ).pipe(Effect.flip)
         ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-
-        // History retention must still resolve which releases stay reachable.
-        const retention = yield* readReleaseRetention(historical);
-        const { program, quran, tryout } = manifest.snapshots;
-        expect(retention).toEqual({
-          manifest: {
-            baseManifestHash: TEST_MANIFEST_HASH,
-            baseReleaseId: "release-base",
-            snapshots: {
-              program: {
-                baseSnapshotId: program.baseSnapshotId,
-                resultSnapshotId: program.resultSnapshotId,
-              },
-              quran: {
-                baseSnapshotId: quran.baseSnapshotId,
-                resultSnapshotId: quran.resultSnapshotId,
-              },
-              tryout: {
-                baseSnapshotId: tryout.baseSnapshotId,
-                resultSnapshotId: tryout.resultSnapshotId,
-              },
-            },
-          },
-          manifestHash: TEST_MANIFEST_HASH,
-        });
       })
-  );
-
-  it.live("rejects a stored release that lost its retention metadata", () =>
-    Effect.gen(function* () {
-      const stored = JSON.parse(
-        testReleaseJson({ baseReleaseId: "release-base" })
-      );
-      const partial = JSON.stringify({
-        ...stored,
-        manifest: { ...stored.manifest, baseManifestHash: null },
-      });
-
-      for (const source of ["{", "{}", partial]) {
-        expect(
-          yield* readReleaseRetention(source).pipe(Effect.flip)
-        ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-      }
-    })
   );
 
   it.live(

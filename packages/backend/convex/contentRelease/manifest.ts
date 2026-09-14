@@ -15,6 +15,7 @@ import {
   decodeReleaseJson,
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import { completedReceipt } from "@repo/backend/convex/contentRelease/receipt";
 import {
   deriveReleaseFamilies,
@@ -178,6 +179,7 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
   const now = Date.now();
   const sequence = state.nextSequence;
   const row = {
+    ...releaseReachability(signed),
     baseFamilies: families.base,
     checkedIndex: -1,
     checkedItems: 0,

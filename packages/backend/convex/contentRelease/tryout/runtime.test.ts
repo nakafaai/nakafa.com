@@ -5,6 +5,8 @@ import {
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { reconcileTryoutRuntimeAfterAttempt } from "@repo/backend/convex/contentRelease/tryout/runtime";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -15,6 +17,16 @@ import {
 } from "@repo/backend/test/activation/fixture";
 import { testRendererJson } from "@repo/backend/test/content/release";
 import { storeRuntimeFixture } from "@repo/backend/test/runtime/bundle";
+import {
+  insertRetentionAttempt,
+  RETENTION_BASE_SNAPSHOT,
+  RETENTION_NEWER_SNAPSHOT,
+  RETENTION_OTHER_SNAPSHOT,
+  RETENTION_RELEASE_ID,
+  RETENTION_RESULT_SNAPSHOT,
+  readRuntimeRetention,
+  seedRuntimeRetentionRow,
+} from "@repo/backend/test/runtime/retention";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -256,5 +268,179 @@ describe("contentRelease/tryout runtime activation", () => {
       );
       expect(state?.activeReleaseId).toBe(CANDIDATE.releaseId);
     })
+  );
+});
+
+describe("contentRelease/tryout runtime retention", () => {
+  it.each([
+    {
+      expected: RETENTION_RELEASE_ID,
+      name: "result snapshot match",
+      seed: { originKind: "git", snapshotId: RETENTION_RESULT_SNAPSHOT },
+    },
+    {
+      expected: RETENTION_RELEASE_ID,
+      name: "git base snapshot match",
+      seed: {
+        baseSnapshotId: RETENTION_BASE_SNAPSHOT,
+        originKind: "git",
+        snapshotId: RETENTION_BASE_SNAPSHOT,
+      },
+    },
+    {
+      expected: null,
+      name: "newer pair selected",
+      seed: {
+        baseSnapshotId: RETENTION_BASE_SNAPSHOT,
+        originKind: "git",
+        resultSnapshotId: RETENTION_NEWER_SNAPSHOT,
+        snapshotId: RETENTION_OTHER_SNAPSHOT,
+      },
+    },
+    {
+      expected: null,
+      name: "rollback result only",
+      seed: {
+        baseSnapshotId: RETENTION_BASE_SNAPSHOT,
+        originKind: "rollback",
+        snapshotId: RETENTION_BASE_SNAPSHOT,
+      },
+    },
+    {
+      expected: null,
+      name: "restore mode",
+      seed: {
+        baseSnapshotId: RETENTION_BASE_SNAPSHOT,
+        mode: "restore",
+        originKind: "git",
+        resultSnapshotId: RETENTION_NEWER_SNAPSHOT,
+        snapshotId: RETENTION_BASE_SNAPSHOT,
+      },
+    },
+    {
+      expected: null,
+      name: "renderer manifest drift",
+      seed: {
+        originKind: "git",
+        rendererManifestHash: `sha256:${"2".repeat(64)}`,
+        snapshotId: RETENTION_RESULT_SNAPSHOT,
+      },
+    },
+    {
+      expected: RETENTION_RELEASE_ID,
+      name: "unprovable stored facts",
+      seed: {
+        originKind: "git",
+        patchColumns: true,
+        snapshotId: RETENTION_RESULT_SNAPSHOT,
+      },
+    },
+    {
+      expected: null,
+      name: "no publication state",
+      seed: {
+        originKind: "git",
+        snapshotId: RETENTION_RESULT_SNAPSHOT,
+        withState: false,
+      },
+    },
+  ] as const)("$name", async ({ seed, expected }) => {
+    const t = convexTest(schema, convexModules);
+    const rowId = await t.mutation((ctx) => seedRuntimeRetentionRow(ctx, seed));
+    const retention = await readRuntimeRetention(t, rowId);
+    expect(retention.retainingReleaseId).toBe(expected);
+  });
+
+  it.effect("rejects reconciliation of a missing permanent pair", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const rowId = yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const stored = await seedRuntimeRetentionRow(ctx, {
+            originKind: "git",
+            snapshotId: RETENTION_RESULT_SNAPSHOT,
+            withState: false,
+          });
+          await ctx.db.delete("tryoutRuntimeBundles", stored);
+          return stored;
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation((ctx) =>
+            runConvexProgram(reconcileTryoutRuntimeAfterAttempt(ctx, rowId))
+          )
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+    })
+  );
+
+  it.each([
+    {
+      cleanupReleaseId: RETENTION_RELEASE_ID,
+      expectedOwner: RETENTION_RELEASE_ID,
+      name: "keeps an already owned pair",
+      withState: true,
+    },
+    {
+      cleanupReleaseId: "release-retention-old",
+      expectedOwner: RETENTION_RELEASE_ID,
+      name: "transfers the active cleanup owner",
+      withState: true,
+    },
+    {
+      cleanupReleaseId: "release-retention-old",
+      deleted: true,
+      name: "deletes an unreferenced pair with a retired owner",
+      withState: false,
+    },
+    {
+      expectedOwner: undefined,
+      name: "keeps an unreferenced pair without an owner",
+      withState: false,
+    },
+    {
+      attempt: true,
+      cleanupReleaseId: "release-retention-old",
+      expectedOwner: "release-retention-old",
+      name: "keeps a pair with an active attempt",
+      withState: false,
+    },
+  ] as const)(
+    "$name",
+    async ({
+      attempt,
+      cleanupReleaseId,
+      deleted,
+      expectedOwner,
+      withState,
+    }) => {
+      const t = convexTest(schema, convexModules);
+      const rowId = await t.mutation(async (ctx) => {
+        const stored = await seedRuntimeRetentionRow(ctx, {
+          cleanupReleaseId,
+          originKind: "git",
+          snapshotId: RETENTION_RESULT_SNAPSHOT,
+          withState,
+        });
+        if (attempt) {
+          await insertRetentionAttempt(ctx, stored);
+        }
+        return stored;
+      });
+      await t.mutation((ctx) =>
+        runConvexProgram(reconcileTryoutRuntimeAfterAttempt(ctx, rowId))
+      );
+      const stored = await t.run((ctx) =>
+        ctx.db.get("tryoutRuntimeBundles", rowId)
+      );
+      if (deleted) {
+        expect(stored).toBeNull();
+        return;
+      }
+      expect(stored?.cleanupReleaseId).toBe(expectedOwner);
+    }
   );
 });
