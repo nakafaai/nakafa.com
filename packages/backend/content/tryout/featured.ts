@@ -12,6 +12,7 @@ import {
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
+import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import {
   readTryoutSection,
@@ -188,18 +189,13 @@ const readLandingFeaturedSection = Effect.fn(
     ({ row }) =>
       row.sectionKey === target.sectionKey && row.visibility === "visible"
   );
-  const questionCount = sections.reduce(
-    (total, { row }) => total + row.questionCount,
-    0
-  );
-  const visibleCount = sections.filter(
-    ({ row }) => row.visibility === "visible"
-  ).length;
   if (
-    sections.length !== set.sectionCount ||
-    questionCount !== set.questionCount ||
-    visibleCount !== set.visibleSectionCount ||
-    !section
+    !(
+      provesSetInventory(
+        set,
+        sections.map(({ row }) => row)
+      ) && section
+    )
   ) {
     return yield* missingFeaturedTryout("section");
   }

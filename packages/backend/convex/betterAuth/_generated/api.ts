@@ -1048,33 +1048,6 @@ export const api: {
       null | { _id: Id<"user"> }
     >;
   };
-  retirement: {
-    audit: FunctionReference<
-      "query",
-      "public",
-      { cursor: null | string; target: "credentials" | "resets" | "usernames" },
-      {
-        blocked: number;
-        continueCursor: string;
-        isDone: boolean;
-        matched: number;
-        scanned: number;
-      }
-    >;
-    retire: FunctionReference<
-      "mutation",
-      "public",
-      { cursor: null | string; target: "credentials" | "resets" | "usernames" },
-      {
-        blocked: number;
-        continueCursor: string;
-        isDone: boolean;
-        matched: number;
-        retired: number;
-        scanned: number;
-      }
-    >;
-  };
 } = anyApi as any;
 
 /**

@@ -6,9 +6,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import {
   type QuranEmbeddedSourceId,
-  QuranEmbeddedSourceIdSchema,
   type QuranExternalSourceId,
-  QuranExternalSourceIdSchema,
   quranReadingSourceIds,
   quranTafsirSourceId,
   quranTranslationSourceId,
@@ -75,12 +73,6 @@ function embeddedSourceValidator<const SourceId extends QuranEmbeddedSourceId>(
   });
 }
 
-/** Signed metadata for one embedded official Quran source. */
-export const quranEmbeddedSourceValidator = v.object({
-  ...quranEmbeddedSourceFields,
-  id: literals(...QuranEmbeddedSourceIdSchema.literals),
-});
-
 const quranExternalSourceFields = {
   kind: v.literal("external"),
   label: v.string(),
@@ -102,18 +94,6 @@ function externalSourceValidator<const SourceId extends QuranExternalSourceId>(
     id: v.literal(sourceId),
   });
 }
-
-/** Signed metadata for one official Quran source that remains link-only. */
-export const quranExternalSourceValidator = v.object({
-  ...quranExternalSourceFields,
-  id: literals(...QuranExternalSourceIdSchema.literals),
-});
-
-/** Full signed source metadata exposed to Quran consumers. */
-export const quranContentSourceValidator = v.union(
-  quranEmbeddedSourceValidator,
-  quranExternalSourceValidator
-);
 
 const quranArabicSourceValidator = embeddedSourceValidator(
   quranReadingSourceIds(ENGLISH_APP_LOCALE_CODE)[0]
