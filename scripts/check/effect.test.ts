@@ -1,7 +1,10 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { API, Checker } from "typescript/unstable/sync";
-import { effectTestViolations } from "#scripts/check/effect";
+import {
+  effectSourceViolations,
+  effectTestViolations,
+} from "#scripts/check/effect";
 
 const FILE = "packages/example/src/program.test.ts";
 const VIOLATION =
@@ -139,6 +142,57 @@ describe("Effect test policy", () => {
       assert.strictEqual(failure.cause, cause);
       assert.strictEqual(failure.message, `Unable to inspect ${FILE}.`);
       assert.strictEqual(close.mock.calls.length, 1);
+    })
+  );
+});
+
+const BACKEND_FILE = "packages/backend/convex/example/program.ts";
+const TRY_VIOLATION = `${BACKEND_FILE}: model failure with Effect instead of a raw try statement.`;
+const NARROWING_VIOLATION = `${BACKEND_FILE}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`;
+
+describe("Effect source policy", () => {
+  it.effect("rejects raw try statements and typeof-object narrowing", () =>
+    Effect.gen(function* () {
+      const violations = yield* effectSourceViolations([
+        {
+          file: BACKEND_FILE,
+          sourceText:
+            'export function read(value: unknown) {\n  try {\n    JSON.parse("{}");\n  } catch {\n    return null;\n  }\n  return typeof value === "object" && value !== null;\n}',
+        },
+      ]);
+      assert.deepStrictEqual(
+        [...violations].sort(),
+        [TRY_VIOLATION, NARROWING_VIOLATION].sort()
+      );
+    })
+  );
+
+  it.effect("allows Effect-native failure and narrowing", () =>
+    Effect.gen(function* () {
+      const violations = yield* effectSourceViolations([
+        {
+          file: BACKEND_FILE,
+          sourceText:
+            'import { Effect, Predicate } from "effect";\nexport const read = Effect.fn("read")(function* (value: unknown) {\n  return Predicate.isObject(value) && Predicate.hasProperty(value, "code");\n});',
+        },
+      ]);
+      assert.deepStrictEqual(violations, []);
+    })
+  );
+
+  it.effect("ignores sources outside the backend package", () =>
+    Effect.gen(function* () {
+      const violations = yield* effectSourceViolations([
+        {
+          file: "apps/www/lib/example.ts",
+          sourceText: 'export const value = typeof input === "object";',
+        },
+        {
+          file: "packages/backend/example.tsx",
+          sourceText: 'export const value = typeof input === "object";',
+        },
+      ]);
+      assert.deepStrictEqual(violations, []);
     })
   );
 });

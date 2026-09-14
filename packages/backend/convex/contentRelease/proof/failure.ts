@@ -10,6 +10,7 @@ import {
   SigningKeyResolutionError,
 } from "@nakafa/aksara-contracts/signature/spec";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
+import { Predicate } from "effect";
 
 /** Recognizes exact contract errors caused by unsupported trust or rendering. */
 function isUnsupported(error: unknown) {
@@ -30,6 +31,15 @@ function isSize(error: unknown) {
   );
 }
 
+/** Reads the concrete contract failure tag from unknown thrown values. */
+function readContractTag(error: unknown) {
+  if (!(Predicate.isObject(error) && Predicate.hasProperty(error, "_tag"))) {
+    return "UnknownContractError";
+  }
+  const { _tag } = error;
+  return Predicate.isString(_tag) ? _tag : "UnknownContractError";
+}
+
 /** Maps one concrete Aksara contract failure into publication semantics. */
 export function contractFailure(error: unknown) {
   let code: ReleaseError["code"] = "CONTENT_RELEASE_INTEGRITY";
@@ -38,15 +48,8 @@ export function contractFailure(error: unknown) {
   } else if (isSize(error)) {
     code = "CONTENT_RELEASE_SIZE";
   }
-  const tag =
-    typeof error === "object" &&
-    error !== null &&
-    "_tag" in error &&
-    typeof error._tag === "string"
-      ? error._tag
-      : "UnknownContractError";
   return new ReleaseError({
     code,
-    message: `Content release verification failed with ${tag}.`,
+    message: `Content release verification failed with ${readContractTag(error)}.`,
   });
 }

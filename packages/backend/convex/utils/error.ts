@@ -1,14 +1,15 @@
 import { ConvexError } from "convex/values";
+import { Predicate } from "effect";
 
 /** Extract a human-readable message from unknown thrown values. */
 export function getErrorMessage(error: unknown) {
   if (error instanceof ConvexError) {
-    const data = error.data;
+    const { data } = error;
 
-    if (typeof data === "object" && data !== null && "message" in data) {
-      const message = data.message;
+    if (Predicate.isObject(data) && Predicate.hasProperty(data, "message")) {
+      const { message } = data;
 
-      if (typeof message === "string") {
+      if (Predicate.isString(message)) {
         return message;
       }
     }

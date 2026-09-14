@@ -1,5 +1,5 @@
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 /**
  * Publication records signed under a retired content contract.
@@ -10,48 +10,35 @@ import { Effect } from "effect";
  * records has to tell it apart from corruption, so it can ask for a republish
  * instead of reporting an integrity failure. This module owns the only
  * knowledge of what the retired markers look like.
+ *
+ * Each marker decodes the stored bytes with its own schema, so the check never
+ * widens the current contract and never narrows unknown input by hand.
  */
 
-/** Narrows one unknown stored value to a plain record. */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+/** Retired artifact marker: component requirements carry explicit versions. */
+const RetiredArtifactSchema = Schema.fromJsonString(
+  Schema.Struct({
+    payload: Schema.Struct({
+      requiredComponents: Schema.Array(
+        Schema.Struct({ version: Schema.Finite })
+      ).pipe(Schema.check(Schema.isMinLength(1))),
+    }),
+  })
+);
 
-/** Reads one stored JSON value, reporting invalid bytes as unrecognized. */
-function readStoredRecord(source: string): Record<string, unknown> | null {
-  try {
-    const parsed: unknown = JSON.parse(source);
-    return isRecord(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Detects one stored artifact that requires components by version. */
-function hasVersionedComponentRequirements(source: string) {
-  const payload = readStoredRecord(source)?.payload;
-  if (!(isRecord(payload) && Array.isArray(payload.requiredComponents))) {
-    return false;
-  }
-  return payload.requiredComponents.some(
-    (entry) => isRecord(entry) && typeof entry.version === "number"
-  );
-}
-
-/** Detects one stored release that declares a renderer contract version. */
-function hasRendererContractVersion(source: string) {
-  const manifest = readStoredRecord(source)?.manifest;
-  if (!isRecord(manifest)) {
-    return false;
-  }
-  return typeof manifest.rendererContractVersion === "string";
-}
+/** Retired release marker: the manifest declares a renderer contract version. */
+const RetiredReleaseSchema = Schema.fromJsonString(
+  Schema.Struct({
+    manifest: Schema.Struct({ rendererContractVersion: Schema.String }),
+  })
+);
 
 /** Fails one rollback artifact signed under a retired content contract. */
 export const requireCurrentArtifact = Effect.fn(
   "contentRelease.requireCurrentArtifact"
 )(function* (source: string, identity: string, artifactHash: string) {
-  if (!hasVersionedComponentRequirements(source)) {
+  const retired = Schema.decodeOption(RetiredArtifactSchema)(source);
+  if (Option.isNone(retired)) {
     return;
   }
   return yield* releaseFail(
@@ -64,7 +51,8 @@ export const requireCurrentArtifact = Effect.fn(
 export const requireCurrentRelease = Effect.fn(
   "contentRelease.requireCurrentRelease"
 )(function* (source: string, releaseId: string) {
-  if (!hasRendererContractVersion(source)) {
+  const retired = Schema.decodeOption(RetiredReleaseSchema)(source);
+  if (Option.isNone(retired)) {
     return;
   }
   return yield* releaseFail(

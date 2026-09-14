@@ -1,3 +1,5 @@
+import { Predicate } from "effect";
+
 const DEFAULT_ALLOWED_HEADERS = [
   "accept",
   "baggage",
@@ -124,23 +126,21 @@ export function mcpOptionsResponse(request: Request) {
 
 /** Recovers an echoable JSON-RPC request ID from the bounded parsed value. */
 export function readJsonRpcRequestId(body: unknown) {
-  if (typeof body !== "object" || body === null || !("id" in body)) {
+  if (!(Predicate.isObject(body) && Predicate.hasProperty(body, "id"))) {
     return null;
   }
-  const id = body.id;
-  return typeof id === "number" || typeof id === "string" ? id : null;
+  const { id } = body;
+  return Predicate.isNumber(id) || Predicate.isString(id) ? id : null;
 }
 
 function isJsonRpcNotification(body: unknown) {
   return (
-    typeof body === "object" &&
-    body !== null &&
-    !Array.isArray(body) &&
-    !("id" in body) &&
-    "jsonrpc" in body &&
+    Predicate.isObject(body) &&
+    !Predicate.hasProperty(body, "id") &&
+    Predicate.hasProperty(body, "jsonrpc") &&
     body.jsonrpc === "2.0" &&
-    "method" in body &&
-    typeof body.method === "string"
+    Predicate.hasProperty(body, "method") &&
+    Predicate.isString(body.method)
   );
 }
 
