@@ -1,6 +1,6 @@
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
-import { HeaderContainer } from "@/components/sidebar/header-container";
-import { HeaderSearch } from "@/components/sidebar/header-search";
+import { HeaderContainer } from "@/components/sidebar/header/frame";
+import { HeaderSearch } from "@/components/sidebar/search/trigger";
 
 /** Renders the app header controls shared by authenticated learning pages. */
 export function Header() {

@@ -1,10 +1,8 @@
 "use client";
 
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { NavExplore } from "@/components/sidebar/nav-explore";
-import { NavForYou } from "@/components/sidebar/nav-for-you";
+import type { ReactNode } from "react";
 import { UserSettingsNav } from "@/components/user/settings/nav";
-import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { isUserSettingsPath } from "@/lib/settings/routes";
 
 /**
@@ -12,23 +10,15 @@ import { isUserSettingsPath } from "@/lib/settings/routes";
  *
  * Settings swaps its own sections into the sidebar body while the header,
  * footer, and panel geometry stay mounted, so switching surfaces cannot shift
- * or remount the shell around it.
+ * or remount the shell around it. The browsing navigation arrives as a slot,
+ * so this chooser never carries data it does not render itself.
  */
-export function SidebarNavigation({
-  articleNavigation,
-}: {
-  articleNavigation: readonly ArticleNavigationItem[];
-}) {
+export function SidebarNavigation({ browse }: { browse: ReactNode }) {
   const pathname = usePathname();
 
   if (isUserSettingsPath(pathname)) {
     return <UserSettingsNav />;
   }
 
-  return (
-    <>
-      <NavForYou />
-      <NavExplore articleNavigation={articleNavigation} />
-    </>
-  );
+  return <>{browse}</>;
 }

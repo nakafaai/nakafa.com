@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { ReactNode } from "react";
-import { AppShell } from "@/components/sidebar/app-shell";
+import { AppShell } from "@/components/sidebar/shell";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import {
   TryoutActiveQuestionShell,

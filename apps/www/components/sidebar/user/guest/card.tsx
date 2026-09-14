@@ -1,5 +1,3 @@
-"use client";
-
 import {
   SidebarMenuItem,
   SidebarMenuSeparator,
@@ -8,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/actions";
 import { GuestLanguageMenu } from "@/components/sidebar/menu/preference";
 import { PricingItem } from "@/components/sidebar/menu/pricing";
-import { NavUserGuestButton } from "@/components/sidebar/user/guest/button";
+import { NavUserGuestButton } from "@/components/sidebar/user/guest/action";
 
 /** Renders guest utilities and the signed-out account call to action. */
 export function NavUserGuest() {

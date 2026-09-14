@@ -4,7 +4,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useConvexAuth, useQuery } from "convex/react";
 import { type ReactNode, useState } from "react";
-import { AppShell } from "@/components/sidebar/app-shell";
+import { AppShell } from "@/components/sidebar/shell";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { selectTryoutTrackReturnHref } from "@/components/tryout/route/owner";
 import {
