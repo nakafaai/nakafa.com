@@ -449,9 +449,9 @@ function isTypeofObjectComparison(node: Node) {
 function inspectSourcePolicy(file: string, sourceFile: SourceFile) {
   const violations: string[] = [];
   for (const node of descendants(sourceFile)) {
-    if (isTryStatement(node)) {
+    if (isTryStatement(node) && node.catchClause !== undefined) {
       violations.push(
-        `${file}: model failure with Effect instead of a raw try statement.`
+        `${file}: model failure with Effect instead of a raw try/catch statement.`
       );
     }
     if (isTypeofObjectComparison(node)) {

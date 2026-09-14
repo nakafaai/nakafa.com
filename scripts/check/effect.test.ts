@@ -147,7 +147,7 @@ describe("Effect test policy", () => {
 });
 
 const BACKEND_FILE = "packages/backend/convex/example/program.ts";
-const TRY_VIOLATION = `${BACKEND_FILE}: model failure with Effect instead of a raw try statement.`;
+const TRY_VIOLATION = `${BACKEND_FILE}: model failure with Effect instead of a raw try/catch statement.`;
 const NARROWING_VIOLATION = `${BACKEND_FILE}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`;
 
 describe("Effect source policy", () => {
@@ -174,6 +174,11 @@ describe("Effect source policy", () => {
           file: BACKEND_FILE,
           sourceText:
             'import { Effect, Predicate } from "effect";\nexport const read = Effect.fn("read")(function* (value: unknown) {\n  return Predicate.isObject(value) && Predicate.hasProperty(value, "code");\n});',
+        },
+        {
+          file: BACKEND_FILE,
+          sourceText:
+            "export async function clean() {\n  try {\n    await write();\n  } finally {\n    await erase();\n  }\n}",
         },
       ]);
       assert.deepStrictEqual(violations, []);
