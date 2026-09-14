@@ -1,5 +1,7 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
+  type ClaimLearningPopularityRetentionResult,
+  claimLearningPopularityRetentionResultValidator,
   type ExpireLearningPopularityWindowPageResult,
   expireLearningPopularityWindowPageArgs,
   expireLearningPopularityWindowPageResultValidator,
@@ -22,7 +24,10 @@ import {
   refreshLearningPopularityWindowPage as refreshLearningPopularityWindowPageProgram,
   scheduleLearningPopularityRefreshes as scheduleLearningPopularityRefreshesProgram,
 } from "@repo/backend/convex/contents/metrics/refresh";
-import { sweepLearningPopularityRetention as sweepLearningPopularityRetentionProgram } from "@repo/backend/convex/contents/metrics/retention";
+import {
+  claimLearningPopularityRetention as claimLearningPopularityRetentionProgram,
+  sweepLearningPopularityRetention as sweepLearningPopularityRetentionProgram,
+} from "@repo/backend/convex/contents/metrics/retention";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
@@ -69,8 +74,7 @@ export const refreshLearningPopularityWindowPage = internalMutation({
         ctx,
         args,
         internal.contents.mutations.popularity
-          .refreshLearningPopularityWindowPage,
-        internal.contents.mutations.popularity.sweepLearningPopularityRetention
+          .refreshLearningPopularityWindowPage
       )
     ),
 });
@@ -88,7 +92,19 @@ export const expireLearningPopularityWindowPage = internalMutation({
         ctx,
         args,
         internal.contents.mutations.popularity
-          .expireLearningPopularityWindowPage,
+          .expireLearningPopularityWindowPage
+      )
+    ),
+});
+
+/** Claims today's retention chain once every finite window completed it. */
+export const claimLearningPopularityRetention = internalMutation({
+  args: {},
+  returns: claimLearningPopularityRetentionResultValidator,
+  handler: async (ctx): Promise<ClaimLearningPopularityRetentionResult> =>
+    await runConvexProgram(
+      claimLearningPopularityRetentionProgram(
+        ctx,
         internal.contents.mutations.popularity.sweepLearningPopularityRetention
       )
     ),

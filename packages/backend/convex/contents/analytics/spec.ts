@@ -116,6 +116,12 @@ export const sweepLearningPopularityRetentionResultValidator = v.object({
   skipped: v.boolean(),
 });
 
+/** Progress contract returned by the single retention claim owner. */
+export const claimLearningPopularityRetentionResultValidator = v.object({
+  claimed: v.boolean(),
+  day: v.number(),
+});
+
 export type ScheduleContentAnalyticsPartitionArgs = Infer<
   typeof scheduleContentAnalyticsPartitionArgsValidator
 >;
@@ -166,6 +172,10 @@ export type SweepLearningPopularityRetentionArgs = Infer<
 
 export type SweepLearningPopularityRetentionResult = Infer<
   typeof sweepLearningPopularityRetentionResultValidator
+>;
+
+export type ClaimLearningPopularityRetentionResult = Infer<
+  typeof claimLearningPopularityRetentionResultValidator
 >;
 
 /** Raised when a requested analytics partition is outside the configured set. */

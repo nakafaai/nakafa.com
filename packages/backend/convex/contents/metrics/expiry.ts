@@ -15,10 +15,6 @@ import {
   getPopularityCyclePage,
 } from "@repo/backend/convex/contents/metrics/cycle";
 import { repairPopularityCounter } from "@repo/backend/convex/contents/metrics/repair";
-import {
-  type RetentionPageReference,
-  startLearningPopularityRetention,
-} from "@repo/backend/convex/contents/metrics/retention";
 import { getAppliedCount } from "@repo/backend/convex/contents/metrics/signal";
 import {
   getFinitePopularityWindows,
@@ -199,8 +195,7 @@ export const expireLearningPopularityWindowPage = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   args: ExpireLearningPopularityWindowPageArgs,
-  expirePage: ExpirePageReference,
-  retentionPage: RetentionPageReference
+  expirePage: ExpirePageReference
 ) {
   const cycle = yield* getPopularityCyclePage(ctx, {
     cursor: args.cursor,
@@ -265,7 +260,6 @@ export const expireLearningPopularityWindowPage = Effect.fn(
 
   if (page.isDone) {
     yield* completePopularityCycle(ctx, cycle.cycleId, args.day);
-    yield* startLearningPopularityRetention(ctx, args.day, retentionPage);
   } else {
     yield* advancePopularityCycle(ctx, cycle.cycleId, page.continueCursor);
     yield* Effect.tryPromise({

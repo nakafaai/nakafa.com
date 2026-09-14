@@ -10,6 +10,7 @@ const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
+const LEARNING_POPULARITY_RETENTION_CLAIM_INTERVAL_HOURS = 1;
 const NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS = 24;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
@@ -101,6 +102,17 @@ crons.cron(
   "repair learning popularity windows",
   "15 0 * * 0",
   internal.contents.mutations.popularity.scheduleLearningPopularityRefreshes,
+  {}
+);
+
+/**
+ * Claims the daily popularity retention chain from one owner once every finite
+ * window finished the current UTC maintenance day.
+ */
+crons.interval(
+  "claim learning popularity retention",
+  { hours: LEARNING_POPULARITY_RETENTION_CLAIM_INTERVAL_HOURS },
+  internal.contents.mutations.popularity.claimLearningPopularityRetention,
   {}
 );
 
