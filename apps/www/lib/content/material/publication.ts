@@ -6,6 +6,7 @@ import { fetchQuery } from "convex/nextjs";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import { cache } from "react";
 import { env } from "@/env";
 import { applyContentCache } from "@/lib/content/cache";
 import {
@@ -52,11 +53,8 @@ export const decodeMaterialDelivery = Effect.fn(
   return { model, published };
 });
 
-/** Caches a coherent shell selection separately from immutable body rendering. */
-export async function getMaterialPublication(
-  locale: Locale,
-  publicPath: string
-) {
+/** Reads and verifies one signed material delivery inside the content cache. */
+async function readMaterialDelivery(locale: Locale, publicPath: string) {
   "use cache";
 
   applyContentCache("material");
@@ -74,3 +72,9 @@ export async function getMaterialPublication(
     decodeMaterialDelivery(source, locale, publicPath)
   );
 }
+
+/**
+ * Shares one verified delivery between the material metadata and body in a
+ * single render pass. https://react.dev/reference/react/cache
+ */
+export const getMaterialPublication = cache(readMaterialDelivery);

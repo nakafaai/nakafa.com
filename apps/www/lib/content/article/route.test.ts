@@ -7,10 +7,7 @@ import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projecti
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
 import { Effect } from "effect";
-import {
-  getPublishedArticleRoute,
-  readPublishedArticleRoute,
-} from "@/lib/content/article/route";
+import { readPublishedArticleRoute } from "@/lib/content/article/route";
 import { makeArticleRuntimeSource } from "@/test/content/article";
 import {
   makeTestArticleProjection,
@@ -25,12 +22,8 @@ import {
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const runtimeReadMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
 
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
 vi.mock("@repo/backend/client/nakafa/query", () => ({
   readNakafaRuntimeQuery: runtimeReadMock,
 }));
@@ -65,7 +58,6 @@ function foundModel(overrides?: {
 beforeEach(() => {
   runtimeQueryMock.mockReset();
   runtimeReadMock.mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
-  cacheMock.mockReset();
 });
 
 describe("published article route", () => {
@@ -111,8 +103,9 @@ describe("published article route", () => {
           })
         );
 
-        const route = yield* Effect.tryPromise(() =>
-          getPublishedArticleRoute(projection.appLocale, projection.publicPath)
+        const route = yield* readPublishedArticleRoute(
+          projection.appLocale,
+          projection.publicPath
         );
         expect(route).toEqual({
           activeReleaseId,
@@ -123,7 +116,6 @@ describe("published article route", () => {
           ],
           projection,
         });
-        expect(cacheMock).toHaveBeenCalledWith("article");
       })
   );
 
@@ -131,12 +123,10 @@ describe("published article route", () => {
     Effect.gen(function* () {
       runtimeQueryMock.mockResolvedValueOnce(foundModel());
 
-      const route = yield* Effect.tryPromise(() =>
-        getPublishedArticleRoute(
-          "en",
-          testArticleProjection.publicPath,
-          activeReleaseId
-        )
+      const route = yield* readPublishedArticleRoute(
+        "en",
+        testArticleProjection.publicPath,
+        activeReleaseId
       );
       expect(route).toMatchObject({ activeReleaseId });
       expect(runtimeQueryMock).toHaveBeenCalledWith(
