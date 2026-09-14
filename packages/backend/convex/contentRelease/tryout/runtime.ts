@@ -28,13 +28,6 @@ const releaseRetainsRuntime = Effect.fn(
 ) {
   const release = yield* loadRelease(ctx, releaseId);
   const { originKind, rendererManifestHash, snapshotTransitions } = release;
-  if (
-    originKind === undefined ||
-    rendererManifestHash === undefined ||
-    snapshotTransitions === undefined
-  ) {
-    return true;
-  }
   const transition = snapshotTransitions.tryout;
   if (rendererManifestHash !== row.rendererManifestHash) {
     return false;

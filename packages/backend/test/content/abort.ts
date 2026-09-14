@@ -5,6 +5,7 @@ import {
   testReleaseJson,
   testRendererJson,
   testRollbackJson,
+  testStoredReachability,
 } from "@repo/backend/test/content/release";
 
 export const ABORT_RELEASE_ID = "release-abort";
@@ -37,19 +38,21 @@ export function abortItemJson(index: number) {
 /** Seeds one invisible candidate larger than the former eight-row ceiling. */
 export async function seedAbortRelease(ctx: MutationCtx) {
   const now = Date.UTC(2026, 6, 23, 12);
+  const releaseJson = testReleaseJson({
+    itemCount: ABORT_ITEM_COUNT,
+    projectionCount: 0,
+    releaseId: ABORT_RELEASE_ID,
+    routeCount: 0,
+    upsertCount: ABORT_ITEM_COUNT,
+  });
   await ctx.db.insert("contentReleases", {
+    ...testStoredReachability(releaseJson),
     baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
     releaseId: ABORT_RELEASE_ID,
-    releaseJson: testReleaseJson({
-      itemCount: ABORT_ITEM_COUNT,
-      projectionCount: 0,
-      releaseId: ABORT_RELEASE_ID,
-      routeCount: 0,
-      upsertCount: ABORT_ITEM_COUNT,
-    }),
+    releaseJson,
     rendererJson: testRendererJson(),
     resultFamilies: [...ContentFamilySchema.literals],
     role: "candidate",

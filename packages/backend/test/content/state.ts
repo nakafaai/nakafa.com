@@ -16,6 +16,7 @@ import {
   INITIAL_MODEL_SLOT,
   type ModelSlot,
 } from "@repo/backend/convex/contentRelease/models/slot";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
@@ -25,8 +26,8 @@ import {
   TEST_DIGEST,
   testReleaseJson,
   testRendererJson,
+  testStoredReachability,
 } from "@repo/backend/test/content/release";
-import { Schema } from "effect";
 
 export interface TestIdentity {
   readonly manifestHash: string;
@@ -34,69 +35,10 @@ export interface TestIdentity {
   readonly sequence: number;
 }
 
-const reachabilitySnapshotTransitionSchema = Schema.Struct({
-  baseSnapshotId: Schema.NullOr(Schema.String),
-  mode: Schema.Literals(["inherit", "replace", "restore"]),
-  resultSnapshotId: Schema.NullOr(Schema.String),
-});
-
-/** Stored envelope fields history retention reads, tolerant of contract drift. */
-const reachabilityEnvelopeSchema = Schema.Struct({
-  manifest: Schema.Struct({
-    baseManifestHash: Schema.NullOr(Schema.String),
-    baseReleaseId: Schema.NullOr(Schema.String),
-    origin: Schema.Struct({
-      kind: Schema.Literals(["git", "rollback"]),
-    }),
-    rendererManifestHash: Schema.String,
-    snapshots: Schema.Struct({
-      program: reachabilitySnapshotTransitionSchema,
-      quran: reachabilitySnapshotTransitionSchema,
-      tryout: reachabilitySnapshotTransitionSchema,
-    }),
-  }),
-  manifestHash: Schema.String,
-});
-
-/**
- * Aligns stored reachability columns to one release's signed fixture bytes.
- *
- * Retention fixtures must never guess facts from insert options; the signed
- * manifest is the source of truth exactly as it is in production staging.
- */
-export async function patchTestReachability(
-  ctx: MutationCtx,
-  releaseId: string
-) {
-  const release = await ctx.db
-    .query("contentReleases")
-    .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
-    .unique();
-  if (!release) {
-    throw new Error(`Expected reachable fixture release ${releaseId}.`);
-  }
-  // Fixture manifests stay intentionally tolerant of contract drift, exactly
-  // like stored history: reachability facts must project from the bytes alone.
-  const signed = Schema.decodeUnknownSync(reachabilityEnvelopeSchema, {
-    onExcessProperty: "ignore",
-  })(JSON.parse(release.releaseJson));
-  await ctx.db.patch("contentReleases", release._id, {
-    baseManifestHash: signed.manifest.baseManifestHash,
-    baseReleaseId: signed.manifest.baseReleaseId,
-    manifestHash: signed.manifestHash,
-    originKind: signed.manifest.origin.kind,
-    rendererManifestHash: signed.manifest.rendererManifestHash,
-    snapshotTransitions: {
-      program: signed.manifest.snapshots.program,
-      quran: signed.manifest.snapshots.quran,
-      tryout: signed.manifest.snapshots.tryout,
-    },
-  });
-}
-
 interface TestReleaseEnvelope extends TestIdentity {
   readonly activeAppLocales?: readonly ActiveAppLocaleCode[];
   readonly base?: TestIdentity;
+  readonly originKind?: "git" | "rollback";
   readonly originReleaseId?: string;
   readonly role: "candidate" | "recovery";
   readonly scope?: PublicationScope;
@@ -134,6 +76,7 @@ export function zeroReleaseJson(options: TestReleaseEnvelope) {
     baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     itemCount: 0,
     manifestHash: options.manifestHash,
+    originKind: options.originKind,
     originReleaseId: options.originReleaseId,
     projectionCount: 0,
     releaseId: options.releaseId,
@@ -174,6 +117,7 @@ export async function insertZeroRelease(
     stagedSnapshotRows: snapshotRowCount(snapshots),
   };
   await ctx.db.insert("contentReleases", {
+    ...testStoredReachability(releaseJson),
     ...(aborted
       ? { abortedAt: now, abortedRows: 0, abortingAt: now }
       : {
@@ -208,7 +152,6 @@ export async function insertZeroRelease(
     status: options.status,
     updatedAt: now,
   });
-  await patchTestReachability(ctx, options.releaseId);
 }
 
 /** Inserts the singleton publication pointer with exact slot identities. */
@@ -271,8 +214,13 @@ export async function insertTestState(
 
 /** Inserts one detached terminal release for cleanup dispatch coverage. */
 export async function insertAbortedRelease(ctx: MutationCtx) {
+  const releaseId = "release-cleanup-dispatch";
+  const signed = testSignedRelease(
+    testEmptyManifest(ReleaseIdSchema.make(releaseId))
+  );
   const now = Date.UTC(2026, 6, 22, 12);
   await ctx.db.insert("contentReleases", {
+    ...releaseReachability(signed),
     abortedAt: now,
     abortedRows: 0,
     abortingAt: now,
@@ -280,8 +228,8 @@ export async function insertAbortedRelease(ctx: MutationCtx) {
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
-    releaseId: "release-cleanup-dispatch",
-    releaseJson: "{}",
+    releaseId,
+    releaseJson: JSON.stringify(signed),
     rendererJson: "{}",
     resultFamilies: [],
     role: "candidate",
@@ -296,6 +244,39 @@ export async function insertAbortedRelease(ctx: MutationCtx) {
     stagedUpserts: 0,
     status: "aborted",
     updatedAt: now,
+  });
+}
+
+/**
+ * Rewrites one stored release's signed origin to unrelated provenance.
+ *
+ * A signed release can no longer carry a rollback origin that names another
+ * release, but stored history written before that rule existed can, so this
+ * fixture patches the retained bytes instead of minting an invalid release.
+ */
+export async function patchStoredOriginRelease(
+  ctx: MutationCtx,
+  releaseId: string,
+  originReleaseId: string
+) {
+  const release = await ctx.db
+    .query("contentReleases")
+    .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
+    .unique();
+  if (!release) {
+    throw new Error(`Expected stored release ${releaseId}.`);
+  }
+  const stored: { manifest: Record<string, unknown> } = JSON.parse(
+    release.releaseJson
+  );
+  await ctx.db.patch("contentReleases", release._id, {
+    releaseJson: JSON.stringify({
+      ...stored,
+      manifest: {
+        ...stored.manifest,
+        origin: { kind: "rollback", releaseId: originReleaseId },
+      },
+    }),
   });
 }
 
@@ -327,6 +308,7 @@ export async function insertActiveRelease(
     stagedSnapshotRows: 0,
   };
   await ctx.db.insert("contentReleases", {
+    ...releaseReachability(active),
     baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,

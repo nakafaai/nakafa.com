@@ -5,6 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import { makePublicationReceipt } from "@repo/backend/convex/contentRelease/receipt";
 import {
   PROOF_PAGE_LIMIT,
@@ -122,6 +123,7 @@ async function insertBaseFixture(role: "candidate" | "recovery") {
     });
     const pendingId = await ctx.db.insert("contentReleases", {
       ...Struct.omit(base, ["_id", "_creationTime"]),
+      ...releaseReachability(signed),
       releaseId,
       releaseJson: JSON.stringify(signed),
       role,
