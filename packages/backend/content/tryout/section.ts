@@ -57,8 +57,8 @@ export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
   }
 );
 /** Reads one already-selected signed section without repeating owner reads. */
-export const readTryoutSectionRows = Effect.fn(
-  "contentRelease.readTryoutSectionRows"
+export const readTryoutSectionRow = Effect.fn(
+  "contentRelease.readTryoutSectionRow"
 )(function* (
   snapshotId: string,
   storedSection: PublicationRow<"tryoutCatalog">
@@ -76,7 +76,19 @@ export const readTryoutSectionRows = Effect.fn(
         })
     )
   );
-  if (section.questionCount > TRYOUT_SECTION_LIMIT) {
+  return { row: section, rowHash: storedSection.rowHash };
+});
+
+/** Reads one already-selected signed section without repeating owner reads. */
+export const readTryoutSectionRows = Effect.fn(
+  "contentRelease.readTryoutSectionRows"
+)(function* (
+  snapshotId: string,
+  storedSection: PublicationRow<"tryoutCatalog">
+) {
+  const catalogIdentity = storedSection.identity;
+  const section = yield* readTryoutSectionRow(snapshotId, storedSection);
+  if (section.row.questionCount > TRYOUT_SECTION_LIMIT) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
       `Try-out section ${catalogIdentity} exceeds ${TRYOUT_SECTION_LIMIT} placements.`
@@ -85,10 +97,10 @@ export const readTryoutSectionRows = Effect.fn(
   const source = yield* TryoutSource;
   const storedPlacements = yield* source.placements(
     snapshotId,
-    section,
-    section.questionCount + 1
+    section.row,
+    section.row.questionCount + 1
   );
-  if (storedPlacements.length !== section.questionCount) {
+  if (storedPlacements.length !== section.row.questionCount) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Try-out section ${catalogIdentity} lost its signed placements.`
@@ -110,7 +122,7 @@ export const readTryoutSectionRows = Effect.fn(
   }
   return {
     placements,
-    section: { row: section, rowHash: storedSection.rowHash },
+    section,
     snapshotId,
   };
 });
