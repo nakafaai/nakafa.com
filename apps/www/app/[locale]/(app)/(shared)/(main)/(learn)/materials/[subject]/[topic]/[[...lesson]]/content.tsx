@@ -13,7 +13,6 @@ import {
   readMaterialRequest,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { getMaterialPublication } from "@/lib/content/material/publication";
-import { getPublishedMaterialRoute } from "@/lib/content/material/route";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewContent,
@@ -109,7 +108,7 @@ async function resolveMaterialOwner(
   };
 }
 
-/** Reads metadata through the same exclusive owner used by page rendering. */
+/** Reads metadata from the same signed delivery the page body renders. */
 export async function readMaterialMetadata(
   params: MaterialParams
 ): Promise<MaterialMetadataContent> {
@@ -124,17 +123,20 @@ export async function readMaterialMetadata(
     };
   }
 
-  const model = await getPublishedMaterialRoute(owner.locale, owner.publicPath);
-  if (!model.projection) {
+  const publication = await getMaterialPublication(
+    owner.locale,
+    owner.publicPath
+  );
+  if (!publication?.model.projection) {
     notFound();
   }
 
   return {
-    alternates: model.alternates,
+    alternates: publication.model.alternates,
     kind: owner.kind,
     appLocale: owner.locale,
-    metadata: model.projection.metadata,
-    route: model.projection,
+    metadata: publication.model.projection.metadata,
+    route: publication.model.projection,
   };
 }
 

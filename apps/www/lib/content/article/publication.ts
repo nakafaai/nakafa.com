@@ -6,6 +6,7 @@ import { fetchQuery } from "convex/nextjs";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import { cache } from "react";
 import { env } from "@/env";
 import {
   makeArticleProjectionError,
@@ -52,11 +53,8 @@ export const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
   }
 );
 
-/** Caches a coherent shell selection separately from immutable body rendering. */
-export async function getArticlePublication(
-  locale: Locale,
-  publicPath: string
-) {
+/** Reads and verifies one signed article delivery inside the content cache. */
+async function readArticleDelivery(locale: Locale, publicPath: string) {
   "use cache";
 
   applyContentCache("article");
@@ -74,3 +72,9 @@ export async function getArticlePublication(
     decodeArticleDelivery(source, locale, publicPath)
   );
 }
+
+/**
+ * Shares one verified delivery between the article metadata and body in a
+ * single render pass. https://react.dev/reference/react/cache
+ */
+export const getArticlePublication = cache(readArticleDelivery);

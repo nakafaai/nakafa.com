@@ -10,7 +10,6 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
 import { getArticlePublication } from "@/lib/content/article/publication";
-import { getPublishedArticleRoute } from "@/lib/content/article/route";
 import {
   type ArticlePreviewContent,
   readArticlePreview,
@@ -87,15 +86,18 @@ export async function readArticleMetadata(input: ArticleContentInput) {
       route: owner.content.projection,
     };
   }
-  const model = await getPublishedArticleRoute(input.locale, input.publicPath);
-  if (!model.projection) {
+  const publication = await getArticlePublication(
+    input.locale,
+    input.publicPath
+  );
+  if (!publication?.model.projection) {
     notFound();
   }
   return {
-    alternates: model.alternates,
-    categoryTitle: model.projection.categoryTitle,
-    metadata: model.projection.metadata,
-    route: model.projection,
+    alternates: publication.model.alternates,
+    categoryTitle: publication.model.projection.categoryTitle,
+    metadata: publication.model.projection.metadata,
+    route: publication.model.projection,
   };
 }
 

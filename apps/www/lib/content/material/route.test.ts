@@ -7,10 +7,7 @@ import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/project
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect } from "effect";
-import {
-  getPublishedMaterialRoute,
-  readPublishedMaterialRoute,
-} from "@/lib/content/material/route";
+import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
 import {
   previewDeProjection,
@@ -26,14 +23,10 @@ import {
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const runtimeReadMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
 const activeManifestHash = `sha256:${"a".repeat(64)}`;
 const activeReleaseId = ReleaseIdSchema.make("release-material");
 const sourceRevision = "a".repeat(40);
 
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
 vi.mock("@repo/backend/client/nakafa/query", () => ({
   readNakafaRuntimeQuery: runtimeReadMock,
 }));
@@ -93,7 +86,6 @@ function foundModel(overrides?: {
 beforeEach(() => {
   runtimeQueryMock.mockReset();
   runtimeReadMock.mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
-  cacheMock.mockReset();
 });
 
 describe("published material route", () => {
@@ -134,8 +126,9 @@ describe("published material route", () => {
       Effect.gen(function* () {
         runtimeQueryMock.mockResolvedValueOnce(foundModel());
 
-        const route = yield* Effect.tryPromise(() =>
-          getPublishedMaterialRoute("en", previewProjection.publicPath)
+        const route = yield* readPublishedMaterialRoute(
+          "en",
+          previewProjection.publicPath
         );
         expect(route).toMatchObject({
           activeReleaseId,
@@ -150,7 +143,6 @@ describe("published material route", () => {
           sourceRevision,
         });
         expect(runtimeQueryMock).toHaveBeenCalledOnce();
-        expect(cacheMock).toHaveBeenCalledOnce();
       })
   );
 
@@ -158,12 +150,10 @@ describe("published material route", () => {
     Effect.gen(function* () {
       runtimeQueryMock.mockResolvedValueOnce(foundModel());
 
-      const route = yield* Effect.tryPromise(() =>
-        getPublishedMaterialRoute(
-          "en",
-          previewProjection.publicPath,
-          activeReleaseId
-        )
+      const route = yield* readPublishedMaterialRoute(
+        "en",
+        previewProjection.publicPath,
+        activeReleaseId
       );
       expect(route).toMatchObject({ activeReleaseId });
       expect(runtimeQueryMock).toHaveBeenCalledWith(

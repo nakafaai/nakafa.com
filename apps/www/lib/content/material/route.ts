@@ -20,7 +20,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { applyContentCache } from "@/lib/content/cache";
 import {
   decodeMaterialJson,
   isMaterialCounterpart,
@@ -214,16 +213,3 @@ export const decodePublishedMaterialRoute = Effect.fn(
     sourceRevision,
   } satisfies PublishedMaterialRoute;
 });
-/** Caches one exact signed material model under release invalidation. */
-export async function getPublishedMaterialRoute(
-  locale: Locale,
-  publicPath: string,
-  expectedActiveReleaseId?: ContentReleasePin
-) {
-  "use cache";
-  const result = await Effect.runPromise(
-    readPublishedMaterialRoute(locale, publicPath, expectedActiveReleaseId)
-  );
-  applyContentCache("material");
-  return result;
-}

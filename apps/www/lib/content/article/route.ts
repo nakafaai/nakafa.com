@@ -16,7 +16,6 @@ import {
   isArticleCounterpart,
   makeArticleProjectionError,
 } from "@/lib/content/article/decode";
-import { applyContentCache } from "@/lib/content/cache";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
   type ContentReleasePin,
@@ -134,18 +133,3 @@ export const decodePublishedArticleRoute = Effect.fn(
     projection,
   } satisfies PublishedArticleRoute;
 });
-
-/** Caches one exact signed article model under release invalidation. */
-export async function getPublishedArticleRoute(
-  locale: Locale,
-  publicPath: string,
-  expectedActiveReleaseId?: ContentReleasePin
-) {
-  "use cache";
-
-  const result = await Effect.runPromise(
-    readPublishedArticleRoute(locale, publicPath, expectedActiveReleaseId)
-  );
-  applyContentCache("article");
-  return result;
-}
