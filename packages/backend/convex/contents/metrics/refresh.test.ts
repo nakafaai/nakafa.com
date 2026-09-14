@@ -258,14 +258,16 @@ describe("contents/metrics/refresh", () => {
     );
     // Aggregate 0.3 checks its async queue once per synchronous counter write.
     // These seven writes add seven queries without reading queue documents.
+    // A completing window page no longer re-reads its sibling cycles, because
+    // the single retention claim owner reads them on its own schedule.
     expect(expiryMetrics).toEqual({
-      databaseQueries: 133,
-      documentsRead: 153,
+      databaseQueries: 98,
+      documentsRead: 119,
       documentsWritten: 28,
     });
     expect(repairMetrics).toEqual({
-      databaseQueries: 140,
-      documentsRead: 840,
+      databaseQueries: 105,
+      documentsRead: 806,
       documentsWritten: 28,
     });
   });

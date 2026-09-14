@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  getFinitePopularityWindows,
   getPopularitySignalDay,
   type LearningPopularityFiniteWindow,
+  learningPopularityScopeValues,
   POPULARITY_DAY_MS,
 } from "@repo/backend/convex/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
@@ -255,6 +257,49 @@ describe("contents/mutations/popularity", () => {
       ])
     );
     expect(jobs).toHaveLength(14);
+  });
+
+  it("claims the retention chain from its single owner", async () => {
+    const t = createPopularityConvexTest();
+    const day = getPopularitySignalDay(NOW);
+
+    await t.mutation(async (ctx) => {
+      for (const scopeMode of learningPopularityScopeValues) {
+        for (const windowKey of getFinitePopularityWindows()) {
+          await ctx.db.insert("learningPopularityCycles", {
+            completedDay: day,
+            mode: "repair",
+            scopeMode,
+            startedDay: day,
+            windowKey,
+          });
+        }
+      }
+    });
+
+    const claimed = await t.mutation(
+      internal.contents.mutations.popularity.claimLearningPopularityRetention,
+      {}
+    );
+    const duplicate = await t.mutation(
+      internal.contents.mutations.popularity.claimLearningPopularityRetention,
+      {}
+    );
+    const retention = await t.query(
+      async (ctx) => await ctx.db.query("learningPopularityRetention").unique()
+    );
+    const jobs = await t.query(
+      async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
+    );
+
+    expect(claimed).toEqual({ claimed: true, day });
+    expect(duplicate).toEqual({ claimed: false, day });
+    expect(retention).toMatchObject({
+      day,
+      key: "popularity",
+      phase: "viewers",
+    });
+    expect(jobs.map((job) => job.args)).toEqual([[{ day }]]);
   });
 
   it("repairs finite windows from daily signals and removes expired counters", async () => {

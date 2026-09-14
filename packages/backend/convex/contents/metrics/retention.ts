@@ -7,12 +7,13 @@ import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analyti
 import { POPULARITY_RETENTION_BATCH_SIZE } from "@repo/backend/convex/contents/constants";
 import {
   getFinitePopularityWindows,
+  getPopularitySignalDay,
   getPopularityWindowStartDay,
   learningPopularityScopeValues,
   POPULARITY_DAY_MS,
 } from "@repo/backend/convex/contents/popularity";
 import type { FunctionReference } from "convex/server";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 
 export type RetentionPageReference = FunctionReference<
   "mutation",
@@ -75,7 +76,11 @@ const hasCompletedPopularityMaintenance = Effect.fn(
   return true;
 });
 
-/** Claims one retention chain after every daily repair or expiry cycle finishes. */
+/**
+ * Claims the daily retention chain once every finite window finished the day.
+ * The singleton guard reads first, so a claim that already happened costs one
+ * document read instead of a full namespace scan.
+ */
 export const startLearningPopularityRetention = Effect.fn(
   "contents.metrics.startLearningPopularityRetention"
 )(function* (
@@ -83,12 +88,12 @@ export const startLearningPopularityRetention = Effect.fn(
   day: number,
   retentionPage: RetentionPageReference
 ) {
-  if (!(yield* hasCompletedPopularityMaintenance(ctx, day))) {
+  const retention = yield* loadRetention(ctx);
+  if (retention && retention.day >= day) {
     return false;
   }
 
-  const retention = yield* loadRetention(ctx);
-  if (retention && retention.day >= day) {
+  if (!(yield* hasCompletedPopularityMaintenance(ctx, day))) {
     return false;
   }
 
@@ -116,6 +121,25 @@ export const startLearningPopularityRetention = Effect.fn(
 
   yield* scheduleRetentionPage(ctx, day, retentionPage);
   return true;
+});
+
+/**
+ * Claims the retention chain for the current UTC maintenance day. One owner
+ * decides the claim, so a completing window page never reads its sibling
+ * namespaces and never races their cycle writes.
+ */
+export const claimLearningPopularityRetention = Effect.fn(
+  "contents.metrics.claimLearningPopularityRetention"
+)(function* (ctx: MutationCtx, retentionPage: RetentionPageReference) {
+  const timestamp = yield* Clock.currentTimeMillis;
+  const day = getPopularitySignalDay(timestamp);
+  const claimed = yield* startLearningPopularityRetention(
+    ctx,
+    day,
+    retentionPage
+  );
+
+  return { claimed, day };
 });
 
 /** Deletes one indexed page whose popularity repair value has expired. */

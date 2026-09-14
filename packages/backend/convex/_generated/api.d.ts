@@ -12252,6 +12252,12 @@ export declare const internal: {
         >;
       };
       popularity: {
+        claimLearningPopularityRetention: FunctionReference<
+          "mutation",
+          "internal",
+          {},
+          { claimed: boolean; day: number }
+        >;
         expireLearningPopularityWindowPage: FunctionReference<
           "mutation",
           "internal",

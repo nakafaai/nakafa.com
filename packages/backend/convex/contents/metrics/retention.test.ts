@@ -185,6 +185,8 @@ describe("contents/metrics/retention", () => {
     expect(claimed.metrics.documentsWritten.used).toBe(1);
     expect(claimed.metrics.functionsScheduled.used).toBe(1);
     expect(duplicate.result).toBe(false);
+    expect(duplicate.metrics.databaseQueries.used).toBe(1);
+    expect(duplicate.metrics.documentsRead.used).toBe(1);
     expect(duplicate.metrics.documentsWritten.used).toBe(0);
     expect(duplicate.metrics.functionsScheduled.used).toBe(0);
 
