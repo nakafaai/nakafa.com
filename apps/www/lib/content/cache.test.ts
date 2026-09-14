@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   ContentCacheScopeSchema,
@@ -20,15 +22,15 @@ const otherArtifactTag = makeArtifactCacheTag(otherArtifactHash);
 const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
 const revalidateTagMock = vi.hoisted(() => vi.fn());
-const dangerouslyDeleteByTagMock = vi.hoisted(() => vi.fn());
+const invalidateSitemapCacheMock = vi.hoisted(() => vi.fn());
 
 class TestCacheFailure extends Data.TaggedError("TestCacheFailure")<{
   readonly layer: "next" | "sitemap";
 }> {}
 
-vi.mock("@vercel/functions", () => ({
-  /** Records immediate CDN deletion without calling Vercel. */
-  dangerouslyDeleteByTag: dangerouslyDeleteByTagMock,
+vi.mock("@/lib/sitemap/cache", () => ({
+  /** Records the shared sitemap invalidation without calling Vercel. */
+  invalidateSitemapCache: invalidateSitemapCacheMock,
 }));
 vi.mock("next/cache", () => ({
   /** Records cache profile usage without touching Next internals. */
@@ -43,7 +45,7 @@ describe("content runtime cache", () => {
     cacheLifeMock.mockClear();
     cacheTagMock.mockClear();
     revalidateTagMock.mockClear();
-    dangerouslyDeleteByTagMock.mockReset().mockResolvedValue(undefined);
+    invalidateSitemapCacheMock.mockReset().mockReturnValue(Effect.void);
   });
   it("keeps combined mutable dependencies explicit", () => {
     applyContentCache("material", "program");
@@ -64,24 +66,28 @@ describe("content runtime cache", () => {
       Effect.gen(function* () {
         expect(yield* invalidateContentCache(scope)).toBe(scope);
         expect(revalidateTagMock.mock.calls).toEqual([
-          [makeContentCacheTag(scope), { expire: 0 }],
+          [makeContentCacheTag(scope), "max"],
         ]);
-        expect(dangerouslyDeleteByTagMock).toHaveBeenCalledWith(
-          "content-sitemap",
-          { revalidationDeadlineSeconds: 0 }
-        );
+        expect(invalidateSitemapCacheMock).toHaveBeenCalledOnce();
       })
   );
-  it.effect("keeps a failed CDN purge in the typed error channel", () =>
-    Effect.gen(function* () {
-      dangerouslyDeleteByTagMock.mockRejectedValueOnce(
-        new TestCacheFailure({ layer: "sitemap" })
-      );
+  it("revalidates through the runtime profile instead of deleting", () => {
+    applyContentCache("material");
 
-      expect(
-        yield* invalidateContentCache("material").pipe(Effect.flip)
-      ).toEqual(new ContentCacheInvalidationError({ layer: "sitemap" }));
-    })
+    expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
+  });
+  it.effect(
+    "keeps a failed sitemap invalidation in the typed error channel",
+    () =>
+      Effect.gen(function* () {
+        invalidateSitemapCacheMock.mockReturnValueOnce(
+          Effect.fail(new TestCacheFailure({ layer: "sitemap" }))
+        );
+
+        expect(
+          yield* invalidateContentCache("material").pipe(Effect.flip)
+        ).toEqual(new ContentCacheInvalidationError({ layer: "sitemap" }));
+      })
   );
   it.effect("keeps a failed Next invalidation in the typed error channel", () =>
     Effect.gen(function* () {
@@ -92,7 +98,7 @@ describe("content runtime cache", () => {
       expect(
         yield* invalidateContentCache("material").pipe(Effect.flip)
       ).toEqual(new ContentCacheInvalidationError({ layer: "next" }));
-      expect(dangerouslyDeleteByTagMock).not.toHaveBeenCalled();
+      expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
     })
   );
 });

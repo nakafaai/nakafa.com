@@ -14,6 +14,10 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
+import {
+  CONTENT_CACHE_LIFETIME,
+  CONTENT_CACHE_PROFILE,
+} from "@/lib/content/profile";
 import { createOgRouteAliasRewrites } from "@/lib/og/route";
 import { readRuntimeConfig } from "@/runtime";
 
@@ -181,12 +185,10 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: `${isAksaraPreviewChild}`,
   },
+  // Signed content reads share one freshness policy with the publication
+  // invalidation that refreshes them, so both live in one module.
   cacheLife: {
-    contentRuntime: {
-      stale: 300,
-      revalidate: 3600,
-      expire: 86_400,
-    },
+    [CONTENT_CACHE_PROFILE]: { ...CONTENT_CACHE_LIFETIME },
   },
   // PostHog's same-origin proxy endpoints include trailing slashes such as
   // `/i/v0/e/`, so Next.js slash normalization must be disabled.
