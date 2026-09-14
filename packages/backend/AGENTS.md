@@ -37,11 +37,6 @@ the job, such as risky schema or function changes, destructive rehearsals, or
 parallel work that must not disturb the main dev loop. No explicit request
 needed.
 
-Run one-off inspection and diagnostic queries against the dev or an Agent Mode
-deployment, never production. An ad-hoc query is an unbounded read until it is
-bounded, so give it `.take()`, pagination, or `maximumBytesRead` before it
-touches a real dataset.
-
 ## Nakafa Convex Architecture Rules
 
 Keep Convex route files focused on registered Convex functions. Move shared
@@ -73,12 +68,12 @@ or legacy code/data paths behind. After verifying dev and prod data, delete the
 obsolete Convex function and its tests before considering the work complete.
 
 History retention and compaction decide which stored releases must stay
-reachable, so they read reachability metadata (release identity, base identity,
-and snapshot transitions) through a projection that tolerates unknown manifest
-fields. They never parse the signed content contract, because a contract
-generation change must not be able to strand the cleaner that retires old
-history. Content readers stay strict, and a missing reachability fact still
-fails closed.
+reachable, so they read small stored reachability facts (release identity, base
+identity, origin, renderer identity, and snapshot transitions) written beside
+each release. They never parse or decode the signed content contract, because a
+contract generation change must not be able to strand the cleaner that retires
+old history. Content readers stay strict, and an unprovable reachability fact
+protects all stored history instead of risking deletion.
 
 Every public Convex function used by a deployed client is a rollout contract.
 Renames and removals use expand, switch, observe, contract: deploy the successor

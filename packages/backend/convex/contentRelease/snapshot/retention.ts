@@ -4,7 +4,6 @@ import {
   loadRelease,
   loadState,
 } from "@repo/backend/convex/contentRelease/model";
-import { readReleaseRetention } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
 
 /** Checks permanent try-out state that still requires one snapshot. */
@@ -54,14 +53,17 @@ const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
         ...completed.map(({ releaseId }) => releaseId),
       ].filter((releaseId) => releaseId !== undefined)
     );
+    let unprovable = false;
     for (const releaseId of [...ids]) {
       const release = yield* loadRelease(ctx, releaseId);
-      const retention = yield* readReleaseRetention(release.releaseJson);
-      if (retention.manifest.baseReleaseId !== null) {
-        ids.add(retention.manifest.baseReleaseId);
+      const baseReleaseId = release.baseReleaseId;
+      if (baseReleaseId === undefined) {
+        unprovable = true;
+      } else if (baseReleaseId !== null) {
+        ids.add(baseReleaseId);
       }
     }
-    return ids;
+    return { ids, unprovable };
   }
 );
 
@@ -79,11 +81,17 @@ export const isSnapshotReferenced = Effect.fn(
   ) {
     return true;
   }
-  const releaseIds = yield* protectedReleases(ctx);
-  for (const releaseId of releaseIds) {
+  const { ids, unprovable } = yield* protectedReleases(ctx);
+  if (unprovable) {
+    return true;
+  }
+  for (const releaseId of ids) {
     const release = yield* loadRelease(ctx, releaseId);
-    const retention = yield* readReleaseRetention(release.releaseJson);
-    const state = retention.manifest.snapshots[family];
+    const transitions = release.snapshotTransitions;
+    if (transitions === undefined) {
+      return true;
+    }
+    const state = transitions[family];
     if (
       state.baseSnapshotId === snapshotId ||
       state.resultSnapshotId === snapshotId

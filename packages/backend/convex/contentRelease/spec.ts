@@ -189,6 +189,20 @@ const snapshotStateValidator = v.object({
   rowDigest: v.string(),
 });
 
+/** Snapshot transition facts history retention reads without the manifest. */
+export const releaseSnapshotTransitionValidator = v.object({
+  baseSnapshotId: v.union(v.string(), v.null()),
+  mode: literals("inherit", "replace", "restore"),
+  resultSnapshotId: v.union(v.string(), v.null()),
+});
+
+/** Fixed per-family snapshot transitions stored beside one release. */
+export const releaseSnapshotTransitionsValidator = v.object({
+  program: releaseSnapshotTransitionValidator,
+  quran: releaseSnapshotTransitionValidator,
+  tryout: releaseSnapshotTransitionValidator,
+});
+
 /** Completed publication evidence stored and returned without body replay. */
 export const publicationReceiptValidator = v.object({
   activatedHeads: v.number(),

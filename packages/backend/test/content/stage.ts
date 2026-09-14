@@ -14,6 +14,7 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
+import { patchTestReachability } from "@repo/backend/test/content/state";
 
 interface StagedReleaseOptions {
   readonly activeAppLocales?: readonly ActiveAppLocaleCode[];
@@ -154,6 +155,7 @@ export async function insertTestRelease(
     status,
     updatedAt: now,
   });
+  await patchTestReachability(ctx, releaseId);
   await ctx.db.insert("contentState", {
     articleSlot: INITIAL_MODEL_SLOT,
     ...(role === "candidate"

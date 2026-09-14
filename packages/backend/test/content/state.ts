@@ -26,11 +26,72 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
+import { Schema } from "effect";
 
 export interface TestIdentity {
   readonly manifestHash: string;
   readonly releaseId: string;
   readonly sequence: number;
+}
+
+const reachabilitySnapshotTransitionSchema = Schema.Struct({
+  baseSnapshotId: Schema.NullOr(Schema.String),
+  mode: Schema.Literals(["inherit", "replace", "restore"]),
+  resultSnapshotId: Schema.NullOr(Schema.String),
+});
+
+/** Stored envelope fields history retention reads, tolerant of contract drift. */
+const reachabilityEnvelopeSchema = Schema.Struct({
+  manifest: Schema.Struct({
+    baseManifestHash: Schema.NullOr(Schema.String),
+    baseReleaseId: Schema.NullOr(Schema.String),
+    origin: Schema.Struct({
+      kind: Schema.Literals(["git", "rollback"]),
+    }),
+    rendererManifestHash: Schema.String,
+    snapshots: Schema.Struct({
+      program: reachabilitySnapshotTransitionSchema,
+      quran: reachabilitySnapshotTransitionSchema,
+      tryout: reachabilitySnapshotTransitionSchema,
+    }),
+  }),
+  manifestHash: Schema.String,
+});
+
+/**
+ * Aligns stored reachability columns to one release's signed fixture bytes.
+ *
+ * Retention fixtures must never guess facts from insert options; the signed
+ * manifest is the source of truth exactly as it is in production staging.
+ */
+export async function patchTestReachability(
+  ctx: MutationCtx,
+  releaseId: string
+) {
+  const release = await ctx.db
+    .query("contentReleases")
+    .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
+    .unique();
+  if (!release) {
+    throw new Error(`Expected reachable fixture release ${releaseId}.`);
+  }
+  // Fixture manifests stay intentionally tolerant of contract drift, exactly
+  // like stored history: reachability facts must project from the bytes alone.
+  const signed = Schema.decodeUnknownSync(reachabilityEnvelopeSchema, {
+    onExcessProperty: "ignore",
+  })(JSON.parse(release.releaseJson));
+  await ctx.db.patch("contentReleases", release._id, {
+    baseManifestHash: signed.manifest.baseManifestHash,
+    baseReleaseId: signed.manifest.baseReleaseId,
+    manifestHash: signed.manifestHash,
+    originKind: signed.manifest.origin.kind,
+    rendererManifestHash: signed.manifest.rendererManifestHash,
+    snapshotTransitions: {
+      program: signed.manifest.snapshots.program,
+      quran: signed.manifest.snapshots.quran,
+      tryout: signed.manifest.snapshots.tryout,
+    },
+  });
 }
 
 interface TestReleaseEnvelope extends TestIdentity {
@@ -147,6 +208,7 @@ export async function insertZeroRelease(
     status: options.status,
     updatedAt: now,
   });
+  await patchTestReachability(ctx, options.releaseId);
 }
 
 /** Inserts the singleton publication pointer with exact slot identities. */
