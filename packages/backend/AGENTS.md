@@ -37,6 +37,11 @@ the job, such as risky schema or function changes, destructive rehearsals, or
 parallel work that must not disturb the main dev loop. No explicit request
 needed.
 
+Run one-off inspection and diagnostic queries against the dev or an Agent Mode
+deployment, never production. An ad-hoc query is an unbounded read until it is
+bounded, so give it `.take()`, pagination, or `maximumBytesRead` before it
+touches a real dataset.
+
 ## Nakafa Convex Architecture Rules
 
 Keep Convex route files focused on registered Convex functions. Move shared
