@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { LayoutContent } from "@/components/shared/layout-content";
+import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { LayoutMaterial } from "@/components/shared/material/layout";
 import { UserSettingsHeader } from "@/components/user/settings/header";
 
 /** Keeps private account settings out of search and social discovery. */
@@ -23,11 +26,13 @@ export default function Layout({
   children,
 }: LayoutProps<"/[locale]/user/settings">) {
   return (
-    <div className="flex flex-col">
-      <UserSettingsHeader />
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-6">
-        {children}
-      </div>
-    </div>
+    <LayoutMaterial>
+      <LayoutMaterialContent>
+        <UserSettingsHeader />
+        <LayoutContent className="flex flex-col gap-6 py-6">
+          {children}
+        </LayoutContent>
+      </LayoutMaterialContent>
+    </LayoutMaterial>
   );
 }
