@@ -1,6 +1,6 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
+import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { buildSitemapIndexXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
 
@@ -12,7 +12,7 @@ export function GET() {
   return Effect.runPromise(
     buildSitemapIndexResponse().pipe(
       Effect.catch((error) =>
-        reportSitemapRouteError(error, "sitemap-index").pipe(
+        captureServerExceptionSafely(error, { source: "sitemap-index" }).pipe(
           Effect.as(
             new Response(sitemapIndexError, {
               headers: { "Content-Type": "text/plain; charset=utf-8" },
@@ -38,8 +38,3 @@ const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
     });
   }
 );
-
-/** Reports sitemap route failures without exposing implementation details. */
-function reportSitemapRouteError(error: unknown, source: string) {
-  return captureServerException(error, { source }).pipe(Effect.ignore);
-}

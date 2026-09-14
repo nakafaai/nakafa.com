@@ -1,9 +1,9 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import { preloadedQueryResult } from "convex/nextjs";
 import { ConvexError } from "convex/values";
 import { Effect, Schema } from "effect";
 import { cache } from "react";
+import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { fetchAuthQuery, getToken, preloadAuthQuery } from "@/lib/auth/server";
 
 const SCHOOL_SWITCHER_PAGE_SIZE = 20;
@@ -46,9 +46,9 @@ function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
 /** Captures an unexpected school route error and preserves the original failure. */
 function captureSchoolRouteError(failure: SchoolDataReadError) {
   return Effect.gen(function* () {
-    yield* captureServerException(failure.cause, {
+    yield* captureServerExceptionSafely(failure.cause, {
       source: failure.source,
-    }).pipe(Effect.ignore);
+    });
 
     return yield* failure;
   });

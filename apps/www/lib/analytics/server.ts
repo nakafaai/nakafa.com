@@ -14,8 +14,17 @@ class ServerExceptionScheduleError extends Schema.TaggedError<ServerExceptionSch
   }
 ) {}
 
-/** Captures one server exception without leaking analytics failures. */
-const captureServerExceptionSafely = Effect.fn(
+/**
+ * Captures one server exception without leaking analytics failures into the
+ * caller.
+ *
+ * This is the module's public best-effort seam: reporting runs behind a
+ * dynamic import and swallows its own failures, so a missing analytics runtime
+ * or a rejected PostHog call never fails the operation that produced the
+ * error. Callers that must observe the capture failure use
+ * `captureServerException` directly.
+ */
+export const captureServerExceptionSafely = Effect.fn(
   "www.analytics.captureServerExceptionSafely"
 )(function* (error: unknown, properties: OperationalExceptionProperties) {
   yield* Effect.tryPromise(() => import("@repo/analytics/posthog/server")).pipe(

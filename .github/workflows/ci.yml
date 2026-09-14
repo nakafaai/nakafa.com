@@ -140,11 +140,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Export app version
-        run: |
-          app_version="$(node -p 'require("./package.json").version')"
-          echo "NEXT_PUBLIC_VERSION=$app_version" >> "$GITHUB_ENV"
-
       - name: Prepare signed acceptance publication
         run: pnpm acceptance:prepare
 
