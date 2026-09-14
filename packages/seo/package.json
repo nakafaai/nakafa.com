@@ -11,7 +11,6 @@
     "@repo/next-config": "workspace:*",
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
-    "lodash.merge": "^4.6.2",
     "next": "16.3.5",
     "next-intl": "^4.14.4",
     "react": "19.2.8",
@@ -21,7 +20,6 @@
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/lodash.merge": "^4.6.9",
     "@vitest/coverage-istanbul": "catalog:",
     "vitest": "catalog:"
   }

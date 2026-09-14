@@ -83,7 +83,7 @@ pnpm build
 ```
 
 The PostHog browser SDK is exact-pinned. Its scoped Socket heuristic exception
-in `packages/analytics/doctor.config.json` must be revalidated or removed
+in `packages/analytics/doctor.config.ts` must be revalidated or removed
 whenever that pin changes. Registry advisories remain a hard failure through
 `pnpm security:audit`.
 

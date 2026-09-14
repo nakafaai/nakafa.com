@@ -1,4 +1,3 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
@@ -6,6 +5,7 @@ import { Effect } from "effect";
 import type { Metadata } from "next";
 import { cache, Suspense, use } from "react";
 import { AiChatPage } from "@/components/ai/chat-page";
+import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { getToken } from "@/lib/auth/server";
 
 /** Loads the current chat title once per request for metadata generation. */
@@ -31,9 +31,9 @@ export async function generateMetadata({
     Effect.tryPromise(() => getChatTitle(id as Id<"chats">)).pipe(
       Effect.catchTag("UnknownError", ({ cause: error }) =>
         Effect.gen(function* () {
-          yield* captureServerException(error, {
+          yield* captureServerExceptionSafely(error, {
             source: "chat-page-metadata",
-          }).pipe(Effect.ignore);
+          });
 
           return null;
         })

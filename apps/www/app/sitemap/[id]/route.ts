@@ -1,5 +1,5 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
 import { Effect } from "effect";
+import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 import { buildSitemapUrlSetXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
@@ -25,7 +25,7 @@ export async function GET(
         Effect.succeed(createNotFoundResponse())
       ),
       Effect.catch((error) =>
-        reportSitemapRouteError(error, "sitemap-page").pipe(
+        captureServerExceptionSafely(error, { source: "sitemap-page" }).pipe(
           Effect.as(
             new Response(sitemapPageError, {
               headers: { "Content-Type": "text/plain; charset=utf-8" },
@@ -70,8 +70,3 @@ const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
     });
   }
 );
-
-/** Reports sitemap route failures without exposing implementation details. */
-function reportSitemapRouteError(error: unknown, source: string) {
-  return captureServerException(error, { source }).pipe(Effect.ignore);
-}

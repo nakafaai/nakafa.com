@@ -5,7 +5,7 @@ import { Data, Effect } from "effect";
 import { GET } from "@/app/sitemap.xml/route";
 
 const mockReadSitemapPageDescriptors = vi.hoisted(() => vi.fn());
-const mockCaptureServerException = vi.hoisted(() => vi.fn());
+const mockCaptureServerExceptionSafely = vi.hoisted(() => vi.fn());
 
 /** Test-only typed sitemap failure. */
 class TestSitemapIndexError extends Data.TaggedError("TestSitemapIndexError")<{
@@ -16,14 +16,14 @@ vi.mock("@/lib/sitemap/catalog", () => ({
   readSitemapPageDescriptors: mockReadSitemapPageDescriptors,
 }));
 
-vi.mock("@repo/analytics/posthog/server", () => ({
-  captureServerException: mockCaptureServerException,
+vi.mock("@/lib/analytics/server", () => ({
+  captureServerExceptionSafely: mockCaptureServerExceptionSafely,
 }));
 
 describe("sitemap index route", () => {
   beforeEach(() => {
-    mockCaptureServerException.mockReset();
-    mockCaptureServerException.mockReturnValue(Effect.void);
+    mockCaptureServerExceptionSafely.mockReset();
+    mockCaptureServerExceptionSafely.mockReturnValue(Effect.void);
     mockReadSitemapPageDescriptors.mockReset();
     mockReadSitemapPageDescriptors.mockReturnValue(
       Effect.succeed([{ id: "base" }, { id: "content_id_quran_0" }])
@@ -53,7 +53,7 @@ describe("sitemap index route", () => {
 
     expect(response.status).toBe(500);
     expect(await response.text()).toBe("Internal Server Error");
-    expect(mockCaptureServerException).toHaveBeenCalledWith(failure, {
+    expect(mockCaptureServerExceptionSafely).toHaveBeenCalledWith(failure, {
       source: "sitemap-index",
     });
   });

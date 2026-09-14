@@ -6,7 +6,7 @@ import { GET } from "@/app/sitemap/[id]/route";
 
 const mockGetSitemapEntries = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
-const mockCaptureServerException = vi.hoisted(() => vi.fn());
+const mockCaptureServerExceptionSafely = vi.hoisted(() => vi.fn());
 
 /** Test-only typed sitemap page failure. */
 class TestSitemapPageError extends Data.TaggedError("TestSitemapPageError")<{
@@ -21,14 +21,14 @@ vi.mock("@/lib/sitemap/identity", () => ({
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
 }));
 
-vi.mock("@repo/analytics/posthog/server", () => ({
-  captureServerException: mockCaptureServerException,
+vi.mock("@/lib/analytics/server", () => ({
+  captureServerExceptionSafely: mockCaptureServerExceptionSafely,
 }));
 
 describe("sitemap page route", () => {
   beforeEach(() => {
-    mockCaptureServerException.mockReset();
-    mockCaptureServerException.mockReturnValue(Effect.void);
+    mockCaptureServerExceptionSafely.mockReset();
+    mockCaptureServerExceptionSafely.mockReturnValue(Effect.void);
     mockGetSitemapEntries.mockReset();
     mockGetSitemapPageDescriptor.mockReset();
     mockGetSitemapPageDescriptor.mockImplementation((pageId) =>
@@ -113,7 +113,7 @@ describe("sitemap page route", () => {
 
     expect(response.status).toBe(404);
     expect(await response.text()).toBe("Not found");
-    expect(mockCaptureServerException).not.toHaveBeenCalled();
+    expect(mockCaptureServerExceptionSafely).not.toHaveBeenCalled();
   });
 
   it("reports page failures and returns a plain error response", async () => {
@@ -127,7 +127,7 @@ describe("sitemap page route", () => {
 
     expect(response.status).toBe(500);
     expect(await response.text()).toBe("Internal Server Error");
-    expect(mockCaptureServerException).toHaveBeenCalledWith(failure, {
+    expect(mockCaptureServerExceptionSafely).toHaveBeenCalledWith(failure, {
       source: "sitemap-page",
     });
   });
