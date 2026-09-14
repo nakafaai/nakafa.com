@@ -12,7 +12,7 @@ import {
   COMPACTION_PAGE_BYTES,
   ROLLBACK_RETENTION_MS,
 } from "@repo/backend/convex/contentRelease/spec";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
 const RELEASE_SCAN_COUNT = 32;
 
@@ -83,9 +83,6 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
         `Content release ${release.releaseId} lost its exact protected identity.`
       );
     }
-    if (release.manifestHash === undefined) {
-      return Option.none<readonly number[]>();
-    }
     if (
       identity !== undefined &&
       release.manifestHash !== identity.manifestHash
@@ -97,9 +94,6 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
     }
     const baseId = release.baseReleaseId;
     const baseHash = release.baseManifestHash;
-    if (baseId === undefined || baseHash === undefined) {
-      return Option.none<readonly number[]>();
-    }
     if ((baseId === null) !== (baseHash === null)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -107,7 +101,7 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
       );
     }
     if (baseId === null || baseHash === null) {
-      return Option.some([sequence]);
+      return [sequence];
     }
     const base = yield* loadRelease(ctx, baseId);
     if (!isSequence(base.sequence)) {
@@ -116,16 +110,13 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
         `Content release ${release.releaseId} lost its exact protected base.`
       );
     }
-    if (base.manifestHash === undefined) {
-      return Option.none<readonly number[]>();
-    }
     if (base.manifestHash !== baseHash) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Content release ${release.releaseId} lost its exact protected base.`
       );
     }
-    return Option.some([sequence, base.sequence]);
+    return [sequence, base.sequence];
   }
 );
 
@@ -168,20 +159,21 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
       state.recoverySequence
     ),
   ]);
-  const slotSequences = yield* Effect.forEach(slots, (slot) =>
-    slot === null
-      ? Effect.succeedSome<readonly number[]>([])
-      : loadRelease(ctx, slot.releaseId).pipe(
-          Effect.flatMap((release) => protectedRelease(ctx, release, slot)),
-          // A missing slot release is an unprovable reachability fact: never
-          // break compaction, protect the stored history instead.
-          Effect.catchTag("ReleaseError", (error: ReleaseError) =>
-            error.code === "CONTENT_RELEASE_MISSING"
-              ? Effect.succeed(Option.none<readonly number[]>())
-              : Effect.fail(error)
-          )
-        )
-  );
+  const slotSequences = yield* Effect.forEach(slots, (slot) => {
+    if (slot === null) {
+      return Effect.succeed<null | readonly number[]>([]);
+    }
+    return loadRelease(ctx, slot.releaseId).pipe(
+      Effect.flatMap((release) => protectedRelease(ctx, release, slot)),
+      // A missing slot release is an unprovable reachability fact: never
+      // break compaction, protect the stored history instead.
+      Effect.catchTag("ReleaseError", (error: ReleaseError) =>
+        error.code === "CONTENT_RELEASE_MISSING"
+          ? Effect.succeed(null)
+          : Effect.fail(error)
+      )
+    );
+  });
   const completed = yield* Effect.promise(() =>
     ctx.db
       .query("contentReleases")
@@ -196,10 +188,10 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
   );
   const sequences: number[] = [];
   for (const entry of [...slotSequences, ...completedSequences]) {
-    if (Option.isNone(entry)) {
+    if (entry === null) {
       return yield* earliestStoredSequence(ctx, state);
     }
-    sequences.push(...entry.value);
+    sequences.push(...entry);
   }
   return sequences.length === 0 ? state.nextSequence : Math.min(...sequences);
 });

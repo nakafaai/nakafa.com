@@ -299,21 +299,10 @@ describe("contentRelease/tryout runtime retention", () => {
     },
     {
       expected: null,
-      name: "rollback result only",
+      name: "rollback restore never retains its base",
       seed: {
         baseSnapshotId: RETENTION_BASE_SNAPSHOT,
         originKind: "rollback",
-        snapshotId: RETENTION_BASE_SNAPSHOT,
-      },
-    },
-    {
-      expected: null,
-      name: "restore mode",
-      seed: {
-        baseSnapshotId: RETENTION_BASE_SNAPSHOT,
-        mode: "restore",
-        originKind: "git",
-        resultSnapshotId: RETENTION_NEWER_SNAPSHOT,
         snapshotId: RETENTION_BASE_SNAPSHOT,
       },
     },
@@ -323,15 +312,6 @@ describe("contentRelease/tryout runtime retention", () => {
       seed: {
         originKind: "git",
         rendererManifestHash: `sha256:${"2".repeat(64)}`,
-        snapshotId: RETENTION_RESULT_SNAPSHOT,
-      },
-    },
-    {
-      expected: RETENTION_RELEASE_ID,
-      name: "unprovable stored facts",
-      seed: {
-        originKind: "git",
-        patchColumns: true,
         snapshotId: RETENTION_RESULT_SNAPSHOT,
       },
     },

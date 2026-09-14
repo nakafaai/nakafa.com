@@ -4,6 +4,7 @@ import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/proje
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeTestPageProjection } from "@repo/backend/test/content/page";
@@ -53,6 +54,7 @@ export function makeRuntimeSource(
   } satisfies PublicationRow<"contentState">;
   source.set("contentState", [state]);
   const release = {
+    ...releaseReachability(signed),
     baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,

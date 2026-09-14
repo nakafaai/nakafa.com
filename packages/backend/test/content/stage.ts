@@ -6,6 +6,7 @@ import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot
 import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { INITIAL_MODEL_SLOT } from "@repo/backend/convex/contentRelease/models/slot";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -13,8 +14,8 @@ import {
   testPublicationScope,
   testReleaseJson,
   testRendererJson,
+  testStoredReachability,
 } from "@repo/backend/test/content/release";
-import { patchTestReachability } from "@repo/backend/test/content/state";
 
 interface StagedReleaseOptions {
   readonly activeAppLocales?: readonly ActiveAppLocaleCode[];
@@ -23,6 +24,7 @@ interface StagedReleaseOptions {
   readonly checkedItems?: number;
   readonly deleteCount?: number;
   readonly itemCount?: number;
+  readonly originKind?: "git" | "rollback";
   readonly originReleaseId?: string;
   readonly projectionCount?: number;
   readonly releaseId?: string;
@@ -53,6 +55,7 @@ export async function insertSignedCandidate(
 ) {
   const now = Date.UTC(2026, 6, 22, 12);
   await ctx.db.insert("contentReleases", {
+    ...releaseReachability(release),
     baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
@@ -99,6 +102,7 @@ export async function insertTestRelease(
     itemCount = 1,
     upsertCount = itemCount,
     deleteCount = itemCount - upsertCount,
+    originKind,
     originReleaseId,
     projectionCount = upsertCount,
     releaseId = TEST_RELEASE_ID,
@@ -120,26 +124,29 @@ export async function insertTestRelease(
   }: StagedReleaseOptions = {}
 ) {
   const now = Date.UTC(2026, 6, 22, 12);
+  const releaseJson = testReleaseJson({
+    activeAppLocales,
+    baseManifestHash: originReleaseId ? TEST_DIGEST : null,
+    baseReleaseId: originReleaseId ?? null,
+    deleteCount,
+    itemCount,
+    originKind,
+    originReleaseId,
+    projectionCount,
+    releaseId,
+    routeCount,
+    scope,
+    snapshots,
+    upsertCount,
+  });
   await ctx.db.insert("contentReleases", {
+    ...testStoredReachability(releaseJson),
     baseFamilies: [...baseFamilies],
     checkedIndex,
     checkedItems,
     createdAt: now,
     releaseId,
-    releaseJson: testReleaseJson({
-      activeAppLocales,
-      baseManifestHash: originReleaseId ? TEST_DIGEST : null,
-      baseReleaseId: originReleaseId ?? null,
-      deleteCount,
-      itemCount,
-      originReleaseId,
-      projectionCount,
-      releaseId,
-      routeCount,
-      scope,
-      snapshots,
-      upsertCount,
-    }),
+    releaseJson,
     rendererJson: testRendererJson(),
     resultFamilies: [...resultFamilies],
     role,
@@ -155,7 +162,6 @@ export async function insertTestRelease(
     status,
     updatedAt: now,
   });
-  await patchTestReachability(ctx, releaseId);
   await ctx.db.insert("contentState", {
     articleSlot: INITIAL_MODEL_SLOT,
     ...(role === "candidate"

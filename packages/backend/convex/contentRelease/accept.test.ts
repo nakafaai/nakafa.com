@@ -6,6 +6,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertTestState,
   insertZeroRelease,
+  patchStoredOriginRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
@@ -137,7 +138,7 @@ describe("contentRelease/accept", () => {
       await insertZeroRelease(ctx, {
         ...unrelated,
         base: CANDIDATE,
-        originReleaseId: "release-other",
+        originReleaseId: CANDIDATE.releaseId,
         ownership: {
           base: ContentFamilySchema.literals,
           result: [],
@@ -145,6 +146,7 @@ describe("contentRelease/accept", () => {
         role: "recovery",
         status: "aborted",
       });
+      await patchStoredOriginRelease(ctx, unrelated.releaseId, "release-other");
       await insertTestState(ctx, { active: CANDIDATE, nextSequence: 3 });
     });
 

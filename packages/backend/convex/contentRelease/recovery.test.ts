@@ -17,6 +17,7 @@ import {
 import { testRendererJson } from "@repo/backend/test/content/release";
 import {
   insertZeroRelease,
+  patchStoredOriginRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { storeRuntimeFixture } from "@repo/backend/test/runtime/bundle";
@@ -323,7 +324,7 @@ describe("contentRelease/recovery", () => {
           await insertZeroRelease(ctx, {
             ...LOOKUP_RECOVERY,
             base: LOOKUP_BASE,
-            originReleaseId: "release-other",
+            originReleaseId: LOOKUP_BASE.releaseId,
             ownership: {
               base: ContentFamilySchema.literals,
               result: [],
@@ -331,6 +332,11 @@ describe("contentRelease/recovery", () => {
             role: "recovery",
             status: "completed",
           });
+          await patchStoredOriginRelease(
+            ctx,
+            LOOKUP_RECOVERY.releaseId,
+            "release-other"
+          );
         })
       );
 

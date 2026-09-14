@@ -14,7 +14,10 @@ import {
   AppLocaleSchema,
   type ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { CONTENT_RELEASE_FORMAT } from "@nakafa/aksara-contracts/release";
+import {
+  CONTENT_RELEASE_FORMAT,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import {
   ContentSnapshotKindSchema,
@@ -27,8 +30,9 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import { testMaterialPublicPath } from "@repo/backend/test/content/material";
-import { Effect, type Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
@@ -85,6 +89,7 @@ interface ReleaseOptions {
   readonly deleteCount?: number;
   readonly itemCount?: number;
   readonly manifestHash?: string;
+  readonly originKind?: "git" | "rollback";
   readonly originReleaseId?: string;
   readonly projectionCount?: number;
   readonly releaseId?: string;
@@ -123,6 +128,7 @@ export function testReleaseJson({
   baseResultDigest = TEST_DIGEST,
   deleteCount = itemCount - upsertCount,
   manifestHash = TEST_MANIFEST_HASH,
+  originKind,
   originReleaseId,
   projectionCount = upsertCount,
   releaseId = TEST_RELEASE_ID,
@@ -134,8 +140,9 @@ export function testReleaseJson({
   routeDigest = TEST_DIGEST,
   scope = testPublicationScope({ snapshots }),
 }: ReleaseOptions = {}) {
-  const origin = originReleaseId
-    ? { kind: "rollback", releaseId: originReleaseId }
+  const rollback = originKind ? originKind === "rollback" : !!originReleaseId;
+  const origin = rollback
+    ? { kind: "rollback", releaseId: originReleaseId ?? baseReleaseId }
     : { kind: "git", sha: "a".repeat(40) };
   return JSON.stringify({
     keyId: "test-key",
@@ -173,6 +180,20 @@ export function testReleaseJson({
     signature: "A".repeat(86),
   });
 }
+/**
+ * Projects one canonical fixture's signed bytes into its stored facts.
+ *
+ * Stored reachability facts are a required release field, so fixtures derive
+ * them from the same signed bytes through the production projector.
+ */
+export function testStoredReachability(releaseJson: string) {
+  return releaseReachability(
+    Schema.decodeUnknownSync(SignedContentReleaseSchema)(
+      JSON.parse(releaseJson)
+    )
+  );
+}
+
 /** Creates one canonical snapshot for a previously absent head. */
 export function testRollbackJson(options?: {
   readonly artifactLocale?: ArtifactLocaleCode;

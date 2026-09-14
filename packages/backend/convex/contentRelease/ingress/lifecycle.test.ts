@@ -11,6 +11,7 @@ import type {
   MutationCtx,
 } from "@repo/backend/convex/_generated/server";
 import { advancePublication } from "@repo/backend/convex/contentRelease/ingress/lifecycle";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import {
   type ConvexTaggedError,
   getUnknownErrorMessage,
@@ -65,6 +66,7 @@ const insertRelease = Effect.fn("test.contentRelease.insertLifecycleRelease")(
     const now = Date.UTC(2026, 6, 22, 12, 0, 0);
     yield* Effect.promise(() =>
       ctx.db.insert("contentReleases", {
+        ...releaseReachability(release),
         baseFamilies: [],
         checkedIndex: -1,
         checkedItems: 0,

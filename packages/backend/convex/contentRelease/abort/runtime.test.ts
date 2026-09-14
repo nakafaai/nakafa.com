@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { abortProgram } from "@repo/backend/convex/contentRelease/abort";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -102,6 +103,7 @@ describe("content release abort runtime", () => {
           await ctx.db.patch("contentReleases", _id, { role: "recovery" });
           await ctx.db.insert("contentReleases", {
             ...releaseFields,
+            ...releaseReachability(active.release),
             completedAt: 1,
             releaseId: active.release.manifest.releaseId,
             releaseJson: JSON.stringify(active.release),
@@ -185,6 +187,7 @@ describe("content release abort runtime", () => {
           await ctx.db.patch("contentReleases", _id, { role: "recovery" });
           await ctx.db.insert("contentReleases", {
             ...releaseFields,
+            ...releaseReachability(candidate.release),
             releaseId: candidate.release.manifest.releaseId,
             releaseJson: JSON.stringify(candidate.release),
             role: "candidate",
