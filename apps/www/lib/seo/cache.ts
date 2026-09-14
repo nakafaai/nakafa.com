@@ -24,6 +24,9 @@ export async function getCachedSEOMetadata(
   "use cache";
 
   cacheTag(makeContentCacheTag(seoContentScope[context.type]));
+  // SEO metadata keeps the long built-in profile on purpose. The family tag
+  // above is what refreshes it, so it does not need the hourly content
+  // revalidation the shared profile carries.
   cacheLife("max");
 
   return await Effect.runPromise(generateSEOMetadata(context, locale));
