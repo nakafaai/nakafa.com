@@ -8,6 +8,8 @@ import { writeError, writeOutput } from "#scripts/output";
 
 const TEST_FILE_PATTERN = /\.test\.tsx?$/u;
 const TSX_TEST_FILE_PATTERN = /\.test\.tsx$/u;
+const SOURCE_FILE_PATTERN = /\.tsx?$/u;
+const GENERATED_DIRECTORY = "_generated";
 const TEST_DIRECTORIES = new Set(["__test__", "__tests__"]);
 const IGNORED_DIRECTORIES = new Set([
   ".git",
@@ -127,14 +129,13 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       )
     );
     const effectViolations = yield* effectTestViolations(sources);
-    const backendFiles = files.filter(
+    const authoredFiles = [...files, ...scriptFiles].filter(
       (file) =>
-        file.endsWith(".ts") &&
-        path
-          .relative(root, file)
-          .startsWith(`packages${path.sep}backend${path.sep}`)
+        SOURCE_FILE_PATTERN.test(file) &&
+        !file.endsWith(".d.ts") &&
+        !file.split(path.sep).includes(GENERATED_DIRECTORY)
     );
-    const backendSources = yield* Effect.forEach(backendFiles, (file) =>
+    const authoredSources = yield* Effect.forEach(authoredFiles, (file) =>
       fileSystem.readFileString(file).pipe(
         Effect.map((sourceText) => ({
           file: path.relative(root, file).split(path.sep).join("/"),
@@ -149,7 +150,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         )
       )
     );
-    const sourceViolations = yield* effectSourceViolations(backendSources);
+    const sourceViolations = yield* effectSourceViolations(authoredSources);
 
     if (
       orphanTests.length === 0 &&

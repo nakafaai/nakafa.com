@@ -16,6 +16,7 @@ import {
 } from "@repo/design-system/components/ui/autocomplete";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
+import { Predicate } from "effect";
 import type * as React from "react";
 
 const CommandDialog = CommandDialogPrimitive.Root;
@@ -38,9 +39,8 @@ function hasGroupedItems(
   value: unknown
 ): value is { items: readonly unknown[] } {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    "items" in value &&
+    Predicate.isObject(value) &&
+    Predicate.hasProperty(value, "items") &&
     Array.isArray(value.items)
   );
 }

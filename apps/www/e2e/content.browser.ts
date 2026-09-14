@@ -1,6 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Schema } from "effect";
+import { Effect, Predicate, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -95,9 +95,7 @@ const readJsonLdDates = Effect.fn("NakafaE2E.readJsonLdDates")(function* (
           for (const script of scripts) {
             const value: unknown = JSON.parse(script.textContent ?? "null");
             if (
-              typeof value !== "object" ||
-              value === null ||
-              Array.isArray(value) ||
+              !Predicate.isObject(value) ||
               Reflect.get(value, "@type") !== expectedType
             ) {
               continue;

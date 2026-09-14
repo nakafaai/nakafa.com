@@ -45,8 +45,7 @@ const EFFECT_RUNNERS = new Set(
 const MANAGED_RUNTIME_RUNNERS = new Set(
   "runCallback runFork runPromise runPromiseExit runSync runSyncExit".split(" ")
 );
-const BACKEND_SOURCE_PATTERN = /^packages\/backend\//u;
-const SOURCE_MODULE_PATTERN = /\.ts$/u;
+const SOURCE_MODULE_PATTERN = /\.tsx?$/u;
 const EQUALITY_OPERATORS: ReadonlySet<SyntaxKind> = new Set([
   SyntaxKind.EqualsEqualsEqualsToken,
   SyntaxKind.EqualsEqualsToken,
@@ -475,26 +474,32 @@ function inspectSourcePolicy(file: string, sourceFile: SourceFile) {
 export const effectSourceViolations = Effect.fn(
   "RepositoryPolicy.effectSources"
 )(function* (sources: readonly (typeof EffectSource.Type)[]) {
-  const inspected = sources.filter(
-    ({ file }) =>
-      BACKEND_SOURCE_PATTERN.test(file) && SOURCE_MODULE_PATTERN.test(file)
+  const inspected = sources.filter(({ file }) =>
+    SOURCE_MODULE_PATTERN.test(file)
   );
   if (inspected.length === 0) {
     return [];
   }
   const root = "/source-policy";
   const configFile = `${root}/tsconfig.json`;
+  const modules = inspected.map(
+    ({ file }, index) => `${index}.${file.endsWith(".tsx") ? "tsx" : "ts"}`
+  );
   const api = yield* openCompiler(
     Object.fromEntries([
       ...inspected.map(({ sourceText }, index) => [
-        `${root}/${index}.ts`,
+        `${root}/${modules[index]}`,
         sourceText,
       ]),
       [
         configFile,
         JSON.stringify({
-          compilerOptions: { noLib: true, noResolve: true },
-          files: inspected.map((_, index) => `${index}.ts`),
+          compilerOptions: {
+            jsx: "preserve",
+            noLib: true,
+            noResolve: true,
+          },
+          files: modules,
         }),
       ],
     ]),
@@ -524,7 +529,7 @@ export const effectSourceViolations = Effect.fn(
     });
   }
   return inspected.flatMap(({ file }, index) => {
-    const sourceFile = program.getSourceFile(`${root}/${index}.ts`);
+    const sourceFile = program.getSourceFile(`${root}/${modules[index]}`);
     return sourceFile === undefined
       ? [`${file}: the native compiler did not expose this source file.`]
       : inspectSourcePolicy(file, sourceFile);

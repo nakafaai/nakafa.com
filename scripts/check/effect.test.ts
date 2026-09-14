@@ -180,15 +180,36 @@ describe("Effect source policy", () => {
     })
   );
 
-  it.effect("ignores sources outside the backend package", () =>
+  it.effect("covers every authored module, including JSX", () =>
     Effect.gen(function* () {
+      const appFile = "apps/www/lib/example.ts";
+      const viewFile = "apps/www/components/example.tsx";
       const violations = yield* effectSourceViolations([
         {
-          file: "apps/www/lib/example.ts",
+          file: appFile,
           sourceText: 'export const value = typeof input === "object";',
         },
         {
-          file: "packages/backend/example.tsx",
+          file: viewFile,
+          sourceText:
+            'export const View = () => (typeof input === "object" ? null : <div />);',
+        },
+      ]);
+      assert.deepStrictEqual(
+        [...violations].sort(),
+        [
+          `${appFile}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`,
+          `${viewFile}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`,
+        ].sort()
+      );
+    })
+  );
+
+  it.effect("ignores sources that are not authored modules", () =>
+    Effect.gen(function* () {
+      const violations = yield* effectSourceViolations([
+        {
+          file: "apps/www/content/example.md",
           sourceText: 'export const value = typeof input === "object";',
         },
       ]);

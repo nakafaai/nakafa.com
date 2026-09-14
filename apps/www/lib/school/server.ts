@@ -1,7 +1,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { preloadedQueryResult } from "convex/nextjs";
 import { ConvexError } from "convex/values";
-import { Effect, Schema } from "effect";
+import { Effect, Predicate, Schema } from "effect";
 import { cache } from "react";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { fetchAuthQuery, getToken, preloadAuthQuery } from "@/lib/auth/server";
@@ -36,11 +36,11 @@ function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
 
   const data = error.data;
 
-  if (typeof data !== "object" || data === null || !("code" in data)) {
+  if (!(Predicate.isObject(data) && Predicate.hasProperty(data, "code"))) {
     return false;
   }
 
-  return typeof data.code === "string" && allowedCodes.includes(data.code);
+  return Predicate.isString(data.code) && allowedCodes.includes(data.code);
 }
 
 /** Captures an unexpected school route error and preserves the original failure. */

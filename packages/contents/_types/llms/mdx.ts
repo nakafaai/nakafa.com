@@ -7,10 +7,11 @@ import {
   getTan,
   ISOSCELES_RIGHT_TRIANGLE_ANGLE,
 } from "@repo/math/angles";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option, Predicate, Schema } from "effect";
 import type { Parent, Root, RootContent } from "mdast";
 import type {
   MdxJsxAttribute,
+  MdxJsxAttributeValueExpression,
   MdxJsxExpressionAttribute,
   MdxJsxFlowElement,
   MdxJsxTextElement,
@@ -215,12 +216,13 @@ function readTriangleAngle(attributes: MdxAttribute[]) {
   if (!attribute) {
     return Option.some(ISOSCELES_RIGHT_TRIANGLE_ANGLE);
   }
-  if (typeof attribute.value !== "object" || attribute.value === null) {
+  const { value } = attribute;
+  if (!isExpressionValue(value)) {
     return Option.none();
   }
 
   return Schema.decodeUnknownOption(StaticNumericExpressionSchema)(
-    attribute.value.data?.estree
+    value.data?.estree
   ).pipe(
     Option.map(({ body: [{ expression }] }) => {
       if (expression.type === "Literal") {
@@ -230,6 +232,16 @@ function readTriangleAngle(attributes: MdxAttribute[]) {
         ? -expression.argument.value
         : expression.argument.value;
     })
+  );
+}
+
+/** Narrows one MDX attribute value to its parsed expression form. */
+function isExpressionValue(
+  value: MdxJsxAttribute["value"]
+): value is MdxJsxAttributeValueExpression {
+  return (
+    Predicate.hasProperty(value, "type") &&
+    value.type === "mdxJsxAttributeValueExpression"
   );
 }
 
