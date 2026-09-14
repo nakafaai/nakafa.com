@@ -2,6 +2,7 @@ import { Effect, Schema } from "effect";
 import {
   type Expression,
   isAwaitExpression,
+  isBinaryExpression,
   isCallExpression,
   isElementAccessExpression,
   isIdentifier,
@@ -12,7 +13,9 @@ import {
   isPropertyAccessExpression,
   isStringLiteral,
   isStringLiteralLikeNode,
+  isTryStatement,
   isTypeNode,
+  isTypeOfExpression,
   isVariableDeclaration,
   type Node,
   type ObjectBindingPattern,
@@ -23,7 +26,7 @@ import {
 import { createVirtualFileSystem } from "typescript/unstable/fs";
 import { API, type Symbol as NativeSymbol } from "typescript/unstable/sync";
 
-export const EffectTestSource = Schema.Struct({
+export const EffectSource = Schema.Struct({
   file: Schema.String,
   sourceText: Schema.String,
 });
@@ -42,6 +45,13 @@ const EFFECT_RUNNERS = new Set(
 const MANAGED_RUNTIME_RUNNERS = new Set(
   "runCallback runFork runPromise runPromiseExit runSync runSyncExit".split(" ")
 );
+const SOURCE_MODULE_PATTERN = /\.tsx?$/u;
+const EQUALITY_OPERATORS: ReadonlySet<SyntaxKind> = new Set([
+  SyntaxKind.EqualsEqualsEqualsToken,
+  SyntaxKind.EqualsEqualsToken,
+  SyntaxKind.ExclamationEqualsEqualsToken,
+  SyntaxKind.ExclamationEqualsToken,
+]);
 
 type RuntimeKind =
   | "effect"
@@ -308,6 +318,17 @@ function destructuresRunner(node: Node, imports: RuntimeImports) {
   );
 }
 
+/** Opens one scoped native compiler over an in-memory source set. */
+function openCompiler(files: Record<string, string>, message: string) {
+  return Effect.acquireRelease(
+    Effect.try({
+      try: () => new API({ cwd: "/", fs: createVirtualFileSystem(files) }),
+      catch: (cause) => new TestCompilerError({ cause, message }),
+    }),
+    (resource) => Effect.sync(() => resource.close())
+  );
+}
+
 /** Keeps each test in its own native project so lexical bindings stay local. */
 const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
   api: API,
@@ -372,7 +393,7 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
 
 /** Reports authored tests using one scoped, Effect-patched native compiler. */
 export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
-  function* (sources: readonly (typeof EffectTestSource.Type)[]) {
+  function* (sources: readonly (typeof EffectSource.Type)[]) {
     const tests = sources.filter(({ file }) => TEST_MODULE_PATTERN.test(file));
     if (tests.length === 0) {
       return [];
@@ -389,20 +410,9 @@ export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
         ],
       ])
     );
-    const api = yield* Effect.acquireRelease(
-      Effect.try({
-        try: () =>
-          new API({
-            cwd: "/",
-            fs: createVirtualFileSystem(files),
-          }),
-        catch: (cause) =>
-          new TestCompilerError({
-            cause,
-            message: "Unable to start the native test compiler.",
-          }),
-      }),
-      (resource) => Effect.sync(() => resource.close())
+    const api = yield* openCompiler(
+      files,
+      "Unable to start the native test compiler."
     );
     return (yield* Effect.forEach(
       tests,
@@ -412,3 +422,116 @@ export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
   },
   Effect.scoped
 );
+
+/** Returns whether one node compares a typeof result against the object tag. */
+function isTypeofObjectComparison(node: Node) {
+  if (
+    !(
+      isBinaryExpression(node) &&
+      EQUALITY_OPERATORS.has(node.operatorToken.kind)
+    )
+  ) {
+    return false;
+  }
+  for (const side of [node.left, node.right]) {
+    if (!isTypeOfExpression(side)) {
+      continue;
+    }
+    const other = side === node.left ? node.right : node.left;
+    if (isStringLiteralLikeNode(other) && other.text === "object") {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Reports raw failure handling and hand-rolled narrowing in one source file. */
+function inspectSourcePolicy(file: string, sourceFile: SourceFile) {
+  const violations: string[] = [];
+  for (const node of descendants(sourceFile)) {
+    if (isTryStatement(node) && node.catchClause !== undefined) {
+      violations.push(
+        `${file}: model failure with Effect instead of a raw try/catch statement.`
+      );
+    }
+    if (isTypeofObjectComparison(node)) {
+      violations.push(
+        `${file}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`
+      );
+    }
+  }
+  return violations;
+}
+
+/**
+ * Reports raw failure handling and hand-rolled narrowing in backend sources.
+ *
+ * The Convex backend is Effect-native: expected failure belongs to typed
+ * Effect errors and unknown input belongs to Schema or Predicate. One batch
+ * project reads every authored backend syntax tree, so the cost stays flat
+ * as the package grows.
+ */
+export const effectSourceViolations = Effect.fn(
+  "RepositoryPolicy.effectSources"
+)(function* (sources: readonly (typeof EffectSource.Type)[]) {
+  const inspected = sources.filter(({ file }) =>
+    SOURCE_MODULE_PATTERN.test(file)
+  );
+  if (inspected.length === 0) {
+    return [];
+  }
+  const root = "/source-policy";
+  const configFile = `${root}/tsconfig.json`;
+  const modules = inspected.map(
+    ({ file }, index) => `${index}.${file.endsWith(".tsx") ? "tsx" : "ts"}`
+  );
+  const api = yield* openCompiler(
+    Object.fromEntries([
+      ...inspected.map(({ sourceText }, index) => [
+        `${root}/${modules[index]}`,
+        sourceText,
+      ]),
+      [
+        configFile,
+        JSON.stringify({
+          compilerOptions: {
+            jsx: "preserve",
+            noLib: true,
+            noResolve: true,
+          },
+          files: modules,
+        }),
+      ],
+    ]),
+    "Unable to start the native source compiler."
+  );
+  const snapshotFailure = (cause: unknown) =>
+    new TestCompilerError({
+      cause,
+      message: "Unable to inspect repository sources.",
+    });
+  const snapshot = yield* Effect.acquireRelease(
+    Effect.try({
+      try: () =>
+        api.updateSnapshot({
+          openProjects: [configFile],
+          closeProjects: [],
+        }),
+      catch: snapshotFailure,
+    }),
+    (resource) => Effect.sync(() => resource.dispose())
+  );
+  const program = snapshot.getProject(configFile)?.program;
+  if (program === undefined) {
+    return yield* new TestCompilerError({
+      cause: "The native source project is missing.",
+      message: "Unable to inspect repository sources.",
+    });
+  }
+  return inspected.flatMap(({ file }, index) => {
+    const sourceFile = program.getSourceFile(`${root}/${modules[index]}`);
+    return sourceFile === undefined
+      ? [`${file}: the native compiler did not expose this source file.`]
+      : inspectSourcePolicy(file, sourceFile);
+  });
+}, Effect.scoped);

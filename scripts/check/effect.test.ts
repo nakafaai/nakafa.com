@@ -1,7 +1,10 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { API, Checker } from "typescript/unstable/sync";
-import { effectTestViolations } from "#scripts/check/effect";
+import {
+  effectSourceViolations,
+  effectTestViolations,
+} from "#scripts/check/effect";
 
 const FILE = "packages/example/src/program.test.ts";
 const VIOLATION =
@@ -139,6 +142,83 @@ describe("Effect test policy", () => {
       assert.strictEqual(failure.cause, cause);
       assert.strictEqual(failure.message, `Unable to inspect ${FILE}.`);
       assert.strictEqual(close.mock.calls.length, 1);
+    })
+  );
+});
+
+const BACKEND_FILE = "packages/backend/convex/example/program.ts";
+const TRY_VIOLATION = `${BACKEND_FILE}: model failure with Effect instead of a raw try/catch statement.`;
+const NARROWING_VIOLATION = `${BACKEND_FILE}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`;
+
+describe("Effect source policy", () => {
+  it.effect("rejects raw try statements and typeof-object narrowing", () =>
+    Effect.gen(function* () {
+      const violations = yield* effectSourceViolations([
+        {
+          file: BACKEND_FILE,
+          sourceText:
+            'export function read(value: unknown) {\n  try {\n    JSON.parse("{}");\n  } catch {\n    return null;\n  }\n  return typeof value === "object" && value !== null;\n}',
+        },
+      ]);
+      assert.deepStrictEqual(
+        [...violations].sort(),
+        [TRY_VIOLATION, NARROWING_VIOLATION].sort()
+      );
+    })
+  );
+
+  it.effect("allows Effect-native failure and narrowing", () =>
+    Effect.gen(function* () {
+      const violations = yield* effectSourceViolations([
+        {
+          file: BACKEND_FILE,
+          sourceText:
+            'import { Effect, Predicate } from "effect";\nexport const read = Effect.fn("read")(function* (value: unknown) {\n  return Predicate.isObject(value) && Predicate.hasProperty(value, "code");\n});',
+        },
+        {
+          file: BACKEND_FILE,
+          sourceText:
+            "export async function clean() {\n  try {\n    await write();\n  } finally {\n    await erase();\n  }\n}",
+        },
+      ]);
+      assert.deepStrictEqual(violations, []);
+    })
+  );
+
+  it.effect("covers every authored module, including JSX", () =>
+    Effect.gen(function* () {
+      const appFile = "apps/www/lib/example.ts";
+      const viewFile = "apps/www/components/example.tsx";
+      const violations = yield* effectSourceViolations([
+        {
+          file: appFile,
+          sourceText: 'export const value = typeof input === "object";',
+        },
+        {
+          file: viewFile,
+          sourceText:
+            'export const View = () => (typeof input === "object" ? null : <div />);',
+        },
+      ]);
+      assert.deepStrictEqual(
+        [...violations].sort(),
+        [
+          `${appFile}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`,
+          `${viewFile}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`,
+        ].sort()
+      );
+    })
+  );
+
+  it.effect("ignores sources that are not authored modules", () =>
+    Effect.gen(function* () {
+      const violations = yield* effectSourceViolations([
+        {
+          file: "apps/www/content/example.md",
+          sourceText: 'export const value = typeof input === "object";',
+        },
+      ]);
+      assert.deepStrictEqual(violations, []);
     })
   );
 });

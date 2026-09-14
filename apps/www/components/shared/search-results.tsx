@@ -43,9 +43,7 @@ export function SearchResults({
       <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
         <HugeIcons className="size-4" icon={InformationCircleIcon} />
         <div className="mt-1">{t("search-error")}</div>
-        {typeof error === "string" || typeof error === "object" ? (
-          <div className="wrap-break-word mt-2 max-w-xs text-xs">{error}</div>
-        ) : null}
+        <div className="wrap-break-word mt-2 max-w-xs text-xs">{error}</div>
       </div>
     );
   }

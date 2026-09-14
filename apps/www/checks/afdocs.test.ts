@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Predicate } from "effect";
 import { runAfdocs } from "@/checks/afdocs";
 
 const TIMEOUT_MS = 600_000;
@@ -20,9 +20,8 @@ function formatFailureDetails(details: Record<string, unknown> | undefined) {
 
   const failures = pageResults.filter(
     (page) =>
-      typeof page === "object" &&
-      page !== null &&
-      "status" in page &&
+      Predicate.isObject(page) &&
+      Predicate.hasProperty(page, "status") &&
       page.status !== "pass"
   );
 

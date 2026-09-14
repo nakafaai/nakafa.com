@@ -1,7 +1,7 @@
 import { isAiSdkDevToolsTelemetryEnabled } from "@repo/ai/config/devtools-runtime";
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
-import { Effect } from "effect";
+import { Effect, Predicate } from "effect";
 import type { Instrumentation } from "next";
 
 /** Registers Node-only startup telemetry after the runtime gate. */
@@ -44,10 +44,9 @@ export function register() {
  */
 function getErrorDigest(error: unknown) {
   if (
-    typeof error === "object" &&
-    error !== null &&
-    "digest" in error &&
-    typeof error.digest === "string"
+    Predicate.isObject(error) &&
+    Predicate.hasProperty(error, "digest") &&
+    Predicate.isString(error.digest)
   ) {
     return error.digest;
   }

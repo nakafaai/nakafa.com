@@ -3,7 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Predicate } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -122,8 +122,8 @@ function readErrorCode(error: unknown) {
     return;
   }
   const data: unknown = error.data;
-  if (!(typeof data === "object" && data !== null && "code" in data)) {
+  if (!(Predicate.isObject(data) && Predicate.hasProperty(data, "code"))) {
     return;
   }
-  return typeof data.code === "string" ? data.code : undefined;
+  return Predicate.isString(data.code) ? data.code : undefined;
 }

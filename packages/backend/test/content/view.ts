@@ -12,6 +12,7 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
+import { Predicate } from "effect";
 
 const ARTICLE_VIEW_PROJECTION = testArticleProjection(0);
 
@@ -77,26 +78,25 @@ export function getContentViewPartition(contentId: string) {
 /** Returns whether one scheduled job is the analytics partition scheduler. */
 function isAnalyticsPartitionJob(job: { args: readonly unknown[] }) {
   const [arg] = job.args;
-  return typeof arg === "object" && arg !== null && "partition" in arg;
+  return Predicate.isObject(arg) && Predicate.hasProperty(arg, "partition");
 }
 
 /** Returns whether one scheduled job is a content-view product event. */
 function isContentViewedEventJob(job: { args: readonly unknown[] }) {
   const [arg] = job.args;
-  if (typeof arg !== "object" || arg === null) {
-    return false;
-  }
-  return Reflect.get(arg, "event") === "content viewed";
+  return (
+    Predicate.isObject(arg) && Reflect.get(arg, "event") === "content viewed"
+  );
 }
 
 /** Reads the product analytics user from a scheduled content-view event. */
 export function getContentViewDistinctId(job: { args: readonly unknown[] }) {
   const [arg] = job.args;
-  if (typeof arg !== "object" || arg === null) {
+  if (!Predicate.isObject(arg)) {
     expect.fail("Expected scheduled content-view event arguments.");
   }
   const distinctId = Reflect.get(arg, "distinctId");
-  if (typeof distinctId !== "string") {
+  if (!Predicate.isString(distinctId)) {
     expect.fail("Expected scheduled content-view event distinct ID.");
   }
   return distinctId;

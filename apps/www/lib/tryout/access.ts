@@ -1,7 +1,7 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
-import { Data } from "effect";
+import { Data, Predicate } from "effect";
 
 type TryoutStartAccess = FunctionReturnType<
   typeof api.tryouts.queries.access.getStartAccess
@@ -31,7 +31,7 @@ export function isTryoutAccessRequired(error: TryoutClientRequestError) {
 
   const data = cause.data;
 
-  if (typeof data !== "object" || data === null || !("code" in data)) {
+  if (!(Predicate.isObject(data) && Predicate.hasProperty(data, "code"))) {
     return false;
   }
 

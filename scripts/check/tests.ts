@@ -1,10 +1,15 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path, Schema } from "effect";
-import { effectTestViolations } from "#scripts/check/effect";
+import {
+  effectSourceViolations,
+  effectTestViolations,
+} from "#scripts/check/effect";
 import { writeError, writeOutput } from "#scripts/output";
 
 const TEST_FILE_PATTERN = /\.test\.tsx?$/u;
 const TSX_TEST_FILE_PATTERN = /\.test\.tsx$/u;
+const SOURCE_FILE_PATTERN = /\.tsx?$/u;
+const GENERATED_DIRECTORY = "_generated";
 const TEST_DIRECTORIES = new Set(["__test__", "__tests__"]);
 const IGNORED_DIRECTORIES = new Set([
   ".git",
@@ -84,7 +89,7 @@ const hasColocatedOwner = Effect.fn("RepositoryPolicy.hasColocatedOwner")(
   }
 );
 
-/** Validates test ownership and final repository test layout. */
+/** Validates test ownership, source policy, and repository layout. */
 export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   function* (root: string) {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -124,12 +129,35 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       )
     );
     const effectViolations = yield* effectTestViolations(sources);
+    const authoredFiles = [...files, ...scriptFiles].filter(
+      (file) =>
+        SOURCE_FILE_PATTERN.test(file) &&
+        !file.endsWith(".d.ts") &&
+        !file.split(path.sep).includes(GENERATED_DIRECTORY)
+    );
+    const authoredSources = yield* Effect.forEach(authoredFiles, (file) =>
+      fileSystem.readFileString(file).pipe(
+        Effect.map((sourceText) => ({
+          file: path.relative(root, file).split(path.sep).join("/"),
+          sourceText,
+        })),
+        Effect.mapError(
+          (cause) =>
+            new TestPolicyReadError({
+              cause,
+              message: `Unable to read ${file}.`,
+            })
+        )
+      )
+    );
+    const sourceViolations = yield* effectSourceViolations(authoredSources);
 
     if (
       orphanTests.length === 0 &&
       tsxTestFiles.length === 0 &&
       nestedTestFiles.length === 0 &&
-      effectViolations.length === 0
+      effectViolations.length === 0 &&
+      sourceViolations.length === 0
     ) {
       yield* writeOutput("Test ownership checks passed.\n");
       return 0;
@@ -158,6 +186,9 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     }
     if (effectViolations.length > 0) {
       yield* writeError(`${effectViolations.join("\n")}\n`);
+    }
+    if (sourceViolations.length > 0) {
+      yield* writeError(`${sourceViolations.join("\n")}\n`);
     }
 
     return 1;

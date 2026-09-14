@@ -57,6 +57,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - In `packages/ai`, keep provider calls, tool execution, search, scraping, repair, and orchestration explicit in Effect. Keep provider configuration in config boundaries, make source scoping language-neutral, reflect actual provider calls in UI data, and back final output with retrieved evidence, deterministic math, or a stated limitation.
 - Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request or uncached data. Use the framework Promise boundary for request-less static work and document the exception with `https://nextjs.org/docs/messages/next-prerender-current-time`.
 - After touching app effectful code, scan touched paths for raw `try/catch`. After touching domain source or projections, scan for assertions, broad records, `any`, generic errors, raw throws, runners, and silent source fallbacks. Explain every retained framework exception.
+- `scripts/check/effect.ts` enforces this in every authored module under `apps`, `packages`, and `scripts`: no raw `try`/`catch` statement and no `typeof ... === "object"` narrowing. Narrow unknown input with `Predicate` or `Schema` and model expected failure with a tagged Effect error.
 - Tests for Effect-domain seams assert typed failure behavior as well as success.
 
 ### Vendored Effect Reference

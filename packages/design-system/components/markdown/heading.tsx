@@ -6,6 +6,7 @@ import type {
   HeadingTag,
 } from "@repo/design-system/types/markdown";
 import { cn } from "cn";
+import { Predicate } from "effect";
 import type { ReactNode } from "react";
 
 function extractTextFromNode(node: ReactNode): string {
@@ -21,16 +22,20 @@ function extractTextFromNode(node: ReactNode): string {
   if (Array.isArray(node)) {
     return node.map(extractTextFromNode).join("");
   }
-  if (typeof node === "object" && "props" in node && node.props) {
-    const props = node.props as Record<string, unknown>;
+  if (Predicate.isObject(node) && Predicate.hasProperty(node, "props")) {
+    const { props } = node;
 
     // Handle InlineMath and BlockMath components (content is in 'math' prop)
-    if ("math" in props && typeof props.math === "string") {
+    if (
+      Predicate.isObject(props) &&
+      Predicate.hasProperty(props, "math") &&
+      Predicate.isString(props.math)
+    ) {
       return props.math;
     }
 
     // Handle regular React elements (content is in 'children')
-    if ("children" in props) {
+    if (Predicate.isObject(props) && Predicate.hasProperty(props, "children")) {
       return extractTextFromNode(props.children as ReactNode);
     }
   }

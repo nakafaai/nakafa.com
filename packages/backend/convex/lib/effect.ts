@@ -6,6 +6,7 @@ import {
   Effect,
   Exit,
   Option,
+  Predicate,
   Result,
   Scheduler,
 } from "effect";
@@ -23,14 +24,16 @@ export function readConvexErrorData(error: unknown) {
     return null;
   }
 
-  const data = error.data;
-  if (typeof data !== "object" || data === null) {
+  const { data } = error;
+  if (!Predicate.isObject(data)) {
     return null;
   }
 
-  const code = "code" in data ? data.code : undefined;
-  const message = "message" in data ? data.message : undefined;
-  if (typeof code !== "string" || typeof message !== "string") {
+  const code = Predicate.hasProperty(data, "code") ? data.code : undefined;
+  const message = Predicate.hasProperty(data, "message")
+    ? data.message
+    : undefined;
+  if (!(Predicate.isString(code) && Predicate.isString(message))) {
     return null;
   }
 
