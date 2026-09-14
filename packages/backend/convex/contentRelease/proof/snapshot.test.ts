@@ -9,6 +9,7 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { verifyReleaseSnapshots } from "@repo/backend/convex/contentRelease/proof/snapshot";
+import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -44,6 +45,7 @@ function insertCompletedRelease(
   stagedSnapshotRows: number
 ) {
   return ctx.db.insert("contentReleases", {
+    ...releaseReachability(release),
     baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,

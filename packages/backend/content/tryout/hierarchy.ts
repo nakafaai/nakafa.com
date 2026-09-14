@@ -6,6 +6,7 @@ import type {
   TryoutTrack,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import type { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
+import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { TrackIdentity } from "@repo/backend/convex/tryouts/sets/spec";
 import { Effect } from "effect";
@@ -112,18 +113,7 @@ export const readPublishedSetSections = Effect.fn(
         section.setKey === set.setKey
     )
   );
-  const questionCount = sections.reduce(
-    (total, section) => total + section.questionCount,
-    0
-  );
-  const visibleCount = sections.filter(
-    (section) => section.visibility === "visible"
-  ).length;
-  if (
-    sections.length !== set.sectionCount ||
-    questionCount !== set.questionCount ||
-    visibleCount !== set.visibleSectionCount
-  ) {
+  if (!provesSetInventory(set, sections)) {
     return yield* catalogIntegrity(
       "Signed try-out set lost one or more sections."
     );

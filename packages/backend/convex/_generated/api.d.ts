@@ -12814,49 +12814,6 @@ export declare const internal: {
       };
     };
   };
-  onboarding: {
-    lifecycle: {
-      readLifecyclePage: FunctionReference<
-        "query",
-        "internal",
-        {
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            dataQuality: {
-              completedWithoutAdmission: number;
-              completedWithoutRole: number;
-              completedWithoutStart: number;
-              startedWithoutAdmission: number;
-            };
-            incomplete: {
-              admittedNotStarted: number;
-              noRecordedAdmission: number;
-              startedNotCompleted: number;
-            };
-            milestones: {
-              admitted: number;
-              completed: number;
-              started: number;
-            };
-            population: { eligible: number; excluded: number; scanned: number };
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
-    };
-  };
   privacy: {
     recovery: {
       cleanupWorkflowStorage: FunctionReference<

@@ -32,7 +32,7 @@ const hasTryoutRuntimeReference = Effect.fn(
   return attempt !== null || scale !== null;
 });
 
-/** Collects release IDs directly protected by publication slots and history. */
+/** Collects every release ID whose stored history must stay reachable. */
 const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
   function* (ctx: MutationCtx) {
     const state = yield* loadState(ctx);
@@ -53,17 +53,14 @@ const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
         ...completed.map(({ releaseId }) => releaseId),
       ].filter((releaseId) => releaseId !== undefined)
     );
-    let unprovable = false;
     for (const releaseId of [...ids]) {
       const release = yield* loadRelease(ctx, releaseId);
       const baseReleaseId = release.baseReleaseId;
-      if (baseReleaseId === undefined) {
-        unprovable = true;
-      } else if (baseReleaseId !== null) {
+      if (baseReleaseId !== null) {
         ids.add(baseReleaseId);
       }
     }
-    return { ids, unprovable };
+    return ids;
   }
 );
 
@@ -81,17 +78,10 @@ export const isSnapshotReferenced = Effect.fn(
   ) {
     return true;
   }
-  const { ids, unprovable } = yield* protectedReleases(ctx);
-  if (unprovable) {
-    return true;
-  }
+  const ids = yield* protectedReleases(ctx);
   for (const releaseId of ids) {
     const release = yield* loadRelease(ctx, releaseId);
-    const transitions = release.snapshotTransitions;
-    if (transitions === undefined) {
-      return true;
-    }
-    const state = transitions[family];
+    const state = release.snapshotTransitions[family];
     if (
       state.baseSnapshotId === snapshotId ||
       state.resultSnapshotId === snapshotId

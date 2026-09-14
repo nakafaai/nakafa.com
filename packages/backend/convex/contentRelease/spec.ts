@@ -1,9 +1,6 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { ContentDeliveryClassSchema } from "@nakafa/aksara-contracts/delivery";
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  APP_LOCALE_CODES,
-} from "@nakafa/aksara-contracts/locale";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { ProgramNavigationLevelSchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   ContentDeleteSchema,
@@ -26,9 +23,6 @@ export const TRANSACTION_READ_HEADROOM = 4 * 1024 * 1024;
 
 /** Eight body-bearing transitions preserve headroom under transaction limits. */
 export const RELEASE_PAGE_LIMIT = 8;
-
-/** Maximum exact identities owned atomically by one narrow release scope. */
-export const EXACT_SCOPE_LIMIT = 64;
 
 /** Maximum history rows considered by one compaction transaction. */
 export const COMPACTION_PAGE_COUNT = 32;
@@ -106,9 +100,6 @@ export const deliveryValidator = literals(
 
 /** Application locales owned by public routes and localized read models. */
 export const appLocaleValidator = literals(...APP_LOCALE_CODES);
-
-/** Application locales activated by the current signed corpus. */
-export const activeAppLocaleValidator = literals(...ACTIVE_APP_LOCALE_CODES);
 
 /** Artifact locales owned by immutable compiled-content identities. */
 export const artifactLocaleValidator = literals(...APP_LOCALE_CODES);

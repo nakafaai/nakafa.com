@@ -19,6 +19,8 @@ const PartnerCursorSchema = Schema.Struct({
 });
 /** Opaque partner API position bound to one current publication generation. */
 export type PartnerCursor = typeof PartnerCursorSchema.Type;
+/** Signed content family a partner page may address. */
+export type PartnerFamily = PartnerCursor["family"];
 /** Decodes one unversioned current partner pagination cursor. */
 export const decodePartnerCursor = Effect.fn(
   "contentRelease.decodePartnerCursor"
@@ -84,7 +86,7 @@ export const encodePartnerCursor = Effect.fn(
   readonly appLocale: string;
   readonly activeReleaseId: string;
   readonly contentKey: string;
-  readonly family: "article" | "material";
+  readonly family: PartnerFamily;
   readonly prefix: string;
 }) {
   const cursor = yield* Schema.decodeUnknownEffect(PartnerCursorSchema)(

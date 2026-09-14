@@ -12,12 +12,11 @@ import {
   decodePartnerCursor,
   encodePartnerCursor,
   type PartnerCursor,
+  type PartnerFamily,
 } from "@repo/backend/convex/contentRelease/partner/cursor";
 import { Effect } from "effect";
 
 const PARTNER_PAGE_LIMIT = 100;
-
-type PartnerFamily = "article" | "material";
 
 interface PartnerPageInput {
   readonly appLocale: Doc<"contentPaths">["appLocale"];

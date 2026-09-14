@@ -42,12 +42,13 @@ const identity: TryoutSetIdentity = {
 async function activateSet(
   transform: (
     rows: readonly TryoutCatalogRow[]
-  ) => readonly TryoutCatalogRow[] = (rows) => rows
+  ) => readonly TryoutCatalogRow[] = (rows) => rows,
+  visibility: "internal-entry" | "visible" = "visible"
 ) {
   const t = convexTest(schema, convexModules);
   const catalog = transform(
     ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
-      makeTryoutStartCatalog(locale, "visible")
+      makeTryoutStartCatalog(locale, visibility)
     )
   );
   const snapshotId = await t.mutation((ctx) =>
@@ -240,5 +241,43 @@ describe("contentRelease/tryout/set", () => {
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
+  it("rejects a set whose internal entry section is missing", async () => {
+    const { t } = await activateSet(
+      (rows) =>
+        rows.map((row) => {
+          if (row.kind !== "set") {
+            return row;
+          }
+          return Schema.decodeSync(TryoutCatalogRowSchema)({
+            ...row,
+            internalEntrySectionKey: "missing-entry-section",
+          });
+        }),
+      "internal-entry"
+    );
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
+  it("returns one set with its declared internal entry section", async () => {
+    const { t } = await activateSet((rows) => rows, "internal-entry");
+
+    const set = await t.query((ctx) =>
+      runConvexProgram(
+        readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
+      )
+    );
+
+    expect(set.sections.map(({ section }) => section.row.visibility)).toContain(
+      "internal-entry"
+    );
   });
 });

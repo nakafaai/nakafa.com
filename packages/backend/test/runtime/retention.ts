@@ -39,43 +39,56 @@ export const RETENTION_NEWER_SNAPSHOT = Sha256HashSchema.make(
 export interface RuntimeRetentionSeed {
   readonly baseSnapshotId?: SnapshotId | null;
   readonly cleanupReleaseId?: string;
-  readonly mode?: "replace" | "restore";
   readonly originKind: "git" | "rollback";
-  readonly patchColumns?: boolean;
   readonly rendererManifestHash?: string;
   readonly resultSnapshotId?: SnapshotId;
   readonly snapshotId: string;
   readonly withState?: boolean;
 }
 
+const RETENTION_BASE_RELEASE_ID = "release-runtime-base";
+
 /** Seeds one retained runtime pair plus the release that may keep it. */
 export async function seedRuntimeRetentionRow(
   ctx: MutationCtx,
   facts: RuntimeRetentionSeed
 ) {
+  const baseSnapshotId = facts.baseSnapshotId ?? null;
   const resultSnapshotId = facts.resultSnapshotId ?? RETENTION_RESULT_SNAPSHOT;
+  // A Git release replaces immutable snapshots; a rollback only restores them.
+  const rollback = facts.originKind === "rollback";
   const snapshots = {
     ...inheritContentSnapshots(null),
-    tryout:
-      facts.mode === "restore"
-        ? restoreContentSnapshot(
-            facts.baseSnapshotId ?? RETENTION_BASE_SNAPSHOT,
-            facts.resultSnapshotId ?? RETENTION_NEWER_SNAPSHOT
-          )
-        : replaceContentSnapshot({
-            baseSnapshotId: facts.baseSnapshotId ?? null,
-            resultSnapshotId,
-            rowCount: 1,
-            rowDigest: resultSnapshotId,
-          }),
+    tryout: rollback
+      ? restoreContentSnapshot(
+          baseSnapshotId ?? RETENTION_BASE_SNAPSHOT,
+          facts.resultSnapshotId ?? RETENTION_NEWER_SNAPSHOT
+        )
+      : replaceContentSnapshot({
+          baseSnapshotId,
+          resultSnapshotId,
+          rowCount: 1,
+          rowDigest: resultSnapshotId,
+        }),
   };
   if (facts.withState !== false) {
+    // Any release that names an immutable snapshot base must name its base
+    // release too, and a rollback base is the release it restores.
+    const base =
+      rollback || baseSnapshotId !== null
+        ? {
+            manifestHash: TEST_DIGEST,
+            releaseId: RETENTION_BASE_RELEASE_ID,
+            sequence: 1,
+          }
+        : undefined;
     await insertZeroRelease(ctx, {
+      ...(base ? { base } : {}),
       manifestHash: RETENTION_MANIFEST_HASH,
       releaseId: RETENTION_RELEASE_ID,
       sequence: 1,
-      originReleaseId:
-        facts.originKind === "rollback" ? "release-runtime-base" : undefined,
+      originKind: facts.originKind,
+      originReleaseId: rollback ? RETENTION_BASE_RELEASE_ID : undefined,
       ownership: { base: [], result: [] },
       role: "candidate",
       snapshots,
@@ -89,22 +102,6 @@ export async function seedRuntimeRetentionRow(
       },
       nextSequence: 2,
     });
-    if (facts.patchColumns) {
-      const release = await ctx.db
-        .query("contentReleases")
-        .withIndex("by_releaseId", (index) =>
-          index.eq("releaseId", RETENTION_RELEASE_ID)
-        )
-        .unique();
-      if (!release) {
-        throw new Error("Expected retained runtime release.");
-      }
-      await ctx.db.patch("contentReleases", release._id, {
-        originKind: undefined,
-        rendererManifestHash: undefined,
-        snapshotTransitions: undefined,
-      });
-    }
   }
   return ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: "technical",

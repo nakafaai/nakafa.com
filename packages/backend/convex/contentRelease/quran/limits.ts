@@ -24,9 +24,6 @@ export const QURAN_REFERENCE_VERSE_LIMIT = 50;
 /** Maximum localized rows returned by one full-text search request. */
 export const QURAN_SEARCH_RESULT_LIMIT = NAKAFA_AGENT_SEARCH_WINDOW;
 
-/** Prevents one search argument from consuming an excessive request budget. */
-export const QURAN_SEARCH_CHARACTER_LIMIT = 256;
-
 const QURAN_READ_BUDGET = TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM;
 const QURAN_CATALOG_SCAN_LIMIT = QURAN_SURAH_COUNT + 1;
 const QURAN_PAGE_CHUNK_SCAN_LIMIT = QURAN_PAGE_CHUNK_LIMIT + 1;
