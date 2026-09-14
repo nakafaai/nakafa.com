@@ -232,7 +232,7 @@ async function CachedSurahShell({
           <LayoutMaterialContent>
             <QuranSurahHeader
               arabic={surahData.name.arabic}
-              copySourceUrl={`https://nakafa.com/${locale}/quran/${surah}.md`}
+              copySourceUrl={`/${locale}/quran/${surah}.md`}
               meaning={description}
               meaningLanguage={descriptionLanguage}
               quranLabel={t("quran")}

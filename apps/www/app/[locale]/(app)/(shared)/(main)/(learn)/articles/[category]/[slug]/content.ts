@@ -16,7 +16,7 @@ import {
   readArticlePreview,
 } from "@/lib/content/preview/article";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
-import { getAksaraUrl, getRawAksaraUrl } from "@/lib/utils/github";
+import { getAksaraUrl } from "@/lib/utils/github";
 
 /** Exact route identity shared by metadata and body ownership reads. */
 export interface ArticleContentInput {
@@ -129,10 +129,7 @@ export async function readArticlePage(
     children: published.body,
     contentId: published.contentId,
     copySourceUrl: published.sourceRevision
-      ? getRawAksaraUrl({
-          path: published.sourcePath,
-          revision: published.sourceRevision,
-        })
+      ? `/${input.locale}${input.publicPath}.md`
       : null,
     kind: owner.kind,
     metadata: published.metadata,
