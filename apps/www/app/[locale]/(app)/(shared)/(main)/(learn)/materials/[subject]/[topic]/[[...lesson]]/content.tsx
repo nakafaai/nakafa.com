@@ -19,6 +19,7 @@ import {
   type MaterialPreviewContent,
   readMaterialPreview,
 } from "@/lib/content/preview/material";
+import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAksaraUrl } from "@/lib/utils/github";
 
 interface PreviewOwner {
@@ -172,7 +173,10 @@ export async function readMaterialPage(
     body: published.rawMdx,
     children: published.body,
     copySourceUrl: published.sourceRevision
-      ? `/${owner.locale}${owner.publicPath}.md`
+      ? getLlmsMarkdownPath({
+          locale: owner.locale,
+          publicPath: owner.publicPath,
+        })
       : null,
     kind: owner.kind,
     appLocale: owner.locale,

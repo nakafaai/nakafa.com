@@ -16,6 +16,7 @@ import {
   readArticlePreview,
 } from "@/lib/content/preview/article";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
+import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAksaraUrl } from "@/lib/utils/github";
 
 /** Exact route identity shared by metadata and body ownership reads. */
@@ -129,7 +130,10 @@ export async function readArticlePage(
     children: published.body,
     contentId: published.contentId,
     copySourceUrl: published.sourceRevision
-      ? `/${input.locale}${input.publicPath}.md`
+      ? getLlmsMarkdownPath({
+          locale: input.locale,
+          publicPath: input.publicPath,
+        })
       : null,
     kind: owner.kind,
     metadata: published.metadata,
