@@ -7,6 +7,7 @@ import {
   TryoutSetSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { readTryoutSectionRows } from "@repo/backend/content/tryout/section";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
@@ -75,14 +76,16 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
     const sections = yield* Effect.forEach(storedSections, (storedSection) =>
       readTryoutSectionRows(snapshotId, storedSection)
     );
-    const questionCount = sections.reduce(
-      (total, { section }) => total + section.row.questionCount,
-      0
-    );
     const hasChangedOrder = sections.some(
       ({ section }, index) => section.row.order !== index + 1
     );
-    if (hasChangedOrder || questionCount !== setRow.questionCount) {
+    if (
+      hasChangedOrder ||
+      !provesSetInventory(
+        setRow,
+        sections.map(({ section }) => section.row)
+      )
+    ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Try-out set ${setIdentity} lost one or more signed sections.`
