@@ -7,7 +7,6 @@ import {
   measureMarketingPage,
   readFirstContributor,
   swipeContributorDrawer,
-  verifyDesktopSplitter,
 } from "@/e2e/support/marketing";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import {
@@ -29,21 +28,18 @@ const COMMUNITY_MAX_HTML_BYTES = 223_000;
 const HOMEPAGE_MAX_DESCENDANTS = 2800;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 const READINESS_TIMEOUT_MILLISECONDS = 15_000;
-const TRUST_MAX_DESCENDANTS = 330;
-const TRUST_RESIZE_LABEL = "Resize the human and agent views";
 
 const targetViewports = [
-  { desktop: false, height: 800, name: "compact", width: 320 },
+  { height: 800, name: "compact", width: 320 },
   {
-    desktop: false,
     hasTouch: true,
     height: 844,
     name: "touch",
     width: 390,
   },
-  { desktop: false, height: 1024, name: "tablet-portrait", width: 768 },
-  { desktop: true, height: 768, name: "tablet-landscape", width: 1024 },
-  { desktop: true, height: 900, name: "desktop", width: 1440 },
+  { height: 1024, name: "tablet-portrait", width: 768 },
+  { height: 768, name: "tablet-landscape", width: 1024 },
+  { height: 900, name: "desktop", width: 1440 },
 ] as const;
 
 type MarketingViewport = (typeof targetViewports)[number];
@@ -95,9 +91,6 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
       expect(measurements.communityHtmlBytes).toBeLessThanOrEqual(
         COMMUNITY_MAX_HTML_BYTES
       );
-      expect(measurements.trustDescendants).toBeLessThanOrEqual(
-        TRUST_MAX_DESCENDANTS
-      );
       expect(measurements.homepageDescendants).toBeLessThanOrEqual(
         HOMEPAGE_MAX_DESCENDANTS
       );
@@ -117,48 +110,6 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
     yield* Effect.promise(() =>
       expect(page.locator("[data-contributor-drawer]")).toHaveCount(0)
     );
-
-    const trust = page.locator("#trust");
-    const primaryPane = trust.locator("[data-trust-primary-pane]");
-    const sourcePane = trust.locator("[data-trust-source-pane]");
-    const splitter = trust.locator("[data-trust-splitter]");
-    yield* Effect.promise(() =>
-      expect(trust.locator("[data-trust-layout]")).toHaveCount(1)
-    );
-    yield* Effect.promise(() => expect(primaryPane).toHaveCount(1));
-    yield* Effect.promise(() => expect(sourcePane).toHaveCount(1));
-    yield* Effect.promise(() =>
-      expect(primaryPane.locator("article")).toHaveCount(1)
-    );
-    yield* Effect.promise(() =>
-      expect(sourcePane.locator("aside")).toHaveCount(1)
-    );
-    yield* Effect.promise(() =>
-      expect(trust.locator('[data-slot="skeleton"]')).toHaveCount(0)
-    );
-
-    if (viewport.desktop) {
-      yield* verifyDesktopSplitter(
-        primaryPane,
-        sourcePane,
-        splitter,
-        page,
-        TRUST_RESIZE_LABEL
-      );
-    } else {
-      yield* Effect.promise(() => expect(splitter).toBeHidden());
-      const [primaryBounds, sourceBounds] = yield* Effect.all([
-        Effect.promise(() => primaryPane.boundingBox()),
-        Effect.promise(() => sourcePane.boundingBox()),
-      ]);
-      yield* Effect.sync(() => {
-        expect(primaryBounds).not.toBeNull();
-        expect(sourceBounds).not.toBeNull();
-        expect(sourceBounds?.y).toBeGreaterThan(
-          primaryBounds?.y ?? Number.MAX_VALUE
-        );
-      });
-    }
 
     const hasTouch = "hasTouch" in viewport && viewport.hasTouch;
     const firstContributor = yield* readFirstContributor(contributors);

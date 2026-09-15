@@ -784,18 +784,6 @@
     "description": "Du brauchst ein LMS, eine Inhaltsintegration oder einen eigenen Unterrichtsablauf? Wähle, was zu deiner Schule passt.",
     "cta": "Bedarf besprechen"
   },
-  "TrustSection": {
-    "headline": "Du musst uns nicht einfach glauben. Verfolge das Lernmaterial <mark>bis zu seinen Quellen</mark>.",
-    "description": "Lies die Erklärung, folge ihren Verweisen oder öffne die Quelldatei, wenn du prüfen möchtest, wie sie entstanden ist.",
-    "open-lesson": "Dieses Lernmaterial öffnen",
-    "open-lesson-short": "Lernmaterial öffnen",
-    "open-source": ".md öffnen",
-    "human-label": "Mensch",
-    "agent-label": "Agent",
-    "comparison-slider-label": "Größe der Menschen- und Agentenansicht ändern",
-    "lesson-preview-label": "Ansicht eines Nakafa-Lernmaterials",
-    "source-preview-label": "Markdown-Quelldatei von Nakafa"
-  },
   "About": {
     "title": "Lerne, bis es <mark>wirklich klickt.</mark>",
     "description": "Wähle ein Fach, prüfe dein Wissen mit einem Probetest und frage Nina, wenn du nicht weiterkommst.",

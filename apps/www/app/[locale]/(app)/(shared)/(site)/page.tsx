@@ -12,12 +12,10 @@ import { Hero } from "@/components/marketing/about/hero";
 import { Logos } from "@/components/marketing/about/logos";
 import { Pricing } from "@/components/marketing/about/pricing/landing";
 import { Schools } from "@/components/marketing/about/schools";
-import { Trust } from "@/components/marketing/about/trust/section";
 import {
   getSubjectMenuHref,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
-import { getPublishedTrustLesson } from "@/lib/content/material/trust";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
@@ -87,11 +85,10 @@ export default async function Page() {
  * navigation data that powers the app entry points.
  */
 async function MarketingHomePageContent({ locale }: { locale: Locale }) {
-  const [tMetadata, tSubject, tFaq, trustLesson] = await Promise.all([
+  const [tMetadata, tSubject, tFaq] = await Promise.all([
     getTranslations({ locale, namespace: "Metadata" }),
     getTranslations({ locale, namespace: "Subject" }),
     getTranslations({ locale, namespace: "Faq" }),
-    getPublishedTrustLesson(locale),
   ]);
 
   const collectionItems = [
@@ -146,7 +143,6 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         <Logos />
         <Features locale={locale} />
         <Curricula locale={locale} />
-        <Trust lesson={trustLesson} />
         <Pricing />
         <Schools />
         <Faq />

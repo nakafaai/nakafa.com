@@ -1,10 +1,7 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/_types/contributor";
 import { Effect, Schema } from "effect";
 import { dragTouch } from "@/e2e/support/touch";
-
-const COARSE_SPLITTER_TARGET_WIDTH = 44;
-const FINE_SPLITTER_TARGET_WIDTH = 24;
 
 export const legacyAvatarFragmentIds = [
   "clip0",
@@ -16,10 +13,6 @@ export const legacyAvatarFragmentIds = [
 const MarketingSurfaceSchema = Schema.Literals([
   "contributor-drawer",
   "community",
-  "primary-pane",
-  "source-pane",
-  "splitter",
-  "trust",
 ]);
 
 /** The fixed contributor fixture does not contain its required first row. */
@@ -70,7 +63,6 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
       page.evaluate((legacyIds) => {
         const knownAvatarFragmentIds = new Set<string>(legacyIds);
         const community = document.querySelector("#community");
-        const trust = document.querySelector("#trust");
         const ids = [...document.querySelectorAll("[id]")].map(({ id }) => id);
         const duplicateIds = [
           ...new Set(ids.filter((id, index) => ids.indexOf(id) !== index)),
@@ -122,8 +114,6 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
               )
             ),
           ],
-          trustDescendants: trust ? trust.querySelectorAll("*").length : -1,
-          trustPresent: trust !== null,
           unexpectedDuplicateIds: unexpectedDuplicateIds.sort(),
         };
       }, legacyAvatarFragmentIds)
@@ -131,9 +121,6 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
 
     if (!measurements.communityPresent) {
       return yield* new MarketingSurfaceMissing({ surface: "community" });
-    }
-    if (!measurements.trustPresent) {
-      return yield* new MarketingSurfaceMissing({ surface: "trust" });
     }
     return measurements;
   }
@@ -148,117 +135,6 @@ const readBounds = Effect.fn("NakafaE2E.readMarketingBounds")(function* (
     return yield* new MarketingBoundsMissing({ surface });
   }
   return bounds;
-});
-
-/** Proves the desktop splitter's semantics, constraints, and input methods. */
-export const verifyDesktopSplitter = Effect.fn(
-  "NakafaE2E.verifyDesktopSplitter"
-)(function* (
-  primaryPane: Locator,
-  sourcePane: Locator,
-  splitter: Locator,
-  page: Page,
-  resizeLabel: string
-) {
-  yield* Effect.promise(() => expect(splitter).toBeVisible());
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("role", "separator")
-  );
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAccessibleName(resizeLabel)
-  );
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-controls", "trust-primary-pane")
-  );
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-orientation", "vertical")
-  );
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-valuemin", "36")
-  );
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-valuemax", "64")
-  );
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-valuenow", "50")
-  );
-
-  const [primaryBounds, sourceBounds] = yield* Effect.all([
-    readBounds(primaryPane, "primary-pane"),
-    readBounds(sourcePane, "source-pane"),
-  ]);
-  yield* Effect.sync(() => {
-    expect(Math.abs(primaryBounds.y - sourceBounds.y)).toBeLessThan(2);
-    expect(sourceBounds.x).toBeGreaterThan(primaryBounds.x);
-  });
-
-  yield* Effect.promise(() => splitter.focus());
-  yield* Effect.promise(() => page.keyboard.press("ArrowRight"));
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-valuenow", "51")
-  );
-  yield* Effect.promise(() => page.keyboard.press("Home"));
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-valuenow", "36")
-  );
-  yield* Effect.promise(() => page.keyboard.press("End"));
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-valuenow", "64")
-  );
-  yield* Effect.promise(() => page.keyboard.press("Home"));
-
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-valuenow", "36")
-  );
-  // Focus can scroll asynchronously; settle the pointer target before measuring.
-  yield* Effect.promise(() => splitter.hover());
-  const splitterBounds = yield* readBounds(splitter, "splitter");
-  const usesCoarsePointer = yield* Effect.promise(() =>
-    page.evaluate(() => window.matchMedia("(pointer: coarse)").matches)
-  );
-  const minimumTargetWidth = usesCoarsePointer
-    ? COARSE_SPLITTER_TARGET_WIDTH
-    : FINE_SPLITTER_TARGET_WIDTH;
-  yield* Effect.sync(() =>
-    expect(splitterBounds.width).toBeGreaterThanOrEqual(minimumTargetWidth)
-  );
-  const centerX = splitterBounds.x + splitterBounds.width / 2;
-  const centerY = splitterBounds.y + splitterBounds.height / 2;
-  yield* Effect.promise(() => page.mouse.move(centerX, centerY));
-  yield* Effect.promise(() => page.mouse.down());
-  yield* Effect.promise(() => page.mouse.move(centerX + 600, centerY));
-  yield* Effect.promise(() => page.mouse.up());
-  yield* Effect.promise(() =>
-    expect
-      .poll(() =>
-        splitter.getAttribute("aria-valuenow").then((value) => Number(value))
-      )
-      .toBeGreaterThan(36)
-  );
-
-  yield* Effect.promise(() => page.keyboard.press("Home"));
-  yield* Effect.promise(() =>
-    expect(splitter).toHaveAttribute("aria-valuenow", "36")
-  );
-  yield* dragTouch(
-    page,
-    { x: centerX, y: centerY },
-    { x: centerX + 200, y: centerY }
-  );
-  yield* Effect.promise(() =>
-    expect
-      .poll(() =>
-        splitter.getAttribute("aria-valuenow").then((value) => Number(value))
-      )
-      .toBeGreaterThan(36)
-  );
-  yield* Effect.promise(() =>
-    expect
-      .poll(() =>
-        splitter.getAttribute("aria-valuenow").then((value) => Number(value))
-      )
-      .toBeLessThanOrEqual(64)
-  );
 });
 
 /** Dismisses the active contributor drawer through a real touch gesture. */
