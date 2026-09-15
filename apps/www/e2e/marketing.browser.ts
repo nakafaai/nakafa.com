@@ -21,11 +21,15 @@ import { contributors } from "@/lib/data/contributor";
  * Protected #330 and the exact-head trace both measured 755 total descendants,
  * 220 non-SVG descendants, and about 210 KB. These ceilings leave about six
  * percent regression room without changing the visible avatar representation.
+ *
+ * The homepage ceiling still carried the trust chapter that #660 removed. Its
+ * five production viewports now measure 2390 to 2394 body descendants, so the
+ * ceiling is 2540 for the same six percent room.
  */
 const COMMUNITY_MAX_CHROME_DESCENDANTS = 235;
 const COMMUNITY_MAX_DESCENDANTS = 800;
 const COMMUNITY_MAX_HTML_BYTES = 223_000;
-const HOMEPAGE_MAX_DESCENDANTS = 2800;
+const HOMEPAGE_MAX_DESCENDANTS = 2540;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 const READINESS_TIMEOUT_MILLISECONDS = 15_000;
 
