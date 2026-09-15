@@ -49,7 +49,7 @@ const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
 const stageProjections = internal.contentRelease.items.stageProjectionBatch;
 const stageRoutes = internal.contentRelease.routes.stageRouteBatch;
-const TEST_PROOF_WORKFLOW_ID = parse(
+export const TEST_PROOF_WORKFLOW_ID = parse(
   vWorkflowId,
   "content-proof-test-workflow"
 );

@@ -6,36 +6,37 @@ import {
 } from "@repo/backend/convex/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import {
+  completedAnchor,
   completedReceipt,
   stagedEvidence,
 } from "@repo/backend/convex/contentRelease/receipt";
 import { Effect } from "effect";
 
-/** Loads one completed base snapshot and returns its immutable sequence. */
+/**
+ * Loads one completed base anchor and returns its immutable sequence.
+ *
+ * The base is published history that a later release only extends, so it is
+ * proven from the identity, sequence, and completion facts the release row
+ * already stores. Decoding its signed payload here would make every read depend
+ * on the contract generation that produced the base, which strands an
+ * environment as soon as that generation retires an encoding.
+ *
+ * The signed manifest binds the base release identity to its manifest hash, so
+ * an absent base release is the only genesis shape this anchor can receive.
+ */
 const loadBase = Effect.fn("contentRelease.loadSnapshotBase")(function* (
   ctx: QueryCtx,
   releaseId: null | string,
   manifestHash: null | string,
   expectedSequence?: number
 ) {
-  if (releaseId === null || manifestHash === null) {
-    if (
-      releaseId !== null ||
-      manifestHash !== null ||
-      expectedSequence !== undefined
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Content snapshot has an incomplete genesis base identity."
-      );
-    }
+  if (releaseId === null) {
     return 0;
   }
   const release = yield* loadRelease(ctx, releaseId);
-  const signed = yield* decodeReleaseJson(release.releaseJson);
   if (
     release.status !== "completed" ||
-    signed.manifestHash !== manifestHash ||
+    release.manifestHash !== manifestHash ||
     (expectedSequence !== undefined && release.sequence !== expectedSequence)
   ) {
     return yield* releaseFail(
@@ -43,7 +44,7 @@ const loadBase = Effect.fn("contentRelease.loadSnapshotBase")(function* (
       `Content snapshot base ${releaseId} is not exact and completed.`
     );
   }
-  yield* completedReceipt(release, signed);
+  yield* completedAnchor(release);
   return release.sequence;
 });
 
