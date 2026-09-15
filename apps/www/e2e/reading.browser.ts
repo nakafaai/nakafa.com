@@ -91,11 +91,9 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.sync(() =>
       expect(sectionInk.decorationLine).toBe("underline")
     );
+    yield* Effect.sync(() => expect(sectionInk.ink).toBe(sectionInk.primary));
     yield* Effect.sync(() =>
-      expect(sectionInk.ink).toBe(sectionInk.foreground)
-    );
-    yield* Effect.sync(() =>
-      expect(sectionInk.decorationColor).toBe(sectionInk.primary)
+      expect(sectionInk.decorationColor).toBe(sectionInk.foreground)
     );
     yield* Effect.sync(() =>
       expect(sectionInk.ink).not.toBe(sectionInk.decorationColor)
