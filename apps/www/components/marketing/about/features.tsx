@@ -1,9 +1,9 @@
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import { FeaturesBento } from "@/components/marketing/about/features-bento";
 import { readFeaturedTryout } from "@/components/tryout/catalog/server";
 import { getPublishedProgramSubjects } from "@/lib/content/program/catalog";
+import { readCurriculumRouteIcon } from "@/lib/curriculum/icons";
 
 export async function Features({ locale }: { locale: Locale }) {
   const [t, subjects, featuredTryout] = await Promise.all([

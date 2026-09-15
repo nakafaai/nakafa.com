@@ -5,6 +5,7 @@ import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/browser-context";
+import { pinnedRoutes } from "@/e2e/support/corpus";
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;
@@ -32,36 +33,18 @@ const contentRouteGroups = [
     jsonLdTypes: ["Article", "LearningResource"],
     kind: "article",
     routes: [
-      {
-        href: "/en/articles/politics/regional-elections-turmoil",
-        locale: "en",
-      },
-      {
-        href: "/id/articles/politics/regional-elections-turmoil",
-        locale: "id",
-      },
-      {
-        href: "/de/articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen",
-        locale: "de",
-      },
+      { href: pinnedRoutes.article.en, locale: "en" },
+      { href: pinnedRoutes.article.id, locale: "id" },
+      { href: pinnedRoutes.article.de, locale: "de" },
     ],
   },
   {
     jsonLdTypes: ["Article", "LearningResource"],
     kind: "material",
     routes: [
-      {
-        href: "/en/subjects/mathematics/analytic-geometry/hyperbola",
-        locale: "en",
-      },
-      {
-        href: "/id/materi/matematika/geometri-analitik/hiperbola",
-        locale: "id",
-      },
-      {
-        href: "/de/faecher/mathematik/analytische-geometrie/hyperbel",
-        locale: "de",
-      },
+      { href: pinnedRoutes.material.en, locale: "en" },
+      { href: pinnedRoutes.material.id, locale: "id" },
+      { href: pinnedRoutes.material.de, locale: "de" },
     ],
   },
 ] satisfies readonly ContentRouteGroup[];

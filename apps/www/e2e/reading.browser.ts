@@ -2,15 +2,13 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const NINA_DIALOG_NAME = /^Nina/;
 const INTER_FONT = /Inter/;
 
-const routes = [
-  "/en/subjects/mathematics/analytic-geometry/hyperbola",
-  "/en/articles/politics/regional-elections-turmoil",
-];
+const routes = [pinnedRoutes.material.en, pinnedRoutes.article.en];
 
 /** Reads the first rendered section heading ink and its underline accent. */
 const readSectionHeadingInk = (span: HTMLElement) => {

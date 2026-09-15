@@ -13,6 +13,7 @@ import {
   type PriceProps,
   PricingPrice,
 } from "@/components/marketing/about/pricing/price";
+import { freePlanFeatures, proPlanFeatures } from "@/lib/marketing/plan";
 
 interface PricingFeatureProps {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
@@ -38,20 +39,8 @@ function PricingFeature({ text, icon }: PricingFeatureProps) {
 export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
   const PlanHeading = headingLevel;
-  const freeFeatures = [
-    t("free-feature-1"),
-    t("free-feature-2"),
-    t("free-feature-3"),
-    t("free-feature-4"),
-    t("free-feature-5"),
-  ];
-
-  const proFeatures = [
-    t("pro-feature-1"),
-    t("pro-feature-2"),
-    t("pro-feature-3"),
-    t("pro-feature-5"),
-  ];
+  const freeFeatures = freePlanFeatures.map((key) => t(key));
+  const proFeatures = proPlanFeatures.map((key) => t(key));
 
   return (
     <div className="grid lg:grid-cols-2 lg:divide-x">

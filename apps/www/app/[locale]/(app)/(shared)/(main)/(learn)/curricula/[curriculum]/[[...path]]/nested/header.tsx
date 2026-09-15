@@ -1,6 +1,6 @@
 import type { Locale } from "next-intl";
-import type { CurriculumViewRoute } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
+import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /** Renders one nested curriculum route with breadcrumb context only. */

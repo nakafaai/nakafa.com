@@ -30,7 +30,7 @@ import {
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ProgramNavigationIconKey } from "@nakafa/aksara-contracts/program/spec";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import type { CurriculumViewRoute } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
+import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 
 type CurriculumVisualSource =
   | Readonly<{ kind: "material"; key: string }>

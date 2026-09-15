@@ -1,4 +1,4 @@
-import type { CurriculumViewRoute } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
+import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 import type { SEOContext } from "@/lib/seo/contract";
 
 /** Builds shared SEO metadata input from one projected curriculum route. */
