@@ -1,7 +1,6 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { redirect } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import type { Preloaded } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import { notFound } from "next/navigation";
@@ -10,9 +9,8 @@ import { HomeContinueLearning } from "@/components/home/continue-learning";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
 import { HomeTrending } from "@/components/home/trending";
-import { HomeUserProvider } from "@/components/home/user";
 import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
-import { fetchAuthQuery, getToken, preloadAuthQuery } from "@/lib/auth/server";
+import { fetchAuthQuery, getToken } from "@/lib/auth/server";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { readOnboardingStatus } from "@/lib/onboarding/server";
@@ -24,17 +22,18 @@ type HomeRecentRows = FunctionReturnType<
 /**
  * Personalized values the route resolves with its own request credential.
  *
- * A failed preload only drops the request-time snapshot; the client paths keep
- * the greeting and history reactive instead of failing the page.
+ * The route already validates the request token, so resolving its own content
+ * keeps the greeting and history in the first paint instead of letting a client
+ * subscription insert them after hydration.
  */
 interface HomeSeed {
   readonly recentRows: HomeRecentRows;
-  readonly user: Preloaded<typeof api.auth.queries.getCurrentUser>;
+  readonly userName: string;
 }
 
 /** Expected failure when the route cannot resolve the signed-in home feed. */
-class HomePreloadError extends Schema.TaggedError<HomePreloadError>()(
-  "HomePreloadError",
+class HomeSeedError extends Schema.TaggedError<HomeSeedError>()(
+  "HomeSeedError",
   { cause: Schema.Unknown }
 ) {}
 
@@ -81,21 +80,28 @@ async function AuthenticatedHome({
   const seed = await Effect.runPromise(
     Effect.all({
       recentRows: Effect.tryPromise({
-        catch: (cause) => new HomePreloadError({ cause }),
+        catch: (cause) => new HomeSeedError({ cause }),
         try: () =>
           fetchAuthQuery(api.contents.queries.recent.getRecentlyViewed, {
             locale,
             limit: 5,
           }),
       }),
-      user: Effect.tryPromise({
-        catch: (cause) => new HomePreloadError({ cause }),
-        try: () => preloadAuthQuery(api.auth.queries.getCurrentUser, {}),
+      userName: Effect.tryPromise({
+        catch: (cause) => new HomeSeedError({ cause }),
+        try: async () => {
+          const currentUser = await fetchAuthQuery(
+            api.auth.queries.getCurrentUser,
+            {}
+          );
+
+          return currentUser?.appUser.name ?? null;
+        },
       }),
     }).pipe(
-      Effect.catchTag("HomePreloadError", (error) =>
+      Effect.catchTag("HomeSeedError", (error) =>
         scheduleCurrentServerExceptionCapture(error.cause, {
-          source: "home-preload",
+          source: "home-seed",
         }).pipe(Effect.as(null))
       )
     )
@@ -103,9 +109,11 @@ async function AuthenticatedHome({
 
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
-      <HomeUserProvider currentUser={seed?.user}>
-        <Main locale={locale} recentRows={seed?.recentRows} />
-      </HomeUserProvider>
+      <Main
+        locale={locale}
+        recentRows={seed?.recentRows ?? []}
+        userName={seed?.userName ?? null}
+      />
     </div>
   );
 }
@@ -114,18 +122,20 @@ async function AuthenticatedHome({
 function Main({
   locale,
   recentRows,
+  userName,
 }: {
   locale: PublicAppLocale;
-  recentRows: HomeSeed["recentRows"] | undefined;
+  recentRows: HomeSeed["recentRows"];
+  userName: string | null;
 }) {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-24">
       <div className="relative flex flex-col gap-12">
-        <HomeHeader />
+        <HomeHeader userName={userName} />
 
         <HomeExplore />
 
-        <HomeContinueLearning snapshot={recentRows} />
+        <HomeContinueLearning subjects={recentRows} />
 
         <Suspense fallback={null}>
           <HomeTrending locale={locale} />

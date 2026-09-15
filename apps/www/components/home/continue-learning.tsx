@@ -1,16 +1,14 @@
 "use client";
 
 import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { Button } from "@repo/design-system/components/ui/button";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { FunctionReturnType } from "convex/server";
-import { useLocale, useTranslations } from "next-intl";
-import { isActiveLocale } from "@/lib/i18n/active";
+import { useTranslations } from "next-intl";
 
 type RecentlyViewedSubject = FunctionReturnType<
   typeof api.contents.queries.recent.getRecentlyViewed
@@ -21,32 +19,17 @@ type RecentlyViewedSubject = FunctionReturnType<
  *
  * The route resolves the learner's ranked rows with its request credential and
  * passes them in, so the first client paint already contains the row list.
- * Without that snapshot the section would appear during hydration and push
+ * Resolving them after hydration instead would insert the section and push
  * trending content down.
- *
- * When the route could not resolve a snapshot, the live query keeps the same
- * rows reactive instead of dropping the section.
  */
 export function HomeContinueLearning({
-  snapshot,
+  subjects,
 }: {
-  snapshot: readonly RecentlyViewedSubject[] | undefined;
+  subjects: readonly RecentlyViewedSubject[];
 }) {
   const t = useTranslations("Home");
-  const locale = useLocale();
-  const activeLocale = isActiveLocale(locale);
-  const { data: liveData, isPending } = useQueryWithStatus(
-    api.contents.queries.recent.getRecentlyViewed,
-    activeLocale && !snapshot ? { locale, limit: 5 } : "skip"
-  );
-  const data = snapshot ?? liveData;
 
-  if (!data || data.length === 0) {
-    return null;
-  }
-
-  // The snapshot already rendered on the server; only the live fallback waits.
-  if (snapshot === undefined && isPending) {
+  if (subjects.length === 0) {
     return null;
   }
 
@@ -57,7 +40,7 @@ export function HomeContinueLearning({
         <HugeIcons className="size-4" icon={Progress03Icon} />
       </h2>
       <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-        {data.map((subject) => (
+        {subjects.map((subject) => (
           <NavigationLink
             className="group grid gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
             href={subject.href}
