@@ -16,6 +16,7 @@ export const baseComponentNames = {
   heading4: "h4",
   heading5: "h5",
   heading6: "h6",
+  highlight: "Highlight",
   inlineMath: "InlineMath",
   listItem: "li",
   mathContainer: "MathContainer",
