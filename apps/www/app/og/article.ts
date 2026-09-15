@@ -3,11 +3,15 @@ import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/arti
 import { Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { readArticleMetadata } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/content";
+import { resolveArticleOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/owner";
 import { getPublishedCategories } from "@/lib/content/article/catalog";
 import { getPublishedArticleCategory } from "@/lib/content/article/category";
+import { getArticleModel } from "@/lib/content/article/publication";
 
-/** Reads Open Graph copy exclusively from signed or preview article ownership. */
+/** Reads Open Graph copy exclusively from signed or preview article ownership.
+ *
+ * Returns null when no article resolves instead of rendering not-found, so
+ * image routes fall back to brand artwork without hosting the shell. */
 export async function readArticleOgMetadata(
   locale: Locale,
   slug: readonly string[]
@@ -57,9 +61,21 @@ export async function readArticleOgMetadata(
   const publicPath = PublicPathSchema.make(
     `articles/${category}/${articleSlug}`
   );
-  const article = await readArticleMetadata({ locale, publicPath });
+  const owner = await resolveArticleOwner({ locale, publicPath });
+  if (owner.kind === "preview") {
+    const metadata = owner.content.metadata;
+    return {
+      description: metadata.description ?? metadata.title,
+      title: metadata.title,
+    };
+  }
+  const publication = await getArticleModel(locale, publicPath);
+  if (!publication?.model.projection) {
+    return null;
+  }
+  const metadata = publication.model.projection.metadata;
   return {
-    description: article.metadata.description ?? article.metadata.title,
-    title: article.metadata.title,
+    description: metadata.description ?? metadata.title,
+    title: metadata.title,
   };
 }

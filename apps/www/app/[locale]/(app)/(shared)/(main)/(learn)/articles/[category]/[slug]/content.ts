@@ -1,37 +1,19 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type {
   ArticleMetadata,
   ArticleProjection,
   ArticleReference,
 } from "@nakafa/aksara-contracts/projection/article";
-import { Effect, Option } from "effect";
-import { io } from "next/cache";
 import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
-import { getArticlePublication } from "@/lib/content/article/publication";
 import {
-  type ArticlePreviewContent,
-  readArticlePreview,
-} from "@/lib/content/preview/article";
-import { hasPreviewConfig } from "@/lib/content/preview/config";
+  type ArticleContentInput,
+  type PreviewOwner,
+  type PublishedOwner,
+  resolveArticleOwner,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/owner";
+import { getArticlePublication } from "@/lib/content/article/publication";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAksaraUrl } from "@/lib/utils/github";
-
-/** Exact route identity shared by metadata and body ownership reads. */
-export interface ArticleContentInput {
-  readonly locale: Locale;
-  readonly publicPath: ArticleProjection["publicPath"];
-}
-
-interface PublishedOwner {
-  readonly kind: "published";
-}
-
-interface PreviewOwner {
-  readonly content: ArticlePreviewContent;
-  readonly kind: "preview";
-}
 
 /** Complete article data consumed by the existing page shell. */
 export interface ArticlePageContent {
@@ -46,33 +28,6 @@ export interface ArticlePageContent {
   readonly references: readonly ArticleReference[];
   readonly route: ArticleProjection;
   readonly sourceUrl: null | string;
-}
-
-/** Reads local article ownership only inside the configured preview child. */
-async function readPreviewOwner(input: ArticleContentInput) {
-  if (!hasPreviewConfig()) {
-    return Option.none<ArticlePreviewContent>();
-  }
-
-  await io();
-  return Effect.runPromise(
-    readArticlePreview({
-      appLocale: AppLocaleSchema.make(input.locale),
-      publicPath: input.publicPath,
-    })
-  );
-}
-
-/** Selects one exclusive article owner before any native module import. */
-async function resolveArticleOwner(
-  input: ArticleContentInput
-): Promise<PreviewOwner | PublishedOwner> {
-  const preview = await readPreviewOwner(input);
-  if (Option.isSome(preview)) {
-    return { content: preview.value, kind: "preview" };
-  }
-
-  return { kind: "published" };
 }
 
 /** Reads metadata through the same exclusive owner used by page rendering. */
