@@ -278,10 +278,7 @@ async function MaterialLessonPage({
               {showComments && <AiMenuItem contextTitle={metadata.title} />}
             </OpenContent>
           </ContentHeader>
-          <ContentTitle
-            description={metadata.description}
-            title={metadata.title}
-          />
+          <ContentTitle title={metadata.title} />
           <ContentDates
             {...(metadata.dateModified === undefined
               ? {}

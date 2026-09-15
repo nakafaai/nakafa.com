@@ -5,27 +5,31 @@ import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const NINA_DIALOG_NAME = /^Nina/;
-const NEWSREADER_FONT = /Newsreader/;
+const INTER_FONT = /Inter/;
 
 const routes = [
   "/en/subjects/mathematics/analytic-geometry/hyperbola",
   "/en/articles/politics/regional-elections-turmoil",
 ];
 
-/** Reads the first rendered section heading and the live theme accent. */
+/** Reads the first rendered section heading ink and its underline accent. */
 const readSectionHeadingInk = (span: HTMLElement) => {
-  const probe = document.createElement("span");
-  probe.style.color = "var(--primary)";
-  document.body.appendChild(probe);
-  const primary = getComputedStyle(probe).color;
-  probe.remove();
+  const resolveToken = (token: string) => {
+    const probe = document.createElement("span");
+    probe.style.color = token;
+    document.body.appendChild(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return value;
+  };
 
   const style = getComputedStyle(span);
   return {
-    color: style.color,
     decorationColor: style.textDecorationColor,
     decorationLine: style.textDecorationLine,
-    primary,
+    foreground: resolveToken("var(--foreground)"),
+    ink: style.color,
+    primary: resolveToken("var(--primary)"),
     thickness: Number.parseFloat(style.textDecorationThickness),
   };
 };
@@ -41,39 +45,43 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "48px"));
     yield* Effect.promise(() => expect(title).toHaveCSS("text-align", "start"));
     yield* Effect.promise(() =>
-      expect(title).toHaveCSS("font-family", NEWSREADER_FONT)
+      expect(title).toHaveCSS("font-family", INTER_FONT)
     );
     yield* Effect.promise(() =>
       expect(title).toHaveCSS("text-wrap-style", "balance")
     );
-    const newsreaderLoaded = yield* Effect.promise(() =>
+    const interLoaded = yield* Effect.promise(() =>
       page.evaluate(async () => {
         await document.fonts.ready;
         return [...document.fonts].some(
           (font) =>
-            font.family.includes("Newsreader") &&
+            font.family.includes("Inter") &&
             !font.family.includes("Fallback") &&
             font.status === "loaded"
         );
       })
     );
-    yield* Effect.sync(() => expect(newsreaderLoaded).toBe(true));
+    yield* Effect.sync(() => expect(interLoaded).toBe(true));
     const summary = page.locator("header").filter({ has: title }).locator("p");
-    yield* Effect.promise(() => expect(summary).toBeVisible());
-    yield* Effect.promise(() => expect(summary).not.toBeEmpty());
-    yield* Effect.promise(() =>
-      expect(summary).toHaveCSS("text-align", "start")
-    );
-    yield* Effect.promise(() =>
-      expect(summary).toHaveCSS("text-wrap-style", "pretty")
-    );
-    const titleLeft = yield* Effect.promise(() =>
-      title.evaluate((element) => element.getBoundingClientRect().left)
-    );
-    const summaryLeft = yield* Effect.promise(() =>
-      summary.evaluate((element) => element.getBoundingClientRect().left)
-    );
-    yield* Effect.sync(() => expect(summaryLeft).toBe(titleLeft));
+    if (href === routes[0]) {
+      yield* Effect.promise(() => expect(summary).toHaveCount(0));
+    } else {
+      yield* Effect.promise(() => expect(summary).toBeVisible());
+      yield* Effect.promise(() => expect(summary).not.toBeEmpty());
+      yield* Effect.promise(() =>
+        expect(summary).toHaveCSS("text-align", "start")
+      );
+      yield* Effect.promise(() =>
+        expect(summary).toHaveCSS("text-wrap-style", "pretty")
+      );
+      const titleLeft = yield* Effect.promise(() =>
+        title.evaluate((element) => element.getBoundingClientRect().left)
+      );
+      const summaryLeft = yield* Effect.promise(() =>
+        summary.evaluate((element) => element.getBoundingClientRect().left)
+      );
+      yield* Effect.sync(() => expect(summaryLeft).toBe(titleLeft));
+    }
 
     const sectionHeading = page.locator("article h2 span").first();
     yield* Effect.promise(() => expect(sectionHeading).toBeVisible());
@@ -83,9 +91,14 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.sync(() =>
       expect(sectionInk.decorationLine).toBe("underline")
     );
-    yield* Effect.sync(() => expect(sectionInk.color).toBe(sectionInk.primary));
+    yield* Effect.sync(() =>
+      expect(sectionInk.ink).toBe(sectionInk.foreground)
+    );
     yield* Effect.sync(() =>
       expect(sectionInk.decorationColor).toBe(sectionInk.primary)
+    );
+    yield* Effect.sync(() =>
+      expect(sectionInk.ink).not.toBe(sectionInk.decorationColor)
     );
     yield* Effect.sync(() => expect(sectionInk.thickness).toBeGreaterThan(1));
     const titleText = yield* Effect.promise(() => title.innerText());

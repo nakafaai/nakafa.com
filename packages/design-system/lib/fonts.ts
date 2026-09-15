@@ -7,14 +7,12 @@ import {
   GeistPixelSquare,
   GeistPixelTriangle,
 } from "geist/font/pixel";
-import { GeistSans } from "geist/font/sans";
-import { Amiri, Newsreader } from "next/font/google";
+import { Amiri, Inter } from "next/font/google";
 
-const newsreader = Newsreader({
-  axes: ["opsz"],
+const inter = Inter({
   display: "swap",
   subsets: ["latin"],
-  variable: "--font-newsreader",
+  variable: "--font-inter",
 });
 
 export const quranSans = Amiri({
@@ -24,9 +22,8 @@ export const quranSans = Amiri({
 });
 
 export const fonts = cn(
-  GeistSans.variable,
+  inter.variable,
   GeistMono.variable,
-  newsreader.variable,
   GeistPixelSquare.variable,
   GeistPixelGrid.variable,
   GeistPixelCircle.variable,
