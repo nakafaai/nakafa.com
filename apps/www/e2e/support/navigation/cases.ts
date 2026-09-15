@@ -152,14 +152,19 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
 });
 
 const readVisibleLinkedHref = Effect.fn("NakafaE2E.readVisibleLinkedHref")(
-  function* (page: Page, sourceHref: string, hrefPattern: RegExp) {
+  function* (
+    page: Page,
+    sourceHref: string,
+    hrefPattern: RegExp,
+    skipHref?: string
+  ) {
     const candidates = page.locator("a[href]");
     const candidateCount = yield* Effect.promise(() => candidates.count());
 
     for (let index = 0; index < candidateCount; index += 1) {
       const candidate = candidates.nth(index);
       const href = yield* Effect.promise(() => candidate.getAttribute("href"));
-      if (!href) {
+      if (!href || href === skipHref) {
         continue;
       }
       if (!hrefPattern.test(href)) {
@@ -181,16 +186,20 @@ const readVisibleLinkedHref = Effect.fn("NakafaE2E.readVisibleLinkedHref")(
 const discoverLinkedHref = Effect.fn("NakafaE2E.discoverLinkedHref")(function* (
   page: Page,
   sourceHref: string,
-  hrefPattern: RegExp
+  hrefPattern: RegExp,
+  skipHref?: string
 ) {
   const response = yield* Effect.promise(() =>
     page.goto(sourceHref, { waitUntil: "domcontentloaded" })
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
-  return yield* readVisibleLinkedHref(page, sourceHref, hrefPattern).pipe(
-    Effect.retry(linkedHrefRetrySchedule)
-  );
+  return yield* readVisibleLinkedHref(
+    page,
+    sourceHref,
+    hrefPattern,
+    skipHref
+  ).pipe(Effect.retry(linkedHrefRetrySchedule));
 });
 
 /**
@@ -357,14 +366,19 @@ const resolveArticle = Effect.fn("NakafaE2E.resolveArticle")(function* (
   } satisfies NavigationTarget;
 });
 
+/**
+ * The homepage links curriculums rather than lessons, so the material target is
+ * the first published sibling of a lesson the acceptance corpus already pins.
+ */
 const resolveMaterial = Effect.fn("NakafaE2E.resolveMaterial")(function* (
   page: Page
 ) {
-  const sourceHref = "/en";
+  const sourceHref = "/en/subjects/mathematics/analytic-geometry/hyperbola";
   const href = yield* discoverLinkedHref(
     page,
     sourceHref,
-    MATERIAL_HREF_PATTERN
+    MATERIAL_HREF_PATTERN,
+    sourceHref
   );
   return {
     href,
