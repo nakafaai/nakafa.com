@@ -8,25 +8,45 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-/** Renders graph-backed recently viewed learning objects on the home screen. */
-export function HomeContinueLearning() {
+type RecentlyViewedSubject = FunctionReturnType<
+  typeof api.contents.queries.recent.getRecentlyViewed
+>[number];
+
+/**
+ * Renders graph-backed recently viewed learning objects on the home screen.
+ *
+ * The route resolves the learner's ranked rows with its request credential and
+ * passes them in, so the first client paint already contains the row list.
+ * Without that snapshot the section would appear during hydration and push
+ * trending content down.
+ *
+ * When the route could not resolve a snapshot, the live query keeps the same
+ * rows reactive instead of dropping the section.
+ */
+export function HomeContinueLearning({
+  snapshot,
+}: {
+  snapshot: readonly RecentlyViewedSubject[] | undefined;
+}) {
   const t = useTranslations("Home");
   const locale = useLocale();
   const activeLocale = isActiveLocale(locale);
-
-  const { data, isPending } = useQueryWithStatus(
+  const { data: liveData, isPending } = useQueryWithStatus(
     api.contents.queries.recent.getRecentlyViewed,
-    activeLocale ? { locale, limit: 5 } : "skip"
+    activeLocale && !snapshot ? { locale, limit: 5 } : "skip"
   );
+  const data = snapshot ?? liveData;
 
-  if (isPending) {
+  if (!data || data.length === 0) {
     return null;
   }
 
-  if (!data || data.length === 0) {
+  // The snapshot already rendered on the server; only the live fallback waits.
+  if (snapshot === undefined && isPending) {
     return null;
   }
 
