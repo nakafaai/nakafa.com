@@ -55,6 +55,28 @@ export function decodeOperationalExceptionProperties(properties: unknown) {
 const operationalExceptionMessage = "Operational exception";
 const operationalExceptionName = "OperationalError";
 const stackFramePattern = /^\s*at\s/;
+const requestUserAgentMaxLength = 512;
+
+/**
+ * Returns the PostHog system property that lets ingestion classify the traffic
+ * behind an operational exception.
+ *
+ * Captures that carry no user agent are filed under automation by PostHog's
+ * virtual traffic classification, so real visitor faults hide inside crawler
+ * and automation noise. Forwarding the originating request user agent as
+ * `$raw_user_agent` lets ingestion separate visitors from crawlers and
+ * automation before triage. The value is request-derived and untrusted, so it
+ * stays bounded and never enters the redacted exception itself.
+ */
+export function operationalRequestProperties(requestUserAgent?: string): {
+  $raw_user_agent?: string;
+} {
+  const userAgent = requestUserAgent?.trim();
+  if (!userAgent) {
+    return {};
+  }
+  return { $raw_user_agent: userAgent.slice(0, requestUserAgentMaxLength) };
+}
 
 /**
  * Builds a stable exception name from the admitted origin so error tracking

@@ -5,6 +5,7 @@ import {
   createOperationalException,
   decodeOperationalExceptionProperties,
   type OperationalExceptionProperties,
+  operationalRequestProperties,
 } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
 import { Effect, Option, Schema } from "effect";
@@ -68,15 +69,21 @@ function getServerAnalytics() {
  * `$process_person_profile = false` when `distinctId` is omitted. The client is
  * private to this module, so request identity cannot enter through SDK context.
  *
+ * `requestUserAgent` is the only request-derived value admitted, and only as
+ * `$raw_user_agent` for traffic classification. It labels no person, so server
+ * faults from real visitors stop hiding under the automation bucket at triage.
+ *
  * Docs:
  * https://posthog.com/docs/error-tracking/capture
  * https://posthog.com/docs/error-tracking/installation/nextjs
+ * https://posthog.com/docs/web-analytics/bot-detection
  */
 export const captureServerException = Effect.fn(
   "Analytics.captureServerException"
 )(function* (
   error: unknown,
-  additionalProperties: OperationalExceptionProperties
+  additionalProperties: OperationalExceptionProperties,
+  requestUserAgent?: string
 ) {
   if (!isServerExceptionReportingEnabled()) {
     return;
@@ -96,7 +103,10 @@ export const captureServerException = Effect.fn(
       analytics.captureExceptionImmediate(
         createOperationalException(error, decodedProperties.value),
         undefined,
-        decodedProperties.value
+        {
+          ...decodedProperties.value,
+          ...operationalRequestProperties(requestUserAgent),
+        }
       ),
     catch: captureError,
   });

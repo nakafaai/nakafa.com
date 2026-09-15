@@ -37,8 +37,10 @@ const loadInstrumentation = Effect.fn("www.instrumentation.test.load")(() =>
   Effect.promise(() => import("@/instrumentation"))
 );
 
+const userAgent = "Mozilla/5.0 (compatible; Googlebot/2.1)";
+
 const request = {
-  headers: { cookie: "ph_cookie=encoded" },
+  headers: { cookie: "ph_cookie=encoded", "user-agent": userAgent },
   method: "GET",
   path: "/id",
 };
@@ -159,9 +161,35 @@ describe("Next.js instrumentation", () => {
           instrumentationMocks.captureServerException
         ).toHaveBeenCalledWith(
           error,
-          expect.objectContaining({ revalidate_reason: revalidateReason })
+          expect.objectContaining({ revalidate_reason: revalidateReason }),
+          userAgent
         );
       })
+  );
+
+  it.effect("normalizes a repeated user-agent header to its first value", () =>
+    Effect.gen(function* () {
+      const { onRequestError } = yield* loadInstrumentation();
+      vi.stubEnv("NEXT_RUNTIME", "nodejs");
+      instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
+        true
+      );
+      const error = new Error("render failure");
+
+      yield* Effect.promise(() =>
+        onRequestError(
+          error,
+          { ...request, headers: { "user-agent": [userAgent, "second"] } },
+          requestContext
+        )
+      );
+
+      expect(instrumentationMocks.captureServerException).toHaveBeenCalledWith(
+        error,
+        expect.anything(),
+        userAgent
+      );
+    })
   );
 
   it.effect(
@@ -183,16 +211,20 @@ describe("Next.js instrumentation", () => {
 
         expect(
           instrumentationMocks.captureServerException
-        ).toHaveBeenCalledWith(error, {
-          error_digest: "NEXT_DIGEST",
-          method: "GET",
-          render_source: "react-server-components",
-          revalidate_reason: undefined,
-          route_path: "/[locale]",
-          route_type: "render",
-          router_kind: "App Router",
-          source: "next-on-request-error",
-        });
+        ).toHaveBeenCalledWith(
+          error,
+          {
+            error_digest: "NEXT_DIGEST",
+            method: "GET",
+            render_source: "react-server-components",
+            revalidate_reason: undefined,
+            route_path: "/[locale]",
+            route_type: "render",
+            router_kind: "App Router",
+            source: "next-on-request-error",
+          },
+          userAgent
+        );
       })
   );
 
