@@ -291,7 +291,7 @@ describe("contents/views/context", () => {
   );
 
   it.effect(
-    "rejects placement when signed curriculum ownership is unavailable",
+    "falls back to canonical context when signed curriculum ownership is unavailable",
     () =>
       Effect.gen(function* () {
         const target = convexTest(schema, convexModules);
@@ -299,13 +299,11 @@ describe("contents/views/context", () => {
           activateMaterialCatalog(target, [FUNCTION_MATERIAL])
         );
 
-        const failure = yield* readContext(
-          target,
-          FUNCTION_MATERIAL,
-          PLACEMENT
-        ).pipe(Effect.flip);
-        expect(failure.cause).toMatchObject({
-          data: { code: "CONTENT_VIEW_IO_FAILED" },
+        expect(
+          yield* readContext(target, FUNCTION_MATERIAL, PLACEMENT)
+        ).toEqual({
+          contextKey: "canonical",
+          contextMode: "canonical",
         });
       })
   );
