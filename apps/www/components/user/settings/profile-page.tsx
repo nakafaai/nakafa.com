@@ -4,10 +4,10 @@ import type { ReactNode } from "react";
 import { UserSettingsDeleteAccount } from "@/components/user/settings/delete-account";
 import { UserSettingsName } from "@/components/user/settings/name";
 import { UserSettingsRole } from "@/components/user/settings/role";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 export function UserSettingsProfilePage({ children }: { children: ReactNode }) {
-  const user = useAccount((state) => state.user);
+  const user = useViewer((state) => state.account);
 
   if (!user) {
     return null;

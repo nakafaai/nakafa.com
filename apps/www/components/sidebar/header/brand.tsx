@@ -9,11 +9,11 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 export function HeaderMenu() {
   const t = useTranslations("Metadata");
-  const currentUser = useAccount((state) => state.user);
+  const currentUser = useViewer((state) => state.account);
 
   return (
     <SidebarMenu>

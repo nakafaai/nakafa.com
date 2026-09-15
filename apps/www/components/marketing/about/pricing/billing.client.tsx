@@ -19,7 +19,7 @@ import { startGoogleSignIn } from "@/lib/auth/social";
 import { requestGoogleSignIn } from "@/lib/auth/social.client";
 import { useBillingNavigation } from "@/lib/billing/use-navigation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 /** Opens browser-originated checkout or the existing customer's portal. */
 export function BillingButton() {
@@ -28,7 +28,7 @@ export function BillingButton() {
   const tAuth = useTranslations("Auth");
   const callbackURL = getPostAuthOnboardingHref("/pricing", locale);
   const errorCallbackURL = getPostAuthProviderErrorHref("/pricing", locale);
-  const currentUser = useAccount((state) => state.user);
+  const currentUser = useViewer((state) => state.account);
   const billing = useBillingNavigation();
   const [isAuthPending, startAuthTransition] = useTransition();
 

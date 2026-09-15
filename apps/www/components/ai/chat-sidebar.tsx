@@ -37,7 +37,7 @@ import { usePaginatedQuery } from "convex/react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 type Props = ComponentProps<typeof Sidebar>;
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
@@ -112,12 +112,10 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
 }
 
 function AiChatSidebarHistory({ q }: { q?: string }) {
-  const { isPending, user } = useAccount((s) => ({
-    isPending: s.isPending,
-    user: s.user,
-  }));
+  const isPending = useViewer((state) => state.isPending);
+  const viewer = useViewer((state) => state.viewer);
 
-  if (isPending || !user) {
+  if (isPending || viewer === null) {
     return null;
   }
 

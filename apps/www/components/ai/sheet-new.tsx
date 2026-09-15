@@ -21,7 +21,7 @@ import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 import { loadChatRuntime } from "@/components/ai/helpers/runtime-loader";
 import { SheetInput } from "@/components/ai/sheet-input";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 /** Renders Nina's empty state and starts a new study chat. */
 export function SheetNew() {
@@ -36,10 +36,8 @@ export function SheetNew() {
   const setOpen = useAi((state) => state.setOpen);
   const setText = useAi((state) => state.setText);
 
-  const { isPending: isUserPending, user } = useAccount((state) => ({
-    isPending: state.isPending,
-    user: state.user,
-  }));
+  const isUserPending = useViewer((state) => state.isPending);
+  const viewer = useViewer((state) => state.viewer);
   const createChat = useMutation(api.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
@@ -57,7 +55,7 @@ export function SheetNew() {
         return;
       }
 
-      if (!user) {
+      if (viewer === null) {
         setOpen(false);
         router.push(authNavigation.readHref());
         return;

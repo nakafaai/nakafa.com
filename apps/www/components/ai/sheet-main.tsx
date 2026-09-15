@@ -19,7 +19,7 @@ import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
 import { SheetInput } from "@/components/ai/sheet-input";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 /** Ignores submits while the active chat payload is loading. */
 function ignorePlaceholderSubmit() {
@@ -71,10 +71,8 @@ function SheetConversation() {
   const messages = useChat((state) => state.chat.messages);
   const setText = useAi((state) => state.setText);
 
-  const { isPending: isUserPending, user } = useAccount((state) => ({
-    isPending: state.isPending,
-    user: state.user,
-  }));
+  const isUserPending = useViewer((state) => state.isPending);
+  const viewer = useViewer((state) => state.viewer);
   const { sendMessage, status, stop } = useChat((state) => state.chat);
 
   /** Sends a message or stops the current stream from the sheet input. */
@@ -92,7 +90,7 @@ function SheetConversation() {
       return;
     }
 
-    if (!user) {
+    if (viewer === null) {
       router.push(authNavigation.readHref());
       return;
     }

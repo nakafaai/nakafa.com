@@ -7,7 +7,7 @@ import {
   NavUserAccountSkeleton,
   NavUserSkeleton,
 } from "@/components/sidebar/user/skeleton";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 const NavUserAccount = dynamic(
   () =>
@@ -19,11 +19,9 @@ const NavUserAccount = dynamic(
 
 /** Selects the truthful guest or account footer after authentication settles. */
 export function NavUser() {
-  const { isAuthenticated, isPending, user } = useAccount((state) => ({
-    isAuthenticated: state.isAuthenticated,
-    isPending: state.isPending,
-    user: state.user,
-  }));
+  const isAuthenticated = useViewer((state) => state.isAuthenticated);
+  const isPending = useViewer((state) => state.isPending);
+  const user = useViewer((state) => state.account);
 
   if (isPending) {
     return isAuthenticated ? <NavUserAccountSkeleton /> : <NavUserSkeleton />;

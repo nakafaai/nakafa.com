@@ -35,7 +35,7 @@ import {
   useDeleteCommentMutation,
   useVoteCommentMutation,
 } from "@/components/comments/mutation.client";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -109,7 +109,7 @@ function CommentContent({
 }) {
   const t = useTranslations("Common");
   const locale = useLocale();
-  const user = useAccount((s) => s.user);
+  const user = useViewer((s) => s.account);
 
   const userId = comment.user?._id;
   const userName = comment.user?.name ?? t("anonymous");
@@ -177,7 +177,7 @@ function CommentActions({
   onReplyToggle: () => void;
 }) {
   const t = useTranslations("Common");
-  const user = useAccount((s) => s.user);
+  const user = useViewer((s) => s.account);
 
   const [isPending, startTransition] = useTransition();
 

@@ -158,25 +158,3 @@ export function useViewer<T>(selector: (state: IdentityState) => T): T {
   }
   return selector(value);
 }
-
-/**
- * Reads the resolved account row for contracts that still describe storage.
- *
- * Prefer `useViewer`. This stays for the settings forms, optimistic write
- * patches, and consent code whose own contracts read the stored fields.
- */
-export function useAccount<T>(
-  selector: (state: {
-    readonly isAuthenticated: boolean;
-    readonly isPending: boolean;
-    readonly user: AccountRecord | null;
-  }) => T
-): T {
-  return useViewer((state) =>
-    selector({
-      isAuthenticated: state.isAuthenticated,
-      isPending: state.isPending,
-      user: state.account,
-    })
-  );
-}

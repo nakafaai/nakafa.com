@@ -16,7 +16,7 @@ import { nanoid } from "nanoid";
 import { useEffect } from "react";
 import { createContentViewKey } from "@/lib/content/views/key";
 import { useContentViews } from "@/lib/context/use-content-views";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 const DEVICE_STORAGE_KEY = "nakafa-device-id";
 
@@ -54,10 +54,8 @@ export function useRecordContentView({
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const { isUserPending, signedInUserId } = useAccount((state) => ({
-    isUserPending: state.isPending,
-    signedInUserId: state.user?.appUser._id ?? null,
-  }));
+  const isUserPending = useViewer((state) => state.isPending);
+  const signedInUserId = useViewer((state) => state.viewer?.id ?? null);
 
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
