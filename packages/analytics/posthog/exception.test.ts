@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   createOperationalException,
   decodeOperationalExceptionProperties,
+  operationalRequestProperties,
 } from "@repo/analytics/posthog/exception";
 import { Option } from "effect";
 
@@ -56,6 +57,23 @@ describe("operational exception privacy", () => {
         source: "chat-api",
       }).name
     ).toBe("OperationalError(chat-api.saveTitle)");
+  });
+
+  it("forwards a bounded request user agent for traffic classification", () => {
+    expect(
+      operationalRequestProperties("Mozilla/5.0 (compatible; Googlebot/2.1)")
+    ).toEqual({
+      $raw_user_agent: "Mozilla/5.0 (compatible; Googlebot/2.1)",
+    });
+    expect(
+      operationalRequestProperties(`Mozilla/5.0 ${"x".repeat(600)}`)
+        .$raw_user_agent
+    ).toHaveLength(512);
+  });
+
+  it("omits the user agent when the request carries none", () => {
+    expect(operationalRequestProperties()).toEqual({});
+    expect(operationalRequestProperties("   ")).toEqual({});
   });
 
   it("accepts only exact bounded operational context", () => {

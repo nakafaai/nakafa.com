@@ -206,6 +206,7 @@ const handleChatRequest = Effect.fn("chat.respond")(function* (req: Request) {
     chatId,
     logContext,
     modelId: selectedModel,
+    userAgent: req.headers.get("user-agent") ?? undefined,
   });
 
   const translate = yield* Effect.tryPromise(() =>

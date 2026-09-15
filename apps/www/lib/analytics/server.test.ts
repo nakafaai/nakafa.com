@@ -7,9 +7,12 @@ import {
   scheduleServerExceptionCapture,
 } from "@/lib/analytics/server";
 
+const userAgent = "Mozilla/5.0 (compatible; Googlebot/2.1)";
+
 const analyticsMocks = vi.hoisted(() => ({
   after: vi.fn(),
   captureServerException: vi.fn(),
+  headers: vi.fn(),
   isServerExceptionReportingEnabled: vi.fn(),
   tasks: [] as Array<() => unknown>,
 }));
@@ -21,6 +24,10 @@ vi.mock("@repo/analytics/posthog/server", () => ({
 vi.mock("@repo/analytics/server-reporting", () => ({
   isServerExceptionReportingEnabled:
     analyticsMocks.isServerExceptionReportingEnabled,
+}));
+
+vi.mock("next/headers", () => ({
+  headers: analyticsMocks.headers,
 }));
 
 vi.mock("next/server", () => ({
@@ -37,6 +44,9 @@ describe("request-time server exception reporting", () => {
     vi.clearAllMocks();
     analyticsMocks.tasks.length = 0;
     analyticsMocks.captureServerException.mockReturnValue(Effect.void);
+    analyticsMocks.headers.mockResolvedValue(
+      new Headers({ "user-agent": userAgent })
+    );
     analyticsMocks.after.mockImplementation((task) => {
       analyticsMocks.tasks.push(task);
     });
@@ -77,13 +87,37 @@ describe("request-time server exception reporting", () => {
 
         expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
           error,
-          properties
+          properties,
+          userAgent
         );
       })
   );
 
+  it.effect("captures without a hint when no request scope is active", () =>
+    Effect.gen(function* () {
+      analyticsMocks.headers.mockRejectedValueOnce(
+        new Error("headers unavailable")
+      );
+      const error = new Error("preload failed");
+
+      yield* scheduleCurrentServerExceptionCapture(error, {
+        source: "settings",
+      });
+
+      const task = yield* getScheduledTask();
+      yield* Effect.promise(() => Promise.resolve(task()));
+
+      expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
+        error,
+        { source: "settings" },
+        undefined
+      );
+    })
+  );
+
   it.effect("schedules an explicitly provided operational exception", () =>
     Effect.gen(function* () {
+      analyticsMocks.headers.mockResolvedValueOnce(new Headers());
       const error = new Error("weather failed");
 
       yield* scheduleServerExceptionCapture(error, {
@@ -96,7 +130,8 @@ describe("request-time server exception reporting", () => {
         error,
         {
           source: "weather-api",
-        }
+        },
+        undefined
       );
     })
   );

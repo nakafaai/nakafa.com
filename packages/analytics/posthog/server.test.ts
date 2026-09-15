@@ -118,6 +118,31 @@ describe("PostHog server reporting", () => {
     })
   );
 
+  it.effect("forwards the request user agent for traffic classification", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("VERCEL_ENV", "production");
+      vi.stubEnv("NEXT_PHASE", "phase-production-server");
+      const { captureServerException } = yield* Effect.promise(
+        () => import("@repo/analytics/posthog/server")
+      );
+
+      yield* captureServerException(
+        new Error("request failed"),
+        { source: "request" },
+        "Mozilla/5.0 (compatible; Googlebot/2.1)"
+      );
+
+      expect(postHogMocks.captureExceptionImmediate).toHaveBeenCalledWith(
+        expect.anything(),
+        undefined,
+        {
+          $raw_user_agent: "Mozilla/5.0 (compatible; Googlebot/2.1)",
+          source: "request",
+        }
+      );
+    })
+  );
+
   it.effect("drops invalid runtime context before initializing the SDK", () =>
     Effect.gen(function* () {
       vi.stubEnv("VERCEL_ENV", "production");

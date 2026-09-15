@@ -36,10 +36,12 @@ export function createChatErrorReporter({
   chatId,
   logContext,
   modelId,
+  userAgent,
 }: {
   readonly chatId: Id<"chats">;
   readonly logContext: LogContext;
   readonly modelId: ModelId;
+  readonly userAgent?: string;
 }) {
   const gatewayModelId = getModelGatewayId(modelId);
 
@@ -76,7 +78,8 @@ export function createChatErrorReporter({
             logError(normalizedError, errorContext),
             captureServerException(
               normalizedError,
-              serverExceptionProperties
+              serverExceptionProperties,
+              userAgent
             ).pipe(
               Effect.catch((captureError) =>
                 logError(toError(captureError.cause), {
