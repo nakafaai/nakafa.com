@@ -38,7 +38,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* waitForCommittedAppRouter(page, href, href, 15_000);
     const title = page.getByRole("heading", { level: 1 });
     yield* Effect.promise(() => expect(title).toHaveCount(1));
-    yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "36px"));
+    yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "48px"));
     yield* Effect.promise(() => expect(title).toHaveCSS("text-align", "start"));
     yield* Effect.promise(() =>
       expect(title).toHaveCSS("font-family", NEWSREADER_FONT)
