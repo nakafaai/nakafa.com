@@ -27,6 +27,7 @@ const readSectionHeadingInk = (span: HTMLElement) => {
   return {
     decorationColor: style.textDecorationColor,
     decorationLine: style.textDecorationLine,
+    headingRule: resolveToken("var(--chart-4)"),
     foreground: resolveToken("var(--foreground)"),
     ink: style.color,
     primary: resolveToken("var(--primary)"),
@@ -93,7 +94,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     );
     yield* Effect.sync(() => expect(sectionInk.ink).toBe(sectionInk.primary));
     yield* Effect.sync(() =>
-      expect(sectionInk.decorationColor).toBe(sectionInk.foreground)
+      expect(sectionInk.decorationColor).toBe(sectionInk.headingRule)
     );
     yield* Effect.sync(() =>
       expect(sectionInk.ink).not.toBe(sectionInk.decorationColor)

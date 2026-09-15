@@ -10,7 +10,7 @@ to the start of the reading column at the larger display size, and lesson pages
 drop the summary under the title while articles keep theirs.
 
 Markdown and MDX headings render their words in the theme `primary` accent and
-draw the underline in the page ink, at Tailwind's own `decoration-2` and
-`underline-offset-4` values. Both tokens already pass the theme contract as text
-on the page and card surfaces, so all 31 concrete themes stay legible without
-per-theme tuning.
+draw the underline in the theme's validated chart mark, at Tailwind's own
+`decoration-2` and `underline-offset-4` values. A new `heading-rule` color role
+owns that pairing, so the words and the rule never repeat one color and the rule
+stays at least 3:1 against the page in all 31 concrete themes.
