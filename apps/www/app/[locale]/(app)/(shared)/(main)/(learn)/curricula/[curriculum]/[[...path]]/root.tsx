@@ -8,11 +8,6 @@ import {
 } from "@repo/design-system/components/ui/breadcrumb";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { Locale } from "next-intl";
-import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
-import type {
-  CurriculumCatalogEntry,
-  CurriculumViewRoute,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
 import {
   CurriculumSelector,
   type CurriculumSelectorOption,
@@ -24,6 +19,11 @@ import {
 } from "@/components/shared/catalog/card";
 import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import { resolveCurriculumCatalogArtwork } from "@/lib/curriculum/artwork";
+import { readCurriculumRouteIcon } from "@/lib/curriculum/icons";
+import type {
+  CurriculumCatalogEntry,
+  CurriculumViewRoute,
+} from "@/lib/curriculum/model";
 
 /** Renders the curriculum index header with breadcrumb context. */
 export function CurriculumIndexHeader({

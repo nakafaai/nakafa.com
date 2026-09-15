@@ -10,7 +10,7 @@ import {
   readRuntimeCurriculumOptions,
   readRuntimeCurriculumToc,
   resolveRuntimeCurriculumRoute,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
+} from "@/lib/curriculum/model";
 import { previewProjection } from "@/test/content-preview";
 import {
   testProgramClass,

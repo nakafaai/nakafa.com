@@ -4,8 +4,11 @@ import { useIntersection } from "@mantine/hooks";
 import { Warp } from "@paper-design/shaders-react";
 import { useReducedMotion } from "motion/react";
 
+/** Viewport budget for this band; the warp field is cheaper than the hero field. */
+const CURRICULA_SHADER_PIXEL_BUDGET = 720_000;
+
 /** Renders the curriculum field only while its section is near view. */
-export function CurriculaArt({ maxPixelCount }: { maxPixelCount: number }) {
+export function CurriculaArt() {
   const shouldReduceMotion = useReducedMotion() ?? false;
   const { ref, entry } = useIntersection({
     root: null,
@@ -35,7 +38,7 @@ export function CurriculaArt({ maxPixelCount }: { maxPixelCount: number }) {
           ]}
           distortion={0.38}
           fit="cover"
-          maxPixelCount={maxPixelCount}
+          maxPixelCount={CURRICULA_SHADER_PIXEL_BUDGET}
           minPixelRatio={1.2}
           offsetY={0.68}
           proportion={0.36}

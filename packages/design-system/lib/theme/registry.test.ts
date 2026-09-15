@@ -12,6 +12,7 @@ import {
 import {
   DEFAULT_THEME,
   getThemeAppearance,
+  getThemeShaderAlphaColor,
   getThemeShaderColor,
   themes,
 } from "@repo/design-system/lib/theme/registry";
@@ -107,4 +108,22 @@ describe("getThemeShaderColor", () => {
       expect(getThemeShaderColor(theme)).toBe(getThemeShaderColor("light"));
     }
   );
+});
+
+describe("getThemeShaderAlphaColor", () => {
+  it.each(themes)("applies the alpha to the $value projection", (theme) => {
+    const projected = theme.shaderColor
+      .replace("rgb(", "rgba(")
+      .replace(")", ", 0.4)");
+
+    expect(getThemeShaderAlphaColor(theme.shaderColor, 0.4)).toBe(projected);
+  });
+
+  it("keeps the registered channels for every alpha", () => {
+    const color = getThemeShaderColor("dark");
+
+    expect(getThemeShaderAlphaColor(color, 0.32)).toBe(
+      "rgba(57, 199, 244, 0.32)"
+    );
+  });
 });

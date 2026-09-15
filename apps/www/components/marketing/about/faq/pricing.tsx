@@ -1,9 +1,7 @@
 import { useTranslations } from "next-intl";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion.client";
-import {
-  FaqSection,
-  type MarketingFaqItem,
-} from "@/components/marketing/about/faq/section";
+import { FaqSection } from "@/components/marketing/about/faq/section";
+import type { MarketingFaqItem } from "@/lib/marketing/faq";
 
 /** Renders dedicated pricing questions through the shared Accordion design. */
 export function PricingPageFaq({

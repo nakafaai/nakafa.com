@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@repo/design-system/components/ui/accordion";
-import type { MarketingFaqItem } from "@/components/marketing/about/faq/section";
+import type { MarketingFaqItem } from "@/lib/marketing/faq";
 
 export function FaqAccordion({ faqs }: { faqs: readonly MarketingFaqItem[] }) {
   return (

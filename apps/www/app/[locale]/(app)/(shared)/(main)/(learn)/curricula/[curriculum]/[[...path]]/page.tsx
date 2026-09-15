@@ -9,14 +9,6 @@ import {
   CurriculumChildCards,
   CurriculumRootHeader,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
-import {
-  type CurriculumRouteModel,
-  readRuntimeCurriculumBreadcrumbs,
-  readRuntimeCurriculumCatalog,
-  readRuntimeCurriculumOptions,
-  readRuntimeCurriculumToc,
-  resolveRuntimeCurriculumRoute,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
 import { readCurriculumSeoContext } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/seo";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -29,6 +21,14 @@ import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
 import { readPublishedProgramPrerenderRoute } from "@/lib/content/program/catalog";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/artwork";
+import {
+  type CurriculumRouteModel,
+  readRuntimeCurriculumBreadcrumbs,
+  readRuntimeCurriculumCatalog,
+  readRuntimeCurriculumOptions,
+  readRuntimeCurriculumToc,
+  resolveRuntimeCurriculumRoute,
+} from "@/lib/curriculum/model";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";

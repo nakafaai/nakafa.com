@@ -2,6 +2,7 @@ import { instant } from "@next/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
+import { pinnedRoutes } from "@/e2e/support/corpus";
 import { activateUntilVisible } from "@/e2e/support/interaction";
 import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
 
@@ -367,13 +368,13 @@ const resolveArticle = Effect.fn("NakafaE2E.resolveArticle")(function* (
 });
 
 /**
- * The homepage links curriculums rather than lessons, so the material target is
- * the first published sibling of a lesson the acceptance corpus already pins.
+ * The homepage links curriculums rather than lessons, so the material case
+ * starts from the lesson the acceptance corpus pins.
  */
 const resolveMaterial = Effect.fn("NakafaE2E.resolveMaterial")(function* (
   page: Page
 ) {
-  const sourceHref = "/en/subjects/mathematics/analytic-geometry/hyperbola";
+  const sourceHref = pinnedRoutes.material.en;
   const href = yield* discoverLinkedHref(
     page,
     sourceHref,

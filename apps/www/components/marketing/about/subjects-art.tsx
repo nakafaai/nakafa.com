@@ -4,15 +4,11 @@ import { useIntersection } from "@mantine/hooks";
 import { GrainGradient } from "@paper-design/shaders-react";
 import {
   getThemeAppearance,
+  getThemeShaderAlphaColor,
   getThemeShaderColor,
 } from "@repo/design-system/lib/theme/registry";
 import { useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
-
-/** Adds an alpha channel to a theme registry RGB color. */
-function withAlpha(color: string, alpha: number) {
-  return color.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
-}
 
 /** Renders one softly blended grain field behind the subject chooser. */
 export function SubjectsArt() {
@@ -40,10 +36,19 @@ export function SubjectsArt() {
           className="size-full"
           colorBack="rgba(0, 0, 0, 0)"
           colors={[
-            withAlpha(themeColor, appearance === "dark" ? 0.82 : 0.74),
-            withAlpha(nakafaAccent, appearance === "dark" ? 0.7 : 0.64),
-            withAlpha(themeColor, appearance === "dark" ? 0.56 : 0.46),
-            withAlpha(nakafaAccent, 0.32),
+            getThemeShaderAlphaColor(
+              themeColor,
+              appearance === "dark" ? 0.82 : 0.74
+            ),
+            getThemeShaderAlphaColor(
+              nakafaAccent,
+              appearance === "dark" ? 0.7 : 0.64
+            ),
+            getThemeShaderAlphaColor(
+              themeColor,
+              appearance === "dark" ? 0.56 : 0.46
+            ),
+            getThemeShaderAlphaColor(nakafaAccent, 0.32),
           ]}
           fit="cover"
           intensity={0.34}

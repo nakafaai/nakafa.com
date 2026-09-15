@@ -17,6 +17,7 @@ import {
   subjectMenu,
 } from "@/components/sidebar/data/subject";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { landingFaqNumbers, type MarketingFaqItem } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 
@@ -108,14 +109,10 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
     ),
   ];
 
-  const faqItems = [
-    { question: tFaq("q1"), answer: tFaq("a1") },
-    { question: tFaq("q2"), answer: tFaq("a2") },
-    { question: tFaq("q4"), answer: tFaq("a4") },
-    { question: tFaq("q5"), answer: tFaq("a5") },
-    { question: tFaq("q6"), answer: tFaq("a6") },
-    { question: tFaq("q7"), answer: tFaq("a7") },
-  ];
+  const faqItems: MarketingFaqItem[] = landingFaqNumbers.map((number) => ({
+    answer: tFaq(`a${number}`),
+    question: tFaq(`q${number}`),
+  }));
 
   const url = `https://nakafa.com/${locale}`;
 
@@ -145,7 +142,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         <Curricula locale={locale} />
         <Pricing />
         <Schools />
-        <Faq />
+        <Faq faqs={faqItems} />
         <Community />
       </div>
     </>
