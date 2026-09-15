@@ -2,7 +2,8 @@ import { routing } from "@repo/internationalization/src/routing";
 import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
 import { readOgMetadata } from "@/app/og/content";
-import { generateFallbackImage, generateOGImage } from "@/lib/og";
+import { generateOGImage } from "@/lib/og";
+import { generateFallbackImage } from "@/lib/og/fallback";
 
 /** Renders the Open Graph image for one localized content route. */
 export async function GET(

@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { generateFallbackImage } from "@/lib/og";
+import { generateFallbackImage } from "@/lib/og/fallback";
 
 const mocks = vi.hoisted(() => {
   const imageCalls: Array<{ element: unknown; options: unknown }> = [];
