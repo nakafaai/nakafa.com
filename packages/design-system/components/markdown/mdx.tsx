@@ -14,6 +14,7 @@ import type {
   CodeProps,
   EmProps,
   HeadingProps,
+  HighlightProps,
   ListItemProps,
   ListProps,
   PreProps,
@@ -134,6 +135,19 @@ export function MdxEmphasis(props: EmProps) {
 /** Renders strong MDX text at the shared medium weight. */
 export function MdxStrong(props: StrongProps) {
   return <strong className="font-medium" {...props} />;
+}
+
+/** Renders marked MDX text as a scannable highlight over the warning surface. */
+export function Highlight({ className, ...props }: HighlightProps) {
+  return (
+    <mark
+      className={cn(
+        "box-decoration-clone rounded-sm bg-warning px-0.5 font-medium text-warning-foreground",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 /** Renders an MDX quotation with the shared callout treatment. */
