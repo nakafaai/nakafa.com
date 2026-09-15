@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import { readOgMetadata } from "@/app/og/content";
 
 const mocks = vi.hoisted(() => ({
@@ -8,7 +9,9 @@ const mocks = vi.hoisted(() => ({
   getMaterialModel: vi.fn(),
   parseMaterialParams: vi.fn(),
   readArticleOgMetadata: vi.fn(),
+  readNakafaRuntimeQuery: vi.fn(),
   resolveMaterialOwner: vi.fn(),
+  resolveReferenceInput: vi.fn(),
   toMaterialMetadataCopy: vi.fn(),
 }));
 
@@ -33,10 +36,21 @@ vi.mock("@/lib/content/material/publication", () => ({
 vi.mock("@/lib/utils/system", () => ({
   getCachedMetadataFromSlug: mocks.getCachedMetadataFromSlug,
 }));
+vi.mock("@/env", () => ({
+  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));
+vi.mock("@repo/backend/client/nakafa/query", () => ({
+  readNakafaRuntimeQuery: mocks.readNakafaRuntimeQuery,
+}));
+vi.mock("@repo/backend/convex/contentRelease/reference/input", () => ({
+  resolveReferenceInput: mocks.resolveReferenceInput,
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readArticleOgMetadata.mockResolvedValue(null);
+  mocks.resolveReferenceInput.mockReturnValue(Effect.succeed(null));
+  mocks.readNakafaRuntimeQuery.mockReturnValue(Effect.succeed(null));
   mocks.parseMaterialParams.mockImplementation(
     (locale: string, slug: readonly string[]) => {
       if (slug[0] !== "subjects" || slug.length < 4) {
@@ -186,5 +200,27 @@ describe("OG content metadata", () => {
     });
     expect(mocks.resolveMaterialOwner).not.toHaveBeenCalled();
     expect(mocks.toMaterialMetadataCopy).not.toHaveBeenCalled();
+    expect(mocks.readNakafaRuntimeQuery).not.toHaveBeenCalled();
+  });
+
+  it("reads cached copy for content-owned slugs with a reference", async () => {
+    const copy = { description: "Surah description", title: "Surah 1" };
+    mocks.resolveReferenceInput.mockReturnValueOnce(Effect.succeed({ family: "quran" }));
+    mocks.readNakafaRuntimeQuery.mockReturnValueOnce(Effect.succeed({ title: "Surah 1" }));
+    mocks.getCachedMetadataFromSlug.mockResolvedValueOnce(copy);
+
+    await expect(readOgMetadata("en", ["quran", "1"])).resolves.toEqual(copy);
+    expect(mocks.getCachedMetadataFromSlug).toHaveBeenCalledWith("en", [
+      "quran",
+      "1",
+    ]);
+  });
+
+  it("returns null for content-owned slugs with no reference", async () => {
+    mocks.resolveReferenceInput.mockReturnValueOnce(Effect.succeed({ family: "quran" }));
+    mocks.readNakafaRuntimeQuery.mockReturnValueOnce(Effect.succeed(null));
+
+    await expect(readOgMetadata("id", ["quran", "999"])).resolves.toBeNull();
+    expect(mocks.getCachedMetadataFromSlug).not.toHaveBeenCalled();
   });
 });
