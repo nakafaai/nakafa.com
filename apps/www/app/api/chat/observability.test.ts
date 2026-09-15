@@ -6,6 +6,8 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
 
+const userAgent = "Mozilla/5.0 (compatible; Googlebot/2.1)";
+
 const observabilityMocks = vi.hoisted(() => ({
   captureServerException: vi.fn(),
   getGatewayErrorContext: vi.fn(),
@@ -56,6 +58,7 @@ describe("chat stream observability", () => {
         userId: "user-123",
       },
       modelId,
+      userAgent,
     });
 
     report(error, "stream-on-error");
@@ -68,7 +71,8 @@ describe("chat stream observability", () => {
         gateway_model_id: "google/gemini-3.5-flash-lite",
         model_id: modelId,
         source: "chat-api",
-      }
+      },
+      userAgent
     );
     expect(
       JSON.stringify(observabilityMocks.captureServerException.mock.calls)
@@ -109,7 +113,8 @@ describe("chat stream observability", () => {
         gateway_status_code: 429,
         model_id: "nakafa-lite",
         source: "chat-api",
-      }
+      },
+      undefined
     );
     expect(observabilityMocks.logError).toHaveBeenCalledTimes(2);
   });

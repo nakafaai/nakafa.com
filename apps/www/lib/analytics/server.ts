@@ -3,6 +3,7 @@ import "server-only";
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
 import { Effect, Schema } from "effect";
+import { headers } from "next/headers";
 import { after } from "next/server";
 
 /** Expected failure while registering request completion work with Next.js. */
@@ -15,21 +16,41 @@ class ServerExceptionScheduleError extends Schema.TaggedError<ServerExceptionSch
 ) {}
 
 /**
+ * Reads the current request user agent so PostHog classifies the fault's
+ * traffic type instead of filing every server capture under automation.
+ *
+ * The read is best-effort: outside a request scope `headers()` rejects, and the
+ * capture then proceeds without the classification hint.
+ */
+const readRequestUserAgent = Effect.fn("www.analytics.readRequestUserAgent")(
+  function* () {
+    return yield* Effect.tryPromise(() => headers()).pipe(
+      Effect.map(
+        (requestHeaders) => requestHeaders.get("user-agent") ?? undefined
+      ),
+      Effect.orElseSucceed(() => undefined)
+    );
+  }
+);
+
+/**
  * Captures one server exception without leaking analytics failures into the
  * caller.
  *
  * This is the module's public best-effort seam: reporting runs behind a
  * dynamic import and swallows its own failures, so a missing analytics runtime
  * or a rejected PostHog call never fails the operation that produced the
- * error. Callers that must observe the capture failure use
- * `captureServerException` directly.
+ * error. It reads the current request user agent so every caller separates
+ * visitor faults from crawlers and automation at triage. Callers that must
+ * observe the capture failure use `captureServerException` directly.
  */
 export const captureServerExceptionSafely = Effect.fn(
   "www.analytics.captureServerExceptionSafely"
 )(function* (error: unknown, properties: OperationalExceptionProperties) {
+  const requestUserAgent = yield* readRequestUserAgent();
   yield* Effect.tryPromise(() => import("@repo/analytics/posthog/server")).pipe(
     Effect.flatMap((reporting) =>
-      reporting.captureServerException(error, properties)
+      reporting.captureServerException(error, properties, requestUserAgent)
     ),
     Effect.ignore
   );

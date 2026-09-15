@@ -52,15 +52,25 @@ function getErrorDigest(error: unknown) {
   }
 }
 
+/** Reads the requesting user agent from Next.js instrumentation headers. */
+function getRequestUserAgent(headers: NodeJS.Dict<string | string[]>) {
+  const userAgent = headers["user-agent"];
+  return Array.isArray(userAgent) ? userAgent[0] : userAgent;
+}
+
 /** Loads Node-only reporting and captures one Next.js request failure. */
 const captureRequestError = Effect.fn(
   "www.instrumentation.captureRequestError"
-)(function* (error: unknown, properties: OperationalExceptionProperties) {
+)(function* (
+  error: unknown,
+  properties: OperationalExceptionProperties,
+  requestUserAgent?: string
+) {
   const reporting = yield* Effect.tryPromise(
     () => import("@repo/analytics/posthog/server")
   );
 
-  yield* reporting.captureServerException(error, properties);
+  yield* reporting.captureServerException(error, properties, requestUserAgent);
 });
 
 /**
@@ -80,15 +90,19 @@ export const onRequestError = (async (error, request, context) => {
   }
 
   await Effect.runPromise(
-    captureRequestError(error, {
-      error_digest: getErrorDigest(error),
-      method: request.method,
-      render_source: context.renderSource,
-      revalidate_reason: context.revalidateReason,
-      route_path: context.routePath,
-      route_type: context.routeType,
-      router_kind: context.routerKind,
-      source: "next-on-request-error",
-    }).pipe(Effect.ignore)
+    captureRequestError(
+      error,
+      {
+        error_digest: getErrorDigest(error),
+        method: request.method,
+        render_source: context.renderSource,
+        revalidate_reason: context.revalidateReason,
+        route_path: context.routePath,
+        route_type: context.routeType,
+        router_kind: context.routerKind,
+        source: "next-on-request-error",
+      },
+      getRequestUserAgent(request.headers)
+    ).pipe(Effect.ignore)
   );
 }) satisfies Instrumentation.onRequestError;
