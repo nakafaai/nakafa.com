@@ -784,18 +784,6 @@
     "description": "Need an LMS, content integration, or a custom classroom flow? Pick what works for your school.",
     "cta": "Discuss your needs"
   },
-  "TrustSection": {
-    "headline": "You do not have to take our word for it. Follow the lesson <mark>back to its sources</mark>.",
-    "description": "Read the explanation, follow its references, or open the source when you want to check how it was built.",
-    "open-lesson": "Open this lesson",
-    "open-lesson-short": "Open lesson",
-    "open-source": "Open .md",
-    "human-label": "Human",
-    "agent-label": "Agent",
-    "comparison-slider-label": "Resize the human and agent views",
-    "lesson-preview-label": "Nakafa lesson view",
-    "source-preview-label": "Nakafa Markdown source"
-  },
   "About": {
     "title": "Learn until it <mark>clicks.</mark>",
     "description": "Pick a subject, test what you know with Tryout, and ask Nina when you get stuck.",

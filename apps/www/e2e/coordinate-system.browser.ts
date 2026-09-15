@@ -1,6 +1,8 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { THREE_DIAGRAM_MINIMUM_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
-import { Effect } from "effect";
+import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import { Effect, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -12,6 +14,8 @@ const LINEAR_SYSTEM_ROUTE =
 const MANY_SOLUTIONS_TITLE = "Sistem Persamaan Linear dengan Banyak Solusi";
 const TRIANGLE_ROUTE =
   "/en/subjects/mathematics/trigonometry/right-triangle-naming";
+const UNIT_CIRCLE_ROUTE =
+  "/en/subjects/mathematics/trigonometry/trigonometry-concept";
 const VISUAL_ASSERTION_TIMEOUT = 5000;
 const REQUIRED_STABLE_SAMPLES = 2;
 const HYPOTENUSE_LABEL = /^c$/;
@@ -330,3 +334,110 @@ for (const width of [390, 1200]) {
     );
   });
 }
+
+/** Proves one published unit-circle angle field stays finite and exact. */
+const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
+  function* (card: Locator, angle: Locator, locale: AppLocaleCode) {
+    const formatter = new Intl.NumberFormat(locale);
+    const ratioFormatter = new Intl.NumberFormat(locale, {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+      useGrouping: false,
+    });
+    const annotations = card.locator(
+      '[data-coordinate-controls] annotation[encoding="application/x-tex"]'
+    );
+    for (const value of [31.5, -30.5, 390.5]) {
+      const formatted = formatter.format(value);
+      const radians = (value * Math.PI) / 180;
+      const expected = [
+        `\\sin\\theta \\approx ${ratioFormatter.format(Math.sin(radians)).replaceAll(",", "{,}")}`,
+        `\\cos\\theta \\approx ${ratioFormatter.format(Math.cos(radians)).replaceAll(",", "{,}")}`,
+        `\\tan\\theta \\approx ${ratioFormatter.format(Math.tan(radians)).replaceAll(",", "{,}")}`,
+        `\\theta = ${value}^\\circ`,
+      ];
+      for (const input of [formatted, ""]) {
+        yield* Effect.promise(() => angle.fill(input));
+        yield* Effect.promise(() => angle.press("Tab"));
+        yield* Effect.promise(() => expect(angle).toHaveValue(formatted));
+        yield* Effect.promise(() => expect(card).not.toContainText("NaN"));
+        yield* Effect.promise(() => expect(annotations).toHaveText(expected));
+      }
+    }
+  }
+);
+
+test("published unit-circle controls preserve finite angles after clearing", async ({
+  page,
+}) => {
+  const { APP_LOCALE_CODES } = await import("@nakafa/aksara-contracts/locale");
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        const response = yield* Effect.promise(() =>
+          page.goto(UNIT_CIRCLE_ROUTE, { waitUntil: "domcontentloaded" })
+        );
+        yield* Effect.sync(() => expect(response?.status()).toBe(200));
+      })
+    )
+  );
+  for (const locale of APP_LOCALE_CODES) {
+    await test.step(locale, () =>
+      Effect.runPromise(
+        withObservedPageErrors(
+          page,
+          Effect.gen(function* () {
+            const messages = yield* Effect.promise(() =>
+              loadLocaleMessages(locale)
+            );
+            const alternate = page.locator(
+              `link[rel="alternate"][hreflang="${locale}"]`
+            );
+            yield* Effect.promise(() => expect(alternate).toHaveCount(1));
+            const href = yield* Effect.promise(() =>
+              alternate.getAttribute("href")
+            );
+            const localized = yield* Schema.decodeUnknownEffect(
+              Schema.URLFromString
+            )(href);
+            const response = yield* Effect.promise(() =>
+              page.goto(localized.pathname, { waitUntil: "domcontentloaded" })
+            );
+            yield* Effect.sync(() => expect(response?.status()).toBe(200));
+            const article = page.locator("article");
+            const angles = article.getByRole("textbox", {
+              exact: true,
+              name: messages.Common.angle,
+            });
+            // This signed lesson teaches the triangle before the unit circle.
+            const angle = angles.last();
+            const circle = article
+              .locator('[data-slot="card"]')
+              .filter({
+                has: page.getByRole("textbox", {
+                  exact: true,
+                  name: messages.Common.angle,
+                }),
+              })
+              .last();
+            // Reveal the deferred card after hydration before editing; the
+            // client render replaces the pre-hydration node, so the reveal
+            // must be retried until the unit-circle field is live.
+            yield* Effect.promise(() =>
+              expect(async () => {
+                await expect(angles).toHaveCount(2);
+                await expect(circle).toHaveCount(1);
+                await angle.scrollIntoViewIfNeeded();
+                await expect(angle).toBeVisible();
+                await expect(angle).toHaveValue("30");
+              }).toPass({ timeout: 30_000 })
+            );
+            yield* verifyUnitCircleEditing(circle, angle, locale);
+          })
+        )
+      )
+    );
+  }
+});

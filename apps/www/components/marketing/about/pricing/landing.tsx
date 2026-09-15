@@ -1,6 +1,5 @@
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { useTranslations } from "next-intl";
-import { PricingDithering } from "@/components/marketing/about/pricing/dithering.client";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import type { PriceProps } from "@/components/marketing/about/pricing/price";
 
@@ -16,18 +15,17 @@ function AnimatedPrice({ price }: PriceProps) {
   );
 }
 
-/** Renders the landing pricing section and its established shader treatment. */
+/** Renders the landing pricing section above the shared plan comparison. */
 export function Pricing() {
   const t = useTranslations("Pricing");
 
   return (
     <section aria-labelledby="pricing-heading" className="border-b">
       <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="h-120 w-full overflow-hidden">
-          <PricingDithering />
-        </div>
-
-        <div className="scroll-mt-28 px-6 pb-12 lg:px-10" id="pricing">
+        <div
+          className="scroll-mt-28 px-6 pt-24 pb-12 sm:pt-28 lg:px-10 lg:pt-32"
+          id="pricing"
+        >
           <h2
             className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl"
             id="pricing-heading"

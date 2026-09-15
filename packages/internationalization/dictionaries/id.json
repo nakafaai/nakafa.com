@@ -784,18 +784,6 @@
     "description": "Butuh LMS, integrasi konten, atau alur kelas khusus? Pilih yang cocok untuk sekolahmu.",
     "cta": "Diskusikan kebutuhanmu"
   },
-  "TrustSection": {
-    "headline": "Kamu tidak harus percaya begitu saja. Ikuti pelajarannya <mark>sampai ke sumber</mark>.",
-    "description": "Baca penjelasannya, ikuti rujukannya, atau buka sumber materinya saat kamu ingin memeriksa lebih jauh.",
-    "open-lesson": "Buka materi ini",
-    "open-lesson-short": "Buka materi",
-    "open-source": "Buka .md",
-    "human-label": "Manusia",
-    "agent-label": "Agen",
-    "comparison-slider-label": "Atur lebar tampilan manusia dan agen",
-    "lesson-preview-label": "Tampilan materi Nakafa",
-    "source-preview-label": "Sumber Markdown Nakafa"
-  },
   "About": {
     "title": "Belajar sampai <mark>paham.</mark>",
     "description": "Pilih pelajaran, uji pemahaman lewat Tryout, lalu tanya Nina saat kamu buntu.",
