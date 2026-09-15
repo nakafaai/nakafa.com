@@ -1,5 +1,31 @@
 # www
 
+## 2.0.5
+
+### Patch Changes
+
+- [#662](https://github.com/nakafaai/nakafa.com/pull/662) [`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Classify the traffic behind server exceptions. Server captures carried no user agent, so PostHog filed every one under automated traffic and hid real visitor faults during triage. `captureServerException` now accepts the requesting user agent and sends it as `$raw_user_agent`. The request-scoped capture seam reads the user agent once through `next/headers`, so every route handler, metadata, and scheduled capture classifies without extra plumbing; the Next.js request-error hook and the chat stream error reporter pass the user agent from their own request headers. The redacted exception payload stays unchanged.
+
+- [#657](https://github.com/nakafaai/nakafa.com/pull/657) [`2ba4e84`](https://github.com/nakafaai/nakafa.com/commit/2ba4e84a7c557f22be317f95dddbde66bc4eed2a) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Render the product in Inter and give every rendered content heading a scannable
+  section rule. Inter replaces Geist Sans as the interface and reading face, the
+  serif reading title becomes Inter, the lesson and article title and summary move
+  to the start of the reading column at the larger display size, and lesson pages
+  drop the summary under the title while articles keep theirs.
+  
+  Markdown and MDX headings render their words in the theme `primary` accent and
+  draw the underline in the theme's validated chart mark, at Tailwind's own
+  `decoration-2` and `underline-offset-4` values. A new `heading-rule` color role
+  owns that pairing, so the words and the rule never repeat one color and the rule
+  stays at least 3:1 against the page in all 31 concrete themes.
+
+- [#652](https://github.com/nakafaai/nakafa.com/pull/652) [`25393e7`](https://github.com/nakafaai/nakafa.com/commit/25393e7a8a4257ddde8b4c12aef11de67b0eaa97) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Resolve social images without rendering the application shell. Open Graph routes read release metadata through a render-free seam and answer unknown slugs with translated brand artwork, so crawler traffic no longer throws client-manifest errors. Lesson and article pages keep their exact readers and failure behavior.
+- Updated dependencies [[`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632), [`2ba4e84`](https://github.com/nakafaai/nakafa.com/commit/2ba4e84a7c557f22be317f95dddbde66bc4eed2a), [`bb9a7f8`](https://github.com/nakafaai/nakafa.com/commit/bb9a7f845e47eec2ab3bf8b1153a1baea5b86cc5)]:
+  - @repo/analytics@0.1.2
+  - @repo/design-system@1.1.0
+  - @repo/backend@3.0.2
+  - @repo/contents@2.0.2
+  - @repo/ai@2.0.4
+
 ## 2.0.4
 
 ### Patch Changes
