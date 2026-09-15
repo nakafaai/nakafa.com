@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import {
+  completedAnchor,
   completedReceipt,
   makePublicationReceipt,
   publicationReceipt,
@@ -10,6 +11,7 @@ import {
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
+import { TEST_PROOF_WORKFLOW_ID } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -195,6 +197,38 @@ describe("contentRelease/receipt", () => {
       ];
       for (const corrupted of corruptions) {
         yield* expectIntegrity(completedReceipt(corrupted, signed));
+      }
+    })
+  );
+
+  it.live("proves one completed anchor from stored facts alone", () =>
+    Effect.gen(function* () {
+      const { release, signed } = yield* fixture();
+      const verified = verifiedRelease(release);
+      const completed = {
+        ...verified,
+        completedAt: 2,
+        receiptJson: JSON.stringify(makePublicationReceipt(verified, signed)),
+        status: "completed",
+      } satisfies Doc<"contentReleases">;
+
+      expect(yield* completedAnchor(completed)).toBeUndefined();
+
+      const corruptions: readonly Doc<"contentReleases">[] = [
+        { ...completed, status: "verified" },
+        { ...completed, completedAt: undefined },
+        { ...completed, proofAt: undefined },
+        { ...completed, proofFailure: "failed" },
+        { ...completed, proofJson: undefined },
+        { ...completed, proofWorkflowId: TEST_PROOF_WORKFLOW_ID },
+        { ...completed, verifiedAt: undefined },
+        { ...completed, receiptJson: undefined },
+        { ...completed, stagedArtifacts: -1 },
+        { ...completed, checkedItems: 2, checkedIndex: 1 },
+        { ...completed, checkedIndex: -1 },
+      ];
+      for (const corrupted of corruptions) {
+        yield* expectIntegrity(completedAnchor(corrupted));
       }
     })
   );
