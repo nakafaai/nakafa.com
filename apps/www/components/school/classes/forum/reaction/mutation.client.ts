@@ -4,7 +4,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { OptimisticLocalStore } from "convex/browser";
 import { useMutation } from "convex/react";
 import { toggleReactionState } from "@/components/school/classes/forum/reaction/state";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 /** Toggle a forum reaction across every loaded forum list page. */
 function updateForumLists(
@@ -39,9 +39,7 @@ function updateForumLists(
 
 /** Return a forum reaction mutation that updates loaded list and detail caches. */
 export function useForumReactionMutation() {
-  const reactorName = useAccount(
-    ({ user }) => user?.appUser.name ?? user?.authUser.name
-  );
+  const reactorName = useViewer((state) => state.viewer?.name);
 
   return useMutation(
     api.classes.forums.mutations.reactions.toggleForumReaction
@@ -65,9 +63,7 @@ export function useForumReactionMutation() {
 
 /** Return a post reaction mutation that updates every loaded transcript cache. */
 export function usePostReactionMutation() {
-  const reactorName = useAccount(
-    ({ user }) => user?.appUser.name ?? user?.authUser.name
-  );
+  const reactorName = useViewer((state) => state.viewer?.name);
 
   return useMutation(
     api.classes.forums.mutations.reactions.togglePostReaction

@@ -34,7 +34,7 @@ import {
   useDeleteCommentMutation,
   useVoteCommentMutation,
 } from "@/components/comments/mutation.client";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 import { getInitialName } from "@/lib/utils/helper";
 import { getCleanHref } from "@/lib/utils/link";
 
@@ -76,7 +76,7 @@ function CommentThread({ comment }: { comment: UserComment }) {
   const { data: user } = useQueryWithStatus(api.auth.queries.getUserById, {
     userId: comment.userId,
   });
-  const currentUser = useAccount((state) => state.user);
+  const currentUser = useViewer((state) => state.account);
 
   const userName = user?.name ?? t("anonymous");
   const userImage = user?.image ?? "";

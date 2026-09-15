@@ -4,7 +4,7 @@ import { useMutation } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { createOptimisticForumPost } from "@/components/school/classes/forum/conversation/input/optimistic";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 type CreateForumPostArgs = FunctionArgs<
   typeof api.classes.forums.mutations.posts.createForumPost
@@ -12,7 +12,7 @@ type CreateForumPostArgs = FunctionArgs<
 
 /** Creates the Convex post mutation with a transcript-shaped optimistic update. */
 export function useCreateForumPost() {
-  const currentUser = useAccount((state) => state.user);
+  const currentUser = useViewer((state) => state.account);
   const forum = useData((state) => state.forum);
   const createForumPost = useMutation(
     api.classes.forums.mutations.posts.createForumPost

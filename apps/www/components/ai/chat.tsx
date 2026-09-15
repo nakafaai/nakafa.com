@@ -28,7 +28,7 @@ import { useChat } from "@/components/ai/context/use-chat";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 export function AiChat() {
   return (
@@ -78,10 +78,8 @@ function AiChatToolbar() {
 
   const chat = useCurrentChat((s) => s.chat);
 
-  const { isPending: isUserPending, user } = useAccount((s) => ({
-    isPending: s.isPending,
-    user: s.user,
-  }));
+  const isUserPending = useViewer((state) => state.isPending);
+  const viewer = useViewer((state) => state.viewer);
 
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
@@ -102,7 +100,7 @@ function AiChatToolbar() {
       return;
     }
 
-    if (!user) {
+    if (viewer === null) {
       router.push(authNavigation.readHref());
       return;
     }
@@ -115,7 +113,7 @@ function AiChatToolbar() {
   }
 
   // only show when user is the owner of the chat
-  if (chat?.userId !== user?.appUser._id) {
+  if (chat?.userId !== viewer?.id) {
     return null;
   }
 

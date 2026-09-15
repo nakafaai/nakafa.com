@@ -44,7 +44,7 @@ import {
   useUpdateChatVisibilityMutation,
 } from "@/components/ai/chat/mutation.client";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 /** Render the current chat header or its stable empty placeholder. */
 export function AiChatHeader() {
@@ -77,7 +77,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
 
   const clipboard = useClipboard({ timeout: 500 });
 
-  const user = useAccount((s) => s.user);
+  const user = useViewer((s) => s.account);
   const isOwner = user?.appUser._id === chat.userId;
 
   const updateChatTitle = useUpdateChatTitleMutation();

@@ -21,7 +21,7 @@ import { useAi } from "@/components/ai/context/use-ai";
 import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 import { loadChatRuntime } from "@/components/ai/helpers/runtime-loader";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import { useAccount } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 /** Renders the standalone new-chat input and starts the first message. */
 export function ChatNew() {
@@ -35,10 +35,8 @@ export function ChatNew() {
   const setChatSession = useAi((state) => state.setChatSession);
   const setText = useAi((state) => state.setText);
 
-  const { isPending: isUserPending, user } = useAccount((state) => ({
-    isPending: state.isPending,
-    user: state.user,
-  }));
+  const isUserPending = useViewer((state) => state.isPending);
+  const viewer = useViewer((state) => state.viewer);
   const createChat = useMutation(api.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
@@ -56,7 +54,7 @@ export function ChatNew() {
         return;
       }
 
-      if (!user) {
+      if (viewer === null) {
         router.push(authNavigation.readHref());
         return;
       }
