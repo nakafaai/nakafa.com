@@ -204,3 +204,36 @@ export const completedReceipt = Effect.fn("contentRelease.completedReceipt")(
     return expected;
   }
 );
+
+/**
+ * Proves one completed release's durable evidence from stored facts alone.
+ *
+ * A base anchor is published history, so its signed payload belongs to the
+ * contract generation that produced it. Re-decoding those bytes would tie every
+ * later read to that generation and strand the anchor as soon as the content
+ * contract retires an encoding. Completion is proven from the stored publication
+ * facts and staged counters instead, which every completed release already
+ * carries.
+ */
+export const completedAnchor = Effect.fn("contentRelease.completedAnchor")(
+  function* (release: PublicationRow<"contentReleases">) {
+    if (
+      release.status !== "completed" ||
+      release.completedAt === undefined ||
+      release.proofAt === undefined ||
+      release.proofFailure !== undefined ||
+      release.proofJson === undefined ||
+      release.proofWorkflowId !== undefined ||
+      release.verifiedAt === undefined ||
+      release.receiptJson === undefined ||
+      !hasStageCounters(release) ||
+      release.checkedItems !== release.stagedItems ||
+      release.checkedIndex !== release.checkedItems - 1
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Completed release ${release.releaseId} lost its stored anchor evidence.`
+      );
+    }
+  }
+);
