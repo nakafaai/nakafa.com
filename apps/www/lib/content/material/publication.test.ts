@@ -5,7 +5,10 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
-import { getMaterialPublication } from "@/lib/content/material/publication";
+import {
+  getMaterialModel,
+  getMaterialPublication,
+} from "@/lib/content/material/publication";
 import {
   previewWireArtifact as artifact,
   previewDeProjection as deProjection,
@@ -151,6 +154,29 @@ describe("coherent material publication", () => {
     ).rejects.toMatchObject({
       _tag: "ContentRuntimeVerificationError",
     });
+    expect(renderMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("verified material metadata", () => {
+  it("resolves the verified model without rendering the body", async () => {
+    await expect(
+      getMaterialModel("en", projection.publicPath)
+    ).resolves.toMatchObject({
+      model: { activeReleaseId, projection },
+    });
+    expect(renderMock).not.toHaveBeenCalled();
+    expect(cacheMock).toHaveBeenCalledWith("material");
+  });
+
+  it("returns null for a withdrawn release without rendering", async () => {
+    queryMock.mockResolvedValueOnce({
+      model: { ...model, alternateJson: [], projectionJson: null },
+      runtimeJson: null,
+    });
+    await expect(
+      getMaterialModel("en", projection.publicPath)
+    ).resolves.toBeNull();
     expect(renderMock).not.toHaveBeenCalled();
   });
 });

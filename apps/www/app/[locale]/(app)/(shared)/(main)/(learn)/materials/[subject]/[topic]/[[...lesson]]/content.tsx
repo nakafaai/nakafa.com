@@ -3,37 +3,17 @@ import type {
   MaterialMetadata,
 } from "@nakafa/aksara-contracts/projection/material";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
-import { Effect, Option } from "effect";
-import { io } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
+import type { MaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import {
-  type MaterialParams,
-  readMaterialRequest,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
+  type MaterialOwner,
+  resolveMaterialOwner,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
 import { getMaterialPublication } from "@/lib/content/material/publication";
-import { hasPreviewConfig } from "@/lib/content/preview/config";
-import {
-  type MaterialPreviewContent,
-  readMaterialPreview,
-} from "@/lib/content/preview/material";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAksaraUrl } from "@/lib/utils/github";
-
-interface PreviewOwner {
-  readonly appLocale: Locale;
-  readonly kind: "preview";
-  readonly preview: MaterialPreviewContent;
-}
-
-interface PublishedOwner {
-  readonly kind: "published";
-  readonly locale: Locale;
-  readonly publicPath: string;
-}
-
-type MaterialOwner = PreviewOwner | PublishedOwner;
 
 interface MaterialRouteFields {
   readonly alternates: readonly MaterialLessonProjection[];
@@ -72,47 +52,14 @@ export interface MaterialMetadataContent extends MaterialRouteFields {
   readonly kind: MaterialOwner["kind"];
 }
 
-/** Reads a local overlay only in the explicitly configured preview child. */
-async function readPreviewOwner(
-  params: Awaited<MaterialParams>,
-  appLocale: Locale
-): Promise<Option.Option<PreviewOwner>> {
-  if (!hasPreviewConfig()) {
-    return Option.none();
-  }
-  await io();
-  return Option.map(
-    await Effect.runPromise(readMaterialPreview({ params })),
-    (preview) => ({ appLocale, kind: "preview", preview })
-  );
-}
-
-/** Selects an authenticated preview or the signed Aksara publication. */
-async function resolveMaterialOwner(
-  params: MaterialParams
-): Promise<MaterialOwner> {
-  const routeParams = await params;
-  const request = await readMaterialRequest(Promise.resolve(routeParams));
-  const preview = await readPreviewOwner(routeParams, request.locale);
-  if (Option.isSome(preview)) {
-    return preview.value;
-  }
-
-  if (!request.publicPath) {
-    notFound();
-  }
-  return {
-    kind: "published",
-    locale: request.locale,
-    publicPath: request.publicPath,
-  };
-}
-
 /** Reads metadata from the same signed delivery the page body renders. */
 export async function readMaterialMetadata(
   params: MaterialParams
 ): Promise<MaterialMetadataContent> {
   const owner = await resolveMaterialOwner(params);
+  if (!owner) {
+    notFound();
+  }
   if (owner.kind === "preview") {
     return {
       alternates: [owner.preview.projection],
@@ -145,6 +92,9 @@ export async function readMaterialPage(
   params: MaterialParams
 ): Promise<MaterialPageContent> {
   const owner = await resolveMaterialOwner(params);
+  if (!owner) {
+    notFound();
+  }
   if (owner.kind === "preview") {
     const Content = owner.preview.Content;
     return {

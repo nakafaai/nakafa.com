@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
 import { readOgMetadata } from "@/app/og/content";
 import { generateOGImage } from "@/lib/og";
+import { generateFallbackImage } from "@/lib/og/fallback";
 
 /** Renders the localized Open Graph image for one content route. */
 export async function GET(
@@ -17,13 +18,13 @@ export async function GET(
 
   const contentSlug = slug.at(-1) === "image.png" ? slug.slice(0, -1) : slug;
 
-  const { title, description } = await readOgMetadata(
-    cleanedLocale,
-    contentSlug
-  );
+  const copy = await readOgMetadata(cleanedLocale, contentSlug);
+  if (!copy) {
+    return await generateFallbackImage(cleanedLocale);
+  }
 
   return await generateOGImage({
-    title,
-    description,
+    title: copy.title,
+    description: copy.description,
   });
 }

@@ -4,21 +4,25 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { readArticleOgMetadata } from "@/app/og/article";
 
 const mocks = vi.hoisted(() => ({
+  getArticleModel: vi.fn(),
   getPublishedArticleCategory: vi.fn(),
   getPublishedCategories: vi.fn(),
   getTranslations: vi.fn(),
-  readArticleMetadata: vi.fn(),
+  resolveArticleOwner: vi.fn(),
 }));
 
 vi.mock(
-  "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/content",
-  () => ({ readArticleMetadata: mocks.readArticleMetadata })
+  "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/owner",
+  () => ({ resolveArticleOwner: mocks.resolveArticleOwner })
 );
 vi.mock("@/lib/content/article/catalog", () => ({
   getPublishedCategories: mocks.getPublishedCategories,
 }));
 vi.mock("@/lib/content/article/category", () => ({
   getPublishedArticleCategory: mocks.getPublishedArticleCategory,
+}));
+vi.mock("@/lib/content/article/publication", () => ({
+  getArticleModel: mocks.getArticleModel,
 }));
 vi.mock("next-intl/server", () => ({
   getTranslations: mocks.getTranslations,
@@ -35,10 +39,15 @@ beforeEach(() => {
   mocks.getTranslations.mockImplementation(({ namespace }) =>
     Promise.resolve((key: string) => `${namespace}.${key}`)
   );
-  mocks.readArticleMetadata.mockResolvedValue({
-    metadata: {
-      description: "Signed article description",
-      title: "Signed article",
+  mocks.resolveArticleOwner.mockResolvedValue({ kind: "published" });
+  mocks.getArticleModel.mockResolvedValue({
+    model: {
+      projection: {
+        metadata: {
+          description: "Signed article description",
+          title: "Signed article",
+        },
+      },
     },
   });
 });
@@ -71,20 +80,24 @@ describe("article OG metadata", () => {
     ).resolves.toBeNull();
   });
 
-  it("reads signed detail metadata and derives a missing description", async () => {
+  it("reads signed detail metadata without rendering the body", async () => {
     await expect(
       readArticleOgMetadata("en", ["articles", "politics", "signed-article"])
     ).resolves.toEqual({
       description: "Signed article description",
       title: "Signed article",
     });
-    expect(mocks.readArticleMetadata).toHaveBeenCalledWith({
+    expect(mocks.resolveArticleOwner).toHaveBeenCalledWith({
       locale: "en",
       publicPath: "articles/politics/signed-article",
     });
+    expect(mocks.getArticleModel).toHaveBeenCalledWith(
+      "en",
+      "articles/politics/signed-article"
+    );
 
-    mocks.readArticleMetadata.mockResolvedValueOnce({
-      metadata: { title: "Title fallback" },
+    mocks.getArticleModel.mockResolvedValueOnce({
+      model: { projection: { metadata: { title: "Title fallback" } } },
     });
     await expect(
       readArticleOgMetadata("id", ["articles", "politics", "title-fallback"])
@@ -92,6 +105,48 @@ describe("article OG metadata", () => {
       description: "Title fallback",
       title: "Title fallback",
     });
+  });
+
+  it("reads preview detail metadata without touching the published model", async () => {
+    mocks.resolveArticleOwner.mockResolvedValueOnce({
+      content: {
+        metadata: {
+          description: "Preview description",
+          title: "Preview title",
+        },
+      },
+      kind: "preview",
+    });
+
+    await expect(
+      readArticleOgMetadata("en", ["articles", "politics", "preview-article"])
+    ).resolves.toEqual({
+      description: "Preview description",
+      title: "Preview title",
+    });
+    expect(mocks.getArticleModel).not.toHaveBeenCalled();
+  });
+
+  it("derives a missing preview description from its title", async () => {
+    mocks.resolveArticleOwner.mockResolvedValueOnce({
+      content: { metadata: { title: "Preview title" } },
+      kind: "preview",
+    });
+
+    await expect(
+      readArticleOgMetadata("en", ["articles", "politics", "preview-article"])
+    ).resolves.toEqual({
+      description: "Preview title",
+      title: "Preview title",
+    });
+  });
+
+  it("returns null when the signed article release is withdrawn", async () => {
+    mocks.getArticleModel.mockResolvedValueOnce(null);
+
+    await expect(
+      readArticleOgMetadata("en", ["articles", "politics", "withdrawn"])
+    ).resolves.toBeNull();
   });
 
   it("rejects non-article and malformed article paths without catalog reads", async () => {
@@ -107,6 +162,7 @@ describe("article OG metadata", () => {
     }
     expect(mocks.getPublishedArticleCategory).not.toHaveBeenCalled();
     expect(mocks.getPublishedCategories).not.toHaveBeenCalled();
-    expect(mocks.readArticleMetadata).not.toHaveBeenCalled();
+    expect(mocks.getArticleModel).not.toHaveBeenCalled();
+    expect(mocks.resolveArticleOwner).not.toHaveBeenCalled();
   });
 });
