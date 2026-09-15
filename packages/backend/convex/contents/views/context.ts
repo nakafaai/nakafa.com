@@ -57,25 +57,19 @@ const resolvePublishedContext = Effect.fn(
     Effect.provide(convexProgramLayer(ctx)),
     Effect.mapError(toContentViewIoError)
   );
-  if (!resolved.managed) {
-    return { managed: false, storage: createCanonicalLearningContext() };
-  }
-  if (!resolved.context) {
-    return { managed: true, storage: createCanonicalLearningContext() };
+  if (!(resolved.managed && resolved.context)) {
+    return createCanonicalLearningContext();
   }
   return {
-    managed: true,
-    storage: {
-      contextKey: createContextKey({ mode: context.mode, nodeKey, programKey }),
-      contextMaterialKey: material.materialKey,
-      contextMode: context.mode,
-      contextNodeKey: nodeKey,
-      contextParentPath: resolved.context.mapping.materialContextParentPath,
-      contextProgramKey: programKey,
-      contextPublicPath: resolved.context.mapping.materialContextPublicPath,
-      contextSourcePath: material.sourcePath,
-    } satisfies LearningContextStorage,
-  };
+    contextKey: createContextKey({ mode: context.mode, nodeKey, programKey }),
+    contextMaterialKey: material.materialKey,
+    contextMode: context.mode,
+    contextNodeKey: nodeKey,
+    contextParentPath: resolved.context.mapping.materialContextParentPath,
+    contextProgramKey: programKey,
+    contextPublicPath: resolved.context.mapping.materialContextPublicPath,
+    contextSourcePath: material.sourcePath,
+  } satisfies LearningContextStorage;
 });
 
 /**
@@ -99,7 +93,7 @@ export const resolveLearningContext = Effect.fn(
   if (!targetMaterial) {
     return createCanonicalLearningContext();
   }
-  const published = yield* resolvePublishedContext(
+  return yield* resolvePublishedContext(
     ctx,
     target,
     context,
@@ -107,10 +101,4 @@ export const resolveLearningContext = Effect.fn(
     context.programKey,
     context.nodeKey
   );
-  if (!published.managed) {
-    return yield* toContentViewIoError(
-      "Signed curriculum ownership is unavailable."
-    );
-  }
-  return published.storage;
 });

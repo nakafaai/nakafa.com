@@ -14,6 +14,7 @@ import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { nanoid } from "nanoid";
 import { useEffect } from "react";
+import { readContentViewErrorCode } from "@/lib/content/views/code";
 import { createContentViewKey } from "@/lib/content/views/key";
 import { useContentViews } from "@/lib/context/use-content-views";
 import { useViewer } from "@/lib/identity/client";
@@ -114,16 +115,28 @@ export function useRecordContentView({
           })
         ).pipe(
           Effect.tap(() => Effect.sync(() => markAsViewed(viewKey))),
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            Effect.sync(() =>
+          Effect.catchTag("UnknownError", ({ cause: error }) => {
+            const errorCode = readContentViewErrorCode(error);
+
+            // A write that never reached Convex carries no code: the browser
+            // could not open or keep the socket, which is an expected delivery
+            // failure for this best-effort counter. The dedupe key stays unset
+            // so the next visit retries, and only typed failures reach
+            // operational exceptions with their server code attached.
+            if (errorCode === undefined) {
+              return Effect.void;
+            }
+
+            return Effect.sync(() =>
               captureException(error, {
                 contentId,
                 contextMode: context?.mode ?? "canonical",
+                convex_error_code: errorCode,
                 locale,
                 source: "record-content-view",
               })
-            )
-          )
+            );
+          })
         )
       );
     }, delay);
