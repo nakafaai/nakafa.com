@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { useTranslations } from "next-intl";
-import { UserSettingsTabs } from "@/components/user/settings/tabs";
+import { LayoutContent } from "@/components/shared/layout-content";
+import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { LayoutMaterial } from "@/components/shared/material/layout";
+import { UserSettingsHeader } from "@/components/user/settings/header";
 
 /** Keeps private account settings out of search and social discovery. */
 export const metadata: Metadata = {
@@ -19,18 +21,18 @@ export const metadata: Metadata = {
   twitter: null,
 };
 
-/** Render the user settings shell inside the validated locale subtree. */
+/** Renders the settings section header above the settings body. */
 export default function Layout({
   children,
 }: LayoutProps<"/[locale]/user/settings">) {
-  const t = useTranslations("Auth");
-
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="px-2 font-medium text-lg sm:text-xl">{t("settings")}</h1>
-
-      <UserSettingsTabs />
-      {children}
-    </div>
+    <LayoutMaterial>
+      <LayoutMaterialContent>
+        <UserSettingsHeader />
+        <LayoutContent className="flex flex-col gap-6 py-6">
+          {children}
+        </LayoutContent>
+      </LayoutMaterialContent>
+    </LayoutMaterial>
   );
 }

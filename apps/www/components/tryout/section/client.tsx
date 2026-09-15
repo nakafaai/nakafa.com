@@ -5,7 +5,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useConvexAuth, useQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { type ReactNode, Suspense, use, useState } from "react";
-import { AppShell } from "@/components/sidebar/app-shell";
+import { AppShell } from "@/components/sidebar/shell";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import {

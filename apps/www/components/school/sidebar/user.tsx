@@ -2,8 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { AccountPricing } from "@/components/sidebar/menu/pricing";
-import { NavUserGuest } from "@/components/sidebar/user/guest/panel";
-import { NavUserSkeleton } from "@/components/sidebar/user/skeleton";
+import { NavUserGuest } from "@/components/sidebar/user/guest/card";
+import {
+  NavUserAccountSkeleton,
+  NavUserSkeleton,
+} from "@/components/sidebar/user/skeleton";
 import { useUser } from "@/lib/context/use-user";
 
 const SchoolSidebarAccount = dynamic(
@@ -11,7 +14,7 @@ const SchoolSidebarAccount = dynamic(
     import("@/components/school/sidebar/account").then(
       (module) => module.SchoolSidebarAccount
     ),
-  { loading: () => <NavUserSkeleton mode="account" /> }
+  { loading: () => <NavUserAccountSkeleton /> }
 );
 
 /** Selects the truthful guest or school account footer after auth settles. */
@@ -23,7 +26,7 @@ export function SchoolSidebarNavUser() {
   }));
 
   if (isPending) {
-    return <NavUserSkeleton mode={isAuthenticated ? "account" : "neutral"} />;
+    return isAuthenticated ? <NavUserAccountSkeleton /> : <NavUserSkeleton />;
   }
   if (!user) {
     return <NavUserGuest />;
