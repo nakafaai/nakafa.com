@@ -32,7 +32,7 @@ import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import type { CurrentUser } from "@/lib/context/use-user";
+import type { CurrentUser } from "@/lib/identity/client";
 import { getInitialName } from "@/lib/utils/helper";
 
 /** Renders the school account menu after authentication is confirmed. */

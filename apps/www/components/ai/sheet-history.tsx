@@ -23,11 +23,11 @@ import { Authenticated, usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 
 import { useAi } from "@/components/ai/context/use-ai";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 
 /** Opens the recent Nina chat list when a user is signed in. */
 export function SheetHistory() {
-  const { isPending, user } = useUser((state) => ({
+  const { isPending, user } = useAccount((state) => ({
     isPending: state.isPending,
     user: state.user,
   }));

@@ -4,7 +4,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
 import { ForumPostConversation } from "@/components/school/classes/forum/conversation/shell";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 
 export function SchoolClassesForumPanelContent({
   forum,
@@ -13,7 +13,7 @@ export function SchoolClassesForumPanelContent({
   forum: Forum | undefined;
   forumId: Id<"schoolClassForums">;
 }) {
-  const user = useUser((state) => state.user);
+  const user = useAccount((state) => state.user);
 
   if (!user) {
     return null;

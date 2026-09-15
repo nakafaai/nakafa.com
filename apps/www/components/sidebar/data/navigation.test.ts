@@ -1,54 +1,20 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  getAppNavigationViewer,
   getForYouNavigationHref,
   getForYouNavigationItems,
 } from "@/components/sidebar/data/navigation";
 
 describe("sidebar navigation", () => {
-  it("keeps a persisted role when one is available", () => {
-    expect(getAppNavigationViewer({ isPending: false, role: "teacher" })).toBe(
-      "teacher"
-    );
-    expect(getAppNavigationViewer({ isPending: false, role: null })).toBe(
-      "guest"
-    );
-  });
-
-  it("uses a neutral viewer while the user query is pending", () => {
-    const viewer = getAppNavigationViewer({
-      isPending: true,
-      role: null,
-    });
-
-    expect(viewer).toBe("pending");
-    expect(getForYouNavigationItems(viewer).map((item) => item.id)).toEqual([
+  it("returns the shared primary actions in display order", () => {
+    expect(getForYouNavigationItems().map((item) => item.id)).toEqual([
       "subject",
       "tryOut",
       "askNina",
     ]);
   });
 
-  it("shows try out to every app navigation audience", () => {
-    const expectedItemIds = ["subject", "tryOut", "askNina"];
-    const viewers = [
-      "pending",
-      "guest",
-      "student",
-      "teacher",
-      "parent",
-      "administrator",
-    ] as const;
-
-    for (const viewer of viewers) {
-      expect(getForYouNavigationItems(viewer).map((item) => item.id)).toEqual(
-        expectedItemIds
-      );
-    }
-  });
-
   it("uses localized hrefs only when a navigation item owns them", () => {
-    const [subject, tryOut, askNina] = getForYouNavigationItems("teacher");
+    const [subject, tryOut, askNina] = getForYouNavigationItems();
 
     expect(subject).toBeDefined();
     expect(tryOut).toBeDefined();

@@ -7,7 +7,7 @@ import { Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { FormBlock } from "@/components/shared/form-block";
 import { useUpdateUserNameMutation } from "@/components/user/mutation.client";
-import type { CurrentUser } from "@/lib/context/use-user";
+import type { CurrentUser } from "@/lib/identity/client";
 
 const MAX_NAME_LENGTH = 32;
 const MIN_NAME_LENGTH = 3;

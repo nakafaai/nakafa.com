@@ -40,7 +40,7 @@ import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { usePageNavigation } from "@/lib/content/page/context";
-import type { CurrentUser } from "@/lib/context/use-user";
+import type { CurrentUser } from "@/lib/identity/client";
 import { getInitialName } from "@/lib/utils/helper";
 
 /** Renders the account-only user menu after authentication is confirmed. */

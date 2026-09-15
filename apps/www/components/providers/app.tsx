@@ -8,7 +8,7 @@ import { ReactQueryProviders } from "@/components/providers/react-query";
 import { env } from "@/env";
 import { PageNavigationProvider } from "@/lib/content/page/context";
 import type { PageNavigation } from "@/lib/content/page/navigation";
-import { UserContextProvider } from "@/lib/context/use-user";
+import { IdentityProvider } from "@/lib/identity/client";
 
 /**
  * Mounts the app-wide client runtime providers for the localized app subtree.
@@ -32,7 +32,7 @@ export function AppProviders({
     <NuqsAdapter>
       <ReactQueryProviders>
         <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
-          <UserContextProvider>
+          <IdentityProvider>
             <PageNavigationProvider navigation={pageNavigation}>
               {pageNavigation ? (
                 <AnalyticsConsentProvider
@@ -49,7 +49,7 @@ export function AppProviders({
                 </AnalyticsUnavailableProvider>
               )}
             </PageNavigationProvider>
-          </UserContextProvider>
+          </IdentityProvider>
         </ConvexProvider>
       </ReactQueryProviders>
     </NuqsAdapter>

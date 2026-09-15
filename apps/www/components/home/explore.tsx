@@ -102,7 +102,7 @@ export function HomeExplore() {
   const locale = useLocale();
   // The shared shortcuts are the same for every audience; only their resolved
   // destinations follow the learner preferences below.
-  const items = getForYouNavigationItems("guest");
+  const items = getForYouNavigationItems();
   const preferredCurriculumHref = usePreferredCurriculumHref(locale);
   const preferredTryoutHref = usePreferredTryoutHref(locale);
   const visibleCardIds = new Set(items.map((item) => item.id));

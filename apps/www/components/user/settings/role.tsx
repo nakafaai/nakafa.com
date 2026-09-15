@@ -16,8 +16,8 @@ import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { FormBlock } from "@/components/shared/form-block";
 import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
-import type { CurrentUser } from "@/lib/context/use-user";
 import { roles } from "@/lib/data/roles";
+import type { CurrentUser } from "@/lib/identity/client";
 
 const roleSchema = Schema.Literals(selfSelectableUserRoles);
 const formSchema = Schema.toStandardSchemaV1(

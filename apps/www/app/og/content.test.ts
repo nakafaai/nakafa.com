@@ -205,8 +205,12 @@ describe("OG content metadata", () => {
 
   it("reads cached copy for content-owned slugs with a reference", async () => {
     const copy = { description: "Surah description", title: "Surah 1" };
-    mocks.resolveReferenceInput.mockReturnValueOnce(Effect.succeed({ family: "quran" }));
-    mocks.readNakafaRuntimeQuery.mockReturnValueOnce(Effect.succeed({ title: "Surah 1" }));
+    mocks.resolveReferenceInput.mockReturnValueOnce(
+      Effect.succeed({ family: "quran" })
+    );
+    mocks.readNakafaRuntimeQuery.mockReturnValueOnce(
+      Effect.succeed({ title: "Surah 1" })
+    );
     mocks.getCachedMetadataFromSlug.mockResolvedValueOnce(copy);
 
     await expect(readOgMetadata("en", ["quran", "1"])).resolves.toEqual(copy);
@@ -217,7 +221,9 @@ describe("OG content metadata", () => {
   });
 
   it("returns null for content-owned slugs with no reference", async () => {
-    mocks.resolveReferenceInput.mockReturnValueOnce(Effect.succeed({ family: "quran" }));
+    mocks.resolveReferenceInput.mockReturnValueOnce(
+      Effect.succeed({ family: "quran" })
+    );
     mocks.readNakafaRuntimeQuery.mockReturnValueOnce(Effect.succeed(null));
 
     await expect(readOgMetadata("id", ["quran", "999"])).resolves.toBeNull();

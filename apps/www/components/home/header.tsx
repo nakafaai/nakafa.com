@@ -1,19 +1,17 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useUser } from "@/lib/context/use-user";
+import { useViewer } from "@/lib/identity/client";
 
 /**
  * Renders the home greeting.
  *
- * A protected route passes the account it already resolved so the greeting is
- * complete in the first paint. The live session stays the fallback for callers
- * that cannot resolve an account before rendering.
+ * Selects the projected viewer so a route that seeded its account shows the
+ * real name on the first paint instead of an interim guest label.
  */
-export function HomeHeader({ userName }: { userName?: string | null }) {
+export function HomeHeader() {
   const t = useTranslations("Home");
-  const currentUser = useUser((state) => state.user);
-  const name = userName ?? currentUser?.appUser.name ?? t("guest");
+  const name = useViewer((state) => state.viewer?.name ?? t("guest"));
 
   return (
     <div className="flex flex-col gap-2">

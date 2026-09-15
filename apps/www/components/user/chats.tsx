@@ -24,12 +24,12 @@ import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 import { getLocale } from "@/lib/utils/date";
 
 /** Render the correct owned or public chat list for a profile viewer. */
 export function UserChats({ userId }: { userId: Id<"users"> }) {
-  const user = useUser((state) => state.user);
+  const user = useAccount((state) => state.user);
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = user?.appUser._id === userId;

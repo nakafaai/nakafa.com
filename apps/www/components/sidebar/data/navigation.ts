@@ -3,14 +3,8 @@ import {
   Books02Icon,
   Target01Icon,
 } from "@hugeicons/core-free-icons";
-import { userRoles } from "@repo/ai/types/roles";
 import type { Locale } from "next-intl";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
-
-const appNavigationViewers = ["pending", "guest", ...userRoles] as const;
-
-export type AppNavigationViewer = (typeof appNavigationViewers)[number];
-export type AppNavigationRole = (typeof userRoles)[number];
 
 export const forYouNavigationItems = {
   subject: {
@@ -46,30 +40,12 @@ const primaryNavigationItems = [
 ] as const;
 
 /**
- * Resolves the navigation audience from the auth query state and persisted app role.
+ * Returns the primary sidebar and home actions.
+ *
+ * One list serves every audience; only each resolved destination follows the
+ * learner's stored preferences.
  */
-export function getAppNavigationViewer({
-  isPending,
-  role,
-}: {
-  isPending: boolean;
-  role: AppNavigationRole | null;
-}) {
-  if (isPending) {
-    return "pending";
-  }
-
-  if (role) {
-    return role;
-  }
-
-  return "guest";
-}
-
-/**
- * Returns the primary sidebar/home actions shared by every navigation audience.
- */
-export function getForYouNavigationItems(_viewer: AppNavigationViewer) {
+export function getForYouNavigationItems() {
   return primaryNavigationItems;
 }
 

@@ -7,7 +7,7 @@ import {
   NavUserAccountSkeleton,
   NavUserSkeleton,
 } from "@/components/sidebar/user/skeleton";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 
 const SchoolSidebarAccount = dynamic(
   () =>
@@ -19,7 +19,7 @@ const SchoolSidebarAccount = dynamic(
 
 /** Selects the truthful guest or school account footer after auth settles. */
 export function SchoolSidebarNavUser() {
-  const { isAuthenticated, isPending, user } = useUser((state) => ({
+  const { isAuthenticated, isPending, user } = useAccount((state) => ({
     isAuthenticated: state.isAuthenticated,
     isPending: state.isPending,
     user: state.user,

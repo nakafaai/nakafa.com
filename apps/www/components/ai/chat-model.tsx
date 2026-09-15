@@ -16,14 +16,14 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context/use-ai";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import { useUser } from "@/lib/context/use-user";
 import { aiModels, getAiModel } from "@/lib/data/models";
+import { useAccount } from "@/lib/identity/client";
 
 export function AiChatModel() {
   const t = useTranslations("Ai");
   const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
-  const user = useUser((state) => state.user);
+  const user = useAccount((state) => state.user);
 
   const model = useAi((state) => state.model);
   const setModel = useAi((state) => state.setModel);

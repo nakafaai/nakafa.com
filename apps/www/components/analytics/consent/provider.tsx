@@ -29,7 +29,7 @@ import {
   resolveBrowserAnalyticsConsentState,
   shouldRevokeAccountAnalyticsGrant,
 } from "@/lib/analytics/consent/state";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 
 /** Owns the state that exclusively controls optional product analytics. */
 export function AnalyticsConsentProvider({
@@ -40,7 +40,7 @@ export function AnalyticsConsentProvider({
   isPreviewChild: boolean;
 }) {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-  const { isPending: isUserPending, user } = useUser((state) => ({
+  const { isPending: isUserPending, user } = useAccount((state) => ({
     isPending: state.isPending,
     user: state.user,
   }));

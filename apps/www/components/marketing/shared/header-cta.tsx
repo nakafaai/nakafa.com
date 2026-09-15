@@ -5,7 +5,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Link } from "@repo/internationalization/src/navigation";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 
 /** Renders the shared Nakafa mark used by both logo destinations. */
 function LogoContent() {
@@ -28,7 +28,7 @@ function LogoContent() {
  * signed-out visitors.
  */
 export function LogoCta() {
-  const currentUser = useUser((state) => state.user);
+  const currentUser = useAccount((state) => state.user);
   const locale = useLocale();
 
   if (!currentUser) {
@@ -48,7 +48,7 @@ export function LogoCta() {
 
 export function HeaderCta() {
   const t = useTranslations("Marketing");
-  const currentUser = useUser((state) => state.user);
+  const currentUser = useAccount((state) => state.user);
   const href = currentUser ? "/home" : "/auth";
 
   return (
