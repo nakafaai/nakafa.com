@@ -180,8 +180,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-serif: var(--font-newsreader);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --font-pixel-square: var(--font-geist-pixel-square);
   --font-pixel-grid: var(--font-geist-pixel-grid);
@@ -219,6 +218,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  /* Rendered content headings draw their rule in the validated chart mark. */
+  --color-heading-rule: var(--chart-4);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
