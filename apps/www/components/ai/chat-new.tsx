@@ -21,7 +21,7 @@ import { useAi } from "@/components/ai/context/use-ai";
 import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 import { loadChatRuntime } from "@/components/ai/helpers/runtime-loader";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 
 /** Renders the standalone new-chat input and starts the first message. */
 export function ChatNew() {
@@ -35,7 +35,7 @@ export function ChatNew() {
   const setChatSession = useAi((state) => state.setChatSession);
   const setText = useAi((state) => state.setText);
 
-  const { isPending: isUserPending, user } = useUser((state) => ({
+  const { isPending: isUserPending, user } = useAccount((state) => ({
     isPending: state.isPending,
     user: state.user,
   }));

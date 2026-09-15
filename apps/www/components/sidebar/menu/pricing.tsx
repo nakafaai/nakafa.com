@@ -7,7 +7,7 @@ import {
   SidebarMenuSeparator,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "next-intl";
-import type { CurrentUser } from "@/lib/context/use-user";
+import type { CurrentUser } from "@/lib/identity/client";
 
 /** Links a sidebar footer to the localized pricing page. */
 export function PricingItem() {

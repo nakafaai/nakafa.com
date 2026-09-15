@@ -14,7 +14,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 import { getInitialName } from "@/lib/utils/helper";
 
 export function UserHeader({ userId }: { userId: Id<"users"> }) {
@@ -24,7 +24,7 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
   const { data: user } = useQueryWithStatus(api.auth.queries.getUserById, {
     userId,
   });
-  const currentUser = useUser((state) => state.user);
+  const currentUser = useAccount((state) => state.user);
   const isCurrentUser = currentUser?.appUser._id === userId;
   const userEmail = isCurrentUser ? currentUser.authUser.email : null;
 

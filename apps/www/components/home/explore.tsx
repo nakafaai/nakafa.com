@@ -13,11 +13,9 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 import {
-  getAppNavigationViewer,
   getForYouNavigationHref,
   getForYouNavigationItems,
 } from "@/components/sidebar/data/navigation";
-import { useUser } from "@/lib/context/use-user";
 import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
 import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
 
@@ -102,12 +100,9 @@ export function HomeExplore() {
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const locale = useLocale();
-  const { isPending, role } = useUser((state) => ({
-    isPending: state.isPending,
-    role: state.user?.appUser.role ?? null,
-  }));
-  const viewer = getAppNavigationViewer({ isPending, role });
-  const items = getForYouNavigationItems(viewer);
+  // The shared shortcuts are the same for every audience; only their resolved
+  // destinations follow the learner preferences below.
+  const items = getForYouNavigationItems();
   const preferredCurriculumHref = usePreferredCurriculumHref(locale);
   const preferredTryoutHref = usePreferredTryoutHref(locale);
   const visibleCardIds = new Set(items.map((item) => item.id));

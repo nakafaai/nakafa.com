@@ -14,7 +14,7 @@ import { useTranslations } from "next-intl";
 import { useChat } from "@/components/ai/context/use-chat";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useMessage } from "@/components/ai/context/use-message";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 
 export function AiChatMessageActions() {
   const t = useTranslations("Ai");
@@ -39,7 +39,7 @@ export function AiChatMessageActions() {
 
   const chat = useCurrentChat((s) => s.chat);
 
-  const currentUser = useUser((s) => s.user);
+  const currentUser = useAccount((s) => s.user);
   const showActions = chat?.userId === currentUser?.appUser._id;
 
   const clipboard = useClipboard({ timeout: 1000 });

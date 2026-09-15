@@ -5,7 +5,7 @@ import { useMessage } from "@/components/ai/context/use-message";
 import { AiChatMessageLoading } from "@/components/ai/message-loading";
 import { AiMessagePart } from "@/components/ai/message-part";
 import { SuggestionsPart } from "@/components/ai/message-part/suggestions";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 
 export function AiChatMessageContent() {
   const parts = useMessage((state) =>
@@ -33,7 +33,7 @@ AiChatMessageContent.displayName = "AiChatMessageContent";
 export function AiChatMessageSuggestions() {
   const chat = useCurrentChat((s) => s.chat);
 
-  const currentUser = useUser((s) => s.user);
+  const currentUser = useAccount((s) => s.user);
   const showSuggestions = chat?.userId === currentUser?.appUser._id;
   const suggestions = useMessage((state) => {
     const part = state.message.parts.find((p) => p.type === "data-suggestions");

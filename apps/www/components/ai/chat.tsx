@@ -28,7 +28,7 @@ import { useChat } from "@/components/ai/context/use-chat";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 
 export function AiChat() {
   return (
@@ -78,7 +78,7 @@ function AiChatToolbar() {
 
   const chat = useCurrentChat((s) => s.chat);
 
-  const { isPending: isUserPending, user } = useUser((s) => ({
+  const { isPending: isUserPending, user } = useAccount((s) => ({
     isPending: s.isPending,
     user: s.user,
   }));

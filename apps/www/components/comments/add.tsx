@@ -25,7 +25,7 @@ import { useTranslations } from "next-intl";
 import { type SubmitEventHandler, useState, useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import { useUser } from "@/lib/context/use-user";
+import { useAccount } from "@/lib/identity/client";
 import { getInitialName } from "@/lib/utils/helper";
 
 interface Props {
@@ -49,7 +49,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
   const [commentText, setCommentText] = useState("");
 
-  const user = useUser((s) => s.user);
+  const user = useAccount((s) => s.user);
   const addComment = useMutation(api.comments.mutations.addComment);
 
   const [isPending, startTransition] = useTransition();
@@ -159,7 +159,7 @@ function UserAvatar() {
   const authNavigation = useCurrentAuthNavigation();
   const t = useTranslations("Auth");
 
-  const user = useUser((s) => s.user);
+  const user = useAccount((s) => s.user);
 
   if (!user) {
     return (

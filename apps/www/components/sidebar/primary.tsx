@@ -15,28 +15,21 @@ import {
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  getAppNavigationViewer,
   getForYouNavigationHref,
   getForYouNavigationItems,
 } from "@/components/sidebar/data/navigation";
-import { useUser } from "@/lib/context/use-user";
 import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
 import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
 
 /**
- * Renders role-aware primary app navigation for students, teachers, parents, and guests.
+ * Renders the primary app navigation shared by every audience.
  */
 export function NavForYou() {
   const pathname = usePathname();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const locale = useLocale();
-  const { isPending, role } = useUser((state) => ({
-    isPending: state.isPending,
-    role: state.user?.appUser.role ?? null,
-  }));
-  const viewer = getAppNavigationViewer({ isPending, role });
-  const items = getForYouNavigationItems(viewer);
+  const items = getForYouNavigationItems();
   const preferredCurriculumHref = usePreferredCurriculumHref(locale);
   const preferredTryoutHref = usePreferredTryoutHref(locale);
 

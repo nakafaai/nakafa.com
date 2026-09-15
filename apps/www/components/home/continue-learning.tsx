@@ -1,32 +1,34 @@
 "use client";
 
 import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
+import type { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { useLocale, useTranslations } from "next-intl";
-import { isActiveLocale } from "@/lib/i18n/active";
+import type { FunctionReturnType } from "convex/server";
+import { useTranslations } from "next-intl";
+import { MaterialRow } from "@/components/home/material-row";
 
-/** Renders graph-backed recently viewed learning objects on the home screen. */
-export function HomeContinueLearning() {
+type RecentlyViewedSubject = FunctionReturnType<
+  typeof api.contents.queries.recent.getRecentlyViewed
+>[number];
+
+/**
+ * Renders graph-backed recently viewed learning objects on the home screen.
+ *
+ * The route resolves the learner's ranked rows with its request credential and
+ * passes them in, so the first client paint already contains the row list.
+ * Resolving them after hydration instead would insert the section and push
+ * trending content down.
+ */
+export function HomeContinueLearning({
+  subjects,
+}: {
+  subjects: readonly RecentlyViewedSubject[];
+}) {
   const t = useTranslations("Home");
-  const locale = useLocale();
-  const activeLocale = isActiveLocale(locale);
 
-  const { data, isPending } = useQueryWithStatus(
-    api.contents.queries.recent.getRecentlyViewed,
-    activeLocale ? { locale, limit: 5 } : "skip"
-  );
-
-  if (isPending) {
-    return null;
-  }
-
-  if (!data || data.length === 0) {
+  if (subjects.length === 0) {
     return null;
   }
 
@@ -37,35 +39,11 @@ export function HomeContinueLearning() {
         <HugeIcons className="size-4" icon={Progress03Icon} />
       </h2>
       <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-        {data.map((subject) => (
-          <NavigationLink
-            className="group grid gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-            href={subject.href}
+        {subjects.map((subject) => (
+          <MaterialRow
             key={`${subject.content_id}:${subject.contextKey}`}
-          >
-            <div className="flex items-start gap-3">
-              <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
-                <GradientBlock
-                  className="absolute inset-0"
-                  colorScheme="vibrant"
-                  intensity="medium"
-                  keyString={subject.content_id}
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <HugeIcons
-                    className="size-4 text-background drop-shadow-md"
-                    icon={getMaterialIcon(subject.materialDomain)}
-                  />
-                </div>
-              </div>
-              <div className="-mt-1 flex flex-col gap-0.5">
-                <h3>{subject.title}</h3>
-                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground sm:mr-12">
-                  {subject.description}
-                </span>
-              </div>
-            </div>
-          </NavigationLink>
+            material={subject}
+          />
         ))}
       </div>
 
