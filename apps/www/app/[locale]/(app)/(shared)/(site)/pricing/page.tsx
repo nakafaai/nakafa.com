@@ -5,10 +5,10 @@ import { locale as rootLocale } from "next/root-params";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { PricingPageFaq } from "@/components/marketing/about/faq/pricing";
-import type { MarketingFaqItem } from "@/components/marketing/about/faq/section";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import type { PriceProps } from "@/components/marketing/about/pricing/price";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
@@ -90,28 +90,10 @@ export default async function Page() {
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "PricingPage" }),
   ]);
-  const faqItems: MarketingFaqItem[] = [
-    { question: tPricingPage("q1"), answer: tPricingPage("a1") },
-    { question: tPricingPage("q2"), answer: tPricingPage("a2") },
-    { question: tPricingPage("q3"), answer: tPricingPage("a3") },
-    { question: tPricingPage("q4"), answer: tPricingPage("a4") },
-    { question: tPricingPage("q5"), answer: tPricingPage("a5") },
-    { question: tPricingPage("q6"), answer: tPricingPage("a6") },
-    { question: tPricingPage("q7"), answer: tPricingPage("a7") },
-    { question: tPricingPage("q8"), answer: tPricingPage("a8") },
-    { question: tPricingPage("q9"), answer: tPricingPage("a9") },
-    { question: tPricingPage("q10"), answer: tPricingPage("a10") },
-    { question: tPricingPage("q11"), answer: tPricingPage("a11") },
-    { question: tPricingPage("q12"), answer: tPricingPage("a12") },
-    { question: tPricingPage("q13"), answer: tPricingPage("a13") },
-    { question: tPricingPage("q14"), answer: tPricingPage("a14") },
-    { question: tPricingPage("q15"), answer: tPricingPage("a15") },
-    { question: tPricingPage("q16"), answer: tPricingPage("a16") },
-    { question: tPricingPage("q17"), answer: tPricingPage("a17") },
-    { question: tPricingPage("q18"), answer: tPricingPage("a18") },
-    { question: tPricingPage("q19"), answer: tPricingPage("a19") },
-    { question: tPricingPage("q20"), answer: tPricingPage("a20") },
-  ];
+  const faqItems: MarketingFaqItem[] = pricingFaqNumbers.map((number) => ({
+    answer: tPricingPage(`a${number}`),
+    question: tPricingPage(`q${number}`),
+  }));
   const url = `https://nakafa.com/${locale}/pricing`;
 
   return (

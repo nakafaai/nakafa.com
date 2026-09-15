@@ -5,11 +5,6 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 
-export interface MarketingFaqItem {
-  answer: string;
-  question: string;
-}
-
 interface FaqSectionProps {
   badge: string;
   children: ReactNode;

@@ -9,10 +9,6 @@ import {
   CurriculumCatalogCards,
   CurriculumIndexHeader,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
-import {
-  type CurriculumCatalogModel,
-  readRuntimeCurriculumCatalog,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
@@ -20,6 +16,10 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
 import { getCurriculumIndexSocialImage } from "@/lib/curriculum/artwork";
+import {
+  type CurriculumCatalogModel,
+  readRuntimeCurriculumCatalog,
+} from "@/lib/curriculum/model";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";

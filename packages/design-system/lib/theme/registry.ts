@@ -2,7 +2,9 @@
 export type ThemeAppearance = "light" | "dark";
 
 type ThemeAppearancePolicy = ThemeAppearance | "dynamic";
-type ThemeShaderColor = `rgb(${number}, ${number}, ${number})`;
+
+/** Concrete sRGB projection painted by shader-only renderers. */
+export type ThemeShaderColor = `rgb(${number}, ${number}, ${number})`;
 
 interface ThemeDefinition {
   readonly appearance: ThemeAppearancePolicy;
@@ -211,4 +213,15 @@ export function getThemeShaderColor(resolvedTheme: string | undefined) {
   const definition = themes.find((theme) => theme.value === resolvedTheme);
 
   return definition?.shaderColor ?? LIGHT_SHADER_COLOR;
+}
+
+/**
+ * Projects one registered shader color at an explicit alpha. The projection
+ * stays beside the registered colors so no renderer re-derives their format.
+ */
+export function getThemeShaderAlphaColor(
+  color: ThemeShaderColor,
+  alpha: number
+) {
+  return color.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
 }

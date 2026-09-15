@@ -5,15 +5,13 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "cn";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { CurriculaArt } from "@/components/marketing/about/curricula-art";
+import { CountryFlagIcon } from "@/components/shared/country-flag";
 import {
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
-import { CurriculaArt } from "@/components/marketing/about/curricula-art";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+} from "@/lib/curriculum/model";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
-
-const CURRICULA_SHADER_PIXEL_BUDGET = 720_000;
 
 /** Renders a country flag when available and a global curriculum mark otherwise. */
 function CurriculumCountryMark({ countryCode }: { countryCode?: string }) {
@@ -83,7 +81,7 @@ export async function Curricula({ locale }: { locale: Locale }) {
         </nav>
 
         <div className="relative min-h-80 overflow-hidden border-t sm:min-h-96 lg:min-h-[28rem]">
-          <CurriculaArt maxPixelCount={CURRICULA_SHADER_PIXEL_BUDGET} />
+          <CurriculaArt />
         </div>
       </div>
     </section>

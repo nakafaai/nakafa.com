@@ -3,10 +3,8 @@ import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
-
-const FAQ_NUMBERS = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-] as const;
+import { pricingFaqNumbers } from "@/lib/marketing/faq";
+import { freePlanFeatures, proPlanFeatures } from "@/lib/marketing/plan";
 
 /** Removes the reviewed emphasis tag from a heading used outside rich text. */
 function getPlainHeading(heading: string) {
@@ -25,9 +23,9 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
   const messages = yield* Effect.promise(() => loadLocaleMessages(locale));
   const pricing = messages.Pricing;
   const page = messages.PricingPage;
-  const questions = FAQ_NUMBERS.map(
-    (number) => `### ${page[`q${number}`]}\n\n${page[`a${number}`]}`
-  ).join("\n\n");
+  const questions = pricingFaqNumbers
+    .map((number) => `### ${page[`q${number}`]}\n\n${page[`a${number}`]}`)
+    .join("\n\n");
   const url = `${BASE_URL}/${locale}/pricing`;
 
   return [
@@ -40,17 +38,10 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
     page.description,
     `## ${pricing["free-title"]}`,
     pricing["free-description"],
-    `- ${pricing["free-feature-1"]}`,
-    `- ${pricing["free-feature-2"]}`,
-    `- ${pricing["free-feature-3"]}`,
-    `- ${pricing["free-feature-4"]}`,
-    `- ${pricing["free-feature-5"]}`,
+    ...freePlanFeatures.map((key) => `- ${pricing[key]}`),
     `## ${pricing["pro-title"]}`,
     pricing["pro-description"],
-    `- ${pricing["pro-feature-1"]}`,
-    `- ${pricing["pro-feature-2"]}`,
-    `- ${pricing["pro-feature-3"]}`,
-    `- ${pricing["pro-feature-5"]}`,
+    ...proPlanFeatures.map((key) => `- ${pricing[key]}`),
     `Current price and checkout: ${url}`,
     `## ${getPlainHeading(page["faq-headline"])}`,
     questions,
