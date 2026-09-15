@@ -1,27 +1,35 @@
 "use client";
 
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { type Preloaded, usePreloadedQuery } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
 import { FormBlock } from "@/components/shared/form-block";
 import { useBillingNavigation } from "@/lib/billing/use-navigation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-export function UserSettingsSubscriptions() {
+interface UserSettingsSubscriptionsProps {
+  preloadedSubscription: Preloaded<
+    typeof api.subscriptions.queries.hasActiveSubscription
+  >;
+}
+
+/**
+ * Renders the subscription card from the value the settings route already
+ * resolved, so the plan action never swaps between two labels.
+ */
+export function UserSettingsSubscriptions({
+  preloadedSubscription,
+}: UserSettingsSubscriptionsProps) {
   const locale = useLocale();
   const t = useTranslations("Auth");
 
   const billing = useBillingNavigation();
 
-  const { data: hasSubscription } = useQueryWithStatus(
-    api.subscriptions.queries.hasActiveSubscription,
-    { productId: products.pro.id }
-  );
+  const hasSubscription = usePreloadedQuery(preloadedSubscription);
   const handleCheckout = () => {
     if (!isActiveLocale(locale)) {
       return;

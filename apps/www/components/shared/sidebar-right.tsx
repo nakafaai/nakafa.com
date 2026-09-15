@@ -18,11 +18,11 @@ import {
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
 import type { ComponentProps, ReactNode } from "react";
-import { CommentsButton } from "@/components/sidebar/comments-button";
-import { GithubButton } from "@/components/sidebar/github-button";
-import { ReferenceButton } from "@/components/sidebar/reference-button";
-import { ReportButton } from "@/components/sidebar/report-button";
-import { ShareButton } from "@/components/sidebar/share-button";
+import { CommentsButton } from "@/components/sidebar/actions/comments";
+import { GithubButton } from "@/components/sidebar/actions/github";
+import { ReferenceButton } from "@/components/sidebar/actions/reference";
+import { ReportButton } from "@/components/sidebar/actions/report";
+import { ShareButton } from "@/components/sidebar/actions/share";
 
 export type SidebarRightProps = {
   children: ReactNode;

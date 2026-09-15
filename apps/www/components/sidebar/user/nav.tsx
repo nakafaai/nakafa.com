@@ -2,8 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { AccountPricing } from "@/components/sidebar/menu/pricing";
-import { NavUserGuest } from "@/components/sidebar/user/guest/panel";
-import { NavUserSkeleton } from "@/components/sidebar/user/skeleton";
+import { NavUserGuest } from "@/components/sidebar/user/guest/card";
+import {
+  NavUserAccountSkeleton,
+  NavUserSkeleton,
+} from "@/components/sidebar/user/skeleton";
 import { useUser } from "@/lib/context/use-user";
 
 const NavUserAccount = dynamic(
@@ -11,7 +14,7 @@ const NavUserAccount = dynamic(
     import("@/components/sidebar/user/account").then(
       (module) => module.NavUserAccount
     ),
-  { loading: () => <NavUserSkeleton mode="account" /> }
+  { loading: () => <NavUserAccountSkeleton /> }
 );
 
 /** Selects the truthful guest or account footer after authentication settles. */
@@ -23,7 +26,7 @@ export function NavUser() {
   }));
 
   if (isPending) {
-    return <NavUserSkeleton mode={isAuthenticated ? "account" : "neutral"} />;
+    return isAuthenticated ? <NavUserAccountSkeleton /> : <NavUserSkeleton />;
   }
   if (!user) {
     return <NavUserGuest />;
