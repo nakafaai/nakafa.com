@@ -67,7 +67,7 @@ export function Heading({
         id={id}
         {...props}
       >
-        <span className="wrap-anywhere hyphens-auto text-pretty">
+        <span className="wrap-anywhere hyphens-auto text-pretty text-primary underline decoration-[0.12em] decoration-primary underline-offset-[0.28em]">
           {props.children}
         </span>
       </Tag>
@@ -89,7 +89,7 @@ export function Heading({
         href={`#${id}`}
         title={props.children?.toString()}
       >
-        <span className="wrap-anywhere hyphens-auto text-pretty">
+        <span className="wrap-anywhere hyphens-auto text-pretty text-primary underline decoration-[0.12em] decoration-primary underline-offset-[0.28em]">
           {props.children}
         </span>
         <div className="shrink-0 rounded-sm border p-2 opacity-0 transition-opacity ease-out group-hover/heading:opacity-100">

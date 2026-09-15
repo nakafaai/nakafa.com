@@ -12,6 +12,24 @@ const routes = [
   "/en/articles/politics/regional-elections-turmoil",
 ];
 
+/** Reads the first rendered section heading and the live theme accent. */
+const readSectionHeadingInk = (span: HTMLElement) => {
+  const probe = document.createElement("span");
+  probe.style.color = "var(--primary)";
+  document.body.appendChild(probe);
+  const primary = getComputedStyle(probe).color;
+  probe.remove();
+
+  const style = getComputedStyle(span);
+  return {
+    color: style.color,
+    decorationColor: style.textDecorationColor,
+    decorationLine: style.textDecorationLine,
+    primary,
+    thickness: Number.parseFloat(style.textDecorationThickness),
+  };
+};
+
 /** Verifies the header controls against the real signed reading page. */
 const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
   function* (page: Page, href: string, width: number) {
@@ -20,10 +38,8 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* waitForCommittedAppRouter(page, href, href, 15_000);
     const title = page.getByRole("heading", { level: 1 });
     yield* Effect.promise(() => expect(title).toHaveCount(1));
-    yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "48px"));
-    yield* Effect.promise(() =>
-      expect(title).toHaveCSS("text-align", "center")
-    );
+    yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "36px"));
+    yield* Effect.promise(() => expect(title).toHaveCSS("text-align", "start"));
     yield* Effect.promise(() =>
       expect(title).toHaveCSS("font-family", NEWSREADER_FONT)
     );
@@ -46,11 +62,32 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() => expect(summary).toBeVisible());
     yield* Effect.promise(() => expect(summary).not.toBeEmpty());
     yield* Effect.promise(() =>
-      expect(summary).toHaveCSS("text-align", "center")
+      expect(summary).toHaveCSS("text-align", "start")
     );
     yield* Effect.promise(() =>
       expect(summary).toHaveCSS("text-wrap-style", "pretty")
     );
+    const titleLeft = yield* Effect.promise(() =>
+      title.evaluate((element) => element.getBoundingClientRect().left)
+    );
+    const summaryLeft = yield* Effect.promise(() =>
+      summary.evaluate((element) => element.getBoundingClientRect().left)
+    );
+    yield* Effect.sync(() => expect(summaryLeft).toBe(titleLeft));
+
+    const sectionHeading = page.locator("article h2 span").first();
+    yield* Effect.promise(() => expect(sectionHeading).toBeVisible());
+    const sectionInk = yield* Effect.promise(() =>
+      sectionHeading.evaluate(readSectionHeadingInk)
+    );
+    yield* Effect.sync(() =>
+      expect(sectionInk.decorationLine).toBe("underline")
+    );
+    yield* Effect.sync(() => expect(sectionInk.color).toBe(sectionInk.primary));
+    yield* Effect.sync(() =>
+      expect(sectionInk.decorationColor).toBe(sectionInk.primary)
+    );
+    yield* Effect.sync(() => expect(sectionInk.thickness).toBeGreaterThan(1));
     const titleText = yield* Effect.promise(() => title.innerText());
     const more = page.getByRole("button", {
       name: "More actions",
