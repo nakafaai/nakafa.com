@@ -100,6 +100,15 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       expect(sectionInk.ink).not.toBe(sectionInk.decorationColor)
     );
     yield* Effect.sync(() => expect(sectionInk.thickness).toBeGreaterThan(1));
+    const subheading = page.locator("article h3 span").first();
+    yield* Effect.promise(() => expect(subheading).toBeVisible());
+    const subheadingInk = yield* Effect.promise(() =>
+      subheading.evaluate(readSectionHeadingInk)
+    );
+    yield* Effect.sync(() => expect(subheadingInk.decorationLine).toBe("none"));
+    yield* Effect.sync(() =>
+      expect(subheadingInk.ink).toBe(subheadingInk.primary)
+    );
     const titleText = yield* Effect.promise(() => title.innerText());
     const more = page.getByRole("button", {
       name: "More actions",

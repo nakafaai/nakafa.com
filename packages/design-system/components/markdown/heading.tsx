@@ -42,6 +42,12 @@ function extractTextFromNode(node: ReactNode): string {
   return "";
 }
 
+/**
+ * Renders one content heading with the shared accent ink and anchor.
+ *
+ * The rule under the words marks the start of a section, so only `h2` carries
+ * it. `h3` and below stay plain ink so the level hierarchy reads at a glance.
+ */
 export function Heading({
   Tag,
   className,
@@ -67,7 +73,13 @@ export function Heading({
         id={id}
         {...props}
       >
-        <span className="wrap-anywhere hyphens-auto text-pretty text-primary underline decoration-2 decoration-heading-rule underline-offset-4">
+        <span
+          className={cn(
+            "wrap-anywhere hyphens-auto text-pretty text-primary",
+            Tag === "h2" &&
+              "underline decoration-2 decoration-heading-rule underline-offset-4"
+          )}
+        >
           {props.children}
         </span>
       </Tag>
@@ -89,7 +101,13 @@ export function Heading({
         href={`#${id}`}
         title={props.children?.toString()}
       >
-        <span className="wrap-anywhere hyphens-auto text-pretty text-primary underline decoration-2 decoration-heading-rule underline-offset-4">
+        <span
+          className={cn(
+            "wrap-anywhere hyphens-auto text-pretty text-primary",
+            Tag === "h2" &&
+              "underline decoration-2 decoration-heading-rule underline-offset-4"
+          )}
+        >
           {props.children}
         </span>
         <div className="shrink-0 rounded-sm border p-2 opacity-0 transition-opacity ease-out group-hover/heading:opacity-100">
