@@ -9,6 +9,7 @@ import {
   ContentBlock,
   ContentGrid,
   ContentStack,
+  Highlight,
 } from "@repo/design-system/components/markdown/mdx";
 import { baseComponentNames } from "@repo/design-system/lib/markdown/names";
 import { MermaidMdx, Youtube } from "@/lib/content/renderer/client/base/media";
@@ -40,6 +41,10 @@ export const baseRenderers = [
   {
     name: baseComponentNames.contentStack,
     component: ContentStack,
+  },
+  {
+    name: baseComponentNames.highlight,
+    component: Highlight,
   },
   {
     name: baseComponentNames.inlineMath,

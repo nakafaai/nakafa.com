@@ -9,11 +9,13 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { filterWhitespaceNodes } from "@repo/design-system/lib/markdown/children";
+import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import type {
   BlockquoteProps,
   CodeProps,
   EmProps,
   HeadingProps,
+  HighlightProps,
   ListItemProps,
   ListProps,
   PreProps,
@@ -126,14 +128,29 @@ export function MdxListItem(props: ListItemProps) {
   );
 }
 
-/** Renders emphasized MDX text at the shared medium weight. */
+/** Renders italic MDX emphasis at the medium weight. */
 export function MdxEmphasis(props: EmProps) {
   return <em className="font-medium" {...props} />;
 }
 
-/** Renders strong MDX text at the shared medium weight. */
-export function MdxStrong(props: StrongProps) {
-  return <strong className="font-medium" {...props} />;
+/**
+ * Renders an emphasised phrase authored as `**`.
+ *
+ * The style is shared with {@link Highlight}, so both authoring syntaxes reach
+ * the learner as the same marked phrase.
+ */
+export function MdxStrong({ className, ...props }: StrongProps) {
+  return <strong className={emphasisVariants({ className })} {...props} />;
+}
+
+/**
+ * Renders an emphasised phrase authored as `<Highlight>`.
+ *
+ * The style is shared with {@link MdxStrong}, so both authoring syntaxes reach
+ * the learner as the same marked phrase.
+ */
+export function Highlight({ className, ...props }: HighlightProps) {
+  return <mark className={emphasisVariants({ className })} {...props} />;
 }
 
 /** Renders an MDX quotation with the shared callout treatment. */

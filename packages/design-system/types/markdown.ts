@@ -8,6 +8,7 @@ export type ParagraphProps = ComponentPropsWithoutRef<"p">;
 export type AnchorProps = ComponentPropsWithoutRef<"a">;
 export type EmProps = ComponentPropsWithoutRef<"em">;
 export type StrongProps = ComponentPropsWithoutRef<"strong">;
+export type HighlightProps = ComponentPropsWithoutRef<"mark">;
 export type ListProps = ComponentPropsWithoutRef<"ul">;
 export type ListItemProps = ComponentPropsWithoutRef<"li">;
 export type PreProps = ComponentPropsWithoutRef<"pre">;
