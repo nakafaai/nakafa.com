@@ -3,6 +3,7 @@ import { Heading } from "@repo/design-system/components/markdown/heading";
 import { MarkdownImage } from "@repo/design-system/components/markdown/image";
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import type { ReactMarkdownComponents } from "@repo/design-system/components/markdown/react/node";
+import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import { cn } from "cn";
 
 export const reactTextComponents: ReactMarkdownComponents = {
@@ -94,8 +95,12 @@ export const reactTextComponents: ReactMarkdownComponents = {
   p: ({ node: _node, ...props }) => (
     <Paragraph data-nakafa="paragraph" {...props} />
   ),
-  strong: ({ node: _node, ...props }) => (
-    <strong className="font-medium" data-nakafa="bold" {...props} />
+  strong: ({ className, node: _node, ...props }) => (
+    <strong
+      className={emphasisVariants({ className })}
+      data-nakafa="bold"
+      {...props}
+    />
   ),
   sub: ({ children, className, node: _node, ...props }) => (
     <sub
