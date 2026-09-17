@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Predicate, Schema } from "effect";
 
 /** Input validation failure raised before reading Nakafa content. */
 export class NakafaAgentInputError extends Schema.TaggedError<NakafaAgentInputError>()(
@@ -20,7 +20,7 @@ export class NakafaAgentDataReadError extends Schema.TaggedError<NakafaAgentData
 
 /** Converts an unknown failure value into a stable diagnostic string. */
 export function getUnknownErrorMessage(error: unknown) {
-  if (error instanceof Error) {
+  if (Predicate.isError(error)) {
     return error.message;
   }
 

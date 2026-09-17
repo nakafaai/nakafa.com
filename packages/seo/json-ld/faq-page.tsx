@@ -1,9 +1,14 @@
 import type { Answer, FAQPage, Question, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
+interface FaqItem {
+  readonly acceptedAnswer: Answer;
+  readonly name: string;
+}
+
 interface FAQPageJsonLdProps {
   inLanguage: string;
-  mainEntity: Pick<Question, "name" | "acceptedAnswer">[];
+  mainEntity: readonly FaqItem[];
   url: string;
 }
 
@@ -36,7 +41,7 @@ export function FAQPageJsonLd({
   const faqItems: Question[] = mainEntity.map((item) => ({
     "@type": "Question",
     name: item.name,
-    acceptedAnswer: item.acceptedAnswer as Answer,
+    acceptedAnswer: item.acceptedAnswer,
   }));
 
   const faqPage: WithContext<FAQPage> = {
