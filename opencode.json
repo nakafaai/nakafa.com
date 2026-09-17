@@ -10,10 +10,7 @@
     },
     "posthog": {
       "type": "remote",
-      "url": "https://mcp-eu.posthog.com/mcp",
-      "headers": {
-        "Authorization": "Bearer {env:POSTHOG_MCP_API_KEY}"
-      }
+      "url": "https://mcp-eu.posthog.com/mcp"
     },
     "convex": {
       "type": "local",
