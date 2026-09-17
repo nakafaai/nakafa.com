@@ -2,7 +2,10 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { getPathname } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
-import { getSitemapEntries } from "@/lib/sitemap/entries";
+import {
+  getCachedSitemapEntries,
+  getSitemapEntries,
+} from "@/lib/sitemap/entries";
 
 const mockReadSitemapRoutePage = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
@@ -47,12 +50,38 @@ vi.mock("@/lib/sitemap/routes", () => ({
 
 vi.mock("@/lib/sitemap/identity", () => ({
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
+  isArticleSitemapPage: (page: { kind?: string }) =>
+    "kind" in page && page.kind === "article",
+  isMaterialSitemapPage: (page: { kind?: string }) =>
+    "kind" in page && page.kind === "material",
+  isPageSitemapPage: (page: { kind?: string }) =>
+    "kind" in page && page.kind === "page",
+  isProgramSitemapPage: (page: { kind?: string }) =>
+    "kind" in page && page.kind === "program",
+  isQuranSitemapPage: (page: { kind?: string }) =>
+    "kind" in page && page.kind === "quran",
+  isTryoutSitemapPage: (page: { kind?: string }) =>
+    "kind" in page && page.kind === "tryout",
+}));
+
+const mockCacheLife = vi.hoisted(() => vi.fn());
+const mockCacheTag = vi.hoisted(() => vi.fn());
+
+vi.mock("next/cache", () => ({
+  /** Records sitemap origin-cache usage without touching Next internals. */
+  cacheLife: mockCacheLife,
+  /** Records sitemap origin-cache usage without touching Next internals. */
+  cacheTag: mockCacheTag,
+  /** Unused in these tests; present for module completeness. */
+  revalidateTag: vi.fn(),
 }));
 
 beforeEach(() => {
   mockReadSitemapRoutePage.mockReset();
   mockGetSitemapPageDescriptor.mockReset();
   mockGetPathname.mockClear();
+  mockCacheLife.mockClear();
+  mockCacheTag.mockClear();
 
   mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
   mockReadSitemapRoutePage.mockReturnValue(
@@ -274,4 +303,87 @@ describe("sitemap entries", () => {
       expect(entries).toEqual([{ url: "https://nakafa.com/de/impressum" }]);
     })
   );
+
+  it("shares base sitemap pages through the origin cache", async () => {
+    const entries = await getCachedSitemapEntries({ pageId: "base" });
+
+    expect(entries.length).toBeGreaterThan(0);
+    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
+    expect(mockCacheLife).toHaveBeenCalledWith("max");
+  });
+
+  it("tags cached material partitions with their family scope", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValue({
+      id: "material_en_p0",
+      kind: "material",
+      locale: "en",
+      partition: 0,
+    });
+
+    await getCachedSitemapEntries({ pageId: "material_en_p0" });
+
+    expect(mockCacheTag).toHaveBeenCalledWith(
+      "content-sitemap",
+      "content-scope:material"
+    );
+  });
+
+  it.each([
+    ["article_en_p0", "article", "content-scope:article"],
+    ["program_en_p0", "program", "content-scope:program"],
+    ["page_en", "page", "content-scope:page"],
+    ["quran_en", "quran", "content-scope:quran"],
+    ["tryout_en_0", "tryout", "content-scope:tryout"],
+  ])("tags cached %s with %s", async (pageId, kind, tag) => {
+    mockGetSitemapPageDescriptor.mockReturnValue({
+      id: pageId,
+      kind,
+      locale: "en",
+    });
+
+    await getCachedSitemapEntries({ pageId });
+
+    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap", tag);
+  });
+
+  it("tags unknown sitemap pages with only the shared sitemap tag", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValue(null);
+
+    await getCachedSitemapEntries({ pageId: "unknown" });
+
+    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
+  });
+
+  it("tags foreign page kinds with only the shared sitemap tag", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValue({
+      id: "foreign_en",
+      kind: "question",
+      locale: "en",
+    });
+
+    await getCachedSitemapEntries({ pageId: "foreign_en" });
+
+    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
+  });
+
+  it("normalizes cached dates to serializable strings", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+    mockReadSitemapRoutePage.mockReturnValueOnce(
+      Effect.succeed({
+        routes: [
+          {
+            lastModified: new Date("2024-01-02T00:00:00.000Z"),
+            path: "/search",
+          },
+        ],
+      })
+    );
+
+    const entries = await getCachedSitemapEntries({ pageId: "base" });
+
+    expect(entries).toContainEqual({
+      lastModified: "2024-01-02T00:00:00.000Z",
+      url: "https://nakafa.com/en/search",
+    });
+  });
 });

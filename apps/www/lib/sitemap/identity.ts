@@ -23,6 +23,24 @@ export type SitemapPage =
       kind: "program";
       locale: Locale;
     }
+  | {
+      id: string;
+      kind: "article";
+      locale: Locale;
+      partition: number;
+    }
+  | {
+      id: string;
+      kind: "material";
+      locale: Locale;
+      partition: number;
+    }
+  | {
+      id: string;
+      kind: "program";
+      locale: Locale;
+      partition: number;
+    }
   | { id: string; kind: "page"; locale: Locale }
   | { id: string; kind: "quran"; locale: Locale }
   | {
@@ -35,19 +53,25 @@ export type SitemapPage =
 /** Stable identity for the sitemap containing application-level routes. */
 export const SITEMAP_BASE_ID = "base";
 
-/** Formats one deterministic published-article sitemap page id. */
-export function formatArticlePage(bucket: string, locale: Locale) {
-  return `article_${locale}_${bucket}`;
+/** Content families served through hash-bucket and partition sitemap pages. */
+export type SitemapFamily = "article" | "material" | "program";
+
+/** Prefix marking one capacity-owned sitemap partition index. */
+const PARTITION_PREFIX = "p";
+
+/** Formats one capacity-owned published-article sitemap partition id. */
+export function formatArticlePartition(locale: Locale, partition: number) {
+  return `article_${locale}_${PARTITION_PREFIX}${partition}`;
 }
 
-/** Formats one deterministic published-material sitemap page id. */
-export function formatMaterialPage(bucket: string, locale: Locale) {
-  return `material_${locale}_${bucket}`;
+/** Formats one capacity-owned published-material sitemap partition id. */
+export function formatMaterialPartition(locale: Locale, partition: number) {
+  return `material_${locale}_${PARTITION_PREFIX}${partition}`;
 }
 
-/** Formats one deterministic published-program sitemap page id. */
-export function formatProgramPage(bucket: string, locale: Locale) {
-  return `program_${locale}_${bucket}`;
+/** Formats one capacity-owned published-program sitemap partition id. */
+export function formatProgramPartition(locale: Locale, partition: number) {
+  return `program_${locale}_${PARTITION_PREFIX}${partition}`;
 }
 
 /** Formats the complete signed Page sitemap identity for one locale. */
@@ -98,11 +122,36 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
   ) {
     return null;
   }
-  const bucket = segments[2];
-  if (!(bucket && isProjectionBucket(bucket))) {
+  return describeFamilySitemapPage(prefix, id, locale, segments[2]);
+}
+
+/** Describes one hash-bucket or capacity-owned family sitemap page. */
+function describeFamilySitemapPage(
+  kind: SitemapFamily,
+  id: string,
+  locale: Locale,
+  segment: string | undefined
+): SitemapPage | null {
+  if (segment && isProjectionBucket(segment)) {
+    if (kind === "article") {
+      return { bucket: segment, id, kind, locale };
+    }
+    if (kind === "material") {
+      return { bucket: segment, id, kind, locale };
+    }
+    return { bucket: segment, id, kind, locale };
+  }
+  const partition = parsePartitionNumber(segment);
+  if (partition === null) {
     return null;
   }
-  return { bucket, id, kind: prefix, locale };
+  if (kind === "article") {
+    return { id, kind, locale, partition };
+  }
+  if (kind === "material") {
+    return { id, kind, locale, partition };
+  }
+  return { id, kind, locale, partition };
 }
 
 /** Checks whether one page targets published article rows. */
@@ -147,6 +196,13 @@ export function isTryoutSitemapPage(
   return "kind" in page && page.kind === "tryout";
 }
 
+/** Checks whether one sitemap page targets a capacity-owned partition. */
+export function isPartitionSitemapPage(
+  page: SitemapPage
+): page is Extract<SitemapPage, { partition: number }> {
+  return "partition" in page;
+}
+
 /** Parses one canonical non-negative sitemap page number. */
 function parsePageNumber(segment: string | undefined) {
   if (!segment) {
@@ -157,4 +213,12 @@ function parsePageNumber(segment: string | undefined) {
     return null;
   }
   return page;
+}
+
+/** Parses one canonical capacity-owned partition suffix such as `p0`. */
+function parsePartitionNumber(segment: string | undefined) {
+  if (!segment?.startsWith(PARTITION_PREFIX)) {
+    return null;
+  }
+  return parsePageNumber(segment.slice(PARTITION_PREFIX.length));
 }

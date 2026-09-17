@@ -1,11 +1,22 @@
+import type { ContentCacheScope } from "@nakafa/aksara-contracts/cache/content";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect, Option } from "effect";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
+import { cache } from "react";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
-import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
+import { applySitemapCache } from "@/lib/sitemap/cache";
+import {
+  getSitemapPageDescriptor,
+  isArticleSitemapPage,
+  isMaterialSitemapPage,
+  isPageSitemapPage,
+  isProgramSitemapPage,
+  isQuranSitemapPage,
+  isTryoutSitemapPage,
+} from "@/lib/sitemap/identity";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
@@ -82,3 +93,55 @@ function getSitemapEntryLocales(pageId: string) {
 
   return routing.locales;
 }
+
+/** Selects the mutable publication dependencies read by one sitemap page. */
+function sitemapEntryScopes(pageId: string): ContentCacheScope[] {
+  const page = getSitemapPageDescriptor(pageId);
+  if (!(page && "kind" in page)) {
+    return [];
+  }
+  if (isArticleSitemapPage(page)) {
+    return ["article"];
+  }
+  if (isMaterialSitemapPage(page)) {
+    return ["material"];
+  }
+  if (isProgramSitemapPage(page)) {
+    return ["program"];
+  }
+  if (isPageSitemapPage(page)) {
+    return ["page"];
+  }
+  if (isQuranSitemapPage(page)) {
+    return ["quran"];
+  }
+  if (isTryoutSitemapPage(page)) {
+    return ["tryout"];
+  }
+  return [];
+}
+
+/** Reads one bounded sitemap page inside the sitemap origin cache.
+ *
+ * The cache key is the page id, which already encodes family, locale, and
+ * partition. Entries keep the long built-in profile on purpose. The family
+ * tag above is what a publication revalidates. Dates are normalized to
+ * strings so the cached value stays serializable. */
+async function readCachedSitemapEntries(
+  options: SitemapPageEntryOptions
+): Promise<readonly SitemapEntry[]> {
+  "use cache";
+
+  applySitemapCache(...sitemapEntryScopes(options.pageId));
+  const entries = await Effect.runPromise(getSitemapEntries(options));
+  return entries.map((entry) => ({
+    ...entry,
+    ...(entry.lastModified instanceof Date
+      ? { lastModified: entry.lastModified.toISOString() }
+      : {}),
+  }));
+}
+
+/** Shares one cached sitemap page between the route and indexing scripts
+ * in a single render pass. https://react.dev/reference/react/cache */
+export const getCachedSitemapEntries = cache(readCachedSitemapEntries);

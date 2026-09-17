@@ -1,6 +1,7 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
+import { cache } from "react";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
 import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
@@ -13,16 +14,15 @@ import {
 } from "@/lib/content/published/release";
 import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { readPublishedTryoutSitemapCount } from "@/lib/content/tryout/sitemap";
+import { applySitemapCache } from "@/lib/sitemap/cache";
 import {
-  formatArticlePage,
-  formatMaterialPage,
   formatPagePage,
-  formatProgramPage,
   formatQuranPage,
   formatTryoutPage,
   SITEMAP_BASE_ID,
   type SitemapPage,
 } from "@/lib/sitemap/identity";
+import { describeSitemapPartitions } from "@/lib/sitemap/partition";
 
 /** Reads sitemap page descriptors without loading route rows. */
 export const readSitemapPageDescriptors = Effect.fn(
@@ -81,30 +81,11 @@ export const readSitemapPageDescriptors = Effect.fn(
       });
     }
 
-    for (const bucket of articleBuckets.buckets) {
-      descriptors.push({
-        bucket,
-        id: formatArticlePage(bucket, locale),
-        kind: "article",
-        locale,
-      });
-    }
-    for (const bucket of materialBuckets.buckets) {
-      descriptors.push({
-        bucket,
-        id: formatMaterialPage(bucket, locale),
-        kind: "material",
-        locale,
-      });
-    }
-    for (const bucket of programBuckets.buckets) {
-      descriptors.push({
-        bucket,
-        id: formatProgramPage(bucket, locale),
-        kind: "program",
-        locale,
-      });
-    }
+    descriptors.push(
+      ...describeSitemapPartitions("article", locale, articleBuckets.buckets),
+      ...describeSitemapPartitions("material", locale, materialBuckets.buckets),
+      ...describeSitemapPartitions("program", locale, programBuckets.buckets)
+    );
     for (let page = 0; page < tryoutCount.pageCount; page += 1) {
       descriptors.push({
         id: formatTryoutPage(locale, page),
@@ -119,3 +100,26 @@ export const readSitemapPageDescriptors = Effect.fn(
 
   return descriptors;
 });
+
+/** Reads sitemap page descriptors inside the sitemap origin cache.
+ *
+ * Descriptors keep the long built-in profile on purpose. The family tags
+ * above are what a publication revalidates, so the index does not need the
+ * hourly content revalidation the shared profile carries. */
+async function readCachedSitemapDescriptors(): Promise<readonly SitemapPage[]> {
+  "use cache";
+
+  applySitemapCache(
+    "article",
+    "material",
+    "program",
+    "page",
+    "quran",
+    "tryout"
+  );
+  return await Effect.runPromise(readSitemapPageDescriptors());
+}
+
+/** Shares one cached sitemap index between the route and indexing scripts
+ * in a single render pass. https://react.dev/reference/react/cache */
+export const getCachedSitemapDescriptors = cache(readCachedSitemapDescriptors);

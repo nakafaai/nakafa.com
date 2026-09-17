@@ -5,15 +5,18 @@ import { Effect } from "effect";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
 const articleMocks = vi.hoisted(() => ({
+  readPublishedArticleBuckets: vi.fn(),
   readPublishedArticleSitemap: vi.fn(),
 }));
 const materialMocks = vi.hoisted(() => ({
+  readPublishedMaterialBuckets: vi.fn(),
   readPublishedMaterialSitemap: vi.fn(),
 }));
 const pageMocks = vi.hoisted(() => ({
   readPublishedPageCatalog: vi.fn(),
 }));
 const programMocks = vi.hoisted(() => ({
+  readPublishedProgramBuckets: vi.fn(),
   readPublishedProgramSitemap: vi.fn(),
 }));
 const quranMocks = vi.hoisted(() => ({
@@ -24,6 +27,7 @@ const tryoutMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
+  readPublishedArticleBuckets: articleMocks.readPublishedArticleBuckets,
   readPublishedArticleSitemap: articleMocks.readPublishedArticleSitemap,
 }));
 vi.mock("@/lib/content/material/sitemap", () => materialMocks);
@@ -33,9 +37,25 @@ vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
 
 beforeEach(() => {
+  articleMocks.readPublishedArticleBuckets.mockReset();
+  articleMocks.readPublishedArticleBuckets.mockReturnValue(
+    Effect.succeed({
+      activeReleaseId: "release-articles",
+      articleCount: 0,
+      buckets: [],
+    })
+  );
   articleMocks.readPublishedArticleSitemap.mockReset();
   articleMocks.readPublishedArticleSitemap.mockReturnValue(
     Effect.succeed(null)
+  );
+  materialMocks.readPublishedMaterialBuckets.mockReset();
+  materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+    Effect.succeed({
+      activeReleaseId: "release-materials",
+      buckets: [],
+      materialCount: 0,
+    })
   );
   materialMocks.readPublishedMaterialSitemap.mockReset();
   materialMocks.readPublishedMaterialSitemap.mockReturnValue(
@@ -44,6 +64,10 @@ beforeEach(() => {
   pageMocks.readPublishedPageCatalog.mockReset();
   pageMocks.readPublishedPageCatalog.mockReturnValue(
     Effect.succeed({ activeReleaseId: "release-pages", projections: [] })
+  );
+  programMocks.readPublishedProgramBuckets.mockReset();
+  programMocks.readPublishedProgramBuckets.mockReturnValue(
+    Effect.succeed({ buckets: [], managed: false, routeCount: 0 })
   );
   programMocks.readPublishedProgramSitemap.mockReset();
   programMocks.readPublishedProgramSitemap.mockReturnValue(
@@ -130,6 +154,96 @@ describe("sitemap route pages", () => {
         "/curriculum/merdeka/class-11",
         "/curriculum/merdeka/class-11/mathematics",
       ]);
+    })
+  );
+
+  it.effect(
+    "serves capacity-owned material partitions across bucket groups",
+    () =>
+      Effect.gen(function* () {
+        materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+          Effect.succeed({
+            activeReleaseId: "release-materials",
+            buckets: ["002", "001"],
+            materialCount: 2,
+          })
+        );
+        materialMocks.readPublishedMaterialSitemap.mockImplementation(
+          (locale, bucket) =>
+            Effect.succeed({
+              routes: [
+                {
+                  lastModified: "2026-07-25",
+                  publicPath: `subjects/mathematics/lesson-${locale}-${bucket}`,
+                },
+              ],
+            })
+        );
+
+        expect(yield* readPaths("material_en_p0")).toEqual([
+          "/subjects/mathematics/lesson-en-001",
+          "/subjects/mathematics/lesson-en-002",
+        ]);
+        expect(
+          materialMocks.readPublishedMaterialSitemap
+        ).toHaveBeenCalledTimes(2);
+      })
+  );
+
+  it.effect("keeps legacy hash-bucket pages resolving during migration", () =>
+    Effect.gen(function* () {
+      materialMocks.readPublishedMaterialSitemap.mockReturnValue(
+        Effect.succeed({
+          routes: [
+            {
+              lastModified: "2026-07-25",
+              publicPath: "subjects/mathematics/functions/concept",
+            },
+          ],
+        })
+      );
+
+      expect(yield* readPaths("material_en_abc")).toEqual([
+        "/subjects/mathematics/functions/concept",
+      ]);
+      expect(materialMocks.readPublishedMaterialBuckets).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("rejects partitions whose buckets all went missing", () =>
+    Effect.gen(function* () {
+      materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-materials",
+          buckets: ["001"],
+          materialCount: 1,
+        })
+      );
+      materialMocks.readPublishedMaterialSitemap.mockReturnValue(
+        Effect.succeed(null)
+      );
+
+      expect(yield* readFailure("material_en_p0")).toMatchObject({
+        _tag: "SitemapPageNotFoundError",
+        pageId: "material_en_p0",
+      });
+    })
+  );
+
+  it.effect("rejects partitions past the current bucket inventory", () =>
+    Effect.gen(function* () {
+      expect(yield* readFailure("material_en_p7")).toMatchObject({
+        _tag: "SitemapPageNotFoundError",
+        pageId: "material_en_p7",
+      });
+      expect(yield* readFailure("article_en_p0")).toMatchObject({
+        _tag: "SitemapPageNotFoundError",
+        pageId: "article_en_p0",
+      });
+      expect(yield* readFailure("program_en_p0")).toMatchObject({
+        _tag: "SitemapPageNotFoundError",
+        pageId: "program_en_p0",
+      });
     })
   );
 

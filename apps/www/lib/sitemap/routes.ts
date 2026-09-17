@@ -1,9 +1,19 @@
 import { compareSitemapPaths } from "@repo/backend/convex/contentRelease/sitemap";
 import { Data, Effect } from "effect";
-import { readPublishedArticleSitemap } from "@/lib/content/article/sitemap";
-import { readPublishedMaterialSitemap } from "@/lib/content/material/sitemap";
+import type { Locale } from "next-intl";
+import {
+  readPublishedArticleBuckets,
+  readPublishedArticleSitemap,
+} from "@/lib/content/article/sitemap";
+import {
+  readPublishedMaterialBuckets,
+  readPublishedMaterialSitemap,
+} from "@/lib/content/material/sitemap";
 import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
-import { readPublishedProgramSitemap } from "@/lib/content/program/sitemap";
+import {
+  readPublishedProgramBuckets,
+  readPublishedProgramSitemap,
+} from "@/lib/content/program/sitemap";
 import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { readPublishedTryoutSitemap } from "@/lib/content/tryout/sitemap";
 import {
@@ -11,12 +21,35 @@ import {
   isArticleSitemapPage,
   isMaterialSitemapPage,
   isPageSitemapPage,
+  isPartitionSitemapPage,
   isProgramSitemapPage,
   isQuranSitemapPage,
   isTryoutSitemapPage,
+  type SitemapPage,
 } from "@/lib/sitemap/identity";
+import { selectSitemapPartition } from "@/lib/sitemap/partition";
 
 const quranRootRoute = "/quran";
+
+/** Bucket inventories backing capacity-owned sitemap partitions. */
+const familyBucketInventories = {
+  article: readPublishedArticleBuckets,
+  material: readPublishedMaterialBuckets,
+  program: readPublishedProgramBuckets,
+} as const;
+
+/** Single-bucket sitemap pages backing both legacy and partition reads. */
+const familyBucketPages = {
+  article: readPublishedArticleSitemap,
+  material: readPublishedMaterialSitemap,
+  program: readPublishedProgramSitemap,
+} as const;
+
+/** Article, material, and curriculum pages sharing one partition seam. */
+type SitemapFamilyPage = Extract<
+  SitemapPage,
+  { kind: "article" | "material" | "program" }
+>;
 
 /** A canonical sitemap page id whose route page does not exist. */
 export class SitemapPageNotFoundError extends Data.TaggedError(
@@ -43,55 +76,12 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       return yield* new SitemapPageNotFoundError({ pageId });
     }
 
-    if (isArticleSitemapPage(page)) {
-      const artifact = yield* readPublishedArticleSitemap(
-        page.locale,
-        page.bucket
-      );
-      if (!artifact) {
-        return yield* new SitemapPageNotFoundError({ pageId });
-      }
-      return {
-        routes: artifact.routes
-          .map((route) => ({
-            ...("lastModified" in route
-              ? { lastModified: route.lastModified }
-              : {}),
-            path: routeToPath(route.publicPath),
-          }))
-          .sort((left, right) => compareSitemapPaths(left.path, right.path)),
-      };
-    }
-    if (isMaterialSitemapPage(page)) {
-      const artifact = yield* readPublishedMaterialSitemap(
-        page.locale,
-        page.bucket
-      );
-      if (!artifact) {
-        return yield* new SitemapPageNotFoundError({ pageId });
-      }
-      return {
-        routes: artifact.routes
-          .map(({ lastModified, publicPath }) => ({
-            lastModified,
-            path: routeToPath(publicPath),
-          }))
-          .sort((left, right) => compareSitemapPaths(left.path, right.path)),
-      };
-    }
-    if (isProgramSitemapPage(page)) {
-      const artifact = yield* readPublishedProgramSitemap(
-        page.locale,
-        page.bucket
-      );
-      if (!artifact) {
-        return yield* new SitemapPageNotFoundError({ pageId });
-      }
-      return {
-        routes: artifact.routes
-          .map(({ publicPath }) => ({ path: routeToPath(publicPath) }))
-          .sort((left, right) => compareSitemapPaths(left.path, right.path)),
-      };
+    if (
+      isArticleSitemapPage(page) ||
+      isMaterialSitemapPage(page) ||
+      isProgramSitemapPage(page)
+    ) {
+      return yield* readFamilySitemapPage(pageId, page);
     }
 
     if (isTryoutSitemapPage(page)) {
@@ -147,3 +137,70 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
 function routeToPath(route: string) {
   return `/${route}`;
 }
+
+/** Maps one family sitemap route into a canonical path entry. */
+function mapFamilyRoute(route: {
+  readonly lastModified?: string;
+  readonly publicPath: string;
+}) {
+  return {
+    ...("lastModified" in route && route.lastModified !== undefined
+      ? { lastModified: route.lastModified }
+      : {}),
+    path: routeToPath(route.publicPath),
+  };
+}
+
+/** Reads one article, material, or curriculum sitemap page. */
+const readFamilySitemapPage = Effect.fn("www.sitemap.routePage.family")(
+  function* (pageId: string, page: SitemapFamilyPage) {
+    if (isPartitionSitemapPage(page)) {
+      return yield* readFamilyPartition(
+        pageId,
+        page.kind,
+        page.locale,
+        page.partition
+      );
+    }
+    const artifact = yield* familyBucketPages[page.kind](
+      page.locale,
+      page.bucket
+    );
+    if (!artifact) {
+      return yield* new SitemapPageNotFoundError({ pageId });
+    }
+    return {
+      routes: artifact.routes
+        .map(mapFamilyRoute)
+        .sort((left, right) => compareSitemapPaths(left.path, right.path)),
+    };
+  }
+);
+
+/** Reads one capacity-owned family partition across its bucket group. */
+const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
+  function* (
+    pageId: string,
+    family: SitemapFamilyPage["kind"],
+    locale: Locale,
+    partition: number
+  ) {
+    const inventory = yield* familyBucketInventories[family](locale);
+    const buckets = selectSitemapPartition(inventory.buckets, partition);
+    if (buckets.length === 0) {
+      return yield* new SitemapPageNotFoundError({ pageId });
+    }
+    const pages = yield* Effect.forEach(
+      buckets,
+      (bucket) => familyBucketPages[family](locale, bucket),
+      { concurrency: "unbounded" }
+    );
+    const routes = pages
+      .flatMap((page) => (page?.routes ?? []).map(mapFamilyRoute))
+      .sort((left, right) => compareSitemapPaths(left.path, right.path));
+    if (routes.length === 0) {
+      return yield* new SitemapPageNotFoundError({ pageId });
+    }
+    return { routes };
+  }
+);

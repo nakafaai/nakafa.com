@@ -2,7 +2,10 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
-import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
+import {
+  getCachedSitemapDescriptors,
+  readSitemapPageDescriptors,
+} from "@/lib/sitemap/catalog";
 
 class MissingSignedMaterialInventory extends Schema.TaggedError<MissingSignedMaterialInventory>()(
   "MissingSignedMaterialInventory",
@@ -30,6 +33,10 @@ const quranMocks = vi.hoisted(() => ({
 const tryoutMocks = vi.hoisted(() => ({
   readPublishedTryoutSitemapCount: vi.fn(),
 }));
+const nextCacheMocks = vi.hoisted(() => ({
+  cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
+}));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: articleMocks.readPublishedArticleBuckets,
@@ -50,6 +57,13 @@ vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: activeMocks.readActiveContentIdentity,
 }));
 
+vi.mock("next/cache", () => ({
+  /** Records sitemap origin-cache usage without touching Next internals. */
+  cacheLife: nextCacheMocks.cacheLife,
+  /** Records sitemap origin-cache usage without touching Next internals. */
+  cacheTag: nextCacheMocks.cacheTag,
+}));
+
 vi.mock("@repo/internationalization/src/routing", async () => {
   const { ACTIVE_APP_LOCALE_CODES } = await import(
     "@nakafa/aksara-contracts/locale"
@@ -63,6 +77,8 @@ vi.mock("@repo/internationalization/src/routing", async () => {
 });
 
 beforeEach(() => {
+  nextCacheMocks.cacheLife.mockClear();
+  nextCacheMocks.cacheTag.mockClear();
   activeMocks.readActiveContentIdentity.mockReset();
   activeMocks.readActiveContentIdentity.mockReturnValue(
     Effect.succeed({ releaseId: "release-material" })
@@ -142,10 +158,10 @@ describe("sitemap page catalog", () => {
       const descriptors = yield* readSitemapPageDescriptors();
 
       expect(descriptors).toContainEqual({
-        bucket: "abc",
-        id: "article_en_abc",
+        id: "article_en_p0",
         kind: "article",
         locale: "en",
+        partition: 0,
       });
     })
   );
@@ -179,16 +195,16 @@ describe("sitemap page catalog", () => {
         const descriptors = yield* readSitemapPageDescriptors();
 
         expect(descriptors).toContainEqual({
-          bucket: "def",
-          id: "material_en_def",
+          id: "material_en_p0",
           kind: "material",
           locale: "en",
+          partition: 0,
         });
         expect(descriptors).toContainEqual({
-          bucket: "abc",
-          id: "program_en_abc",
+          id: "program_en_p0",
           kind: "program",
           locale: "en",
+          partition: 0,
         });
       })
   );
@@ -306,4 +322,51 @@ describe("sitemap page catalog", () => {
       expect(yield* readSitemapPageDescriptors()).toEqual([{ id: "base" }]);
     })
   );
+
+  it.effect("splits large bucket inventories into stable partitions", () =>
+    Effect.gen(function* () {
+      const buckets = Array.from(
+        { length: 33 },
+        (_, index) => `b${String(index).padStart(3, "0")}`
+      );
+      materialMocks.readPublishedMaterialBuckets.mockImplementation((locale) =>
+        Effect.succeed({
+          activeReleaseId: "release-material",
+          buckets: locale === "en" ? buckets : [],
+          materialCount: locale === "en" ? buckets.length : 0,
+        })
+      );
+
+      const descriptors = yield* readSitemapPageDescriptors();
+
+      expect(descriptors).toContainEqual({
+        id: "material_en_p0",
+        kind: "material",
+        locale: "en",
+        partition: 0,
+      });
+      expect(descriptors).toContainEqual({
+        id: "material_en_p1",
+        kind: "material",
+        locale: "en",
+        partition: 1,
+      });
+    })
+  );
+
+  it("shares the cached index inside the sitemap origin cache", async () => {
+    const descriptors = await getCachedSitemapDescriptors();
+
+    expect(descriptors).toContainEqual({ id: "base" });
+    expect(nextCacheMocks.cacheTag).toHaveBeenCalledWith(
+      "content-sitemap",
+      "content-scope:article",
+      "content-scope:material",
+      "content-scope:program",
+      "content-scope:page",
+      "content-scope:quran",
+      "content-scope:tryout"
+    );
+    expect(nextCacheMocks.cacheLife).toHaveBeenCalledWith("max");
+  });
 });
