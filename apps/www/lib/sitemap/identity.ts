@@ -1,28 +1,9 @@
-import { isProjectionBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { routing } from "@repo/internationalization/src/routing";
 import { hasLocale, type Locale } from "next-intl";
 
 /** One canonical sitemap XML page identity. */
 export type SitemapPage =
   | { id: typeof SITEMAP_BASE_ID }
-  | {
-      bucket: string;
-      id: string;
-      kind: "article";
-      locale: Locale;
-    }
-  | {
-      bucket: string;
-      id: string;
-      kind: "material";
-      locale: Locale;
-    }
-  | {
-      bucket: string;
-      id: string;
-      kind: "program";
-      locale: Locale;
-    }
   | {
       id: string;
       kind: "article";
@@ -53,7 +34,7 @@ export type SitemapPage =
 /** Stable identity for the sitemap containing application-level routes. */
 export const SITEMAP_BASE_ID = "base";
 
-/** Content families served through hash-bucket and partition sitemap pages. */
+/** Content families served through capacity-owned sitemap partitions. */
 export type SitemapFamily = "article" | "material" | "program";
 
 /** Prefix marking one capacity-owned sitemap partition index. */
@@ -122,25 +103,16 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
   ) {
     return null;
   }
-  return describeFamilySitemapPage(prefix, id, locale, segments[2]);
+  return describePartitionSitemapPage(prefix, id, locale, segments[2]);
 }
 
-/** Describes one hash-bucket or capacity-owned family sitemap page. */
-function describeFamilySitemapPage(
+/** Describes one capacity-owned family sitemap partition page. */
+function describePartitionSitemapPage(
   kind: SitemapFamily,
   id: string,
   locale: Locale,
   segment: string | undefined
 ): SitemapPage | null {
-  if (segment && isProjectionBucket(segment)) {
-    if (kind === "article") {
-      return { bucket: segment, id, kind, locale };
-    }
-    if (kind === "material") {
-      return { bucket: segment, id, kind, locale };
-    }
-    return { bucket: segment, id, kind, locale };
-  }
   const partition = parsePartitionNumber(segment);
   if (partition === null) {
     return null;
@@ -194,13 +166,6 @@ export function isTryoutSitemapPage(
   page: SitemapPage
 ): page is Extract<SitemapPage, { kind: "tryout" }> {
   return "kind" in page && page.kind === "tryout";
-}
-
-/** Checks whether one sitemap page targets a capacity-owned partition. */
-export function isPartitionSitemapPage(
-  page: SitemapPage
-): page is Extract<SitemapPage, { partition: number }> {
-  return "partition" in page;
 }
 
 /** Parses one canonical non-negative sitemap page number. */

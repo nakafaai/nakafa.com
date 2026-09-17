@@ -25,7 +25,6 @@ import {
   isArticleSitemapPage,
   isMaterialSitemapPage,
   isPageSitemapPage,
-  isPartitionSitemapPage,
   isProgramSitemapPage,
   isQuranSitemapPage,
   isTryoutSitemapPage,
@@ -42,7 +41,7 @@ const familyBucketInventories = {
   program: readPublishedProgramBuckets,
 } as const;
 
-/** Single-bucket sitemap pages backing both legacy and partition reads. */
+/** Bucket sitemap pages backing partition fan-out reads. */
 const familyBucketPages = {
   article: readPublishedArticleSitemap,
   material: readPublishedMaterialSitemap,
@@ -85,7 +84,12 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       isMaterialSitemapPage(page) ||
       isProgramSitemapPage(page)
     ) {
-      return yield* readFamilySitemapPage(pageId, page);
+      return yield* readFamilyPartition(
+        pageId,
+        page.kind,
+        page.locale,
+        page.partition
+      );
     }
 
     if (isTryoutSitemapPage(page)) {
@@ -154,32 +158,6 @@ function mapFamilyRoute(route: {
     path: routeToPath(route.publicPath),
   };
 }
-
-/** Reads one article, material, or curriculum sitemap page. */
-const readFamilySitemapPage = Effect.fn("www.sitemap.routePage.family")(
-  function* (pageId: string, page: SitemapFamilyPage) {
-    if (isPartitionSitemapPage(page)) {
-      return yield* readFamilyPartition(
-        pageId,
-        page.kind,
-        page.locale,
-        page.partition
-      );
-    }
-    const artifact = yield* familyBucketPages[page.kind](
-      page.locale,
-      page.bucket
-    );
-    if (!artifact) {
-      return yield* new SitemapPageNotFoundError({ pageId });
-    }
-    return {
-      routes: artifact.routes
-        .map(mapFamilyRoute)
-        .sort((left, right) => compareSitemapPaths(left.path, right.path)),
-    };
-  }
-);
 
 /** Reads one capacity-owned family partition across its bucket group.
  *

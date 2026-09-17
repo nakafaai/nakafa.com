@@ -94,6 +94,13 @@ beforeEach(() => {
 describe("sitemap route pages", () => {
   it.effect("serves published article routes in canonical order", () =>
     Effect.gen(function* () {
+      articleMocks.readPublishedArticleBuckets.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-articles",
+          articleCount: 2,
+          buckets: ["001"],
+        })
+      );
       articleMocks.readPublishedArticleSitemap.mockReturnValue(
         Effect.succeed({
           routes: [
@@ -106,13 +113,13 @@ describe("sitemap route pages", () => {
         })
       );
 
-      expect(yield* readPaths("article_en_abc")).toEqual([
+      expect(yield* readPaths("article_en_p0")).toEqual([
         "/articles/politics",
         "/articles/politics/article",
       ]);
       expect(articleMocks.readPublishedArticleSitemap).toHaveBeenCalledWith(
         "en",
-        "abc"
+        "001"
       );
     })
   );
@@ -133,6 +140,13 @@ describe("sitemap route pages", () => {
 
   it.effect("serves release-owned material and curriculum sitemap pages", () =>
     Effect.gen(function* () {
+      materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-materials",
+          buckets: ["001"],
+          materialCount: 2,
+        })
+      );
       materialMocks.readPublishedMaterialSitemap.mockReturnValue(
         Effect.succeed({
           routes: [
@@ -147,6 +161,13 @@ describe("sitemap route pages", () => {
           ],
         })
       );
+      programMocks.readPublishedProgramBuckets.mockReturnValue(
+        Effect.succeed({
+          buckets: ["001"],
+          managed: true,
+          routeCount: 2,
+        })
+      );
       programMocks.readPublishedProgramSitemap.mockReturnValue(
         Effect.succeed({
           routes: [
@@ -156,11 +177,11 @@ describe("sitemap route pages", () => {
         })
       );
 
-      expect(yield* readPaths("material_en_abc")).toEqual([
+      expect(yield* readPaths("material_en_p0")).toEqual([
         "/subjects/mathematics/functions/bijection",
         "/subjects/mathematics/functions/concept",
       ]);
-      expect(yield* readPaths("program_en_abc")).toEqual([
+      expect(yield* readPaths("program_en_p0")).toEqual([
         "/curriculum/merdeka/class-11",
         "/curriculum/merdeka/class-11/mathematics",
       ]);
@@ -200,23 +221,21 @@ describe("sitemap route pages", () => {
       })
   );
 
-  it.effect("keeps legacy hash-bucket pages resolving during migration", () =>
+  it.effect("rejects retired hash-bucket page ids without reading Convex", () =>
     Effect.gen(function* () {
-      materialMocks.readPublishedMaterialSitemap.mockReturnValue(
-        Effect.succeed({
-          routes: [
-            {
-              lastModified: "2026-07-25",
-              publicPath: "subjects/mathematics/functions/concept",
-            },
-          ],
-        })
-      );
-
-      expect(yield* readPaths("material_en_abc")).toEqual([
-        "/subjects/mathematics/functions/concept",
-      ]);
+      for (const pageId of [
+        "article_en_abc",
+        "material_en_def",
+        "program_id_012",
+      ]) {
+        expect(yield* readFailure(pageId)).toMatchObject({
+          _tag: "SitemapPageNotFoundError",
+          pageId,
+        });
+      }
       expect(materialMocks.readPublishedMaterialBuckets).not.toHaveBeenCalled();
+      expect(articleMocks.readPublishedArticleBuckets).not.toHaveBeenCalled();
+      expect(programMocks.readPublishedProgramBuckets).not.toHaveBeenCalled();
     })
   );
 
