@@ -1,6 +1,9 @@
 import { Link05Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { createHeadingId } from "@repo/design-system/lib/markdown/headings";
+import {
+  createHeadingId,
+  headingTextVariants,
+} from "@repo/design-system/lib/markdown/headings";
 import type {
   HeadingProps,
   HeadingTag,
@@ -43,11 +46,31 @@ function extractTextFromNode(node: ReactNode): string {
 }
 
 /**
- * Renders one content heading with the shared accent ink and anchor.
+ * Renders the text inside one heading level.
  *
- * The rule under the words marks the start of a section, so only `h2` carries
- * it. `h3` and below stay plain ink so the level hierarchy reads at a glance.
+ * The rule under the words marks the start of a section, so `h1` and `h2`
+ * carry it from {@link headingTextVariants}. `h3` and below stay plain ink so
+ * the level hierarchy reads at a glance.
  */
+function HeadingText({
+  children,
+  Tag,
+}: {
+  Tag: HeadingTag;
+  children: ReactNode;
+}) {
+  return (
+    <span
+      className={headingTextVariants({
+        rule: Tag === "h1" || Tag === "h2" ? "section" : "none",
+      })}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Renders one content heading with the shared accent ink and anchor. */
 export function Heading({
   Tag,
   className,
@@ -73,15 +96,7 @@ export function Heading({
         id={id}
         {...props}
       >
-        <span
-          className={cn(
-            "wrap-anywhere hyphens-auto text-pretty text-primary",
-            Tag === "h2" &&
-              "underline decoration-2 decoration-heading-rule underline-offset-4"
-          )}
-        >
-          {props.children}
-        </span>
+        <HeadingText Tag={Tag}>{props.children}</HeadingText>
       </Tag>
     );
   }
@@ -101,15 +116,7 @@ export function Heading({
         href={`#${id}`}
         title={props.children?.toString()}
       >
-        <span
-          className={cn(
-            "wrap-anywhere hyphens-auto text-pretty text-primary",
-            Tag === "h2" &&
-              "underline decoration-2 decoration-heading-rule underline-offset-4"
-          )}
-        >
-          {props.children}
-        </span>
+        <HeadingText Tag={Tag}>{props.children}</HeadingText>
         <div className="shrink-0 rounded-sm border p-2 opacity-0 transition-opacity ease-out group-hover/heading:opacity-100">
           <HugeIcons
             className="size-4 shrink-0 text-muted-foreground"

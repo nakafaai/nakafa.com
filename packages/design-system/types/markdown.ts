@@ -1,3 +1,5 @@
+import type { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
+import type { VariantProps } from "class-variance-authority";
 import type { MDXComponents as MDXComponentsType } from "mdx/types";
 import type { ComponentPropsWithoutRef } from "react";
 
@@ -8,7 +10,8 @@ export type ParagraphProps = ComponentPropsWithoutRef<"p">;
 export type AnchorProps = ComponentPropsWithoutRef<"a">;
 export type EmProps = ComponentPropsWithoutRef<"em">;
 export type StrongProps = ComponentPropsWithoutRef<"strong">;
-export type HighlightProps = ComponentPropsWithoutRef<"mark">;
+export type HighlightProps = ComponentPropsWithoutRef<"strong"> &
+  VariantProps<typeof emphasisVariants>;
 export type ListProps = ComponentPropsWithoutRef<"ul">;
 export type ListItemProps = ComponentPropsWithoutRef<"li">;
 export type PreProps = ComponentPropsWithoutRef<"pre">;
