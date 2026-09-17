@@ -36,13 +36,11 @@ describe("sitemap cache invalidation", () => {
     revalidateTagMock.mockReset();
   });
 
-  it("tags origin reads with the shared sitemap tag and family scopes", () => {
-    applySitemapCache("material", "program");
+  it("tags origin reads with only the shared sitemap tag", () => {
+    applySitemapCache();
 
     expect(cacheTagMock).toHaveBeenCalledExactlyOnceWith(
-      CONTENT_SITEMAP_CACHE_TAG,
-      "content-scope:material",
-      "content-scope:program"
+      CONTENT_SITEMAP_CACHE_TAG
     );
     expect(cacheLifeMock).toHaveBeenCalledExactlyOnceWith("max");
   });
@@ -53,7 +51,7 @@ describe("sitemap cache invalidation", () => {
 
       expect(revalidateTagMock).toHaveBeenCalledExactlyOnceWith(
         CONTENT_SITEMAP_CACHE_TAG,
-        "max"
+        { expire: 0 }
       );
       expect(invalidateByTagMock).toHaveBeenCalledExactlyOnceWith(
         "content-sitemap"

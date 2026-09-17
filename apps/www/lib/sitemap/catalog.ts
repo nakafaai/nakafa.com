@@ -103,20 +103,13 @@ export const readSitemapPageDescriptors = Effect.fn(
 
 /** Reads sitemap page descriptors inside the sitemap origin cache.
  *
- * Descriptors keep the long built-in profile on purpose. The family tags
- * above are what a publication revalidates, so the index does not need the
- * hourly content revalidation the shared profile carries. */
+ * Descriptors keep the long built-in profile on purpose. Every publication
+ * hard-expires them through the shared sitemap tag, so the index never needs
+ * the hourly content revalidation the shared profile carries. */
 async function readCachedSitemapDescriptors(): Promise<readonly SitemapPage[]> {
   "use cache";
 
-  applySitemapCache(
-    "article",
-    "material",
-    "program",
-    "page",
-    "quran",
-    "tryout"
-  );
+  applySitemapCache();
   return await Effect.runPromise(readSitemapPageDescriptors());
 }
 

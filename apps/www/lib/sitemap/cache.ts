@@ -1,13 +1,8 @@
 import "server-only";
 
-import {
-  type ContentCacheScope,
-  makeContentCacheTag,
-} from "@nakafa/aksara-contracts/cache/content";
 import { invalidateByTag } from "@vercel/functions";
 import { Effect, Schema } from "effect";
 import { cacheLife, cacheTag, revalidateTag } from "next/cache";
-import { CONTENT_CACHE_REVALIDATION } from "@/lib/content/profile";
 
 /** One CDN-only tag shared by every bounded sitemap response. */
 export const CONTENT_SITEMAP_CACHE_TAG = "content-sitemap";
@@ -18,30 +13,36 @@ export class SitemapCacheInvalidationError extends Schema.TaggedError<SitemapCac
   {}
 ) {}
 
-/** Applies sitemap origin-cache dependencies inside a `use cache` boundary.
+/** Applies the sitemap origin-cache dependency inside a `use cache` boundary.
  *
- * Entries keep the long built-in profile on purpose. The family tags below
- * are what a publication revalidates, so sitemap reads do not need the
- * hourly content revalidation the shared profile carries. */
-export function applySitemapCache(...scopes: readonly ContentCacheScope[]) {
-  cacheTag(CONTENT_SITEMAP_CACHE_TAG, ...scopes.map(makeContentCacheTag));
+ * Entries carry only the shared sitemap tag, so every publication purges
+ * every sitemap entry through the single invalidation below. Family tags
+ * would not narrow that scope, and mixing them with the hard expiry below
+ * would leave stale-versus-expired semantics ambiguous. Entries keep the
+ * long built-in profile on purpose because only publication purges them. */
+export function applySitemapCache() {
+  cacheTag(CONTENT_SITEMAP_CACHE_TAG);
   cacheLife("max");
 }
 
 /**
- * Marks every sitemap response stale. The next crawler is served the previous
- * sitemap while a background revalidation refreshes it, which stays inside the
- * `stale-while-revalidate` window the response already advertises.
+ * Expires every sitemap origin entry, then purges every sitemap CDN response.
+ * The order matters: expiring the origin first guarantees the next edge miss
+ * regenerates from fresh Convex reads instead of re-caching a stale origin
+ * value under the long CDN lifetime the responses advertise.
  *
- * Purges both the Next origin entries carrying the shared sitemap tag and the
- * Vercel CDN responses carrying the same tag value.
+ * Origin entries hard-expire on purpose instead of stale-marking. A
+ * stale-marked origin would serve the previous sitemap to the first edge
+ * miss after invalidation, and the edge would then cache that stale value
+ * for another day with no second purge when the background refresh lands.
+ * One blocking regeneration per sitemap document per publication is the
+ * cheaper price for always serving the current index.
  */
 export const invalidateSitemapCache = Effect.fn("www.sitemap.cache.invalidate")(
   function* () {
     yield* Effect.try({
       catch: () => new SitemapCacheInvalidationError(),
-      try: () =>
-        revalidateTag(CONTENT_SITEMAP_CACHE_TAG, CONTENT_CACHE_REVALIDATION),
+      try: () => revalidateTag(CONTENT_SITEMAP_CACHE_TAG, { expire: 0 }),
     });
     yield* Effect.tryPromise({
       catch: () => new SitemapCacheInvalidationError(),

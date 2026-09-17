@@ -358,15 +358,7 @@ describe("sitemap page catalog", () => {
     const descriptors = await getCachedSitemapDescriptors();
 
     expect(descriptors).toContainEqual({ id: "base" });
-    expect(nextCacheMocks.cacheTag).toHaveBeenCalledWith(
-      "content-sitemap",
-      "content-scope:article",
-      "content-scope:material",
-      "content-scope:program",
-      "content-scope:page",
-      "content-scope:quran",
-      "content-scope:tryout"
-    );
+    expect(nextCacheMocks.cacheTag).toHaveBeenCalledWith("content-sitemap");
     expect(nextCacheMocks.cacheLife).toHaveBeenCalledWith("max");
   });
 });

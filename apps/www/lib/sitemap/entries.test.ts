@@ -50,18 +50,6 @@ vi.mock("@/lib/sitemap/routes", () => ({
 
 vi.mock("@/lib/sitemap/identity", () => ({
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
-  isArticleSitemapPage: (page: { kind?: string }) =>
-    "kind" in page && page.kind === "article",
-  isMaterialSitemapPage: (page: { kind?: string }) =>
-    "kind" in page && page.kind === "material",
-  isPageSitemapPage: (page: { kind?: string }) =>
-    "kind" in page && page.kind === "page",
-  isProgramSitemapPage: (page: { kind?: string }) =>
-    "kind" in page && page.kind === "program",
-  isQuranSitemapPage: (page: { kind?: string }) =>
-    "kind" in page && page.kind === "quran",
-  isTryoutSitemapPage: (page: { kind?: string }) =>
-    "kind" in page && page.kind === "tryout",
 }));
 
 const mockCacheLife = vi.hoisted(() => vi.fn());
@@ -312,7 +300,7 @@ describe("sitemap entries", () => {
     expect(mockCacheLife).toHaveBeenCalledWith("max");
   });
 
-  it("tags cached material partitions with their family scope", async () => {
+  it("shares material partitions through the origin cache", async () => {
     mockGetSitemapPageDescriptor.mockReturnValue({
       id: "material_en_p0",
       kind: "material",
@@ -320,48 +308,16 @@ describe("sitemap entries", () => {
       partition: 0,
     });
 
-    await getCachedSitemapEntries({ pageId: "material_en_p0" });
+    const entries = await getCachedSitemapEntries({ pageId: "material_en_p0" });
 
-    expect(mockCacheTag).toHaveBeenCalledWith(
-      "content-sitemap",
-      "content-scope:material"
-    );
-  });
-
-  it.each([
-    ["article_en_p0", "article", "content-scope:article"],
-    ["program_en_p0", "program", "content-scope:program"],
-    ["page_en", "page", "content-scope:page"],
-    ["quran_en", "quran", "content-scope:quran"],
-    ["tryout_en_0", "tryout", "content-scope:tryout"],
-  ])("tags cached %s with %s", async (pageId, kind, tag) => {
-    mockGetSitemapPageDescriptor.mockReturnValue({
-      id: pageId,
-      kind,
-      locale: "en",
-    });
-
-    await getCachedSitemapEntries({ pageId });
-
-    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap", tag);
+    expect(entries.length).toBeGreaterThan(0);
+    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
   });
 
   it("tags unknown sitemap pages with only the shared sitemap tag", async () => {
     mockGetSitemapPageDescriptor.mockReturnValue(null);
 
     await getCachedSitemapEntries({ pageId: "unknown" });
-
-    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
-  });
-
-  it("tags foreign page kinds with only the shared sitemap tag", async () => {
-    mockGetSitemapPageDescriptor.mockReturnValue({
-      id: "foreign_en",
-      kind: "question",
-      locale: "en",
-    });
-
-    await getCachedSitemapEntries({ pageId: "foreign_en" });
 
     expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
   });
