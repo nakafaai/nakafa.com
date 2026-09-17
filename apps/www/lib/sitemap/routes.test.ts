@@ -25,6 +25,9 @@ const quranMocks = vi.hoisted(() => ({
 const tryoutMocks = vi.hoisted(() => ({
   readPublishedTryoutSitemap: vi.fn(),
 }));
+const activeMocks = vi.hoisted(() => ({
+  readActiveContentIdentity: vi.fn(),
+}));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: articleMocks.readPublishedArticleBuckets,
@@ -35,8 +38,15 @@ vi.mock("@/lib/content/page/catalog", () => pageMocks);
 vi.mock("@/lib/content/program/sitemap", () => programMocks);
 vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
+vi.mock("@/lib/content/published/active", () => ({
+  readActiveContentIdentity: activeMocks.readActiveContentIdentity,
+}));
 
 beforeEach(() => {
+  activeMocks.readActiveContentIdentity.mockReset();
+  activeMocks.readActiveContentIdentity.mockReturnValue(
+    Effect.succeed({ releaseId: "release-sitemap" })
+  );
   articleMocks.readPublishedArticleBuckets.mockReset();
   articleMocks.readPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({
@@ -226,6 +236,50 @@ describe("sitemap route pages", () => {
       expect(yield* readFailure("material_en_p0")).toMatchObject({
         _tag: "SitemapPageNotFoundError",
         pageId: "material_en_p0",
+      });
+    })
+  );
+
+  it.effect("rejects partitions rendered across publication releases", () =>
+    Effect.gen(function* () {
+      materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-materials",
+          buckets: ["001"],
+          materialCount: 1,
+        })
+      );
+      materialMocks.readPublishedMaterialSitemap.mockReturnValue(
+        Effect.succeed({
+          routes: [
+            {
+              lastModified: "2026-07-25",
+              publicPath: "subjects/mathematics/functions/concept",
+            },
+          ],
+        })
+      );
+      activeMocks.readActiveContentIdentity
+        .mockReturnValueOnce(Effect.succeed({ releaseId: "release-before" }))
+        .mockReturnValueOnce(Effect.succeed({ releaseId: "release-after" }));
+
+      expect(yield* readFailure("material_en_p0")).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: "release-after",
+        expectedReleaseId: "release-before",
+      });
+    })
+  );
+
+  it.effect("rejects partitions without an active publication", () =>
+    Effect.gen(function* () {
+      activeMocks.readActiveContentIdentity.mockReturnValue(
+        Effect.succeed(null)
+      );
+
+      expect(yield* readFailure("material_en_p0")).toMatchObject({
+        _tag: "PublishedProjectionError",
+        publicPath: "sitemap/material_en_p0.xml",
       });
     })
   );

@@ -1,3 +1,4 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { compareSitemapPaths } from "@repo/backend/convex/contentRelease/sitemap";
 import { Data, Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -14,6 +15,9 @@ import {
   readPublishedProgramBuckets,
   readPublishedProgramSitemap,
 } from "@/lib/content/program/sitemap";
+import { readActiveContentIdentity } from "@/lib/content/published/active";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
+import { verifyContentReleasePin } from "@/lib/content/published/release";
 import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { readPublishedTryoutSitemap } from "@/lib/content/tryout/sitemap";
 import {
@@ -177,7 +181,11 @@ const readFamilySitemapPage = Effect.fn("www.sitemap.routePage.family")(
   }
 );
 
-/** Reads one capacity-owned family partition across its bucket group. */
+/** Reads one capacity-owned family partition across its bucket group.
+ *
+ * Pins the active release before the fan-out and re-verifies it after, so a
+ * publication that lands mid-render fails loudly instead of caching a mixed
+ * or partial partition behind the long origin-cache lifetime. */
 const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
   function* (
     pageId: string,
@@ -185,6 +193,15 @@ const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
     locale: Locale,
     partition: number
   ) {
+    const identity = {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath: `sitemap/${pageId}.xml`,
+    };
+    const active = yield* readActiveContentIdentity();
+    if (!active) {
+      return yield* new PublishedProjectionError(identity);
+    }
+    const activeReleaseId = active.releaseId;
     const inventory = yield* familyBucketInventories[family](locale);
     const buckets = selectSitemapPartition(inventory.buckets, partition);
     if (buckets.length === 0) {
@@ -201,6 +218,7 @@ const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
     if (routes.length === 0) {
       return yield* new SitemapPageNotFoundError({ pageId });
     }
+    yield* verifyContentReleasePin(activeReleaseId, identity);
     return { routes };
   }
 );
