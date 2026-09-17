@@ -136,8 +136,9 @@ export function MdxEmphasis(props: EmProps) {
 /**
  * Renders an emphasised phrase authored as `**`.
  *
- * The style is shared with {@link Highlight}, so both authoring syntaxes reach
- * the learner as the same marked phrase.
+ * The surface comes from {@link emphasisVariants}, which {@link Highlight}
+ * shares, so both authoring syntaxes reach the learner as the same marked
+ * phrase.
  */
 export function MdxStrong({ className, ...props }: StrongProps) {
   return <strong className={emphasisVariants({ className })} {...props} />;
@@ -146,11 +147,15 @@ export function MdxStrong({ className, ...props }: StrongProps) {
 /**
  * Renders an emphasised phrase authored as `<Highlight>`.
  *
- * The style is shared with {@link MdxStrong}, so both authoring syntaxes reach
- * the learner as the same marked phrase.
+ * A highlight is the same marked phrase as `**`, so it renders as `<strong>`
+ * from the shared {@link emphasisVariants} map instead of a browser `<mark>`
+ * that would also match the search-result highlight rule. `variant` selects the
+ * surface tone and defaults to the warning surface every `**` phrase uses.
  */
-export function Highlight({ className, ...props }: HighlightProps) {
-  return <mark className={emphasisVariants({ className })} {...props} />;
+export function Highlight({ className, variant, ...props }: HighlightProps) {
+  return (
+    <strong className={emphasisVariants({ className, variant })} {...props} />
+  );
 }
 
 /** Renders an MDX quotation with the shared callout treatment. */
