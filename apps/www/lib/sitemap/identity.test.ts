@@ -1,5 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
-import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
+import {
+  formatArticlePartition,
+  formatMaterialPartition,
+  formatProgramPartition,
+  getSitemapPageDescriptor,
+  isPartitionSitemapPage,
+} from "@/lib/sitemap/identity";
 
 describe("sitemap page identity", () => {
   it("parses every canonical page kind", () => {
@@ -40,6 +46,35 @@ describe("sitemap page identity", () => {
     });
   });
 
+  it("parses capacity-owned partition pages alongside hash buckets", () => {
+    expect(getSitemapPageDescriptor("material_en_p0")).toEqual({
+      id: "material_en_p0",
+      kind: "material",
+      locale: "en",
+      partition: 0,
+    });
+    expect(getSitemapPageDescriptor("article_id_p12")).toEqual({
+      id: "article_id_p12",
+      kind: "article",
+      locale: "id",
+      partition: 12,
+    });
+    expect(getSitemapPageDescriptor("program_de_p3")).toEqual({
+      id: "program_de_p3",
+      kind: "program",
+      locale: "de",
+      partition: 3,
+    });
+    expect(formatMaterialPartition("en", 0)).toBe("material_en_p0");
+    expect(formatArticlePartition("id", 12)).toBe("article_id_p12");
+    expect(formatProgramPartition("de", 3)).toBe("program_de_p3");
+    expect(isPartitionSitemapPage({ id: "base" })).toBe(false);
+    const partition = getSitemapPageDescriptor("material_en_p0");
+    expect(partition && isPartitionSitemapPage(partition)).toBe(true);
+    const bucket = getSitemapPageDescriptor("material_en_def");
+    expect(bucket && isPartitionSitemapPage(bucket)).toBe(false);
+  });
+
   it.each([
     "quran_en_extra",
     "quran_unknown",
@@ -60,6 +95,10 @@ describe("sitemap page identity", () => {
     "article_en_wrong",
     "article_en",
     "material_en_wrong",
+    "material_en_p",
+    "material_en_p-1",
+    "material_en_p01",
+    "material_en_p1.5",
     "program_en",
     "",
   ])("rejects malformed id %s", (id) => {

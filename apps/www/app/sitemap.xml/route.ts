@@ -1,7 +1,7 @@
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
-import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
+import { getCachedSitemapDescriptors } from "@/lib/sitemap/catalog";
 import { buildSitemapIndexXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
 
 const sitemapIndexError = "Internal Server Error";
@@ -12,7 +12,9 @@ export function GET() {
   return Effect.runPromise(
     buildSitemapIndexResponse().pipe(
       Effect.catch((error) =>
-        captureServerExceptionSafely(error, { source: "sitemap-index" }).pipe(
+        captureServerExceptionSafely(error.cause, {
+          source: "sitemap-index",
+        }).pipe(
           Effect.as(
             new Response(sitemapIndexError, {
               headers: { "Content-Type": "text/plain; charset=utf-8" },
@@ -28,7 +30,9 @@ export function GET() {
 /** Builds the sitemap index response from materialized page descriptors. */
 const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
   function* () {
-    const descriptors = yield* readSitemapPageDescriptors();
+    const descriptors = yield* Effect.tryPromise(() =>
+      getCachedSitemapDescriptors()
+    );
     const urls = descriptors.map(
       (descriptor) => `${canonicalSitemapOrigin}/sitemap/${descriptor.id}.xml`
     );

@@ -4,7 +4,9 @@ import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect, Option } from "effect";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
+import { cache } from "react";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
+import { applySitemapCache } from "@/lib/sitemap/cache";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
@@ -82,3 +84,28 @@ function getSitemapEntryLocales(pageId: string) {
 
   return routing.locales;
 }
+
+/** Reads one bounded sitemap page inside the sitemap origin cache.
+ *
+ * The cache key is the page id, which already encodes family, locale, and
+ * partition. Entries keep the long built-in profile on purpose because only
+ * publication purges them through the shared sitemap tag. Dates are
+ * normalized to strings so the cached value stays serializable. */
+async function readCachedSitemapEntries(
+  options: SitemapPageEntryOptions
+): Promise<readonly SitemapEntry[]> {
+  "use cache";
+
+  applySitemapCache();
+  const entries = await Effect.runPromise(getSitemapEntries(options));
+  return entries.map((entry) => ({
+    ...entry,
+    ...(entry.lastModified instanceof Date
+      ? { lastModified: entry.lastModified.toISOString() }
+      : {}),
+  }));
+}
+
+/** Shares one cached sitemap page between the route and indexing scripts
+ * in a single render pass. https://react.dev/reference/react/cache */
+export const getCachedSitemapEntries = cache(readCachedSitemapEntries);

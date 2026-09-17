@@ -2,7 +2,10 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { getPathname } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
-import { getSitemapEntries } from "@/lib/sitemap/entries";
+import {
+  getCachedSitemapEntries,
+  getSitemapEntries,
+} from "@/lib/sitemap/entries";
 
 const mockReadSitemapRoutePage = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
@@ -49,10 +52,24 @@ vi.mock("@/lib/sitemap/identity", () => ({
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
 }));
 
+const mockCacheLife = vi.hoisted(() => vi.fn());
+const mockCacheTag = vi.hoisted(() => vi.fn());
+
+vi.mock("next/cache", () => ({
+  /** Records sitemap origin-cache usage without touching Next internals. */
+  cacheLife: mockCacheLife,
+  /** Records sitemap origin-cache usage without touching Next internals. */
+  cacheTag: mockCacheTag,
+  /** Unused in these tests; present for module completeness. */
+  revalidateTag: vi.fn(),
+}));
+
 beforeEach(() => {
   mockReadSitemapRoutePage.mockReset();
   mockGetSitemapPageDescriptor.mockReset();
   mockGetPathname.mockClear();
+  mockCacheLife.mockClear();
+  mockCacheTag.mockClear();
 
   mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
   mockReadSitemapRoutePage.mockReturnValue(
@@ -274,4 +291,55 @@ describe("sitemap entries", () => {
       expect(entries).toEqual([{ url: "https://nakafa.com/de/impressum" }]);
     })
   );
+
+  it("shares base sitemap pages through the origin cache", async () => {
+    const entries = await getCachedSitemapEntries({ pageId: "base" });
+
+    expect(entries.length).toBeGreaterThan(0);
+    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
+    expect(mockCacheLife).toHaveBeenCalledWith("max");
+  });
+
+  it("shares material partitions through the origin cache", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValue({
+      id: "material_en_p0",
+      kind: "material",
+      locale: "en",
+      partition: 0,
+    });
+
+    const entries = await getCachedSitemapEntries({ pageId: "material_en_p0" });
+
+    expect(entries.length).toBeGreaterThan(0);
+    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
+  });
+
+  it("tags unknown sitemap pages with only the shared sitemap tag", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValue(null);
+
+    await getCachedSitemapEntries({ pageId: "unknown" });
+
+    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
+  });
+
+  it("normalizes cached dates to serializable strings", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+    mockReadSitemapRoutePage.mockReturnValueOnce(
+      Effect.succeed({
+        routes: [
+          {
+            lastModified: new Date("2024-01-02T00:00:00.000Z"),
+            path: "/search",
+          },
+        ],
+      })
+    );
+
+    const entries = await getCachedSitemapEntries({ pageId: "base" });
+
+    expect(entries).toContainEqual({
+      lastModified: "2024-01-02T00:00:00.000Z",
+      url: "https://nakafa.com/en/search",
+    });
+  });
 });

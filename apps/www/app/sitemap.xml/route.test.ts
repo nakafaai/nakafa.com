@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect } from "effect";
 import { GET } from "@/app/sitemap.xml/route";
 
-const mockReadSitemapPageDescriptors = vi.hoisted(() => vi.fn());
+const mockGetCachedSitemapDescriptors = vi.hoisted(() => vi.fn());
 const mockCaptureServerExceptionSafely = vi.hoisted(() => vi.fn());
 
 /** Test-only typed sitemap failure. */
@@ -13,7 +13,7 @@ class TestSitemapIndexError extends Data.TaggedError("TestSitemapIndexError")<{
 }> {}
 
 vi.mock("@/lib/sitemap/catalog", () => ({
-  readSitemapPageDescriptors: mockReadSitemapPageDescriptors,
+  getCachedSitemapDescriptors: mockGetCachedSitemapDescriptors,
 }));
 
 vi.mock("@/lib/analytics/server", () => ({
@@ -24,10 +24,11 @@ describe("sitemap index route", () => {
   beforeEach(() => {
     mockCaptureServerExceptionSafely.mockReset();
     mockCaptureServerExceptionSafely.mockReturnValue(Effect.void);
-    mockReadSitemapPageDescriptors.mockReset();
-    mockReadSitemapPageDescriptors.mockReturnValue(
-      Effect.succeed([{ id: "base" }, { id: "content_id_quran_0" }])
-    );
+    mockGetCachedSitemapDescriptors.mockReset();
+    mockGetCachedSitemapDescriptors.mockResolvedValue([
+      { id: "base" },
+      { id: "material_en_p0" },
+    ]);
   });
 
   it("serves a conventional canonical sitemap index for bounded sitemap pages", async () => {
@@ -39,7 +40,7 @@ describe("sitemap index route", () => {
     expect(response.headers.get("Vercel-Cache-Tag")).toBe("content-sitemap");
     expect(text).toContain("<sitemapindex");
     expect(text).toContain("https://nakafa.com/sitemap/base.xml");
-    expect(text).toContain("https://nakafa.com/sitemap/content_id_quran_0.xml");
+    expect(text).toContain("https://nakafa.com/sitemap/material_en_p0.xml");
     expect(text).not.toContain("https://nakafa.id");
   });
 
@@ -47,7 +48,7 @@ describe("sitemap index route", () => {
     const failure = new TestSitemapIndexError({
       message: "descriptor read failed",
     });
-    mockReadSitemapPageDescriptors.mockReturnValueOnce(Effect.fail(failure));
+    mockGetCachedSitemapDescriptors.mockRejectedValueOnce(failure);
 
     const response = await GET();
 
