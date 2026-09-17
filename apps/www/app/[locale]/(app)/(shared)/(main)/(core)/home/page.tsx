@@ -83,6 +83,7 @@ async function AuthenticatedHome({
 
 /** Reads the Continue Learning rows, degrading to an empty list on failure. */
 function resolveRecentRows(locale: PublicAppLocale) {
+  const emptyRecentRows: HomeRecentRows = [];
   return Effect.runPromise(
     Effect.tryPromise({
       catch: (cause) => new HomeFeedError({ cause, source: "recent" }),
@@ -95,7 +96,7 @@ function resolveRecentRows(locale: PublicAppLocale) {
       Effect.catchTag("HomeFeedError", (error) =>
         scheduleCurrentServerExceptionCapture(error.cause, {
           source: "home-feed",
-        }).pipe(Effect.as([] as HomeRecentRows))
+        }).pipe(Effect.as(emptyRecentRows))
       )
     )
   );

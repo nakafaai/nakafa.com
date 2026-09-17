@@ -178,7 +178,7 @@ export async function runConvexActionProgram<A, E extends ConvexTaggedError>(
 
 /** Converts an unknown thrown value into a stable message for tagged errors. */
 export function getUnknownErrorMessage(error: unknown) {
-  if (error instanceof Error) {
+  if (Predicate.isError(error)) {
     return error.message;
   }
 
