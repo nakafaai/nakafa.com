@@ -58,30 +58,28 @@ const nakafaTestRuntime = {
       );
     }
     if (parsed.value.from_verse === 999) {
-      return Effect.succeed(Option.none());
+      return Effect.succeedNone;
     }
-    return Effect.succeed(Option.some(makeQuranFixture(parsed.value)));
+    return Effect.succeedSome(makeQuranFixture(parsed.value));
   },
   /** Returns deterministic markdown for service-injection tests. */
   read: (input) => {
     const ref = resolveNakafaTestContentRef(input);
     if (Option.isNone(ref) || ref.value.route.includes("missing")) {
-      return Effect.succeed(Option.none());
+      return Effect.succeedNone;
     }
     const readableRef = Schema.decodeUnknownOption(
       NakafaAgentReadableContentRefSchema
     )(ref.value);
     if (Option.isNone(readableRef)) {
-      return Effect.succeed(Option.none());
+      return Effect.succeedNone;
     }
-    return Effect.succeed(
-      Option.some({
-        ...readableRef.value,
-        description: "Runtime content fixture.",
-        text: "# Nakafa Content\n\nSynced runtime markdown.",
-        title: "Nakafa Content",
-      })
-    );
+    return Effect.succeedSome({
+      ...readableRef.value,
+      description: "Runtime content fixture.",
+      text: "# Nakafa Content\n\nSynced runtime markdown.",
+      title: "Nakafa Content",
+    });
   },
   /** Returns deterministic taxonomy for service-injection tests. */
   taxonomy: (locale = defaultLocale) =>

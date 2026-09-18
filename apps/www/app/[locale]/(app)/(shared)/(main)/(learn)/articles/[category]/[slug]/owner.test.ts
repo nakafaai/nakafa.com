@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { resolveArticleOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/owner";
 
 const mocks = vi.hoisted(() => ({
@@ -25,7 +25,7 @@ const input = {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.hasPreviewConfig.mockReturnValue(false);
-  mocks.readArticlePreview.mockReturnValue(Effect.succeed(Option.none()));
+  mocks.readArticlePreview.mockReturnValue(Effect.succeedNone);
 });
 
 describe("article ownership", () => {
@@ -51,9 +51,7 @@ describe("article ownership", () => {
       projection: { slug: "preview" },
     };
     mocks.hasPreviewConfig.mockReturnValue(true);
-    mocks.readArticlePreview.mockReturnValue(
-      Effect.succeed(Option.some(content))
-    );
+    mocks.readArticlePreview.mockReturnValue(Effect.succeedSome(content));
 
     await expect(resolveArticleOwner(input)).resolves.toEqual({
       content,

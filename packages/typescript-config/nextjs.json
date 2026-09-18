@@ -7,7 +7,7 @@
       { "name": "next" },
       {
         "name": "@effect/language-service",
-        "allowedDuplicatedPackages": ["@nakafa/aksara-contracts"]
+        "ignoreEffectSuggestionsInTscExitCode": false
       }
     ],
     "module": "ESNext",

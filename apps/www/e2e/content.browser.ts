@@ -96,7 +96,7 @@ const readJsonLdDates = Effect.fn("NakafaE2E.readJsonLdDates")(function* (
       ? { datePublished }
       : { dateModified, datePublished };
 
-  return yield* Schema.decodeUnknownEffect(PublicationDatesSchema)(raw).pipe(
+  return yield* Schema.decodeEffect(PublicationDatesSchema)(raw).pipe(
     Effect.mapError(() => contentDateError(href, `${jsonLdType} JSON-LD dates`))
   );
 });

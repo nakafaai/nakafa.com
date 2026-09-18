@@ -29,10 +29,9 @@ const program = Effect.gen(function* () {
     version,
   });
 }).pipe(
-  Effect.catchCause((cause) =>
-    Cause.hasInterruptsOnly(cause)
-      ? Effect.failCause(cause)
-      : reportStartupFailure(cause).pipe(Effect.as(4))
+  Effect.catchCauseIf(
+    (cause) => !Cause.hasInterruptsOnly(cause),
+    (cause) => reportStartupFailure(cause).pipe(Effect.as(4))
   ),
   Effect.tap((exitCode) =>
     Effect.sync(() => {
