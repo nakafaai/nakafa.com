@@ -1,6 +1,9 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { TryoutTrack } from "@nakafa/aksara-contracts/tryout/catalog";
+import type {
+  TryoutCountry,
+  TryoutTrack,
+} from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutKeySchema } from "@nakafa/aksara-contracts/tryout/key";
 import { Effect, Result, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -9,6 +12,14 @@ import {
   resolveSocialArtwork,
   resolveStaticArtwork,
 } from "@/lib/og/artwork";
+
+const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = new Map<
+  TryoutCountry["countryKey"],
+  ArtworkIdentity
+>([
+  ["germany", "tryout/germany/index"],
+  ["indonesia", "tryout/indonesia/index"],
+]);
 
 const TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY = new Map<
   TryoutTrack["trackKey"],
@@ -88,6 +99,16 @@ export function resolveTryoutExamArtwork(input: unknown) {
       cardImageSrc ? { cardImageSrc, socialImageSrc } : { socialImageSrc }
     )
   );
+}
+
+/** Resolves reviewed card artwork for one signed try-out country. */
+export function getTryoutCountryCatalogArtwork(
+  locale: Locale,
+  source: Pick<TryoutCountry, "countryKey">
+) {
+  const identity = TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY.get(source.countryKey);
+
+  return identity ? resolveStaticArtwork(identity, locale) : undefined;
 }
 
 /** Resolves subject or year artwork for one signed try-out track. */
