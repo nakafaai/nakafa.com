@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { resolveMaterialOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
 
 const mocks = vi.hoisted(() => ({
@@ -35,7 +35,7 @@ beforeEach(() => {
     locale: "en",
     publicPath: "subjects/math/topic/lesson",
   });
-  mocks.readMaterialPreview.mockReturnValue(Effect.succeed(Option.none()));
+  mocks.readMaterialPreview.mockReturnValue(Effect.succeedNone);
 });
 
 describe("material ownership", () => {
@@ -66,9 +66,7 @@ describe("material ownership", () => {
       projection: { slug: "preview" },
     };
     mocks.hasPreviewConfig.mockReturnValue(true);
-    mocks.readMaterialPreview.mockReturnValue(
-      Effect.succeed(Option.some(preview))
-    );
+    mocks.readMaterialPreview.mockReturnValue(Effect.succeedSome(preview));
 
     await expect(resolveMaterialOwner(params)).resolves.toEqual({
       appLocale: "en",

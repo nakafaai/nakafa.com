@@ -13,7 +13,8 @@
     "plugins": [
       {
         "name": "@effect/language-service",
-        "allowedDuplicatedPackages": ["@nakafa/aksara-contracts"]
+        "allowedDuplicatedPackages": ["@nakafa/aksara-contracts"],
+        "ignoreEffectSuggestionsInTscExitCode": false
       }
     ],
     "resolveJsonModule": true,
