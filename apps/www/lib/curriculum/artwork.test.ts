@@ -89,7 +89,50 @@ describe("curriculum artwork", () => {
         programKey,
         nodeKey: "secondary-science",
       })
-    ).toBeUndefined();
+    ).toBe("/open-graph/subject/id-science.png");
+  });
+
+  it.each(["en", "id", "de"] as const)(
+    "resolves the combined science course artwork in %s",
+    (locale) => {
+      for (const [program, nodeKey] of [
+        ["singapore-moe", "secondary-science"],
+        ["united-states", "high-school-science"],
+      ] as const) {
+        expect(
+          resolveCurriculumCatalogArtwork(locale, {
+            kind: "route",
+            programKey: LearningProgramKeySchema.make(program),
+            nodeKey,
+          })
+        ).toBe(`/open-graph/subject/${locale}-science.png`);
+      }
+    }
+  );
+
+  it("resolves the high-school stage with an English default", () => {
+    const programKey = LearningProgramKeySchema.make("united-states");
+    expect(
+      resolveCurriculumCatalogArtwork("id", {
+        kind: "route",
+        programKey,
+        nodeKey: "high-school",
+      })
+    ).toBe("/open-graph/grade/id-high-school.png");
+    expect(
+      resolveCurriculumCatalogArtwork("en", {
+        kind: "route",
+        programKey,
+        nodeKey: "high-school",
+      })
+    ).toBe("/open-graph/grade/en-high-school.png");
+    expect(
+      resolveCurriculumCatalogArtwork("de", {
+        kind: "route",
+        programKey,
+        nodeKey: "high-school",
+      })
+    ).toBe("/open-graph/grade/en-high-school.png");
   });
 
   it.each(["en", "id", "de"] as const)(

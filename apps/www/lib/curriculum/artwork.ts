@@ -38,8 +38,11 @@ const CURRICULUM_ARTWORK_BY_IDENTITY = new Map<string, ArtworkIdentity>([
   ["singapore-moe/secondary-science-physics", "subject/physics"],
   ["singapore-moe/secondary-science-chemistry", "subject/chemistry"],
   ["singapore-moe/secondary-science-biology", "subject/biology"],
+  ["singapore-moe/secondary-science", "subject/science"],
   ["united-states", "curriculum/united-states"],
+  ["united-states/high-school", "grade/high-school"],
   ["united-states/high-school-mathematics", "subject/mathematics"],
+  ["united-states/high-school-science", "subject/science"],
 ]);
 
 type CurriculumSocialImageRoute = Pick<CurriculumRoute, "level" | "publicPath">;
