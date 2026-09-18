@@ -15,7 +15,8 @@
     "plugins": [
       {
         "name": "@effect/language-service",
-        "allowedDuplicatedPackages": ["@nakafa/aksara-contracts"]
+        "allowedDuplicatedPackages": ["@nakafa/aksara-contracts"],
+        "ignoreEffectSuggestionsInTscExitCode": false
       }
     ],
     "types": ["node", "vitest/globals"],
