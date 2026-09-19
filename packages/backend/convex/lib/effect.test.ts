@@ -160,8 +160,11 @@ describe("lib/effect", () => {
       yield* Effect.sync(() => {
         vi.spyOn(Date, "now").mockReturnValue(now);
       });
+      const readTime = Effect.fn("query.readTime")(function* () {
+        return yield* Clock.currentTimeMillis;
+      });
       const milliseconds = yield* Effect.promise(() =>
-        runConvexProgram(Clock.currentTimeMillis)
+        runConvexProgram(readTime())
       );
       const nanoseconds = yield* Effect.promise(() =>
         runConvexProgram(Clock.currentTimeNanos)
@@ -190,6 +193,23 @@ describe("lib/effect", () => {
       ).toBe(BigInt(now) * 1_000_000n);
     })
   );
+
+  it("preserves nested query spans without an implicit clock dependency", async () => {
+    const child = Effect.fn("query.child")(function* () {
+      const span = yield* Effect.currentSpan.pipe(Effect.orDie);
+      return span.name;
+    });
+    const parent = Effect.fn("query.parent")(function* () {
+      const span = yield* Effect.currentSpan.pipe(Effect.orDie);
+      return [span.name, yield* child()];
+    });
+    const now = vi.spyOn(Date, "now");
+
+    const result = await runConvexProgram(parent());
+
+    expect(result).toEqual(["query.parent", "query.child"]);
+    expect(now).not.toHaveBeenCalled();
+  });
 
   it.effect("rejects sleeping inside native Convex handlers", () =>
     Effect.promise(() =>
