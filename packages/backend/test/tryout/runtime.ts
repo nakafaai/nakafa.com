@@ -86,6 +86,7 @@ export async function seedTryoutContentAccessState(
     now: TRYOUT_TEST_NOW,
     suffix: args.suffix,
   });
+  await ctx.db.patch("users", identity.userId, { plan: "pro" });
   const set = makeTryoutSet();
   const section = makeTryoutSection({
     publicPath: TRYOUT_SECTION_PATH,

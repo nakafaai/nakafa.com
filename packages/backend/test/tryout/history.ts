@@ -169,6 +169,7 @@ export async function insertHistoryAttempt(
     now: TRYOUT_TEST_NOW,
     suffix: "history-owner",
   });
+  await ctx.db.patch("users", identity.userId, { plan: "pro" });
   if (!runtime) {
     throw new Error("Expected one retained runtime bundle.");
   }

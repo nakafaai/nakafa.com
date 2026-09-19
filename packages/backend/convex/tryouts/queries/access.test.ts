@@ -19,7 +19,7 @@ const startAccessArgs: FunctionArgs<
 };
 
 describe("tryouts/queries/access", () => {
-  it("shows one free attempt to anonymous and unclaimed accounts", async () => {
+  it("shows free access to anonymous and free accounts", async () => {
     const t = createConvexTestWithBetterAuth();
 
     expect(
@@ -45,50 +45,12 @@ describe("tryouts/queries/access", () => {
     ).toEqual({ kind: "free-attempt" });
   });
 
-  it("requires an upgrade after the account-level free claim", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const seeded = await seedAuthenticatedUser(ctx, {
-        now: TRYOUT_TEST_NOW,
-        suffix: "start-access-claimed",
-      });
-      await ctx.db.insert("tryoutFreeAttemptClaims", {
-        claimedAt: TRYOUT_TEST_NOW,
-        countryKey: "indonesia",
-        examKey: "snbt",
-        setKey: "set-1",
-        trackKey: "2027",
-        userId: seeded.userId,
-      });
-      return seeded;
-    });
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    expect(
-      await authed.query(
-        api.tryouts.queries.access.getStartAccess,
-        startAccessArgs
-      )
-    ).toEqual({ kind: "upgrade-required" });
-  });
-
-  it("prefers live included access over a consumed free claim", async () => {
+  it("shows included scoped access without restricting free starts", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now: TRYOUT_TEST_NOW,
         suffix: "start-access-included",
-      });
-      await ctx.db.insert("tryoutFreeAttemptClaims", {
-        claimedAt: TRYOUT_TEST_NOW,
-        countryKey: "indonesia",
-        examKey: "snbt",
-        setKey: "set-1",
-        trackKey: "2027",
-        userId: seeded.userId,
       });
       await ctx.db.insert("tryoutEntitlements", {
         countryKey: "indonesia",

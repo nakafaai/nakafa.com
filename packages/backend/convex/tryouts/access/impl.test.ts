@@ -180,6 +180,8 @@ describe("tryouts/access/impl", () => {
         "subscriptions",
         subscriptionId
       );
+      expect(isActiveProSubscription(null, NOW)).toBe(false);
+      expect(isActiveProSubscription(subscription, NOW)).toBe(true);
       expect(
         isActiveProSubscription(
           { ...subscription, productId: "another-product" },
@@ -225,6 +227,7 @@ describe("tryouts/access/impl", () => {
       });
 
       const access = await resolveAccess(ctx, userId);
+      expect(await resolveAccess(ctx, userId)).toEqual(access);
       const entitlements = await ctx.db.query("tryoutEntitlements").collect();
 
       return { access, entitlements };
@@ -374,5 +377,77 @@ describe("tryouts/access/impl", () => {
         })
       )
     ).resolves.toBeNull();
+  });
+  it("ignores future and orphaned subscription entitlements while allowing free participation", async () => {
+    const t = convexTest(schema, convexModules);
+    const result = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx);
+      await ctx.db.insert("tryoutEntitlements", {
+        countryKey: "indonesia",
+        examKey: "snbt",
+        startsAt: NOW + 1,
+        endsAt: PERIOD_END,
+        sourceKind: "competition",
+        userId,
+      });
+      await ctx.db.insert("tryoutEntitlements", {
+        countryKey: "indonesia",
+        examKey: "snbt",
+        startsAt: NOW,
+        endsAt: PERIOD_END,
+        sourceKind: "subscription",
+        userId,
+      });
+      return resolveAccess(ctx, userId);
+    });
+    expect(result).toBeNull();
+  });
+  it("retains the campaign and redeemed grant on included access", async () => {
+    const t = convexTest(schema, convexModules);
+    const result = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx);
+      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        campaignKind: "competition",
+        enabled: true,
+        endsAt: PERIOD_END,
+        firstRedeemedAt: NOW,
+        name: "Competition",
+        redeemStatus: "active",
+        resultsFinalizedAt: null,
+        resultsStatus: "pending",
+        slug: "competition",
+        startsAt: NOW,
+      });
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "competition",
+        enabled: true,
+        label: "Competition",
+      });
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId,
+        linkId,
+        userId,
+        endsAt: PERIOD_END,
+        redeemedAt: NOW,
+        status: "active",
+      });
+      await ctx.db.insert("tryoutEntitlements", {
+        accessCampaignId: campaignId,
+        accessGrantId: grantId,
+        countryKey: "indonesia",
+        examKey: "snbt",
+        endsAt: PERIOD_END,
+        sourceKind: "competition",
+        startsAt: NOW,
+        userId,
+      });
+      return { access: await resolveAccess(ctx, userId), campaignId, grantId };
+    });
+    expect(result.access).toMatchObject({
+      accessCampaignId: result.campaignId,
+      accessGrantId: result.grantId,
+      countsForCompetition: true,
+    });
   });
 });

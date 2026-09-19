@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import { projectTryoutReview } from "@/components/tryout/review/model";
+import { TryoutReviewUpgrade } from "@/components/tryout/review/upgrade.client";
 import {
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
@@ -20,6 +21,9 @@ export async function TryoutReview({
   readonly runtime: TryoutSectionRuntime;
 }) {
   const resolvedContent = await content;
+  if (resolvedContent.answers.length === 0 && runtime.questions.length > 0) {
+    return <TryoutReviewUpgrade />;
+  }
   const questions = await Effect.runPromise(
     projectTryoutReview({
       content: resolvedContent,

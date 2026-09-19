@@ -35,15 +35,11 @@ export type StartAccessArgs = Infer<typeof startAccessArgsValidator>;
 
 export const tryoutStartAccessValidator = v.union(
   v.object({ kind: v.literal("free-attempt") }),
-  v.object({ kind: v.literal("included") }),
-  v.object({ kind: v.literal("upgrade-required") })
+  v.object({ kind: v.literal("included") })
 );
 export type TryoutStartAccess = Infer<typeof tryoutStartAccessValidator>;
 
-export const tryoutPaywallSourceValidator = literals(
-  "access-query",
-  "start-mutation"
-);
+export const tryoutPaywallSourceValidator = literals("review");
 export type TryoutPaywallSource = Infer<typeof tryoutPaywallSourceValidator>;
 
 export interface AttemptAccessFields {
@@ -65,8 +61,6 @@ export interface TryoutStartScope {
 }
 
 export const tryoutStartErrorCode = Object.freeze({
-  accessRequired: "TRYOUT_ACCESS_REQUIRED",
-  attemptLimitReached: "TRYOUT_ATTEMPT_LIMIT_REACHED",
   attemptNotFound: "TRYOUT_ATTEMPT_NOT_FOUND",
   failed: "TRYOUT_START_FAILED",
   irtScaleRequired: "TRYOUT_IRT_SCALE_REQUIRED",

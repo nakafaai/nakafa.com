@@ -1,7 +1,7 @@
 import { assert, beforeEach, describe, it } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { loadTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
+import { projectTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import {
   TRYOUT_SECTION_KEY,
@@ -30,14 +30,23 @@ function readAttemptContent(
         if (!(attempt?.snapshotReleaseId && attempt.tryoutSnapshotId)) {
           return yield* Effect.die("Expected one signed attempt fixture.");
         }
-        return yield* loadTryoutSignedContent({
+        return yield* projectTryoutSignedContent({
           answers: false,
           appLocale: attempt.appLocale,
           attempt,
           ctx,
-          sectionKey: input.sectionKey,
-          snapshotId: attempt.tryoutSnapshotId,
-          snapshotReleaseId: attempt.snapshotReleaseId,
+          placements: yield* Effect.promise(() =>
+            ctx.db
+              .query("tryoutAttemptPlacements")
+              .withIndex(
+                "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+                (query) =>
+                  query
+                    .eq("tryoutAttemptId", attempt._id)
+                    .eq("sectionKey", input.sectionKey)
+              )
+              .take(2)
+          ),
           totalQuestions: 1,
         });
       })

@@ -46,7 +46,7 @@ export const loadActiveProSubscription = Effect.fn(
   );
 
   if (perpetual) {
-    return perpetual;
+    return { subscription: perpetual, endsAt: perpetualSubscriptionEndsAt };
   }
 
   // Polar ingestion stores UTC ISO strings through Date.toISOString(), so
@@ -66,7 +66,11 @@ export const loadActiveProSubscription = Effect.fn(
       .first()
   );
 
-  return isActiveProSubscription(subscription, args.now) ? subscription : null;
+  if (!subscription) {
+    return null;
+  }
+  const endsAt = getSubscriptionEntitlementEndsAt(subscription, args.now);
+  return endsAt === null ? null : { subscription, endsAt };
 });
 
 /** Creates or refreshes the exam entitlement backed by a live subscription. */

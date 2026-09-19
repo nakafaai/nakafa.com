@@ -7,7 +7,8 @@ on 2026-07-22 to define freemium attempt access, and on 2026-08-04 to make
 Aksara signed publication the only authored try-out source. Amended on
 2026-08-10 to define transactional response and scoring integrity. Amended on
 2026-08-14 to record the completed physical retirement of superseded storage,
-and on 2026-09-01 to define the structured response rollout.
+on 2026-09-01 to define the structured response rollout, and on 2026-09-19
+to make attempts and scores free with Pro access to worked solutions.
 
 ## Context
 
@@ -48,7 +49,6 @@ Use these Convex table families:
   `tryoutPlacements` for verified signed publication state.
 - `tryoutAttempts`, `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`, `tryoutScores` for realtime runtime state.
 - `tryoutAccessCampaigns`, `tryoutAccessTargets`, `tryoutAccessLinks`, `tryoutAccessGrants`, `tryoutEntitlements` for premium access.
-- `tryoutFreeAttemptClaims` for the one lifetime free attempt claimed by each account.
 - `irtCalibration*` and `irtScale*` for scoring calibration and immutable scale versions.
 
 Do not reconstruct authored catalog or question data from Nakafa filesystem
@@ -105,22 +105,25 @@ navigation destinations. Terminal pages stop their mutable subscriptions.
 
 ### Freemium Access
 
-Every account can start one complete try-out for free. The claim is global to the
-account, not one claim per exam, track, or set. Starting through a live
-subscription, competition grant, or access pass does not consume it.
+Every authenticated account can start and repeat any try-out without a lifetime
+claim or a per-set attempt cap. Every completed attempt retains its score,
+including IRT scores on supported sets. The start mutation resumes a live attempt
+before starting another and derives the next attempt number from the newest
+indexed attempt, without scanning the complete history.
 
-The start mutation is authoritative. It resumes a live attempt before checking
-new access, then resolves premium access before the free claim. A successful free
-start inserts the claim and attempt in the same transaction, so a failed start
-consumes nothing and concurrent starts cannot create two free attempts. The
-catalog access query is advisory UI state only; a structured
-`TRYOUT_ACCESS_REQUIRED` mutation failure opens the upgrade dialog instead of a
-generic retry error.
+Nakafa Pro grants access to worked solutions and answer keys after an attempt
+finishes. The billing-owned `users.plan` is the current entitlement, maintained
+transactionally by the subscription trigger. Upgrading opens solutions for
+previous attempts too. Downgrading revokes future solution reads while preserving
+attempts and scores. An access-source snapshot records the circumstances of a
+start for competition eligibility and attribution; it does not grant permanent
+access to solutions.
 
-The free claim is durable account state. Content and try-out reset commands must
-preserve it, while deleted-user cleanup removes it with the local user row.
-Attempts record the access source used at creation for support, analytics, and
-future policy changes.
+Both the runtime response projection and the signed-body query enforce the same
+current-plan check. Free terminal responses omit answer keys and answer selectors.
+A direct request for an answer artifact must pass ownership, terminal lifecycle,
+and current Pro entitlement checks. The user interface presents the upgrade
+option below the free result.
 
 Delete public standalone practice/exercise routes and tool surfaces. Do not keep aliases, compatibility readers, or old product/package/part vocabulary in touched code.
 
@@ -152,7 +155,7 @@ flowchart TD
 
 Content reset may delete only rebuildable Nakafa read models. It preserves
 signed snapshot state, attempts, progress, placements, responses, scores,
-access state, entitlements, free claims, calibration runs, and IRT scales.
+access state, entitlements, calibration runs, and IRT scales.
 Attempts and scales retain the exact signed snapshot needed for historical
 review and scoring.
 

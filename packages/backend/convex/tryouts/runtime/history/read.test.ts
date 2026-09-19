@@ -57,6 +57,46 @@ async function setup(historical = false) {
 beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
 
 describe("tryouts/runtime/history/read", () => {
+  it.effect(
+    "requires current Pro access for old answer selectors while keeping questions free",
+    () =>
+      Effect.gen(function* () {
+        const { owned, seed, t } = yield* Effect.promise(() => setup());
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            ctx.db.patch("users", seed.identity.userId, { plan: "free" })
+          )
+        );
+        assert.isNull(yield* Effect.promise(() => read(owned, seed.request)));
+        const questions = {
+          ...seed.request,
+          selectors: seed.request.selectors.filter(
+            (selector) => selector.delivery === "authenticated"
+          ),
+        };
+        const freeResult = yield* Effect.promise(() => read(owned, questions));
+        assert.isNotNull(freeResult);
+        assert.deepStrictEqual(
+          freeResult.items.map((item) => item.delivery),
+          ["authenticated"]
+        );
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            ctx.db.patch("users", seed.identity.userId, { plan: "pro" })
+          )
+        );
+        assert.isNotNull(
+          yield* Effect.promise(() => read(owned, seed.request))
+        );
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            ctx.db.patch("users", seed.identity.userId, { plan: "free" })
+          )
+        );
+        assert.isNull(yield* Effect.promise(() => read(owned, seed.request)));
+      })
+  );
+
   it.effect("preserves old signed bytes after active release compaction", () =>
     Effect.gen(function* () {
       const { owned, seed, t } = yield* Effect.promise(() => setup(true));
