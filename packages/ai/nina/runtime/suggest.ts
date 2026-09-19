@@ -48,10 +48,12 @@ export class NinaSuggestionError extends Schema.TaggedError<NinaSuggestionError>
  */
 export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
   locale,
+  signal,
   messages,
   writer,
 }: {
   readonly locale: Locale;
+  readonly signal: AbortSignal;
   readonly messages: ModelMessage[];
   readonly writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
@@ -61,6 +63,7 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
     toolCalls: "all",
   });
   const suggestionsStream = streamText({
+    abortSignal: signal,
     model: provider.languageModel(defaultModel),
     instructions: nakafaSuggestions({ locale }),
     messages: [...promptMessages, suggestionRequest],

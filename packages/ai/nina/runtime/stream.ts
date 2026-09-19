@@ -33,7 +33,7 @@ import {
   pruneMessages,
   type UIMessageStreamWriter,
 } from "ai";
-import { Effect, Schema } from "effect";
+import { Deferred, Effect, Schema } from "effect";
 
 /** Raised when NinaHarness cannot prepare or stream one turn. */
 export class NinaStreamError extends Schema.TaggedError<NinaStreamError>()(
@@ -46,7 +46,19 @@ export class NinaStreamError extends Schema.TaggedError<NinaStreamError>()(
 
 /** Creates the framework-native AI SDK stream response for one Nina turn. */
 export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
-  function* (turn: NinaTurn) {
+  function* (
+    turn: NinaTurn,
+    requestSignal: AbortSignal,
+    deadline: AbortSignal
+  ) {
+    // The SDK response outlives this Effect; its cancellation owns this controller.
+    const cancellation = yield* Effect.sync(() => new AbortController());
+    const signal = AbortSignal.any([
+      requestSignal,
+      cancellation.signal,
+      deadline,
+    ]);
+    const settled = yield* Deferred.make<void>();
     const store = yield* NinaStore;
     const reporter = yield* NinaReporter;
     const nakafa = yield* Nakafa;
@@ -106,18 +118,24 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
       }
 
       failureScheduled = true;
+      cancellation.abort();
       runFork(
         Effect.all(
           [
             reporter.report({ error, source }),
-            store.saveFailure({ responseMessageId }).pipe(
-              Effect.catch((saveError) =>
-                reporter.report({
-                  error: saveError,
-                  source: "saveAssistantFailure",
-                })
-              )
-            ),
+            store
+              .saveFailure({
+                responseMessageId,
+                settled: Deferred.await(settled),
+              })
+              .pipe(
+                Effect.catch((saveError) =>
+                  reporter.report({
+                    error: saveError,
+                    source: "saveAssistantFailure",
+                  })
+                )
+              ),
           ],
           { discard: true }
         )
@@ -130,6 +148,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
         runPromise(
           runNinaWriterTurn({
             finalMessages,
+            signal,
             logContext,
             onStreamError: scheduleAssistantFailure,
             page,
@@ -142,7 +161,8 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
             Effect.provideService(NinaStore, store),
             Effect.provideService(NinaReporter, reporter),
             Effect.provideService(Nakafa, nakafa),
-            Effect.provideService(NakafaSearch, search)
+            Effect.provideService(NakafaSearch, search),
+            Effect.onExit(() => Deferred.succeed(settled, undefined))
           )
         ),
       generateId: () => responseMessageId,
@@ -162,7 +182,9 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
 
         const responseFailure = getNinaResponseFailure({
           finishReason,
-          isAborted,
+          // Optional hints may hit the work deadline after a valid main answer.
+          isAborted:
+            isAborted || requestSignal.aborted || cancellation.signal.aborted,
           responseMessage,
         });
 
@@ -171,7 +193,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
           return;
         }
 
-        if (isFirstMessage) {
+        if (isFirstMessage && !deadline.aborted) {
           runFork(
             store
               .saveTitle({ messages: updatedMessages })
@@ -206,6 +228,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
 /** Streams one Nina ToolLoopAgent turn into the AI SDK UI writer. */
 const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   finalMessages,
+  signal,
   logContext,
   onStreamError,
   copy,
@@ -217,6 +240,7 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
 }: {
   readonly copy: NinaTurn["copy"];
   readonly finalMessages: NinaAgentMessages;
+  readonly signal: AbortSignal;
   readonly logContext: LogContext;
   readonly onStreamError: (error: unknown, source: string) => void;
   readonly page: NinaTurn["page"];
@@ -245,6 +269,7 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
 
   const responseMessages = yield* runNinaAgentTurn({
     messages: finalMessages,
+    signal,
     page,
     runtime,
     settings: {
@@ -256,7 +281,8 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
             reservePageFetch: pageFetch.reserveForRepair,
             sessionLogger: logContext,
             url: context.url,
-          })
+          }),
+          { signal }
         ),
       tools,
     },
@@ -282,7 +308,12 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
     user,
   });
 
+  if (signal.aborted) {
+    return;
+  }
+
   yield* writeNinaSuggestions({
+    signal,
     locale: page.locale,
     messages: [...finalMessages, ...responseMessages],
     writer,

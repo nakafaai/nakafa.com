@@ -39,14 +39,20 @@ const enqueueRenderedWelcomeProgram = Effect.fn(
     readonly text: string;
   }
 ) {
-  const intent = yield* tryWelcomeIntent(() => ctx.db.get(intentId));
+  const intent = yield* tryWelcomeIntent(() =>
+    ctx.db.get("welcomeEmailIntents", intentId)
+  );
   if (intent?.phase !== "scheduled") {
     return null;
   }
 
-  const user = yield* tryWelcomeIntent(() => ctx.db.get(intent.userId));
+  const user = yield* tryWelcomeIntent(() =>
+    ctx.db.get("users", intent.userId)
+  );
   if (!user || user.deletedAt !== undefined) {
-    yield* tryWelcomeIntent(() => ctx.db.delete(intent._id));
+    yield* tryWelcomeIntent(() =>
+      ctx.db.delete("welcomeEmailIntents", intent._id)
+    );
     return null;
   }
   if (user.deletionPreparedAt !== undefined) {
@@ -62,7 +68,7 @@ const enqueueRenderedWelcomeProgram = Effect.fn(
     })
   );
   yield* tryWelcomeIntent(() =>
-    ctx.db.replace(intent._id, {
+    ctx.db.replace("welcomeEmailIntents", intent._id, {
       componentEmailId,
       phase: "enqueued",
       userId: intent.userId,

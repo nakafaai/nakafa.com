@@ -1,19 +1,18 @@
 import type { TimeoutConfiguration, ToolSet } from "ai";
 
 /**
- * Bounds user-visible chat streams without cutting off normal tool flows.
+ * Bounds individual chat steps and silent chunks within the request deadline.
  *
  * AI SDK treats `stepMs` as a per-step abort timer and `chunkMs` as the
  * maximum gap between streamed chunks, so the main chat window must allow
- * slower Pro reasoning and web-search steps while still preventing runaway
- * requests.
+ * slower Pro reasoning and web-search steps. The app request deadline covers
+ * preparation, the main answer, and optional suggestions together.
  *
  * @see https://ai-sdk.dev/docs/ai-sdk-core/settings#timeout
  */
 export const chatStreamTimeout = {
   chunkMs: 45_000,
   stepMs: 90_000,
-  totalMs: 300_000,
 } satisfies TimeoutConfiguration<ToolSet>;
 
 /** Bounds subagent model steps so a slow provider cannot hold the chat open. */

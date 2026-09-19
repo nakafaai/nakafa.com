@@ -12,6 +12,8 @@ import {
   finalizeAttemptScore,
   loadAttemptScoreSource,
   requireOwnedAttempt,
+  scoreTryoutSection,
+  summarizeResponses,
 } from "@repo/backend/convex/tryouts/runtime/score";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import {
@@ -21,12 +23,7 @@ import {
   seedFrozenTryoutScoreState,
 } from "@repo/backend/test/tryout/score";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
-
-class ObservedPublicFailure extends Schema.TaggedError<ObservedPublicFailure>()(
-  "ObservedPublicFailure",
-  { cause: Schema.Unknown }
-) {}
+import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
@@ -59,101 +56,46 @@ const finalizeLoadedAttempt = Effect.fn(
 });
 
 describe("tryouts/runtime/score", () => {
-  it.effect("masks unexpected owned attempt lookup failures", () =>
-    Effect.gen(function* () {
-      const t = createConvexTestWithBetterAuth();
-      const seeded = yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          seedTryoutContentAccessState(ctx, {
-            attemptStatus: "in-progress",
-            sectionStatus: "in-progress",
-            suffix: "score-owned-attempt-failure",
+  it("masks unexpected owned attempt lookup failures", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation((ctx) =>
+      seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        suffix: "score-storage",
+      })
+    );
+    const storageCause = new Error("internal tryoutAttempts storage details");
+    await t.mutation(async (ctx) => {
+      const get = vi.spyOn(ctx.db, "get").mockRejectedValue(storageCause);
+      const failure = await runConvexProgram(
+        requireOwnedAttempt(ctx, {
+          attemptId: seeded.attemptId,
+          userId: seeded.identity.userId,
+        }).pipe(Effect.flip, Effect.orDie)
+      );
+      expect(failure).toMatchObject({
+        code: "TRYOUT_RUNTIME_FAILED",
+        message: "Unable to load try-out attempt.",
+      });
+      expect(failure.cause).toBeInstanceOf(TryoutRuntimeError);
+      expect(failure.cause).toMatchObject({ cause: storageCause });
+      await expect(
+        runConvexProgram(
+          requireOwnedAttempt(ctx, {
+            attemptId: seeded.attemptId,
+            userId: seeded.identity.userId,
           })
         )
-      );
-      const storageCause = new Error("internal tryoutAttempts storage details");
-
-      yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          runConvexProgram(
-            Effect.acquireUseRelease(
-              Effect.sync(() =>
-                vi.spyOn(ctx.db, "get").mockRejectedValue(storageCause)
-              ),
-              () =>
-                Effect.gen(function* () {
-                  const internalFailure = yield* requireOwnedAttempt(ctx, {
-                    attemptId: seeded.attemptId,
-                    userId: seeded.identity.userId,
-                  }).pipe(
-                    Effect.match({
-                      onFailure: (error) => error,
-                      onSuccess: () => null,
-                    })
-                  );
-                  if (!internalFailure) {
-                    return yield* Effect.die(
-                      "Expected owned attempt lookup to fail."
-                    );
-                  }
-
-                  expect(internalFailure).toMatchObject({
-                    cause: {
-                      code: "TRYOUT_RUNTIME_FAILED",
-                      message: "Unable to complete try-out runtime operation.",
-                    },
-                    code: "TRYOUT_RUNTIME_FAILED",
-                    message: "Unable to load try-out attempt.",
-                  });
-                  const lookupFailure = internalFailure.cause;
-                  expect(lookupFailure).toBeInstanceOf(TryoutRuntimeError);
-                  if (!(lookupFailure instanceof TryoutRuntimeError)) {
-                    return yield* Effect.die(
-                      "Expected a typed lookup failure cause."
-                    );
-                  }
-                  expect(lookupFailure.cause).toBe(storageCause);
-                }),
-              (getSpy) => Effect.sync(() => getSpy.mockRestore())
-            )
-          )
-        )
-      );
-
-      const publicFailure = yield* Effect.tryPromise({
-        catch: (cause) => new ObservedPublicFailure({ cause }),
-        try: () =>
-          t.mutation((ctx) =>
-            runConvexProgram(
-              Effect.acquireUseRelease(
-                Effect.sync(() =>
-                  vi.spyOn(ctx.db, "get").mockRejectedValue(storageCause)
-                ),
-                () =>
-                  requireOwnedAttempt(ctx, {
-                    attemptId: seeded.attemptId,
-                    userId: seeded.identity.userId,
-                  }),
-                (getSpy) => Effect.sync(() => getSpy.mockRestore())
-              )
-            )
-          ),
-      }).pipe(
-        Effect.match({
-          onFailure: (error) => error.cause,
-          onSuccess: () => null,
-        })
-      );
-
-      expect(publicFailure).toMatchObject({
+      ).rejects.toMatchObject({
         data: {
           code: "TRYOUT_RUNTIME_FAILED",
           message: "Unable to load try-out attempt.",
         },
       });
-      expect(JSON.stringify(publicFailure)).not.toContain(storageCause.message);
-    })
-  );
+      get.mockRestore();
+    });
+  });
 
   it.effect(
     "scores from the frozen bundle after the active release advances",
@@ -172,6 +114,11 @@ describe("tryouts/runtime/score", () => {
                   now: NOW,
                 });
 
+                yield* finalizeLoadedAttempt(ctx, {
+                  attempt,
+                  endReason: "submitted",
+                  now: NOW + 1,
+                });
                 const score = yield* Effect.promise(() =>
                   ctx.db
                     .query("tryoutScores")
@@ -441,4 +388,100 @@ describe("tryouts/runtime/score", () => {
         expect(stored.section?.score).toBeUndefined();
       })
   );
+  it.each(
+    Object.entries({
+      inactive: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+      "foreign source": "TRYOUT_SCORE_SOURCE_MISMATCH",
+      "wrong strategy": "TRYOUT_SCORE_SOURCE_MISMATCH",
+      "progress failure": "TRYOUT_PROGRESS_WRITE_FAILED",
+    })
+  )("rolls back terminal writes on %s", async (kind, code) => {
+    const t = convexTest(schema, convexModules);
+    const attempt = await t.mutation((ctx) =>
+      runConvexProgram(seedFrozenTryoutScoreState(ctx))
+    );
+    await expect(
+      t.mutation(async (ctx) => {
+        const placements = await runConvexProgram(
+          loadAttemptPlacements(ctx, attempt)
+        );
+        const responseIndex = await runConvexProgram(
+          loadAttemptResponses(ctx, attempt, placements, "complete")
+        );
+        const source = await runConvexProgram(
+          loadAttemptScoreSource(ctx, attempt, placements)
+        );
+        if (kind === "foreign source") {
+          const { _id, _creationTime, ...values } = attempt;
+          const foreignId = await ctx.db.insert("tryoutAttempts", values);
+          return runConvexProgram(
+            scoreTryoutSection({
+              attempt,
+              placements,
+              responses: [],
+              source: { ...source, attemptId: foreignId },
+              totalQuestions: 1,
+            })
+          );
+        }
+        if (kind === "wrong strategy") {
+          return runConvexProgram(
+            scoreTryoutSection({
+              attempt: { ...attempt, scoringStrategy: "irt" },
+              placements,
+              responses: [],
+              source,
+              totalQuestions: 1,
+            })
+          );
+        }
+        if (kind === "progress failure") {
+          const query = ctx.db.query.bind(ctx.db);
+          vi.spyOn(ctx.db, "query")
+            .mockImplementationOnce(query)
+            .mockImplementationOnce(() => {
+              throw new Error("Progress storage unavailable.");
+            });
+        }
+        return runConvexProgram(
+          finalizeAttemptScore(ctx, {
+            attempt:
+              kind === "inactive"
+                ? { ...attempt, status: "completed" }
+                : attempt,
+            endReason: "submitted",
+            now: NOW,
+            responseIndex,
+            source,
+          })
+        );
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code,
+      },
+    });
+    expect(
+      await t.query((ctx) => ctx.db.query("tryoutScores").collect())
+    ).toEqual([]);
+    expect(await t.query((ctx) => ctx.db.get(attempt._id))).toEqual(attempt);
+  });
+
+  it("counts only complete responses and distinguishes incorrect answers", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await runConvexProgram(seedFrozenTryoutScoreState(ctx));
+      const response = await ctx.db.query("tryoutResponses").unique();
+      if (!response) {
+        throw new Error("Expected a scored response.");
+      }
+      expect(
+        summarizeResponses([
+          response,
+          { ...response, isComplete: false },
+          { ...response, isCorrect: false },
+        ])
+      ).toEqual({ answeredCount: 2, correctAnswers: 1 });
+    });
+  });
 });

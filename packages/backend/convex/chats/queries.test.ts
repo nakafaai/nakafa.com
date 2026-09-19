@@ -291,3 +291,153 @@ describe("chats/queries", () => {
     expect(pinnedForContinuation).toEqual(deletedTailContext);
   });
 });
+
+it("keeps search and every optional list filter scoped to the right owner and visibility", async () => {
+  const t = createConvexTestWithBetterAuth();
+  const identity = await t.mutation(async (ctx) => {
+    const owner = await seedAuthenticatedUser(ctx, {
+      now: NOW,
+      suffix: "filter-owner",
+    });
+    const stranger = await seedAuthenticatedUser(ctx, {
+      now: NOW,
+      suffix: "filter-stranger",
+    });
+    for (const userId of [owner.userId, stranger.userId]) {
+      for (const visibility of ["public", "private"] as const) {
+        await ctx.db.insert("chats", {
+          title: "Algebra practice",
+          userId,
+          visibility,
+          type: "study",
+          updatedAt: NOW,
+        });
+      }
+    }
+    return owner;
+  });
+  const owner = t.withIdentity({
+    subject: identity.authUserId,
+    sessionId: identity.sessionId,
+  });
+  const paginationOpts = { cursor: null, numItems: 10 };
+  expect(
+    (await t.query(api.chats.queries.getOwnChats, { paginationOpts })).page
+  ).toEqual([]);
+  for (const q of [undefined, " ", "Algebra"]) {
+    for (const type of [undefined, "study"] as const) {
+      const publicPage = await t.query(api.chats.queries.getChats, {
+        userId: identity.userId,
+        q,
+        type,
+        paginationOpts,
+      });
+      expect(publicPage.page).toEqual([
+        expect.objectContaining({
+          userId: identity.userId,
+          visibility: "public",
+        }),
+      ]);
+      for (const visibility of [undefined, "private", "public"] as const) {
+        const ownPage = await owner.query(api.chats.queries.getOwnChats, {
+          q,
+          type,
+          visibility,
+          paginationOpts,
+        });
+        expect(ownPage.page).toHaveLength(visibility ? 1 : 2);
+        expect(
+          ownPage.page.every(
+            (chat) =>
+              chat.userId === identity.userId &&
+              (!visibility || chat.visibility === visibility)
+          )
+        ).toBe(true);
+      }
+    }
+  }
+});
+
+it("protects titles and transcript context when chats are private, missing, or untitled", async () => {
+  const t = createConvexTestWithBetterAuth();
+  const fixture = await t.mutation(async (ctx) => {
+    const owner = await seedAuthenticatedUser(ctx, { now: NOW });
+    const base = {
+      userId: owner.userId,
+      type: "study" as const,
+      updatedAt: NOW,
+    };
+    const privateId = await ctx.db.insert("chats", {
+      ...base,
+      visibility: "private",
+      title: "Secret",
+    });
+    const publicId = await ctx.db.insert("chats", {
+      ...base,
+      visibility: "public",
+      title: "Shared",
+    });
+    const emptyPublic = await ctx.db.insert("chats", {
+      ...base,
+      visibility: "public",
+    });
+    const emptyPrivate = await ctx.db.insert("chats", {
+      ...base,
+      visibility: "private",
+    });
+    const missingId = await ctx.db.insert("chats", {
+      ...base,
+      visibility: "public",
+    });
+    await ctx.db.delete("chats", missingId);
+    return { owner, privateId, publicId, emptyPublic, emptyPrivate, missingId };
+  });
+  const owner = t.withIdentity({
+    subject: fixture.owner.authUserId,
+    sessionId: fixture.owner.sessionId,
+  });
+  expect(
+    await t.query(api.chats.queries.getChatTitle, { chatId: fixture.privateId })
+  ).toBeNull();
+  expect(
+    await owner.query(api.chats.queries.getChatTitle, {
+      chatId: fixture.privateId,
+    })
+  ).toBe("Secret");
+  expect(
+    await t.query(api.chats.queries.getChatTitle, { chatId: fixture.publicId })
+  ).toBe("Shared");
+  for (const chatId of [
+    fixture.emptyPublic,
+    fixture.emptyPrivate,
+    fixture.missingId,
+  ]) {
+    expect(
+      await owner.query(api.chats.queries.getChatTitle, { chatId })
+    ).toBeNull();
+  }
+  expect(
+    await owner.query(api.chats.queries.getChat, { chatId: fixture.privateId })
+  ).toMatchObject({ title: "Secret" });
+  await expect(
+    t.query(api.chats.queries.getChat, { chatId: fixture.missingId })
+  ).rejects.toThrow("CHAT_NOT_FOUND");
+  await expect(
+    t.query(api.chats.queries.getPinnedNinaContextForTurn, {
+      chatId: fixture.missingId,
+      messageIdentifier: "new",
+    })
+  ).rejects.toThrow("CHAT_NOT_FOUND");
+  await expect(
+    t.query(api.chats.queries.loadMessagesPage, {
+      chatId: fixture.missingId,
+      paginationOpts: { cursor: null, numItems: 10 },
+    })
+  ).rejects.toThrow("CHAT_NOT_FOUND");
+  expect(
+    await t.query(api.chats.queries.getPinnedNinaContextForTurn, {
+      chatId: fixture.publicId,
+      messageIdentifier: "new",
+    })
+  ).toBeNull();
+});

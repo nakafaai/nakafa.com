@@ -93,8 +93,9 @@ export const repairNinaToolCall = Effect.fn("nina.repair.toolCall")(function* ({
       reporter.report({ error: error.cause, source: "repair.inputSchema" })
     )
   );
-  const { output: recoveredArgs } = yield* Effect.tryPromise(() =>
+  const { output: recoveredArgs } = yield* Effect.tryPromise((signal) =>
     generateText({
+      abortSignal: signal,
       model: provider.languageModel(defaultModel),
       output: Output.object({ schema: tool.inputSchema }),
       prompt: [

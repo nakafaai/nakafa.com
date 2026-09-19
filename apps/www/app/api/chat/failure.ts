@@ -23,11 +23,13 @@ export const persistAssistantFailure = Effect.fn(
   "chat.persistAssistantFailure"
 )(function* ({
   chatId,
+  turnId,
   modelId,
   responseMessageId,
   token,
 }: {
   readonly chatId: Id<"chats">;
+  readonly turnId: Id<"chatTurns">;
   readonly modelId: ModelId;
   readonly responseMessageId: string;
   readonly token: string;
@@ -37,6 +39,7 @@ export const persistAssistantFailure = Effect.fn(
       fetchAction(
         convexApi.chats.actions.scheduleSaveAssistantFailure,
         {
+          turnId,
           message: {
             chatId,
             identifier: responseMessageId,

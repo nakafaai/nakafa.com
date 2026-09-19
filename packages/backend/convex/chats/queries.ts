@@ -265,7 +265,7 @@ export const getPinnedNinaContextForTurn = query({
     const viewer = await getOptionalAppUserForRead(ctx);
     const viewerUserId = viewer?.appUser._id ?? null;
 
-    const chat = await ctx.db.get(args.chatId);
+    const chat = await ctx.db.get("chats", args.chatId);
 
     if (!chat) {
       throw new ConvexError({

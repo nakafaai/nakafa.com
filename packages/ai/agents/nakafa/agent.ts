@@ -58,8 +58,9 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   let hasPendingContentRead = false;
   const result = yield* Effect.tryPromise({
     /** Runs the AI SDK Nakafa specialist loop with MCP-equivalent tools. */
-    try: () =>
+    try: (signal) =>
       generateText({
+        abortSignal: signal,
         model: provider.languageModel(modelId),
         providerOptions: {
           gateway: gatewayProviderOptions,
@@ -74,7 +75,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             inputSchema: nakafaSearchInputSchema,
             outputSchema: textOutputSchema,
             /** Runs content search and records whether the next step should read. */
-            execute: (input, { toolCallId }) =>
+            execute: (input, { toolCallId, abortSignal }) =>
               runPromise(
                 search({ input, locale, toolCallId, writer }).pipe(
                   Effect.provideService(NakafaSearch, searchService),
@@ -87,7 +88,8 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
                     })
                   ),
                   Effect.map((output) => output.text)
-                )
+                ),
+                { signal: abortSignal }
               ),
           }),
           read: tool({
@@ -95,11 +97,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             inputSchema: nakafaReadInputSchema,
             outputSchema: textOutputSchema,
             /** Reads a selected content reference through the injected service. */
-            execute: (input, { toolCallId }) => {
+            execute: (input, { toolCallId, abortSignal }) => {
               hasPendingContentRead = false;
 
               return runPromise(
-                read({ input, toolCallId, writer }).pipe(provideNakafa(nakafa))
+                read({ input, toolCallId, writer }).pipe(provideNakafa(nakafa)),
+                { signal: abortSignal }
               );
             },
           }),
@@ -108,11 +111,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             inputSchema: nakafaQuranInputSchema,
             outputSchema: textOutputSchema,
             /** Reads Quran references through the injected Nakafa service. */
-            execute: (input, { toolCallId }) =>
+            execute: (input, { toolCallId, abortSignal }) =>
               runPromise(
                 quran({ input, locale, toolCallId, writer }).pipe(
                   provideNakafa(nakafa)
-                )
+                ),
+                { signal: abortSignal }
               ),
           }),
           taxonomy: tool({
@@ -120,11 +124,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             inputSchema: nakafaTaxonomyInputSchema,
             outputSchema: textOutputSchema,
             /** Lists content taxonomy through the injected Nakafa service. */
-            execute: (input, { toolCallId }) =>
+            execute: (input, { toolCallId, abortSignal }) =>
               runPromise(
                 taxonomy({ input, locale, toolCallId, writer }).pipe(
                   provideNakafa(nakafa)
-                )
+                ),
+                { signal: abortSignal }
               ),
           }),
         },

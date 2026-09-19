@@ -94,7 +94,7 @@ export const requireOwnedAttempt = Effect.fn(
   args: { attemptId: Id<"tryoutAttempts">; userId: Id<"users"> }
 ) {
   const attempt = yield* tryRuntimePromise(() =>
-    ctx.db.get(args.attemptId)
+    ctx.db.get("tryoutAttempts", args.attemptId)
   ).pipe(
     Effect.mapError(
       (cause) =>
@@ -214,7 +214,7 @@ export const finalizeAttemptScore = Effect.fn(
   const status = getAttemptStatusFromEndReason(args.endReason);
 
   yield* tryRuntimePromise(() =>
-    ctx.db.patch(args.attempt._id, {
+    ctx.db.patch("tryoutAttempts", args.attempt._id, {
       completedAt: args.now,
       endReason: args.endReason,
       lastActivityAt: args.now,
@@ -290,7 +290,7 @@ function scoreRawAttempt(args: {
   });
 }
 
-/** Inserts the public score snapshot without undefined optional fields. */
+/** Persists one public score; Convex omits undefined optional fields. */
 function insertAttemptScore(
   ctx: MutationCtx,
   args: {
@@ -313,24 +313,12 @@ function insertAttemptScore(
     userId: args.attempt.userId,
   };
 
-  if (args.score.scaleVersionId) {
-    const scoreWithScale = {
-      ...score,
-      scaleVersionId: args.score.scaleVersionId,
-    };
-
-    if (args.score.theta !== undefined) {
-      return ctx.db.insert("tryoutScores", {
-        ...scoreWithScale,
-        theta: args.score.theta,
-        thetaSE: args.score.thetaSE,
-      });
-    }
-
-    return ctx.db.insert("tryoutScores", scoreWithScale);
-  }
-
-  return ctx.db.insert("tryoutScores", score);
+  return ctx.db.insert("tryoutScores", {
+    ...score,
+    scaleVersionId: args.score.scaleVersionId,
+    theta: args.score.theta,
+    thetaSE: args.score.thetaSE,
+  });
 }
 
 /** Creates one count-based score source without any database reads. */

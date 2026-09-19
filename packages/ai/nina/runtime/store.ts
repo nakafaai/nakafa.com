@@ -28,6 +28,8 @@ export class NinaStore extends Context.Service<
     }) => Effect.Effect<void, NinaStoreError>;
     readonly saveFailure: (input: {
       readonly responseMessageId: string;
+      /** The framework retains this wait before durable refund scheduling. */
+      readonly settled: Effect.Effect<void>;
     }) => Effect.Effect<void, NinaStoreError>;
     readonly saveTrace: (
       input: CapabilityTrace

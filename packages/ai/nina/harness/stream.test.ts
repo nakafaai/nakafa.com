@@ -17,6 +17,7 @@ const createNinaStreamResponseMock = vi.hoisted(() => vi.fn());
 vi.mock("@repo/ai/nina/runtime/stream", () => ({
   createNinaStreamResponse: createNinaStreamResponseMock,
 }));
+const signal = new AbortController().signal;
 const modelId = ModelIdSchema.make("nakafa-lite");
 const programKey = LearningProgramKeySchema.make("cambridge-lower-secondary");
 const turn = {
@@ -113,11 +114,15 @@ describe("nina/harness/stream", () => {
     () =>
       Effect.gen(function* () {
         const response = yield* provideHarnessServices(
-          NinaHarness.use((service) => service.stream(turn))
+          NinaHarness.use((service) => service.stream(turn, signal, signal))
         );
         const body = yield* Effect.promise(() => response.text());
         expect(body).toBe("/subjects/mathematics/vector/addition");
-        expect(createNinaStreamResponseMock).toHaveBeenCalledWith(turn);
+        expect(createNinaStreamResponseMock).toHaveBeenCalledWith(
+          turn,
+          signal,
+          signal
+        );
       })
   );
   it.effect("rejects invalid route input with a tagged harness error", () =>
@@ -125,7 +130,7 @@ describe("nina/harness/stream", () => {
       const exit = yield* Effect.exit(
         provideHarnessServices(
           NinaHarness.use((service) =>
-            service.stream({ ...turn, page: undefined })
+            service.stream({ ...turn, page: undefined }, signal, signal)
           )
         )
       );

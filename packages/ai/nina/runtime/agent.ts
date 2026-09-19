@@ -85,6 +85,7 @@ function readNinaMessageMetadata({
 /** Streams one Nina ToolLoopAgent turn through the internal agent lifecycle. */
 export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
   messages,
+  signal,
   page,
   runtime,
   settings,
@@ -92,6 +93,7 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
   user,
 }: {
   readonly messages: NinaAgentMessages;
+  readonly signal: AbortSignal;
   readonly page: NinaPage;
   readonly runtime: NinaRuntime;
   readonly settings: NinaAgentToolSettings;
@@ -123,6 +125,7 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
   const streamTextResult = yield* Effect.tryPromise({
     try: () =>
       agent.stream({
+        abortSignal: signal,
         experimental_transform: smoothStream({
           chunking: "word",
           delayInMs: 20,

@@ -16,7 +16,9 @@ export const cleanupAttemptScale = Effect.fn("tryouts.runtime.cleanupScale")(
     if (scaleVersionId === undefined) {
       return false;
     }
-    const scale = yield* tryRuntimePromise(() => ctx.db.get(scaleVersionId));
+    const scale = yield* tryRuntimePromise(() =>
+      ctx.db.get("irtScaleVersions", scaleVersionId)
+    );
     if (!scale) {
       return yield* new TryoutRuntimeError({
         code: "TRYOUT_HISTORY_SCALE_MISSING",

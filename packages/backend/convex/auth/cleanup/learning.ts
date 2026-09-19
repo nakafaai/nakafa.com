@@ -44,6 +44,18 @@ const cleanupAccountHistory = Effect.fn("auth.cleanup.cleanupAccountHistory")(
       return true;
     }
 
+    const turns = yield* tryUserCleanup(() =>
+      ctx.db
+        .query("chatTurns")
+        .withIndex("by_userId", (query) => query.eq("userId", userId))
+        .take(SMALL_BATCH_SIZE)
+    );
+    for (const turn of turns) {
+      yield* tryUserCleanup(() => ctx.db.delete("chatTurns", turn._id));
+    }
+    if (turns.length > 0) {
+      return true;
+    }
     const transactions = yield* tryUserCleanup(() =>
       ctx.db
         .query("creditTransactions")

@@ -61,6 +61,15 @@ describe("chats/traces", () => {
         userId: identity.userId,
       }),
     ]);
+    await expect(
+      t.query(api.chats.traces.queries.list, { chatId: identity.chatId })
+    ).rejects.toThrow("UNAUTHORIZED");
+    expect(
+      await owner.query(api.chats.traces.queries.list, {
+        chatId: identity.chatId,
+        limit: 200,
+      })
+    ).toEqual(traces);
     expect(traces[0]?.evidence.summary).toBe("checked derivative evidence");
   });
 

@@ -4,10 +4,7 @@ import {
   readSectionCompletion,
   requireFinalSectionAttempts,
 } from "@repo/backend/convex/tryouts/runtime/completion";
-import {
-  TryoutRuntimeError,
-  tryRuntimePromise,
-} from "@repo/backend/convex/tryouts/runtime/error";
+import { tryRuntimePromise } from "@repo/backend/convex/tryouts/runtime/error";
 import {
   loadAttemptPlacements,
   loadSectionPlacements,
@@ -51,24 +48,16 @@ export const expireAttemptAtEffectiveTime = Effect.fn(
   }
 
   yield* tryRuntimePromise(() =>
-    ctx.db.patch(args.attempt._id, {
+    ctx.db.patch("tryoutAttempts", args.attempt._id, {
       expiresAt,
       lastActivityAt: args.now,
     })
   );
 
-  const currentAttempt = yield* tryRuntimePromise(() =>
-    ctx.db.get(args.attempt._id)
-  );
-
-  if (!currentAttempt) {
-    return yield* new TryoutRuntimeError({
-      code: "TRYOUT_ATTEMPT_NOT_FOUND",
-      message: "Try-out attempt not found.",
-    });
-  }
-
-  return yield* expireAttempt(ctx, { attempt: currentAttempt, now: args.now });
+  return yield* expireAttempt(ctx, {
+    attempt: { ...args.attempt, expiresAt, lastActivityAt: args.now },
+    now: args.now,
+  });
 });
 
 /** Creates an expired section attempt for a section the user never opened. */
@@ -218,7 +207,7 @@ export const finalizeSectionAttempt = Effect.fn(
     section: args.section,
   });
   yield* tryRuntimePromise(() =>
-    ctx.db.patch(args.section._id, {
+    ctx.db.patch("tryoutSectionAttempts", args.section._id, {
       answeredCount: finalization.answeredCount,
       completedAt: args.now,
       correctAnswers: finalization.correctAnswers,
@@ -230,7 +219,7 @@ export const finalizeSectionAttempt = Effect.fn(
   );
 
   yield* tryRuntimePromise(() =>
-    ctx.db.patch(args.attempt._id, {
+    ctx.db.patch("tryoutAttempts", args.attempt._id, {
       completedSectionKeys: completion.completedSectionKeys,
       lastActivityAt: args.now,
     })
@@ -240,18 +229,12 @@ export const finalizeSectionAttempt = Effect.fn(
     return { kind: "completed" };
   }
 
-  const currentAttempt = yield* tryRuntimePromise(() =>
-    ctx.db.get(args.attempt._id)
-  );
-  if (!currentAttempt) {
-    return yield* new TryoutRuntimeError({
-      code: "TRYOUT_ATTEMPT_NOT_FOUND",
-      message: "Try-out attempt not found.",
-    });
-  }
-
   yield* finalizeAttemptScore(ctx, {
-    attempt: currentAttempt,
+    attempt: {
+      ...args.attempt,
+      completedSectionKeys: completion.completedSectionKeys,
+      lastActivityAt: args.now,
+    },
     endReason: "submitted",
     now: args.now,
     responseIndex: attemptResponseIndex,
@@ -294,7 +277,7 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
       });
 
       yield* tryRuntimePromise(() =>
-        ctx.db.patch(section._id, {
+        ctx.db.patch("tryoutSectionAttempts", section._id, {
           answeredCount: finalization.answeredCount,
           completedAt: args.attempt.expiresAt,
           correctAnswers: finalization.correctAnswers,
@@ -315,7 +298,7 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
     });
 
     yield* tryRuntimePromise(() =>
-      ctx.db.patch(args.attempt._id, {
+      ctx.db.patch("tryoutAttempts", args.attempt._id, {
         completedSectionKeys: args.attempt.sectionSnapshots.map(
           (section) => section.sectionKey
         ),
@@ -323,18 +306,14 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
       })
     );
 
-    const currentAttempt = yield* tryRuntimePromise(() =>
-      ctx.db.get(args.attempt._id)
-    );
-    if (!currentAttempt) {
-      return yield* new TryoutRuntimeError({
-        code: "TRYOUT_ATTEMPT_NOT_FOUND",
-        message: "Try-out attempt not found.",
-      });
-    }
-
     return yield* finalizeAttemptScore(ctx, {
-      attempt: currentAttempt,
+      attempt: {
+        ...args.attempt,
+        completedSectionKeys: args.attempt.sectionSnapshots.map(
+          (section) => section.sectionKey
+        ),
+        lastActivityAt: args.now,
+      },
       endReason: "time-expired",
       now: args.now,
       responseIndex,

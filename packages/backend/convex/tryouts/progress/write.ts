@@ -76,7 +76,9 @@ export const writeTryoutSetProgress = Effect.fn(
 
   if (current) {
     yield* ensureTryoutProgressWithinReadBudget({ ...current, ...values });
-    yield* tryProgressPromise(() => ctx.db.patch(current._id, values));
+    yield* tryProgressPromise(() =>
+      ctx.db.patch("tryoutSetProgress", current._id, values)
+    );
     return current._id;
   }
 

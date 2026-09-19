@@ -1,5 +1,5 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { mutation } from "@repo/backend/convex/functions";
+import { mutation } from "@repo/backend/convex/_generated/server";
 import {
   getUnknownErrorMessage,
   readConvexErrorData,

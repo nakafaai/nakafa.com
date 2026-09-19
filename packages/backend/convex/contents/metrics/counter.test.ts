@@ -1,10 +1,11 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   buildMetricsBatch,
   type PopularityCounterDelta,
 } from "@repo/backend/convex/contents/metrics/batch";
 import { applyPopularityCounter } from "@repo/backend/convex/contents/metrics/counter";
+import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -78,6 +79,44 @@ function captureCounter(ctx: MutationCtx, counter: PopularityCounterDelta) {
 }
 
 describe("contents/metrics/counter", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("rolls back the counter when its transactional ranking write fails", async () => {
+    const target = convexTest(schema, convexModules);
+    vi.spyOn(learningPopularityRankings, "insert").mockRejectedValueOnce(
+      new Error("Ranking unavailable")
+    );
+
+    await expect(
+      target.mutation(async (ctx) => {
+        const queueId = await insertQueue(ctx, "rollback", "rollback");
+        const queueItem = await ctx.db.get("learningEngagementQueue", queueId);
+        if (!queueItem) {
+          throw new Error("Expected the ranking rollback queue fixture.");
+        }
+        const counter = [
+          ...buildMetricsBatch({
+            queueItems: [queueItem],
+            updatedAt: NOW,
+          }).counters.values(),
+        ][0];
+        if (!counter) {
+          throw new Error("Expected the ranking rollback counter delta.");
+        }
+        await runConvexProgram(
+          applyPopularityCounter(ctx, { ...counter, updatedAt: NOW })
+        );
+      })
+    ).rejects.toThrow("CONTENT_ANALYTICS_IO_FAILED");
+
+    const counters = await target.query((ctx) =>
+      ctx.db.query("learningPopularityCounters").take(1)
+    );
+    expect(counters).toEqual([]);
+  });
+
   it("maps a duplicate indexed counter read into the typed IO failure", async () => {
     const target = convexTest(schema, convexModules);
 

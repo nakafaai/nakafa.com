@@ -28,7 +28,11 @@ export class NinaHarness extends Context.Service<NinaHarness>()(
       const nakafa = yield* Nakafa;
       const search = yield* NakafaSearch;
       return {
-        stream: Effect.fn("nina.harness.stream")(function* (input: unknown) {
+        stream: Effect.fn("nina.harness.stream")(function* (
+          input: unknown,
+          signal: AbortSignal,
+          deadline: AbortSignal
+        ) {
           const turn = yield* Schema.decodeUnknownEffect(NinaTurnSchema)(
             input
           ).pipe(
@@ -39,7 +43,7 @@ export class NinaHarness extends Context.Service<NinaHarness>()(
                 })
             )
           );
-          return yield* createNinaStreamResponse(turn).pipe(
+          return yield* createNinaStreamResponse(turn, signal, deadline).pipe(
             Effect.provideService(NinaStore, store),
             Effect.provideService(NinaReporter, reporter),
             Effect.provideService(Nakafa, nakafa),

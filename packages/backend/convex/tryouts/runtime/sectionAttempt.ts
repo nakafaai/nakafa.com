@@ -141,19 +141,8 @@ export const startSectionAttempt = Effect.fn(
       tryoutAttemptId: currentAttempt._id,
     })
   );
-  const sectionAttempt = yield* tryRuntimePromise(() =>
-    ctx.db.get(sectionAttemptId)
-  );
-
-  if (!sectionAttempt) {
-    return yield* new TryoutRuntimeError({
-      code: "TRYOUT_SECTION_NOT_FOUND",
-      message: "Try-out section attempt not found.",
-    });
-  }
-
   yield* tryRuntimePromise(() =>
-    ctx.db.patch(currentAttempt._id, {
+    ctx.db.patch("tryoutAttempts", currentAttempt._id, {
       lastActivityAt: args.now,
     })
   );
@@ -197,10 +186,6 @@ const requireNoParallelSectionTimer = Effect.fn(
   const sections = yield* loadAttemptSections(ctx, args.attempt);
 
   for (const section of sections) {
-    if (section.sectionKey === args.sectionKey) {
-      continue;
-    }
-
     if (section.status !== "in-progress") {
       continue;
     }
@@ -222,7 +207,7 @@ const requireNoParallelSectionTimer = Effect.fn(
   }
 
   const currentAttempt = yield* tryRuntimePromise(() =>
-    ctx.db.get(args.attempt._id)
+    ctx.db.get("tryoutAttempts", args.attempt._id)
   );
 
   if (currentAttempt?.status !== "in-progress") {

@@ -13,20 +13,26 @@ import {
   modelIdValueValidator,
 } from "@repo/backend/convex/chats/schema";
 import tables from "@repo/backend/convex/chats/tables/schema";
+import {
+  readChatTurn,
+  refundChatTurn,
+} from "@repo/backend/convex/chats/turns/impl";
 import type { CreditTransactionMetadata } from "@repo/backend/convex/credits/schema";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
 /**
- * Persists an assistant message with parts and deducts credits atomically.
+ * Persists an assistant message and settles its credits atomically.
  *
- * Credits are deducted after streaming. A deleted-account tombstone turns a
- * previously scheduled write into an idempotent no-op.
+ * Reserved turns complete the existing debit. The predecessor server can still
+ * charge after streaming during rollout. Account deletion makes retries a no-op.
  */
 export const saveAssistantResponse = internalMutation({
   args: {
     userId: vv.id("users"),
+    turnId: v.optional(vv.id("chatTurns")),
     message: tables.messages.validator,
     parts: v.array(
       v.object({
@@ -52,6 +58,14 @@ export const saveAssistantResponse = internalMutation({
       return null;
     }
 
+    const turn = args.turnId
+      ? await runConvexProgram(
+          readChatTurn(ctx, args.turnId, appUser._id, message.modelId)
+        )
+      : null;
+    if (args.turnId && !turn) {
+      return null;
+    }
     await verifyChatOwnership(ctx, message.chatId, appUser._id);
     await deleteExistingResponseByIdentifier(
       ctx,
@@ -59,15 +73,23 @@ export const saveAssistantResponse = internalMutation({
       message.identifier
     );
 
-    const modelId = message.modelId
-      ? ModelIdSchema.make(message.modelId)
+    const selectedModel = turn?.modelId ?? message.modelId;
+    const modelId = selectedModel
+      ? ModelIdSchema.make(selectedModel)
       : undefined;
-    const creditUsage = await getAssistantCreditUsage(ctx, appUser, modelId);
+    const creditUsage = turn
+      ? {
+          credits: turn.credits,
+          newBalance: appUser.credits,
+          nextResetTimestamp: appUser.creditsResetAt,
+          resetGrant: null,
+        }
+      : await getAssistantCreditUsage(ctx, appUser, modelId);
     const messageId = await ctx.db.insert("messages", {
       chatId: message.chatId,
       role: message.role,
       identifier: message.identifier,
-      modelId: message.modelId,
+      modelId,
       inputTokens: message.inputTokens,
       outputTokens: message.outputTokens,
       totalTokens: message.totalTokens,
@@ -117,13 +139,20 @@ export const saveAssistantResponse = internalMutation({
       usageMetadata.totalTokens = message.totalTokens;
     }
 
-    await ctx.db.insert("creditTransactions", {
-      userId: appUser._id,
-      amount: -creditUsage.credits,
-      type: "usage",
-      balanceAfter: creditUsage.newBalance,
-      metadata: usageMetadata,
-    });
+    if (turn) {
+      await ctx.db.patch("creditTransactions", turn.transactionId, {
+        metadata: usageMetadata,
+      });
+      await ctx.db.delete("chatTurns", turn._id);
+    } else {
+      await ctx.db.insert("creditTransactions", {
+        userId: appUser._id,
+        amount: -creditUsage.credits,
+        type: "usage",
+        balanceAfter: creditUsage.newBalance,
+        metadata: usageMetadata,
+      });
+    }
 
     return {
       messageId,
@@ -138,6 +167,7 @@ export const saveAssistantResponse = internalMutation({
 export const saveAssistantFailure = internalMutation({
   args: {
     userId: vv.id("users"),
+    turnId: v.optional(vv.id("chatTurns")),
     message: v.object({
       chatId: vv.id("chats"),
       identifier: v.string(),
@@ -159,6 +189,14 @@ export const saveAssistantFailure = internalMutation({
       return null;
     }
 
+    const turn = args.turnId
+      ? await runConvexProgram(
+          readChatTurn(ctx, args.turnId, appUser._id, message.modelId)
+        )
+      : null;
+    if (args.turnId && !turn) {
+      return null;
+    }
     await verifyChatOwnership(ctx, message.chatId, appUser._id);
     await deleteExistingResponseByIdentifier(
       ctx,
@@ -175,6 +213,9 @@ export const saveAssistantFailure = internalMutation({
       generationErrorCode: message.generationErrorCode,
     });
 
+    if (turn) {
+      await runConvexProgram(refundChatTurn(ctx, turn));
+    }
     return { messageId };
   },
 });

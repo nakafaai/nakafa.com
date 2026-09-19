@@ -11,13 +11,14 @@ import { v } from "convex/values";
 
 /**
  * Enqueues saveAssistantResponse as a scheduled internal mutation.
- * Guarantees exactly-once execution with automatic retry — unlike a direct
+ * Guarantees exactly-once execution with automatic retry, unlike a direct
  * fetchMutation call which has no retry on transient failures.
  *
  * @see https://docs.convex.dev/scheduling/scheduled-functions
  */
 export const scheduleSaveAssistantResponse = action({
   args: {
+    turnId: v.optional(vv.id("chatTurns")),
     message: tables.messages.validator,
     parts: v.array(
       v.object({
@@ -45,6 +46,7 @@ export const scheduleSaveAssistantResponse = action({
  */
 export const scheduleSaveAssistantFailure = action({
   args: {
+    turnId: v.optional(vv.id("chatTurns")),
     message: v.object({
       chatId: vv.id("chats"),
       identifier: v.string(),

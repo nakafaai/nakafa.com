@@ -110,12 +110,16 @@ export type WelcomeIntentInput = Infer<typeof welcomeIntentInputValidator>;
 export const readWelcomeIntentInput = Effect.fn(
   "emails.welcome.readIntentInput"
 )(function* (ctx: QueryCtx, intentId: Id<"welcomeEmailIntents">) {
-  const intent = yield* tryWelcomeIntent(() => ctx.db.get(intentId));
+  const intent = yield* tryWelcomeIntent(() =>
+    ctx.db.get("welcomeEmailIntents", intentId)
+  );
   if (intent?.phase !== "scheduled") {
     return null;
   }
 
-  const user = yield* tryWelcomeIntent(() => ctx.db.get(intent.userId));
+  const user = yield* tryWelcomeIntent(() =>
+    ctx.db.get("users", intent.userId)
+  );
   if (!user || user.deletedAt !== undefined) {
     return null;
   }

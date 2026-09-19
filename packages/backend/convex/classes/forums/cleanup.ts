@@ -231,7 +231,9 @@ export const cleanupForumData = Effect.fn(
   const post = yield* tryForumCleanup(() =>
     ctx.db
       .query("schoolClassForumPosts")
-      .withIndex("by_forumId", (query) => query.eq("forumId", forumId))
+      .withIndex("by_forumId_and_sequence", (query) =>
+        query.eq("forumId", forumId)
+      )
       .first()
   );
 

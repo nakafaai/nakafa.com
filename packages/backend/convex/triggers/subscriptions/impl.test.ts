@@ -126,11 +126,36 @@ describe("triggers/subscriptions/impl", () => {
     vi.useRealTimers();
   });
 
+  it("fails the plan sync transaction when its customer lookup fails", async () => {
+    const t = createSubscriptionTestConvex();
+    await expect(
+      t.mutation(async (ctx) => {
+        const id = await insertSubscription(ctx, {
+          customerId: "broken",
+          productId: products.pro.id,
+          status: "active",
+          subscriptionId: "broken",
+        });
+        const subscription = await ctx.db.get("subscriptions", id);
+        if (!subscription) {
+          throw new Error("Fixture subscription missing");
+        }
+        vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
+          throw new Error("lookup unavailable");
+        });
+        return runConvexProgram(syncCustomerPlan(ctx, subscription));
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "SUBSCRIPTION_PLAN_SYNC_IO_FAILED",
+        message: "lookup unavailable",
+      },
+    });
+  });
+
   it("returns without side effects when the customer is missing", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createSubscriptionTestConvex();
-
     const result = await t.mutation(async (ctx) => {
       await insertSubscription(ctx, {
         customerId: "missing-customer",
@@ -138,27 +163,22 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-missing-customer",
       });
-
       const ran = await runSyncCustomerPlanBySubscriptionId(
         ctx,
         "sub-missing-customer"
       );
-
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
         ran,
       };
     });
-
     expect(result.ran).toBe(true);
     expect(result.creditTransactions).toHaveLength(0);
   });
 
   it("returns without side effects when the customer user is missing", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createSubscriptionTestConvex();
-
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "missing-user");
       await insertCustomer(ctx, userId, "polar-missing-user");
@@ -169,34 +189,28 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-missing-user",
       });
-
       const ran = await runSyncCustomerPlanBySubscriptionId(
         ctx,
         "sub-missing-user"
       );
-
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
         ran,
       };
     });
-
     expect(result.ran).toBe(true);
     expect(result.creditTransactions).toHaveLength(0);
   });
 
   it("returns early when the derived plan is unchanged", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createSubscriptionTestConvex();
-
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "no-op", {
         credits: 7,
         creditsResetAt: NOW - 1000,
         plan: "free",
       });
-
       await insertCustomer(ctx, userId, "polar-no-op");
       await insertSubscription(ctx, {
         customerId: "polar-no-op",
@@ -204,16 +218,13 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-no-op",
       });
-
       await runSyncCustomerPlanBySubscriptionId(ctx, "sub-no-op");
-
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
         storedResetAt: await getStoredCreditResetTimestamp(ctx.db, "free"),
         user: await ctx.db.get("users", userId),
       };
     });
-
     expect(result.creditTransactions).toHaveLength(0);
     expect(result.storedResetAt).toBeNull();
     expect(result.user).toMatchObject({
@@ -225,9 +236,7 @@ describe("triggers/subscriptions/impl", () => {
 
   it("upgrades a free user to pro and records a purchase transaction", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createSubscriptionTestConvex();
-
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "upgrade", {
         credits: 4,
@@ -235,7 +244,6 @@ describe("triggers/subscriptions/impl", () => {
         plan: "free",
       });
       await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
-
       await insertCustomer(ctx, userId, "polar-upgrade");
       await insertSubscription(ctx, {
         customerId: "polar-upgrade",
@@ -243,9 +251,7 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-upgrade",
       });
-
       await runSyncCustomerPlanBySubscriptionId(ctx, "sub-upgrade");
-
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
         scheduledJobs: await ctx.db.system
@@ -255,7 +261,6 @@ describe("triggers/subscriptions/impl", () => {
         user: await ctx.db.get("users", userId),
       };
     });
-
     expect(result.user).toMatchObject({
       credits: 3000,
       plan: "pro",
@@ -305,9 +310,7 @@ describe("triggers/subscriptions/impl", () => {
 
   it("downgrades a pro user without recording a cancellation for an active subscription", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createSubscriptionTestConvex();
-
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "downgrade", {
         credits: 120,
@@ -315,7 +318,6 @@ describe("triggers/subscriptions/impl", () => {
         plan: "pro",
       });
       await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
-
       await insertCustomer(ctx, userId, "polar-downgrade");
       await insertSubscription(ctx, {
         customerId: "polar-downgrade",
@@ -323,9 +325,7 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-downgrade",
       });
-
       await runSyncCustomerPlanBySubscriptionId(ctx, "sub-downgrade");
-
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
         scheduledJobs: await ctx.db.system
@@ -335,7 +335,6 @@ describe("triggers/subscriptions/impl", () => {
         user: await ctx.db.get("users", userId),
       };
     });
-
     expect(result.user).toMatchObject({
       credits: 10,
       plan: "free",
@@ -373,9 +372,7 @@ describe("triggers/subscriptions/impl", () => {
 
   it("records a cancellation only when a canceled subscription downgrades the user", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createSubscriptionTestConvex();
-
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "canceled-downgrade", {
         credits: 120,
@@ -383,7 +380,6 @@ describe("triggers/subscriptions/impl", () => {
         plan: "pro",
       });
       await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
-
       await insertCustomer(ctx, userId, "polar-canceled-downgrade");
       await insertSubscription(ctx, {
         customerId: "polar-canceled-downgrade",
@@ -391,9 +387,7 @@ describe("triggers/subscriptions/impl", () => {
         status: "canceled",
         subscriptionId: "sub-canceled-downgrade",
       });
-
       await runSyncCustomerPlanBySubscriptionId(ctx, "sub-canceled-downgrade");
-
       return {
         scheduledJobs: await ctx.db.system
           .query("_scheduled_functions")
@@ -401,7 +395,6 @@ describe("triggers/subscriptions/impl", () => {
         user: await ctx.db.get("users", userId),
       };
     });
-
     expect(result.user).toMatchObject({
       credits: 10,
       plan: "free",
@@ -435,25 +428,24 @@ describe("triggers/subscriptions/impl", () => {
     ]);
   });
 
-  it("picks the highest plan across overlapping active subscriptions", async () => {
+  it("finds Pro beyond unrelated active subscriptions and attributes the earliest matching grant", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createSubscriptionTestConvex();
-
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "highest-plan", {
         credits: 10,
         creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
         plan: "free",
       });
-
       await insertCustomer(ctx, userId, "polar-highest-plan");
-      await insertSubscription(ctx, {
-        customerId: "polar-highest-plan",
-        productId: "free-plan",
-        status: "active",
-        subscriptionId: "sub-highest-plan-free",
-      });
+      for (let index = 0; index < 20; index += 1) {
+        await insertSubscription(ctx, {
+          customerId: "polar-highest-plan",
+          productId: `unrelated-product-${index}`,
+          status: "active",
+          subscriptionId: `sub-unrelated-${index}`,
+        });
+      }
       await insertSubscription(ctx, {
         customerId: "polar-highest-plan",
         productId: products.pro.id,
@@ -463,18 +455,21 @@ describe("triggers/subscriptions/impl", () => {
       await insertSubscription(ctx, {
         customerId: "polar-highest-plan",
         productId: products.pro.id,
+        status: "active",
+        subscriptionId: "sub-later-pro",
+      });
+      await insertSubscription(ctx, {
+        customerId: "polar-highest-plan",
+        productId: products.pro.id,
         status: "canceled",
         subscriptionId: "sub-highest-plan-canceled",
       });
-
-      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-highest-plan-free");
-
+      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-unrelated-0");
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
         user: await ctx.db.get("users", userId),
       };
     });
-
     expect(result.user).toMatchObject({
       credits: 3000,
       plan: "pro",
@@ -484,6 +479,9 @@ describe("triggers/subscriptions/impl", () => {
     expect(result.creditTransactions[0]).toMatchObject({
       amount: 3000,
       type: "purchase",
+      metadata: expect.objectContaining({
+        "subscription-id": "sub-highest-plan-pro",
+      }),
     });
   });
 });

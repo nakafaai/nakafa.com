@@ -11,10 +11,15 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
+import { readConvexErrorData } from "@repo/backend/convex/lib/effect";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Option, Schema } from "effect";
-import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
+import {
+  ChatAdmissionError,
+  ChatMutationError,
+  ChatQueryError,
+} from "@/app/api/chat/errors";
 
 /** Generated Convex page shape returned by the chat-message pagination query. */
 type ChatMessagesPage = FunctionReturnType<
@@ -230,4 +235,57 @@ export const loadMessages = Effect.fn("chat.loadMessages")(function* ({
 
     cursor = page.continueCursor;
   }
+});
+
+/** Convex atomically debits before the server can invoke any provider. */
+export const reserveChatTurn = Effect.fn("chat.reserveChatTurn")(function* (
+  modelId: ModelId,
+  token: string
+) {
+  return yield* Effect.tryPromise({
+    try: () =>
+      fetchMutation(
+        convexApi.chats.turns.mutations.reserve,
+        { modelId },
+        { token }
+      ),
+    catch: (cause) => {
+      const failure = readConvexErrorData(cause);
+      if (
+        failure?.code === "INSUFFICIENT_CREDITS" ||
+        failure?.code === "RATE_LIMITED"
+      ) {
+        return new ChatAdmissionError({
+          code: failure.code,
+          message: failure.message,
+        });
+      }
+      return new ChatMutationError({
+        cause,
+        message: "Unable to reserve chat credits.",
+        operation: "reserve-turn",
+      });
+    },
+  });
+});
+
+/** Releases admission after a failure before the streaming lifecycle starts. */
+export const releaseChatTurn = Effect.fn("chat.releaseChatTurn")(function* (
+  turnId: Id<"chatTurns">,
+  token: string
+) {
+  yield* Effect.tryPromise({
+    try: () =>
+      fetchMutation(
+        convexApi.chats.turns.mutations.release,
+        { turnId },
+        { token }
+      ),
+    catch: (cause) =>
+      new ChatMutationError({
+        cause,
+        message: "Unable to release chat credits.",
+        operation: "release-turn",
+      }),
+  });
 });

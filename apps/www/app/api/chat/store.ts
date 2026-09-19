@@ -23,11 +23,13 @@ import { loadMessages } from "@/app/api/chat/persistence";
  */
 export function createNinaStore({
   chatId,
+  turnId,
   modelId,
   reportError,
   token,
 }: {
   readonly chatId: Id<"chats">;
+  readonly turnId: Id<"chatTurns">;
   readonly modelId: ModelId;
   readonly reportError: (error: unknown, source: string) => void;
   readonly token: string;
@@ -52,6 +54,7 @@ export function createNinaStore({
               fetchAction(
                 convexApi.chats.actions.scheduleSaveAssistantResponse,
                 {
+                  turnId,
                   message: {
                     chatId,
                     identifier: responseMessage.id,
@@ -77,16 +80,21 @@ export function createNinaStore({
           )
         );
       }),
-    saveFailure: ({ responseMessageId }) =>
+    // Register waitUntil before cancellation settles, even after socket closure.
+    saveFailure: ({ responseMessageId, settled }) =>
       Effect.sync(() => {
         waitUntil(
           Effect.runPromise(
-            persistAssistantFailure({
-              chatId,
-              modelId,
-              responseMessageId,
-              token,
-            }).pipe(
+            settled.pipe(
+              Effect.andThen(
+                persistAssistantFailure({
+                  chatId,
+                  turnId,
+                  modelId,
+                  responseMessageId,
+                  token,
+                })
+              ),
               Effect.catch((error) =>
                 Effect.sync(() => reportError(error, "saveAssistantFailure"))
               )

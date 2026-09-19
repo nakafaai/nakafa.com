@@ -66,11 +66,6 @@ const tables = {
       "locale",
       "lastViewedAt",
     ])
-    .index("by_deviceId_and_content_id_and_contextKey", [
-      "deviceId",
-      "content_id",
-      "contextKey",
-    ])
     .index("by_deviceId_and_content_id_and_contextKey_and_lastViewedAt", [
       "deviceId",
       "content_id",

@@ -88,7 +88,7 @@ export const readLatestProgressAttempt = Effect.fn(
   }
 
   const attempt = yield* tryRuntimePromise(() =>
-    ctx.db.get(progress.latestAttemptId)
+    ctx.db.get("tryoutAttempts", progress.latestAttemptId)
   );
   if (!attempt) {
     return yield* new TryoutRuntimeError({
@@ -111,7 +111,9 @@ export const readLatestProgressAttempt = Effect.fn(
 export const readOwnedAttemptById = Effect.fn(
   "tryouts.runtime.readOwnedAttemptById"
 )(function* (ctx: QueryCtx, attemptId: Id<"tryoutAttempts">, userId: UserId) {
-  const attempt = yield* tryRuntimePromise(() => ctx.db.get(attemptId));
+  const attempt = yield* tryRuntimePromise(() =>
+    ctx.db.get("tryoutAttempts", attemptId)
+  );
   if (attempt?.userId !== userId) {
     return null;
   }

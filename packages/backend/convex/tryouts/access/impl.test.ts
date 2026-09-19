@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -9,7 +9,13 @@ import {
   tryoutEntitlementSourceKindSubscription,
 } from "@repo/backend/convex/tryoutAccess/schema";
 import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
+import {
+  ensureSubscriptionEntitlement,
+  isActiveProSubscription,
+  loadActiveProSubscription,
+} from "@repo/backend/convex/tryouts/access/subscription";
 import { products } from "@repo/backend/convex/utils/polar/products";
+import { getOrThrow } from "convex-helpers/server/relationships";
 import { convexTest } from "convex-test";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
@@ -92,6 +98,121 @@ function resolveAccess(
 }
 
 describe("tryouts/access/impl", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+  it("renews one entitlement without moving its start or granting an expired period", async () => {
+    const t = convexTest(schema, convexModules);
+    const result = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx);
+      const subscriptionId = await insertSubscription(ctx, {
+        status: "active",
+        subscriptionId: "renewed-period",
+      });
+      const subscription = await getOrThrow(
+        ctx,
+        "subscriptions",
+        subscriptionId
+      );
+      const args = {
+        countryKey: "indonesia",
+        examKey: "snbt",
+        now: NOW,
+        subscription,
+        userId,
+      };
+      await runConvexProgram(ensureSubscriptionEntitlement(ctx, args));
+      await runConvexProgram(
+        ensureSubscriptionEntitlement(ctx, {
+          ...args,
+          now: NOW + 1000,
+          subscription: {
+            ...subscription,
+            currentPeriodEnd: new Date(PERIOD_END + 86_400_000).toISOString(),
+          },
+        })
+      );
+      await runConvexProgram(
+        ensureSubscriptionEntitlement(ctx, {
+          ...args,
+          subscription: {
+            ...subscription,
+            currentPeriodEnd: new Date(NOW).toISOString(),
+          },
+        })
+      );
+      return await ctx.db.query("tryoutEntitlements").collect();
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      startsAt: NOW,
+      endsAt: PERIOD_END + 86_400_000,
+    });
+  });
+
+  it("rejects another product and preserves typed lookup failures", async () => {
+    const t = convexTest(schema, convexModules);
+    const userId = await t.mutation(insertUser);
+    await t.query(async (ctx) => {
+      vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
+        throw new Error("Subscription store unavailable");
+      });
+      await expect(
+        runConvexProgram(
+          loadActiveProSubscription(ctx, {
+            countryKey: "indonesia",
+            examKey: "snbt",
+            now: NOW,
+            setKey: "set-1",
+            trackKey: "2027",
+            userId,
+          })
+        )
+      ).rejects.toMatchObject({ data: { code: "TRYOUT_START_FAILED" } });
+    });
+    await t.mutation(async (ctx) => {
+      const subscriptionId = await insertSubscription(ctx, {
+        status: "active",
+        subscriptionId: "other-product",
+      });
+      const subscription = await getOrThrow(
+        ctx,
+        "subscriptions",
+        subscriptionId
+      );
+      expect(
+        isActiveProSubscription(
+          { ...subscription, productId: "another-product" },
+          NOW
+        )
+      ).toBe(false);
+    });
+  });
+
+  it("finds live subscription access after more than ten expired records", async () => {
+    const t = convexTest(schema, convexModules);
+    const result = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx);
+      await insertCustomer(ctx, userId);
+      for (let index = 0; index < 32; index += 1) {
+        await insertSubscription(ctx, {
+          currentPeriodEnd: new Date(NOW - index).toISOString(),
+          status: "active",
+          subscriptionId: `expired-${index}`,
+        });
+      }
+      await insertSubscription(ctx, {
+        status: "active",
+        subscriptionId: "live-subscription",
+      });
+      return await resolveAccess(ctx, userId);
+    });
+    expect(result).toMatchObject({
+      accessEndsAt: PERIOD_END,
+      accessSubscriptionId: "live-subscription",
+    });
+  });
+
   it("creates an exam entitlement from an active Pro subscription", async () => {
     const t = convexTest(schema, convexModules);
 

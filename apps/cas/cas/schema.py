@@ -1,8 +1,16 @@
 """Pydantic contracts for the Nakafa CAS HTTP API."""
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
+
+# School calculations keep each operand readable and each collection modest.
+# These shape limits complement the process deadline: short expressions can still
+# expand into expensive symbolic work, so shape validation is not a CPU budget.
+MathText = Annotated[str, Field(max_length=2048)]
+MathValues = Annotated[list[MathText], Field(max_length=128)]
+MathMatrixRow = Annotated[list[MathText], Field(max_length=16)]
+MathMatrix = Annotated[list[MathMatrixRow], Field(max_length=16)]
 
 MathStatus = Literal["verified", "contradicted", "inconclusive"]
 MathSource = Literal["math"]
@@ -14,8 +22,8 @@ class PointInput(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    x: str
-    y: str
+    x: MathText
+    y: MathText
 
 
 class MathRequest(BaseModel):
@@ -26,30 +34,30 @@ class MathRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: MathSource
-    operation: str
-    expression: str | None = None
-    expressions: list[str] = Field(default_factory=list)
+    operation: MathText
+    expression: MathText | None = None
+    expressions: MathValues = Field(default_factory=list)
     inclusive: bool | None = None
-    left: str | None = None
-    right: str | None = None
-    variable: str | None = None
-    variables: list[str] = Field(default_factory=list)
-    point: str | None = None
-    order: int | None = None
-    lower: str | None = None
+    left: MathText | None = None
+    right: MathText | None = None
+    variable: MathText | None = None
+    variables: MathValues = Field(default_factory=list)
+    point: MathText | None = None
+    order: int | None = Field(default=None, le=100)
+    lower: MathText | None = None
     lowerInclusive: bool | None = None
-    upper: str | None = None
+    upper: MathText | None = None
     upperInclusive: bool | None = None
-    matrix: list[list[str]] = Field(default_factory=list)
-    right_matrix: list[list[str]] = Field(default_factory=list)
-    vector: list[str] = Field(default_factory=list)
-    values: list[str] = Field(default_factory=list)
-    points: list[PointInput] = Field(default_factory=list)
-    distribution: str | None = None
-    parameters: dict[str, str] = Field(default_factory=dict)
-    modulus: str | None = None
-    n: str | None = None
-    k: str | None = None
+    matrix: MathMatrix = Field(default_factory=list)
+    right_matrix: MathMatrix = Field(default_factory=list)
+    vector: MathValues = Field(default_factory=list)
+    values: MathValues = Field(default_factory=list)
+    points: list[PointInput] = Field(default_factory=list, max_length=128)
+    distribution: MathText | None = None
+    parameters: dict[MathText, MathText] = Field(default_factory=dict, max_length=16)
+    modulus: MathText | None = None
+    n: MathText | None = None
+    k: MathText | None = None
 
 
 class MathExpression(BaseModel):

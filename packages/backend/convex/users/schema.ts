@@ -42,6 +42,8 @@ export const userValidator = v.object({
   plan: userPlanValidator,
   credits: v.number(),
   creditsResetAt: v.number(),
+  // Identifies a balance replacement caused by a subscription plan change.
+  planCreditGrantId: v.optional(v.id("creditTransactions")),
   authVerificationCleanupCursor: v.optional(v.string()),
   deletionCleanupStartedAt: v.optional(v.number()),
   deletionPreparedAt: v.optional(v.number()),

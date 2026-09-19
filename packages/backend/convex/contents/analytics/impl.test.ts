@@ -11,6 +11,7 @@ import {
 } from "@repo/backend/convex/contents/constants";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
@@ -164,6 +165,7 @@ describe("contents/analytics/impl", () => {
 
   it("creates one active lease and leaves it unchanged until expiry", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     await target.mutation((ctx) => enqueueViews(ctx, 1));
 
     await expect(claim(target)).resolves.toEqual({
@@ -191,6 +193,7 @@ describe("contents/analytics/impl", () => {
 
   it("does not create a lease for an empty queue", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
 
     await expect(claim(target)).resolves.toEqual({
       createdPartition: false,
@@ -205,6 +208,7 @@ describe("contents/analytics/impl", () => {
 
   it("reclaims an expired lease with a new version", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     await target.mutation(async (ctx) => {
       await enqueueViews(ctx, 1);
       await insertPartition(ctx, {
@@ -228,6 +232,7 @@ describe("contents/analytics/impl", () => {
 
   it("drains a partial batch and releases its lease", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     await target.mutation(async (ctx) => {
       await insertPartition(ctx);
       await enqueueViews(ctx, 2);
@@ -253,6 +258,7 @@ describe("contents/analytics/impl", () => {
 
   it("continues a full batch without releasing its lease", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     await target.mutation(async (ctx) => {
       await insertPartition(ctx);
       await enqueueViews(ctx, CONTENT_ANALYTICS_BATCH_SIZE);
@@ -281,6 +287,7 @@ describe("contents/analytics/impl", () => {
 
   it("releases an active lease whose queue became empty", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     await target.mutation((ctx) => insertPartition(ctx));
 
     await expect(process(target)).resolves.toEqual({
@@ -314,6 +321,7 @@ describe("contents/analytics/impl", () => {
 
   it("rejects partitions outside the configured set", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     const partition = CONTENT_ANALYTICS_PARTITIONS.length;
 
     await expect(claim(target, partition)).rejects.toMatchObject({

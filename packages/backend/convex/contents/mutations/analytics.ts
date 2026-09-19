@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { processClaimedContentAnalyticsPartition } from "@repo/backend/convex/contents/analytics/drain";
 import {
   claimContentAnalyticsPartition,
@@ -14,7 +15,6 @@ import {
   scheduleContentAnalyticsPartitionResultValidator,
   scheduleContentAnalyticsPartitionsResultValidator,
 } from "@repo/backend/convex/contents/analytics/spec";
-import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
 /** Schedules one worker attempt per analytics partition. */

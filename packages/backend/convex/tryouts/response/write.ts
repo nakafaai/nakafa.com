@@ -55,7 +55,9 @@ const requirePlacement = Effect.fn("tryouts.response.requirePlacement")(
     ctx: MutationCtx,
     placementId: SaveTryoutResponseArgs["placementId"]
   ) {
-    const placement = yield* tryResponsePromise(() => ctx.db.get(placementId));
+    const placement = yield* tryResponsePromise(() =>
+      ctx.db.get("tryoutAttemptPlacements", placementId)
+    );
     if (!placement) {
       return yield* new TryoutResponseError({
         code: "TRYOUT_PLACEMENT_NOT_FOUND",
@@ -150,7 +152,9 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
     if (!existing) {
       return null;
     }
-    yield* tryResponsePromise(() => ctx.db.delete(existing._id));
+    yield* tryResponsePromise(() =>
+      ctx.db.delete("tryoutResponses", existing._id)
+    );
     yield* updateResponseActivity(ctx, {
       answeredDelta: -Number(existing.isComplete),
       attemptId: attempt._id,
@@ -181,7 +185,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
       Number(evaluated.isComplete) - Number(existing.isComplete);
 
     yield* tryResponsePromise(() =>
-      ctx.db.patch(existing._id, {
+      ctx.db.patch("tryoutResponses", existing._id, {
         isComplete: evaluated.isComplete,
         isCorrect: evaluated.isCorrect,
         selection: evaluated.selection,
@@ -235,14 +239,16 @@ const updateResponseActivity = Effect.fn("tryouts.response.updateActivity")(
     }
   ) {
     yield* tryResponsePromise(() =>
-      ctx.db.patch(input.section._id, {
+      ctx.db.patch("tryoutSectionAttempts", input.section._id, {
         answeredCount: input.section.answeredCount + input.answeredDelta,
         correctAnswers: input.section.correctAnswers + input.correctDelta,
         lastActivityAt: input.now,
       })
     );
     yield* tryResponsePromise(() =>
-      ctx.db.patch(input.attemptId, { lastActivityAt: input.now })
+      ctx.db.patch("tryoutAttempts", input.attemptId, {
+        lastActivityAt: input.now,
+      })
     );
   }
 );

@@ -59,6 +59,7 @@ describe("nina/runtime/suggest", () => {
         partialOutputStream: suggestionPartials([{}, { suggestions: [] }]),
       });
       yield* writeNinaSuggestions({
+        signal: yield* Effect.abortSignal,
         locale: "id",
         messages,
         writer,
@@ -121,6 +122,7 @@ describe("nina/runtime/suggest", () => {
           partialOutputStream: suggestionPartials([]),
         });
         yield* writeNinaSuggestions({
+          signal: yield* Effect.abortSignal,
           locale: "id",
           messages: transcriptWithToolCall,
           writer,
@@ -168,6 +170,7 @@ describe("nina/runtime/suggest", () => {
           ]),
         });
         yield* writeNinaSuggestions({
+          signal: yield* Effect.abortSignal,
           locale: "id",
           messages,
           writer,
@@ -204,6 +207,7 @@ describe("nina/runtime/suggest", () => {
           partialOutputStream: suggestionPartials([{}]),
         });
         yield* writeNinaSuggestions({
+          signal: yield* Effect.abortSignal,
           locale: "id",
           messages,
           writer,
@@ -224,6 +228,7 @@ describe("nina/runtime/suggest", () => {
         });
         const result = yield* Effect.result(
           writeNinaSuggestions({
+            signal: yield* Effect.abortSignal,
             locale: "id",
             messages,
             writer,
@@ -250,6 +255,7 @@ describe("nina/runtime/suggest", () => {
         });
         const result = yield* Effect.result(
           writeNinaSuggestions({
+            signal: yield* Effect.abortSignal,
             locale: "id",
             messages,
             writer,

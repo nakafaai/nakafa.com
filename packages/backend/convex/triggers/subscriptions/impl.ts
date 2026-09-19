@@ -19,10 +19,6 @@ const proPlan = "pro" satisfies UserPlan;
 const activeSubscriptionStatus = "active";
 const canceledSubscriptionStatus = "canceled";
 
-const productToPlan: ReadonlyMap<string, UserPlan> = new Map([
-  [products.pro.id, proPlan],
-]);
-
 type SubscriptionDoc = Doc<"subscriptions">;
 type UserDoc = Doc<"users">;
 
@@ -32,19 +28,6 @@ function toSubscriptionPlanSyncIoError(error: unknown) {
     code: subscriptionPlanSyncIoFailedCode,
     message: getUnknownErrorMessage(error),
   });
-}
-
-/** Maps one Polar product ID to the app plan it grants. */
-function getPlanFromProductId(productId: SubscriptionDoc["productId"]) {
-  return productToPlan.get(productId) ?? freePlan;
-}
-
-/** Keeps the plan with the larger credit allowance. */
-function getHigherPlan(currentPlan: UserPlan, nextPlan: UserPlan) {
-  const currentCredits = getPlanCreditConfig(currentPlan).amount;
-  const nextCredits = getPlanCreditConfig(nextPlan).amount;
-
-  return nextCredits > currentCredits ? nextPlan : currentPlan;
 }
 
 /** Loads the app customer linked to one Polar customer ID. */
@@ -61,44 +44,24 @@ const loadCustomer = Effect.fn("triggers.subscriptions.loadCustomer")(
   }
 );
 
-/** Loads active subscription rows that still grant the customer access. */
-const loadActiveSubscriptions = Effect.fn(
-  "triggers.subscriptions.loadActiveSubscriptions"
+/** Loads the earliest active Pro subscription that grants the customer a plan. */
+const loadActiveProSubscription = Effect.fn(
+  "triggers.subscriptions.loadActiveProSubscription"
 )(function* (db: MutationCtx["db"], customerId: SubscriptionDoc["customerId"]) {
   return yield* Effect.tryPromise({
     try: () =>
       db
         .query("subscriptions")
-        .withIndex("by_customerId_and_status", (q) =>
-          q.eq("customerId", customerId).eq("status", activeSubscriptionStatus)
+        .withIndex("by_customerId_and_status_and_productId", (q) =>
+          q
+            .eq("customerId", customerId)
+            .eq("status", activeSubscriptionStatus)
+            .eq("productId", products.pro.id)
         )
-        .collect(),
+        .first(),
     catch: toSubscriptionPlanSyncIoError,
   });
 });
-
-/** Derives the user's effective plan from the customer's active subscriptions. */
-function deriveCustomerPlan(
-  activeSubscriptions: readonly SubscriptionDoc[],
-  fallbackSubscription: SubscriptionDoc
-) {
-  let plan: UserPlan = freePlan;
-  let sourceSubscription = fallbackSubscription;
-
-  for (const subscription of activeSubscriptions) {
-    const subscriptionPlan = getPlanFromProductId(subscription.productId);
-    const higherPlan = getHigherPlan(plan, subscriptionPlan);
-
-    if (higherPlan === plan) {
-      continue;
-    }
-
-    plan = higherPlan;
-    sourceSubscription = subscription;
-  }
-
-  return { plan, sourceSubscription };
-}
 
 /** Applies one durable user plan update and the matching credit transaction. */
 const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
@@ -118,17 +81,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
     });
 
     if (newPlan === proPlan) {
-      yield* Effect.tryPromise({
-        try: () =>
-          ctx.db.patch("users", user._id, {
-            plan: newPlan,
-            credits: newCreditConfig.amount,
-            creditsResetAt: nextResetTimestamp,
-          }),
-        catch: toSubscriptionPlanSyncIoError,
-      });
-
-      yield* Effect.tryPromise({
+      const planCreditGrantId = yield* Effect.tryPromise({
         try: () =>
           ctx.db.insert("creditTransactions", {
             userId: user._id,
@@ -141,6 +94,17 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
               "new-plan": newPlan,
               "subscription-id": subscription.id,
             },
+          }),
+        catch: toSubscriptionPlanSyncIoError,
+      });
+
+      yield* Effect.tryPromise({
+        try: () =>
+          ctx.db.patch("users", user._id, {
+            plan: newPlan,
+            credits: newCreditConfig.amount,
+            creditsResetAt: nextResetTimestamp,
+            planCreditGrantId,
           }),
         catch: toSubscriptionPlanSyncIoError,
       });
@@ -181,18 +145,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
 
       return;
     }
-
-    yield* Effect.tryPromise({
-      try: () =>
-        ctx.db.patch("users", user._id, {
-          plan: newPlan,
-          credits: newCreditConfig.amount,
-          creditsResetAt: nextResetTimestamp,
-        }),
-      catch: toSubscriptionPlanSyncIoError,
-    });
-
-    yield* Effect.tryPromise({
+    const planCreditGrantId = yield* Effect.tryPromise({
       try: () =>
         ctx.db.insert("creditTransactions", {
           userId: user._id,
@@ -205,6 +158,17 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
             "new-plan": newPlan,
             "subscription-id": subscription.id,
           },
+        }),
+      catch: toSubscriptionPlanSyncIoError,
+    });
+
+    yield* Effect.tryPromise({
+      try: () =>
+        ctx.db.patch("users", user._id, {
+          plan: newPlan,
+          credits: newCreditConfig.amount,
+          creditsResetAt: nextResetTimestamp,
+          planCreditGrantId,
         }),
       catch: toSubscriptionPlanSyncIoError,
     });
@@ -251,7 +215,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
  * Recomputes the effective app plan after one subscription row changes.
  *
  * The trigger keeps this as an indexed, local mutation flow: customer by Polar
- * ID, linked user by document ID, active subscription rows by customer/status,
+ * ID, linked user by document ID, one active Pro subscription by indexed identity,
  * then a bounded user and credit update.
  * @see https://docs.convex.dev/understanding/best-practices/
  * @see https://docs.convex.dev/database/advanced/occ
@@ -292,14 +256,12 @@ export const syncCustomerPlan = Effect.fn(
   }
 
   const now = yield* Clock.currentTimeMillis;
-  const activeSubscriptions = yield* loadActiveSubscriptions(
+  const activeSubscription = yield* loadActiveProSubscription(
     ctx.db,
     subscription.customerId
   );
-  const { plan, sourceSubscription } = deriveCustomerPlan(
-    activeSubscriptions,
-    subscription
-  );
+  const plan = activeSubscription ? proPlan : freePlan;
+  const sourceSubscription = activeSubscription ?? subscription;
 
   if (plan === user.plan) {
     return;

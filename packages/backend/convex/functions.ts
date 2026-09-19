@@ -16,7 +16,6 @@ import { chatsHandler } from "@repo/backend/convex/triggers/chats/chats";
 import { messagesHandler } from "@repo/backend/convex/triggers/chats/messages";
 import { commentsHandler } from "@repo/backend/convex/triggers/comments/comments";
 import { commentVotesHandler } from "@repo/backend/convex/triggers/comments/commentVotes";
-import { learningPopularityRankingsTrigger } from "@repo/backend/convex/triggers/contents/popularity";
 import { learningViewsHandler } from "@repo/backend/convex/triggers/contents/views";
 import { postReactionsHandler } from "@repo/backend/convex/triggers/forums/postReactions";
 import { forumPostsHandler } from "@repo/backend/convex/triggers/forums/posts";
@@ -62,8 +61,3 @@ triggers.register("schoolClassForumReactions", forumReactionsHandler);
 triggers.register("schoolClassMaterials", materialsHandler);
 triggers.register("schoolClassMaterialGroups", materialGroupsHandler);
 triggers.register("tryoutScores", tryoutScoresHandler);
-
-triggers.register(
-  "learningPopularityCounters",
-  learningPopularityRankingsTrigger
-);

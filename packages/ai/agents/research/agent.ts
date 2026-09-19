@@ -96,8 +96,9 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     }
 
     const evidenceResult = yield* Effect.tryPromise({
-      try: () =>
+      try: (signal) =>
         generateText({
+          abortSignal: signal,
           model: provider.languageModel(modelId),
           instructions: researchEvidencePrompt({ locale, context }),
           messages: createResearchMessages(task, collectedEvidence),
@@ -109,7 +110,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
               description: nakafaWebSearch,
               inputSchema: webSearchInputSchema,
               outputSchema: textOutputSchema,
-              execute: ({ queries, sourcePreference }, { toolCallId }) =>
+              execute: (
+                { queries, sourcePreference },
+                { toolCallId, abortSignal }
+              ) =>
                 runPromise(
                   searchWeb({
                     queries,
@@ -128,14 +132,15 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                       })
                     ),
                     Effect.map((output) => output.text)
-                  )
+                  ),
+                  { signal: abortSignal }
                 ),
             }),
             scrape: tool({
               description: nakafaScrape,
               inputSchema: scrapeInputSchema,
               outputSchema: textOutputSchema,
-              execute: ({ urlToCrawl }, { toolCallId }) =>
+              execute: ({ urlToCrawl }, { toolCallId, abortSignal }) =>
                 runPromise(
                   scrapeUrl({
                     toolCallId,
@@ -156,7 +161,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                       })
                     ),
                     Effect.map(formatScrapeOutput)
-                  )
+                  ),
+                  { signal: abortSignal }
                 ),
             }),
           },
@@ -221,8 +227,9 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 
     const sourceEvidenceAvailable = eligibleCitationUrls.size > 0;
     const synthesisResult = yield* Effect.tryPromise({
-      try: () =>
+      try: (signal) =>
         generateText({
+          abortSignal: signal,
           model: wrapLanguageModel({
             middleware: extractJsonMiddleware(),
             model: provider.languageModel(modelId),

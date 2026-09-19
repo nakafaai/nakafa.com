@@ -31,10 +31,15 @@ const tables = {
     questionCount: v.number(),
     publishedAt: v.number(),
   })
-    .index("by_setIdentity_and_publishedAt", ["setIdentity", "publishedAt"])
-    .index("by_tryoutSnapshotId_and_setIdentity_and_publishedAt", [
+    .index("by_setIdentity_and_history_and_publishedAt", [
+      "setIdentity",
+      "history",
+      "publishedAt",
+    ])
+    .index("by_tryoutSnapshotId_and_setIdentity_and_history_and_publishedAt", [
       "tryoutSnapshotId",
       "setIdentity",
+      "history",
       "publishedAt",
     ]),
 

@@ -72,11 +72,14 @@ export function ChatNew() {
         getModel,
         initialMessages: [],
         onError: (error) =>
-          reportChatRuntimeError({
-            error,
-            fallbackMessage: t("error-message"),
-            insufficientCreditsMessage: t("insufficient-credits"),
-          }),
+          Effect.runSync(
+            reportChatRuntimeError({
+              error,
+              fallbackMessage: t("error-message"),
+              insufficientCreditsMessage: t("insufficient-credits"),
+              rateLimitMessage: t("rate-limit-message"),
+            })
+          ),
       });
 
       setChatSession({ chatId, runtime: chatRuntime });
