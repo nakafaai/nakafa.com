@@ -39,7 +39,14 @@ export const tryoutStartAccessValidator = v.union(
 );
 export type TryoutStartAccess = Infer<typeof tryoutStartAccessValidator>;
 
-export const tryoutPaywallSourceValidator = literals("review");
+// Deployed clients keep these telemetry values through the observed rollout.
+// Remove the predecessor sources after the release owner verifies a complete
+// 30-minute production window without either source after web promotion.
+export const tryoutPaywallSourceValidator = literals(
+  "access-query",
+  "start-mutation",
+  "review"
+);
 export type TryoutPaywallSource = Infer<typeof tryoutPaywallSourceValidator>;
 
 export interface AttemptAccessFields {

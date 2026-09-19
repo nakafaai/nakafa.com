@@ -221,7 +221,7 @@ async function ResolvedTryoutSectionRoute({
       : null;
   const reviewRuntime =
     attemptPage?.content.kind === "signed" &&
-    attemptPage.content.answers.length > 0
+    attemptPage.initialState.attempt.status !== "in-progress"
       ? attemptPage.initialState.runtime
       : null;
   const startHref = attemptPage?.activeSectionPublicPath
