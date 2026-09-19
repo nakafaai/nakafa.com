@@ -1,12 +1,16 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import { tryRuntimePromise } from "@repo/backend/convex/tryouts/runtime/error";
 import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
 import {
   type TryoutStatus,
   tryoutStatusValidator,
 } from "@repo/backend/convex/tryouts/status";
 import { type Infer, v } from "convex/values";
+import { Effect } from "effect";
 
 export const tryoutCurrentSectionValidator = v.object({
   answeredCount: v.number(),
@@ -66,7 +70,7 @@ export const noTryoutSectionContentAccess = {
 } satisfies TryoutSectionContentAccess;
 
 /** Derives question and answer access from one coherent attempt lifecycle. */
-export function getTryoutSectionContentAccess(
+function getTryoutSectionContentAccess(
   attemptStatus: TryoutStatus,
   sectionStatus: TryoutStatus
 ) {
@@ -80,3 +84,24 @@ export function getTryoutSectionContentAccess(
     questions: isActive || isReview,
   };
 }
+
+/** Resolves lifecycle access and the current billing-owned Pro plan together. */
+export const readTryoutSectionContentAccess = Effect.fn(
+  "tryouts.content.readAccess"
+)(function* (
+  ctx: QueryCtx,
+  attempt: Doc<"tryoutAttempts">,
+  sectionStatus: TryoutStatus
+) {
+  const access = getTryoutSectionContentAccess(attempt.status, sectionStatus);
+  if (!access.answers) {
+    return access;
+  }
+  const user = yield* tryRuntimePromise(() =>
+    ctx.db.get("users", attempt.userId)
+  );
+  if (!user) {
+    return { answers: false, questions: false };
+  }
+  return { ...access, answers: user.plan === "pro" };
+});

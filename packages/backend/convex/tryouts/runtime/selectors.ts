@@ -7,57 +7,11 @@ import type {
   TryoutQuestionSelector,
   TryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
-import {
-  selectorIntegrity,
-  TryoutSelectorReadError,
-} from "@repo/backend/convex/tryouts/runtime/ownership";
+import { selectorIntegrity } from "@repo/backend/convex/tryouts/runtime/ownership";
 import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
-
-/** Returns exact protected selectors from one immutable signed attempt. */
-export const loadTryoutSignedContent = Effect.fn(
-  "tryouts.selectors.loadSignedContent"
-)(function* (input: {
-  readonly answers: boolean;
-  readonly attempt: TryoutAttempt;
-  readonly ctx: QueryCtx;
-  readonly appLocale: AppLocaleCode;
-  readonly sectionKey: string;
-  readonly snapshotReleaseId: string;
-  readonly snapshotId: string;
-  readonly totalQuestions: number;
-}) {
-  if (
-    input.attempt.snapshotReleaseId !== input.snapshotReleaseId ||
-    input.attempt.tryoutSnapshotId !== input.snapshotId
-  ) {
-    return yield* selectorIntegrity(
-      "Signed try-out attempt lost its locale or snapshot identity."
-    );
-  }
-  const placements = yield* trySelectorPromise(() =>
-    input.ctx.db
-      .query("tryoutAttemptPlacements")
-      .withIndex(
-        "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
-        (index) =>
-          index
-            .eq("tryoutAttemptId", input.attempt._id)
-            .eq("sectionKey", input.sectionKey)
-      )
-      .take(input.totalQuestions + 1)
-  );
-  return yield* projectTryoutSignedContent({
-    answers: input.answers,
-    attempt: input.attempt,
-    ctx: input.ctx,
-    appLocale: input.appLocale,
-    placements,
-    totalQuestions: input.totalQuestions,
-  });
-});
 
 /** Projects protected selectors from already-loaded frozen placements. */
 export const projectTryoutSignedContent = Effect.fn(
@@ -171,17 +125,4 @@ function makeAnswerSelector(
     sourceRevision: placement.sourceRevision,
   };
   return Effect.succeed(selector);
-}
-
-/** Lifts one Convex read into the typed selector error channel. */
-function trySelectorPromise<A>(operation: () => Promise<A>) {
-  return Effect.tryPromise({
-    catch: (cause) =>
-      new TryoutSelectorReadError({
-        cause,
-        code: "TRYOUT_SELECTOR_INTEGRITY",
-        message: "Unable to read signed try-out selectors.",
-      }),
-    try: operation,
-  });
 }

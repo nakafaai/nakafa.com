@@ -10,7 +10,6 @@ import {
 import { tryoutAttemptAccessSourceKindSubscription } from "@repo/backend/convex/tryouts/access/source";
 import {
   ensureSubscriptionEntitlement,
-  getSubscriptionEntitlementEndsAt,
   isActiveProSubscription,
   loadActiveProSubscription,
 } from "@repo/backend/convex/tryouts/access/subscription";
@@ -41,17 +40,6 @@ export const getTryoutStartAccess = Effect.fn(
 
   if (included) {
     return { kind: "included" } satisfies TryoutStartAccess;
-  }
-
-  const claim = yield* tryAccessPromise(() =>
-    ctx.db
-      .query("tryoutFreeAttemptClaims")
-      .withIndex("by_userId", (query) => query.eq("userId", args.userId))
-      .unique()
-  );
-
-  if (claim) {
-    return { kind: "upgrade-required" } satisfies TryoutStartAccess;
   }
 
   return { kind: "free-attempt" } satisfies TryoutStartAccess;
@@ -89,17 +77,11 @@ const loadIncludedAccess = Effect.fn("tryouts.access.loadIncludedAccess")(
       return { access: getAttemptAccessFields(entitlement) };
     }
 
-    const subscription = yield* loadActiveProSubscription(ctx, args);
-
-    if (!subscription) {
+    const subscriptionAccess = yield* loadActiveProSubscription(ctx, args);
+    if (!subscriptionAccess) {
       return null;
     }
-
-    const endsAt = getSubscriptionEntitlementEndsAt(subscription, args.now);
-
-    if (!endsAt) {
-      return null;
-    }
+    const { subscription, endsAt } = subscriptionAccess;
 
     return {
       access: {

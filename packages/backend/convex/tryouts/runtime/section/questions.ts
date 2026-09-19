@@ -3,8 +3,8 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/convex/tryouts/response/integrity";
 import { projectTryoutResponseSpec } from "@repo/backend/convex/tryouts/response/model";
 import {
-  getTryoutSectionContentAccess,
   noTryoutSectionContentAccess,
+  readTryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { readAttemptSetIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { loadSectionPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
@@ -39,7 +39,11 @@ const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
   attempt: Doc<"tryoutAttempts">,
   section: Doc<"tryoutSectionAttempts">
 ) {
-  const access = getTryoutSectionContentAccess(attempt.status, section.status);
+  const access = yield* readTryoutSectionContentAccess(
+    ctx,
+    attempt,
+    section.status
+  );
   if (!access.questions) {
     return null;
   }

@@ -32,7 +32,7 @@ describe("tryouts/mutations/access", () => {
 
     await expect(
       authed.mutation(api.tryouts.mutations.access.trackPaywallView, {
-        source: "start-mutation",
+        source: "review",
       })
     ).resolves.toBeNull();
 
@@ -44,7 +44,7 @@ describe("tryouts/mutations/access", () => {
         args: [
           expect.objectContaining({
             event: "tryout paywall viewed",
-            properties: JSON.stringify({ source: "start-mutation" }),
+            properties: JSON.stringify({ source: "review" }),
           }),
         ],
       }),
@@ -57,7 +57,7 @@ describe("tryouts/mutations/access", () => {
 
     await expect(
       t.mutation(api.tryouts.mutations.access.trackPaywallView, {
-        source: "access-query",
+        source: "review",
       })
     ).rejects.toThrow();
   });

@@ -1,7 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { decodeArtifactJson } from "@repo/backend/convex/contentRelease/parse";
-import { getTryoutSectionContentAccess } from "@repo/backend/convex/tryouts/runtime/content";
+import { readTryoutSectionContentAccess } from "@repo/backend/convex/tryouts/runtime/content";
 import { tryRuntimePromise } from "@repo/backend/convex/tryouts/runtime/error";
 import {
   TryoutHistoryError,
@@ -54,8 +54,9 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
         "Try-out section lost its frozen identity."
       );
     }
-    const access = getTryoutSectionContentAccess(
-      attempt.status,
+    const access = yield* readTryoutSectionContentAccess(
+      ctx,
+      attempt,
       section.status
     );
     if (

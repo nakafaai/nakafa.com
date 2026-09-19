@@ -9,23 +9,20 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import { TryoutStartDialog } from "@/components/tryout/set/dialog";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
-import { TryoutStartDialog } from "@/components/tryout/set/start-dialog";
 import {
-  checkoutProgram,
-  paywallViewProgram,
   startAttemptProgram,
   startEntrySectionProgram,
-} from "@/components/tryout/set/start-program";
-import { getTryoutStartDialogKind } from "@/lib/tryout/access";
+} from "@/components/tryout/set/program";
 
 type StartAttempt = Pick<
   CurrentAttempt,
@@ -50,26 +47,26 @@ interface StartTryoutButtonProps {
   request: StartTryoutRequest;
 }
 
-/** Starts, resumes, or clearly upgrades one try-out from the current page. */
-export function StartTryoutButton({
-  attempt,
-  request,
-}: StartTryoutButtonProps) {
+/** Composes the active attempt link or the transactional start action. */
+export function StartTryoutButton(props: StartTryoutButtonProps) {
+  if (
+    props.attempt?.status === "in-progress" &&
+    !props.request.entrySectionKey
+  ) {
+    return <ResumeTryoutLink attempt={props.attempt} request={props.request} />;
+  }
+  return <TryoutStartAction {...props} />;
+}
+
+/** Starts or resumes a free try-out from the current page. */
+function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const router = useRouter();
-  const prewarmData = useTryoutDataIntent();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const startAttempt = useMutation(api.tryouts.mutations.attempts.startAttempt);
   const startSection = useMutation(api.tryouts.mutations.sections.start);
-  const trackPaywall = useMutation(
-    api.tryouts.mutations.access.trackPaywallView
-  );
-  const generateCheckout = useAction(
-    api.customers.actions.public.generateCheckoutLink
-  );
   const t = useTranslations("Tryouts");
   const now = useTryoutClock(false);
   const [isPending, startTransition] = useTransition();
-  const [forceUpgrade, setForceUpgrade] = useState(false);
   const [dialogOpen, dialog] = useDisclosure(false);
   const activeAttempt = attempt?.status === "in-progress";
   const finishedAttempt = Boolean(attempt && !activeAttempt);
@@ -91,7 +88,7 @@ export function StartTryoutButton({
   const attemptLoading = isAuthenticated && attempt === undefined;
   const resolvingAccess = isLoading || accessLoading || attemptLoading;
   const busy = isPending || resolvingAccess;
-  const dialogKind = getTryoutStartDialogKind(access, forceUpgrade);
+  const dialogKind = access?.kind ?? "free-attempt";
   const buttonLabel = activeAttempt
     ? t("continue-cta")
     : t(finishedAttempt ? "restart-cta" : "start-cta");
@@ -108,43 +105,38 @@ export function StartTryoutButton({
       return;
     }
 
-    if (activeAttempt && request.entrySectionKey) {
-      runEntrySection(attempt?.resumeSectionKey ?? request.entrySectionKey);
+    if (attempt?.status === "in-progress" && request.entrySectionKey) {
+      const sectionKey = attempt.resumeSectionKey ?? request.entrySectionKey;
+      startTransition(() =>
+        Effect.runPromise(
+          startEntrySectionProgram({
+            attemptId: attempt.attemptId,
+            failureMessage: t("start-part-error"),
+            mutation: startSection,
+            sectionKey,
+            successMessage: t("start-entry-success"),
+          })
+        )
+      );
       return;
-    }
-
-    if (dialogKind === "upgrade-required") {
-      recordPaywallView("access-query");
     }
 
     dialog.open();
   }
 
-  /** Runs the dialog's authoritative start or checkout action. */
+  /** Starts the attempt transactionally after confirmation. */
   function onPrimary() {
     if (busy) {
       return;
     }
 
-    if (dialogKind === "upgrade-required") {
-      runAttemptStart(createCheckoutProgram);
-      return;
-    }
-
-    runAttemptStart(createPaywallProgram);
-  }
-
-  /** Starts authoritatively before either showing or continuing to checkout. */
-  function runAttemptStart(onDenied: () => Effect.Effect<void>) {
     const program = startAttemptProgram({
       args: {
         countryKey: request.countryKey,
-        ...(directEntry
-          ? {}
-          : { destinationSectionKey: request.destinationSectionKey }),
-        ...(request.entrySectionKey
-          ? { entrySectionKey: request.entrySectionKey }
-          : {}),
+        destinationSectionKey: directEntry
+          ? undefined
+          : request.destinationSectionKey,
+        entrySectionKey: request.entrySectionKey,
         examKey: request.examKey,
         locale: request.locale,
         setKey: request.setKey,
@@ -169,79 +161,9 @@ export function StartTryoutButton({
           }
           router.push(href);
         }),
-      onUpgrade: onDenied,
     });
 
     startTransition(() => Effect.runPromise(program));
-  }
-
-  /** Builds the existing Pro checkout program after authoritative denial. */
-  function createCheckoutProgram() {
-    return checkoutProgram({
-      action: generateCheckout,
-      failureMessage: t("checkout-error"),
-      locale: request.locale,
-    });
-  }
-
-  /** Shows the authoritative paywall before recording its detached impression. */
-  function createPaywallProgram() {
-    return Effect.sync(() => setForceUpgrade(true)).pipe(
-      Effect.tap(() =>
-        Effect.forkDetach(
-          paywallViewProgram({
-            mutation: trackPaywall,
-            source: "start-mutation",
-          })
-        )
-      )
-    );
-  }
-
-  /** Starts an internal entry section for an already-active attempt. */
-  function runEntrySection(sectionKey: string) {
-    if (!attempt) {
-      return;
-    }
-
-    startTransition(() =>
-      Effect.runPromise(
-        startEntrySectionProgram({
-          attemptId: attempt.attemptId,
-          failureMessage: t("start-part-error"),
-          mutation: startSection,
-          sectionKey,
-          successMessage: t("start-entry-success"),
-        })
-      )
-    );
-  }
-
-  /** Records a non-blocking paywall impression from its authoritative source. */
-  function recordPaywallView(source: "access-query" | "start-mutation") {
-    Effect.runPromise(paywallViewProgram({ mutation: trackPaywall, source }));
-  }
-
-  if (activeAttempt && !directEntry) {
-    return (
-      <IntentLink
-        className={buttonVariants()}
-        href={request.destinationHref}
-        onIntent={() => {
-          if (!(attempt && request.destinationSectionKey)) {
-            return;
-          }
-          prewarmData({
-            attemptId: attempt.attemptId,
-            kind: "section",
-            sectionKey: request.destinationSectionKey,
-          });
-        }}
-      >
-        <Spinner icon={Rocket01Icon} isLoading={false} />
-        {buttonLabel}
-      </IntentLink>
-    );
   }
 
   return (
@@ -267,5 +189,33 @@ export function StartTryoutButton({
         }}
       />
     </>
+  );
+}
+
+/** Reuses an active attempt and warms its next section on navigation intent. */
+function ResumeTryoutLink({
+  attempt,
+  request,
+}: {
+  readonly attempt: NonNullable<StartAttempt>;
+  readonly request: StartTryoutRequest;
+}) {
+  const prewarmData = useTryoutDataIntent();
+  const t = useTranslations("Tryouts");
+  return (
+    <IntentLink
+      className={buttonVariants()}
+      href={request.destinationHref}
+      onIntent={() =>
+        prewarmData({
+          attemptId: attempt.attemptId,
+          kind: "section",
+          sectionKey: request.destinationSectionKey,
+        })
+      }
+    >
+      <Spinner icon={Rocket01Icon} isLoading={false} />
+      {t("continue-cta")}
+    </IntentLink>
   );
 }

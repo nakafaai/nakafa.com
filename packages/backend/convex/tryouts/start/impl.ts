@@ -2,25 +2,15 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
 import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/convex/tryouts/access/source";
-import {
-  expireAttemptAtEffectiveTime,
-  getAttemptExpiresAt,
-} from "@repo/backend/convex/tryouts/runtime/finish";
-import {
-  type AttemptOwnerIdentity,
-  readLatestAttempt,
-  readOwnedAttempts,
-} from "@repo/backend/convex/tryouts/runtime/lookup";
+import { expireAttempt } from "@repo/backend/convex/tryouts/runtime/finish";
+import { readLatestAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
 import {
   requireInternalEntrySection,
   startSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { createTryoutAttempt } from "@repo/backend/convex/tryouts/start/attempt";
 import { selectAttemptScale } from "@repo/backend/convex/tryouts/start/scale";
-import {
-  loadTryoutStartSource,
-  type TryoutStartSource,
-} from "@repo/backend/convex/tryouts/start/source";
+import { loadTryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
 import type {
   AttemptAccessFields,
   StartAttemptArgs,
@@ -34,7 +24,6 @@ import {
 import { Effect } from "effect";
 
 const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
-const MAX_ATTEMPTS_PER_USER_SET = 100;
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 
@@ -59,7 +48,6 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
     }
 
     const source = yield* loadTryoutStartSource(ctx, input.args);
-    const owner = resolveAttemptOwner(input, source);
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
       yield* requireInternalEntrySection(
@@ -68,9 +56,8 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
       ).pipe(Effect.mapError(toTryoutStartError));
     }
 
-    const [attemptNumber, scaleVersion, access] = yield* Effect.all(
+    const [scaleVersion, access] = yield* Effect.all(
       [
-        getNextAttemptNumber(ctx, owner),
         selectAttemptScale(ctx, source, input.now),
         requireAttemptAccess(ctx, input),
       ],
@@ -79,7 +66,7 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
     const attempt = yield* createTryoutAttempt(ctx, {
       access,
       args: input.args,
-      attemptNumber,
+      attemptNumber: (latestAttempt?.attemptNumber ?? 0) + 1,
       now: input.now,
       scaleVersion,
       source,
@@ -133,8 +120,8 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
       return null;
     }
 
-    if (input.now >= getAttemptExpiresAt(attempt)) {
-      yield* expireAttemptAtEffectiveTime(ctx, {
+    if (input.now >= attempt.expiresAt) {
+      yield* expireAttempt(ctx, {
         attempt,
         now: input.now,
       });
@@ -169,7 +156,7 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
   Effect.mapError(toTryoutStartError)
 );
 
-/** Resolves premium access first, then atomically claims the lifetime free try-out. */
+/** Records scoped access for attribution, with unlimited free starts otherwise. */
 const requireAttemptAccess = Effect.fn("tryouts.start.requireAttemptAccess")(
   function* (ctx: MutationCtx, input: StartTryoutAttemptInput) {
     const scope = {
@@ -186,31 +173,6 @@ const requireAttemptAccess = Effect.fn("tryouts.start.requireAttemptAccess")(
       return included;
     }
 
-    const claim = yield* tryStartPromise(() =>
-      ctx.db
-        .query("tryoutFreeAttemptClaims")
-        .withIndex("by_userId", (query) => query.eq("userId", input.userId))
-        .unique()
-    );
-
-    if (claim) {
-      return yield* new TryoutStartError({
-        code: tryoutStartErrorCode.accessRequired,
-        message: "Nakafa Pro is required for another try-out attempt.",
-      });
-    }
-
-    yield* tryStartPromise(() =>
-      ctx.db.insert("tryoutFreeAttemptClaims", {
-        claimedAt: input.now,
-        countryKey: input.args.countryKey,
-        examKey: input.args.examKey,
-        setKey: input.args.setKey,
-        trackKey: input.args.trackKey,
-        userId: input.userId,
-      })
-    );
-
     return {
       accessEndsAt: input.now + ATTEMPT_DURATION_MS,
       accessSourceKind: tryoutAttemptAccessSourceKindFree,
@@ -218,45 +180,3 @@ const requireAttemptAccess = Effect.fn("tryouts.start.requireAttemptAccess")(
     } satisfies AttemptAccessFields;
   }
 );
-
-/** Resolves the signed set identity that owns one user's attempts. */
-function resolveAttemptOwner(
-  input: StartTryoutAttemptInput,
-  source: TryoutStartSource
-) {
-  return {
-    setIdentity: source.snapshot.setIdentity,
-    userId: input.userId,
-  } satisfies AttemptOwnerIdentity;
-}
-
-/** Returns the next bounded attempt number for one user and set. */
-const getNextAttemptNumber = Effect.fn("tryouts.start.getNextAttemptNumber")(
-  function* (ctx: MutationCtx, owner: AttemptOwnerIdentity) {
-    const attempts = yield* readOwnedAttempts(
-      ctx,
-      owner,
-      MAX_ATTEMPTS_PER_USER_SET
-    );
-    return yield* readNextAttemptNumber(attempts);
-  }
-);
-
-/** Derives the next bounded attempt number from one owner-specific row set. */
-const readNextAttemptNumber = Effect.fn("tryouts.start.readAttemptNumber")(
-  function* (attempts: readonly TryoutAttempt[]) {
-    if (attempts.length >= MAX_ATTEMPTS_PER_USER_SET) {
-      return yield* new TryoutStartError({
-        code: tryoutStartErrorCode.attemptLimitReached,
-        message: "Try-out attempt limit reached for this set.",
-      });
-    }
-
-    return attempts.length + 1;
-  }
-);
-
-/** Lifts one Convex promise into the typed start failure channel. */
-function tryStartPromise<A>(operation: () => Promise<A>) {
-  return Effect.tryPromise({ catch: toTryoutStartError, try: operation });
-}

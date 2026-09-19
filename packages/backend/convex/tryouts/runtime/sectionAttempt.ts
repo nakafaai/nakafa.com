@@ -5,10 +5,7 @@ import {
   TryoutRuntimeError,
   tryRuntimePromise,
 } from "@repo/backend/convex/tryouts/runtime/error";
-import {
-  finalizeSectionAttempt,
-  getAttemptExpiresAt,
-} from "@repo/backend/convex/tryouts/runtime/finish";
+import { finalizeSectionAttempt } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireSectionSnapshot } from "@repo/backend/convex/tryouts/runtime/placement";
 import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
@@ -85,7 +82,7 @@ export const startSectionAttempt = Effect.fn(
     });
   }
 
-  if (args.now >= getAttemptExpiresAt(args.attempt)) {
+  if (args.now >= args.attempt.expiresAt) {
     return yield* new TryoutRuntimeError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt time has expired.",
@@ -122,7 +119,7 @@ export const startSectionAttempt = Effect.fn(
   );
   const expiresAt = Math.min(
     args.now + snapshot.timeLimitSeconds * 1000,
-    getAttemptExpiresAt(currentAttempt)
+    currentAttempt.expiresAt
   );
   const sectionAttemptId = yield* tryRuntimePromise(() =>
     ctx.db.insert("tryoutSectionAttempts", {

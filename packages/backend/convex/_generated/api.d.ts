@@ -7894,7 +7894,7 @@ export declare const api: {
         trackPaywallView: FunctionReference<
           "mutation",
           "public",
-          { source: "access-query" | "start-mutation" },
+          { source: "access-query" | "start-mutation" | "review" },
           null
         >;
       };
@@ -7967,9 +7967,7 @@ export declare const api: {
             setKey: string;
             trackKey: string;
           },
-          | { kind: "free-attempt" }
-          | { kind: "included" }
-          | { kind: "upgrade-required" }
+          { kind: "free-attempt" } | { kind: "included" }
         >;
       };
       attempt: {
@@ -12433,7 +12431,9 @@ export declare const internal: {
                 }
               | {
                   name: "tryout paywall viewed";
-                  properties: { source: "access-query" | "start-mutation" };
+                  properties: {
+                    source: "access-query" | "start-mutation" | "review";
+                  };
                 }
               | {
                   name: "chat message sent";

@@ -66,7 +66,7 @@ describe("analytics/events", () => {
     expect(
       validate(productAnalyticsEventValidator, {
         name: "tryout paywall viewed",
-        properties: { source: "access-query" },
+        properties: { source: "review" },
       })
     ).toBe(true);
     expect(

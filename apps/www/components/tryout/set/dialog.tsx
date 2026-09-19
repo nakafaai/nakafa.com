@@ -1,38 +1,27 @@
 "use client";
 
-import {
-  CheckmarkCircle02Icon,
-  Diamond02Icon,
-  Rocket01Icon,
-} from "@hugeicons/core-free-icons";
+import { Rocket01Icon } from "@hugeicons/core-free-icons";
+import type { TryoutStartAccess } from "@repo/backend/convex/tryouts/start/spec";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
-import type { TryoutStartDialogKind } from "@/lib/tryout/access";
-
-const paywallBenefitKeys = [
-  "paywall-benefit-access",
-  "paywall-benefit-feedback",
-] as const;
 
 interface TryoutStartDialogProps {
   readonly busy: boolean;
   readonly directEntry: boolean;
   readonly finishedAttempt: boolean;
-  readonly kind: TryoutStartDialogKind;
+  readonly kind: TryoutStartAccess["kind"];
   readonly onCancel: () => void;
   readonly onPrimary: () => void;
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
 }
 
-/** Renders free, included, and upgrade try-out decisions responsively. */
+/** Confirms the timer and retained history before starting a free try-out. */
 export function TryoutStartDialog(props: TryoutStartDialogProps) {
   const t = useTranslations("Tryouts");
   const copy = getDialogCopy(props, t);
-  const upgrade = props.kind === "upgrade-required";
 
   return (
     <ResponsiveDialog
@@ -50,7 +39,7 @@ export function TryoutStartDialog(props: TryoutStartDialogProps) {
           <Button disabled={props.busy} onClick={props.onPrimary} type="button">
             <Spinner
               data-icon="inline-start"
-              icon={upgrade ? Diamond02Icon : Rocket01Icon}
+              icon={Rocket01Icon}
               isLoading={props.busy}
             />
             {copy.primary}
@@ -60,28 +49,7 @@ export function TryoutStartDialog(props: TryoutStartDialogProps) {
       open={props.open}
       setOpen={props.setOpen}
       title={copy.title}
-    >
-      {upgrade ? <PaywallBenefits /> : undefined}
-    </ResponsiveDialog>
-  );
-}
-
-/** Shows the two concrete try-out benefits unlocked by Nakafa Pro. */
-function PaywallBenefits() {
-  const t = useTranslations("Tryouts");
-
-  return (
-    <ul className="space-y-3 text-sm">
-      {paywallBenefitKeys.map((key) => (
-        <li className="flex items-start gap-3" key={key}>
-          <HugeIcons
-            className="mt-0.5 size-4 text-primary"
-            icon={CheckmarkCircle02Icon}
-          />
-          <span>{t(key)}</span>
-        </li>
-      ))}
-    </ul>
+    />
   );
 }
 
@@ -93,14 +61,6 @@ function getDialogCopy(
   >,
   t: ReturnType<typeof useTranslations<"Tryouts">>
 ) {
-  if (props.kind === "upgrade-required") {
-    return {
-      description: t("paywall-description"),
-      primary: t("checkout-cta"),
-      title: t("paywall-title"),
-    };
-  }
-
   if (props.kind === "free-attempt") {
     return {
       description: props.directEntry

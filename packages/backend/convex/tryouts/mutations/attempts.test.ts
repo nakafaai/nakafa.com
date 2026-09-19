@@ -139,12 +139,7 @@ describe("tryouts/mutations/attempts", () => {
             .eq("setIdentity", seeded.fixture.setIdentity)
         )
         .unique();
-      const freeClaim = await ctx.db
-        .query("tryoutFreeAttemptClaims")
-        .withIndex("by_userId", (q) => q.eq("userId", seeded.identity.userId))
-        .unique();
-
-      return { attempt, freeClaim, placements, progress, sectionAttempts };
+      return { attempt, placements, progress, sectionAttempts };
     });
     expect(runtime.attempt).toMatchObject({
       accessEndsAt: NOW + 3 * 86_400_000,
@@ -182,10 +177,6 @@ describe("tryouts/mutations/attempts", () => {
         sectionKey: SECTION,
       }),
     ]);
-    expect(runtime.freeClaim).toMatchObject({
-      setKey: SET,
-      userId: seeded.identity.userId,
-    });
     expect(runtime.progress).toMatchObject({
       latestAttemptId: result.attemptId,
       setIdentity: seeded.fixture.setIdentity,
@@ -223,9 +214,35 @@ describe("tryouts/mutations/attempts", () => {
         status: "completed",
       })
     );
-    await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
-    ).rejects.toThrow("TRYOUT_ACCESS_REQUIRED");
+    const restarted = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      startArgs
+    );
+    expect(restarted.attemptId).not.toBe(result.attemptId);
+    expect(
+      await t.query((ctx) => ctx.db.get(restarted.attemptId))
+    ).toMatchObject({
+      attemptNumber: 2,
+      accessSourceKind: "free",
+    });
+    await t.mutation((ctx) =>
+      ctx.db.patch("tryoutAttempts", restarted.attemptId, {
+        attemptNumber: 100,
+        completedAt: NOW + 2,
+        endReason: "submitted",
+        status: "completed",
+      })
+    );
+    const repeated = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      startArgs
+    );
+    expect(
+      await t.query((ctx) => ctx.db.get(repeated.attemptId))
+    ).toMatchObject({
+      attemptNumber: 101,
+      accessSourceKind: "free",
+    });
   });
 
   it("starts remaining sections from the immutable attempt snapshot", async () => {
@@ -256,14 +273,12 @@ describe("tryouts/mutations/attempts", () => {
 
     const paidStart = await t.query(async (ctx) => ({
       attempt: await ctx.db.get(attempt.attemptId),
-      claims: await ctx.db.query("tryoutFreeAttemptClaims").collect(),
     }));
 
     expect(paidStart.attempt).toMatchObject({
       accessSourceKind: tryoutEntitlementSourceKindCompetition,
       countsForCompetition: true,
     });
-    expect(paidStart.claims).toEqual([]);
     expect(attempt.navigation).toEqual({
       publicPath: `${TRYOUT_RENAMED_SET_PATH}/${SECTION}`,
     });

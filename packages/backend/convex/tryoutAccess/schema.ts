@@ -182,6 +182,9 @@ const tables = {
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
     .index("by_status_and_endsAt", ["status", "endsAt"]),
 
+  // The release owner removes this table after the no-quota backend is live
+  // and production has no claim rows. Account deletion retains its cleanup
+  // until that retirement is proven. New attempts never write claims.
   tryoutFreeAttemptClaims: defineTable(tryoutFreeAttemptClaimValidator).index(
     "by_userId",
     ["userId"]

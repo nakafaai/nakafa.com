@@ -1,9 +1,12 @@
 import "server-only";
 
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
-import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
+import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
+import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { projectTryoutReview } from "@/components/tryout/review/model";
+import { TryoutReviewUpgrade } from "@/components/tryout/review/upgrade.client";
 import {
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
@@ -13,13 +16,20 @@ import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
 /** Renders one immutable terminal review outside the active runtime Module. */
 export async function TryoutReview({
-  content,
+  access,
+  attemptId,
   runtime,
 }: {
-  readonly content: Promise<TryoutRuntimeContent>;
+  readonly access: SignedContentAccess;
+  readonly attemptId: Id<"tryoutAttempts">;
   readonly runtime: TryoutSectionRuntime;
 }) {
-  const resolvedContent = await content;
+  if (access.answers.length === 0 && runtime.questions.length > 0) {
+    return <TryoutReviewUpgrade />;
+  }
+  const resolvedContent = await Effect.runPromise(
+    loadSignedTryoutContent(attemptId, access)
+  );
   const questions = await Effect.runPromise(
     projectTryoutReview({
       content: resolvedContent,

@@ -35,14 +35,17 @@ export type StartAccessArgs = Infer<typeof startAccessArgsValidator>;
 
 export const tryoutStartAccessValidator = v.union(
   v.object({ kind: v.literal("free-attempt") }),
-  v.object({ kind: v.literal("included") }),
-  v.object({ kind: v.literal("upgrade-required") })
+  v.object({ kind: v.literal("included") })
 );
 export type TryoutStartAccess = Infer<typeof tryoutStartAccessValidator>;
 
+// Deployed clients keep these telemetry values through the observed rollout.
+// Remove the predecessor sources after the release owner verifies a complete
+// 30-minute production window without either source after web promotion.
 export const tryoutPaywallSourceValidator = literals(
   "access-query",
-  "start-mutation"
+  "start-mutation",
+  "review"
 );
 export type TryoutPaywallSource = Infer<typeof tryoutPaywallSourceValidator>;
 
@@ -65,8 +68,6 @@ export interface TryoutStartScope {
 }
 
 export const tryoutStartErrorCode = Object.freeze({
-  accessRequired: "TRYOUT_ACCESS_REQUIRED",
-  attemptLimitReached: "TRYOUT_ATTEMPT_LIMIT_REACHED",
   attemptNotFound: "TRYOUT_ATTEMPT_NOT_FOUND",
   failed: "TRYOUT_START_FAILED",
   irtScaleRequired: "TRYOUT_IRT_SCALE_REQUIRED",
