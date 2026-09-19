@@ -72,6 +72,16 @@ test("material sidebar preserves verified curriculum context", async ({
               yield* Effect.promise(() => expect(title).toBeVisible());
               yield* Effect.promise(() => expect(opening).toBeVisible());
               yield* Effect.promise(() =>
+                expect(
+                  page
+                    .getByRole("navigation", {
+                      name: "breadcrumb",
+                      exact: true,
+                    })
+                    .getByRole("link", { name: "Home", exact: true })
+                ).toBeVisible()
+              );
+              yield* Effect.promise(() =>
                 page.evaluate(() => document.fonts.ready.then(() => undefined))
               );
               const titleBefore = yield* Effect.promise(() =>

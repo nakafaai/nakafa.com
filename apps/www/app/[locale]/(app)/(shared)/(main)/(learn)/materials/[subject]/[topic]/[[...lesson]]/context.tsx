@@ -9,13 +9,12 @@ import {
 import { useQuery } from "convex/react";
 import { Effect } from "effect";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import {
   type MaterialNavigationPage,
   readMaterialNavigation,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
-import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
+import { BreadcrumbHeaderSegment } from "@/components/shared/breadcrumb/header";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { SidebarRightHeader } from "@/components/shared/sidebar-right";
 import { ContentViewTracker } from "@/components/tracking/tracker";
@@ -79,19 +78,12 @@ export function MaterialBreadcrumb({
   context: MaterialContextProps;
 }) {
   const { navigation, pending } = useMaterialNavigation(context);
-  const t = useTranslations("Common");
   if (pending) {
     return null;
   }
   return (
-    <BreadcrumbHeaderPath
-      homeLabel={t("home")}
-      items={
-        navigation.link
-          ? [navigation.link]
-          : [{ label: context.page.metadata.title }]
-      }
-      menuLabel={t("more")}
+    <BreadcrumbHeaderSegment
+      item={navigation.link ?? { label: context.page.metadata.title }}
     />
   );
 }

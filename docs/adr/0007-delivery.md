@@ -15,8 +15,9 @@ server-side locale resolution, and chat context. It does not fetch data.
 
 The static shell contains the real lesson, heading, outline, and canonical
 pagination. Context changes link destinations without replacing those visible
-labels. The breadcrumb occupies the existing fixed-height reading header and
-waits for verified context. View recording waits for context resolution so one
+labels. The breadcrumb's Home link stays outside Suspense in the initial HTML;
+only its optional context segment waits inside the fixed-height reading header.
+View recording waits for context resolution so one
 contextual visit cannot first record a canonical view and then a placement view.
 
 ## Framework Boundaries

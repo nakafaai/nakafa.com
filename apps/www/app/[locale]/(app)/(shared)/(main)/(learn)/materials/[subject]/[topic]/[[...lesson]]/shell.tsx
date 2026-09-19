@@ -21,6 +21,7 @@ import { DeferredComments } from "@/components/comments/deferred";
 import { ContentDates } from "@/components/content/dates";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
@@ -109,9 +110,15 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
         <LayoutMaterialContent>
           <ContentHeader
             breadcrumb={
-              <Suspense fallback={null}>
-                <MaterialBreadcrumb context={context} />
-              </Suspense>
+              <BreadcrumbHeaderPath
+                homeLabel={tCommon("home")}
+                items={[]}
+                menuLabel={tCommon("more")}
+              >
+                <Suspense fallback={null}>
+                  <MaterialBreadcrumb context={context} />
+                </Suspense>
+              </BreadcrumbHeaderPath>
             }
           >
             <OpenContent

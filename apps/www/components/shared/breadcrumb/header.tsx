@@ -56,11 +56,13 @@ export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
 
 /** Bounded path navigation with linked parents and one collapsed middle group. */
 export function BreadcrumbHeaderPath({
+  children,
   homeLabel,
   items,
   menuLabel,
   visibleItemCount = 2,
 }: Pick<BreadcrumbHeaderValue, "homeLabel" | "items" | "menuLabel"> & {
+  children?: ReactNode;
   visibleItemCount?: 1 | 2;
 }) {
   const hiddenItems = items.slice(0, -visibleItemCount);
@@ -77,11 +79,12 @@ export function BreadcrumbHeaderPath({
           <BreadcrumbMenu items={hiddenItems} menuLabel={menuLabel} />
         )}
         {visibleItems.map((item) => (
-          <BreadcrumbSegment
+          <BreadcrumbHeaderSegment
             item={item}
             key={`${item.label}:${item.href ?? "current"}`}
           />
         ))}
+        {children}
       </BreadcrumbList>
     </Breadcrumb>
   );
@@ -144,7 +147,11 @@ function BreadcrumbMenuItem({ item }: { item: BreadcrumbHeaderItem }) {
 }
 
 /** Renders one visible current or linked breadcrumb segment. */
-function BreadcrumbSegment({ item }: { item: BreadcrumbHeaderItem }) {
+export function BreadcrumbHeaderSegment({
+  item,
+}: {
+  item: BreadcrumbHeaderItem;
+}) {
   if (!item.href) {
     return (
       <>
