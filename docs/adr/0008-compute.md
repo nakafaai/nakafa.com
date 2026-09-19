@@ -57,13 +57,19 @@ current records inside the index rather than filtering historical rows after
 reading them. Prefix indexes remain when their implicit creation-time ordering
 is part of a consumer's contract.
 
-## Rollout
+## Persistence Contract
 
-This release expands assistant persistence with an optional hold while the
-previous HTTP server can still finish requests. The release owner switches the
-production server, observes the old server's maximum request lifetime and
-scheduled persistence, then removes the unreserved persistence path in the
-cleanup release. Do not retain that path as a permanent compatibility API.
+Assistant persistence requires an existing credit hold. A completed or expired
+hold makes a delayed retry a no-op. There is no post-generation charging path
+and no second user-balance write on successful completion.
+
+Only the HTTP server calls the scheduled persistence actions. The browser sends
+the same chat request through the AI SDK's ordinary fetch transport, without a
+deployment pin. Next.js Skew Protection does not pin these custom fetches. The
+release therefore observes the predecessor server's five-minute maximum
+request lifetime and pending scheduled persistence before removing its optional
+hold contract. Future changes must recheck both transport and scheduler
+ownership instead of treating promotion alone as proof that old callers stopped.
 
 ## References
 
@@ -72,5 +78,6 @@ cleanup release. Do not retain that path as a permanent compatibility API.
 - [Convex best-practice rules](https://docs.convex.dev/eslint)
 - [Convex index ranges](https://docs.convex.dev/database/reading-data/indexes/)
 - [Vercel function duration](https://vercel.com/docs/functions/configuring-functions/duration)
+- [Vercel Skew Protection request ownership](https://vercel.com/docs/skew-protection#how-it-works)
 - [Python subprocess deadline behavior](https://docs.python.org/3/library/subprocess.html#subprocess.run)
 - [Python address-space limits](https://docs.python.org/3/library/resource.html#resource.RLIMIT_AS)

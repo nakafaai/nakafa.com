@@ -186,8 +186,12 @@ describe("chats/mutations", () => {
       }
     );
 
+    const turnId = await owner.mutation(api.chats.turns.mutations.reserve, {
+      modelId: "nakafa-lite",
+    });
     await t.mutation(internal.chats.assistantResponses.saveAssistantResponse, {
       userId: identity.userId,
+      turnId,
       message: {
         chatId,
         role: "assistant",

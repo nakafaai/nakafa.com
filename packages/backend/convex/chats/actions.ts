@@ -18,7 +18,7 @@ import { v } from "convex/values";
  */
 export const scheduleSaveAssistantResponse = action({
   args: {
-    turnId: v.optional(vv.id("chatTurns")),
+    turnId: vv.id("chatTurns"),
     message: tables.messages.validator,
     parts: v.array(
       v.object({
@@ -46,7 +46,7 @@ export const scheduleSaveAssistantResponse = action({
  */
 export const scheduleSaveAssistantFailure = action({
   args: {
-    turnId: v.optional(vv.id("chatTurns")),
+    turnId: vv.id("chatTurns"),
     message: v.object({
       chatId: vv.id("chats"),
       identifier: v.string(),
