@@ -114,7 +114,10 @@ describe("local preview JSON requests", () => {
         "//attacker.test/steal",
         MAX_PREVIEW_MANIFEST_BYTES
       )
-    ).rejects.toMatchObject({ _tag: "PreviewConfigError" }));
+    ).resolves.toMatchObject({
+      _tag: "Failure",
+      failure: { _tag: "PreviewConfigError" },
+    }));
 
   it.effect(
     "sends the bearer token only to an exact content-addressed artifact",

@@ -130,7 +130,7 @@ const decodePreviewResponse = Effect.fn("NakafaContent.decodePreviewResponse")(
   }
 );
 /**
- * Fetches one bounded preview resource through Next's direct Promise boundary.
+ * Fetches one bounded result through Next's direct Promise boundary.
  *
  * Request-less static generation must not start an Effect fiber before its
  * uncached fetch: https://nextjs.org/docs/messages/next-prerender-current-time
@@ -139,10 +139,12 @@ export function fetchPreviewJsonForPrerender(
   config: PreviewConfig,
   path: string,
   maxBytes: number
-) {
+): Promise<
+  Result.Result<unknown, Effect.Error<ReturnType<typeof fetchPreviewJson>>>
+> {
   const target = decodePreviewUrl(config, path);
   if (Result.isFailure(target)) {
-    return Promise.reject(target.failure);
+    return Promise.resolve(Result.fail(target.failure));
   }
   const controller = new AbortController();
   const response = fetch(
@@ -165,7 +167,7 @@ export function fetchPreviewJsonForPrerender(
           )
         ),
       (activeController) => Effect.sync(() => activeController.abort())
-    )
+    ).pipe(Effect.result)
   );
 }
 /** Fetches one bearer-protected loopback JSON resource with strict bounds. */

@@ -27,7 +27,7 @@ export function Graph({
             {
               text: <InlineMath math="y = f(x)" />,
               at: 1,
-              offset: [0, -2, 0],
+              offset: [-1.4, -2, 0],
             },
             {
               text: <InlineMath math="5" />,
@@ -56,7 +56,7 @@ export function Graph({
             {
               text: <InlineMath math="(2, 3)" />,
               at: exponentialPoints.findIndex((p) => p.x === 2),
-              offset: [1, -0.5, 0],
+              offset: [2, 0, 0],
             },
           ],
           showPoints: false,

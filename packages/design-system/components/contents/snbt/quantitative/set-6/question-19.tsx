@@ -45,7 +45,7 @@ export function Graph({
             {
               text: <InlineMath math="y = 2x + 6" />,
               at: 1,
-              offset: [1.6, 0.4, 0],
+              offset: [3, 0.4, 0],
             },
           ],
         },
