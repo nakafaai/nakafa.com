@@ -144,6 +144,14 @@ describe("auth/cleanup", () => {
               decidedAt: NOW,
               userId,
             });
+            await ctx.db.insert("tryoutFreeAttemptClaims", {
+              claimedAt: NOW,
+              countryKey: "indonesia",
+              examKey: "snbt",
+              setKey: "set-1",
+              trackKey: "2027",
+              userId,
+            });
             const collectionId = await ctx.db.insert("bookmarkCollections", {
               bookmarkCount: 1,
               image: "default",
@@ -358,6 +366,10 @@ describe("auth/cleanup", () => {
                   query.eq("userId", userId)
                 )
                 .take(2),
+              claims: await ctx.db
+                .query("tryoutFreeAttemptClaims")
+                .withIndex("by_userId", (query) => query.eq("userId", userId))
+                .collect(),
               preferences: await ctx.db
                 .query("notificationPreferences")
                 .withIndex("by_userId", (query) => query.eq("userId", userId))
@@ -436,6 +448,7 @@ describe("auth/cleanup", () => {
         expect(result).toEqual({
           bookmarks: [],
           chats: [],
+          claims: [],
           collections: [],
           consentDecisions: [],
           consents: [],

@@ -171,6 +171,20 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
       return true;
     }
 
+    const freeClaim = yield* tryUserCleanup(() =>
+      ctx.db
+        .query("tryoutFreeAttemptClaims")
+        .withIndex("by_userId", (query) => query.eq("userId", userId))
+        .first()
+    );
+
+    if (freeClaim) {
+      yield* tryUserCleanup(() =>
+        ctx.db.delete("tryoutFreeAttemptClaims", freeClaim._id)
+      );
+      return true;
+    }
+
     return false;
   }
 );
