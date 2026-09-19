@@ -3,6 +3,7 @@
 import { type UseChatHelpers, useChat as useAiChat } from "@ai-sdk/react";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
@@ -46,11 +47,14 @@ export function ChatProvider({
 
   /** Handles one failed chat request with localized user feedback. */
   function handleError(error: Error) {
-    reportChatRuntimeError({
-      error,
-      fallbackMessage: t("error-message"),
-      insufficientCreditsMessage: t("insufficient-credits"),
-    });
+    Effect.runSync(
+      reportChatRuntimeError({
+        error,
+        fallbackMessage: t("error-message"),
+        insufficientCreditsMessage: t("insufficient-credits"),
+        rateLimitMessage: t("rate-limit-message"),
+      })
+    );
   }
 
   const chat = useAiChat<MyUIMessage>(

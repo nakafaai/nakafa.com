@@ -63,11 +63,13 @@ export function AiChatError() {
 
   let errorMessage = t("error-message");
 
-  const isInsufficientCredits = error.message?.includes(
-    CHAT_ERRORS.INSUFFICIENT_CREDITS.code
-  );
+  const errorCode = error.message.trim();
+  const isInsufficientCredits =
+    errorCode === CHAT_ERRORS.INSUFFICIENT_CREDITS.code;
   if (isInsufficientCredits) {
     errorMessage = t("insufficient-credits");
+  } else if (errorCode === CHAT_ERRORS.RATE_LIMITED.code) {
+    errorMessage = t("rate-limit-message");
   }
 
   return (
