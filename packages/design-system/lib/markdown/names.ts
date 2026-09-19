@@ -231,11 +231,9 @@ export const snbtQuantComponentNames = {
   unitCircle: "UnitCircle",
 } as const;
 
-/** Canonical rich component names owned by TKA mathematics routes. */
+/** Mathematical rendering capabilities shared by TKA subject routes. */
 export const tkaMathComponentNames = {
   histogramChart: "HistogramChart",
   lineEquation: "LineEquation",
   numberLine: "NumberLine",
-  set1Question19Graph: "Set1Question19Graph",
-  set1Question30Illustration: "Set1Question30Illustration",
 } as const;
