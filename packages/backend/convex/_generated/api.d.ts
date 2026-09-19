@@ -7894,7 +7894,7 @@ export declare const api: {
         trackPaywallView: FunctionReference<
           "mutation",
           "public",
-          { source: "access-query" | "start-mutation" | "review" },
+          { source: "review" },
           null
         >;
       };
@@ -12431,9 +12431,7 @@ export declare const internal: {
                 }
               | {
                   name: "tryout paywall viewed";
-                  properties: {
-                    source: "access-query" | "start-mutation" | "review";
-                  };
+                  properties: { source: "review" };
                 }
               | {
                   name: "chat message sent";

@@ -55,15 +55,6 @@ const tryoutSetScopeFields = {
   setKey: v.string(),
 };
 
-export const tryoutFreeAttemptClaimValidator = v.object({
-  claimedAt: v.number(),
-  countryKey: v.string(),
-  examKey: v.string(),
-  setKey: v.string(),
-  trackKey: v.string(),
-  userId: v.id("users"),
-});
-
 export const tryoutAccessCampaignValidator = v.object({
   slug: v.string(),
   name: v.string(),
@@ -181,14 +172,6 @@ const tables = {
     .index("by_campaignId_and_redeemedAt", ["campaignId", "redeemedAt"])
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
     .index("by_status_and_endsAt", ["status", "endsAt"]),
-
-  // The release owner removes this table after the no-quota backend is live
-  // and production has no claim rows. Account deletion retains its cleanup
-  // until that retirement is proven. New attempts never write claims.
-  tryoutFreeAttemptClaims: defineTable(tryoutFreeAttemptClaimValidator).index(
-    "by_userId",
-    ["userId"]
-  ),
 
   tryoutEntitlements: defineTable(tryoutEntitlementValidator)
     .index("by_accessGrantId", ["accessGrantId"])

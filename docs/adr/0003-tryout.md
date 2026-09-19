@@ -111,6 +111,12 @@ including IRT scores on supported sets. The start mutation resumes a live attemp
 before starting another and derives the next attempt number from the newest
 indexed attempt, without scanning the complete history.
 
+Response capture and IRT scoring do not filter by subscription plan. More free
+attempts can therefore contribute response data, but response volume alone does
+not calibrate the model. The current scale publisher reuses matching item
+parameters or starts a provisional 2PL scale; it does not fit new parameters
+automatically from accumulated responses. Scores retain their scale status.
+
 Nakafa Pro grants access to worked solutions and answer keys after an attempt
 finishes. The billing-owned `users.plan` is the current entitlement, maintained
 transactionally by the subscription trigger. Upgrading opens solutions for
