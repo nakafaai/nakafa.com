@@ -13,7 +13,6 @@ import {
   toTryoutResponseError,
 } from "@repo/backend/convex/tryouts/response/spec";
 import type { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
-import { getAttemptExpiresAt } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireOwnedAttempt } from "@repo/backend/convex/tryouts/runtime/score";
 import { loadPlacementSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { Effect } from "effect";
@@ -116,10 +115,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
   yield* validateTryoutResponsePlacements(attempt._id, sectionSnapshot, [
     placement,
   ]);
-  if (
-    input.now >= getAttemptExpiresAt(attempt) ||
-    input.now >= section.expiresAt
-  ) {
+  if (input.now >= attempt.expiresAt || input.now >= section.expiresAt) {
     return yield* new TryoutResponseError({
       code: "TRYOUT_EXPIRED",
       message: "Try-out attempt time has expired.",

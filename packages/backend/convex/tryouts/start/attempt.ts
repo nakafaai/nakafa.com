@@ -64,10 +64,7 @@ function buildAttemptValues(
     completedAt: null,
     completedSectionKeys: [],
     endReason: null,
-    expiresAt: Math.min(
-      input.now + 3 * 24 * 60 * 60 * 1000,
-      input.access.accessEndsAt
-    ),
+    expiresAt: input.now + 3 * 24 * 60 * 60 * 1000,
     lastActivityAt: input.now,
     scoreStatus: input.scaleVersion?.status ?? "official",
     startedAt: input.now,

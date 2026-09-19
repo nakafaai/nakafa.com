@@ -192,7 +192,8 @@ async function ResolvedTryoutSetRoute({
   ]);
 
   const signedContent =
-    attemptPage?.content.kind === "signed"
+    attemptPage?.content.kind === "signed" &&
+    attemptPage.initialState.attempt.status === "in-progress"
       ? Effect.runPromise(
           loadSignedTryoutContent(attemptPage.attemptId, attemptPage.content)
         )
@@ -221,8 +222,12 @@ async function ResolvedTryoutSetRoute({
         restartTarget={restartTarget}
         route={route}
       >
-        {signedContent && reviewRuntime ? (
-          <TryoutReview content={signedContent} runtime={reviewRuntime} />
+        {attemptPage?.content.kind === "signed" && reviewRuntime ? (
+          <TryoutReview
+            access={attemptPage.content}
+            attemptId={attemptPage.attemptId}
+            runtime={reviewRuntime}
+          />
         ) : null}
       </TryoutSetPageClient>
     </TryoutClockProvider>

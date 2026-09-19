@@ -2,10 +2,7 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
 import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/convex/tryouts/access/source";
-import {
-  expireAttemptAtEffectiveTime,
-  getAttemptExpiresAt,
-} from "@repo/backend/convex/tryouts/runtime/finish";
+import { expireAttempt } from "@repo/backend/convex/tryouts/runtime/finish";
 import { readLatestAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
 import {
   requireInternalEntrySection,
@@ -123,8 +120,8 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
       return null;
     }
 
-    if (input.now >= getAttemptExpiresAt(attempt)) {
-      yield* expireAttemptAtEffectiveTime(ctx, {
+    if (input.now >= attempt.expiresAt) {
+      yield* expireAttempt(ctx, {
         attempt,
         now: input.now,
       });

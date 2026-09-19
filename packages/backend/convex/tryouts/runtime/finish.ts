@@ -32,34 +32,6 @@ type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
 type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 
-/** Returns the earliest timestamp that can end an attempt. */
-export function getAttemptExpiresAt(attempt: TryoutAttempt) {
-  return Math.min(attempt.expiresAt, attempt.accessEndsAt);
-}
-
-/** Expires an attempt using its entitlement-bounded timer. */
-export const expireAttemptAtEffectiveTime = Effect.fn(
-  "tryouts.runtime.expireAttemptAtEffectiveTime"
-)(function* (ctx: MutationCtx, args: { attempt: TryoutAttempt; now: number }) {
-  const expiresAt = getAttemptExpiresAt(args.attempt);
-
-  if (expiresAt === args.attempt.expiresAt) {
-    return yield* expireAttempt(ctx, args);
-  }
-
-  yield* tryRuntimePromise(() =>
-    ctx.db.patch("tryoutAttempts", args.attempt._id, {
-      expiresAt,
-      lastActivityAt: args.now,
-    })
-  );
-
-  return yield* expireAttempt(ctx, {
-    attempt: { ...args.attempt, expiresAt, lastActivityAt: args.now },
-    now: args.now,
-  });
-});
-
 /** Creates an expired section attempt for a section the user never opened. */
 const createExpiredSectionAttempt = Effect.fn(
   "tryouts.runtime.createExpiredSectionAttempt"

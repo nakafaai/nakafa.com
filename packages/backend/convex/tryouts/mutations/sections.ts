@@ -7,10 +7,7 @@ import {
   TryoutRuntimeError,
   tryRuntimePromise,
 } from "@repo/backend/convex/tryouts/runtime/error";
-import {
-  finalizeSectionAttempt,
-  getAttemptExpiresAt,
-} from "@repo/backend/convex/tryouts/runtime/finish";
+import { finalizeSectionAttempt } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireOwnedAttempt } from "@repo/backend/convex/tryouts/runtime/score";
 import {
   requireActiveSectionAttempt,
@@ -94,7 +91,7 @@ export const complete = mutation({
         }
 
         const now = yield* Clock.currentTimeMillis;
-        if (now >= getAttemptExpiresAt(attempt)) {
+        if (now >= attempt.expiresAt) {
           return yield* new TryoutRuntimeError({
             code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
             message: "Try-out attempt time has expired.",

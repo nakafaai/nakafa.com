@@ -5,7 +5,6 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helper
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   expireAttempt,
-  expireAttemptAtEffectiveTime,
   finalizeSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
@@ -33,7 +32,7 @@ const SECOND_SECTION = "penalaran-matematika";
 
 describe("tryouts/runtime/finish", () => {
   it.each([false, true])(
-    "expires opened and unopened IRT sections with earlier access expiry: %s",
+    "expires IRT sections at the attempt deadline despite earlier entitlement expiry: %s",
     async (earlyAccess) => {
       const t = convexTest(schema, convexModules);
       const snapshot = await t.mutation(async (ctx) => {
@@ -150,7 +149,7 @@ describe("tryouts/runtime/finish", () => {
         }
         const query = vi.spyOn(ctx.db, "query");
         await runConvexProgram(
-          expireAttemptAtEffectiveTime(ctx, {
+          expireAttempt(ctx, {
             attempt: currentAttempt,
             now: NOW,
           })
@@ -192,6 +191,7 @@ describe("tryouts/runtime/finish", () => {
       expect(snapshot).toMatchObject({
         attempt: {
           completedSectionKeys: [FIRST_SECTION, SECOND_SECTION],
+          expiresAt: EXPIRED_AT,
           endReason: "time-expired",
           status: "expired",
         },

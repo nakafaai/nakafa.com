@@ -64,7 +64,7 @@ describe("tryouts/runtime/sectionAttempt", () => {
         await ctx.db.patch(seeded.attemptId, {
           scoringStrategy: "raw",
           scoreStatus: "official",
-          ...(kind === "expired attempt" ? { accessEndsAt: NOW } : {}),
+          ...(kind === "expired attempt" ? { expiresAt: NOW } : {}),
         });
         if (kind === "expired section" || kind === "last section expires") {
           await ctx.db.patch(seeded.sectionAttemptId, { expiresAt: NOW });
