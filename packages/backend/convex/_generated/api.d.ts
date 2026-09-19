@@ -102,7 +102,7 @@ export declare const api: {
             identifier: string;
             modelId: "nakafa-lite" | "nakafa-pro";
           };
-          turnId?: Id<"chatTurns">;
+          turnId: Id<"chatTurns">;
         },
         null
       >;
@@ -1162,7 +1162,7 @@ export declare const api: {
               | "data-scrape-url"
               | "data-web-search";
           }>;
-          turnId?: Id<"chatTurns">;
+          turnId: Id<"chatTurns">;
         },
         null
       >;
@@ -9629,7 +9629,7 @@ export declare const internal: {
             identifier: string;
             modelId: "nakafa-lite" | "nakafa-pro";
           };
-          turnId?: Id<"chatTurns">;
+          turnId: Id<"chatTurns">;
           userId: Id<"users">;
         },
         null | { messageId: Id<"messages"> }
@@ -10690,7 +10690,7 @@ export declare const internal: {
               | "data-scrape-url"
               | "data-web-search";
           }>;
-          turnId?: Id<"chatTurns">;
+          turnId: Id<"chatTurns">;
           userId: Id<"users">;
         },
         null | {
