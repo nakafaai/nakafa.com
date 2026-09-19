@@ -2,6 +2,7 @@ import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { env } from "@/env";
 import "server-only";
 
+import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
@@ -9,11 +10,9 @@ import { decodePublishedQuranSource } from "@repo/backend/client/quran/publicati
 import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
+import { cacheTag } from "next/cache";
 import type { Locale } from "next-intl";
-import {
-  applyContentCache,
-  applyImmutableContentCache,
-} from "@/lib/content/cache";
+import { applyContentCache } from "@/lib/content/cache";
 
 /** Reads and validates the active signed Quran identity without a catalog payload. */
 export const readPublishedQuranIdentity = Effect.fn(
@@ -83,7 +82,7 @@ export async function getPublishedQuranCatalog() {
 
   const catalog = await Effect.runPromise(readPublishedQuranCatalog());
   applyContentCache("quran");
-  applyImmutableContentCache([catalog.snapshotId]);
+  cacheTag(makeArtifactCacheTag(catalog.snapshotId));
   return catalog;
 }
 
@@ -98,6 +97,6 @@ export async function getPublishedQuranView(
     readPublishedQuranView(locale, surahNumber)
   );
   applyContentCache("quran");
-  applyImmutableContentCache([view.snapshotId]);
+  cacheTag(makeArtifactCacheTag(view.snapshotId));
   return view;
 }

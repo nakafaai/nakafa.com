@@ -1,5 +1,6 @@
 import "server-only";
 
+import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
@@ -12,6 +13,7 @@ import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { fetchQuery } from "convex/nextjs";
 import { makeFunctionReference } from "convex/server";
 import { Array as Arr, Effect } from "effect";
+import { cacheLife, cacheTag } from "next/cache";
 import { renderLiveItem } from "@/components/tryout/content/artifact";
 import {
   planTryoutContentBatches,
@@ -28,7 +30,6 @@ import {
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
-import { applyImmutableContentCache } from "@/lib/content/cache";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
@@ -145,7 +146,10 @@ async function renderAttemptBatch(
       return yield* renderFoundItems(selectors, found.items);
     })
   );
-  applyImmutableContentCache(content.map(({ artifactHash }) => artifactHash));
+  cacheLife("max");
+  cacheTag(
+    ...content.map(({ artifactHash }) => makeArtifactCacheTag(artifactHash))
+  );
   return content;
 }
 
@@ -154,7 +158,10 @@ async function renderBatch(selectors: readonly TryoutSelector[]) {
   "use cache";
 
   const content = await Effect.runPromise(readBatch(selectors));
-  applyImmutableContentCache(content.map(({ artifactHash }) => artifactHash));
+  cacheLife("max");
+  cacheTag(
+    ...content.map(({ artifactHash }) => makeArtifactCacheTag(artifactHash))
+  );
   return content;
 }
 

@@ -8,13 +8,17 @@ import { AiMenuItem } from "@/components/ai/menu";
 import { ContentDates } from "@/components/content/dates";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { MaterialOutline } from "@/components/shared/material/toc";
 import { OpenContent } from "@/components/shared/open-content/actions";
-import { SidebarRightProvider } from "@/components/shared/sidebar-right";
+import {
+  SidebarRightHeader,
+  SidebarRightProvider,
+} from "@/components/shared/sidebar-right";
 
 /** Renders a signed article body and its route-owned navigation. */
 export async function ArticleShell({
@@ -45,10 +49,16 @@ export async function ArticleShell({
     <SidebarRightProvider>
       <LayoutMaterialContent>
         <ContentHeader
-          items={[
-            { href: "/articles", label: tCommon("articles") },
-            { href: `/articles/${category}`, label: categoryLabel },
-          ]}
+          breadcrumb={
+            <BreadcrumbHeaderPath
+              homeLabel={tCommon("home")}
+              items={[
+                { href: "/articles", label: tCommon("articles") },
+                { href: `/articles/${category}`, label: categoryLabel },
+              ]}
+              menuLabel={tCommon("more")}
+            />
+          }
         >
           <OpenContent
             content={content.copySourceUrl ? undefined : raw}
@@ -84,11 +94,13 @@ export async function ArticleShell({
           data: headings,
         }}
         githubUrl={content.sourceUrl ?? undefined}
-        header={{
-          title: metadata.title,
-          href: filePath,
-          description: metadata.description,
-        }}
+        header={
+          <SidebarRightHeader
+            description={metadata.description}
+            href={filePath}
+            title={metadata.title}
+          />
+        }
         references={{
           title: metadata.title,
           data: content.references.map((reference) => ({ ...reference })),

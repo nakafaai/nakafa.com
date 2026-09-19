@@ -15,8 +15,8 @@ import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement"
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import {
-  readTryoutSection,
   readTryoutSectionRow,
+  readTryoutSectionRows,
 } from "@repo/backend/content/tryout/section";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -74,14 +74,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       setIdentity,
       set
     );
-    const resolved = yield* readTryoutSection({
-      countryKey: section.countryKey,
-      examKey: section.examKey,
-      locale,
-      sectionKey: section.sectionKey,
-      setKey: section.setKey,
-      trackKey: section.trackKey,
-    });
+    const resolved = yield* readTryoutSectionRows(snapshotId, section);
     const placement = resolved.placements.find(
       ({ row }) => row.questionContentKey === target.questionContentKey
     )?.row;
@@ -183,7 +176,9 @@ const readLandingFeaturedSection = Effect.fn(
     set.sectionCount + 1
   );
   const sections = yield* Effect.forEach(storedSections, (stored) =>
-    readTryoutSectionRow(snapshotId, stored)
+    readTryoutSectionRow(snapshotId, stored).pipe(
+      Effect.map((verified) => ({ ...verified, stored }))
+    )
   );
   const section = sections.find(
     ({ row }) =>
@@ -199,7 +194,7 @@ const readLandingFeaturedSection = Effect.fn(
   ) {
     return yield* missingFeaturedTryout("section");
   }
-  return section.row;
+  return section.stored;
 });
 
 type FeaturedMissingKind =

@@ -58,8 +58,8 @@ vi.mock("@repo/internationalization/src/navigation", () => ({
 }));
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: vi.fn(),
-  applyImmutableContentCache: vi.fn(),
 }));
+vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
 vi.mock("@/env", () => ({
   env: {
     NEXT_PUBLIC_CONVEX_SITE_URL: "https://runtime.example.test",

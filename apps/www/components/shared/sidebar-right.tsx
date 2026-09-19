@@ -26,12 +26,7 @@ import { ShareButton } from "@/components/sidebar/actions/share";
 
 export type SidebarRightProps = {
   children: ReactNode;
-  header?: {
-    title: string;
-    href: string;
-    description?: string;
-    descriptionLanguage?: string;
-  };
+  header?: ReactNode;
   githubUrl?: string;
   showComments?: boolean;
   references?: {
@@ -40,28 +35,31 @@ export type SidebarRightProps = {
   };
 } & ComponentProps<typeof Sidebar>;
 
-function SidebarRightHeader({
-  header,
+/** Outline heading slot, which can resolve independently from the panel. */
+export function SidebarRightHeader({
+  title,
+  href,
+  description,
+  descriptionLanguage,
 }: {
-  header: SidebarRightProps["header"];
+  title: string;
+  href: string;
+  description?: string;
+  descriptionLanguage?: string;
 }) {
-  if (!header) {
-    return null;
-  }
-
   return (
     <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
-            render={<NavigationLink href={header.href} title={header.title} />}
+            render={<NavigationLink href={href} title={title} />}
             size="lg"
           >
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{header.title}</span>
-              {!!header.description && (
-                <SidebarMenuDescription lang={header.descriptionLanguage}>
-                  {header.description}
+              <span className="truncate font-medium">{title}</span>
+              {!!description && (
+                <SidebarMenuDescription lang={descriptionLanguage}>
+                  {description}
                 </SidebarMenuDescription>
               )}
             </div>
@@ -152,7 +150,7 @@ export function SidebarRightPanel({
   return (
     <aside>
       <Sidebar containerClassName="lg:hidden xl:block" side="right" {...props}>
-        <SidebarRightHeader header={header} />
+        {header}
         <SidebarContent>{children}</SidebarContent>
         <SidebarRightFooter
           githubUrl={githubUrl}

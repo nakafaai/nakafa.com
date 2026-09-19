@@ -103,6 +103,46 @@ describe("public document route resolution", () => {
     })
   );
 
+  it.effect(
+    "delegates Flight navigation without reading publication ownership",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* resolvePublicDocumentRoute({
+            ...defaultInput,
+            isRscRequest: true,
+            pathname: "/en/subjects/mathematics/functions/identity",
+          })
+        ).toEqual({ kind: "delegate" });
+        expect(routeMocks.source).not.toHaveBeenCalled();
+        expect(routeMocks.projected).not.toHaveBeenCalled();
+        expect(routeMocks.markdown).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect.each([".md", ".mdx"])(
+    "preserves an explicit %s representation on an RSC request",
+    (extension) =>
+      Effect.gen(function* () {
+        expect(
+          yield* resolvePublicDocumentRoute({
+            ...defaultInput,
+            isRscRequest: true,
+            pathname: `/en/subjects/mathematics/functions/identity${extension}`,
+          })
+        ).toEqual({
+          kind: "rewrite-markdown",
+          localizedRoute: {
+            locale: "en",
+            markdownExtension: extension,
+            route: "/subjects/mathematics/functions/identity",
+          },
+        });
+        expect(routeMocks.markdown).not.toHaveBeenCalled();
+        expect(routeMocks.projected).not.toHaveBeenCalled();
+      })
+  );
+
   it.effect("returns the final not-acceptable decision", () =>
     Effect.gen(function* () {
       expect(

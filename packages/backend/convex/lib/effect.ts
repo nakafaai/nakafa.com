@@ -129,6 +129,9 @@ function resolveConvexExit<A, E extends ConvexTaggedError>(
  * Convex mutations/queries reject the Performance API, while Effect's default
  * clock can use it for tracing. This boundary installs a Date-backed clock
  * locally for each program without creating a global runtime or layer.
+ * Span timing is disabled so named programs do not implicitly depend on
+ * Date.now(), which shortens Convex query cache lifetimes. Span names and
+ * explicit domain clock reads remain available.
  * The native runtime also omits setImmediate and rejects setTimeout. Effect's
  * async scheduler falls back to those timers for cooperative fiber yields, so
  * this boundary preserves async execution with cancellable microtask dispatch.
@@ -143,6 +146,7 @@ function resolveConvexExit<A, E extends ConvexTaggedError>(
  * - Convex error handling: https://docs.convex.dev/functions/error-handling/
  * - Convex action runtime note: https://docs.convex.dev/functions/actions
  * - Convex deterministic runtime: https://docs.convex.dev/functions/runtimes
+ * - Convex query clock: https://docs.convex.dev/understanding/best-practices#dont-use-datenow-in-queries
  * - Convex environment proxy: https://github.com/get-convex/convex-backend/blob/main/npm-packages/udf-runtime/src/setup.ts
  */
 export async function runConvexProgram<A, E extends ConvexTaggedError>(
@@ -150,6 +154,7 @@ export async function runConvexProgram<A, E extends ConvexTaggedError>(
 ) {
   const exit = await Effect.runPromiseExit(
     program.pipe(
+      Effect.withTracerTiming(false),
       Effect.provideService(Clock.Clock, convexClock),
       Effect.provideService(
         ConfigProvider.ConfigProvider,

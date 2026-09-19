@@ -1,58 +1,24 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { LearningContextInput } from "@repo/backend/convex/contents/context";
-import { getHeadings } from "@repo/contents/_lib/toc";
-import type { ContentPagination } from "@repo/contents/_types/content";
-import { ArticleJsonLd } from "@repo/seo/json-ld/article";
-import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect } from "effect";
 import type { Metadata } from "next";
-import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
-import { type ReactNode, Suspense } from "react";
+import { Suspense } from "react";
 import {
-  type MaterialPageContent,
   readMaterialMetadata,
   readMaterialPage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
-import {
-  readMaterialNavigation,
-  toMaterialHref,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
-import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
-import { AiMenuItem } from "@/components/ai/menu";
-import { DeferredComments } from "@/components/comments/deferred";
-import { ContentDates } from "@/components/content/dates";
-import { ContentHeader } from "@/components/content/header";
-import { ContentTitle } from "@/components/content/title";
-import { ComingSoon } from "@/components/shared/coming-soon";
-import { FooterContent } from "@/components/shared/footer-content";
-import { LayoutContent } from "@/components/shared/layout-content";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { toMaterialHref } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
+import { MaterialShell } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/shell";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { MaterialOutline } from "@/components/shared/material/toc";
-import { OpenContent } from "@/components/shared/open-content/actions";
-import { PaginationContent } from "@/components/shared/pagination-content";
-import { SidebarRightProvider } from "@/components/shared/sidebar-right";
-import { ContentViewTracker } from "@/components/tracking/tracker";
-import { getPublishedMaterialContext } from "@/lib/content/material/context";
 import { readPublishedMaterialPrerenderRoute } from "@/lib/content/material/prerender";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readMaterialPreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { readMaterialContextQuery } from "@/lib/routing/material/query";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 
 type MaterialPageProps =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">;
-type MaterialBody = Pick<MaterialPageContent, "body" | "metadata">;
-type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
-type ArticleJsonLdAuthor = ArrayItem<
-  Parameters<typeof ArticleJsonLd>[0]["author"]
->;
 
 /** Supplies the one real lesson per locale required by Cache Components. */
 export async function generateStaticParams({
@@ -122,191 +88,8 @@ export default function Page(props: MaterialPageProps) {
   );
 }
 
-/** Resolves the URL-specific signed material inside its streaming boundary. */
-async function MaterialRouteContent({
-  params,
-  searchParams,
-}: MaterialPageProps) {
-  const [page, query] = await Promise.all([
-    readMaterialPage(params),
-    searchParams,
-  ]);
-  const { appLocale, route } = page;
-  const materialContext = readMaterialContextQuery(query ?? {});
-  const publishedContext =
-    materialContext && page.kind === "published"
-      ? await getPublishedMaterialContext(appLocale, route, materialContext)
-      : null;
-  const navigation = readMaterialNavigation(page, publishedContext);
-  const trackerContext: LearningContextInput | undefined = navigation.context
-    ? {
-        mode: "placement",
-        nodeKey: navigation.context.nodeKey,
-        programKey: navigation.context.programKey,
-      }
-    : undefined;
-  const contentKey = page.route.contentKey;
-  const contentId = page.route.graph.assetId;
-  const allowsInteractions = page.kind === "published";
-
-  return (
-    <ContentViewTracker
-      contentId={contentId}
-      context={trackerContext}
-      enabled={allowsInteractions}
-      locale={appLocale}
-      publicPath={route.publicPath}
-      section="material"
-    >
-      <MaterialLessonPage
-        content={{ body: page.body, metadata: page.metadata }}
-        copyContent={page.copySourceUrl ? undefined : page.body}
-        copySourceUrl={page.copySourceUrl}
-        currentHref={navigation.currentHref}
-        footer={
-          allowsInteractions ? <DeferredComments slug={contentKey} /> : null
-        }
-        headerLink={navigation.link}
-        locale={appLocale}
-        pagination={navigation.pagination}
-        parentTitle={page.route.topicTitle}
-        route={route}
-        showComments={allowsInteractions}
-        sourceUrl={page.sourceUrl}
-        toolbar={
-          allowsInteractions ? (
-            <DeferredAiSheetOpen contextTitle={page.metadata.title} />
-          ) : null
-        }
-      >
-        {page.children}
-      </MaterialLessonPage>
-    </ContentViewTracker>
-  );
-}
-
-/**
- * Wraps a concrete material lesson in the established rich lesson shell.
- *
- * Runtime content supplies body, metadata, and graph-backed source identity;
- * route projection supplies the canonical localized URL and sibling links.
- */
-async function MaterialLessonPage({
-  children,
-  content,
-  copyContent,
-  copySourceUrl,
-  currentHref,
-  footer,
-  headerLink,
-  locale,
-  pagination,
-  parentTitle,
-  route,
-  showComments,
-  sourceUrl,
-  toolbar,
-}: {
-  children: ReactNode;
-  content: MaterialBody;
-  copyContent?: string;
-  copySourceUrl: null | string;
-  currentHref: string;
-  footer: ReactNode;
-  headerLink?: {
-    href: string;
-    label: string;
-  };
-  locale: Locale;
-  pagination: ContentPagination;
-  parentTitle: string;
-  route: MaterialPageContent["route"];
-  showComments: boolean;
-  sourceUrl: null | string;
-  toolbar: ReactNode;
-}) {
-  const tCommon = await getTranslations({ locale, namespace: "Common" });
-  const raw = content.body;
-  const headings = getHeadings(raw);
-  const metadata = content.metadata;
-  const publishedAt = metadata.datePublished;
-  const modifiedAt = metadata.dateModified;
-  const authorJsonLd: ArticleJsonLdAuthor[] = metadata.authors.map(
-    (author) => ({
-      "@type": "Person",
-      name: author.name,
-      url: `https://nakafa.com/${locale}/contributor`,
-    })
-  );
-
-  return (
-    <>
-      <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(locale, [
-          { name: tCommon("home"), path: "" },
-          { name: metadata.title, path: toMaterialHref(route) },
-        ])}
-      />
-      <ArticleJsonLd
-        author={authorJsonLd}
-        dateModified={modifiedAt}
-        datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject}
-        headline={metadata.title}
-        image={getOgUrl(locale, route.publicPath)}
-        url={toMaterialHref(route)}
-      />
-      <LearningResourceJsonLd
-        author={authorJsonLd}
-        dateModified={modifiedAt}
-        datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject}
-        educationalLevel={parentTitle}
-        name={metadata.title}
-      />
-      <SidebarRightProvider>
-        <LayoutMaterialContent>
-          <ContentHeader
-            items={headerLink ? [headerLink] : [{ label: metadata.title }]}
-          >
-            <OpenContent
-              content={copyContent}
-              copySourceUrl={copySourceUrl}
-              slug={toMaterialHref(route)}
-              sourceUrl={sourceUrl}
-            >
-              {showComments && <AiMenuItem contextTitle={metadata.title} />}
-            </OpenContent>
-          </ContentHeader>
-          <ContentTitle title={metadata.title} />
-          <ContentDates
-            {...(metadata.dateModified === undefined
-              ? {}
-              : { dateModified: metadata.dateModified })}
-            datePublished={metadata.datePublished}
-          />
-          <LayoutContent>
-            {headings.length === 0 && <ComingSoon />}
-            {headings.length > 0 ? children : null}
-          </LayoutContent>
-          <PaginationContent pagination={pagination} />
-          {footer ? <FooterContent>{footer}</FooterContent> : null}
-          {toolbar}
-        </LayoutMaterialContent>
-        <MaterialOutline
-          chapters={{
-            label: tCommon("on-this-page"),
-            data: headings,
-          }}
-          githubUrl={sourceUrl ?? undefined}
-          header={{
-            title: metadata.title,
-            href: currentHref,
-            description: metadata.description ?? metadata.subject,
-          }}
-          showComments={showComments}
-        />
-      </SidebarRightProvider>
-    </>
-  );
+/** Reads only route-owned content so the complete lesson can be prerendered. */
+async function MaterialRouteContent({ params }: MaterialPageProps) {
+  const page = await readMaterialPage(params);
+  return <MaterialShell page={page} />;
 }

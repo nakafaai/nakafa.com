@@ -3,6 +3,7 @@ import { Effect, Schema } from "effect";
 import {
   LlmsProxyRouteDecisionSchema,
   LlmsProxyRouteRequestSchema,
+  readLlmsMarkdownPathname,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
@@ -28,6 +29,17 @@ type PublicDocumentRouteDecision =
 export const resolvePublicDocumentRoute = Effect.fn(
   "www.routing.publicDocument.resolve"
 )(function* (input: PublicDocumentRouteInput) {
+  // Flight navigation is resolved by the page itself. Checking the publication
+  // here repeats database reads before Next can serve its cached RSC segments.
+  // Explicit Markdown keeps its representation resolver, even with RSC headers.
+  // HTML keeps the early ownership check so crawlers receive a hard 404.
+  if (
+    input.isRscRequest &&
+    !readLlmsMarkdownPathname(input.pathname).markdownExtension
+  ) {
+    return { kind: "delegate" } satisfies PublicDocumentRouteDecision;
+  }
+
   const sourceBackedRouteRejection = yield* readSourceBackedHtmlRouteRejection({
     method: input.method,
     pathname: input.pathname,
