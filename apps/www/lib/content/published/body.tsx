@@ -1,8 +1,9 @@
 import "server-only";
+import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 
 import { Effect } from "effect";
-import { applyImmutableContentCache } from "@/lib/content/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 import {
@@ -14,7 +15,8 @@ import {
 async function renderVerifiedBody(artifact: SignedContentArtifact) {
   "use cache";
 
-  applyImmutableContentCache([artifact.artifactHash]);
+  cacheLife("max");
+  cacheTag(makeArtifactCacheTag(artifact.artifactHash));
   const rendered = await Effect.runPromise(
     evaluateVerifiedArtifact({ artifact })
   );

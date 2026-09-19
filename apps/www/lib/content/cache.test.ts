@@ -3,22 +3,15 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   ContentCacheScopeSchema,
-  makeArtifactCacheTag,
   makeContentCacheTag,
 } from "@nakafa/aksara-contracts/cache/content";
-import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { Data, Effect } from "effect";
 import {
   applyContentCache,
-  applyImmutableContentCache,
   ContentCacheInvalidationError,
   invalidateContentCache,
 } from "@/lib/content/cache";
 
-const artifactHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
-const artifactTag = makeArtifactCacheTag(artifactHash);
-const otherArtifactHash = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
-const otherArtifactTag = makeArtifactCacheTag(otherArtifactHash);
 const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
 const revalidateTagMock = vi.hoisted(() => vi.fn());
@@ -53,11 +46,6 @@ describe("content runtime cache", () => {
       "content-scope:material",
       "content-scope:program"
     );
-    expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
-  });
-  it("gives immutable bodies no mutable or global dependency", () => {
-    applyImmutableContentCache([artifactHash, otherArtifactHash]);
-    expect(cacheTagMock).toHaveBeenCalledWith(artifactTag, otherArtifactTag);
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
   it.effect.each(ContentCacheScopeSchema.literals)(

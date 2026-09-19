@@ -20,6 +20,8 @@ import {
   it,
 } from "@effect/vitest";
 import { compile } from "@mdx-js/mdx";
+import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -72,8 +74,9 @@ const attemptQuery = makeFunctionReference<
 
 vi.mock("convex/nextjs", () => ({ fetchQuery: queryMock }));
 vi.mock("@/lib/auth/server", () => ({ getToken: tokenMock }));
-vi.mock("@/lib/content/cache", () => ({
-  applyImmutableContentCache: cacheMock,
+vi.mock("next/cache", () => ({
+  cacheLife: vi.fn(),
+  cacheTag: cacheMock,
 }));
 vi.mock("@repo/next-config/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
@@ -218,10 +221,14 @@ describe("signed try-out execution", () => {
         expect(queryMock).toHaveBeenCalledOnce();
         expect(runtimeKeysMock).not.toHaveBeenCalled();
         expect(fetchMock).not.toHaveBeenCalled();
-        expect(cacheMock).toHaveBeenCalledWith([
-          fixture.question.artifactHash,
-          fixture.answer.artifactHash,
-        ]);
+        expect(cacheMock).toHaveBeenCalledWith(
+          makeArtifactCacheTag(
+            Sha256HashSchema.make(fixture.question.artifactHash)
+          ),
+          makeArtifactCacheTag(
+            Sha256HashSchema.make(fixture.answer.artifactHash)
+          )
+        );
       })
   );
 
@@ -266,7 +273,11 @@ describe("signed try-out execution", () => {
         );
         expect(fetchMock).toHaveBeenCalledOnce();
         expect(runtimeKeysMock).toHaveBeenCalledOnce();
-        expect(cacheMock).toHaveBeenCalledWith([fixture.question.artifactHash]);
+        expect(cacheMock).toHaveBeenCalledWith(
+          makeArtifactCacheTag(
+            Sha256HashSchema.make(fixture.question.artifactHash)
+          )
+        );
       })
   );
 

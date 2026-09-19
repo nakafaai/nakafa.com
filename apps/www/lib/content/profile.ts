@@ -1,12 +1,13 @@
 /**
- * Freshness policy shared by every signed content read and every content
+ * Freshness policy shared by mutable signed content reads and content
  * invalidation. The profile name, the lifetime, and the revalidation window
  * live together so they cannot drift apart.
  *
  * A content change reaches production through an authenticated request from the
  * Aksara publisher CLI to `/api/internal/content/cache`, which invalidates the
  * exact scope that changed. The lifetime is therefore a safety net for a missed
- * invalidation, not the freshness guarantee.
+ * invalidation, not the freshness guarantee. Immutable artifacts use Next.js's
+ * `max` lifetime because their content hash is already part of the cache key.
  *
  * References:
  * https://vercel.com/docs/incremental-static-regeneration/limits-and-pricing#optimizing-isr-reads-and-writes

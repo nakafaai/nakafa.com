@@ -23,7 +23,10 @@ import {
 } from "@/components/shared/quran/interpretation/button";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
-import { SidebarRightProvider } from "@/components/shared/sidebar-right";
+import {
+  SidebarRightHeader,
+  SidebarRightProvider,
+} from "@/components/shared/sidebar-right";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -293,12 +296,14 @@ async function CachedSurahShell({
               label: t("verse"),
               data: headings,
             }}
-            header={{
-              title,
-              href: `/quran/${surah}`,
-              description,
-              descriptionLanguage,
-            }}
+            header={
+              <SidebarRightHeader
+                description={description}
+                descriptionLanguage={descriptionLanguage}
+                href={`/quran/${surah}`}
+                title={title}
+              />
+            }
             references={{ title, data: references }}
           />
         </SidebarRightProvider>

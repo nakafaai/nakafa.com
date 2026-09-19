@@ -2,7 +2,25 @@ import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projecti
 import type { ContentPagination } from "@repo/contents/_types/content";
 import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
-import type { PublishedMaterialContext } from "@/lib/content/material/context";
+import type { PublishedMaterialContext } from "@/lib/content/material/projection";
+
+/** Only route identity and visible labels are needed for sibling navigation. */
+type MaterialNavigationRoute = Pick<
+  MaterialLessonProjection,
+  "appLocale" | "order" | "parentPath" | "publicPath"
+> & {
+  readonly metadata: Pick<MaterialLessonProjection["metadata"], "title">;
+};
+
+/** Small public navigation model shared by the static shell and client controls. */
+export interface MaterialNavigationPage {
+  readonly kind: MaterialPageContent["kind"];
+  readonly route: Pick<
+    MaterialLessonProjection,
+    "appLocale" | "contentKey" | "materialKey" | "parentPath" | "publicPath"
+  >;
+  readonly siblings: readonly MaterialNavigationRoute[];
+}
 
 const emptyItem = { href: "", title: "" };
 
@@ -16,8 +34,8 @@ export function toMaterialHref(route: {
 
 /** Orders signed sibling routes by authored order and canonical path. */
 function compareMaterialRoute(
-  left: MaterialLessonProjection,
-  right: MaterialLessonProjection
+  left: MaterialNavigationRoute,
+  right: MaterialNavigationRoute
 ) {
   const order = left.order - right.order;
   return order === 0 ? left.publicPath.localeCompare(right.publicPath) : order;
@@ -25,9 +43,9 @@ function compareMaterialRoute(
 
 /** Builds sibling pagination with one optional context-aware href resolver. */
 function readRoutePagination(
-  current: MaterialLessonProjection,
-  siblings: readonly MaterialLessonProjection[],
-  toHref?: (target: MaterialLessonProjection) => string
+  current: MaterialNavigationPage["route"],
+  siblings: readonly MaterialNavigationRoute[],
+  toHref?: (target: MaterialNavigationRoute) => string
 ): ContentPagination {
   const ordered = Array.from(siblings).sort(compareMaterialRoute);
   const currentIndex = ordered.findIndex(
@@ -37,7 +55,7 @@ function readRoutePagination(
     return { next: emptyItem, prev: emptyItem };
   }
 
-  const toItem = (target: MaterialLessonProjection | undefined) => {
+  const toItem = (target: MaterialNavigationRoute | undefined) => {
     if (!target) {
       return emptyItem;
     }
@@ -56,7 +74,7 @@ function readRoutePagination(
 
 /** Builds navigation from signed routes and an already verified context. */
 export function readMaterialNavigation(
-  page: MaterialPageContent,
+  page: MaterialNavigationPage,
   published: PublishedMaterialContext | null
 ) {
   const currentHref = toMaterialHref(page.route);
@@ -70,7 +88,12 @@ export function readMaterialNavigation(
     };
   }
 
-  const toHref = (target: MaterialLessonProjection) => {
+  const toHref = (
+    target: Pick<
+      MaterialNavigationRoute,
+      "appLocale" | "parentPath" | "publicPath"
+    >
+  ) => {
     const href = toMaterialHref(target);
     if (
       !(

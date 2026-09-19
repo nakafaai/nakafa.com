@@ -1,9 +1,7 @@
 import {
   type ContentCacheScope,
-  makeArtifactCacheTag,
   makeContentCacheTag,
 } from "@nakafa/aksara-contracts/cache/content";
-import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import { Effect, Schema } from "effect";
 import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import {
@@ -23,12 +21,6 @@ export function applyContentCache(
   ...scopes: readonly [ContentCacheScope, ...ContentCacheScope[]]
 ) {
   cacheTag(...scopes.map(makeContentCacheTag));
-  cacheLife(CONTENT_CACHE_PROFILE);
-}
-
-/** Caches authenticated immutable bodies independently of active publication. */
-export function applyImmutableContentCache(hashes: readonly Sha256Hash[]) {
-  cacheTag(...hashes.map(makeArtifactCacheTag));
   cacheLife(CONTENT_CACHE_PROFILE);
 }
 

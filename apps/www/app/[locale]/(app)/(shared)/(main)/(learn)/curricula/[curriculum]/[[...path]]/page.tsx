@@ -19,6 +19,7 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
+import { SidebarRightHeader } from "@/components/shared/sidebar-right";
 import { readPublishedProgramPrerenderRoute } from "@/lib/content/program/catalog";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/artwork";
 import {
@@ -226,7 +227,7 @@ function CurriculumRouteFrame({
             data: readMaterialCardChapters(model.materialCards),
           }}
           githubUrl={sourceUrl}
-          header={readRuntimeCurriculumToc(model)}
+          header={<SidebarRightHeader {...readRuntimeCurriculumToc(model)} />}
         />
       )}
     </>

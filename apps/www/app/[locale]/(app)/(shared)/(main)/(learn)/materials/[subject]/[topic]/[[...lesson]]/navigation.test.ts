@@ -9,7 +9,7 @@ import {
   readMaterialNavigation,
   toMaterialHref,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
-import type { PublishedMaterialContext } from "@/lib/content/material/context";
+import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 import {
   previewIdProjection,
   previewNextProjection,

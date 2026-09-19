@@ -103,6 +103,23 @@ describe("public document route resolution", () => {
     })
   );
 
+  it.effect(
+    "delegates Flight navigation without reading publication ownership",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* resolvePublicDocumentRoute({
+            ...defaultInput,
+            isRscRequest: true,
+            pathname: "/en/subjects/mathematics/functions/identity",
+          })
+        ).toEqual({ kind: "delegate" });
+        expect(routeMocks.source).not.toHaveBeenCalled();
+        expect(routeMocks.projected).not.toHaveBeenCalled();
+        expect(routeMocks.markdown).not.toHaveBeenCalled();
+      })
+  );
+
   it.effect("returns the final not-acceptable decision", () =>
     Effect.gen(function* () {
       expect(

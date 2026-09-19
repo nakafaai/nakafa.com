@@ -9,27 +9,19 @@ import {
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
-import {
-  type BreadcrumbHeaderItem,
-  BreadcrumbHeaderPath,
-} from "@/components/shared/breadcrumb/header";
 
 /** Keeps parent navigation and reading controls together above the content title. */
 export async function ContentHeader({
-  items,
+  breadcrumb,
   children,
 }: {
-  items: readonly BreadcrumbHeaderItem[];
+  breadcrumb: ReactNode;
   children: ReactNode;
 }) {
   const t = await getTranslations("Common");
   return (
     <BreadcrumbHeaderFrame>
-      <BreadcrumbHeaderPath
-        homeLabel={t("home")}
-        items={items}
-        menuLabel={t("more")}
-      />
+      <div className="min-w-0">{breadcrumb}</div>
       <ButtonGroup aria-label={t("content-actions")} className="shrink-0">
         {children}
         <Tooltip>

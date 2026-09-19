@@ -1,12 +1,14 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { GET } from "@/app/rss.xml/route";
 
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestArticles = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestMaterials = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/content/cache", () => ({ applyContentCache: vi.fn() }));
 
 vi.mock("@/lib/content/article/discovery", () => ({
   readPublishedLatestArticles: mockReadPublishedLatestArticles,
@@ -23,6 +25,8 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const activeReleaseId = "release-material";
+
+afterEach(() => vi.useRealTimers());
 
 beforeEach(() => {
   mockReadActiveContentIdentity
@@ -56,6 +60,19 @@ beforeEach(() => {
 });
 
 describe("rss route", () => {
+  it("keeps unchanged publications byte-identical across regeneration times", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-19T08:00:00Z"));
+    const before = await (await GET()).text();
+    vi.setSystemTime(new Date("2026-09-19T09:00:00Z"));
+    const after = await (await GET()).text();
+
+    expect(after).toBe(before);
+    expect(after).toContain(
+      "<lastBuildDate>Sat, 22 Aug 2026 00:00:00 GMT</lastBuildDate>"
+    );
+  });
+
   it("serves dated signed articles and materials as RSS XML", async () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
@@ -139,6 +156,26 @@ describe("rss route", () => {
     const text = await (await GET()).text();
 
     expect(text).not.toContain("Published article");
+  });
+
+  it("dates a never-revised article from its publication", async () => {
+    mockReadPublishedLatestArticles.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId,
+        articles: [
+          {
+            authors: [{ name: "Nakafa" }],
+            datePublished: "2026-07-24",
+            publicPath: "articles/politics/published",
+            title: "Published article",
+          },
+        ],
+      })
+    );
+    const text = await (await GET()).text();
+    expect(text).toContain(
+      "<lastBuildDate>Fri, 24 Jul 2026 00:00:00 GMT</lastBuildDate>"
+    );
   });
 
   it("rejects the feed when no active publication exists", async () => {

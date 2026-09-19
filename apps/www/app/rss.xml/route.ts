@@ -6,6 +6,7 @@ import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
+import { applyContentCache } from "@/lib/content/cache";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
@@ -22,6 +23,14 @@ const rssHeaders = {
 
 /** Serves the RSS feed from dated signed article and material publications. */
 export async function GET() {
+  return new NextResponse(await readFeed(), { headers: rssHeaders });
+}
+
+/** Prerenders the complete feed and refreshes it when either source changes. */
+async function readFeed() {
+  "use cache";
+
+  applyContentCache("article", "material");
   const [t, tCommon, routes] = await Promise.all([
     getTranslations({
       namespace: "Metadata",
@@ -35,6 +44,9 @@ export async function GET() {
   ]);
 
   const feed = new Feed({
+    updated: new Date(
+      Math.max(0, ...routes.map((route) => route.dateModified))
+    ),
     title: t("title"),
     description: t("description"),
     id: `${baseUrl}`,
@@ -70,7 +82,7 @@ export async function GET() {
     feed.addItem(item);
   }
 
-  return new NextResponse(feed.rss2(), { headers: rssHeaders });
+  return feed.rss2();
 }
 
 /** Reads article and subject feed routes from the Convex route catalog. */
@@ -127,6 +139,9 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
     authors: article.authors,
     appLocale,
     datePublished: Date.parse(`${article.datePublished}T00:00:00.000Z`),
+    dateModified: Date.parse(
+      `${article.dateModified ?? article.datePublished}T00:00:00.000Z`
+    ),
     description: article.description,
     route: article.publicPath,
     title: article.title,
@@ -147,6 +162,9 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
   const publishedRoutes = published.materials.map((material) => ({
     authors: material.authors,
     datePublished: Date.parse(`${material.datePublished}T00:00:00.000Z`),
+    dateModified: Date.parse(
+      `${material.dateModified ?? material.datePublished}T00:00:00.000Z`
+    ),
     description: material.description,
     appLocale,
     route: material.publicPath,

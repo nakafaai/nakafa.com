@@ -33,8 +33,8 @@ const readNakafaRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
-  applyImmutableContentCache: vi.fn(),
 }));
+vi.mock("next/cache", () => ({ cacheTag: vi.fn() }));
 vi.mock("@repo/backend/client/nakafa/query", () => ({
   readNakafaRuntimeQuery: readNakafaRuntimeQueryMock,
 }));
