@@ -39,8 +39,9 @@ export class MathService extends Context.Service<MathService, MathRuntime>()(
       const baseUrl = yield* casUrl;
       const apiKey = yield* casApiKey;
       return {
-        compute: (request: MathRequest) =>
-          Effect.gen(function* () {
+        compute: Effect.fn("Math.compute")(
+          function* (request: MathRequest) {
+            const signal = yield* Effect.abortSignal;
             const response = yield* Effect.tryPromise({
               try: () =>
                 fetch(new URL(CAS_MATH_PATH, baseUrl), {
@@ -50,6 +51,7 @@ export class MathService extends Context.Service<MathService, MathRuntime>()(
                     "Content-Type": "application/json",
                   },
                   method: "POST",
+                  signal,
                 }),
               catch: () =>
                 new MathCasRequestError({
@@ -79,7 +81,19 @@ export class MathService extends Context.Service<MathService, MathRuntime>()(
                   })
               )
             );
-          }),
+          },
+          Effect.scoped,
+          // CAS terminates its worker after 20 seconds. This outer budget
+          // includes transport and response decoding, without leaving fetch
+          // alive when the Effect fiber is interrupted.
+          Effect.timeoutOrElse({
+            duration: "25 seconds",
+            orElse: () =>
+              new MathCasRequestError({
+                message: "Math service exceeded its response deadline.",
+              }),
+          })
+        ),
       };
     }),
   }

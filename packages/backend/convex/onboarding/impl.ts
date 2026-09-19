@@ -138,20 +138,29 @@ function patchOnboardingAnswer(
   if (answer.kind === "role") {
     const saved = { ...profile, ...lifecycle, role: answer.value };
     return tryOnboardingPersistence(() =>
-      ctx.db.patch(profile._id, { ...lifecycle, role: answer.value })
+      ctx.db.patch("onboardingProfiles", profile._id, {
+        ...lifecycle,
+        role: answer.value,
+      })
     ).pipe(Effect.as(saved));
   }
 
   if (answer.kind === "region") {
     const saved = { ...profile, ...lifecycle, region: answer.value };
     return tryOnboardingPersistence(() =>
-      ctx.db.patch(profile._id, { ...lifecycle, region: answer.value })
+      ctx.db.patch("onboardingProfiles", profile._id, {
+        ...lifecycle,
+        region: answer.value,
+      })
     ).pipe(Effect.as(saved));
   }
 
   const saved = { ...profile, ...lifecycle, focus: answer.value };
   return tryOnboardingPersistence(() =>
-    ctx.db.patch(profile._id, { ...lifecycle, focus: answer.value })
+    ctx.db.patch("onboardingProfiles", profile._id, {
+      ...lifecycle,
+      focus: answer.value,
+    })
   ).pipe(Effect.as(saved));
 }
 
@@ -169,7 +178,7 @@ export const admitOnboarding = Effect.fn("onboarding.admit")(function* (
   const now = yield* Clock.currentTimeMillis;
   if (profile) {
     yield* tryOnboardingPersistence(() =>
-      ctx.db.patch(profile._id, { admittedAt: now })
+      ctx.db.patch("onboardingProfiles", profile._id, { admittedAt: now })
     );
   } else {
     yield* tryOnboardingPersistence(() =>
@@ -248,7 +257,7 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
 
   if (profile) {
     yield* tryOnboardingPersistence(() =>
-      ctx.db.patch(profile._id, {
+      ctx.db.patch("onboardingProfiles", profile._id, {
         ...answers,
         admittedAt: profile.admittedAt ?? now,
         completedAt: now,

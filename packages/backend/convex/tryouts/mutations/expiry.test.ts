@@ -378,4 +378,40 @@ describe("tryouts/mutations/expiry", () => {
       },
     });
   });
+  it.each(["completed", "in-progress"] as const)(
+    "handles a section timer after its parent is %s",
+    async (status) => {
+      const t = createConvexTestWithBetterAuth();
+      const fixture = await t.mutation(async (ctx) => {
+        const seeded = await seedTryoutContentAccessState(ctx, {
+          attemptStatus: status,
+          sectionStatus: "in-progress",
+          suffix: `expiry-parent-${status}`,
+        });
+        await ctx.db.patch(seeded.attemptId, {
+          expiresAt: EXPIRED_AT,
+          scoringStrategy: "raw",
+          scoreStatus: "official",
+        });
+        await ctx.db.patch(seeded.sectionAttemptId, { expiresAt: EXPIRED_AT });
+        return seeded;
+      });
+      await t.mutation(internal.tryouts.mutations.expiry.section, {
+        expiresAt: EXPIRED_AT,
+        sectionAttemptId: fixture.sectionAttemptId,
+      });
+      const stored = await t.query(async (ctx) => ({
+        attempt: await ctx.db.get(fixture.attemptId),
+        section: await ctx.db.get(fixture.sectionAttemptId),
+        scores: await ctx.db.query("tryoutScores").collect(),
+      }));
+      expect(stored.attempt?.status).toBe(
+        status === "completed" ? "completed" : "expired"
+      );
+      expect(stored.section?.status).toBe(
+        status === "completed" ? "in-progress" : "expired"
+      );
+      expect(stored.scores).toHaveLength(status === "completed" ? 0 : 1);
+    }
+  );
 });

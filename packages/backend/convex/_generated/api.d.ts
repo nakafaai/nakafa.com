@@ -64,6 +64,7 @@ export declare const api: {
             image?: string;
             name: string;
             plan: "free" | "pro";
+            planCreditGrantId?: Id<"creditTransactions">;
             role?: "teacher" | "student" | "parent" | "administrator";
           };
           authUser: {
@@ -101,6 +102,7 @@ export declare const api: {
             identifier: string;
             modelId: "nakafa-lite" | "nakafa-pro";
           };
+          turnId?: Id<"chatTurns">;
         },
         null
       >;
@@ -1160,6 +1162,7 @@ export declare const api: {
               | "data-scrape-url"
               | "data-web-search";
           }>;
+          turnId?: Id<"chatTurns">;
         },
         null
       >;
@@ -4572,6 +4575,22 @@ export declare const api: {
             toolCallId?: string;
             userId: Id<"users">;
           }>
+        >;
+      };
+    };
+    turns: {
+      mutations: {
+        release: FunctionReference<
+          "mutation",
+          "public",
+          { turnId: Id<"chatTurns"> },
+          null
+        >;
+        reserve: FunctionReference<
+          "mutation",
+          "public",
+          { modelId: "nakafa-lite" | "nakafa-pro" },
+          Id<"chatTurns">
         >;
       };
     };
@@ -9610,6 +9629,7 @@ export declare const internal: {
             identifier: string;
             modelId: "nakafa-lite" | "nakafa-pro";
           };
+          turnId?: Id<"chatTurns">;
           userId: Id<"users">;
         },
         null | { messageId: Id<"messages"> }
@@ -10670,6 +10690,7 @@ export declare const internal: {
               | "data-scrape-url"
               | "data-web-search";
           }>;
+          turnId?: Id<"chatTurns">;
           userId: Id<"users">;
         },
         null | {
@@ -10693,6 +10714,16 @@ export declare const internal: {
           "internal",
           {},
           { deleted: number; hasMore: boolean }
+        >;
+      };
+    };
+    turns: {
+      mutations: {
+        expire: FunctionReference<
+          "mutation",
+          "internal",
+          { turnId: Id<"chatTurns"> },
+          null
         >;
       };
     };
@@ -13029,6 +13060,7 @@ export declare const internal: {
           image?: string;
           name: string;
           plan: "free" | "pro";
+          planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
         }
       >;
@@ -13050,6 +13082,7 @@ export declare const internal: {
           image?: string;
           name: string;
           plan: "free" | "pro";
+          planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
         }
       >;

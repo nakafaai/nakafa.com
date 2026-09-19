@@ -1,4 +1,4 @@
-import { mutation } from "@repo/backend/convex/functions";
+import { mutation } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {

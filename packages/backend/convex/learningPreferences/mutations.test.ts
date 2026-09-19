@@ -9,6 +9,7 @@ import {
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
 import { api } from "@repo/backend/convex/_generated/api";
+import { authReader } from "@repo/backend/convex/auth/reader";
 import { readLearningPreferenceByUserId } from "@repo/backend/convex/learningPreferences/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
@@ -294,6 +295,36 @@ describe("learningPreferences", () => {
       );
     })
   );
+
+  it("redacts unexpected auth provider failures for both preference mutations", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const auth = vi
+      .spyOn(authReader, "getAuthUser")
+      .mockRejectedValue(new Error("private auth provider details"));
+    await expect(
+      t.mutation(api.learningPreferences.mutations.setPreferredCurriculum, {
+        locale: "id",
+        preferredCurriculumProgramKey: "merdeka",
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "CURRICULUM_PREFERENCE_AUTH_FAILED",
+        message: "Unable to authenticate the curriculum preference request.",
+      },
+    });
+    await expect(
+      t.mutation(api.learningPreferences.mutations.setPreferredTryoutCountry, {
+        locale: "id",
+        preferredTryoutCountryKey: "indonesia",
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "TRYOUT_PREFERENCE_AUTH_FAILED",
+        message: "Unable to authenticate the try-out preference request.",
+      },
+    });
+    auth.mockRestore();
+  });
 
   it.effect("redacts preference persistence failures", () =>
     Effect.gen(function* () {

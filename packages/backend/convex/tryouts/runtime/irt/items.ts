@@ -95,7 +95,9 @@ const requireIrtScaleVersion = Effect.fn(
       "Attempt IRT scale is missing for this try-out."
     );
   }
-  const scale = yield* tryRuntimePromise(() => ctx.db.get(scaleVersionId));
+  const scale = yield* tryRuntimePromise(() =>
+    ctx.db.get("irtScaleVersions", scaleVersionId)
+  );
   if (scale && scaleBelongsToAttempt(scale, attempt)) {
     return scale;
   }

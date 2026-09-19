@@ -6,12 +6,19 @@ import type {
   NinaContextTransition,
 } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { ConvexError } from "convex/values";
 import { Effect } from "effect";
-import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
+import {
+  ChatAdmissionError,
+  ChatMutationError,
+  ChatQueryError,
+} from "@/app/api/chat/errors";
 import {
   createChatWithMessage,
   loadMessages,
   loadPinnedNinaContext,
+  releaseChatTurn,
+  reserveChatTurn,
   saveChatMessage,
 } from "@/app/api/chat/persistence";
 
@@ -422,6 +429,71 @@ describe("app/api/chat/persistence", () => {
 
         expect(messages).toEqual([]);
         expect(mocks.fetchQuery).toHaveBeenCalledTimes(1);
+      })
+  );
+});
+
+describe("atomic chat admission adapter", () => {
+  beforeEach(() => vi.resetAllMocks());
+  it.effect(
+    "keeps the hold on the server and releases it on preparation failure",
+    () =>
+      Effect.gen(function* () {
+        mocks.fetchMutation.mockResolvedValueOnce("turn-held");
+        const turnId = yield* reserveChatTurn(modelId, "session-token");
+        expect(turnId).toBe("turn-held");
+        expect(mocks.fetchMutation).toHaveBeenLastCalledWith(
+          expect.anything(),
+          { modelId },
+          { token: "session-token" }
+        );
+        mocks.fetchMutation.mockResolvedValueOnce(null);
+        yield* releaseChatTurn(turnId, "session-token");
+        expect(mocks.fetchMutation).toHaveBeenLastCalledWith(
+          expect.anything(),
+          { turnId },
+          { token: "session-token" }
+        );
+      })
+  );
+  it.effect(
+    "distinguishes insufficient credits from an unavailable backend",
+    () =>
+      Effect.gen(function* () {
+        for (const code of ["INSUFFICIENT_CREDITS", "RATE_LIMITED"]) {
+          mocks.fetchMutation.mockRejectedValueOnce(
+            new ConvexError({ code, message: "Admission rejected" })
+          );
+          const rejected = yield* Effect.flip(
+            reserveChatTurn(modelId, "session-token")
+          );
+          expect(rejected).toBeInstanceOf(ChatAdmissionError);
+          expect(rejected).toMatchObject({ code });
+        }
+        mocks.fetchMutation.mockRejectedValueOnce(new Error("offline"));
+        const unavailable = yield* Effect.flip(
+          reserveChatTurn(modelId, "session-token")
+        );
+        expect(unavailable).toMatchObject({
+          _tag: "ChatMutationError",
+          operation: "reserve-turn",
+        });
+      })
+  );
+  it.effect(
+    "reports release failures so durable expiry can recover the hold",
+    () =>
+      Effect.gen(function* () {
+        mocks.fetchMutation.mockResolvedValueOnce("turn-held");
+        const turnId = yield* reserveChatTurn(modelId, "session-token");
+        mocks.fetchMutation.mockRejectedValueOnce(new Error("offline"));
+        const failure = yield* Effect.flip(
+          releaseChatTurn(turnId, "session-token")
+        );
+        expect(failure).toMatchObject({
+          _tag: "ChatMutationError",
+          operation: "release-turn",
+        });
       })
   );
 });

@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { MathCasRequestError } from "@repo/math/errors";
 import { MathService } from "@repo/math/service";
-import { ConfigProvider, Effect, Exit } from "effect";
+import { ConfigProvider, Deferred, Effect, Exit, Fiber } from "effect";
+import { TestClock } from "effect/testing";
 
 const provider = ConfigProvider.fromEnvRecord({
   MATH_CAS_API_KEY: "secret",
@@ -11,6 +12,37 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe("MathService", () => {
+  it.effect("aborts transport when its response deadline expires", () =>
+    Effect.gen(function* () {
+      const started = yield* Deferred.make<void>();
+      let requestSignal: AbortSignal | null | undefined;
+      vi.spyOn(globalThis, "fetch").mockImplementation((_url, options) => {
+        requestSignal = options?.signal;
+        Deferred.doneUnsafe(started, Exit.void);
+        return new Promise<Response>(() => undefined);
+      });
+      const fiber = yield* MathService.use((service) =>
+        service.compute({
+          expression: "2 + 2",
+          kind: "math",
+          operation: "evaluate",
+        })
+      ).pipe(
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.exit,
+        Effect.forkChild
+      );
+      yield* Deferred.await(started);
+      yield* TestClock.adjust("25 seconds");
+      const exit = yield* Fiber.join(fiber);
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        expect(exit.cause.toString()).toContain("response deadline");
+      }
+      expect(requestSignal?.aborted).toBe(true);
+    })
+  );
   it.effect("calls the configured CAS endpoint and decodes the result", () =>
     Effect.gen(function* () {
       vi.spyOn(globalThis, "fetch").mockResolvedValue(

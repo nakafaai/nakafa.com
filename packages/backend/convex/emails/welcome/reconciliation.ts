@@ -89,10 +89,14 @@ const reconcileWelcomeIntent = Effect.fn("emails.welcome.reconcileIntent")(
         yield* Effect.logError("Welcome email workflow failed.");
       }
       if (intent.phase === "scheduled") {
-        yield* tryWelcomeIntent(() => ctx.db.delete(intent._id));
+        yield* tryWelcomeIntent(() =>
+          ctx.db.delete("welcomeEmailIntents", intent._id)
+        );
       } else {
         yield* tryWelcomeIntent(() =>
-          ctx.db.patch(intent._id, { workflowId: undefined })
+          ctx.db.patch("welcomeEmailIntents", intent._id, {
+            workflowId: undefined,
+          })
         );
       }
     }
@@ -114,7 +118,9 @@ const reconcileWelcomeIntent = Effect.fn("emails.welcome.reconcileIntent")(
         return;
       }
 
-      yield* tryWelcomeIntent(() => ctx.db.delete(intent._id));
+      yield* tryWelcomeIntent(() =>
+        ctx.db.delete("welcomeEmailIntents", intent._id)
+      );
     }
   }
 );

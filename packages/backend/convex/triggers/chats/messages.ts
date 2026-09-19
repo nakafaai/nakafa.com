@@ -18,7 +18,7 @@ export async function messagesHandler(
     return;
   }
 
-  const chat = await ctx.db.get(message.chatId);
+  const chat = await ctx.db.get("chats", message.chatId);
   if (!chat) {
     return;
   }

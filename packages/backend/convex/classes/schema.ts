@@ -343,7 +343,6 @@ const tables = {
     .index("by_userId", ["userId"]),
 
   schoolClassForumPosts: defineTable(schoolClassForumPostValidator)
-    .index("by_forumId", ["forumId"])
     .index("by_forumId_and_sequence", ["forumId", "sequence"])
     .index("by_createdBy", ["createdBy"])
     .index("by_parentId", ["parentId"])

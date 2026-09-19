@@ -174,12 +174,7 @@ describe("tryouts/response/write", () => {
             optionKey
           );
         }
-        const stored = yield* Effect.promise(() =>
-          t.query(async (ctx) => ({
-            responses: await ctx.db.query("tryoutResponses").collect(),
-            section: await ctx.db.get(seeded.sectionAttemptId),
-          }))
-        );
+        const stored = yield* readResponseState(t, seeded);
         expect(stored.responses).toEqual([]);
         expect(stored.section).toMatchObject({
           answeredCount: 0,
@@ -357,23 +352,14 @@ describe("tryouts/response/write", () => {
               "tryoutAttempts",
               attemptValues
             );
+            const {
+              _id: sectionId,
+              _creationTime: sectionTime,
+              ...sectionValues
+            } = section;
             const foreignSectionId = await ctx.db.insert(
               "tryoutSectionAttempts",
-              {
-                answeredCount: 0,
-                completedAt: null,
-                correctAnswers: 0,
-                endReason: null,
-                expiresAt: section.expiresAt,
-                lastActivityAt: section.lastActivityAt,
-                sectionIdentity: section.sectionIdentity,
-                sectionKey: section.sectionKey,
-                sectionOrder: section.sectionOrder,
-                startedAt: section.startedAt,
-                status: "in-progress",
-                totalQuestions: section.totalQuestions,
-                tryoutAttemptId: foreignAttemptId,
-              }
+              { ...sectionValues, tryoutAttemptId: foreignAttemptId }
             );
             await ctx.db.insert("tryoutResponses", {
               answeredAt: TRYOUT_TEST_NOW,
@@ -395,19 +381,8 @@ describe("tryouts/response/write", () => {
         yield* expectSaveFailure(seeded, {
           code: "TRYOUT_RESPONSE_LINK_MISMATCH",
         });
-        const stored = yield* Effect.promise(() =>
-          t.query(async (ctx) => ({
-            attempt: await ctx.db.get(seeded.attemptId),
-            response: await ctx.db
-              .query("tryoutResponses")
-              .withIndex("by_placementId", (index) =>
-                index.eq("placementId", seeded.placementId)
-              )
-              .unique(),
-            section: await ctx.db.get(seeded.sectionAttemptId),
-          }))
-        );
-        expect(stored.response?.updatedAt).toBe(TRYOUT_TEST_NOW);
+        const stored = yield* readResponseState(t, seeded);
+        expect(stored.responses[0]?.updatedAt).toBe(TRYOUT_TEST_NOW);
         expect(stored.section).toMatchObject({
           answeredCount: 0,
           correctAnswers: 0,
@@ -481,19 +456,43 @@ describe("tryouts/response/write", () => {
       yield* expectSaveFailure(seeded, {
         code: "TRYOUT_RESPONSE_SELECTION_MISMATCH",
       });
-      const stored = yield* Effect.promise(() =>
-        t.query(async (ctx) => ({
-          attempt: await ctx.db.get(seeded.attemptId),
-          response: await ctx.db.query("tryoutResponses").unique(),
-          section: await ctx.db.get(seeded.sectionAttemptId),
-        }))
-      );
-      expect(stored.response).toMatchObject({
+      const stored = yield* readResponseState(t, seeded);
+      expect(stored.responses[0]).toMatchObject({
         isCorrect: !seeded.selectedChoice.isCorrect,
         updatedAt: TRYOUT_TEST_NOW,
       });
       expect(stored.section?.lastActivityAt).toBe(TRYOUT_TEST_NOW);
       expect(stored.attempt?.lastActivityAt).toBe(TRYOUT_TEST_NOW);
     })
+  );
+  it.effect(
+    "clears an unanswered or incorrect response idempotently without changing counters",
+    () =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        const seeded = yield* seedResponseFixture(t, "clear-response");
+        yield* setResponseClock(5000);
+        const clear = () =>
+          seeded.client.mutation(api.tryouts.mutations.responses.save, {
+            placementId: seeded.placementId,
+            selection: null,
+          });
+        yield* Effect.promise(clear);
+        yield* saveSelection(seeded, "option-2");
+        yield* Effect.promise(clear);
+        yield* Effect.promise(clear);
+        const stored = yield* readResponseState(t, seeded);
+        expect(stored.responses).toEqual([]);
+        expect(stored.section).toMatchObject({
+          answeredCount: 0,
+          correctAnswers: 0,
+        });
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => ctx.db.delete(seeded.placementId))
+        );
+        yield* expectSaveFailure(seeded, {
+          code: "TRYOUT_PLACEMENT_NOT_FOUND",
+        });
+      })
   );
 });

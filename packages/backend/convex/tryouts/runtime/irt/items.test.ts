@@ -89,7 +89,12 @@ async function seedSectionIrtSource(
   }
   await runConvexProgram(createAttemptPlacements(ctx, { attempt, source }));
 
-  return { attemptId, sectionIdentity: snapshot.sectionIdentity };
+  return {
+    attemptId,
+    firstItemId,
+    scaleVersionId,
+    sectionIdentity: snapshot.sectionIdentity,
+  };
 }
 
 describe("tryouts/runtime/irt/items", () => {
@@ -160,6 +165,73 @@ describe("tryouts/runtime/irt/items", () => {
           );
         })
       ).rejects.toMatchObject({ data: { code: expectedCode } });
+    }
+  );
+  it.each([
+    { kind: "missing reference", code: "TRYOUT_IRT_SCALE_REQUIRED" },
+    { kind: "deleted scale", code: "TRYOUT_IRT_SCALE_REQUIRED" },
+    { kind: "foreign scale", code: "TRYOUT_IRT_SCALE_REQUIRED" },
+    { kind: "wrong count", code: "TRYOUT_IRT_SCALE_COUNT_MISMATCH" },
+    {
+      kind: "unfinished calibration",
+      code: "TRYOUT_IRT_CALIBRATION_RUN_MISMATCH",
+    },
+    { kind: "missing item", code: "TRYOUT_IRT_ITEM_COUNT_MISMATCH" },
+    { kind: "duplicate placement", code: "TRYOUT_PLACEMENT_DUPLICATE" },
+  ])(
+    "rejects $kind before returning a scoring source",
+    async ({ kind, code }) => {
+      const t = convexTest(schema, convexModules);
+      await expect(
+        t.mutation(async (ctx) => {
+          const fixture = await seedSectionIrtSource(ctx, "none");
+          if (kind === "missing reference") {
+            await ctx.db.patch(fixture.attemptId, {
+              scaleVersionId: undefined,
+            });
+          }
+          if (kind === "deleted scale") {
+            await ctx.db.delete(fixture.scaleVersionId);
+          }
+          if (kind === "foreign scale") {
+            await ctx.db.patch(fixture.scaleVersionId, {
+              setIdentity: "foreign-set",
+            });
+          }
+          if (kind === "wrong count") {
+            await ctx.db.patch(fixture.scaleVersionId, { questionCount: 3 });
+          }
+          if (kind === "missing item") {
+            await ctx.db.delete(fixture.firstItemId);
+          }
+          if (kind === "unfinished calibration") {
+            const item = await ctx.db.get(fixture.firstItemId);
+            if (!item) {
+              throw new Error("Expected an IRT item.");
+            }
+            await ctx.db.patch(item.calibrationRunId, { status: "running" });
+          }
+          const attempt = await ctx.db.get(fixture.attemptId);
+          if (!attempt) {
+            throw new Error("Expected an IRT attempt.");
+          }
+          const placements = await runConvexProgram(
+            loadAttemptPlacements(ctx, attempt)
+          );
+          const first = placements[0];
+          if (!first) {
+            throw new Error("Expected a frozen placement.");
+          }
+          return runConvexProgram(
+            loadSectionIrtSource(ctx, {
+              attempt,
+              placements:
+                kind === "duplicate placement" ? [first, first] : placements,
+              sectionIdentity: fixture.sectionIdentity,
+            })
+          );
+        })
+      ).rejects.toMatchObject({ data: { code } });
     }
   );
 });

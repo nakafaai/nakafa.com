@@ -33,6 +33,7 @@ interface CapturedAgentSettings {
   readonly tools?: NinaToolSet;
 }
 interface CapturedStreamOptions {
+  readonly abortSignal: AbortSignal;
   readonly messages: ModelMessage[];
   readonly timeout?: unknown;
 }
@@ -333,7 +334,9 @@ describe("nina/agent", () => {
         } satisfies UIMessageStreamWriter<MyUIMessage>;
         const tools = createTools();
         const onStreamError = vi.fn();
+        const signal = yield* Effect.abortSignal;
         const responseMessages = yield* runNinaAgentTurn({
+          signal,
           messages: chat.finalMessages,
           page,
           runtime,
@@ -358,6 +361,7 @@ describe("nina/agent", () => {
           "Vector Addition"
         );
         expect(fakeAgentState.settings?.tools).toBe(tools);
+        expect(fakeAgentState.streamOptions?.abortSignal).toBe(signal);
         expect(fakeAgentState.streamOptions?.messages).toEqual(
           chat.finalMessages
         );
@@ -394,6 +398,7 @@ describe("nina/agent", () => {
         fakeAgentState.streamFailure = new Error("stream startup failed");
         const exit = yield* Effect.exit(
           runNinaAgentTurn({
+            signal: yield* Effect.abortSignal,
             messages: chat.finalMessages,
             page,
             runtime,
@@ -413,6 +418,7 @@ describe("nina/agent", () => {
         fakeAgentState.responseFailure = new Error("response failed");
         const exit = yield* Effect.exit(
           runNinaAgentTurn({
+            signal: yield* Effect.abortSignal,
             messages: chat.finalMessages,
             page,
             runtime,

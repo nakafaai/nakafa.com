@@ -258,16 +258,18 @@ describe("contents/metrics/refresh", () => {
     );
     // Aggregate 0.3 checks its async queue once per synchronous counter write.
     // These seven writes add seven queries without reading queue documents.
+    // Domain-owned ranking updates reuse loaded counters, removing two reads
+    // per write that the generic trigger previously needed.
     // A completing window page no longer re-reads its sibling cycles, because
     // the single retention claim owner reads them on its own schedule.
     expect(expiryMetrics).toEqual({
-      databaseQueries: 98,
-      documentsRead: 119,
+      databaseQueries: 84,
+      documentsRead: 105,
       documentsWritten: 28,
     });
     expect(repairMetrics).toEqual({
-      databaseQueries: 105,
-      documentsRead: 806,
+      databaseQueries: 91,
+      documentsRead: 792,
       documentsWritten: 28,
     });
   });

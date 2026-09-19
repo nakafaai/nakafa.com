@@ -6,9 +6,13 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
+import {
+  TryoutProgressError,
+  writeTryoutSetProgress,
+} from "@repo/backend/convex/tryouts/progress/write";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout/runtime";
 import { makeTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
 const SIGNED_SET_IDENTITY = tryoutCatalogNodeIdentity({
@@ -198,5 +202,69 @@ describe("tryouts/progress", () => {
       publishedScore: null,
       status: "completed",
     })
+  );
+  it.each([
+    {
+      cause: new TryoutProgressError({
+        code: "PROGRESS_UNAVAILABLE",
+        message: "Progress unavailable.",
+      }),
+      code: "PROGRESS_UNAVAILABLE",
+    },
+    {
+      cause: new ConvexError({
+        code: "PROGRESS_STORAGE_LIMIT",
+        message: "Storage limit reached.",
+      }),
+      code: "PROGRESS_STORAGE_LIMIT",
+    },
+    {
+      cause: new Error("Storage unavailable."),
+      code: "TRYOUT_PROGRESS_WRITE_FAILED",
+    },
+  ])(
+    "preserves the typed failure contract for $code without partial progress",
+    async ({ cause, code }) => {
+      const t = createConvexTestWithBetterAuth();
+      await expect(
+        t.mutation(async (ctx) => {
+          const user = await seedAuthenticatedUser(ctx, {
+            now: TRYOUT_TEST_NOW,
+            suffix: code,
+          });
+          const id = await insertTryoutAttempt(ctx, {
+            scoringStrategy: "raw",
+            sectionSnapshots: [],
+            set: makeTryoutSet(),
+            userId: user.userId,
+          });
+          const attempt = await ctx.db.get(id);
+          if (!attempt) {
+            throw new Error("Expected an attempt.");
+          }
+          vi.spyOn(ctx.db, "insert").mockRejectedValueOnce(cause);
+          return runConvexProgram(
+            writeTryoutSetProgress(ctx, {
+              attempt,
+              publishedScore: null,
+              status: "in-progress",
+              updatedAt: TRYOUT_TEST_NOW,
+            })
+          );
+        })
+      ).rejects.toMatchObject({
+        data: {
+          code,
+          message:
+            cause instanceof ConvexError ? cause.data.message : cause.message,
+        },
+      });
+      expect(
+        await t.query((ctx) => ctx.db.query("tryoutSetProgress").collect())
+      ).toEqual([]);
+      expect(
+        await t.query((ctx) => ctx.db.query("tryoutAttempts").collect())
+      ).toEqual([]);
+    }
   );
 });

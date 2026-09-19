@@ -9,7 +9,6 @@ import { toTryoutStartError } from "@repo/backend/convex/tryouts/start/spec";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { Effect } from "effect";
 
-const SUBSCRIPTION_LOOKUP_LIMIT = 10;
 const activeSubscriptionStatus = "active";
 const perpetualSubscriptionEndsAt = Number.MAX_SAFE_INTEGER;
 
@@ -31,23 +30,43 @@ export const loadActiveProSubscription = Effect.fn(
     return null;
   }
 
-  const subscriptions = yield* tryAccessPromise(() =>
+  const perpetual = yield* tryAccessPromise(() =>
     ctx.db
       .query("subscriptions")
-      .withIndex("by_customerId_and_status_and_productId", (query) =>
-        query
-          .eq("customerId", customer.id)
-          .eq("status", activeSubscriptionStatus)
-          .eq("productId", products.pro.id)
+      .withIndex(
+        "by_customerId_and_status_and_productId_and_currentPeriodEnd",
+        (query) =>
+          query
+            .eq("customerId", customer.id)
+            .eq("status", activeSubscriptionStatus)
+            .eq("productId", products.pro.id)
+            .eq("currentPeriodEnd", null)
       )
-      .take(SUBSCRIPTION_LOOKUP_LIMIT)
+      .first()
   );
 
-  return (
-    subscriptions.find((subscription) =>
-      isActiveProSubscription(subscription, args.now)
-    ) ?? null
+  if (perpetual) {
+    return perpetual;
+  }
+
+  // Polar ingestion stores UTC ISO strings through Date.toISOString(), so
+  // the period index excludes expired rows before reading a document.
+  const subscription = yield* tryAccessPromise(() =>
+    ctx.db
+      .query("subscriptions")
+      .withIndex(
+        "by_customerId_and_status_and_productId_and_currentPeriodEnd",
+        (query) =>
+          query
+            .eq("customerId", customer.id)
+            .eq("status", activeSubscriptionStatus)
+            .eq("productId", products.pro.id)
+            .gt("currentPeriodEnd", new Date(args.now).toISOString())
+      )
+      .first()
   );
+
+  return isActiveProSubscription(subscription, args.now) ? subscription : null;
 });
 
 /** Creates or refreshes the exam entitlement backed by a live subscription. */

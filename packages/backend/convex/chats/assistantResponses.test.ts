@@ -330,3 +330,41 @@ describe("chats/assistantResponses", () => {
     ]);
   });
 });
+
+it("preserves a legacy unmetered assistant message without inventing a model debit", async () => {
+  const t = convexTest(schema, convexModules);
+  posthogTest.register(t);
+  const identity = await t.mutation(async (ctx) => {
+    const userId = await ctx.db.insert("users", {
+      authId: "unmetered",
+      credits: 7,
+      creditsResetAt: NOW,
+      email: "unmetered@example.com",
+      name: "Unmetered",
+      plan: "free",
+    });
+    const chatId = await ctx.db.insert("chats", {
+      userId,
+      type: "study",
+      visibility: "private",
+      updatedAt: NOW,
+    });
+    return { userId, chatId };
+  });
+  const saved = await t.mutation(
+    internal.chats.assistantResponses.saveAssistantResponse,
+    {
+      userId: identity.userId,
+      message: {
+        chatId: identity.chatId,
+        identifier: "unmetered-answer",
+        role: "assistant",
+      },
+      parts: [],
+    }
+  );
+  expect(saved).toMatchObject({ credits: 0, newBalance: 7 });
+  expect(
+    await t.query((ctx) => ctx.db.query("creditTransactions").collect())
+  ).toEqual([]);
+});

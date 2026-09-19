@@ -23,7 +23,7 @@ const hasTryoutRuntimeReference = Effect.fn(
       ctx.db
         .query("irtScaleVersions")
         .withIndex(
-          "by_tryoutSnapshotId_and_setIdentity_and_publishedAt",
+          "by_tryoutSnapshotId_and_setIdentity_and_history_and_publishedAt",
           (query) => query.eq("tryoutSnapshotId", snapshotId)
         )
         .first()

@@ -13,9 +13,9 @@ import type {
 import {
   TryoutStartError,
   toTryoutStartError,
-  tryoutStartErrorCode,
 } from "@repo/backend/convex/tryouts/start/spec";
 import { makeFunctionReference } from "convex/server";
+import { getOrThrow } from "convex-helpers/server/relationships";
 import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
@@ -45,14 +45,9 @@ export const createTryoutAttempt = Effect.fn(
   const attemptId = yield* tryStartPromise(() =>
     ctx.db.insert("tryoutAttempts", values)
   );
-  const attempt = yield* tryStartPromise(() => ctx.db.get(attemptId));
-
-  if (!attempt) {
-    return yield* new TryoutStartError({
-      code: tryoutStartErrorCode.attemptNotFound,
-      message: "Try-out attempt not found.",
-    });
-  }
+  const attempt = yield* tryStartPromise(() =>
+    getOrThrow(ctx, "tryoutAttempts", attemptId)
+  );
 
   yield* persistAttemptStart(ctx, { attempt, input });
 

@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from cas.auth import require_api_key
-from cas.engine import run
+from cas.compute import ComputeUnavailable, compute
 from cas.schema import MathRequest, MathResult
 
 load_dotenv(".env.local", override=False)
@@ -54,6 +54,12 @@ def value_error_handler(_request: Request, error: ValueError) -> JSONResponse:
     return JSONResponse(status_code=422, content={"detail": str(error)})
 
 
+@app.exception_handler(ComputeUnavailable)
+def compute_error_handler(_request: Request, error: ComputeUnavailable) -> JSONResponse:
+    """Decline excess or expired work without leaving a running calculation."""
+    return JSONResponse(status_code=503, content={"detail": str(error)})
+
+
 @app.post(
     "/api/math",
     dependencies=[Depends(require_api_key)],
@@ -62,4 +68,4 @@ def value_error_handler(_request: Request, error: ValueError) -> JSONResponse:
 )
 def math(request: MathRequest) -> MathResult:
     """Run one fixed CAS operation after bearer-token authentication."""
-    return run(request)
+    return compute(request)

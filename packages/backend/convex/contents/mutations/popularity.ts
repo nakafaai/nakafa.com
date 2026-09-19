@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
   type ClaimLearningPopularityRetentionResult,
   claimLearningPopularityRetentionResultValidator,
@@ -28,7 +29,6 @@ import {
   claimLearningPopularityRetention as claimLearningPopularityRetentionProgram,
   sweepLearningPopularityRetention as sweepLearningPopularityRetentionProgram,
 } from "@repo/backend/convex/contents/metrics/retention";
-import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
 /** Schedules daily expiry or a full repair after any missed cycle. */

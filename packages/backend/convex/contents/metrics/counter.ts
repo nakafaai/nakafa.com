@@ -1,6 +1,8 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analytics/spec";
 import type { PopularityCounterDelta } from "@repo/backend/convex/contents/metrics/batch";
+import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
+import { getOrThrow } from "convex-helpers/server/relationships";
 import { Effect } from "effect";
 
 /** Projects counter payload from the newest queued signal day. */
@@ -46,7 +48,7 @@ export const applyPopularityCounter = Effect.fn(
   });
 
   if (!currentRow) {
-    yield* Effect.tryPromise({
+    const counterId = yield* Effect.tryPromise({
       try: () =>
         ctx.db.insert("learningPopularityCounters", {
           ...projectCounter(delta),
@@ -55,18 +57,35 @@ export const applyPopularityCounter = Effect.fn(
         }),
       catch: toContentAnalyticsIoError,
     });
+    const counter = yield* Effect.tryPromise({
+      try: () => getOrThrow(ctx, "learningPopularityCounters", counterId),
+      catch: toContentAnalyticsIoError,
+    });
+    yield* Effect.tryPromise({
+      try: () => learningPopularityRankings.insert(ctx, counter),
+      catch: toContentAnalyticsIoError,
+    });
     return;
   }
 
   const newest =
     delta.latestDay >= currentRow.latestDay ? projectCounter(delta) : {};
+  const update = {
+    ...newest,
+    score: currentRow.score + delta.viewCount,
+    updatedAt: delta.updatedAt,
+  };
 
   yield* Effect.tryPromise({
     try: () =>
-      ctx.db.patch("learningPopularityCounters", currentRow._id, {
-        ...newest,
-        score: currentRow.score + delta.viewCount,
-        updatedAt: delta.updatedAt,
+      ctx.db.patch("learningPopularityCounters", currentRow._id, update),
+    catch: toContentAnalyticsIoError,
+  });
+  yield* Effect.tryPromise({
+    try: () =>
+      learningPopularityRankings.replace(ctx, currentRow, {
+        ...currentRow,
+        ...update,
       }),
     catch: toContentAnalyticsIoError,
   });

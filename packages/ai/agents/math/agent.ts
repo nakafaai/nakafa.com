@@ -56,8 +56,9 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   const services = yield* Effect.context<never>();
   const runPromise = Effect.runPromiseWith(services);
   const result = yield* Effect.tryPromise({
-    try: () =>
+    try: (signal) =>
       generateText({
+        abortSignal: signal,
         messages: [{ role: "user", content: task }],
         model: provider.languageModel(modelId),
         providerOptions: {
@@ -80,130 +81,140 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
         tools: {
           algebra: tool({
             description: mathAlgebra,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathAlgebraInput,
             outputSchema: textOutputSchema,
           }),
           arithmetic: tool({
             description: mathArithmetic,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathArithmeticInput,
             outputSchema: textOutputSchema,
           }),
           calculus: tool({
             description: mathCalculus,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathCalculusInput,
             outputSchema: textOutputSchema,
           }),
           discrete: tool({
             description: mathDiscrete,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathDiscreteInput,
             outputSchema: textOutputSchema,
           }),
           equation: tool({
             description: mathEquation,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathEquationInput,
             outputSchema: textOutputSchema,
           }),
           geometry: tool({
             description: mathGeometry,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathGeometryInput,
             outputSchema: textOutputSchema,
           }),
           matrix: tool({
             description: mathMatrix,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathMatrixInput,
             outputSchema: textOutputSchema,
           }),
           probability: tool({
             description: mathProbability,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathProbabilityInput,
             outputSchema: textOutputSchema,
           }),
           series: tool({
             description: mathSeries,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathSeriesInput,
             outputSchema: textOutputSchema,
           }),
           statistics: tool({
             description: mathStatistics,
-            execute: (input, { toolCallId }) =>
+            execute: (input, { abortSignal, toolCallId }) =>
               runPromise(
                 compute({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.layer))
+                }).pipe(Effect.provide(MathService.layer)),
+                { signal: abortSignal }
               ),
             inputSchema: mathStatisticsInput,
             outputSchema: textOutputSchema,

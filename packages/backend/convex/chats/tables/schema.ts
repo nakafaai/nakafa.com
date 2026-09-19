@@ -4,9 +4,11 @@ import {
   partValidator,
 } from "@repo/backend/convex/chats/schema";
 import { capabilityTraceValidator } from "@repo/backend/convex/chats/traces/spec";
+import { chatTurnValidator } from "@repo/backend/convex/chats/turns/spec";
 import { defineTable } from "convex/server";
 
 const tables = {
+  chatTurns: defineTable(chatTurnValidator).index("by_userId", ["userId"]),
   chats: defineTable(chatValidator)
     .index("by_userId", ["userId"])
     .index("by_userId_and_visibility", ["userId", "visibility"])

@@ -5,6 +5,7 @@
  */
 
 export const CHAT_ERRORS = {
+  RATE_LIMITED: { code: "RATE_LIMITED", status: 429 },
   INSUFFICIENT_CREDITS: {
     code: "INSUFFICIENT_CREDITS",
     status: 402,

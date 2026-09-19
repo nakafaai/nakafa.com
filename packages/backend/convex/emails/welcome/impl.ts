@@ -114,7 +114,7 @@ export const activateWelcomeIntent: (
   );
 
   yield* tryWelcomeIntent(() =>
-    ctx.db.replace(intent._id, {
+    ctx.db.replace("welcomeEmailIntents", intent._id, {
       locale,
       phase: "scheduled",
       userId,
@@ -169,5 +169,5 @@ export const removeWelcomeIntent: (
     }
   }
 
-  yield* tryUserCleanup(() => ctx.db.delete(intent._id));
+  yield* tryUserCleanup(() => ctx.db.delete("welcomeEmailIntents", intent._id));
 });

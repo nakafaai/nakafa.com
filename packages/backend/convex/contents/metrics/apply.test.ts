@@ -7,11 +7,14 @@ import {
   getPopularitySignalDay,
   POPULARITY_DAY_MS,
 } from "@repo/backend/convex/contents/popularity";
+import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { testArticleGraph } from "@repo/backend/test/content/release";
+import { getOrThrow } from "convex-helpers/server/relationships";
 import { convexTest, type TestConvex } from "convex-test";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
@@ -82,6 +85,7 @@ function applyQueue(target: TestConvex<typeof schema>) {
 describe("contents/metrics/apply", () => {
   it("folds repeated current views into daily signals and window counters", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     await target.mutation(async (ctx) => {
       await insertQueueItem(ctx, { kind: "article", suffix: "article" });
       await insertQueueItem(ctx, { kind: "material", suffix: "subject-1" });
@@ -123,6 +127,15 @@ describe("contents/metrics/apply", () => {
       scopeMode: "global",
       updatedAt: NOW,
     });
+    const initialRanking = await target.query((ctx) =>
+      learningPopularityRankings.paginate(ctx, {
+        namespace: ["material", "en", "global", getDefaultPopularityWindow()],
+        pageSize: 10,
+      })
+    );
+    expect(initialRanking.page.map(({ key }) => key)).toEqual([
+      [-2, subjectCounter?.content_id],
+    ]);
     expect(subjectSignal).toMatchObject({
       applied: {
         d1: 2,
@@ -142,6 +155,16 @@ describe("contents/metrics/apply", () => {
       insertQueueItem(ctx, { kind: "material", suffix: "subject-3" })
     );
     await applyQueue(target);
+
+    const updatedRanking = await target.query((ctx) =>
+      learningPopularityRankings.paginate(ctx, {
+        namespace: ["material", "en", "global", getDefaultPopularityWindow()],
+        pageSize: 10,
+      })
+    );
+    expect(updatedRanking.page.map(({ key }) => key)).toEqual([
+      [-3, subjectCounter?.content_id],
+    ]);
 
     const accumulated = await target.query(
       async (ctx) =>
@@ -174,6 +197,7 @@ describe("contents/metrics/apply", () => {
 
   it("keeps stale views out of finite windows while preserving lifetime", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     const staleViewedAt = NOW - 8 * POPULARITY_DAY_MS;
     await target.mutation((ctx) =>
       insertQueueItem(ctx, {
@@ -216,6 +240,7 @@ describe("contents/metrics/apply", () => {
 
   it("projects the newest payload from an out-of-order queue batch", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     await target.mutation(async (ctx) => {
       await insertQueueItem(ctx, {
         kind: "material",
@@ -273,6 +298,7 @@ describe("contents/metrics/apply", () => {
 
   it("preserves newer finite and lifetime payloads while accepting late events", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     const subject = withContentId(
       testMaterialGraph("vector", "addition", "en", "mathematics")
     );
@@ -324,12 +350,16 @@ describe("contents/metrics/apply", () => {
         viewCount: 1,
       });
       for (const windowKey of ["7d", "lifetime"] as const) {
-        await ctx.db.insert("learningPopularityCounters", {
+        const counterId = await ctx.db.insert("learningPopularityCounters", {
           ...base,
           latestDay: NOW,
           score: 6,
           windowKey,
         });
+        await learningPopularityRankings.insert(
+          ctx,
+          await getOrThrow(ctx, "learningPopularityCounters", counterId)
+        );
       }
       await insertQueueItem(ctx, {
         contextMode: "placement",

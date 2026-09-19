@@ -5,6 +5,7 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helper
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   expireAttempt,
+  expireAttemptAtEffectiveTime,
   finalizeSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
@@ -22,7 +23,6 @@ import {
   makeSignedTryoutSource,
 } from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
-import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
@@ -32,185 +32,193 @@ const FIRST_SECTION = "pengetahuan-kuantitatif";
 const SECOND_SECTION = "penalaran-matematika";
 
 describe("tryouts/runtime/finish", () => {
-  it("expires opened and unopened IRT sections before scoring", async () => {
-    const t = convexTest(schema, convexModules);
-    const snapshot = await t.mutation(async (ctx) => {
-      const userId = await insertTryoutUser(ctx, {
-        authId: "auth-expire-irt",
-        email: "expire-irt@example.com",
-        name: "Expire IRT",
-      });
-      const set = makeTryoutSet({
-        questionCount: 2,
-        sectionCount: 2,
-        visibleSectionCount: 2,
-      });
-      const firstSection = makeTryoutSection({
-        publicPath: `${SET_PATH}/pengetahuan-kuantitatif`,
-        questionSourcePath: `packages/corpus/question-bank/tryout/indonesia/snbt/${FIRST_SECTION}/set-1`,
-        sectionKey: FIRST_SECTION,
-      });
-      const secondSection = makeTryoutSection({
-        order: 2,
-        publicPath: `${SET_PATH}/penalaran-matematika`,
-        questionSourcePath: `packages/corpus/question-bank/tryout/indonesia/snbt/${SECOND_SECTION}/set-1`,
-        sectionKey: SECOND_SECTION,
-      });
-      const alignedSections = [
-        makeSignedTryoutSection(firstSection),
-        makeSignedTryoutSection(secondSection),
-      ];
-      const firstPlacement = alignedSections[0]?.signed.placements[0];
-      const secondPlacement = alignedSections[1]?.signed.placements[0];
-      if (!(firstPlacement && secondPlacement)) {
-        throw new ConvexError({
-          code: "TRYOUT_PLACEMENT_NOT_FOUND",
-          message: "Expected signed try-out placement fixtures.",
+  it.each([false, true])(
+    "expires opened and unopened IRT sections with earlier access expiry: %s",
+    async (earlyAccess) => {
+      const t = convexTest(schema, convexModules);
+      const snapshot = await t.mutation(async (ctx) => {
+        const userId = await insertTryoutUser(ctx, {
+          authId: "auth-expire-irt",
+          email: "expire-irt@example.com",
+          name: "Expire IRT",
         });
-      }
-      const source = makeSignedTryoutSource(set, alignedSections);
-      const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
-        model: "2pl",
-        publishedAt: NOW,
-        questionCount: 2,
-        setIdentity: source.snapshot.setIdentity,
-        status: "provisional",
-        tryoutSnapshotId: source.snapshot.snapshotId,
-      });
-      await insertIrtScaleItem(ctx, {
-        placement: firstPlacement,
-        scaleVersionId,
-      });
-      await insertIrtScaleItem(ctx, {
-        placement: secondPlacement,
-        scaleVersionId,
-      });
-
-      const attemptId = await insertTryoutAttempt(ctx, {
-        expiresAt: EXPIRED_AT,
-        scaleVersionId,
-        sectionSnapshots: [
-          tryoutSectionSnapshot({
-            signed: alignedSections[0]?.signed,
-          }),
-          tryoutSectionSnapshot({
-            signed: alignedSections[1]?.signed,
-          }),
-        ],
-        set,
-        snapshotId: source.snapshot.snapshotId,
-        snapshotReleaseId: TEST_RELEASE_ID,
-        userId,
-      });
-      const sectionAttemptId = await insertTryoutSectionAttempt(ctx, {
-        expiresAt: EXPIRED_AT,
-        sectionKey: FIRST_SECTION,
-        tryoutAttemptId: attemptId,
-      });
-      const attempt = await ctx.db.get(attemptId);
-      if (!attempt) {
-        throw new ConvexError({
-          code: "TRYOUT_ATTEMPT_NOT_FOUND",
-          message: "Expected try-out attempt fixture.",
+        const set = makeTryoutSet({
+          questionCount: 2,
+          sectionCount: 2,
+          visibleSectionCount: 2,
         });
-      }
-
-      await runConvexProgram(
-        createAttemptPlacements(ctx, {
-          attempt,
-          source,
-        })
-      );
-      const placement = await ctx.db
-        .query("tryoutAttemptPlacements")
-        .withIndex("by_tryoutAttemptId_and_sectionKey_and_questionOrder", (q) =>
-          q.eq("tryoutAttemptId", attemptId).eq("sectionKey", FIRST_SECTION)
-        )
-        .unique();
-
-      if (!placement) {
-        throw new ConvexError({
-          code: "TRYOUT_PLACEMENT_NOT_FOUND",
-          message: "Expected try-out placement fixture.",
+        const alignedSections = [FIRST_SECTION, SECOND_SECTION].map(
+          (sectionKey, index) =>
+            makeSignedTryoutSection(
+              makeTryoutSection({
+                order: index + 1,
+                publicPath: `${SET_PATH}/${sectionKey}`,
+                questionSourcePath: `packages/corpus/question-bank/tryout/indonesia/snbt/${sectionKey}/set-1`,
+                sectionKey,
+              })
+            )
+        );
+        const firstPlacement = alignedSections[0]?.signed.placements[0];
+        const secondPlacement = alignedSections[1]?.signed.placements[0];
+        if (!(firstPlacement && secondPlacement)) {
+          throw new Error("Expected signed try-out placement fixtures.");
+        }
+        const source = makeSignedTryoutSource(set, alignedSections);
+        const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
+          model: "2pl",
+          publishedAt: NOW,
+          questionCount: 2,
+          setIdentity: source.snapshot.setIdentity,
+          status: "provisional",
+          tryoutSnapshotId: source.snapshot.snapshotId,
         });
-      }
+        for (const placement of [firstPlacement, secondPlacement]) {
+          await insertIrtScaleItem(ctx, { placement, scaleVersionId });
+        }
 
-      await ctx.db.insert("tryoutResponses", {
-        answeredAt: NOW - 5000,
-        isComplete: true,
-        isCorrect: true,
-        placementId: placement._id,
-        selection: { kind: "single-choice", optionKey: "option-1" },
-        timeSpent: 1000,
-        tryoutAttemptId: attemptId,
-        tryoutSectionAttemptId: sectionAttemptId,
-        updatedAt: NOW - 5000,
-      });
-      const query = vi.spyOn(ctx.db, "query");
-      await runConvexProgram(expireAttempt(ctx, { attempt, now: NOW }));
-      const placementQueryCount = query.mock.calls.filter(
-        ([tableName]) => tableName === "tryoutAttemptPlacements"
-      ).length;
-      const scaleItemQueryCount = query.mock.calls.filter(
-        ([tableName]) => tableName === "irtScaleItems"
-      ).length;
-      const calibrationRunQueryCount = query.mock.calls.filter(
-        ([tableName]) => tableName === "irtCalibrationRuns"
-      ).length;
-      query.mockRestore();
-
-      const sections = await ctx.db
-        .query("tryoutSectionAttempts")
-        .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
-          q.eq("tryoutAttemptId", attemptId)
-        )
-        .collect();
-      const score = await ctx.db
-        .query("tryoutScores")
-        .withIndex("by_tryoutAttemptId", (q) =>
-          q.eq("tryoutAttemptId", attemptId)
-        )
-        .unique();
-
-      return {
-        attempt: await ctx.db.get(attemptId),
-        calibrationRunQueryCount,
-        placementQueryCount,
-        scaleItemQueryCount,
-        score,
-        sections,
-      };
-    });
-
-    expect(snapshot).toMatchObject({
-      attempt: {
-        completedSectionKeys: [FIRST_SECTION, SECOND_SECTION],
-        endReason: "time-expired",
-        status: "expired",
-      },
-      calibrationRunQueryCount: 0,
-      placementQueryCount: 1,
-      scaleItemQueryCount: 1,
-      score: {
-        rawScore: 50,
-        scoringStrategy: "irt",
-      },
-      sections: [
-        {
-          endReason: "time-expired",
-          score: { rawScore: 100, scoringStrategy: "irt", theta: 4 },
+        const attemptId = await insertTryoutAttempt(ctx, {
+          expiresAt: EXPIRED_AT,
+          scaleVersionId,
+          sectionSnapshots: alignedSections.map(({ signed }) =>
+            tryoutSectionSnapshot({ signed })
+          ),
+          set,
+          snapshotId: source.snapshot.snapshotId,
+          snapshotReleaseId: TEST_RELEASE_ID,
+          userId,
+        });
+        if (earlyAccess) {
+          await ctx.db.patch(attemptId, { accessEndsAt: EXPIRED_AT - 1000 });
+        }
+        const sectionAttemptId = await insertTryoutSectionAttempt(ctx, {
+          expiresAt: EXPIRED_AT,
           sectionKey: FIRST_SECTION,
-          status: "expired",
-        },
-        {
+          tryoutAttemptId: attemptId,
+        });
+        const attempt = await ctx.db.get(attemptId);
+        if (!attempt) {
+          throw new Error("Expected try-out attempt fixture.");
+        }
+
+        await runConvexProgram(
+          createAttemptPlacements(ctx, {
+            attempt,
+            source,
+          })
+        );
+        const placement = await ctx.db
+          .query("tryoutAttemptPlacements")
+          .withIndex(
+            "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+            (q) =>
+              q.eq("tryoutAttemptId", attemptId).eq("sectionKey", FIRST_SECTION)
+          )
+          .unique();
+
+        if (!placement) {
+          throw new Error("Expected try-out placement fixture.");
+        }
+
+        await ctx.db.insert("tryoutResponses", {
+          answeredAt: NOW - 5000,
+          isComplete: true,
+          isCorrect: true,
+          placementId: placement._id,
+          selection: { kind: "single-choice", optionKey: "option-1" },
+          timeSpent: 1000,
+          tryoutAttemptId: attemptId,
+          tryoutSectionAttemptId: sectionAttemptId,
+          updatedAt: NOW - 5000,
+        });
+        if (earlyAccess) {
+          const section = await ctx.db.get(sectionAttemptId);
+          if (!section) {
+            throw new Error("Expected an opened section.");
+          }
+          await runConvexProgram(
+            finalizeSectionAttempt(ctx, {
+              attempt,
+              section,
+              now: NOW - 2000,
+              endReason: "submitted",
+            })
+          );
+        }
+        const currentAttempt = await ctx.db.get(attemptId);
+        if (!currentAttempt) {
+          throw new Error("Expected an active attempt.");
+        }
+        const query = vi.spyOn(ctx.db, "query");
+        await runConvexProgram(
+          expireAttemptAtEffectiveTime(ctx, {
+            attempt: currentAttempt,
+            now: NOW,
+          })
+        );
+        const placementQueryCount = query.mock.calls.filter(
+          ([tableName]) => tableName === "tryoutAttemptPlacements"
+        ).length;
+        const scaleItemQueryCount = query.mock.calls.filter(
+          ([tableName]) => tableName === "irtScaleItems"
+        ).length;
+        const calibrationRunQueryCount = query.mock.calls.filter(
+          ([tableName]) => tableName === "irtCalibrationRuns"
+        ).length;
+        query.mockRestore();
+
+        const sections = await ctx.db
+          .query("tryoutSectionAttempts")
+          .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
+            q.eq("tryoutAttemptId", attemptId)
+          )
+          .collect();
+        const score = await ctx.db
+          .query("tryoutScores")
+          .withIndex("by_tryoutAttemptId", (q) =>
+            q.eq("tryoutAttemptId", attemptId)
+          )
+          .unique();
+
+        return {
+          attempt: await ctx.db.get(attemptId),
+          calibrationRunQueryCount,
+          placementQueryCount,
+          scaleItemQueryCount,
+          score,
+          sections,
+        };
+      });
+
+      expect(snapshot).toMatchObject({
+        attempt: {
+          completedSectionKeys: [FIRST_SECTION, SECOND_SECTION],
           endReason: "time-expired",
-          score: { rawScore: 0, scoringStrategy: "irt", theta: -4 },
-          sectionKey: SECOND_SECTION,
           status: "expired",
         },
-      ],
-    });
-  });
+        calibrationRunQueryCount: 0,
+        placementQueryCount: 1,
+        scaleItemQueryCount: 1,
+        score: {
+          rawScore: 50,
+          scoringStrategy: "irt",
+        },
+        sections: [
+          {
+            endReason: earlyAccess ? "submitted" : "time-expired",
+            score: { rawScore: 100, scoringStrategy: "irt", theta: 4 },
+            sectionKey: FIRST_SECTION,
+            status: earlyAccess ? "completed" : "expired",
+          },
+          {
+            endReason: "time-expired",
+            score: { rawScore: 0, scoringStrategy: "irt", theta: -4 },
+            sectionKey: SECOND_SECTION,
+            status: "expired",
+          },
+        ],
+      });
+    }
+  );
 
   it.each([
     {
@@ -332,10 +340,7 @@ describe("tryouts/runtime/finish", () => {
       const signedSection = signedSectionFixture.signed;
       const signedPlacement = signedSection.placements.at(0);
       if (!signedPlacement) {
-        throw new ConvexError({
-          code: "TRYOUT_PLACEMENT_NOT_FOUND",
-          message: "Expected one signed try-out placement fixture.",
-        });
+        throw new Error("Expected one signed try-out placement fixture.");
       }
       const source = makeSignedTryoutSource(set, [signedSectionFixture]);
       const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
@@ -366,10 +371,7 @@ describe("tryouts/runtime/finish", () => {
       const sectionAttempt = await ctx.db.get(sectionId);
 
       if (!(attempt && sectionAttempt)) {
-        throw new ConvexError({
-          code: "TRYOUT_FIXTURE_INCOMPLETE",
-          message: "Expected try-out attempt and section fixtures.",
-        });
+        throw new Error("Expected try-out attempt and section fixtures.");
       }
 
       await runConvexProgram(

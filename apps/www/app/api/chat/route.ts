@@ -13,7 +13,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { geolocation } from "@vercel/functions";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Exit, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import {
@@ -27,6 +27,8 @@ import { createChatErrorReporter } from "@/app/api/chat/observability";
 import {
   createChatWithMessage,
   loadPinnedNinaContext,
+  releaseChatTurn,
+  reserveChatTurn,
   saveChatMessage,
 } from "@/app/api/chat/persistence";
 import { createNinaStore } from "@/app/api/chat/store";
@@ -42,8 +44,8 @@ import {
 } from "@/lib/security/cors";
 
 /**
- * Keeps the streamed chat route aligned with the longest normal AI SDK chat
- * timeout. Vercel uses this route segment config to set the function limit.
+ * Vercel hard cap. The request work deadline leaves 50 seconds for durable
+ * persistence and the existing 45-second optional title generation.
  *
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#maxduration
  * @see https://vercel.com/docs/functions/configuring-functions/duration
@@ -60,7 +62,10 @@ export const maxDuration = 300;
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/convert-to-model-messages
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/create-ui-message-stream-response
  */
-const handleChatRequest = Effect.fn("chat.respond")(function* (req: Request) {
+const handleChatRequest = Effect.fn("chat.respond")(function* (
+  req: Request,
+  deadline: AbortSignal
+) {
   const isAllowedOrigin = yield* isCorsRequestAllowed(req);
   if (!isAllowedOrigin) {
     return createCorsForbiddenResponse();
@@ -182,81 +187,114 @@ const handleChatRequest = Effect.fn("chat.respond")(function* (req: Request) {
     url,
   };
 
-  let chatId: Id<"chats">;
+  const turnId = yield* reserveChatTurn(selectedModel, token);
+  return yield* Effect.gen(function* () {
+    let chatId: Id<"chats">;
 
-  if (id) {
-    chatId = yield* saveChatMessage({
-      chatId: id,
-      message,
-      modelId: selectedModel,
-      ninaContextSnapshot: ninaSession.context.snapshot,
-      ninaContextTransition: ninaSession.context.transition,
-      token,
-    });
-  } else {
-    chatId = yield* createChatWithMessage({
-      message,
-      modelId: selectedModel,
-      ninaContextSnapshot: ninaSession.context.snapshot,
-      ninaContextTransition: ninaSession.context.transition,
-      token,
-    });
-  }
-  const reportChatError = createChatErrorReporter({
-    chatId,
-    logContext,
-    modelId: selectedModel,
-    userAgent: req.headers.get("user-agent") ?? undefined,
-  });
-
-  const translate = yield* Effect.tryPromise(() =>
-    getTranslations({ locale, namespace: "Ai" })
-  );
-
-  return yield* NinaHarness.use((service) =>
-    service.stream({
-      copy: {
-        errorMessage: translate("error-message"),
-        rateLimitMessage: translate("rate-limit-message"),
-      },
-      page: {
-        locale,
-        needsFetch: false,
-        nina: ninaSession.context,
-        slug,
-        url,
-        verified,
-      },
-      runtime: {
-        currentDate,
+    if (id) {
+      chatId = yield* saveChatMessage({
+        chatId: id,
+        message,
         modelId: selectedModel,
-      },
-      user: {
-        ...(curriculumPreference ? { curriculumPreference } : {}),
-        ...(userInfo.role ? { role: userInfo.role } : {}),
-        location: userLocation,
-      },
-    })
-  ).pipe(
-    Effect.provide(NinaHarness.layer),
-    Effect.provideService(
-      NinaStore,
-      createNinaStore({
-        chatId,
-        modelId: selectedModel,
-        reportError: reportChatError,
+        ninaContextSnapshot: ninaSession.context.snapshot,
+        ninaContextTransition: ninaSession.context.transition,
         token,
-      })
-    ),
-    Effect.provideService(NinaReporter, {
-      report: ({ error, source }) =>
-        Effect.sync(() => reportChatError(error, source)),
-    }),
-    Effect.provideService(Nakafa, nakafaContent),
-    Effect.provideService(NakafaSearch, nakafaSearch)
+      });
+    } else {
+      chatId = yield* createChatWithMessage({
+        message,
+        modelId: selectedModel,
+        ninaContextSnapshot: ninaSession.context.snapshot,
+        ninaContextTransition: ninaSession.context.transition,
+        token,
+      });
+    }
+    const reportChatError = createChatErrorReporter({
+      chatId,
+      logContext,
+      modelId: selectedModel,
+      userAgent: req.headers.get("user-agent") ?? undefined,
+    });
+
+    const translate = yield* Effect.tryPromise(() =>
+      getTranslations({ locale, namespace: "Ai" })
+    );
+
+    return yield* NinaHarness.use((service) =>
+      service.stream(
+        {
+          copy: {
+            errorMessage: translate("error-message"),
+            rateLimitMessage: translate("rate-limit-message"),
+          },
+          page: {
+            locale,
+            needsFetch: false,
+            nina: ninaSession.context,
+            slug,
+            url,
+            verified,
+          },
+          runtime: {
+            currentDate,
+            modelId: selectedModel,
+          },
+          user: {
+            ...(curriculumPreference ? { curriculumPreference } : {}),
+            ...(userInfo.role ? { role: userInfo.role } : {}),
+            location: userLocation,
+          },
+        },
+        req.signal,
+        deadline
+      )
+    ).pipe(
+      Effect.provide(NinaHarness.layer),
+      Effect.provideService(
+        NinaStore,
+        createNinaStore({
+          chatId,
+          turnId,
+          modelId: selectedModel,
+          reportError: reportChatError,
+          token,
+        })
+      ),
+      Effect.provideService(NinaReporter, {
+        report: ({ error, source }) =>
+          Effect.sync(() => reportChatError(error, source)),
+      }),
+      Effect.provideService(Nakafa, nakafaContent),
+      Effect.provideService(NakafaSearch, nakafaSearch)
+    );
+  }).pipe(
+    Effect.onError(() =>
+      releaseChatTurn(turnId, token).pipe(
+        Effect.catchTag("ChatMutationError", (error) => Effect.logError(error))
+      )
+    )
   );
 });
 
-export function POST(req: Request) {
-  return Effect.runPromise(handleChatRequest(req));
+export async function POST(req: Request) {
+  const deadline = AbortSignal.timeout(250_000);
+  const result = await Effect.runPromiseExit(
+    handleChatRequest(req, deadline).pipe(
+      Effect.catchTag("ChatAdmissionError", (error) =>
+        Effect.succeed(
+          new Response(CHAT_ERRORS[error.code].code, {
+            status: CHAT_ERRORS[error.code].status,
+          })
+        )
+      )
+    ),
+    { signal: AbortSignal.any([req.signal, deadline]) }
+  );
+  if (Exit.isSuccess(result)) {
+    return result.value;
+  }
+  if (deadline.aborted && !req.signal.aborted) {
+    return new Response("CHAT_DEADLINE_EXCEEDED", { status: 504 });
+  }
+  return Effect.runPromise(Effect.failCause(result.cause));
 }

@@ -100,7 +100,7 @@ export const startLearningPopularityRetention = Effect.fn(
   if (retention) {
     yield* Effect.tryPromise({
       try: () =>
-        ctx.db.patch(retention._id, {
+        ctx.db.patch("learningPopularityRetention", retention._id, {
           completedDay: undefined,
           day,
           phase: "viewers",
@@ -175,7 +175,7 @@ export const sweepLearningPopularityRetention = Effect.fn(
 
     for (const signal of signals) {
       yield* Effect.tryPromise({
-        try: () => ctx.db.delete(signal._id),
+        try: () => ctx.db.delete("learningPopularityViewerSignals", signal._id),
         catch: toContentAnalyticsIoError,
       });
     }
@@ -190,7 +190,10 @@ export const sweepLearningPopularityRetention = Effect.fn(
     }
 
     yield* Effect.tryPromise({
-      try: () => ctx.db.patch(retention._id, { phase: "signals" }),
+      try: () =>
+        ctx.db.patch("learningPopularityRetention", retention._id, {
+          phase: "signals",
+        }),
       catch: toContentAnalyticsIoError,
     });
     yield* scheduleRetentionPage(ctx, args.day, retentionPage);
@@ -217,7 +220,7 @@ export const sweepLearningPopularityRetention = Effect.fn(
 
   for (const signal of signals) {
     yield* Effect.tryPromise({
-      try: () => ctx.db.delete(signal._id),
+      try: () => ctx.db.delete("learningPopularitySignals", signal._id),
       catch: toContentAnalyticsIoError,
     });
   }
@@ -232,7 +235,10 @@ export const sweepLearningPopularityRetention = Effect.fn(
   }
 
   yield* Effect.tryPromise({
-    try: () => ctx.db.patch(retention._id, { completedDay: args.day }),
+    try: () =>
+      ctx.db.patch("learningPopularityRetention", retention._id, {
+        completedDay: args.day,
+      }),
     catch: toContentAnalyticsIoError,
   });
 

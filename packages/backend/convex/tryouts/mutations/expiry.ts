@@ -47,7 +47,9 @@ const expireScheduledAttempt = Effect.fn("tryouts.expiry.attempt")(function* (
   ctx: MutationCtx,
   args: { attemptId: Id<"tryoutAttempts">; expiresAt: number }
 ) {
-  const attemptRow = yield* tryRuntimePromise(() => ctx.db.get(args.attemptId));
+  const attemptRow = yield* tryRuntimePromise(() =>
+    ctx.db.get("tryoutAttempts", args.attemptId)
+  );
   const now = yield* Clock.currentTimeMillis;
 
   if (!shouldExpire(attemptRow, args.expiresAt, now)) {
@@ -64,7 +66,7 @@ const expireScheduledSection = Effect.fn("tryouts.expiry.section")(function* (
   args: { expiresAt: number; sectionAttemptId: Id<"tryoutSectionAttempts"> }
 ) {
   const sectionRow = yield* tryRuntimePromise(() =>
-    ctx.db.get(args.sectionAttemptId)
+    ctx.db.get("tryoutSectionAttempts", args.sectionAttemptId)
   );
   const now = yield* Clock.currentTimeMillis;
 
@@ -73,7 +75,7 @@ const expireScheduledSection = Effect.fn("tryouts.expiry.section")(function* (
   }
 
   const attemptRow = yield* tryRuntimePromise(() =>
-    ctx.db.get(sectionRow.tryoutAttemptId)
+    ctx.db.get("tryoutAttempts", sectionRow.tryoutAttemptId)
   );
   if (!attemptRow) {
     return yield* new TryoutRuntimeError({

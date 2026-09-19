@@ -80,7 +80,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
           "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, examples, warmups, review tasks, tryout preparation, and structured exercises. Use this before math when content must be selected. Preserve requested deliverables in the structured input.",
         inputSchema: nakafaToolInputSchema,
         /** Runs the Nakafa specialist with one-time current-page fetch support. */
-        execute: (input, { toolCallId }) =>
+        execute: (input, { toolCallId, abortSignal }) =>
           runPromise(
             traceLearningCapability({
               capability: NAKAFA_CAPABILITY,
@@ -154,7 +154,8 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
               Effect.provideService(NinaReporter, reporter),
               Effect.provideService(NinaStore, store),
               Effect.map((result) => result.text)
-            )
+            ),
+            { signal: abortSignal }
           ),
       }),
       [RESEARCH_CAPABILITY]: tool({
@@ -162,7 +163,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
           "Research external, official, current, latest, cited, or source-backed information with web search and source analysis.",
         inputSchema: researchToolInputSchema,
         /** Runs the external research specialist and records its token usage. */
-        execute: (input, { messages, toolCallId }) =>
+        execute: (input, { messages, toolCallId, abortSignal }) =>
           runPromise(
             traceLearningCapability({
               capability: RESEARCH_CAPABILITY,
@@ -216,7 +217,8 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
               Effect.provideService(NinaReporter, reporter),
               Effect.provideService(NinaStore, store),
               Effect.map((result) => result.text)
-            )
+            ),
+            { signal: abortSignal }
           ),
       }),
       [MATH_CAPABILITY]: tool({
@@ -224,7 +226,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
           "Verify user-provided or retrieved math with deterministic evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math. Do not use this as the first or only source for educational practice content; use Nakafa first, then math verifies the selected content.",
         inputSchema: mathToolInputSchema,
         /** Runs the deterministic math specialist and records its token usage. */
-        execute: (input, { toolCallId }) =>
+        execute: (input, { toolCallId, abortSignal }) =>
           runPromise(
             traceLearningCapability({
               capability: MATH_CAPABILITY,
@@ -276,7 +278,8 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
               Effect.provideService(NinaReporter, reporter),
               Effect.provideService(NinaStore, store),
               Effect.map((result) => result.text)
-            )
+            ),
+            { signal: abortSignal }
           ),
       }),
     } satisfies NinaToolSet;

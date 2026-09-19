@@ -149,7 +149,7 @@ export const setPreferredCurriculumProgram = Effect.fn(
   }
 
   yield* tryLearningPreferencePersistence(() =>
-    ctx.db.patch(current._id, {
+    ctx.db.patch("learningPreferences", current._id, {
       preferredCurriculumProgramKey: programKey ?? undefined,
       updatedAt: now,
     })
@@ -189,7 +189,7 @@ export const upsertPreferredTryoutCountry = Effect.fn(
   }
 
   yield* tryLearningPreferencePersistence(() =>
-    ctx.db.patch(current._id, {
+    ctx.db.patch("learningPreferences", current._id, {
       preferredTryoutCountryKey: countryKey,
       updatedAt: now,
     })

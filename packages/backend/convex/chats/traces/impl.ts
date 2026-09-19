@@ -100,7 +100,7 @@ export async function deleteExpiredCapabilityTraces(
   const page = expired.slice(0, CAPABILITY_TRACE_BATCH_SIZE);
 
   for (const trace of page) {
-    await ctx.db.delete(trace._id);
+    await ctx.db.delete("ninaCapabilityTraces", trace._id);
   }
 
   const hasMore = expired.length > CAPABILITY_TRACE_BATCH_SIZE;

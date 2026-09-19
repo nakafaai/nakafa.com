@@ -392,7 +392,7 @@ describe("auth/cleanup", () => {
               ),
               deletedForumPosts: await ctx.db
                 .query("schoolClassForumPosts")
-                .withIndex("by_forumId", (query) =>
+                .withIndex("by_forumId_and_sequence", (query) =>
                   query.eq("forumId", deletedForumId)
                 )
                 .collect(),

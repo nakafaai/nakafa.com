@@ -24,6 +24,7 @@ import {
   learningPopularityScopeValues,
   POPULARITY_DAY_MS,
 } from "@repo/backend/convex/contents/popularity";
+import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
 
@@ -112,7 +113,11 @@ const expirePopularityCounter = Effect.fn(
 
   if (score === 0) {
     yield* Effect.tryPromise({
-      try: () => ctx.db.delete(counter._id),
+      try: () => ctx.db.delete("learningPopularityCounters", counter._id),
+      catch: toContentAnalyticsIoError,
+    });
+    yield* Effect.tryPromise({
+      try: () => learningPopularityRankings.delete(ctx, counter),
       catch: toContentAnalyticsIoError,
     });
     return {
@@ -123,7 +128,20 @@ const expirePopularityCounter = Effect.fn(
   }
 
   yield* Effect.tryPromise({
-    try: () => ctx.db.patch(counter._id, { score, updatedAt }),
+    try: () =>
+      ctx.db.patch("learningPopularityCounters", counter._id, {
+        score,
+        updatedAt,
+      }),
+    catch: toContentAnalyticsIoError,
+  });
+  yield* Effect.tryPromise({
+    try: () =>
+      learningPopularityRankings.replace(ctx, counter, {
+        ...counter,
+        score,
+        updatedAt,
+      }),
     catch: toContentAnalyticsIoError,
   });
 

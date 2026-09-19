@@ -73,7 +73,7 @@ export const beginPopularityCycle = Effect.fn(
   if (cycle) {
     yield* Effect.tryPromise({
       try: () =>
-        ctx.db.patch(cycle._id, {
+        ctx.db.patch("learningPopularityCycles", cycle._id, {
           completedDay: undefined,
           cursor: undefined,
           mode,
@@ -137,7 +137,7 @@ export const advancePopularityCycle = Effect.fn(
   cursor: string
 ) {
   yield* Effect.tryPromise({
-    try: () => ctx.db.patch(cycleId, { cursor }),
+    try: () => ctx.db.patch("learningPopularityCycles", cycleId, { cursor }),
     catch: toContentAnalyticsIoError,
   });
 });
@@ -152,7 +152,7 @@ export const completePopularityCycle = Effect.fn(
 ) {
   yield* Effect.tryPromise({
     try: () =>
-      ctx.db.patch(cycleId, {
+      ctx.db.patch("learningPopularityCycles", cycleId, {
         completedDay: day,
         cursor: undefined,
       }),

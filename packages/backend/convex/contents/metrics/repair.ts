@@ -7,6 +7,8 @@ import {
   getPopularityWindowStartDay,
   type LearningPopularityFiniteWindow,
 } from "@repo/backend/convex/contents/popularity";
+import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
+import { getOrThrow } from "convex-helpers/server/relationships";
 import { Effect } from "effect";
 
 type PopularityCounter = Doc<"learningPopularityCounters">;
@@ -182,7 +184,11 @@ export const repairPopularityCounter = Effect.fn(
   if (latestSignal === null || score <= 0) {
     if (counter) {
       yield* Effect.tryPromise({
-        try: () => ctx.db.delete(counter._id),
+        try: () => ctx.db.delete("learningPopularityCounters", counter._id),
+        catch: toContentAnalyticsIoError,
+      });
+      yield* Effect.tryPromise({
+        try: () => learningPopularityRankings.delete(ctx, counter),
         catch: toContentAnalyticsIoError,
       });
     }
@@ -199,7 +205,7 @@ export const repairPopularityCounter = Effect.fn(
     score
   );
   if (!counter) {
-    yield* Effect.tryPromise({
+    const counterId = yield* Effect.tryPromise({
       try: () =>
         ctx.db.insert("learningPopularityCounters", {
           ...update,
@@ -211,6 +217,14 @@ export const repairPopularityCounter = Effect.fn(
           updatedAt,
           windowKey,
         }),
+      catch: toContentAnalyticsIoError,
+    });
+    const inserted = yield* Effect.tryPromise({
+      try: () => getOrThrow(ctx, "learningPopularityCounters", counterId),
+      catch: toContentAnalyticsIoError,
+    });
+    yield* Effect.tryPromise({
+      try: () => learningPopularityRankings.insert(ctx, inserted),
       catch: toContentAnalyticsIoError,
     });
     return { removed: false, refreshed: true };
@@ -229,7 +243,16 @@ export const repairPopularityCounter = Effect.fn(
 
   yield* Effect.tryPromise({
     try: () =>
-      ctx.db.patch(counter._id, {
+      ctx.db.patch("learningPopularityCounters", counter._id, {
+        ...update,
+        updatedAt,
+      }),
+    catch: toContentAnalyticsIoError,
+  });
+  yield* Effect.tryPromise({
+    try: () =>
+      learningPopularityRankings.replace(ctx, counter, {
+        ...counter,
         ...update,
         updatedAt,
       }),

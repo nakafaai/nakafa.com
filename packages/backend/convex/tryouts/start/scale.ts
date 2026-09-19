@@ -10,6 +10,7 @@ import {
   toTryoutStartError,
   tryoutStartErrorCode,
 } from "@repo/backend/convex/tryouts/start/spec";
+import { getOrThrow } from "convex-helpers/server/relationships";
 import { Effect } from "effect";
 
 const IRT_MODEL = "2pl";
@@ -49,13 +50,13 @@ const loadExactScale = Effect.fn("tryouts.start.loadExactScale")(function* (
     ctx.db
       .query("irtScaleVersions")
       .withIndex(
-        "by_tryoutSnapshotId_and_setIdentity_and_publishedAt",
+        "by_tryoutSnapshotId_and_setIdentity_and_history_and_publishedAt",
         (query) =>
           query
             .eq("tryoutSnapshotId", source.snapshot.snapshotId)
             .eq("setIdentity", source.snapshot.setIdentity)
+            .eq("history", undefined)
       )
-      .filter((query) => query.neq(query.field("history"), true))
       .take(2)
   );
   if (scales.length > 1) {
@@ -157,10 +158,9 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
       }
     }
 
-    const scale = yield* tryScalePromise(() => ctx.db.get(scaleVersionId));
-    if (!scale) {
-      return yield* scaleError("Signed IRT scale was not persisted.");
-    }
+    const scale = yield* tryScalePromise(() =>
+      getOrThrow(ctx, "irtScaleVersions", scaleVersionId)
+    );
     return scale;
   }
 );
@@ -171,10 +171,11 @@ const loadPreviousScale = Effect.fn("tryouts.start.loadPreviousScale")(
     const scale = yield* tryScalePromise(() =>
       ctx.db
         .query("irtScaleVersions")
-        .withIndex("by_setIdentity_and_publishedAt", (query) =>
-          query.eq("setIdentity", source.snapshot.setIdentity)
+        .withIndex("by_setIdentity_and_history_and_publishedAt", (query) =>
+          query
+            .eq("setIdentity", source.snapshot.setIdentity)
+            .eq("history", undefined)
         )
-        .filter((query) => query.neq(query.field("history"), true))
         .order("desc")
         .first()
     );

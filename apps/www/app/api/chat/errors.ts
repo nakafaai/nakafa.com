@@ -5,7 +5,13 @@ export class ChatMutationError extends Schema.TaggedError<ChatMutationError>()(
   {
     cause: Schema.Unknown,
     message: Schema.String,
-    operation: Schema.Literals(["create-chat", "save-message", "sync-user"]),
+    operation: Schema.Literals([
+      "create-chat",
+      "save-message",
+      "sync-user",
+      "reserve-turn",
+      "release-turn",
+    ]),
   }
 ) {}
 /** Convex query failure raised while loading authenticated chat context. */
@@ -19,5 +25,14 @@ export class ChatQueryError extends Schema.TaggedError<ChatQueryError>()(
       "load-context",
       "load-messages",
     ]),
+  }
+) {}
+
+/** Atomic admission rejected the current credit balance. */
+export class ChatAdmissionError extends Schema.TaggedError<ChatAdmissionError>()(
+  "ChatAdmissionError",
+  {
+    code: Schema.Literals(["INSUFFICIENT_CREDITS", "RATE_LIMITED"]),
+    message: Schema.String,
   }
 ) {}
