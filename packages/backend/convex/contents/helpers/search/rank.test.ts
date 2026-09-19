@@ -72,10 +72,10 @@ describe("rankContentSearchDocuments", () => {
       title: "General Reasoning 11",
     });
     const topicRow = createSearchRow({
-      route: "try-out/indonesia/tka/mathematics/set-1",
-      sourcePath: "try-out/indonesia/tka/mathematics/set-1",
+      route: "try-out/indonesia/tka/compulsory-mathematics/set-1",
+      sourcePath: "try-out/indonesia/tka/compulsory-mathematics/set-1",
       text: "rational functions for grade 11",
-      title: "TKA Mathematics",
+      title: "TKA Compulsory Mathematics",
     });
 
     expect(
