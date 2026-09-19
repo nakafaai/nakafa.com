@@ -8,10 +8,9 @@ export function QuestionGraph({
   title,
   description,
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
-  // Configuration
   const step = 0.05;
-  const startY = -8;
-  const endY = 10;
+  const startY = -3;
+  const endY = 5;
 
   // Function: x = -y^2 + 2y + 8
   const points = Array.from({
@@ -39,6 +38,8 @@ export function QuestionGraph({
           points,
           color: getColor("INDIGO"),
           showPoints: false,
+          smooth: false,
+          cone: { position: "both", size: 0.5 },
           labels: [
             {
               text: <InlineMath math="4" />,
@@ -59,6 +60,7 @@ export function QuestionGraph({
         },
       ]}
       description={description}
+      showZAxis={false}
       title={title}
     />
   );

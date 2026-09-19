@@ -42,6 +42,13 @@ export function Vector3d({
   ],
   cameraTarget,
 }: Props) {
+  const isFrontalPlane =
+    cameraPosition[0] === (cameraTarget?.[0] ?? 0) &&
+    cameraPosition[1] === (cameraTarget?.[1] ?? 0) &&
+    vectors.every(
+      (vector) => (vector.from?.[2] ?? 0) === 0 && vector.to[2] === 0
+    );
+
   return (
     <CoordinateProvider>
       <Card className="content-auto-card">
@@ -51,9 +58,12 @@ export function Vector3d({
         </CardHeader>
         <CardContent>
           <CoordinateSystem
-            cameraFraming="content"
             cameraPosition={cameraPosition}
+            cameraProjection={
+              isFrontalPlane ? { kind: "orthographic" } : undefined
+            }
             cameraTarget={cameraTarget}
+            showZAxis={!isFrontalPlane}
           >
             {vectors.map((vector) => (
               <Vector

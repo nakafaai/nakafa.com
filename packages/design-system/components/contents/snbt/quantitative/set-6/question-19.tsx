@@ -10,18 +10,18 @@ export function Graph({
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
   // Solves (1/2)^x - 3 = 2x + 6 and is included in the sampled curve.
   const intersectionX = -2.201_003_972_920_786_6;
-  const lineLabelX = -4 + (25 * 6) / 49;
-  const curveLabelX = -4 + (45 * 6) / 49;
-  const linearPoints = [-24, lineLabelX, 24].map((x) => ({
+  const lineLabelX = -1;
+  const curveLabelX = 1.5;
+  const linearPoints = [-3.5, lineLabelX, 2.5].map((x) => ({
     x,
     y: 2 * x + 6,
     z: 0,
   }));
   const exponentialInputs = Array.from(
-    { length: 1281 },
-    (_, i) => -8 + i * 0.025
+    { length: 241 },
+    (_, i) => -3.5 + i * 0.025
   );
-  exponentialInputs.push(intersectionX, curveLabelX);
+  exponentialInputs.push(intersectionX);
   exponentialInputs.sort((a, b) => a - b);
   const exponentialPoints = exponentialInputs.map((x) => ({
     x,
@@ -31,7 +31,8 @@ export function Graph({
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[-0.5, 2, 14]}
+      cameraTarget={[-0.5, 2, 0]}
       data={[
         // Linear Line: y = 2x + 6
         {
@@ -39,11 +40,12 @@ export function Graph({
           color: getColor("INDIGO"),
           showPoints: false,
           smooth: false,
+          cone: { position: "both", size: 0.5 },
           labels: [
             {
               text: <InlineMath math="y = 2x + 6" />,
               at: 1,
-              offset: [3, 0.5, 0],
+              offset: [1.6, 0.4, 0],
             },
           ],
         },
@@ -53,11 +55,12 @@ export function Graph({
           color: getColor("ORANGE"),
           showPoints: false,
           smooth: false,
+          cone: { position: "both", size: 0.5 },
           labels: [
             {
               text: <InlineMath math="y = \left(\frac{1}{2}\right)^x - 3" />,
               at: exponentialInputs.indexOf(curveLabelX),
-              offset: [1, 2, 0],
+              offset: [0, -0.6, 0],
             },
           ],
         },
@@ -91,6 +94,7 @@ export function Graph({
         },
       ]}
       description={description}
+      showZAxis={false}
       title={title}
     />
   );

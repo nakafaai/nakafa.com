@@ -4,11 +4,12 @@ import { Result, Schema } from "effect";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 /** Refreshes the real Next route after Aksara publishes a local revision. */
-export function PreviewRefresh() {
+export function PreviewRefresh({ revision }: { revision: number }) {
   const router = useRouter();
   useEffect(() => {
     const events = new EventSource("/api/internal/content/preview");
-    /** Refetches the server tree after every validated source state change. */
+    let observedRevision = revision;
+    /** Refetches only newer revisions, including edits missed while disconnected. */
     function refresh(event: MessageEvent) {
       const decoded = Schema.decodeUnknownResult(
         Schema.fromJsonString(PreviewEventSchema)
@@ -16,6 +17,10 @@ export function PreviewRefresh() {
       if (Result.isFailure(decoded)) {
         return;
       }
+      if (decoded.success.revision <= observedRevision) {
+        return;
+      }
+      observedRevision = decoded.success.revision;
       router.refresh();
     }
     events.addEventListener("update", refresh);
@@ -23,6 +28,6 @@ export function PreviewRefresh() {
       events.removeEventListener("update", refresh);
       events.close();
     };
-  }, [router]);
+  }, [revision, router]);
   return null;
 }
