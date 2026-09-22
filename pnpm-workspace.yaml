@@ -42,20 +42,20 @@ update:
     - vitest
 
 catalog:
-  '@effect/platform-node': 4.0.0-rc.115
-  '@effect/vitest': 4.0.0-rc.115
-  '@vitest/coverage-istanbul': 5.0.0
-  '@vitest/ui': 5.0.0
-  effect: 4.0.0-rc.115
+  '@effect/platform-node': 4.0.0-rc.117
+  '@effect/vitest': 4.0.0-rc.117
+  '@vitest/coverage-istanbul': 5.0.1
+  '@vitest/ui': 5.0.1
+  effect: 4.0.0-rc.117
   typescript: 7.0.2
-  vitest: 5.0.0
+  vitest: 5.0.1
 
 overrides:
   "react": "19.2.8"
   "react-dom": "19.2.8"
   "@types/react": "19.2.18"
   "@types/react-dom": "19.2.7"
-  "@effect/platform-node-shared": "4.0.0-rc.115"
+  "@effect/platform-node-shared": "4.0.0-rc.117"
   "@react-email/ui@6.9.5>next": "16.3.5"
   "@vercel/routing-utils@6.5.0>path-to-regexp": "6.3.0"
   "auth@1.6.31>@babel/core": "7.29.7"
@@ -69,7 +69,7 @@ overrides:
 # The tested test-utils-only exception is recorded in scripts/dependencies/policy.ts.
 peerDependencyRules:
   allowedVersions:
-    "better-auth@1.6.31>vitest": "5.0.0"
+    "better-auth@1.6.33>vitest": "5.0.1"
 
 allowBuilds:
   '@parcel/watcher': true

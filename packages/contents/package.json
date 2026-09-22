@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@hugeicons/core-free-icons": "^4.3.2",
+    "@hugeicons/core-free-icons": "^4.3.5",
     "@nakafa/aksara-contracts": "0.41.0",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
