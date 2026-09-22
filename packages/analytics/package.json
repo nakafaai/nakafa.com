@@ -10,8 +10,8 @@
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.13.11",
     "effect": "catalog:",
-    "posthog-js": "1.430.3",
-    "posthog-node": "^5.52.1",
+    "posthog-js": "1.434.7",
+    "posthog-node": "^5.52.5",
     "server-only": "0.0.1"
   },
   "devDependencies": {

@@ -125,20 +125,20 @@ export function validateDependencyPolicy({
     );
   }
 
-  if (workspace.catalog?.effect !== "4.0.0-rc.115") {
-    problems.push("The Effect catalog must be exactly 4.0.0-rc.115.");
+  if (workspace.catalog?.effect !== "4.0.0-rc.117") {
+    problems.push("The Effect catalog must be exactly 4.0.0-rc.117.");
   }
-  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.115") {
-    problems.push("The platform-node catalog must match Effect RC 115.");
+  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.117") {
+    problems.push("The platform-node catalog must match Effect RC 117.");
   }
-  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.115") {
-    problems.push("The Effect Vitest catalog must match Effect RC 115.");
+  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.117") {
+    problems.push("The Effect Vitest catalog must match Effect RC 117.");
   }
   if (
-    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.115"
+    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.117"
   ) {
     problems.push(
-      "The platform-node-shared override must match Effect RC 115."
+      "The platform-node-shared override must match Effect RC 117."
     );
   }
   if (workspace.catalog?.typescript !== "7.0.2") {
@@ -149,9 +149,9 @@ export function validateDependencyPolicy({
     "@vitest/coverage-istanbul",
     "@vitest/ui",
   ]) {
-    if (workspace.catalog?.[dependency] !== "5.0.0") {
+    if (workspace.catalog?.[dependency] !== "5.0.1") {
       problems.push(
-        `${dependency} must match the supported Vitest 5.0.0 cohort.`
+        `${dependency} must match the supported Vitest 5.0.1 cohort.`
       );
     }
   }

@@ -36,7 +36,7 @@ function validInput() {
         ])
       ),
       scripts:
-        index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.13" } : undefined,
+        index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.14" } : undefined,
     },
     path,
   }));
@@ -55,16 +55,16 @@ function validInput() {
     },
     workspace: {
       catalog: {
-        "@effect/platform-node": "4.0.0-rc.115",
-        "@effect/vitest": "4.0.0-rc.115",
-        "@vitest/coverage-istanbul": "5.0.0",
-        "@vitest/ui": "5.0.0",
-        effect: "4.0.0-rc.115",
+        "@effect/platform-node": "4.0.0-rc.117",
+        "@effect/vitest": "4.0.0-rc.117",
+        "@vitest/coverage-istanbul": "5.0.1",
+        "@vitest/ui": "5.0.1",
+        effect: "4.0.0-rc.117",
         typescript: "7.0.2",
-        vitest: "5.0.0",
+        vitest: "5.0.1",
       },
       overrides: {
-        "@effect/platform-node-shared": "4.0.0-rc.115",
+        "@effect/platform-node-shared": "4.0.0-rc.117",
       },
       update: { ignoreDeps },
     },

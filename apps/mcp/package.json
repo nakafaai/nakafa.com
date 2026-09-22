@@ -13,7 +13,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "24.13.4",
-    "@vercel/config": "^0.7.0",
+    "@vercel/config": "^0.7.1",
     "typescript": "7.0.2"
   }
 }
