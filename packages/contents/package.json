@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "^4.3.5",
-    "@nakafa/aksara-contracts": "0.41.0",
+    "@nakafa/aksara-contracts": "0.42.0",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/math": "workspace:*",

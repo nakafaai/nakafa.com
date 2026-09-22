@@ -6,7 +6,7 @@ interface DependencyHold {
   readonly minimumDeclarations?: number;
 }
 
-export const CONTRACT_PACKAGE_VERSION = "0.41.0";
+export const CONTRACT_PACKAGE_VERSION = "0.42.0";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "19.2.8", dependency: "react", minimumDeclarations: 1 },
