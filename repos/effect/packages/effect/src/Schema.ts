@@ -5404,7 +5404,7 @@ export function decodeTo<To extends Constraint, From extends Constraint, RD = ne
       SchemaAST.decodeTo(
         from.ast,
         to.ast,
-        transformation ? SchemaTransformation.make(transformation) : SchemaTransformation.passthrough()
+        transformation ? SchemaTransformation.makeTransformation(transformation) : SchemaTransformation.passthrough()
       ),
       {
         from,
@@ -6391,7 +6391,7 @@ export function link<T>() {
       readonly encode: SchemaGetter.Getter<NoInfer<To["Type"]>, T>
     }
   ): SchemaAST.Link => {
-    return new SchemaAST.Link(encodeTo.ast, SchemaTransformation.make(transformation))
+    return new SchemaAST.Link(encodeTo.ast, SchemaTransformation.makeTransformation(transformation))
   }
 }
 /**
@@ -10155,50 +10155,6 @@ export interface BigDecimal extends declare<BigDecimal_.BigDecimal> {
   readonly "Rebuild": BigDecimal
 }
 const BigDecimalString = String.annotate({ expected: "a string that will be decoded as a BigDecimal" })
-const arbitraryBigDecimalMaxScale = 20
-function bigIntArbitrarySchema(minimum: bigint | undefined, maximum: bigint | undefined): Codec<bigint> {
-  if (minimum !== undefined && maximum !== undefined) {
-    return BigInt.check(isBetweenBigInt({ minimum, maximum }))
-  }
-  if (minimum !== undefined) return BigInt.check(isGreaterThanOrEqualToBigInt(minimum))
-  if (maximum !== undefined) return BigInt.check(isLessThanOrEqualToBigInt(maximum))
-  return BigInt
-}
-function bigDecimalValueAtScale(value: BigDecimal_.BigDecimal, scale: number): bigint {
-  return value.value * globalThis.BigInt(10) ** globalThis.BigInt(scale - value.scale)
-}
-function bigDecimalArbitrarySchema(
-  constraint: Annotations.ToArbitrary.GenerationConstraint<BigDecimal_.BigDecimal> | undefined
-): Codec<{ readonly value: bigint; readonly scale: number }> {
-  if (constraint?.minimum === undefined && constraint?.maximum === undefined) {
-    return Struct({
-      value: BigInt,
-      scale: Int.check(isBetween({ minimum: 0, maximum: arbitraryBigDecimalMaxScale }))
-    })
-  }
-  const scale = Math.max(
-    arbitraryBigDecimalMaxScale,
-    constraint.minimum?.scale ?? 0,
-    constraint.maximum?.scale ?? 0,
-    constraint.exclusiveMinimum === true && constraint.minimum !== undefined ? constraint.minimum.scale + 1 : 0,
-    constraint.exclusiveMaximum === true && constraint.maximum !== undefined ? constraint.maximum.scale + 1 : 0
-  )
-  const minimum = constraint.minimum === undefined
-    ? undefined
-    : bigDecimalValueAtScale(constraint.minimum, scale) +
-      (constraint.exclusiveMinimum === true ? globalThis.BigInt(1) : globalThis.BigInt(0))
-  const maximum = constraint.maximum === undefined
-    ? undefined
-    : bigDecimalValueAtScale(constraint.maximum, scale) -
-      (constraint.exclusiveMaximum === true ? globalThis.BigInt(1) : globalThis.BigInt(0))
-  if (minimum !== undefined && maximum !== undefined && minimum > maximum) {
-    return Struct({
-      value: BigInt,
-      scale: Int.check(isBetween({ minimum: 0, maximum: arbitraryBigDecimalMaxScale }))
-    })
-  }
-  return Struct({ value: bigIntArbitrarySchema(minimum, maximum), scale: Literal(scale) })
-}
 /**
  * Schema for `BigDecimal` values.
  *
@@ -10231,11 +10187,6 @@ export const BigDecimal: BigDecimal = declare(
       importDeclarations: [`import * as BigDecimal from "effect/BigDecimal"`]
     }),
     expected: "BigDecimal",
-    toCodecArbitrary: ({ constraint }) =>
-      linkDecoding<BigDecimal_.BigDecimal>()(
-        bigDecimalArbitrarySchema(constraint),
-        SchemaGetter.transform(({ scale, value }) => BigDecimal_.make(value, scale))
-      ),
     toCodecJson: () =>
       link<BigDecimal_.BigDecimal>()(
         BigDecimalString,
@@ -10550,7 +10501,16 @@ export function CauseReason<E extends Constraint, D extends Constraint>(
                   return Cause_.makeInterruptReason(e.fiberId)
               }
             },
-            encode: identity
+            encode: (reason) => {
+              switch (reason._tag) {
+                case "Fail":
+                  return { _tag: "Fail" as const, error: reason.error }
+                case "Die":
+                  return { _tag: "Die" as const, defect: reason.defect }
+                case "Interrupt":
+                  return { _tag: "Interrupt" as const, fiberId: reason.fiberId }
+              }
+            }
           })
         )
     }
@@ -11543,6 +11503,709 @@ export const IpAddressFromString: IpAddressFromString = netAddressFromString(
   NetAddress_.formatIp,
   "IpAddressFromString"
 )
+
+const netAddressRefinement = <S extends Constraint, T extends S["Type"]>(
+  schema: S,
+  guard: (value: S["Type"]) => value is T,
+  expected: string,
+  identifier: string
+): refine<T, S> => refine(guard, { expected })(schema).annotate({ identifier })
+
+/**
+ * Type-level representation of {@link IpMulticastAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpMulticastAddress extends refine<NetAddress_.MulticastAddress<NetAddress_.IpAddress>, IpAddress> {
+  readonly "Rebuild": IpMulticastAddress
+}
+
+/**
+ * Schema for already-constructed multicast IP addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpMulticastAddress: IpMulticastAddress = netAddressRefinement(
+  IpAddress,
+  NetAddress_.isMulticast,
+  "a multicast address",
+  "IpMulticastAddress"
+)
+
+/**
+ * Type-level representation of {@link IpMulticastAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpMulticastAddressFromString
+  extends refine<NetAddress_.MulticastAddress<NetAddress_.IpAddress>, IpAddressFromString>
+{
+  readonly "Rebuild": IpMulticastAddressFromString
+}
+
+/**
+ * Schema for multicast IP addresses encoded as numeric strings.
+ *
+ * **Example** (Decoding a validated multicast address)
+ *
+ * ```ts import.meta.vitest
+ * import { assert } from "@effect/vitest"
+ * import { Schema } from "effect"
+ * import { NetAddress } from "effect/unstable/net"
+ *
+ * const address = Schema.decodeUnknownSync(Schema.IpMulticastAddressFromString)("239.255.0.1")
+ * assert.isTrue(NetAddress.isMulticast(address))
+ * ```
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpMulticastAddressFromString: IpMulticastAddressFromString = netAddressRefinement(
+  IpAddressFromString,
+  NetAddress_.isMulticast,
+  "a multicast address",
+  "IpMulticastAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link MacMulticastAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacMulticastAddress extends refine<NetAddress_.MulticastAddress<NetAddress_.MacAddress>, MacAddress> {
+  readonly "Rebuild": MacMulticastAddress
+}
+
+/**
+ * Schema for already-constructed multicast MAC addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacMulticastAddress: MacMulticastAddress = netAddressRefinement(
+  MacAddress,
+  NetAddress_.isMulticast,
+  "a multicast address",
+  "MacMulticastAddress"
+)
+
+/**
+ * Type-level representation of {@link MacMulticastAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacMulticastAddressFromString
+  extends refine<NetAddress_.MulticastAddress<NetAddress_.MacAddress>, MacAddressFromString>
+{
+  readonly "Rebuild": MacMulticastAddressFromString
+}
+
+/**
+ * Schema for multicast MAC addresses encoded as canonical strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacMulticastAddressFromString: MacMulticastAddressFromString = netAddressRefinement(
+  MacAddressFromString,
+  NetAddress_.isMulticast,
+  "a multicast address",
+  "MacMulticastAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link IpUnicastAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpUnicastAddress extends refine<NetAddress_.UnicastAddress<NetAddress_.IpAddress>, IpAddress> {
+  readonly "Rebuild": IpUnicastAddress
+}
+
+/**
+ * Schema for already-constructed syntactic unicast IP addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpUnicastAddress: IpUnicastAddress = netAddressRefinement(
+  IpAddress,
+  NetAddress_.isUnicast,
+  "a unicast address",
+  "IpUnicastAddress"
+)
+
+/**
+ * Type-level representation of {@link IpUnicastAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpUnicastAddressFromString
+  extends refine<NetAddress_.UnicastAddress<NetAddress_.IpAddress>, IpAddressFromString>
+{
+  readonly "Rebuild": IpUnicastAddressFromString
+}
+
+/**
+ * Schema for syntactic unicast IP addresses encoded as numeric strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpUnicastAddressFromString: IpUnicastAddressFromString = netAddressRefinement(
+  IpAddressFromString,
+  NetAddress_.isUnicast,
+  "a unicast address",
+  "IpUnicastAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link MacUnicastAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacUnicastAddress extends refine<NetAddress_.UnicastAddress<NetAddress_.MacAddress>, MacAddress> {
+  readonly "Rebuild": MacUnicastAddress
+}
+
+/**
+ * Schema for already-constructed unicast MAC addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacUnicastAddress: MacUnicastAddress = netAddressRefinement(
+  MacAddress,
+  NetAddress_.isMacUnicast,
+  "a unicast address",
+  "MacUnicastAddress"
+)
+
+/**
+ * Type-level representation of {@link MacUnicastAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacUnicastAddressFromString
+  extends refine<NetAddress_.UnicastAddress<NetAddress_.MacAddress>, MacAddressFromString>
+{
+  readonly "Rebuild": MacUnicastAddressFromString
+}
+
+/**
+ * Schema for unicast MAC addresses encoded as canonical strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacUnicastAddressFromString: MacUnicastAddressFromString = netAddressRefinement(
+  MacAddressFromString,
+  NetAddress_.isMacUnicast,
+  "a unicast address",
+  "MacUnicastAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link Ipv4BroadcastAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface Ipv4BroadcastAddress
+  extends refine<NetAddress_.BroadcastAddress<NetAddress_.Ipv4Address>, Ipv4Address>
+{
+  readonly "Rebuild": Ipv4BroadcastAddress
+}
+
+/**
+ * Schema for the already-constructed IPv4 limited broadcast address.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const Ipv4BroadcastAddress: Ipv4BroadcastAddress = netAddressRefinement(
+  Ipv4Address,
+  NetAddress_.isBroadcast,
+  "a broadcast address",
+  "Ipv4BroadcastAddress"
+)
+
+/**
+ * Type-level representation of {@link Ipv4BroadcastAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface Ipv4BroadcastAddressFromString
+  extends refine<NetAddress_.BroadcastAddress<NetAddress_.Ipv4Address>, Ipv4AddressFromString>
+{
+  readonly "Rebuild": Ipv4BroadcastAddressFromString
+}
+
+/**
+ * Schema for the IPv4 limited broadcast address encoded as a string.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const Ipv4BroadcastAddressFromString: Ipv4BroadcastAddressFromString = netAddressRefinement(
+  Ipv4AddressFromString,
+  NetAddress_.isBroadcast,
+  "a broadcast address",
+  "Ipv4BroadcastAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link MacBroadcastAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacBroadcastAddress extends refine<NetAddress_.BroadcastAddress<NetAddress_.MacAddress>, MacAddress> {
+  readonly "Rebuild": MacBroadcastAddress
+}
+
+/**
+ * Schema for the already-constructed MAC all-ones broadcast address.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacBroadcastAddress: MacBroadcastAddress = netAddressRefinement(
+  MacAddress,
+  NetAddress_.isMacBroadcast,
+  "a broadcast address",
+  "MacBroadcastAddress"
+)
+
+/**
+ * Type-level representation of {@link MacBroadcastAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacBroadcastAddressFromString
+  extends refine<NetAddress_.BroadcastAddress<NetAddress_.MacAddress>, MacAddressFromString>
+{
+  readonly "Rebuild": MacBroadcastAddressFromString
+}
+
+/**
+ * Schema for the MAC all-ones broadcast address encoded as a string.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacBroadcastAddressFromString: MacBroadcastAddressFromString = netAddressRefinement(
+  MacAddressFromString,
+  NetAddress_.isMacBroadcast,
+  "a broadcast address",
+  "MacBroadcastAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link IpLoopbackAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpLoopbackAddress extends refine<NetAddress_.LoopbackAddress<NetAddress_.IpAddress>, IpAddress> {
+  readonly "Rebuild": IpLoopbackAddress
+}
+
+/**
+ * Schema for already-constructed loopback IP addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpLoopbackAddress: IpLoopbackAddress = netAddressRefinement(
+  IpAddress,
+  NetAddress_.isLoopback,
+  "a loopback address",
+  "IpLoopbackAddress"
+)
+
+/**
+ * Type-level representation of {@link IpLoopbackAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpLoopbackAddressFromString
+  extends refine<NetAddress_.LoopbackAddress<NetAddress_.IpAddress>, IpAddressFromString>
+{
+  readonly "Rebuild": IpLoopbackAddressFromString
+}
+
+/**
+ * Schema for loopback IP addresses encoded as numeric strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpLoopbackAddressFromString: IpLoopbackAddressFromString = netAddressRefinement(
+  IpAddressFromString,
+  NetAddress_.isLoopback,
+  "a loopback address",
+  "IpLoopbackAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link IpLinkLocalAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpLinkLocalAddress extends refine<NetAddress_.LinkLocalAddress<NetAddress_.IpAddress>, IpAddress> {
+  readonly "Rebuild": IpLinkLocalAddress
+}
+
+/**
+ * Schema for already-constructed link-local IP addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpLinkLocalAddress: IpLinkLocalAddress = netAddressRefinement(
+  IpAddress,
+  NetAddress_.isLinkLocal,
+  "a link-local address",
+  "IpLinkLocalAddress"
+)
+
+/**
+ * Type-level representation of {@link IpLinkLocalAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpLinkLocalAddressFromString
+  extends refine<NetAddress_.LinkLocalAddress<NetAddress_.IpAddress>, IpAddressFromString>
+{
+  readonly "Rebuild": IpLinkLocalAddressFromString
+}
+
+/**
+ * Schema for link-local IP addresses encoded as numeric strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpLinkLocalAddressFromString: IpLinkLocalAddressFromString = netAddressRefinement(
+  IpAddressFromString,
+  NetAddress_.isLinkLocal,
+  "a link-local address",
+  "IpLinkLocalAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link IpUnspecifiedAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpUnspecifiedAddress extends refine<NetAddress_.UnspecifiedAddress<NetAddress_.IpAddress>, IpAddress> {
+  readonly "Rebuild": IpUnspecifiedAddress
+}
+
+/**
+ * Schema for already-constructed unspecified IP addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpUnspecifiedAddress: IpUnspecifiedAddress = netAddressRefinement(
+  IpAddress,
+  NetAddress_.isUnspecified,
+  "an unspecified address",
+  "IpUnspecifiedAddress"
+)
+
+/**
+ * Type-level representation of {@link IpUnspecifiedAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface IpUnspecifiedAddressFromString
+  extends refine<NetAddress_.UnspecifiedAddress<NetAddress_.IpAddress>, IpAddressFromString>
+{
+  readonly "Rebuild": IpUnspecifiedAddressFromString
+}
+
+/**
+ * Schema for unspecified IP addresses encoded as numeric strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const IpUnspecifiedAddressFromString: IpUnspecifiedAddressFromString = netAddressRefinement(
+  IpAddressFromString,
+  NetAddress_.isUnspecified,
+  "an unspecified address",
+  "IpUnspecifiedAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link Ipv4PrivateAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface Ipv4PrivateAddress extends refine<NetAddress_.PrivateAddress<NetAddress_.Ipv4Address>, Ipv4Address> {
+  readonly "Rebuild": Ipv4PrivateAddress
+}
+
+/**
+ * Schema for already-constructed RFC 1918 private-use addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const Ipv4PrivateAddress: Ipv4PrivateAddress = netAddressRefinement(
+  Ipv4Address,
+  NetAddress_.isPrivate,
+  "a private address",
+  "Ipv4PrivateAddress"
+)
+
+/**
+ * Type-level representation of {@link Ipv4PrivateAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface Ipv4PrivateAddressFromString
+  extends refine<NetAddress_.PrivateAddress<NetAddress_.Ipv4Address>, Ipv4AddressFromString>
+{
+  readonly "Rebuild": Ipv4PrivateAddressFromString
+}
+
+/**
+ * Schema for RFC 1918 private-use addresses encoded as strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const Ipv4PrivateAddressFromString: Ipv4PrivateAddressFromString = netAddressRefinement(
+  Ipv4AddressFromString,
+  NetAddress_.isPrivate,
+  "a private address",
+  "Ipv4PrivateAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link Ipv6UniqueLocalAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface Ipv6UniqueLocalAddress
+  extends refine<NetAddress_.UniqueLocalAddress<NetAddress_.Ipv6Address>, Ipv6Address>
+{
+  readonly "Rebuild": Ipv6UniqueLocalAddress
+}
+
+/**
+ * Schema for already-constructed IPv6 unique-local addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const Ipv6UniqueLocalAddress: Ipv6UniqueLocalAddress = netAddressRefinement(
+  Ipv6Address,
+  NetAddress_.isUniqueLocal,
+  "a unique-local address",
+  "Ipv6UniqueLocalAddress"
+)
+
+/**
+ * Type-level representation of {@link Ipv6UniqueLocalAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface Ipv6UniqueLocalAddressFromString
+  extends refine<NetAddress_.UniqueLocalAddress<NetAddress_.Ipv6Address>, Ipv6AddressFromString>
+{
+  readonly "Rebuild": Ipv6UniqueLocalAddressFromString
+}
+
+/**
+ * Schema for IPv6 unique-local addresses encoded as strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const Ipv6UniqueLocalAddressFromString: Ipv6UniqueLocalAddressFromString = netAddressRefinement(
+  Ipv6AddressFromString,
+  NetAddress_.isUniqueLocal,
+  "a unique-local address",
+  "Ipv6UniqueLocalAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link MacLocallyAdministeredAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacLocallyAdministeredAddress
+  extends refine<NetAddress_.LocallyAdministeredAddress<NetAddress_.MacAddress>, MacAddress>
+{
+  readonly "Rebuild": MacLocallyAdministeredAddress
+}
+
+/**
+ * Schema for already-constructed locally administered MAC addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacLocallyAdministeredAddress: MacLocallyAdministeredAddress = netAddressRefinement(
+  MacAddress,
+  NetAddress_.isMacLocallyAdministered,
+  "a locally administered address",
+  "MacLocallyAdministeredAddress"
+)
+
+/**
+ * Type-level representation of {@link MacLocallyAdministeredAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacLocallyAdministeredAddressFromString
+  extends refine<NetAddress_.LocallyAdministeredAddress<NetAddress_.MacAddress>, MacAddressFromString>
+{
+  readonly "Rebuild": MacLocallyAdministeredAddressFromString
+}
+
+/**
+ * Schema for locally administered MAC addresses encoded as strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacLocallyAdministeredAddressFromString: MacLocallyAdministeredAddressFromString = netAddressRefinement(
+  MacAddressFromString,
+  NetAddress_.isMacLocallyAdministered,
+  "a locally administered address",
+  "MacLocallyAdministeredAddressFromString"
+)
+
+/**
+ * Type-level representation of {@link MacUniversallyAdministeredAddress}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacUniversallyAdministeredAddress
+  extends refine<NetAddress_.UniversallyAdministeredAddress<NetAddress_.MacAddress>, MacAddress>
+{
+  readonly "Rebuild": MacUniversallyAdministeredAddress
+}
+
+/**
+ * Schema for already-constructed universally administered MAC addresses.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacUniversallyAdministeredAddress: MacUniversallyAdministeredAddress = netAddressRefinement(
+  MacAddress,
+  NetAddress_.isMacUniversallyAdministered,
+  "a universally administered address",
+  "MacUniversallyAdministeredAddress"
+)
+
+/**
+ * Type-level representation of {@link MacUniversallyAdministeredAddressFromString}.
+ *
+ * @unstable
+ * @category models
+ * @since 4.0.0
+ */
+export interface MacUniversallyAdministeredAddressFromString
+  extends refine<NetAddress_.UniversallyAdministeredAddress<NetAddress_.MacAddress>, MacAddressFromString>
+{
+  readonly "Rebuild": MacUniversallyAdministeredAddressFromString
+}
+
+/**
+ * Schema for universally administered MAC addresses encoded as strings.
+ *
+ * @unstable
+ * @category schemas
+ * @since 4.0.0
+ */
+export const MacUniversallyAdministeredAddressFromString: MacUniversallyAdministeredAddressFromString =
+  netAddressRefinement(
+    MacAddressFromString,
+    NetAddress_.isMacUniversallyAdministered,
+    "a universally administered address",
+    "MacUniversallyAdministeredAddressFromString"
+  )
 
 /**
  * Type-level representation of {@link Ipv4Interface}.
@@ -13481,7 +14144,7 @@ export function Redacted<S extends Constraint>(value: S, options?: {
             Effect.mapBothEager(
               SchemaParser.decodeUnknownEffect(value)(Redacted_.value(input), poptions),
               {
-                onSuccess: () => input,
+                onSuccess: (value) => Redacted_.make(value, { label: input.label }),
                 onFailure: () => {
                   return new SchemaIssue.Composite(
                     ast,
@@ -14774,7 +15437,7 @@ export function overrideToCodecIso<S extends Constraint, Iso>(
   return (schema: S): overrideToCodecIso<S, Iso> => {
     return make(
       SchemaAST.annotate(schema.ast, {
-        toCodecIso: () => new SchemaAST.Link(to.ast, SchemaTransformation.make(transformation))
+        toCodecIso: () => new SchemaAST.Link(to.ast, SchemaTransformation.makeTransformation(transformation))
       }),
       { schema }
     )
