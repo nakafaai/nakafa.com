@@ -35,8 +35,9 @@ overrides:
   '@types/react-dom': 19.2.7
   '@effect/platform-node-shared': 4.0.0-rc.117
   '@react-email/ui@6.9.5>next': 16.3.5
-  '@vercel/routing-utils@6.5.0>path-to-regexp': 6.3.0
-  auth@1.6.31>@babel/core: 7.29.7
+  '@vercel/routing-utils@6.6.0>path-to-regexp': 6.3.0
+  '@scalar/json-magic@0.15.0>undici': 7.29.0
+  auth@1.6.33>@babel/core: 7.29.7
   convex-helpers: 0.1.124
   fast-uri: 3.1.6
   ip-address: 10.7.0
@@ -6534,9 +6535,6 @@ packages:
     resolution: {integrity: sha512-3O/iVVsJAPsOnpwWIeD+d6z/7PmqApyQePUtCndjatj/9I5LylHvt5qluFaBT3I5h3r1ejfR056c+FCv+NnNXg==}
     engines: {node: 18 || 20 || >=22}
 
-  path-to-regexp@6.1.0:
-    resolution: {integrity: sha512-h9DqehX3zZZDCEm+xbfU0ZmwCGFCAAraPJWMXJ4+v32NjZJilVg3k1TcKsRgIb8IQ/izZSaydDc1OhJCZvs2Dw==}
-
   path-to-regexp@6.3.0:
     resolution: {integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==}
 
@@ -7427,10 +7425,6 @@ packages:
 
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
-
-  undici@7.24.4:
-    resolution: {integrity: sha512-BM/JzwwaRXxrLdElV2Uo6cTLEjhSb3WXboncJamZ15NgUURmvlXvxa6xkwIOILIjPNo9i8ku136ZvWV0Uly8+w==}
-    engines: {node: '>=20.18.1'}
 
   undici@7.29.0:
     resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
@@ -9825,7 +9819,7 @@ snapshots:
     dependencies:
       '@scalar/helpers': 0.13.0
       pathe: 2.0.3
-      undici: 7.24.4
+      undici: 7.29.0
       yaml: 2.9.1
 
   '@scalar/json-schema-validator@0.1.4':
@@ -10676,7 +10670,7 @@ snapshots:
 
   '@vercel/routing-utils@6.6.0':
     dependencies:
-      path-to-regexp: 6.1.0
+      path-to-regexp: 6.3.0
       path-to-regexp-updated: path-to-regexp@6.3.0
     optionalDependencies:
       ajv: 6.15.0
@@ -13333,8 +13327,6 @@ snapshots:
       lru-cache: 11.5.3
       minipass: 7.1.3
 
-  path-to-regexp@6.1.0: {}
-
   path-to-regexp@6.3.0: {}
 
   pathe@2.0.3: {}
@@ -14364,8 +14356,6 @@ snapshots:
       prettier: 3.9.6
 
   undici-types@7.18.2: {}
-
-  undici@7.24.4: {}
 
   undici@7.29.0: {}
 
