@@ -108,7 +108,7 @@ const assembleMaterialMetadata = Effect.fn(
   };
 });
 
-/** Preserves the complete model contract for existing public consumers. */
+/** Combines authenticated lesson metadata with its ordered navigation. */
 const assembleMaterialModel = Effect.fn("contentRelease.assembleMaterialModel")(
   function* (
     appLocale: Doc<"materialCatalog">["appLocale"],
@@ -165,17 +165,3 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     );
   }
 );
-
-/** Reads the material shell and signed body in one Convex snapshot. */
-export const readMaterialDelivery = Effect.fn(
-  "contentRelease.readMaterialDelivery"
-)(function* (
-  appLocale: Doc<"materialCatalog">["appLocale"],
-  publicPath: string
-) {
-  const route = yield* resolveMaterialRoute(appLocale, publicPath);
-  const model = yield* assembleMaterialModel(appLocale, route);
-  const runtime = yield* readSelectedPublicRuntime(route);
-  const runtimeJson = yield* encodePublicDelivery(runtime, model);
-  return { model, runtimeJson };
-});

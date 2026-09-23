@@ -23,11 +23,11 @@ function decodeProjection(source: string) {
 }
 
 describe("contentRelease/material/model", () => {
-  it("delivers one bounded coherent shell and public body through a single query", async () => {
+  it("delivers coherent lesson metadata and its signed public body", async () => {
     const target = convexTest(schema, convexModules);
     await activateMaterialCatalog(target);
     const projection = makeMaterialProjection("en", 1);
-    const result = await target.query(api.contentRelease.material.delivery, {
+    const result = await target.query(api.contentRelease.material.lesson, {
       appLocale: projection.appLocale,
       publicPath: projection.publicPath,
     });
@@ -37,7 +37,7 @@ describe("contentRelease/material/model", () => {
       JSON.parse(result.model.projectionJson ?? "")
     );
     expect(runtime.delivery).toBe("public");
-    const missing = await target.query(api.contentRelease.material.delivery, {
+    const missing = await target.query(api.contentRelease.material.lesson, {
       appLocale: "en",
       publicPath: "materials/missing",
     });

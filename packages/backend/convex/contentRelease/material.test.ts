@@ -67,7 +67,7 @@ describe("contentRelease/material", () => {
               }),
               sitemap: await t.query(material.sitemapPage, {
                 appLocale: "en",
-                bucket,
+                bucket: [bucket],
               }),
             }))
           )

@@ -5712,38 +5712,6 @@ export declare const api: {
           }> | null;
         }
       >;
-      delivery: FunctionReference<
-        "query",
-        "public",
-        { appLocale: "en" | "id" | "de"; publicPath: string },
-        {
-          model: {
-            activeAppLocales: Array<"en" | "id" | "de">;
-            activeManifestHash: string | null;
-            activeReleaseId: string | null;
-            alternateJson: Array<string>;
-            projectionJson: string | null;
-            rendererDomain:
-              | "ai-ds"
-              | "biology"
-              | "chemistry"
-              | "mathematics"
-              | "physics"
-              | "politics"
-              | "site"
-              | "snbt-general"
-              | "snbt-math"
-              | "snbt-plain"
-              | "snbt-quant"
-              | "tka-math"
-              | null;
-            siblingJson: Array<string>;
-            sourcePath: string | null;
-            sourceRevision: string | null;
-          };
-          runtimeJson: string | null;
-        }
-      >;
       identity: FunctionReference<
         "query",
         "public",
@@ -5901,7 +5869,7 @@ export declare const api: {
       sitemapPage: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; bucket: string | Array<string> },
+        { appLocale: "en" | "id" | "de"; bucket: Array<string> },
         null | { routes: Array<{ lastModified: string; publicPath: string }> }
       >;
     };
