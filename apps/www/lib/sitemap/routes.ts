@@ -1,6 +1,7 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
 import { compareSitemapPaths } from "@repo/backend/convex/contentRelease/sitemap";
-import { Data, Effect } from "effect";
+import { Array as Arr, Data, Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
   readPublishedArticleBuckets,
@@ -44,7 +45,6 @@ const familyBucketInventories = {
 /** Bucket sitemap pages backing partition fan-out reads. */
 const familyBucketPages = {
   article: readPublishedArticleSitemap,
-  material: readPublishedMaterialSitemap,
   program: readPublishedProgramSitemap,
 } as const;
 
@@ -185,13 +185,24 @@ const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
     if (buckets.length === 0) {
       return yield* new SitemapPageNotFoundError({ pageId });
     }
-    const pages = yield* Effect.forEach(
-      buckets,
-      (bucket) => familyBucketPages[family](locale, bucket),
-      { concurrency: "unbounded" }
-    );
-    const routes = pages
-      .flatMap((page) => (page?.routes ?? []).map(mapFamilyRoute))
+    const pages =
+      family === "material"
+        ? yield* Effect.forEach(
+            Arr.chunksOf(buckets, MATERIAL_SITEMAP_BUCKET_LIMIT),
+            (batch) => readPublishedMaterialSitemap(locale, batch),
+            { concurrency: 2 }
+          )
+        : yield* Effect.forEach(
+            buckets,
+            (bucket) => familyBucketPages[family](locale, bucket),
+            { concurrency: 4 }
+          );
+    const routes = (yield* Effect.forEach(pages, (page) =>
+      page === null
+        ? Effect.fail(new PublishedProjectionError(identity))
+        : Effect.succeed(page.routes.map(mapFamilyRoute))
+    ))
+      .flat()
       .sort((left, right) => compareSitemapPaths(left.path, right.path));
     if (routes.length === 0) {
       return yield* new SitemapPageNotFoundError({ pageId });

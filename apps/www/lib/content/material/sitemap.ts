@@ -4,6 +4,7 @@ import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
@@ -43,7 +44,10 @@ export const readPublishedMaterialBuckets = Effect.fn(
 /** Reads one complete verified material sitemap partition. */
 export const readPublishedMaterialSitemap = Effect.fn(
   "www.materials.readSitemapPage"
-)(function* (locale: Locale, bucket: string) {
+)(function* (
+  locale: Locale,
+  bucket: FunctionArgs<typeof api.contentRelease.material.sitemapPage>["bucket"]
+) {
   const appLocale = AppLocaleSchema.make(locale);
   return yield* readNakafaRuntimeQuery(
     env.NEXT_PUBLIC_CONVEX_URL,

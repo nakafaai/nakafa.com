@@ -4,9 +4,11 @@ import {
   readMaterialBucket,
 } from "@repo/backend/content/material/discovery";
 import { readMaterialIdentity } from "@repo/backend/content/material/identity";
+import { readMaterialNavigation } from "@repo/backend/content/material/navigation";
 import { readMaterialPage } from "@repo/backend/content/material/page";
 import {
   readMaterialDelivery,
+  readMaterialLesson,
   readMaterialModel,
 } from "@repo/backend/content/material/read";
 import {
@@ -14,12 +16,13 @@ import {
   readMaterialSitemap,
 } from "@repo/backend/content/material/sitemap";
 import { query } from "@repo/backend/convex/_generated/server";
-import { materialApiPageValidator } from "@repo/backend/convex/contentRelease/material/spec";
-import { readPartnerApiPage } from "@repo/backend/convex/contentRelease/partner/page";
 import {
-  appLocaleValidator,
-  rendererDomainValidator,
-} from "@repo/backend/convex/contentRelease/spec";
+  materialApiPageValidator,
+  materialModelValidator,
+  materialNavigationValidator,
+} from "@repo/backend/convex/contentRelease/material/spec";
+import { readPartnerApiPage } from "@repo/backend/convex/contentRelease/partner/page";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   paginationOptsValidator,
@@ -27,18 +30,6 @@ import {
 } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
-
-const materialModelValidator = v.object({
-  activeManifestHash: v.union(v.string(), v.null()),
-  activeAppLocales: v.array(appLocaleValidator),
-  activeReleaseId: v.union(v.string(), v.null()),
-  alternateJson: v.array(v.string()),
-  projectionJson: v.union(v.string(), v.null()),
-  rendererDomain: v.union(rendererDomainValidator, v.null()),
-  siblingJson: v.array(v.string()),
-  sourcePath: v.union(v.string(), v.null()),
-  sourceRevision: v.union(v.string(), v.null()),
-});
 
 const materialPageValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
@@ -96,7 +87,9 @@ const materialIdentityValidator = v.object({
   publicPath: v.union(v.string(), v.null()),
 });
 
-/** Delivers one generation-consistent public material shell and signed body. */
+/** Whole-shell delivery for previously deployed www consumers.
+ * The signed content delivery owner can retire this after every consumer uses
+ * lesson/navigation and production records no calls for seven complete days. */
 export const delivery = query({
   args: { appLocale: appLocaleValidator, publicPath: v.string() },
   returns: v.object({
@@ -108,6 +101,40 @@ export const delivery = query({
       readMaterialDelivery(appLocale, publicPath).pipe(
         Effect.provide(convexMaterialLayer(ctx))
       )
+    ),
+});
+
+/** Delivers the signed lesson while navigation uses a reusable group query. */
+export const lesson = query({
+  args: { appLocale: appLocaleValidator, publicPath: v.string() },
+  returns: v.object({
+    materialKey: v.union(v.string(), v.null()),
+    model: materialModelValidator.omit("siblingJson"),
+    runtimeJson: v.union(v.string(), v.null()),
+  }),
+  handler: (ctx, { appLocale, publicPath }) =>
+    runConvexProgram(
+      readMaterialLesson(appLocale, publicPath).pipe(
+        Effect.provide(convexMaterialLayer(ctx))
+      )
+    ),
+});
+
+/** Returns one authenticated navigation group pinned to the lesson's release. */
+export const navigation = query({
+  args: {
+    appLocale: appLocaleValidator,
+    expectedActiveReleaseId: v.string(),
+    materialKey: v.string(),
+  },
+  returns: materialNavigationValidator,
+  handler: (ctx, { appLocale, expectedActiveReleaseId, materialKey }) =>
+    runConvexProgram(
+      readMaterialNavigation(
+        appLocale,
+        materialKey,
+        expectedActiveReleaseId
+      ).pipe(Effect.provide(convexMaterialLayer(ctx)))
     ),
 });
 
@@ -193,13 +220,17 @@ export const sitemapBuckets = query({
 
 /** Returns one verified material sitemap partition. */
 export const sitemapPage = query({
-  args: { appLocale: appLocaleValidator, bucket: v.string() },
+  args: {
+    appLocale: appLocaleValidator,
+    bucket: v.union(v.string(), v.array(v.string())),
+  },
   returns: materialSitemapValidator,
   handler: (ctx, { appLocale, bucket: bucketId }) =>
     runConvexProgram(
-      readMaterialSitemap(appLocale, bucketId).pipe(
-        Effect.provide(convexMaterialLayer(ctx))
-      )
+      readMaterialSitemap(
+        appLocale,
+        typeof bucketId === "string" ? [bucketId] : bucketId
+      ).pipe(Effect.provide(convexMaterialLayer(ctx)))
     ),
 });
 
