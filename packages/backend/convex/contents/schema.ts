@@ -5,7 +5,6 @@ import {
 } from "@repo/backend/convex/contents/graph";
 import {
   learningPopularityFiniteWindowValues,
-  learningPopularityRetentionPhaseValues,
   learningPopularityScopeValues,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
@@ -26,9 +25,6 @@ const learningPopularityFiniteWindowValidator = literals(
 );
 const learningPopularityScopeValidator = literals(
   ...learningPopularityScopeValues
-);
-const learningPopularityRetentionPhaseValidator = literals(
-  ...learningPopularityRetentionPhaseValues
 );
 const tables = {
   /**
@@ -218,14 +214,6 @@ const tables = {
     startedDay: v.number(),
     windowKey: learningPopularityFiniteWindowValidator,
   }).index("by_scopeMode_and_windowKey", ["scopeMode", "windowKey"]),
-
-  /** Frozen checkpoint from retired retention; retained as historical evidence. */
-  learningPopularityRetention: defineTable({
-    completedDay: v.optional(v.number()),
-    day: v.number(),
-    key: v.literal("popularity"),
-    phase: learningPopularityRetentionPhaseValidator,
-  }).index("by_key", ["key"]),
 
   /** Ranked popularity read model for bounded homepage and route queries. */
   learningPopularityCounters: defineTable({

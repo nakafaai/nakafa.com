@@ -63,9 +63,10 @@ public ranking window are preserved. Reintroducing deletion requires prospective
 accounting and a bounded, resumable integrity proof that detects concurrent
 writes and checks the counter/index relationship in both directions.
 
-The retired retention cron and scheduler entrypoints are removed. The frozen
-`learningPopularityRetention` checkpoint remains historical evidence; it neither
-schedules deletion nor certifies data completeness.
+Retired retention has no cron, scheduler entrypoints, checkpoint schema or
+application table. Its completed day and phase describe the retired deletion
+job, not learning engagement or integrity evidence. Historical decisions belong
+in version control, not unused application tables.
 
 Mutations that write only tables without registered triggers use native Convex
 builders. Mutations that own message, subscription, score, or other registered

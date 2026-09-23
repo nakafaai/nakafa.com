@@ -260,8 +260,7 @@ describe("contents/metrics/refresh", () => {
     // These seven writes add seven queries without reading queue documents.
     // Domain-owned ranking updates reuse loaded counters, removing two reads
     // per write that the generic trigger previously needed.
-    // A completing window page no longer re-reads its sibling cycles, because
-    // the single retention claim owner reads them on its own schedule.
+    // Completing a window page only updates its own cycle watermark.
     expect(expiryMetrics).toEqual({
       databaseQueries: 84,
       documentsRead: 105,
