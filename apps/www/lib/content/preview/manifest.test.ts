@@ -1,7 +1,11 @@
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { readPreviewManifestForPrerender } from "@/lib/content/preview/manifest";
+import { Effect, Option } from "effect";
+import {
+  readPreviewManifestForPrerender,
+  readPreviewSnapshot,
+} from "@/lib/content/preview/manifest";
 import { makePendingManifest } from "@/test/content-preview";
 
 const target = "http://127.0.0.1:4000/manifest";
@@ -13,6 +17,7 @@ afterEach(() => {
 
 /** Installs one complete test-only child environment. */
 function stubPreviewEnvironment() {
+  vi.stubEnv("NODE_ENV", "development");
   vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/events");
   vi.stubEnv("AKSARA_PREVIEW_KEY_ID", "local-preview");
   vi.stubEnv("AKSARA_PREVIEW_MANIFEST_PATH", "/manifest");
@@ -35,6 +40,68 @@ function response(body: BodyInit | null) {
 }
 
 describe("local preview prerender manifest", () => {
+  it.effect(
+    "does not fetch a snapshot outside a configured development child",
+    () =>
+      Effect.gen(function* () {
+        stubPreviewEnvironment();
+        vi.stubEnv("NODE_ENV", "production");
+        const fetcher = vi.fn();
+        vi.stubGlobal("fetch", fetcher);
+
+        expect(yield* readPreviewSnapshot()).toEqual(Option.none());
+        expect(fetcher).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "reads the authenticated manifest through the Effect boundary",
+    () =>
+      Effect.gen(function* () {
+        stubPreviewEnvironment();
+        const manifest = makePendingManifest();
+        vi.stubGlobal(
+          "fetch",
+          vi.fn(() => Promise.resolve(response(JSON.stringify(manifest))))
+        );
+
+        const snapshot = yield* readPreviewSnapshot();
+        expect(Option.map(snapshot, (value) => value.manifest)).toEqual(
+          Option.some(manifest)
+        );
+      })
+  );
+
+  it.effect("keeps transport failures in the Effect error channel", () =>
+    Effect.gen(function* () {
+      stubPreviewEnvironment();
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() => Promise.reject(new TypeError("closed")))
+      );
+
+      expect(yield* readPreviewSnapshot().pipe(Effect.flip)).toMatchObject({
+        _tag: "PreviewRequestError",
+        stage: "connect",
+      });
+    })
+  );
+
+  it.effect("keeps manifest failures in the Effect error channel", () =>
+    Effect.gen(function* () {
+      stubPreviewEnvironment();
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() => Promise.resolve(response("{}")))
+      );
+
+      expect(yield* readPreviewSnapshot().pipe(Effect.flip)).toMatchObject({
+        _tag: "PreviewIntegrityError",
+        check: "manifest",
+      });
+    })
+  );
+
   it("reads the strict manifest behind Next's direct Promise boundary", async () => {
     stubPreviewEnvironment();
     const manifest = makePendingManifest();

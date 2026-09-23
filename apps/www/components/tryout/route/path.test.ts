@@ -16,11 +16,11 @@ describe("tryout route paths", () => {
       getTryoutHref({
         country: "indonesia",
         exam: "tka",
-        section: "matematika",
+        section: "matematika-wajib",
         set: "set-1",
-        track: "2027",
+        track: "matematika-wajib",
       })
-    ).toBe("/try-out/indonesia/tka/2027/set-1/matematika");
+    ).toBe("/try-out/indonesia/tka/matematika-wajib/set-1/matematika-wajib");
     expect(getTryoutPublicPathHref("try-out/indonesia/tka")).toBe(
       "/try-out/indonesia/tka"
     );

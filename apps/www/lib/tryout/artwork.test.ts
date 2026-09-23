@@ -135,24 +135,33 @@ describe("try-out artwork", () => {
     }
   );
 
-  it("uses canonical TKA track keys instead of localized slugs", () => {
-    expect(
-      getTryoutTrackCatalogArtwork("de", {
-        countryKey: "indonesia",
-        examKey: "tka",
-        trackKey: "mathematics",
-        trackKind: "subject",
-      })
-    ).toBe("/open-graph/subject/de-mathematics.png");
-    expect(
-      getTryoutTrackCatalogArtwork("id", {
-        countryKey: "indonesia",
-        examKey: "tka",
-        trackKey: "matematika",
-        trackKind: "subject",
-      })
-    ).toBeUndefined();
-  });
+  it.each(["en", "id", "de"] as const)(
+    "resolves compulsory Mathematics artwork from its canonical key in %s",
+    (locale) => {
+      expect(
+        getTryoutTrackCatalogArtwork(locale, {
+          countryKey: "indonesia",
+          examKey: "tka",
+          trackKey: "compulsory-mathematics",
+          trackKind: "subject",
+        })
+      ).toBe(`/open-graph/subject/${locale}-mathematics.png`);
+      for (const trackKey of [
+        "mathematics",
+        "matematika-wajib",
+        "pflichtmathematik",
+      ]) {
+        expect(
+          getTryoutTrackCatalogArtwork(locale, {
+            countryKey: "indonesia",
+            examKey: "tka",
+            trackKey,
+            trackKind: "subject",
+          })
+        ).toBeUndefined();
+      }
+    }
+  );
 
   it.effect.each([
     { appLocale: "en", countryKey: "Indonesia", examKey: "snbt" },

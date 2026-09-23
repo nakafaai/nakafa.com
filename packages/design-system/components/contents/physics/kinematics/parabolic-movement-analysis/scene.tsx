@@ -79,25 +79,29 @@ function SceneSky() {
 function StartIsland() {
   return (
     <group>
-      <SceneAsset path={PROJECTILE_ASSET_PATHS.sandFoliage} scale={0.58} />
+      <CameraBounds exclude>
+        <SceneAsset path={PROJECTILE_ASSET_PATHS.sandFoliage} scale={0.58} />
+      </CameraBounds>
       <SceneAsset
         path={PROJECTILE_ASSET_PATHS.cannon}
         position={[0, 0.04, 0]}
         rotation={[0, PROJECTILE_SCENE.cannonRotationY, 0]}
         scale={PROJECTILE_SCENE.cannonScale}
       />
-      <SceneAsset
-        path={PROJECTILE_ASSET_PATHS.palm}
-        position={[-1.25, 0.02, 1.15]}
-        rotation={[0, -0.72, 0]}
-        scale={0.3}
-      />
-      <SceneAsset
-        path={PROJECTILE_ASSET_PATHS.rock}
-        position={[-1.3, -0.02, -1.25]}
-        rotation={[0, 0.8, 0]}
-        scale={0.18}
-      />
+      <CameraBounds exclude>
+        <SceneAsset
+          path={PROJECTILE_ASSET_PATHS.palm}
+          position={[-1.25, 0.02, 1.15]}
+          rotation={[0, -0.72, 0]}
+          scale={0.3}
+        />
+        <SceneAsset
+          path={PROJECTILE_ASSET_PATHS.rock}
+          position={[-1.3, -0.02, -1.25]}
+          rotation={[0, 0.8, 0]}
+          scale={0.18}
+        />
+      </CameraBounds>
     </group>
   );
 }
@@ -107,25 +111,29 @@ function TargetIsland({ motion }: { motion: ProjectileMotionState }) {
 
   return (
     <group position={[targetX, 0, 0]}>
-      <SceneAsset path={PROJECTILE_ASSET_PATHS.sand} scale={0.5} />
+      <CameraBounds exclude>
+        <SceneAsset path={PROJECTILE_ASSET_PATHS.sand} scale={0.5} />
+      </CameraBounds>
       <SceneAsset
         path={PROJECTILE_ASSET_PATHS.flag}
         position={[0.4, 0.02, 0.8]}
         rotation={[0, -0.45, 0]}
         scale={0.34}
       />
-      <SceneAsset
-        path={PROJECTILE_ASSET_PATHS.rock}
-        position={[-0.9, -0.02, -0.95]}
-        rotation={[0, 1.1, 0]}
-        scale={0.16}
-      />
-      <SceneAsset
-        path={PROJECTILE_ASSET_PATHS.ship}
-        position={[...PROJECTILE_SCENE.shipOffset]}
-        rotation={[0, Math.PI / 2, 0]}
-        scale={PROJECTILE_SCENE.shipScale}
-      />
+      <CameraBounds exclude>
+        <SceneAsset
+          path={PROJECTILE_ASSET_PATHS.rock}
+          position={[-0.9, -0.02, -0.95]}
+          rotation={[0, 1.1, 0]}
+          scale={0.16}
+        />
+        <SceneAsset
+          path={PROJECTILE_ASSET_PATHS.ship}
+          position={[...PROJECTILE_SCENE.shipOffset]}
+          rotation={[0, Math.PI / 2, 0]}
+          scale={PROJECTILE_SCENE.shipScale}
+        />
+      </CameraBounds>
     </group>
   );
 }

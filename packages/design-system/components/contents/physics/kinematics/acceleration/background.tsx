@@ -32,7 +32,7 @@ export function SpaceBackground({ length }: { length: number }) {
 
 function DistantPlanet() {
   return (
-    <group position={[8.2, -3.1, -9.2]} rotation={[0.3, 0.2, -0.25]}>
+    <group position={[8.2, 3.1, -9.2]} rotation={[0.3, 0.2, -0.25]}>
       <mesh>
         <sphereGeometry args={[1.12, 32, 20]} />
         <meshStandardMaterial color={SPACE_COLORS.planet} roughness={0.72} />

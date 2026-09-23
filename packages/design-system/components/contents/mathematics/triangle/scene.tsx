@@ -17,6 +17,7 @@ export function TriangleScene({
       cameraPosition={[0, 0, CAMERA_Z_POSITION]}
       cameraProjection={{ kind: "orthographic" }}
       showOrigin={false}
+      showZAxis={false}
     >
       <Triangle
         angle={angle}

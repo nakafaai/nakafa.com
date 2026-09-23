@@ -170,11 +170,6 @@ print(area)\`
   ]}
 />
 
-<Vector3d
-  title={<>Resultant vector</>}
-  vectors={[{ from: [0, 0, 0], to: [3, 4, 0], label: "R" }]}
-/>
-
 <FunctionChart title="Exponential model" p={2} a={3} n={5} />
 
 <HistogramChart
@@ -224,8 +219,6 @@ A-->B\`} />
         expect(markdown).toContain("Component: NumberLine");
         expect(markdown).toContain("startInclusive: true");
         expect(markdown).toContain("Number.POSITIVE_INFINITY");
-        expect(markdown).toContain("Component: Vector3d");
-        expect(markdown).toContain("from: [0, 0, 0], to: [3, 4, 0]");
         expect(markdown).toContain("Component: FunctionChart");
         expect(markdown).toContain("- p: 2");
         expect(markdown).toContain("- a: 3");

@@ -26,7 +26,7 @@ afterEach(() => {
 
 describe("renderer components", () => {
   it.effect(
-    "resolves both published and successor physics vector artifacts",
+    "resolves the physics LineEquation artifact",
     () =>
       Effect.gen(function* () {
         const { resolveRendererComponents } = yield* Effect.promise(
@@ -35,11 +35,12 @@ describe("renderer components", () => {
         const components = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "physics",
-          requiredComponents: ["LineEquation", "Vector3d"],
+          requiredComponents: ["LineEquation"],
         });
         expect(components.LineEquation).toBeDefined();
-        expect(components.Vector3d).toBeDefined();
-      })
+      }),
+    // This integration seam loads the real physics renderer module graph.
+    15_000
   );
 
   it.effect(
@@ -55,7 +56,7 @@ describe("renderer components", () => {
         const components = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "snbt-plain",
-          requiredComponents: ["InlineMath"],
+          requiredComponents: ["p", "InlineMath"],
         });
 
         expect(components).toMatchObject(semanticMdxComponents);

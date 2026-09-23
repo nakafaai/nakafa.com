@@ -85,9 +85,9 @@ vi.mock("@/lib/content/renderer/manifest", async () => {
 
 const COUNTRY = "try-out/indonesia";
 const EXAM = `${COUNTRY}/tka`;
-const TRACK = `${EXAM}/matematika`;
+const TRACK = `${EXAM}/matematika-wajib`;
 const SET = `${TRACK}/set-1`;
-const SECTION = `${SET}/matematika`;
+const SECTION = `${SET}/matematika-wajib`;
 
 beforeEach(() => {
   fetchQueryMock.mockReset();
@@ -143,9 +143,11 @@ describe("immutable try-out application catalog", () => {
         );
         expect(metadata.route).toMatchObject({
           publicPath: TRACK,
-          title: { en: "Mathematics", id: "Matematika", de: "Mathematik" }[
-            locale
-          ],
+          title: {
+            en: "Compulsory Mathematics",
+            id: "Matematika Wajib",
+            de: "Pflichtmathematik",
+          }[locale],
           alternates: APP_LOCALE_CODES.map((appLocale) => ({
             appLocale,
             publicPath: TRACK,
@@ -166,7 +168,7 @@ describe("immutable try-out application catalog", () => {
         const args = {
           countryKey: "indonesia",
           examKey: "tka",
-          trackKey: "matematika",
+          trackKey: "matematika-wajib",
           locale: "id",
           filter: "completed",
           sort: { field: "durationSeconds", direction: "desc" },

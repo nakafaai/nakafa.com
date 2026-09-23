@@ -27,10 +27,7 @@ import {
   ParabolicMovementAnalysisLab,
   ParabolicMovementLab,
 } from "@/lib/content/renderer/client/physics/parabolic";
-import {
-  Vector3d,
-  VectorConceptLab,
-} from "@/lib/content/renderer/client/physics/vector";
+import { VectorConceptLab } from "@/lib/content/renderer/client/physics/vector";
 import {
   AverageVelocitySpeedLab,
   InstantaneousVelocitySpeedLab,
@@ -102,10 +99,6 @@ export const domainRenderers = [
   {
     name: physicsComponentNames.uniformLinearMotionLab,
     component: UniformLinearMotionLab,
-  },
-  {
-    name: physicsComponentNames.vector3d,
-    component: Vector3d,
   },
   {
     name: physicsComponentNames.vectorConceptLab,

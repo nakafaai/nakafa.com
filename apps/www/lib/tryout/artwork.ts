@@ -25,7 +25,7 @@ const TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY = new Map<
   TryoutTrack["trackKey"],
   ArtworkIdentity
 >([
-  ["mathematics", "subject/mathematics"],
+  ["compulsory-mathematics", "subject/mathematics"],
   ["english-language", "subject/english-language"],
   ["indonesian-language", "subject/indonesian-language"],
 ]);

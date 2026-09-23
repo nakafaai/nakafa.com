@@ -74,10 +74,7 @@ export async function generateStaticParams({
 }) {
   const locale = getActiveLocaleOrThrow(params.locale);
   if (hasPreviewConfig()) {
-    const preview = await readPagePreviewStaticParams(
-      AppLocaleSchema.make(locale)
-    );
-    return [preview];
+    return await readPagePreviewStaticParams(AppLocaleSchema.make(locale));
   }
   const catalog = await getPublishedPageCatalog();
   const routes: { page: string[] }[] = [];

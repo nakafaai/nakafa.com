@@ -13,10 +13,10 @@ import {
 /** Keeps entry failures on a localized, recoverable Nakafa surface. */
 export default function EntryError({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   const t = useTranslations("Auth");
 
@@ -42,7 +42,7 @@ export default function EntryError({
               {t("entry-error-description")}
             </p>
           </div>
-          <Button onClick={reset}>{t("retry")}</Button>
+          <Button onClick={retry}>{t("retry")}</Button>
         </div>
       </EntryShellBody>
     </>

@@ -119,10 +119,7 @@ export async function generateStaticParams({
 }) {
   const locale = getLocaleOrThrow(params.locale);
   if (hasPreviewConfig()) {
-    const preview = await readArticlePreviewStaticParams(
-      AppLocaleSchema.make(locale)
-    );
-    return [preview];
+    return await readArticlePreviewStaticParams(AppLocaleSchema.make(locale));
   }
   const route = await Effect.runPromise(
     readPublishedArticlePrerenderRoute(locale)

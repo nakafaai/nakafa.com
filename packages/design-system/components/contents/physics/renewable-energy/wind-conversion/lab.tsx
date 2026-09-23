@@ -3,7 +3,6 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -55,7 +54,7 @@ interface WindEnergyConversionLabProps {
 
 /**
  * Shows wind energy conversion as one interactive 3D system: moving air turns a
- * rotor, the nacelle houses the generator, and the cable carries electricity.
+ * rotor while the nacelle houses the generator.
  */
 export function WindEnergyConversionLab({
   description,
@@ -85,10 +84,9 @@ export function WindEnergyConversionLab({
             <Suspense>
               <CameraControls
                 autoRotate={false}
-                cameraPosition={[1.9, 1.5, 3.45]}
-                cameraTarget={[0.03, 0.72, 0.14]}
+                cameraPosition={[2.65, 2, 4.7]}
+                cameraTarget={[0.03, 0.94, 0.14]}
                 fov={34}
-                framing="content"
               />
               <ambientLight intensity={0.68} />
               <hemisphereLight
@@ -237,18 +235,7 @@ function WindGust({
   });
 
   return (
-    <CameraBounds
-      motion={{
-        rotation: "all",
-        scale: seed.size * GUST_DEPTH_SCALE,
-        translation: {
-          x: { min: seed.baseX - GUST_SWIRL, max: seed.baseX + GUST_SWIRL },
-          y: { min: seed.baseY - GUST_LIFT, max: seed.baseY + GUST_LIFT },
-          z: { min: GUST_FRONT_Z - GUST_TRAVEL, max: GUST_FRONT_Z },
-        },
-      }}
-      objectRef={ref}
-    >
+    <group ref={ref}>
       <mesh>
         <icosahedronGeometry args={[0.08, 1]} />
         <meshStandardMaterial
@@ -260,7 +247,7 @@ function WindGust({
           transparent
         />
       </mesh>
-    </CameraBounds>
+    </group>
   );
 }
 
@@ -311,7 +298,7 @@ function WindTurbine({
         />
       </mesh>
       <group position={[-0.08, 1.23, 0.26]}>
-        <CameraBounds motion={{ rotation: "z" }} objectRef={rotorRef}>
+        <group ref={rotorRef}>
           {[0, 1, 2].map((bladeIndex) => (
             <WindBlade
               color={colors.blade}
@@ -327,7 +314,7 @@ function WindTurbine({
               roughness={0.34}
             />
           </mesh>
-        </CameraBounds>
+        </group>
       </group>
     </group>
   );

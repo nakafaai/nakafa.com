@@ -9,10 +9,10 @@ export function QuestionGraph({
   description,
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
   const step = 0.025;
-  const startExp = -24;
-  const endExp = 8;
-  const startLine = -24;
-  const endLine = 24;
+  const startExp = -2;
+  const endExp = 3;
+  const startLine = -1;
+  const endLine = 3.5;
   // Solves 2^x + 2x - 6 = 0. Include D itself in the sampled curve.
   const intersectionX = 1.543_000_440_865_408_3;
   const indexD = Math.round((intersectionX - startExp) / step);
@@ -26,7 +26,7 @@ export function QuestionGraph({
   });
 
   // Function 2: y = -2x + 4
-  const linePoints = [startLine, 2, 3.5, endLine].map((x) => ({
+  const linePoints = [startLine, 2, endLine].map((x) => ({
     x,
     y: -2 * x + 4,
     z: 0,
@@ -42,12 +42,14 @@ export function QuestionGraph({
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[1, 1, 10.5]}
+      cameraTarget={[1, 1, 0]}
       data={[
         {
           points: expPoints,
           color: getColor("INDIGO"),
           showPoints: false,
+          smooth: false,
           cone: { position: "end", size: 0.5 },
           labels: [
             {
@@ -68,7 +70,7 @@ export function QuestionGraph({
             {
               text: <InlineMath math="y = 2^x - 2" />,
               at: Math.round((2.5 - startExp) / step),
-              offset: [1, 0.5, 0],
+              offset: [-1.1, 1, 0],
             },
           ],
         },
@@ -76,7 +78,8 @@ export function QuestionGraph({
           points: linePoints,
           color: getColor("TEAL"),
           showPoints: false,
-          cone: { position: "both", size: 0.5 }, // Lines usually extend both ways
+          smooth: false,
+          cone: { position: "both", size: 0.5 },
           labels: [
             {
               text: <InlineMath math="C" />,
@@ -86,12 +89,13 @@ export function QuestionGraph({
             {
               text: <InlineMath math="y = -2x + 4" />,
               at: 2,
-              offset: [1, -0.5, 0],
+              offset: [-1.2, -0.55, 0],
             },
           ],
         },
       ]}
       description={description}
+      showZAxis={false}
       title={title}
     />
   );

@@ -48,8 +48,8 @@ function generateArc(
 export function Graph({ title, description }: GraphProps) {
   return (
     <LineEquation
-      cameraPosition={[3.7, 2.1, 14]}
-      cameraTarget={[3.7, 2.1, 0]}
+      cameraPosition={[3.3, 2.1, 12]}
+      cameraTarget={[3.3, 2.1, 0]}
       data={[
         // Ground Line (A -> D -> B)
         {
@@ -104,6 +104,13 @@ export function Graph({ title, description }: GraphProps) {
             { x: thirtyDegreeDistance, y: height, z: 0 },
           ],
           color: getColor("INDIGO"),
+          labels: [
+            {
+              text: <InlineMath math="3000\,\mathrm{m}" />,
+              at: 1,
+              offset: [-1.6, -height / 2, 0],
+            },
+          ],
         },
         // Vertical Line (D -> E)
         {
@@ -141,6 +148,7 @@ export function Graph({ title, description }: GraphProps) {
         },
       ]}
       description={description}
+      showZAxis={false}
       title={title}
     />
   );

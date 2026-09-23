@@ -190,6 +190,8 @@ function OrbitingShellElectrons({
   speed: number;
 }) {
   const groupRef = useRef<Group>(null);
+  const electronRadius = isOuterShell ? OUTER_ELECTRON_RADIUS : ELECTRON_RADIUS;
+  const orbitExtent = radius + electronRadius;
   const electrons = Array.from(
     { length: shell.electronCount },
     (_, electronIndex) => electronIndex
@@ -204,24 +206,33 @@ function OrbitingShellElectrons({
   });
 
   return (
-    <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
-      <group rotation={[0, shellIndex * 0.24, 0]}>
-        {electrons.map((electronIndex) => {
-          const angle =
-            (2 * Math.PI * electronIndex) / shell.electronCount +
-            shellIndex * 0.42;
-          const x = Math.cos(angle) * radius;
-          const z = Math.sin(angle) * radius;
+    <CameraBounds
+      bounds={{
+        x: { min: -orbitExtent, max: orbitExtent },
+        y: { min: -electronRadius, max: electronRadius },
+        z: { min: -orbitExtent, max: orbitExtent },
+      }}
+    >
+      <group ref={groupRef}>
+        <group rotation={[0, shellIndex * 0.24, 0]}>
+          {electrons.map((electronIndex) => {
+            const angle =
+              (2 * Math.PI * electronIndex) / shell.electronCount +
+              shellIndex * 0.42;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
 
-          return (
-            <Electron
-              colors={colors}
-              isOuterShell={isOuterShell}
-              key={`${shell.key}-${electronIndex}`}
-              position={[x, 0, z]}
-            />
-          );
-        })}
+            return (
+              <Electron
+                colors={colors}
+                isOuterShell={isOuterShell}
+                key={`${shell.key}-${electronIndex}`}
+                position={[x, 0, z]}
+                radius={electronRadius}
+              />
+            );
+          })}
+        </group>
       </group>
     </CameraBounds>
   );
@@ -234,16 +245,16 @@ function Electron({
   colors,
   isOuterShell,
   position,
+  radius,
 }: {
   colors: ShellModelSceneColors;
   isOuterShell: boolean;
   position: readonly [number, number, number];
+  radius: number;
 }) {
   return (
     <mesh castShadow position={position}>
-      <sphereGeometry
-        args={[isOuterShell ? OUTER_ELECTRON_RADIUS : ELECTRON_RADIUS, 24, 16]}
-      />
+      <sphereGeometry args={[radius, 24, 16]} />
       <meshStandardMaterial
         color={isOuterShell ? colors.outerElectron : colors.electron}
         emissive={isOuterShell ? colors.outerElectron : colors.electron}

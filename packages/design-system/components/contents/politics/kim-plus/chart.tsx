@@ -93,12 +93,13 @@ export function ElectabilityChart({
       <CardContent>
         <EvilBarChart
           chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
+          className="min-h-80"
           config={chartConfig}
           data={electabilityData}
           layout="horizontal"
         >
           <Grid horizontal={false} />
-          <YAxis dataKey="name" tickMargin={10} width={150} />
+          <YAxis dataKey="name" tickMargin={10} />
           <XAxis dataKey="value" domain={[0, valueAxisMax]} hide />
           <Tooltip />
           <Bar

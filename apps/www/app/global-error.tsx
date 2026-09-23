@@ -13,10 +13,10 @@ import { useEffect } from "react";
 
 export default function GlobalError({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     captureException(error, {
@@ -55,7 +55,7 @@ export default function GlobalError({
                   </div>
 
                   <div className="mx-auto grid w-fit grid-cols-2 gap-2">
-                    <Button onClick={reset}>Retry</Button>
+                    <Button onClick={retry}>Retry</Button>
                     <a
                       className={cn(buttonVariants({ variant: "secondary" }))}
                       href="https://github.com/nakafaai/nakafa.com/issues"
