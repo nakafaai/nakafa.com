@@ -3,8 +3,8 @@ import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
-} from "@repo/contents/_lib/agent/errors";
-import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
+} from "@repo/contents/agent/errors";
+import { NakafaAgentSearchResultSchema } from "@repo/contents/agent/schema/search";
 import { fetchQuery } from "convex/nextjs";
 import type { Context } from "effect";
 import { Effect, Schema } from "effect";

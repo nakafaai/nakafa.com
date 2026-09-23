@@ -1,4 +1,4 @@
-import type { Contributor } from "@repo/contents/_types/contributor";
+import type { Contributor } from "@repo/contents/contributor";
 
 export const contributors: Contributor[] = [
   {

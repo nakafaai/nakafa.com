@@ -15,7 +15,7 @@
     "customers:verify:prod": "tsx scripts/customers/verify.ts --prod",
     "deploy": "convex deploy",
     "dev": "convex dev --tail-logs",
-    "generate-schema": "cd convex/betterAuth && auth generate --yes && pnpm --workspace-root exec ultracite fix packages/backend/convex/betterAuth/schema.ts",
+    "generate-schema": "cd components/betterAuth && auth generate --yes && pnpm --workspace-root exec ultracite fix packages/backend/components/betterAuth/schema.ts",
     "insights": "convex insights",
     "seed": "convex dev --once && convex run init",
     "setup": "convex dev --once",

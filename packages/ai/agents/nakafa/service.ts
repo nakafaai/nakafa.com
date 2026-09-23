@@ -2,10 +2,10 @@ import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/loc
 import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
-import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran/reference";
-import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
-import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
+} from "@repo/contents/agent/errors";
+import type { NakafaAgentQuranReference } from "@repo/contents/agent/schema/quran/reference";
+import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
+import type { NakafaAgentTaxonomy } from "@repo/contents/agent/schema/taxonomy";
 import { Context, type Effect, type Option } from "effect";
 
 type NakafaReadError = NakafaAgentDataReadError | NakafaAgentInputError;

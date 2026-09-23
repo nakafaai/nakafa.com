@@ -3,7 +3,7 @@ import {
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,
   NAKAFA_AGENT_MAX_QUERIES,
-} from "@repo/contents/_types/agent/search";
+} from "@repo/contents/agent/search";
 import { ConvexError, type Infer } from "convex/values";
 
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/agent/constants";
 import { languages } from "@repo/internationalization/data/lang";
 
 const NAKAFA_SKILL_NAME = "nakafa";

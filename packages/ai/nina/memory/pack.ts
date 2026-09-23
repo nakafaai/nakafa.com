@@ -1,5 +1,5 @@
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Schema, Struct } from "effect";
 export const NINA_CONTEXT_TRANSITION_REASONS = [
   "same-context",

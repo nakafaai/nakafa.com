@@ -1,7 +1,7 @@
 "use client";
 
 import type { api } from "@repo/backend/convex/_generated/api";
-import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
+import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";

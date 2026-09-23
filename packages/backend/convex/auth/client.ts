@@ -1,9 +1,9 @@
 import { type AuthFunctions, createClient } from "@convex-dev/better-auth";
+import authSchema from "@repo/backend/components/betterAuth/schema";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
-import authSchema from "@repo/backend/convex/betterAuth/schema";
 import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,

@@ -72,6 +72,16 @@ peerDependencyRules:
   allowedVersions:
     "better-auth@1.6.33>vitest": "5.0.1"
 
+# The Next integration imports next/headers.js but omits its framework peer.
+# Resolve it from the consuming app so request storage has one identity.
+packageExtensions:
+  "@convex-dev/better-auth@0.12.5":
+    peerDependencies:
+      next: "^16.0.0"
+    peerDependenciesMeta:
+      next:
+        optional: true
+
 allowBuilds:
   '@parcel/watcher': true
   '@swc/core': true

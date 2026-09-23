@@ -2,7 +2,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { api } from "@repo/backend/convex/_generated/api";
-import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
+import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";

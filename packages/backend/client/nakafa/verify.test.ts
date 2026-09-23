@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { verifyNakafaContent } from "@repo/backend/client/nakafa/verify";
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { Effect } from "effect";
 
 const runtimeMocks = vi.hoisted(() => ({

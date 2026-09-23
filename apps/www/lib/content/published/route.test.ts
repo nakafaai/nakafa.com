@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Effect } from "effect";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { makeMaterialRuntimeSource } from "@/test/content/material";

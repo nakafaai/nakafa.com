@@ -3,9 +3,9 @@ import { previewQuran } from "@repo/ai/agents/nakafa/preview";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { NakafaDataSchema } from "@repo/ai/schema/data";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
-import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/_lib/agent/schema/quran/input";
-import type { Locale } from "@repo/contents/_types/content";
+import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/agent/constants";
+import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/agent/schema/quran/input";
+import type { Locale } from "@repo/contents/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Option, Result, Schema } from "effect";
 

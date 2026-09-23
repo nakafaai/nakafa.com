@@ -11,7 +11,7 @@ import {
 import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { getExactRouteQuery } from "@repo/backend/convex/contents/helpers/search/terms";
-import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import type { Infer } from "convex/values";
 import { Effect } from "effect";
 

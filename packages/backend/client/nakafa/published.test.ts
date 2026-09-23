@@ -5,7 +5,7 @@ import { ContentTransportError } from "@repo/backend/client/content/errors";
 import { readPublishedMarkdown } from "@repo/backend/client/nakafa/published";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content/runtime";
-import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/agent/refs";
 import { Effect, Option } from "effect";
 
 const readMock = vi.hoisted(() => vi.fn());
@@ -67,6 +67,33 @@ describe("Nakafa signed public reader", () => {
 
   it.effect.each([
     [
+      { description: "A signed lesson description." },
+      "A signed lesson description.",
+    ],
+    [{ subject: "Functions" }, "Functions"],
+  ] as const)(
+    "preserves signed lesson metadata %s",
+    ([metadata, description]) =>
+      Effect.gen(function* () {
+        readMock.mockReturnValue(
+          Effect.succeed({
+            artifact: { payload: { rawMdx: "## Current body" } },
+            projection: {
+              ...material,
+              metadata: { ...material.metadata, ...metadata },
+            },
+          })
+        );
+        const result = yield* readPublishedMarkdown(
+          () => target,
+          currentRef("material", material)
+        );
+        expect(Option.getOrThrow(result).description).toBe(description);
+      })
+  );
+
+  it.effect.each([
+    [
       "configuration",
       () => {
         throw new Error("missing token");
@@ -83,7 +110,7 @@ describe("Nakafa signed public reader", () => {
       () => target,
       Effect.succeed({
         artifact: { payload: { rawMdx: "## Body" } },
-        projection: { ...material, kind: "article" },
+        projection: TEST_ARTICLE_PROJECTION,
       }),
     ],
     [
@@ -91,10 +118,7 @@ describe("Nakafa signed public reader", () => {
       () => target,
       Effect.succeed({
         artifact: { payload: { rawMdx: "## Body" } },
-        projection: {
-          ...material,
-          graph: { ...material.graph, assetId: "invalid" },
-        },
+        projection: makeMaterialProjection("en", 2),
       }),
     ],
     [

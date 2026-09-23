@@ -3,7 +3,7 @@ import { env } from "@repo/backend/convex/_generated/server";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
-} from "@repo/contents/_lib/agent/errors";
+} from "@repo/contents/agent/errors";
 import { Effect } from "effect";
 
 const MAX_EDGE_SECRETS = 2;

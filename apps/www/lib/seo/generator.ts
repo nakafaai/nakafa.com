@@ -1,8 +1,5 @@
-import { getGradeNonNumeric } from "@repo/contents/_lib/curriculum/grade";
-import type {
-  Grade,
-  PresentedMaterialDomain,
-} from "@repo/contents/_types/taxonomy";
+import { getGradeNonNumeric } from "@repo/contents/curriculum/grade";
+import type { Grade, PresentedMaterialDomain } from "@repo/contents/taxonomy";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import type {

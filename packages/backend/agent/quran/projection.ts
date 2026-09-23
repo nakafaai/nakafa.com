@@ -3,8 +3,8 @@ import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { projectQuranVerse } from "@repo/backend/agent/quran/verse";
 import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
+import type { NakafaAgentContentRef } from "@repo/contents/agent/schema/ref";
 import { Effect } from "effect";
 
 type QuranReferenceResult = PublishedQuranReference;

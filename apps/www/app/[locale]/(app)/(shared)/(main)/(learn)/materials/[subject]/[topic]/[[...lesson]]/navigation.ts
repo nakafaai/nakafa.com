@@ -1,6 +1,6 @@
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import type { ContentPagination } from "@repo/contents/_types/content";
-import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
+import type { ContentPagination } from "@repo/contents/content";
+import { toContextualMaterialHref } from "@repo/contents/route/material/context";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 

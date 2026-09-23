@@ -1,7 +1,7 @@
 import { createClient } from "@convex-dev/better-auth";
+import authSchema from "@repo/backend/components/betterAuth/schema";
 import { components } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import authSchema from "@repo/backend/convex/betterAuth/schema";
 
 /**
  * Lightweight Better Auth component client for read-side auth helpers.

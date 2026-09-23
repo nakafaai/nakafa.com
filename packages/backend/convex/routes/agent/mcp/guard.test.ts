@@ -30,6 +30,35 @@ afterEach(() => {
 });
 
 describe("Nakafa MCP origin guard", () => {
+  it.effect("allows an owned origin when no extra origins are configured", () =>
+    Effect.gen(function* () {
+      vi.stubEnv(ORIGINS_ENVIRONMENT, undefined);
+      const response = yield* fetchMcp("", {
+        headers: { origin: "https://nakafa.com" },
+        method: "OPTIONS",
+      });
+      expect(response.status).toBe(204);
+    })
+  );
+
+  it.effect.each([
+    Array.from(
+      { length: 17 },
+      (_, index) => `https://agent${index}.example.com`
+    ).join(","),
+    "https://agent.example.com,",
+    "not-a-url",
+  ])("fails closed on an invalid origin list: %s", (origins) =>
+    Effect.gen(function* () {
+      vi.stubEnv(ORIGINS_ENVIRONMENT, origins);
+      const response = yield* fetchMcp("", {
+        headers: { origin: "https://agent.example.com" },
+        method: "OPTIONS",
+      });
+      expect(response.status).toBe(503);
+      expect(yield* Effect.promise(() => response.text())).toBe("");
+    })
+  );
   it.effect("rejects direct origin access before transport dispatch", () =>
     Effect.gen(function* () {
       const test = createConvexTestWithBetterAuth();

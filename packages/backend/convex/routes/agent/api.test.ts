@@ -25,6 +25,32 @@ import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 setupApiTest();
 
 describe("public agent API routes", () => {
+  it.each(["/", "/health", "/taxonomy", "/content", "/quran/1"])(
+    "allows a browser preflight for %s",
+    async (path) => {
+      const response = await fetchApi(createConvexTestWithBetterAuth(), path, {
+        method: "OPTIONS",
+      });
+      expect(response.status).toBe(204);
+      expect(response.headers.get("access-control-allow-origin")).toBe("*");
+    }
+  );
+
+  it("preflights the published OpenAPI document", async () => {
+    const response = await fetchOpenApi(createConvexTestWithBetterAuth(), {
+      method: "OPTIONS",
+    });
+    expect(response.status).toBe(204);
+  });
+
+  it("returns method guidance for a non-read request to an unknown API path", async () => {
+    const response = await fetchApi(
+      createConvexTestWithBetterAuth(),
+      "/unknown",
+      { method: "POST" }
+    );
+    await expectProblem(response, { code: "METHOD_NOT_ALLOWED", status: 405 });
+  });
   it("serves the API index, health response, and CORS preflight", async () => {
     const test = createConvexTestWithBetterAuth();
     const [index, health, options] = await Promise.all([

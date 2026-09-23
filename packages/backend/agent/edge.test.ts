@@ -6,7 +6,7 @@ import {
   projectPublicApiPath,
   VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
 } from "@repo/backend/agent/edge";
-import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/agent/constants";
 
 describe("agent edge contract", () => {
   it("owns one server-only Convex origin environment", () => {

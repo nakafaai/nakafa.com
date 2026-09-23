@@ -8,7 +8,7 @@ import {
   NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT,
   NAKAFA_MCP_EDGE_CONTRACT,
 } from "@repo/backend/agent/edge";
-import betterAuth from "@repo/backend/convex/betterAuth/convex.config";
+import betterAuth from "@repo/backend/components/betterAuth/convex.config";
 import { defineApp } from "convex/server";
 import { v } from "convex/values";
 

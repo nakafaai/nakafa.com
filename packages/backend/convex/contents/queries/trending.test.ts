@@ -16,7 +16,7 @@ import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.h
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
-import type { Locale } from "@repo/contents/_types/content";
+import type { Locale } from "@repo/contents/content";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 

@@ -13,6 +13,20 @@ import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 
 describe("contentRelease/reference/agent", () => {
+  it("rejects a route outside signed content namespaces", async () => {
+    const test = convexTest(schema, convexModules);
+    await expect(
+      test.query((ctx) =>
+        runConvexProgram(
+          readAgentContentSource(ctx, {
+            appLocale: "en",
+            kind: "route",
+            publicPath: "unknown/path",
+          })
+        )
+      )
+    ).resolves.toBeNull();
+  });
   it("returns no source when the signed reference is absent", async () => {
     const test = convexTest(schema, convexModules);
 

@@ -7,7 +7,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
-} from "@repo/contents/_lib/agent/errors";
+} from "@repo/contents/agent/errors";
 import { Effect, Schema } from "effect";
 
 const NakafaReleasePinSchema = Schema.NullOr(

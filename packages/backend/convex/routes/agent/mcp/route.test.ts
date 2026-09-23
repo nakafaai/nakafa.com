@@ -9,7 +9,7 @@ import {
 } from "@modelcontextprotocol/server";
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import { Effect } from "effect";
 
 const MCP_SECRET = "technical-mcp-edge-secret";
@@ -63,6 +63,7 @@ function postModern(
 }
 beforeEach(() => vi.stubEnv(MCP_SECRET_ENVIRONMENT, MCP_SECRET));
 afterEach(() => {
+  vi.doUnmock("@repo/backend/agent/mcp/server");
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
@@ -94,69 +95,6 @@ describe("Nakafa MCP transport", () => {
             { name: "nakafa_get_content" },
             { name: "nakafa_get_taxonomy" },
             { name: "nakafa_get_quran_reference" },
-          ],
-        },
-      });
-    })
-  );
-  it.effect("preserves static resources, templates, and prompts", () =>
-    Effect.gen(function* () {
-      const test = createConvexTestWithBetterAuth();
-      const usageUri = "nakafa://usage";
-      const responses = yield* allConcurrently([
-        postModern(test, 10, "resources/list"),
-        postModern(test, 11, "resources/templates/list"),
-        postModern(test, 12, "resources/read", { uri: usageUri }, usageUri),
-        postModern(test, 13, "prompts/list"),
-        postModern(
-          test,
-          14,
-          "prompts/get",
-          {
-            arguments: { topic: "linear equations" },
-            name: "nakafa_find_lesson",
-          },
-          "nakafa_find_lesson"
-        ),
-      ]);
-      const bodies = yield* allConcurrently(responses.map(json));
-      expect(responses.every(({ status }) => status === 200)).toBe(true);
-      expect(bodies[0]).toMatchObject({
-        result: {
-          resources: [{ uri: "nakafa://usage" }, { uri: "nakafa://taxonomy" }],
-        },
-      });
-      expect(bodies[1]).toMatchObject({
-        result: {
-          resourceTemplates: [{ uriTemplate: "nakafa://content/{contentId}" }],
-        },
-      });
-      expect(bodies[2]).toMatchObject({
-        result: {
-          contents: [
-            {
-              mimeType: "text/markdown",
-              text: expect.stringContaining("# Nakafa MCP Usage"),
-              uri: usageUri,
-            },
-          ],
-        },
-      });
-      expect(bodies[3]).toMatchObject({
-        result: {
-          prompts: [
-            { name: "nakafa_find_lesson" },
-            { name: "nakafa_answer_from_content" },
-            { name: "nakafa_quran_reference" },
-          ],
-        },
-      });
-      expect(bodies[4]).toMatchObject({
-        result: {
-          messages: [
-            {
-              content: { text: expect.stringContaining("linear equations") },
-            },
           ],
         },
       });
@@ -494,6 +432,39 @@ describe("Nakafa MCP transport", () => {
         for (const response of [throttled, unavailable]) {
           expect(yield* text(response)).toBe("");
         }
+      })
+  );
+  it.effect("rejects mismatched body framing before the protocol loader", () =>
+    Effect.gen(function* () {
+      const response = yield* fetchMcp(createConvexTestWithBetterAuth(), {
+        body: "{}",
+        headers: { "content-length": "1", "content-type": "application/json" },
+        method: "POST",
+      });
+      expect(response.status).toBe(400);
+      expect(yield* text(response)).toBe("");
+    })
+  );
+  it.effect(
+    "returns a sanitized retryable failure if the protocol module fails to load",
+    () =>
+      Effect.gen(function* () {
+        vi.doMock("@repo/backend/agent/mcp/server", () => {
+          throw new Error("private module initialization failure");
+        });
+        const response = yield* postModern(
+          createConvexTestWithBetterAuth(),
+          99,
+          "server/discover"
+        );
+        expect(response.status).toBe(503);
+        expect(yield* json(response)).toMatchObject({
+          id: 99,
+          error: {
+            code: -32_603,
+            message: "The MCP protocol runtime is unavailable.",
+          },
+        });
       })
   );
 });

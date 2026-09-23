@@ -29,7 +29,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ProgramNavigationIconKey } from "@nakafa/aksara-contracts/program/spec";
-import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
+import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 
 type CurriculumVisualSource =

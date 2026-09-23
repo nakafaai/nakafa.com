@@ -1,5 +1,5 @@
 import { readConvexRuntimeQuery } from "@repo/backend/client/runtime";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import type { FunctionArgs, FunctionReference } from "convex/server";
 import { Effect } from "effect";
 

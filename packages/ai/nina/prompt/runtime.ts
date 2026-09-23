@@ -2,7 +2,7 @@ import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt/system";
 import { formatCurriculumPreferencePromptContext } from "@repo/ai/prompt/curriculum-preference";
 import { AgentCurriculumPreferenceSchema } from "@repo/ai/types/agents";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { LocaleSchema } from "@repo/contents/content";
 import { Schema, Struct } from "effect";
 /** Structured runtime facts that Nina can use without route or title guessing. */
 export const RuntimePromptContextSchema = Schema.Struct({

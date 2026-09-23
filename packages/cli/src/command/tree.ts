@@ -1,7 +1,7 @@
-import { NAKAFA_API_BASE_URL } from "@repo/contents/_lib/agent/constants";
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
-import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { NAKAFA_API_BASE_URL } from "@repo/contents/agent/constants";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
+import { NakafaAgentSectionSchema } from "@repo/contents/agent/schema/ref";
+import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Option, Schema } from "effect";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import {

@@ -1,5 +1,5 @@
-import type { MaterialList } from "@repo/contents/_types/curriculum/material";
-import type { ParsedHeading } from "@repo/contents/_types/toc";
+import type { MaterialList } from "@repo/contents/curriculum/list";
+import type { ParsedHeading } from "@repo/contents/toc";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 
 /** Builds sidebar chapter links from rendered material cards. */

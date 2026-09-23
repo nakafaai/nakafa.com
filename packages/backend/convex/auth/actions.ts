@@ -1,6 +1,6 @@
+import authSchema from "@repo/backend/components/betterAuth/schema";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { createAuth } from "@repo/backend/convex/auth/runtime";
-import authSchema from "@repo/backend/convex/betterAuth/schema";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 

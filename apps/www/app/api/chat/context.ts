@@ -6,7 +6,7 @@ import {
   NinaContextSnapshotSchema,
   openNinaLearningSession,
 } from "@repo/ai/nina/memory/pack";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option, Schema, Struct } from "effect";
 import {

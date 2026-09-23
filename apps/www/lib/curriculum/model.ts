@@ -8,7 +8,7 @@ import type {
   ProgramTranslation,
   LearningProgram as PublishedLearningProgram,
 } from "@nakafa/aksara-contracts/program/spec";
-import type { MaterialList } from "@repo/contents/_types/curriculum/material";
+import type { MaterialList } from "@repo/contents/curriculum/list";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";

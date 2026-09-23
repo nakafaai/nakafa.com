@@ -11,8 +11,8 @@ import {
   NAKAFA_MCP_ENDPOINT,
   NAKAFA_MCP_GUIDANCE,
   NAKAFA_PUBLIC_API_VERSION,
-} from "@repo/contents/_lib/agent/constants";
-import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_types/agent/search";
+} from "@repo/contents/agent/constants";
+import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/agent/search";
 
 export const OPENAPI_CONTENT_ID_EXAMPLE =
   "asset:example:material:linear-equations";

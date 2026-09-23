@@ -1,8 +1,8 @@
-import type { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import type { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
-} from "@repo/contents/_lib/agent/schema/search";
+} from "@repo/contents/agent/schema/search";
 import { Context, type Effect } from "effect";
 
 /**

@@ -2,7 +2,7 @@ import { formatSearch } from "@repo/ai/agents/nakafa/format";
 import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
-} from "@repo/contents/_lib/agent/schema/search";
+} from "@repo/contents/agent/schema/search";
 
 type SearchResultInput = Pick<NakafaAgentSearchInput, "queries">;
 

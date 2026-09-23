@@ -35,8 +35,8 @@ import {
 } from "@repo/ai/schema/tools";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
-import type { Locale } from "@repo/contents/_types/content";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
+import type { Locale } from "@repo/contents/content";
 import type { LogContext } from "@repo/utilities/logging/types";
 import { tool, type UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";

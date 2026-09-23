@@ -1,4 +1,4 @@
-import { encodeMaterialContextHint } from "@repo/contents/_types/route/material/context";
+import { encodeMaterialContextHint } from "@repo/contents/route/material/context";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 

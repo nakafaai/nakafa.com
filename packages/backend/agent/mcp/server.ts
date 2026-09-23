@@ -6,7 +6,7 @@ import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   NAKAFA_MCP_SERVER_NAME,
   NAKAFA_MCP_SERVER_VERSION,
-} from "@repo/contents/_lib/agent/constants";
+} from "@repo/contents/agent/constants";
 
 const SERVER_INSTRUCTIONS =
   "Use Nakafa for cited educational content, lessons, articles, try-outs, and reviewed Quran references. Search first. Pass content_id to the content tool only when the result includes markdown_url. Cite try-out catalog results by URL without requesting private attempt content. Every capability is public and read-only.";

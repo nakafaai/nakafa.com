@@ -5,17 +5,17 @@ import {
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
-import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
+import { NakafaAgentReadOptionsSchema } from "@repo/contents/agent/schema/read";
 import {
   NakafaAgentContentRefSchema,
   NakafaAgentSectionSchema,
-} from "@repo/contents/_lib/agent/schema/ref";
+} from "@repo/contents/agent/schema/ref";
 import {
   NakafaAgentSearchOptionsSchema,
   NakafaAgentSearchResultSchema,
-} from "@repo/contents/_lib/agent/schema/search";
-import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
+} from "@repo/contents/agent/schema/search";
+import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/agent/schema/taxonomy";
 import { MathDataSchema } from "@repo/math/schema/data";
 import { Schema, Struct } from "effect";
 

@@ -5,10 +5,73 @@ import {
   toMcpToolError,
 } from "@repo/backend/agent/mcp/result";
 import { toMcpObjectSchema } from "@repo/backend/agent/mcp/schema";
-import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
-import { Effect, Schema } from "effect";
+import {
+  NakafaAgentDataReadError,
+  NakafaAgentInputError,
+} from "@repo/contents/agent/errors";
+import { Effect, Logger, Schema } from "effect";
 
 describe("Nakafa MCP tool results", () => {
+  it("provides recovery guidance when input failure has no extra cause", async () => {
+    const result = await runMcpTool(
+      Effect.fail(new NakafaAgentInputError({ message: "Invalid input." })),
+      "request-without-cause"
+    );
+    expect(result).toMatchObject({
+      isError: true,
+      structuredContent: {
+        error: {
+          message: "Invalid input.",
+          suggestions: [
+            "Correct the tool arguments using the published input schema and retry.",
+          ],
+        },
+      },
+    });
+  });
+
+  it("keeps private read failures out of public tool guidance", async () => {
+    const result = await runMcpTool(
+      Effect.fail(
+        new NakafaAgentDataReadError({
+          message: "Published content unavailable.",
+          cause: "private storage diagnostic",
+        })
+      ),
+      "request-read-failure"
+    );
+    expect(result).toMatchObject({
+      isError: true,
+      structuredContent: {
+        error: {
+          message: "Published content unavailable.",
+          suggestions: ["Retry later using the same documented arguments."],
+        },
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain("private storage diagnostic");
+  });
+
+  it("reports a traceable request identity for defects without exposing details", async () => {
+    const result = await runMcpTool(
+      Effect.die(new Error("private defect diagnostic")).pipe(
+        Effect.provide(Logger.layer([]))
+      ),
+      "request-defect"
+    );
+    expect(result).toMatchObject({
+      isError: true,
+      structuredContent: {
+        error: {
+          message: "Nakafa MCP could not complete this request.",
+          suggestions: [
+            "Retry later and include request ID request-defect with support.",
+          ],
+        },
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain("private defect diagnostic");
+  });
   it.effect("preserves successful structured content", () =>
     Effect.gen(function* () {
       const result = yield* Effect.promise(() =>

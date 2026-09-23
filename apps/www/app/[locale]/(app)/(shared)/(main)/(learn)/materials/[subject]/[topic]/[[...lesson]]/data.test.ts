@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   readNamespaceSegment: vi.fn(),
 }));
 
-vi.mock("@repo/contents/_types/route/surface", () => ({
+vi.mock("@repo/contents/route/surface", () => ({
   readNamespaceSegment: mocks.readNamespaceSegment,
 }));
 

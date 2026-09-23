@@ -2,7 +2,7 @@ import {
   NAKAFA_MCP_ENDPOINT,
   NAKAFA_MCP_PROTOCOL_VERSION,
   NAKAFA_PUBLIC_API_PATH,
-} from "@repo/contents/_lib/agent/constants";
+} from "@repo/contents/agent/constants";
 import { Console, Effect, Layer, MutableRef } from "effect";
 import {
   CliConfig,

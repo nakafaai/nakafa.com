@@ -8,10 +8,9 @@ import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
-} from "@repo/contents/_lib/agent/errors";
-import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
-import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
+} from "@repo/contents/agent/errors";
+import type { NakafaAgentContentRef } from "@repo/contents/agent/schema/ref";
+import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { Effect, Option, Schema } from "effect";
 
 type PublishedSection = Extract<
@@ -49,24 +48,10 @@ export const readPublishedMarkdown = Effect.fn(
     ref.section === "articles" ? "article" : "subject-lesson";
   if (
     found.projection.kind !== expectedKind ||
-    found.projection.graph.assetId !== ref.content_id ||
-    found.projection.appLocale !== ref.locale ||
-    `${found.projection.publicPath}` !== `${ref.route}`
+    found.projection.graph.assetId !== ref.content_id
   ) {
     return yield* publishedReadError(
       "The signed projection changed its requested public identity."
-    );
-  }
-  const currentRef = createNakafaContentRefFromGraphProjection({
-    ...found.projection.graph,
-    content_id: found.projection.graph.assetId,
-    locale: found.projection.appLocale,
-    route: found.projection.publicPath,
-    section: ref.section,
-  });
-  if (Option.isNone(currentRef)) {
-    return yield* publishedReadError(
-      "The signed projection has an invalid public graph identity."
     );
   }
   const body = yield* projectMdxForAgentMarkdown(
@@ -77,7 +62,7 @@ export const readPublishedMarkdown = Effect.fn(
     metadata.description ??
     ("subject" in metadata ? metadata.subject : undefined);
   const markdown = yield* decodeNakafaMarkdown({
-    ...currentRef.value,
+    ...ref,
     ...(description === undefined ? {} : { description }),
     text: [`# ${metadata.title}`, "", body.trim()].join("\n"),
     title: metadata.title,

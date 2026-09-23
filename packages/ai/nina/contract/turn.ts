@@ -5,7 +5,7 @@ import {
   AgentCurriculumPreferenceSchema,
 } from "@repo/ai/types/agents";
 import { PromptUserRoleSchema } from "@repo/ai/types/roles";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Schema, Struct } from "effect";
 /** Verified learning page state consumed by one Nina harness turn. */

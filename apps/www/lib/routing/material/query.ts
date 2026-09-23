@@ -2,8 +2,8 @@ import {
   encodeMaterialContextHint,
   MATERIAL_CONTEXT_QUERY_PARAM,
   readMaterialContextHint,
-} from "@repo/contents/_types/route/material/context";
-import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
+} from "@repo/contents/route/material/context";
+import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import {
   createLoader,
   createParser,
