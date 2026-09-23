@@ -114,7 +114,7 @@ export async function generateStaticParams({
     const preview = await readArticlePreviewStaticParams(
       AppLocaleSchema.make(locale)
     );
-    return [{ category: preview.category }];
+    return preview.map(({ category }) => ({ category }));
   }
   const route = await Effect.runPromise(
     readPublishedArticlePrerenderRoute(locale)

@@ -6,14 +6,16 @@ import {
   CAMERA_TARGET,
   formatSigned,
   getSceneColors,
-  getVectorState,
-  LOAD_MAX_X,
-  LOAD_MIN_X,
-  LOAD_STEP,
   NARROW_CAMERA_POSITION,
   type VectorConceptLabProps,
 } from "@repo/design-system/components/contents/physics/vector/concept/data";
 import { VectorConceptScene } from "@repo/design-system/components/contents/physics/vector/concept/scene";
+import {
+  getVectorState,
+  LOAD_MAX_X,
+  LOAD_MIN_X,
+  LOAD_STEP,
+} from "@repo/design-system/components/contents/physics/vector/concept/tension";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -30,6 +32,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Slider } from "@repo/design-system/components/ui/slider";
+import { Effect } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useState } from "react";
@@ -52,7 +55,10 @@ export function VectorConceptLab({
   const { resolvedTheme } = useTheme();
   const [loadX, setLoadX] = useState(0);
   const colors = getSceneColors(resolvedTheme);
-  const vectorState = useMemo(() => getVectorState(loadX), [loadX]);
+  const vectorState = useMemo(
+    () => Effect.runSync(getVectorState(loadX)),
+    [loadX]
+  );
 
   function handleLoadChange(nextValue: number) {
     setLoadX(nextValue);

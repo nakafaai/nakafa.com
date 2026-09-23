@@ -132,10 +132,10 @@ export const parseMaterialPreviewStaticParams = Effect.fn(
 export function readMaterialPreviewStaticParams(appLocale: AppLocale) {
   return readPreviewManifestForPrerender().then((manifest) => {
     const document = manifest.document;
-    if (
-      document.family !== "material" ||
-      document.route.appLocale !== appLocale
-    ) {
+    if (document.family !== "material") {
+      return [];
+    }
+    if (document.route.appLocale !== appLocale) {
       return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
     }
     const decoded = decodeMaterialPreviewStaticParams({
@@ -145,35 +145,42 @@ export function readMaterialPreviewStaticParams(appLocale: AppLocale) {
     if (Result.isFailure(decoded)) {
       return Promise.reject(decoded.failure);
     }
-    return decoded.success;
+    return [decoded.success];
   });
 }
 /** Reads the selected article route so Cache Components can build its shell. */
 export function readArticlePreviewStaticParams(appLocale: AppLocale) {
   return readPreviewManifestForPrerender().then((manifest) => {
     const document = manifest.document;
-    if (
-      document.family !== "article" ||
-      document.route.appLocale !== appLocale
-    ) {
+    if (document.family !== "article") {
+      return [];
+    }
+    if (document.route.appLocale !== appLocale) {
       return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
     }
-    return ArticlePreviewStaticParamsSchema.make({
-      category: document.route.categoryRouteSlug,
-      slug: document.route.articleRouteSlug,
-    });
+    return [
+      ArticlePreviewStaticParamsSchema.make({
+        category: document.route.categoryRouteSlug,
+        slug: document.route.articleRouteSlug,
+      }),
+    ];
   });
 }
 /** Reads the selected Page route so Cache Components can build its shell. */
 export function readPagePreviewStaticParams(appLocale: AppLocale) {
   return readPreviewManifestForPrerender().then((manifest) => {
     const document = manifest.document;
-    if (document.family !== "page" || document.route.appLocale !== appLocale) {
+    if (document.family !== "page") {
+      return [];
+    }
+    if (document.route.appLocale !== appLocale) {
       return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
     }
-    return {
-      page: document.route.publicPath.split("/"),
-    } satisfies PagePreviewStaticParams;
+    return [
+      {
+        page: document.route.publicPath.split("/"),
+      } satisfies PagePreviewStaticParams,
+    ];
   });
 }
 /** Resolves a next-intl material rewrite back to its canonical public path. */

@@ -206,11 +206,13 @@ describe("local preview route matching", () => {
           yield* fromPreviewPromise(() =>
             readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
           )
-        ).toEqual({
-          lesson: ["function-concept"],
-          subject: "mathematics",
-          topic: "function-composition-inverse-function",
-        });
+        ).toEqual([
+          {
+            lesson: ["function-concept"],
+            subject: "mathematics",
+            topic: "function-composition-inverse-function",
+          },
+        ]);
       })
   );
 
@@ -226,10 +228,12 @@ describe("local preview route matching", () => {
           yield* fromPreviewPromise(() =>
             readArticlePreviewStaticParams(AppLocaleSchema.make("de"))
           )
-        ).toEqual({
-          category: "politik",
-          slug: "politische-dynastien-und-asiatische-werte",
-        });
+        ).toEqual([
+          {
+            category: "politik",
+            slug: "politische-dynastien-und-asiatische-werte",
+          },
+        ]);
       })
   );
 
@@ -243,7 +247,7 @@ describe("local preview route matching", () => {
           yield* fromPreviewPromise(() =>
             readPagePreviewStaticParams(AppLocaleSchema.make("en"))
           )
-        ).toEqual({ page: ["terms-of-service"] });
+        ).toEqual([{ page: ["terms-of-service"] }]);
       })
   );
 
@@ -282,94 +286,118 @@ describe("local preview route matching", () => {
     })
   );
 
-  it.effect("rejects a missing or mismatched material preview projection", () =>
-    Effect.gen(function* () {
-      prerenderManifestMock.mockRejectedValueOnce(
-        new PreviewIntegrityError({ check: "manifest" })
-      );
-      expect(
-        yield* fromPreviewPromise(() =>
-          readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
-        ).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "manifest",
-      });
+  it.effect(
+    "skips unrelated material routes and rejects invalid preview projections",
+    () =>
+      Effect.gen(function* () {
+        prerenderManifestMock.mockRejectedValueOnce(
+          new PreviewIntegrityError({ check: "manifest" })
+        );
+        expect(
+          yield* fromPreviewPromise(() =>
+            readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
+          ).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "manifest",
+        });
 
-      prerenderManifestMock.mockResolvedValueOnce(articlePendingManifest);
-      expect(
-        yield* fromPreviewPromise(() =>
-          readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
-        ).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "projection",
-      });
+        prerenderManifestMock.mockResolvedValueOnce(articlePendingManifest);
+        expect(
+          yield* fromPreviewPromise(() =>
+            readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
+          )
+        ).toEqual([]);
+        prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
+        expect(
+          yield* fromPreviewPromise(() =>
+            readMaterialPreviewStaticParams(AppLocaleSchema.make("id"))
+          ).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "projection",
+        });
 
-      prerenderManifestMock.mockResolvedValueOnce(
-        pendingRoute({ publicPath: "subjects/mathematics/functions" })
-      );
-      expect(
-        yield* fromPreviewPromise(() =>
-          readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
-        ).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "projection",
-      });
-    })
+        prerenderManifestMock.mockResolvedValueOnce(
+          pendingRoute({ publicPath: "subjects/mathematics/functions" })
+        );
+        expect(
+          yield* fromPreviewPromise(() =>
+            readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
+          ).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "projection",
+        });
+      })
   );
 
-  it.effect("rejects a missing or mismatched article preview projection", () =>
-    Effect.gen(function* () {
-      prerenderManifestMock.mockRejectedValueOnce(
-        new PreviewIntegrityError({ check: "manifest" })
-      );
-      expect(
-        yield* fromPreviewPromise(() =>
-          readArticlePreviewStaticParams(AppLocaleSchema.make("en"))
-        ).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "manifest",
-      });
+  it.effect(
+    "skips unrelated article routes and rejects invalid preview projections",
+    () =>
+      Effect.gen(function* () {
+        prerenderManifestMock.mockRejectedValueOnce(
+          new PreviewIntegrityError({ check: "manifest" })
+        );
+        expect(
+          yield* fromPreviewPromise(() =>
+            readArticlePreviewStaticParams(AppLocaleSchema.make("en"))
+          ).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "manifest",
+        });
 
-      prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
-      expect(
-        yield* fromPreviewPromise(() =>
-          readArticlePreviewStaticParams(AppLocaleSchema.make("en"))
-        ).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "projection",
-      });
-    })
+        prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
+        expect(
+          yield* fromPreviewPromise(() =>
+            readArticlePreviewStaticParams(AppLocaleSchema.make("en"))
+          )
+        ).toEqual([]);
+        prerenderManifestMock.mockResolvedValueOnce(articlePendingManifest);
+        expect(
+          yield* fromPreviewPromise(() =>
+            readArticlePreviewStaticParams(AppLocaleSchema.make("id"))
+          ).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "projection",
+        });
+      })
   );
 
-  it.effect("rejects a missing or mismatched Page preview projection", () =>
-    Effect.gen(function* () {
-      prerenderManifestMock.mockRejectedValueOnce(
-        new PreviewIntegrityError({ check: "manifest" })
-      );
-      expect(
-        yield* fromPreviewPromise(() =>
-          readPagePreviewStaticParams(AppLocaleSchema.make("en"))
-        ).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "manifest",
-      });
+  it.effect(
+    "skips unrelated Page routes and rejects invalid preview projections",
+    () =>
+      Effect.gen(function* () {
+        prerenderManifestMock.mockRejectedValueOnce(
+          new PreviewIntegrityError({ check: "manifest" })
+        );
+        expect(
+          yield* fromPreviewPromise(() =>
+            readPagePreviewStaticParams(AppLocaleSchema.make("en"))
+          ).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "manifest",
+        });
 
-      prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
-      expect(
-        yield* fromPreviewPromise(() =>
-          readPagePreviewStaticParams(AppLocaleSchema.make("en"))
-        ).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "projection",
-      });
-    })
+        prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
+        expect(
+          yield* fromPreviewPromise(() =>
+            readPagePreviewStaticParams(AppLocaleSchema.make("en"))
+          )
+        ).toEqual([]);
+        prerenderManifestMock.mockResolvedValueOnce(testPagePendingManifest);
+        expect(
+          yield* fromPreviewPromise(() =>
+            readPagePreviewStaticParams(AppLocaleSchema.make("id"))
+          ).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "projection",
+        });
+      })
   );
 
   it("does not claim an article preview route", () => {

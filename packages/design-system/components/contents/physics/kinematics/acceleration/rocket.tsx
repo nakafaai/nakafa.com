@@ -1,7 +1,10 @@
 "use client";
 
 import { useGLTF } from "@react-three/drei";
-import { ACCELERATION_ROCKET_MODEL_PATH } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
+import {
+  ACCELERATION_ROCKET_MODEL_PATH,
+  ACCELERATION_ROCKET_MOTION,
+} from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import {
   AnimatedExhaust,
   type RocketExhaust,
@@ -19,7 +22,6 @@ const SPACE_COLORS = {
   rocketFairing: getColor("ZINC", 100),
   rocketWing: getColor("SLATE", 300),
 };
-const ROCKET_MODEL_ROTATION_Y = Math.PI / 2;
 const ROCKET_NOZZLE_MESH_NAME = "nozzle_cap";
 type VectorTuple = [number, number, number];
 interface RocketAsset {
@@ -49,7 +51,7 @@ export function RocketShip({
 
 function PegasusRocketModel({ rocket }: { rocket: Group }) {
   return (
-    <group rotation={[0, ROCKET_MODEL_ROTATION_Y, 0]}>
+    <group rotation={[0, ACCELERATION_ROCKET_MOTION.modelRotationY, 0]}>
       <primitive object={rocket} />
     </group>
   );
@@ -176,8 +178,8 @@ function rotateCenteredRocketPoint(
   center: Vector3
 ): VectorTuple {
   const localPoint = point.clone().sub(center);
-  const rotationCos = Math.cos(ROCKET_MODEL_ROTATION_Y);
-  const rotationSin = Math.sin(ROCKET_MODEL_ROTATION_Y);
+  const rotationCos = Math.cos(ACCELERATION_ROCKET_MOTION.modelRotationY);
+  const rotationSin = Math.sin(ACCELERATION_ROCKET_MOTION.modelRotationY);
 
   return [
     localPoint.x * rotationCos + localPoint.z * rotationSin,

@@ -8,37 +8,39 @@ export function Graph({
   title,
   description,
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
-  // Constants for calculation
-  const Y_START = -10;
-  const Y_END = 8;
-  const STEP = 0.05;
-  const NUM_STEPS = Math.ceil((Y_END - Y_START) / STEP);
+  const startY = -6;
+  const endY = 4;
+  const step = 0.05;
+  const steps = Math.ceil((endY - startY) / step);
 
   // Parabola equation: x = a(y - k)^2 + h
   // Vertex (h, k) = (64/15, -1) -> (4.266..., -1)
   // Passes through (4, 0) and (0, 3)
   // Equation: x = -4/15 * (y + 1)^2 + 64/15
-  const points = Array.from({ length: NUM_STEPS + 1 }, (_, i) => {
-    const y = Y_START + i * STEP;
+  const points = Array.from({ length: steps + 1 }, (_, i) => {
+    const y = startY + i * step;
     // x = -4/15 * (y + 1)^2 + 64/15
     const x = (-4 / 15) * (y + 1) ** 2 + 64 / 15;
     return { x, y, z: 0 };
   });
 
   // Calculate indices for labels
-  const indexY3 = Math.round((3 - Y_START) / STEP);
-  const indexY0 = Math.round((0 - Y_START) / STEP);
-  const indexYMin5 = Math.round((-5 - Y_START) / STEP);
+  const indexY3 = Math.round((3 - startY) / step);
+  const indexY0 = Math.round((0 - startY) / step);
+  const indexYMin5 = Math.round((-5 - startY) / step);
 
   return (
     <LineEquation
-      cameraPosition={[0, 0, 15]}
+      cameraPosition={[1, -1, 14]}
+      cameraTarget={[1, -1, 0]}
       data={[
         {
           points,
           color: getColor("INDIGO"),
           lineWidth: 3,
           showPoints: false,
+          smooth: false,
+          cone: { position: "both", size: 0.5 },
           labels: [
             {
               text: <InlineMath math="3" />,
@@ -59,6 +61,7 @@ export function Graph({
         },
       ]}
       description={description}
+      showZAxis={false}
       title={title}
     />
   );

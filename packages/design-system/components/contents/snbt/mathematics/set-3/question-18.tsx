@@ -70,8 +70,8 @@ export function Graph({ title, description, labels }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[3.2, 2.8, 16]}
-      cameraTarget={[3.2, 2.8, 0]}
+      cameraPosition={[3.8, 2.7, 12]}
+      cameraTarget={[3.8, 2.7, 0]}
       data={[
         {
           points: [origin, buildingTop],
@@ -86,7 +86,7 @@ export function Graph({ title, description, labels }: GraphProps) {
             {
               text: labels.building,
               at: 1,
-              offset: [-labelOffsetX * 1.5, -labelOffsetY * 0.3, 0],
+              offset: [1.4, 0, 0],
             },
           ],
         },
@@ -98,7 +98,7 @@ export function Graph({ title, description, labels }: GraphProps) {
             {
               text: labels.helicopter,
               at: 1,
-              offset: [labelOffsetX * 0.3, labelOffsetY * 0.4, 0],
+              offset: [2.4, labelOffsetY * 0.4, 0],
             },
             {
               text: <InlineMath math="?" />,
@@ -202,6 +202,7 @@ export function Graph({ title, description, labels }: GraphProps) {
         },
       ]}
       description={description}
+      showZAxis={false}
       title={title}
     />
   );

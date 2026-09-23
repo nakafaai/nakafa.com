@@ -9,11 +9,14 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata } from "next";
+import { io } from "next/cache";
 import Link from "next/link";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { PreviewRefresh } from "@/components/dev/preview-refresh";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
+import { readPreviewManifestForPrerender } from "@/lib/content/preview/manifest";
 import { readPreviewStaticLocaleParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
@@ -126,6 +129,14 @@ export async function generateMetadata(): Promise<Metadata> {
 /** Root viewport contract shared by every localized app route. */
 export const viewport = appViewport;
 
+/** Starts revision updates after the local provider snapshot is available. */
+async function PreviewUpdates() {
+  // Local revisions follow saves and must stream from the running provider.
+  await io();
+  const preview = await readPreviewManifestForPrerender();
+  return <PreviewRefresh revision={preview.revision} status={preview.status} />;
+}
+
 /** Prebuilds active shells or the single selected local preview shell. */
 export async function generateStaticParams() {
   if (hasPreviewConfig()) {
@@ -152,7 +163,11 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
       suppressHydrationWarning
     >
       <body className="relative">
-        {hasPreviewConfig() ? <PreviewRefresh /> : null}
+        {hasPreviewConfig() ? (
+          <Suspense fallback={null}>
+            <PreviewUpdates />
+          </Suspense>
+        ) : null}
         <p className="sr-only">
           For AI agents: use <Link href="/llms.txt">/llms.txt</Link> for the
           Nakafa content index.

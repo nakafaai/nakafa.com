@@ -1,12 +1,12 @@
 import { Line, RoundedBox } from "@react-three/drei";
 import type {
-  ScenePoint,
   VectorConceptLabLabels,
   VectorConceptSceneColors,
-  VectorConceptState,
 } from "@repo/design-system/components/contents/physics/vector/concept/data";
+import type { VectorConceptState } from "@repo/design-system/components/contents/physics/vector/concept/tension";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
+import type { CoordinateTuple as ScenePoint } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 
 export function VectorConceptScene({
@@ -60,7 +60,7 @@ export function VectorConceptScene({
         anchorX="left"
         color={colors.leftVector}
         fontSize="reading"
-        position={left.labelPoint}
+        position={getCableLabelPoint(left.anchor)}
       >
         <span className="block">{labels.leftCable}</span>
         <span className="block">
@@ -71,7 +71,7 @@ export function VectorConceptScene({
         anchorX="right"
         color={colors.rightVector}
         fontSize="reading"
-        position={right.labelPoint}
+        position={getCableLabelPoint(right.anchor)}
       >
         <span className="block">{labels.rightCable}</span>
         <span className="block">
@@ -188,4 +188,12 @@ function LoadCartWheel({
       </mesh>
     </group>
   );
+}
+
+function getCableLabelPoint(anchor: ScenePoint): ScenePoint {
+  return [
+    anchor[0] - Math.sign(anchor[0]) * 0.28,
+    anchor[1] + 0.28,
+    anchor[2] + 0.34,
+  ];
 }

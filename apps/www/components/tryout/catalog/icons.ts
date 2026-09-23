@@ -28,5 +28,7 @@ export function getTryoutTrackIcon(
     return Calendar03Icon;
   }
 
-  return getMaterialIcon(trackKey);
+  return getMaterialIcon(
+    trackKey === "compulsory-mathematics" ? "mathematics" : trackKey
+  );
 }

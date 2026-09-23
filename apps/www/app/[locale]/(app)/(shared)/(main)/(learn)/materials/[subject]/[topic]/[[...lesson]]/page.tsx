@@ -28,9 +28,7 @@ export async function generateStaticParams({
 }) {
   const locale = getLocaleOrThrow(params.locale);
   if (hasPreviewConfig()) {
-    return [
-      await readMaterialPreviewStaticParams(AppLocaleSchema.make(locale)),
-    ];
+    return await readMaterialPreviewStaticParams(AppLocaleSchema.make(locale));
   }
   const route = await Effect.runPromise(
     readPublishedMaterialPrerenderRoute(locale)

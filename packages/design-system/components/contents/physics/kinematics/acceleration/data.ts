@@ -46,6 +46,15 @@ export interface AccelerationLabProps {
 export const ACCELERATION_ROCKET_MODEL_PATH =
   "/models/physics/kinematics/nasa-pegasus-xl/pegasus-xl-textureless.glb";
 
+export const ACCELERATION_ROCKET_MOTION = {
+  modelRotationY: Math.PI / 2,
+  rollAmplitude: 0.018,
+  rollFrequency: 2.4,
+  rollPerAcceleration: -0.015,
+  yawAmplitude: 0.025,
+  yawFrequency: 1.8,
+} as const;
+
 const ACCELERATION_PROFILE = {
   accelerationMagnitude: 4,
   segmentSeconds: 4,
@@ -56,11 +65,11 @@ const ACCELERATION_PROFILE = {
 export const ACCELERATION_LAB_SCENE = {
   animationSeconds: 3.2,
   cameraFov: 42,
-  cameraPosition: [-4.8, 2.6, 3.55],
-  cameraTarget: [0.95, 0.22, 0],
-  gateRadius: 0.52,
+  cameraPosition: [-2.8, 2.2, 8],
+  cameraTarget: [0, 0, 0],
+  gateRadius: 0.65,
   minSceneLength: 13.2,
-  rocketScale: 0.24,
+  rocketScale: 0.3,
   scenePadding: 6,
   worldScale: 0.18,
 } as const;
