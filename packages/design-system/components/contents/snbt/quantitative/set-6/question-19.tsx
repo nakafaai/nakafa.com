@@ -83,7 +83,7 @@ export function Graph({
           points: [{ x: -3, y: 0, z: 0 }],
           color: getColor("INDIGO"),
           showPoints: true,
-          labels: [{ text: <InlineMath math="C" />, offset: [0, -0.5, 0] }],
+          labels: [{ text: <InlineMath math="C" />, offset: [-0.65, 0.4, 0] }],
         },
         // Point D is the shared point of the line and the exponential curve.
         {
