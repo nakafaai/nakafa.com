@@ -12295,12 +12295,6 @@ export declare const internal: {
         >;
       };
       popularity: {
-        claimLearningPopularityRetention: FunctionReference<
-          "mutation",
-          "internal",
-          {},
-          { claimed: boolean; day: number }
-        >;
         expireLearningPopularityWindowPage: FunctionReference<
           "mutation",
           "internal",
@@ -12351,12 +12345,6 @@ export declare const internal: {
           "internal",
           {},
           { scheduledWindows: number }
-        >;
-        sweepLearningPopularityRetention: FunctionReference<
-          "mutation",
-          "internal",
-          { day: number },
-          { deleted: number; done: boolean; skipped: boolean }
         >;
       };
     };

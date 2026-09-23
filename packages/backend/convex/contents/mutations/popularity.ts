@@ -1,8 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
-  type ClaimLearningPopularityRetentionResult,
-  claimLearningPopularityRetentionResultValidator,
   type ExpireLearningPopularityWindowPageResult,
   expireLearningPopularityWindowPageArgs,
   expireLearningPopularityWindowPageResultValidator,
@@ -11,11 +9,8 @@ import {
   refreshLearningPopularityWindowPageResultValidator,
   type ScheduleLearningPopularityExpiriesResult,
   type ScheduleLearningPopularityRefreshesResult,
-  type SweepLearningPopularityRetentionResult,
   scheduleLearningPopularityExpiriesResultValidator,
   scheduleLearningPopularityRefreshesResultValidator,
-  sweepLearningPopularityRetentionArgs,
-  sweepLearningPopularityRetentionResultValidator,
 } from "@repo/backend/convex/contents/analytics/spec";
 import {
   expireLearningPopularityWindowPage as expireLearningPopularityWindowPageProgram,
@@ -25,7 +20,6 @@ import {
   refreshLearningPopularityWindowPage as refreshLearningPopularityWindowPageProgram,
   scheduleLearningPopularityRefreshes as scheduleLearningPopularityRefreshesProgram,
 } from "@repo/backend/convex/contents/metrics/refresh";
-import { getPopularitySignalDay } from "@repo/backend/convex/contents/popularity";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
 /** Schedules daily expiry or a full repair after any missed cycle. */
@@ -92,29 +86,4 @@ export const expireLearningPopularityWindowPage = internalMutation({
           .expireLearningPopularityWindowPage
       )
     ),
-});
-
-/**
- * Drains the retired cron without claiming unsafe deletion. ADR 0001 requires
- * raw coverage, queue progress, lifetime and rank proof; finite cycles provide
- * none of those guarantees. Retire this handler after queued jobs are cleared.
- */
-export const claimLearningPopularityRetention = internalMutation({
-  args: {},
-  returns: claimLearningPopularityRetentionResultValidator,
-  handler: (): ClaimLearningPopularityRetentionResult => ({
-    claimed: false,
-    day: getPopularitySignalDay(Date.now()),
-  }),
-});
-
-/** Drains previously scheduled pages while preserving unproven audit data. */
-export const sweepLearningPopularityRetention = internalMutation({
-  args: sweepLearningPopularityRetentionArgs,
-  returns: sweepLearningPopularityRetentionResultValidator,
-  handler: (): SweepLearningPopularityRetentionResult => ({
-    deleted: 0,
-    done: true,
-    skipped: true,
-  }),
 });

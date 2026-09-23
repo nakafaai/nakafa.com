@@ -102,26 +102,6 @@ export const expireLearningPopularityWindowPageResultValidator = v.object({
   skipped: v.boolean(),
 });
 
-export const sweepLearningPopularityRetentionArgs = {
-  day: v.number(),
-};
-
-export const sweepLearningPopularityRetentionArgsValidator = v.object(
-  sweepLearningPopularityRetentionArgs
-);
-
-export const sweepLearningPopularityRetentionResultValidator = v.object({
-  deleted: v.number(),
-  done: v.boolean(),
-  skipped: v.boolean(),
-});
-
-/** Progress contract returned by the single retention claim owner. */
-export const claimLearningPopularityRetentionResultValidator = v.object({
-  claimed: v.boolean(),
-  day: v.number(),
-});
-
 export type ScheduleContentAnalyticsPartitionArgs = Infer<
   typeof scheduleContentAnalyticsPartitionArgsValidator
 >;
@@ -164,18 +144,6 @@ export type ExpireLearningPopularityWindowPageArgs = Infer<
 
 export type ExpireLearningPopularityWindowPageResult = Infer<
   typeof expireLearningPopularityWindowPageResultValidator
->;
-
-export type SweepLearningPopularityRetentionArgs = Infer<
-  typeof sweepLearningPopularityRetentionArgsValidator
->;
-
-export type SweepLearningPopularityRetentionResult = Infer<
-  typeof sweepLearningPopularityRetentionResultValidator
->;
-
-export type ClaimLearningPopularityRetentionResult = Infer<
-  typeof claimLearningPopularityRetentionResultValidator
 >;
 
 /** Raised when a requested analytics partition is outside the configured set. */
