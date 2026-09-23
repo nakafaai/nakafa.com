@@ -26,7 +26,7 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   fullyParallel: false,
   outputDir: "../../.cache/playwright/www",
-  projects: ciProjects,
+  ...(ciProjects === undefined ? {} : { projects: ciProjects }),
   reporter: "list",
   retries: process.env.CI ? 1 : 0,
   testDir: "./e2e",
@@ -39,5 +39,5 @@ export default defineConfig({
     trace: "retain-on-failure",
     video: "retain-on-failure",
   },
-  workers: process.env.CI ? 2 : undefined,
+  ...(process.env.CI ? { workers: 2 } : {}),
 });

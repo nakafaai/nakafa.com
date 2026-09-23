@@ -20,7 +20,7 @@ import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
 export type BreadcrumbHeaderItem = Readonly<{
-  href?: string;
+  href?: string | undefined;
   label: string;
   /** BCP 47 language of the label when it differs from the page. */
   language?: string;

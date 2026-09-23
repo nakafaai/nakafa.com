@@ -167,7 +167,7 @@ const NakafaAgentContentRefFields = {
 /** Runtime schema for a canonical content reference used across agent tools. */
 export const NakafaAgentContentRefSchema = Schema.Struct({
   ...NakafaAgentContentRefFields,
-  markdown_url: Schema.optional(
+  markdown_url: Schema.optionalKey(
     NakafaAgentMarkdownUrlSchema.annotate({
       description:
         "Canonical markdown URL when this content family supports focused retrieval.",

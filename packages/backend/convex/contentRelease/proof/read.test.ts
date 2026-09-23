@@ -1,6 +1,10 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { PROOF_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
+import {
+  ARTIFACT_PROOF_PAGE_BYTES,
+  PROOF_PAGE_LIMIT,
+  PROOF_QUERY_HEADROOM,
+} from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -10,6 +14,7 @@ import {
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
+  testDeleteJson,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
@@ -17,6 +22,7 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
+import { Struct } from "effect";
 
 const proofState = internal.contentRelease.proof.read.state;
 const proofPage = internal.contentRelease.proof.read.page;
@@ -276,4 +282,178 @@ describe("contentRelease/proof/read", () => {
       data: { code: "CONTENT_RELEASE_LIMIT" },
     });
   });
+});
+
+it.each([
+  "not-ready",
+  "wrong-hash",
+  "deleted",
+  "missing",
+  "oversized",
+] as const)("rejects corrupt artifact evidence: %s", async (condition) => {
+  const t = convexTest(schema, convexModules);
+  await stageUpsertFixture(t);
+  await beginFixture(t);
+  await t.mutation(async (ctx) => {
+    const row = await ctx.db.query("contentItems").unique();
+    const artifact = await ctx.db.query("contentArtifacts").unique();
+    assert(row && artifact);
+    if (condition === "not-ready") {
+      await ctx.db.patch("contentItems", row._id, { artifactReady: false });
+    }
+    if (condition === "wrong-hash") {
+      await ctx.db.patch("contentItems", row._id, {
+        artifactHash: `sha256:${"f".repeat(64)}`,
+      });
+    }
+    if (condition === "deleted") {
+      await ctx.db.patch("contentItems", row._id, {
+        itemJson: testDeleteJson({ contentKey: row.contentKey }),
+      });
+    }
+    if (condition === "missing") {
+      await ctx.db.delete("contentArtifacts", artifact._id);
+    }
+    if (condition === "oversized") {
+      await ctx.db.patch("contentArtifacts", artifact._id, {
+        artifactJson: "x".repeat(ARTIFACT_PROOF_PAGE_BYTES),
+      });
+    }
+  });
+  await expect(
+    t.query(artifactBatch, { releaseId: TEST_RELEASE_ID, batchIndex: 0 })
+  ).rejects.toMatchObject({
+    data: {
+      code: {
+        missing: "CONTENT_RELEASE_MISSING",
+        oversized: "CONTENT_RELEASE_LIMIT",
+        "wrong-hash": "CONTENT_RELEASE_INTEGRITY",
+        deleted: "CONTENT_RELEASE_INTEGRITY",
+        "not-ready": "CONTENT_RELEASE_INTEGRITY",
+      }[condition],
+    },
+  });
+});
+
+it.each(["stray", "missing", "fractional", "overflow"] as const)(
+  "rejects inconsistent artifact directories: %s",
+  async (condition) => {
+    const t = convexTest(schema, convexModules);
+    await stageUpsertFixture(t);
+    await beginFixture(t);
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      const row = await ctx.db.query("contentItems").unique();
+      assert(release && row);
+      if (condition === "stray") {
+        await ctx.db.patch("contentReleases", release._id, {
+          stagedArtifacts: 0,
+        });
+      } else {
+        await ctx.db.patch("contentItems", row._id, {
+          artifactBatchIndex: {
+            missing: undefined,
+            fractional: 0.5,
+            overflow: 1,
+          }[condition],
+        });
+      }
+    });
+    await expect(
+      t.query(artifactPlan, {
+        releaseId: TEST_RELEASE_ID,
+        manifestHash: TEST_MANIFEST_HASH,
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  }
+);
+
+it.each(["aborting", "staging", "verified"] as const)(
+  "fences artifact and item proof readers by lifecycle: %s",
+  async (condition) => {
+    const t = convexTest(schema, convexModules);
+    await stageUpsertFixture(t);
+    await beginFixture(t);
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      assert(release);
+      await ctx.db.patch(
+        "contentReleases",
+        release._id,
+        condition === "aborting" ? { abortingAt: 1 } : { status: condition }
+      );
+    });
+    for (const batchIndex of [-1, 0.5]) {
+      await expect(
+        t.query(artifactBatch, { releaseId: TEST_RELEASE_ID, batchIndex })
+      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    }
+    const batch = t.query(artifactBatch, {
+      releaseId: TEST_RELEASE_ID,
+      batchIndex: 0,
+    });
+    const page = t.query(proofPage, {
+      releaseId: TEST_RELEASE_ID,
+      afterIndex: -1,
+    });
+    if (condition === "verified") {
+      expect((await batch).rows).toHaveLength(1);
+      expect((await page).rows).toHaveLength(1);
+    } else {
+      await expect(batch).rejects.toMatchObject({
+        data: { code: "CONTENT_RELEASE_STATE" },
+      });
+      await expect(page).rejects.toMatchObject({
+        data: { code: "CONTENT_RELEASE_STATE" },
+      });
+    }
+  }
+);
+
+it("yields item proof before the transaction query reserve is exhausted", async () => {
+  const t = convexTest({
+    schema,
+    modules: convexModules,
+    transactionLimits: { databaseQueries: PROOF_QUERY_HEADROOM + 1 },
+  });
+  await t.mutation(async (ctx) => {
+    await insertTestRelease(ctx, {
+      itemCount: 2,
+      projectionCount: 2,
+      status: "verifying",
+    });
+    await insertProofItem(ctx, 0);
+    await insertProofItem(ctx, 1);
+  });
+  const first = await t.query(proofPage, {
+    releaseId: TEST_RELEASE_ID,
+    afterIndex: -1,
+  });
+  expect(first).toMatchObject({ done: false, nextIndex: 0 });
+  expect(first.rows).toHaveLength(1);
+  const second = await t.query(proofPage, {
+    releaseId: TEST_RELEASE_ID,
+    afterIndex: first.nextIndex,
+  });
+  expect(second).toMatchObject({ done: true, nextIndex: 1 });
+});
+
+it("returns artifact rows in signed item order inside the publisher batch", async () => {
+  const t = convexTest(schema, convexModules);
+  await stageUpsertFixture(t);
+  await beginFixture(t);
+  await t.mutation(async (ctx) => {
+    const row = await ctx.db.query("contentItems").unique();
+    assert(row);
+    await ctx.db.patch("contentItems", row._id, { index: 1 });
+    await ctx.db.insert("contentItems", {
+      ...Struct.omit(row, ["_id", "_creationTime"]),
+      index: 0,
+    });
+  });
+  const batch = await t.query(artifactBatch, {
+    releaseId: TEST_RELEASE_ID,
+    batchIndex: 0,
+  });
+  expect(batch.rows.map((row) => row.index)).toEqual([0, 1]);
 });

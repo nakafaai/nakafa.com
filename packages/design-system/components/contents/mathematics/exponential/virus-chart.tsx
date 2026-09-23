@@ -130,7 +130,9 @@ export function VirusChart({ labels }: Props) {
             dataKey="exponential"
             lineProps={{
               name: "exponential",
-              strokeDasharray: VIRUS_CUES.exponential.strokeDasharray,
+              ...(VIRUS_CUES.exponential.strokeDasharray === undefined
+                ? {}
+                : { strokeDasharray: VIRUS_CUES.exponential.strokeDasharray }),
               strokeWidth: 2,
             }}
           >
@@ -141,7 +143,9 @@ export function VirusChart({ labels }: Props) {
             dataKey="linear"
             lineProps={{
               name: "linear",
-              strokeDasharray: VIRUS_CUES.linear.strokeDasharray,
+              ...(VIRUS_CUES.linear.strokeDasharray === undefined
+                ? {}
+                : { strokeDasharray: VIRUS_CUES.linear.strokeDasharray }),
               strokeWidth: 2,
             }}
           >
@@ -152,7 +156,9 @@ export function VirusChart({ labels }: Props) {
             dataKey="logarithmic"
             lineProps={{
               name: "logarithmic",
-              strokeDasharray: VIRUS_CUES.logarithmic.strokeDasharray,
+              ...(VIRUS_CUES.logarithmic.strokeDasharray === undefined
+                ? {}
+                : { strokeDasharray: VIRUS_CUES.logarithmic.strokeDasharray }),
               strokeWidth: 2,
             }}
           >

@@ -110,7 +110,9 @@ export const syncCustomerForUser: (
     [customerIdMetadataKey]: input.user._id,
   };
   const polarCustomer = yield* ensureCustomer(polarGateway, {
-    localCustomerId: input.localCustomerId ?? undefined,
+    ...(input.localCustomerId === null || input.localCustomerId === undefined
+      ? {}
+      : { localCustomerId: input.localCustomerId }),
     externalId: input.user.authId,
     email: input.user.email,
     name: input.user.name,
@@ -156,7 +158,9 @@ export const syncOptionalCustomer: (
   }
 
   return yield* syncCustomerForUser(ctx, {
-    localCustomerId: localCustomer?.id,
+    ...(localCustomer?.id === undefined
+      ? {}
+      : { localCustomerId: localCustomer?.id }),
     user,
   }).pipe(Effect.catchTag("UserNotFound", () => Effect.succeed(null)));
 });
@@ -178,7 +182,9 @@ export const requireCustomer: (
   }
 
   return yield* syncCustomerForUser(ctx, {
-    localCustomerId: localCustomer?.id,
+    ...(localCustomer?.id === undefined
+      ? {}
+      : { localCustomerId: localCustomer?.id }),
     user,
   });
 });

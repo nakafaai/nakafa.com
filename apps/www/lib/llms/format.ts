@@ -56,8 +56,8 @@ export function buildHeader({
 
 /** Returns one stable agent-facing description from authored MDX metadata. */
 export function getMdxDescription(metadata: {
-  readonly description?: string;
-  readonly subject?: string;
+  readonly description?: string | undefined;
+  readonly subject?: string | undefined;
 }) {
   return (
     metadata.description ??

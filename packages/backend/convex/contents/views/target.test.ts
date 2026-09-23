@@ -373,3 +373,22 @@ describe("contents/views/target", () => {
     });
   });
 });
+
+it("retains an article description in a signed view target", async () => {
+  const target = convexTest(schema, convexModules);
+  const projection = testArticleProjection(0);
+  await target.mutation((ctx) =>
+    insertRuntimeArticles(ctx, 1, () => ({
+      ...projection,
+      metadata: { ...projection.metadata, description: "Signed description" },
+    }))
+  );
+  expect(
+    await validateIncomingTarget(target, {
+      contentId: projection.graph.assetId,
+      locale: "en",
+      publicPath: projection.publicPath,
+      section: "articles",
+    })
+  ).toMatchObject({ description: "Signed description" });
+});

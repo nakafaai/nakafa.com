@@ -3,7 +3,7 @@ import { cn } from "cn";
 
 interface EvilBrushHandleProps {
   bind: BrushPointerBindings;
-  label?: string;
+  label?: string | undefined;
   position: string;
   side: "left" | "right";
 }

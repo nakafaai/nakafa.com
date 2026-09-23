@@ -107,7 +107,7 @@ function AiChatToolbar() {
 
     sendMessage({
       text: message.text,
-      files: message.files,
+      ...(message.files === undefined ? {} : { files: message.files }),
     });
     setText("");
   }

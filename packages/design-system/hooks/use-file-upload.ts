@@ -31,7 +31,7 @@ export interface FileMetadata {
 export interface FileWithPreview {
   file: File | FileMetadata;
   id: string;
-  preview?: string;
+  preview?: string | undefined;
 }
 
 /** Configures selection behavior; maxSize is bytes and maxFiles is for multiple mode. */

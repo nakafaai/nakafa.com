@@ -259,7 +259,7 @@ describe("contents/mutations/popularity", () => {
     expect(jobs).toHaveLength(14);
   });
 
-  it("claims the retention chain from its single owner", async () => {
+  it("refuses retention without integrity proof even after every finite cycle", async () => {
     const t = createPopularityConvexTest();
     const day = getPopularitySignalDay(NOW);
 
@@ -292,14 +292,10 @@ describe("contents/mutations/popularity", () => {
       async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
     );
 
-    expect(claimed).toEqual({ claimed: true, day });
+    expect(claimed).toEqual({ claimed: false, day });
     expect(duplicate).toEqual({ claimed: false, day });
-    expect(retention).toMatchObject({
-      day,
-      key: "popularity",
-      phase: "viewers",
-    });
-    expect(jobs.map((job) => job.args)).toEqual([[{ day }]]);
+    expect(retention).toBeNull();
+    expect(jobs).toEqual([]);
   });
 
   it("repairs finite windows from daily signals and removes expired counters", async () => {
@@ -383,3 +379,62 @@ describe("contents/mutations/popularity", () => {
     expect(after).toEqual(before);
   });
 });
+
+it.each(["viewers", "signals"] as const)(
+  "retires an already scheduled %s sweep without deleting audit data",
+  async (phase) => {
+    const t = createPopularityConvexTest();
+    const day = getPopularitySignalDay(NOW);
+    await t.mutation(async (ctx) => {
+      await insertPopularityRefreshRows(ctx);
+      await ctx.db.insert("learningPopularityRetention", {
+        day,
+        key: "popularity",
+        phase,
+      });
+      await ctx.db.insert("learningPopularityViewerSignals", {
+        ...withContentId(
+          testMaterialGraph("vector", "addition", "en", "mathematics")
+        ),
+        contextKey: "canonical",
+        contextMode: "canonical",
+        locale: "en",
+        scopeMode: "global",
+        section: "material",
+        signalDay: day - POPULARITY_DAY_MS,
+        viewedAt: day - POPULARITY_DAY_MS,
+        viewerKey: "device:retained",
+      });
+    });
+    const before = await t.query(async (ctx) => ({
+      counters: await ctx.db.query("learningPopularityCounters").collect(),
+      signals: await ctx.db.query("learningPopularitySignals").collect(),
+      viewers: await ctx.db.query("learningPopularityViewerSignals").collect(),
+      retention: await ctx.db.query("learningPopularityRetention").collect(),
+    }));
+    for (const currentDay of [day, day, day + POPULARITY_DAY_MS]) {
+      expect(
+        await t.mutation(
+          internal.contents.mutations.popularity
+            .sweepLearningPopularityRetention,
+          { day: currentDay }
+        )
+      ).toEqual({ deleted: 0, done: true, skipped: true });
+    }
+    expect(
+      await t.query(async (ctx) => ({
+        counters: await ctx.db.query("learningPopularityCounters").collect(),
+        signals: await ctx.db.query("learningPopularitySignals").collect(),
+        viewers: await ctx.db
+          .query("learningPopularityViewerSignals")
+          .collect(),
+        retention: await ctx.db.query("learningPopularityRetention").collect(),
+      }))
+    ).toEqual(before);
+    expect(
+      await t.query((ctx) =>
+        ctx.db.system.query("_scheduled_functions").collect()
+      )
+    ).toEqual([]);
+  }
+);

@@ -32,7 +32,7 @@ export function handleBackNavigation(runtime: ViewportRuntime) {
     }
 
     yield* startViewportPlacement(runtime, {
-      align: backView.kind === "post" ? "center" : undefined,
+      ...(backView.kind === "post" ? { align: "center" } : {}),
       highlightPostId: null,
       view: backView,
     });

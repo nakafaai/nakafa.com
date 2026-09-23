@@ -228,7 +228,7 @@ export const recordUniqueContentView = Effect.fn(
     learningContext.contextKey,
     {
       deviceId: args.deviceId,
-      userId,
+      ...(userId === undefined ? {} : { userId }),
     }
   );
 
@@ -241,7 +241,10 @@ export const recordUniqueContentView = Effect.fn(
 
     const popularityUserId = userId ?? existingView.userId;
 
-    yield* updateExistingView(ctx.db, existingView, { now, userId });
+    yield* updateExistingView(ctx.db, existingView, {
+      now,
+      ...(userId === undefined ? {} : { userId }),
+    });
     if (userId) {
       yield* upsertUserRecent(ctx.db, target, learningContext, {
         lastViewedAt: now,
@@ -256,7 +259,7 @@ export const recordUniqueContentView = Effect.fn(
       learningContext,
       {
         now,
-        userId: popularityUserId,
+        ...(popularityUserId === undefined ? {} : { userId: popularityUserId }),
       }
     );
 
@@ -271,7 +274,7 @@ export const recordUniqueContentView = Effect.fn(
 
   yield* insertNewView(ctx.db, target, args, learningContext, {
     now,
-    userId,
+    ...(userId === undefined ? {} : { userId }),
   });
 
   if (userId) {
@@ -288,7 +291,7 @@ export const recordUniqueContentView = Effect.fn(
     learningContext,
     {
       now,
-      userId,
+      ...(userId === undefined ? {} : { userId }),
     }
   );
 

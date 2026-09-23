@@ -3,7 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
 import { toContentViewIoError } from "@repo/backend/convex/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/convex/contents/views/target";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 /** Builds a patch that also clears stale optional context fields. */
 function toContextPatch(context: LearningContextStorage) {
@@ -46,12 +46,12 @@ export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
       conceptId: route.conceptId,
       content_id: route.content_id,
       ...context,
-      description: route.description,
+      ...Struct.pick(route, ["description"]),
       lastViewedAt: input.lastViewedAt,
       learningObjectId: route.learningObjectId,
       lensId: route.lensId,
       locale: route.locale,
-      materialDomain: route.materialDomain,
+      ...Struct.pick(route, ["materialDomain"]),
       route: route.route,
       section: route.section,
       sourcePath: route.sourcePath,
@@ -72,6 +72,8 @@ export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
         db.patch("userLearningRecents", existing._id, {
           ...row,
           ...toContextPatch(context),
+          description: route.description,
+          materialDomain: route.materialDomain,
         }),
       catch: toContentViewIoError,
     });

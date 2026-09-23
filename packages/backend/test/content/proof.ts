@@ -122,7 +122,7 @@ export async function insertProofItem(
   const contentKey = `test:head-${index}`;
   const artifactHash = `sha256:${(index + 1).toString(16).padStart(64, "0")}`;
   await ctx.db.insert("contentItems", {
-    artifactHash: operation === "upsert" ? artifactHash : undefined,
+    ...(operation === "upsert" ? { artifactHash } : {}),
     artifactReady: operation === "upsert",
     contentKey,
     index,
@@ -133,10 +133,9 @@ export async function insertProofItem(
         ? testDeleteJson({ contentKey, index })
         : testUpsertJson({ artifactHash, contentKey, index }),
     artifactLocale: "en",
-    projectionJson:
-      operation === "upsert"
-        ? testProjectionJson({ contentKey, index })
-        : undefined,
+    ...(operation === "upsert"
+      ? { projectionJson: testProjectionJson({ contentKey, index }) }
+      : {}),
     projectionReady: operation === "upsert",
     releaseId: TEST_RELEASE_ID,
     rollbackJson: testRollbackJson({ contentKey, index }),
@@ -221,7 +220,7 @@ export function testSignedArtifact(
   rendererDomain: RendererDomain = "mathematics",
   options?: {
     readonly artifactLocale?: ArtifactLocaleCode;
-    readonly compiledCode?: string;
+    readonly compiledCode?: string | undefined;
     readonly contentKey?: string;
     readonly plainText?: string;
     readonly rawMdx?: string;

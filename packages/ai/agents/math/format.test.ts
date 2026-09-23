@@ -3,6 +3,7 @@ import { formatMathData } from "@repo/ai/agents/math/format";
 import type { MathData } from "@repo/math/schema/data";
 import type { MathRequest } from "@repo/math/schema/request";
 import type { MathResult } from "@repo/math/schema/result";
+import { Struct } from "effect";
 
 const input = {
   expression: "6 * 7",
@@ -218,10 +219,9 @@ describe("math data formatter", () => {
       input,
       kind: "evaluate",
       result: {
-        ...result,
+        ...Struct.omit(result, ["secondary"]),
         conditions: [],
         items: [],
-        secondary: undefined,
         steps: [],
       },
       status: "verified",
@@ -248,8 +248,6 @@ describe("math data formatter", () => {
               expression: "x",
               latex: "x",
             },
-            relation: undefined,
-            secondary: undefined,
           },
         ],
       },

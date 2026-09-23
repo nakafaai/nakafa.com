@@ -64,8 +64,8 @@ function ChartTooltipContent({
     nameKey?: string;
     labelKey?: string;
     selected?: string | null;
-    roundness?: TooltipRoundness;
-    variant?: TooltipVariant;
+    roundness?: TooltipRoundness | undefined;
+    variant?: TooltipVariant | undefined;
   } & Omit<
     DefaultTooltipContentProps<ValueType, NameType>,
     "accessibilityLayer"

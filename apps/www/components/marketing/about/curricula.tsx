@@ -14,7 +14,11 @@ import {
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /** Renders a country flag when available and a global curriculum mark otherwise. */
-function CurriculumCountryMark({ countryCode }: { countryCode?: string }) {
+function CurriculumCountryMark({
+  countryCode,
+}: {
+  countryCode?: string | undefined;
+}) {
   return (
     <CountryFlagIcon
       className="h-auto w-6 rounded-xs ring-1 ring-foreground/10"

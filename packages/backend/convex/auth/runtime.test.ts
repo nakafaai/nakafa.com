@@ -430,3 +430,12 @@ describe("auth/runtime", () => {
     }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
 });
+
+it("accepts an explicitly configured JWKS in the Convex auth plugin", async () => {
+  vi.stubEnv("JWKS", JSON.stringify({ keys: [] }));
+  const t = createConvexTestWithBetterAuth();
+  const ids = await t.action(async (ctx) =>
+    createAuthOptions(ctx).plugins.map((plugin) => plugin.id)
+  );
+  expect(ids).toContain("convex");
+});

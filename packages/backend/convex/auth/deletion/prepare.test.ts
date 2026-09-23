@@ -315,35 +315,45 @@ describe("auth/deletion/prepare", () => {
     expect(preparations[0]?.recoveryGeneration).toBe(2);
   });
 
-  it("rejects a concurrent browser attempt without changing the reservation", async () => {
-    const t = convexTest(schema, convexModules);
+  it.each([false, true])(
+    "rejects a conflicting or finalized browser attempt: %s",
+    async (finalized) => {
+      const t = convexTest(schema, convexModules);
 
-    await t.mutation((ctx) =>
-      seedDeletionUser(ctx, "concurrent-attempt-owner")
-    );
+      await t.mutation((ctx) =>
+        seedDeletionUser(ctx, "concurrent-attempt-owner")
+      );
 
-    await t.mutation((ctx) => prepareInTest(ctx, "concurrent-attempt-owner"));
-    const initialPreparation = await t.query((ctx) =>
-      ctx.db.query("accountDeletionPreparations").unique()
-    );
-    const outcome = await t.mutation((ctx) =>
-      prepareInTest(
-        ctx,
-        "concurrent-attempt-owner",
-        "019fa44c-02be-7cd0-a4ed-61a7af8e0621"
-      )
-    );
-    const preparation = await t.query((ctx) =>
-      ctx.db.query("accountDeletionPreparations").unique()
-    );
+      await t.mutation((ctx) => prepareInTest(ctx, "concurrent-attempt-owner"));
+      const initialPreparation = await t.query((ctx) =>
+        ctx.db.query("accountDeletionPreparations").unique()
+      );
+      if (finalized && initialPreparation) {
+        await t.mutation((ctx) =>
+          ctx.db.patch("accountDeletionPreparations", initialPreparation._id, {
+            finalizedAt: NOW,
+          })
+        );
+      }
+      const outcome = await t.mutation((ctx) =>
+        prepareInTest(
+          ctx,
+          "concurrent-attempt-owner",
+          "019fa44c-02be-7cd0-a4ed-61a7af8e0621"
+        )
+      );
+      const preparation = await t.query((ctx) =>
+        ctx.db.query("accountDeletionPreparations").unique()
+      );
 
-    expect(outcome).toBe("temporarily-unavailable");
-    expect(preparation?.attemptId).toBe(ATTEMPT_ID);
-    expect(preparation?.recoveryGeneration).toBe(
-      initialPreparation?.recoveryGeneration
-    );
-    expect(preparation?.recoveryAt).toBe(initialPreparation?.recoveryAt);
-  });
+      expect(outcome).toBe("temporarily-unavailable");
+      expect(preparation?.attemptId).toBe(ATTEMPT_ID);
+      expect(preparation?.recoveryGeneration).toBe(
+        initialPreparation?.recoveryGeneration
+      );
+      expect(preparation?.recoveryAt).toBe(initialPreparation?.recoveryAt);
+    }
+  );
 
   it("prepares more owned schools than one transaction batch", async () => {
     const t = convexTest(schema, convexModules);

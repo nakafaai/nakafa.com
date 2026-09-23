@@ -52,7 +52,7 @@ function UserChatsList({
 }: {
   canDelete: boolean;
   userId: Id<"users">;
-  visibility?: "public" | "private";
+  visibility?: "public" | "private" | undefined;
 }) {
   if (canDelete) {
     return <OwnChatsList />;
@@ -78,7 +78,7 @@ function PublicChatsList({
   visibility,
 }: {
   userId: Id<"users">;
-  visibility?: "public" | "private";
+  visibility?: "public" | "private" | undefined;
 }) {
   const type = "study" as const;
   const queryArgs = visibility

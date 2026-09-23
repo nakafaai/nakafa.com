@@ -62,7 +62,7 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
     default: 0,
     description: "Zero-based result offset for pagination.",
   }),
-  queries: Schema.optional(
+  queries: Schema.optionalKey(
     Schema.Array(Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))))
       .pipe(
         Schema.mutable,
@@ -73,7 +73,7 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
           "Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Preserve exact identifiers such as names, years, labels, canonical IDs, and URLs. Use limit for requested counts. Use separate parallel search tool calls when section filters differ.",
       })
   ),
-  section: Schema.optional(
+  section: Schema.optionalKey(
     NakafaAgentSectionSchema.annotate({
       description:
         'Optional section filter. Use "material" for lessons, practice, school materials, class or grade topics, and study content. Use "articles" only when the user explicitly asks for articles, news, essays, analysis, or editorial content. Use "quran" for surah, ayah, tafsir, or Quran references. Omit this filter for broad topic discovery.',
@@ -102,7 +102,7 @@ export const NakafaAgentSearchResultSchema = Schema.Struct({
   ).annotate({
     description: "Requested page size.",
   }),
-  next_offset: Schema.optional(
+  next_offset: Schema.optionalKey(
     Schema.Finite.pipe(
       Schema.check(Schema.isInt()),
       Schema.check(Schema.isGreaterThanOrEqualTo(0))

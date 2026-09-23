@@ -18,7 +18,9 @@ describe("active search publication ownership", () => {
       searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
       searchSequence: TEST_RUNTIME_RELEASE.sequence,
     };
-    const patches: readonly Partial<Doc<"contentState">>[] = [
+    const patches: readonly {
+      [Key in keyof typeof identity]?: Doc<"contentState">[Key] | undefined;
+    }[] = [
       { searchManifestHash: undefined },
       { searchReleaseId: "previous-release" },
       { searchSequence: TEST_RUNTIME_RELEASE.sequence - 1 },

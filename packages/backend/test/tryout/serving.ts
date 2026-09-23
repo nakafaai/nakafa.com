@@ -56,7 +56,7 @@ export const makeTryoutRuntimeSource = Effect.fn(
     testSignedArtifact(placement.rendererDomain, {
       contentKey: placement.answerContentKey,
       artifactLocale: placement.answerArtifactLocale,
-      compiledCode,
+      ...(compiledCode === undefined ? {} : { compiledCode }),
     }),
   ]);
   const placements = sourcePlacements.map((placement) => {

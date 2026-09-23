@@ -19,6 +19,7 @@ import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
+import { Struct } from "effect";
 
 /**
  * Persists an assistant message and settles its credits atomically.
@@ -74,13 +75,13 @@ export const saveAssistantResponse = internalMutation({
       role: message.role,
       identifier: message.identifier,
       modelId,
-      inputTokens: message.inputTokens,
-      outputTokens: message.outputTokens,
-      totalTokens: message.totalTokens,
+      ...Struct.pick(message, ["inputTokens"]),
+      ...Struct.pick(message, ["outputTokens"]),
+      ...Struct.pick(message, ["totalTokens"]),
       credits: turn.credits,
       generationStatus: "complete",
-      ninaContextSnapshot: message.ninaContextSnapshot,
-      ninaContextTransition: message.ninaContextTransition,
+      ...Struct.pick(message, ["ninaContextSnapshot"]),
+      ...Struct.pick(message, ["ninaContextTransition"]),
     });
     const partIds = await insertParts(ctx, messageId, parts);
 

@@ -48,7 +48,9 @@ export const STROKE_WIDTH = 2;
 
 export const DEFAULT_BAR_RADIUS = 4;
 
-export type CurveType = ComponentProps<typeof RechartsLine>["type"];
+export type CurveType = NonNullable<
+  ComponentProps<typeof RechartsLine>["type"]
+>;
 
 /**
  * Direction of the custom motion.dev intro. Recharts' own animation is
@@ -236,8 +238,8 @@ export function EvilComposedChart<
         <LoadingIndicator isLoading={isLoading} />
         <RechartsComposedChart
           accessibilityLayer
-          barCategoryGap={barCategoryGap}
-          barGap={barGap}
+          {...(barCategoryGap === undefined ? {} : { barCategoryGap })}
+          {...(barGap === undefined ? {} : { barGap })}
           data={isLoading ? loadingData : displayData}
           id={chartId}
           onMouseLeave={() => setHoveredIndex(null)}
@@ -388,8 +390,8 @@ export function Tooltip({
         />
       }
       cursor={cursor}
-      defaultIndex={defaultIndex}
-      wrapperStyle={hideContent ? { visibility: "hidden" } : undefined}
+      {...(defaultIndex === undefined ? {} : { defaultIndex })}
+      {...(hideContent ? { wrapperStyle: { visibility: "hidden" } } : {})}
     />
   );
 }

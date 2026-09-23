@@ -45,7 +45,7 @@ export function createConversationTestPost({
   isUnread?: boolean;
   postId: string;
   sequence: number;
-}) {
+}): ForumPost {
   const resolvedCreatedAt = createdAt ?? Date.UTC(2026, 3, 20, 8, sequence, 0);
 
   return {
@@ -62,13 +62,11 @@ export function createConversationTestPost({
     reactionCounts: [],
     reactionUsers: [],
     replyCount: 0,
-    replyToBody: undefined,
     replyToUser: null,
-    replyToUserId: undefined,
     sequence,
     updatedAt: resolvedCreatedAt,
     user: null,
-  } satisfies ForumPost;
+  };
 }
 
 /** Creates one forum fixture aligned with the transcript test data. */

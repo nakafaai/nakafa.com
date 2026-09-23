@@ -61,11 +61,11 @@ export function PromptInput({
   const formRef = useRef<HTMLFormElement | null>(null);
   const submitFibersRef = useRef(new Set<Fiber.Fiber<void, never>>());
   const { attachments, files } = usePromptInputFiles({
-    accept,
+    ...(accept === undefined ? {} : { accept }),
     controller,
     inputRef,
     maxFiles,
-    maxFileSize,
+    ...(maxFileSize === undefined ? {} : { maxFileSize }),
     onError,
   });
   const addFiles = attachments.add;

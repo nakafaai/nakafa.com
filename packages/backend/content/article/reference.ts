@@ -29,7 +29,9 @@ export const readArticleReference = Effect.fn(
   return buildContentSearchDocument({
     ...projection.graph,
     contentHash: resolved.projectionHash,
-    description: projection.metadata.description,
+    ...(projection.metadata.description === undefined
+      ? {}
+      : { description: projection.metadata.description }),
     hasMarkdownSource: true,
     locale: input.publicLocale,
     route: projection.publicPath,

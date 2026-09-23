@@ -3,7 +3,7 @@ import { readMaterialPartition } from "@repo/backend/content/material/partition"
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 const MATERIAL_DISCOVERY_LIMIT = 100;
 /** Selects the compact fields used by RSS, sitemap, and LLMS discovery. */
@@ -14,11 +14,11 @@ function summarizeMaterial(
   const { projection } = verified;
   return {
     authors: projection.metadata.authors.map(({ name }) => ({ name })),
-    ...(projection.metadata.dateModified === undefined
-      ? {}
-      : { dateModified: projection.metadata.dateModified }),
+    ...Struct.pick(projection.metadata, ["dateModified"]),
     datePublished: projection.metadata.datePublished,
-    description: projection.metadata.description,
+    ...(projection.metadata.description === undefined
+      ? {}
+      : { description: projection.metadata.description }),
     publicPath: projection.publicPath,
     sourcePath,
     title: projection.metadata.title,

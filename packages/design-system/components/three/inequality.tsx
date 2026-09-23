@@ -46,8 +46,8 @@ export function Inequality({
     () =>
       createInequalityGeometry({
         is2D,
-        boundaryLine2D,
-        boundaryFunction,
+        ...(boundaryLine2D === undefined ? {} : { boundaryLine2D }),
+        ...(boundaryFunction === undefined ? {} : { boundaryFunction }),
         xRange,
         yRange,
         zRange,
@@ -80,8 +80,8 @@ export function Inequality({
       showBoundary
         ? sampleInequalityBoundary({
             is2D,
-            boundaryLine2D,
-            boundaryFunction,
+            ...(boundaryLine2D === undefined ? {} : { boundaryLine2D }),
+            ...(boundaryFunction === undefined ? {} : { boundaryFunction }),
             xRange,
             yRange,
             zRange,

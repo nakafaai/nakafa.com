@@ -26,7 +26,7 @@ import {
 } from "@repo/backend/convex/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
 import type { FunctionReference } from "convex/server";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Struct } from "effect";
 
 type PopularityCounter = Doc<"learningPopularityCounters">;
 
@@ -216,7 +216,7 @@ export const expireLearningPopularityWindowPage = Effect.fn(
   expirePage: ExpirePageReference
 ) {
   const cycle = yield* getPopularityCyclePage(ctx, {
-    cursor: args.cursor,
+    ...Struct.pick(args, ["cursor"]),
     day: args.day,
     mode: "expiry",
     scopeMode: args.scopeMode,

@@ -81,32 +81,32 @@ export function testRendererJson(
   });
 }
 interface ReleaseOptions {
-  readonly activeAppLocales?: readonly ActiveAppLocaleCode[];
-  readonly baseManifestHash?: null | string;
-  readonly baseReleaseId?: null | string;
-  readonly baseResultCount?: number;
-  readonly baseResultDigest?: string;
-  readonly deleteCount?: number;
-  readonly itemCount?: number;
-  readonly manifestHash?: string;
-  readonly originKind?: "git" | "rollback";
-  readonly originReleaseId?: string;
-  readonly projectionCount?: number;
-  readonly releaseId?: string;
-  readonly rendererHash?: string;
-  readonly resultCount?: number;
-  readonly resultDigest?: string;
-  readonly rollbackDigest?: string;
-  readonly routeCount?: number;
-  readonly routeDigest?: string;
-  readonly scope?: PublicationScope;
-  readonly snapshots?: ContentSnapshotSet;
-  readonly upsertCount?: number;
+  readonly activeAppLocales?: readonly ActiveAppLocaleCode[] | undefined;
+  readonly baseManifestHash?: null | string | undefined;
+  readonly baseReleaseId?: null | string | undefined;
+  readonly baseResultCount?: number | undefined;
+  readonly baseResultDigest?: string | undefined;
+  readonly deleteCount?: number | undefined;
+  readonly itemCount?: number | undefined;
+  readonly manifestHash?: string | undefined;
+  readonly originKind?: "git" | "rollback" | undefined;
+  readonly originReleaseId?: string | undefined;
+  readonly projectionCount?: number | undefined;
+  readonly releaseId?: string | undefined;
+  readonly rendererHash?: string | undefined;
+  readonly resultCount?: number | undefined;
+  readonly resultDigest?: string | undefined;
+  readonly rollbackDigest?: string | undefined;
+  readonly routeCount?: number | undefined;
+  readonly routeDigest?: string | undefined;
+  readonly scope?: PublicationScope | undefined;
+  readonly snapshots?: ContentSnapshotSet | undefined;
+  readonly upsertCount?: number | undefined;
 }
 /** Creates canonical broad test scope plus every replaced snapshot family. */
 export function testPublicationScope(options?: {
-  readonly families?: PublicationScope["families"];
-  readonly snapshots?: ContentSnapshotSet;
+  readonly families?: PublicationScope["families"] | undefined;
+  readonly snapshots?: ContentSnapshotSet | undefined;
 }) {
   const snapshots = options?.snapshots ?? inheritContentSnapshots(null);
   return PublicationScopeSchema.make({
@@ -196,11 +196,11 @@ export function testStoredReachability(releaseJson: string) {
 
 /** Creates one canonical snapshot for a previously absent head. */
 export function testRollbackJson(options?: {
-  readonly artifactLocale?: ArtifactLocaleCode;
-  readonly contentKey?: string;
-  readonly family?: ContentFamily;
-  readonly index?: number;
-  readonly releaseId?: string;
+  readonly artifactLocale?: ArtifactLocaleCode | undefined;
+  readonly contentKey?: string | undefined;
+  readonly family?: ContentFamily | undefined;
+  readonly index?: number | undefined;
+  readonly releaseId?: string | undefined;
 }) {
   const index = options?.index ?? 0;
   return JSON.stringify({
@@ -216,15 +216,15 @@ export function testRollbackJson(options?: {
 }
 /** Creates one canonical technical upsert item. */
 export function testUpsertJson(options?: {
-  readonly artifactHash?: string;
-  readonly artifactLocale?: ArtifactLocaleCode;
-  readonly contentKey?: string;
-  readonly delivery?: ContentDeliveryClass;
-  readonly family?: ContentFamily;
-  readonly index?: number;
-  readonly releaseId?: string;
-  readonly rendererDomain?: RendererDomain;
-  readonly sourcePath?: string;
+  readonly artifactHash?: string | undefined;
+  readonly artifactLocale?: ArtifactLocaleCode | undefined;
+  readonly contentKey?: string | undefined;
+  readonly delivery?: ContentDeliveryClass | undefined;
+  readonly family?: ContentFamily | undefined;
+  readonly index?: number | undefined;
+  readonly releaseId?: string | undefined;
+  readonly rendererDomain?: RendererDomain | undefined;
+  readonly sourcePath?: string | undefined;
 }) {
   const index = options?.index ?? 0;
   const artifactLocale = options?.artifactLocale ?? "en";
@@ -247,12 +247,12 @@ export function testUpsertJson(options?: {
 }
 /** Creates one canonical technical route change. */
 export function testRouteJson(options?: {
-  readonly appLocale?: ActiveAppLocaleCode;
-  readonly contentKey?: string;
-  readonly index?: number;
-  readonly operation?: "bind" | "delete";
-  readonly publicPath?: string;
-  readonly releaseId?: string;
+  readonly appLocale?: ActiveAppLocaleCode | undefined;
+  readonly contentKey?: string | undefined;
+  readonly index?: number | undefined;
+  readonly operation?: "bind" | "delete" | undefined;
+  readonly publicPath?: string | undefined;
+  readonly releaseId?: string | undefined;
 }) {
   const index = options?.index ?? 0;
   const appLocale = options?.appLocale ?? "en";
@@ -272,11 +272,11 @@ export function testRouteJson(options?: {
 }
 /** Creates one canonical technical delete item. */
 export function testDeleteJson(options?: {
-  readonly artifactLocale?: ArtifactLocaleCode;
-  readonly contentKey?: string;
-  readonly family?: ContentFamily;
-  readonly index?: number;
-  readonly releaseId?: string;
+  readonly artifactLocale?: ArtifactLocaleCode | undefined;
+  readonly contentKey?: string | undefined;
+  readonly family?: ContentFamily | undefined;
+  readonly index?: number | undefined;
+  readonly releaseId?: string | undefined;
 }) {
   return JSON.stringify({
     change: {

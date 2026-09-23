@@ -25,7 +25,7 @@ import {
   toUIMessageStream,
   type UIMessageStreamWriter,
 } from "ai";
-import { Effect, Schema } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
 const MAX_ORCHESTRATOR_STEPS = 20;
 
@@ -114,7 +114,7 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
       needsPageFetch: page.needsFetch,
       instructions,
     }),
-    repairToolCall: settings.repairToolCall,
+    ...Struct.pick(settings, ["repairToolCall"]),
     providerOptions: {
       gateway: gatewayProviderOptions,
       google: getModelProviderOptions(runtime.modelId),

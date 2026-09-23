@@ -202,7 +202,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       openAPI(),
       convex({
         authConfig,
-        jwks: process.env.JWKS,
+        ...(process.env.JWKS === undefined ? {} : { jwks: process.env.JWKS }),
         jwksRotateOnTokenGenerationError: true,
       }),
     ],

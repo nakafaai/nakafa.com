@@ -12,14 +12,14 @@ export const NINA_CONTEXT_SOURCES = [
 ] as const;
 /** Page identity Nina can trust because the app validated it before the turn. */
 export const NinaLearningContextSchema = Schema.Struct({
-  assetId: Schema.optional(Schema.String),
-  contentId: Schema.optional(Schema.String),
+  assetId: Schema.optionalKey(Schema.String),
+  contentId: Schema.optionalKey(Schema.String),
   locale: LocaleSchema,
-  materialKey: Schema.optional(Schema.String),
-  section: Schema.optional(Schema.String),
+  materialKey: Schema.optionalKey(Schema.String),
+  section: Schema.optionalKey(Schema.String),
   slug: Schema.String,
-  sourcePath: Schema.optional(Schema.String),
-  title: Schema.optional(Schema.String),
+  sourcePath: Schema.optionalKey(Schema.String),
+  title: Schema.optionalKey(Schema.String),
   url: Schema.String,
   verified: Schema.Boolean,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
@@ -42,14 +42,14 @@ export const NinaToolContextSchema = Schema.Struct({
 /** Compact context copy that can be stored on messages and replayed later. */
 export const NinaContextSnapshotSchema = Schema.Struct({
   learning: NinaLearningContextSchema,
-  placement: Schema.optional(LearningPlacementContextSchema),
+  placement: Schema.optionalKey(LearningPlacementContextSchema),
   capturedAt: Schema.String,
   source: Schema.Literals(NINA_CONTEXT_SOURCES),
   tools: NinaToolContextSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Explicit marker for messages that intentionally switch Nina context. */
 export const NinaContextTransitionSchema = Schema.Struct({
-  fromContextKey: Schema.optional(Schema.String),
+  fromContextKey: Schema.optionalKey(Schema.String),
   reason: Schema.Literals(NINA_CONTEXT_TRANSITION_REASONS),
   toContextKey: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
@@ -57,7 +57,7 @@ export const NinaContextTransitionSchema = Schema.Struct({
 export const NinaLearningSessionInputSchema = Schema.Struct({
   capturedAt: Schema.String,
   learning: NinaLearningContextSchema,
-  placement: Schema.optional(LearningPlacementContextSchema),
+  placement: Schema.optionalKey(LearningPlacementContextSchema),
   source: Schema.Literals(NINA_CONTEXT_SOURCES),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type NinaLearningContext = Schema.Schema.Type<
@@ -79,7 +79,7 @@ export type NinaLearningSessionInput = Schema.Schema.Type<
 /** Nina context pack consumed by prompts, specialists, and message metadata. */
 export const NinaContextPackSchema = Schema.Struct({
   learning: NinaLearningContextSchema,
-  placement: Schema.optional(LearningPlacementContextSchema),
+  placement: Schema.optionalKey(LearningPlacementContextSchema),
   snapshot: NinaContextSnapshotSchema,
   tools: NinaToolContextSchema,
   transition: NinaContextTransitionSchema,
@@ -142,7 +142,7 @@ export function createNinaContextSnapshot({
   return {
     capturedAt,
     learning,
-    placement,
+    ...(placement === undefined ? {} : { placement }),
     source,
     tools,
   };
@@ -159,7 +159,10 @@ export function createNinaContextTransition({
 }): NinaContextTransition {
   return {
     reason,
-    toContextKey: createNinaContextKey({ learning, placement }),
+    toContextKey: createNinaContextKey({
+      learning,
+      ...(placement === undefined ? {} : { placement }),
+    }),
   };
 }
 /** Opens one validated Nina learning session as an Effect-native program. */
@@ -180,23 +183,27 @@ export const openNinaLearningSession = Effect.fn(
   const snapshot = createNinaContextSnapshot({
     capturedAt: sessionInput.capturedAt,
     learning: sessionInput.learning,
-    placement: sessionInput.placement,
+    ...(sessionInput.placement === undefined
+      ? {}
+      : { placement: sessionInput.placement }),
     source: sessionInput.source,
     tools,
   });
   const transition = createNinaContextTransition({
     learning: sessionInput.learning,
-    placement: sessionInput.placement,
+    ...(sessionInput.placement === undefined
+      ? {}
+      : { placement: sessionInput.placement }),
     reason:
       sessionInput.source === "pinned-chat" ? "same-context" : "page-context",
   });
   return {
     context: {
       learning: sessionInput.learning,
-      placement: sessionInput.placement,
+      ...Struct.pick(sessionInput, ["placement"]),
       snapshot,
       tools,
       transition,
     },
-  };
+  } satisfies NinaLearningSession;
 });

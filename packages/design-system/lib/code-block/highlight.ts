@@ -25,9 +25,9 @@ const PRE_BACKGROUND_STYLE_PATTERN =
 /** Input contract for one Shiki code-highlighting operation. */
 export interface CodeHighlightOptions {
   readonly code: string;
-  readonly language?: string;
-  readonly preClassName?: string;
-  readonly themes?: CodeOptionsMultipleThemes["themes"];
+  readonly language?: string | undefined;
+  readonly preClassName?: string | undefined;
+  readonly themes?: CodeOptionsMultipleThemes["themes"] | undefined;
   readonly transparentBackground?: boolean;
 }
 

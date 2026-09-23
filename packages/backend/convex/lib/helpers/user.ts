@@ -1,3 +1,4 @@
+import { Struct } from "effect";
 /**
  * User data utilities.
  *
@@ -43,7 +44,7 @@ export async function getUserMap(ctx: QueryCtx, userIds: Id<"users">[]) {
         _id: user._id,
         name: user.name,
         email: user.email,
-        image: user.image,
+        ...Struct.pick(user, ["image"]),
       },
     ]);
   }

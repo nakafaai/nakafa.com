@@ -41,7 +41,7 @@ export function createChatErrorReporter({
   readonly chatId: Id<"chats">;
   readonly logContext: LogContext;
   readonly modelId: ModelId;
-  readonly userAgent?: string;
+  readonly userAgent?: string | undefined;
 }) {
   const gatewayModelId = getModelGatewayId(modelId);
 

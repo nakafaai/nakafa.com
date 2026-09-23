@@ -30,7 +30,7 @@ export function createActiveTranscriptModel({
   const rows = createConversationRows({
     forum,
     posts,
-    unreadCue,
+    ...(unreadCue === undefined ? {} : { unreadCue }),
   });
   const postIds = posts.map((post) => post._id);
   const rowIndexByPostId = new Map<Id<"schoolClassForumPosts">, number>();

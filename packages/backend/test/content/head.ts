@@ -2,11 +2,20 @@ import { MaterialHeadSchema } from "@nakafa/aksara-contracts/release/head";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
+  TEST_QUESTION_CONTENT_KEY,
+  TEST_QUESTION_PROJECTION_JSON,
+  TEST_QUESTION_SOURCE,
+} from "@repo/backend/test/content/question";
+import {
   TEST_DIGEST,
   TEST_RELEASE_ID,
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
+import {
+  insertRuntimeKey,
+  insertRuntimeVersion,
+} from "@repo/backend/test/runtime/head";
 import { Schema } from "effect";
 
 interface HeadOptions {
@@ -94,4 +103,16 @@ export function maximumTestHead(index: number) {
       "a".repeat(2048 - sourcePrefix.length - suffix.length) +
       suffix,
   });
+}
+
+/** Inserts a complete question identity with no canonical public route. */
+export async function insertQuestionHead(ctx: MutationCtx) {
+  const options = {
+    headReleaseId: TEST_RELEASE_ID,
+    headSequence: 1,
+    projectionJson: TEST_QUESTION_PROJECTION_JSON,
+    sourcePath: TEST_QUESTION_SOURCE,
+  };
+  await insertRuntimeKey(ctx, TEST_QUESTION_CONTENT_KEY, options);
+  await insertRuntimeVersion(ctx, "public", TEST_QUESTION_CONTENT_KEY, options);
 }

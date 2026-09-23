@@ -152,9 +152,7 @@ describe("onboarding/impl", () => {
 
       const status = yield* Effect.promise(() =>
         test.mutation((ctx) =>
-          runConvexProgram(
-            admitOnboarding(ctx, { _id: identity.userId, role: undefined })
-          )
+          runConvexProgram(admitOnboarding(ctx, { _id: identity.userId }))
         )
       );
       const stored = yield* Effect.promise(() =>

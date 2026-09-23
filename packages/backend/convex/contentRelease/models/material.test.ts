@@ -21,7 +21,11 @@ async function reconcile(
     do {
       const result = await t.mutation(async (ctx) => ({
         page: await runConvexProgram(
-          reconcileMaterialModel(ctx, { ...build, phase, cursor })
+          reconcileMaterialModel(ctx, {
+            ...build,
+            phase,
+            ...(cursor === undefined ? {} : { cursor }),
+          })
         ),
         metrics: await ctx.meta.getTransactionMetrics(),
       }));

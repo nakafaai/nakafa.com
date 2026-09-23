@@ -25,13 +25,15 @@ export const runAfdocs = Effect.fn("www.checks.runAfdocs")(function* () {
   const report = yield* Effect.tryPromise({
     try: () =>
       runChecks(config.url, {
-        checkIds: config.checks,
-        skipCheckIds: config.skipChecks,
+        ...(config.checks === undefined ? {} : { checkIds: config.checks }),
+        ...(config.skipChecks === undefined
+          ? {}
+          : { skipCheckIds: config.skipChecks }),
         ...config.options,
         ...(inferredSamplingStrategy && {
           samplingStrategy: inferredSamplingStrategy,
         }),
-        curatedPages: config.pages,
+        ...(config.pages === undefined ? {} : { curatedPages: config.pages }),
       }),
     catch: (cause) =>
       new AfdocsError({ cause, message: "AFDocs site checks failed to run." }),

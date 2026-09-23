@@ -24,7 +24,7 @@ const StatusSchema = Schema.Literals(["loading", "done", "error"]);
 const ContentPreviewSchema = NakafaAgentContentRefSchema.mapFields(
   (fields) => ({
     ...fields,
-    description: Schema.optional(Schema.String),
+    description: Schema.optionalKey(Schema.String),
     title: Schema.String,
   })
 ).mapFields(Struct.map(Schema.mutableKey));

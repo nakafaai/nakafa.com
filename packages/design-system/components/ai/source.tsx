@@ -68,7 +68,7 @@ export function Source({ href, children }: SourceProps) {
 
 export interface SourceTriggerProps {
   className?: string;
-  faviconUrl?: string;
+  faviconUrl?: string | undefined;
   label?: React.ReactNode;
   showFavicon?: boolean;
 }
@@ -121,8 +121,8 @@ export function SourceTrigger({
 
 export interface SourceContentProps {
   className?: string;
-  description?: string;
-  faviconUrl?: string;
+  description?: string | undefined;
+  faviconUrl?: string | undefined;
   title: string;
 }
 

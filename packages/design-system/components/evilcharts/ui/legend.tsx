@@ -41,7 +41,7 @@ function ChartLegendContent({
   selected?: string | null;
   isClickable?: boolean;
   onSelectChange?: (selected: string | null) => void;
-  variant?: ChartLegendVariant;
+  variant?: ChartLegendVariant | undefined;
 } & DefaultLegendContentProps) {
   const { config } = useChart();
 

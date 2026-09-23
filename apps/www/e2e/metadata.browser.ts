@@ -41,7 +41,10 @@ for (const [locale, href] of Object.entries(pinnedRoutes.material)) {
     await Effect.runPromise(
       withBrowserContext(
         browser,
-        { baseURL, viewport: { width: 1280, height: 900 } },
+        {
+          ...(baseURL === undefined ? {} : { baseURL }),
+          viewport: { width: 1280, height: 900 },
+        },
         (context) =>
           Effect.gen(function* () {
             const page = yield* Effect.promise(() => context.newPage());

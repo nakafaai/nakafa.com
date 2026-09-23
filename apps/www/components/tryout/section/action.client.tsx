@@ -95,7 +95,9 @@ export function TryoutSummaryAction({
     countryKey: value.set.countryKey,
     destinationHref: startDestination.href,
     destinationSectionKey: value.section.sectionKey,
-    entrySectionKey: value.startAttemptSectionKey,
+    ...(value.startAttemptSectionKey === undefined
+      ? {}
+      : { entrySectionKey: value.startAttemptSectionKey }),
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,

@@ -13,9 +13,9 @@ interface ArrayJsonSchema extends JsonSchema.JsonSchema {
 }
 
 interface ArrayMetadata {
-  readonly description?: string;
-  readonly maxItems?: number;
-  readonly minItems?: number;
+  readonly description: string | undefined;
+  readonly maxItems: number | undefined;
+  readonly minItems: number | undefined;
 }
 
 /** Narrows generated JSON Schema to object-shaped function parameters. */

@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/test/content/material";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
-import { Effect, Option } from "effect";
+import { Effect, Option, Struct } from "effect";
 
 const runtimeMocks = vi.hoisted(() => ({
   readPublishedMarkdown: vi.fn(),
@@ -32,8 +32,7 @@ const articleRef = readNakafaContentRefFixture(
 );
 const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
 const materialTopicRef: NakafaAgentContentRef = {
-  ...materialRef,
-  markdown_url: undefined,
+  ...Struct.omit(materialRef, ["markdown_url"]),
 };
 const tryoutRef: NakafaAgentContentRef = {
   ...quranRef,

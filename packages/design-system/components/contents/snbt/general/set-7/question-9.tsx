@@ -120,7 +120,9 @@ export function VisitorChart({
           <Line
             dataKey="library"
             lineProps={{
-              strokeDasharray: VISITOR_CUES.library.strokeDasharray,
+              ...(VISITOR_CUES.library.strokeDasharray === undefined
+                ? {}
+                : { strokeDasharray: VISITOR_CUES.library.strokeDasharray }),
               strokeWidth: 2,
             }}
           >
@@ -130,7 +132,9 @@ export function VisitorChart({
           <Line
             dataKey="laboratory"
             lineProps={{
-              strokeDasharray: VISITOR_CUES.laboratory.strokeDasharray,
+              ...(VISITOR_CUES.laboratory.strokeDasharray === undefined
+                ? {}
+                : { strokeDasharray: VISITOR_CUES.laboratory.strokeDasharray }),
               strokeWidth: 2,
             }}
           >

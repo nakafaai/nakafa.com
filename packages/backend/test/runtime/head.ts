@@ -30,19 +30,19 @@ import { Schema } from "effect";
 
 /** Optional identities used to shape immutable runtime head fixtures. */
 export interface RuntimeHeadOptions {
-  readonly appLocale?: AppLocale;
-  readonly artifactHash?: string;
-  readonly artifactLocale?: ArtifactLocale;
-  readonly bindingReleaseId?: string;
-  readonly bindingSequence?: number;
-  readonly compiledCode?: string;
-  readonly headReleaseId?: string;
-  readonly headSequence?: number;
-  readonly plainText?: string;
-  readonly projectionJson?: string;
-  readonly publicPath?: string;
-  readonly rendererDomain?: RendererDomain;
-  readonly sourcePath?: string;
+  readonly appLocale?: AppLocale | undefined;
+  readonly artifactHash?: string | undefined;
+  readonly artifactLocale?: ArtifactLocale | undefined;
+  readonly bindingReleaseId?: string | undefined;
+  readonly bindingSequence?: number | undefined;
+  readonly compiledCode?: string | undefined;
+  readonly headReleaseId?: string | undefined;
+  readonly headSequence?: number | undefined;
+  readonly plainText?: string | undefined;
+  readonly projectionJson?: string | undefined;
+  readonly publicPath?: string | undefined;
+  readonly rendererDomain?: RendererDomain | undefined;
+  readonly sourcePath?: string | undefined;
 }
 
 /** Builds one material projection that owns the requested runtime route. */
@@ -73,9 +73,13 @@ export async function insertRuntimeArtifact(
     artifactHash,
     artifactJson: testArtifactJson({
       artifactHash,
-      compiledCode: options?.compiledCode,
+      ...(options?.compiledCode === undefined
+        ? {}
+        : { compiledCode: options?.compiledCode }),
       contentKey,
-      plainText: options?.plainText,
+      ...(options?.plainText === undefined
+        ? {}
+        : { plainText: options?.plainText }),
       rendererDomain: options?.rendererDomain,
     }),
     createdAt: TEST_RUNTIME_NOW,
@@ -293,8 +297,12 @@ export async function insertSignedHead(
   );
   const rendererDomain = options?.rendererDomain ?? "mathematics";
   const artifact = testSignedArtifact(rendererDomain, {
-    artifactLocale: options?.artifactLocale,
-    compiledCode: options?.compiledCode,
+    ...(options?.artifactLocale === undefined
+      ? {}
+      : { artifactLocale: options?.artifactLocale }),
+    ...(options?.compiledCode === undefined
+      ? {}
+      : { compiledCode: options?.compiledCode }),
     contentKey,
   });
   await insertRuntimeHead(ctx, delivery, contentKey, {

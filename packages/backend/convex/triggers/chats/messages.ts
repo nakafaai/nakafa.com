@@ -4,6 +4,7 @@ import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/sta
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
+import { Struct } from "effect";
 
 /**
  * Captures chat product events after user and assistant messages are persisted.
@@ -36,7 +37,9 @@ export async function messagesHandler(
           name: "chat message sent",
           properties: {
             chat_type: chat.type,
-            model_id: message.modelId,
+            ...Struct.renameKeys(Struct.pick(message, ["modelId"]), {
+              modelId: "model_id",
+            }),
           },
         },
         timestamp: new Date(message._creationTime),
@@ -62,7 +65,9 @@ export async function messagesHandler(
           properties: {
             chat_type: chat.type,
             error_code: message.generationErrorCode,
-            model_id: message.modelId,
+            ...Struct.renameKeys(Struct.pick(message, ["modelId"]), {
+              modelId: "model_id",
+            }),
           },
         },
         timestamp: new Date(message._creationTime),
@@ -78,11 +83,19 @@ export async function messagesHandler(
         name: "chat response completed",
         properties: {
           chat_type: chat.type,
-          credits: message.credits,
-          input_tokens: message.inputTokens,
-          model_id: message.modelId,
-          output_tokens: message.outputTokens,
-          total_tokens: message.totalTokens,
+          ...Struct.pick(message, ["credits"]),
+          ...Struct.renameKeys(Struct.pick(message, ["inputTokens"]), {
+            inputTokens: "input_tokens",
+          }),
+          ...Struct.renameKeys(Struct.pick(message, ["modelId"]), {
+            modelId: "model_id",
+          }),
+          ...Struct.renameKeys(Struct.pick(message, ["outputTokens"]), {
+            outputTokens: "output_tokens",
+          }),
+          ...Struct.renameKeys(Struct.pick(message, ["totalTokens"]), {
+            totalTokens: "total_tokens",
+          }),
         },
       },
       timestamp: new Date(message._creationTime),

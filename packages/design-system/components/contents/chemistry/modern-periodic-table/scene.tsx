@@ -239,7 +239,7 @@ function PeriodicTile({
         <boxGeometry args={[TILE_WIDTH, height, TILE_DEPTH]} />
         <meshStandardMaterial
           color={color}
-          emissive={highlighted ? color : undefined}
+          {...(highlighted ? { emissive: color } : {})}
           emissiveIntensity={highlighted ? 0.1 : 0}
           opacity={opacity}
           roughness={0.44}

@@ -80,7 +80,7 @@ export const recordCustomerDeletionCheckpointProgram = Effect.fn(
 
   yield* tryCustomerDeletion(() =>
     ctx.db.insert("customerDeletionTombstones", {
-      cleanupUserId,
+      ...(cleanupUserId === undefined ? {} : { cleanupUserId }),
       polarCustomerId,
     })
   );

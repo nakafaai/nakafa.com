@@ -53,52 +53,59 @@ describe("customers/checkout/admission", () => {
     })
   );
 
-  it.effect("captures analytics when an active account has consent", () =>
-    Effect.gen(function* () {
-      const t = convexTest(schema, convexModules);
-      const userId = yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const insertedUserId = await ctx.db.insert("users", {
-            authId: "checkout-with-consent-auth",
-            credits: 10,
-            creditsResetAt: NOW,
-            email: "checkout-with-consent@example.com",
-            name: "Checkout With Consent",
-            plan: "free",
-          });
-          await seedAnalyticsConsent(ctx, {
-            decidedAt: NOW,
-            userId: insertedUserId,
-          });
-          return insertedUserId;
-        })
-      );
+  it.effect.each([NOW, undefined])(
+    "captures consented analytics with timestamp %s",
+    (timestamp) =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const userId = yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const insertedUserId = await ctx.db.insert("users", {
+              authId: "checkout-with-consent-auth",
+              credits: 10,
+              creditsResetAt: NOW,
+              email: "checkout-with-consent@example.com",
+              name: "Checkout With Consent",
+              plan: "free",
+            });
+            await seedAnalyticsConsent(ctx, {
+              decidedAt: NOW,
+              userId: insertedUserId,
+            });
+            return insertedUserId;
+          })
+        );
 
-      const admitted = yield* Effect.promise(() =>
-        t.mutation(internal.customers.checkout.admission.admitCheckoutSession, {
-          event: checkoutStartedEvent,
-          timestamp: NOW,
-          userId,
-        })
-      );
-      const scheduledJobs = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.system.query("_scheduled_functions").collect())
-      );
+        const admitted = yield* Effect.promise(() =>
+          t.mutation(
+            internal.customers.checkout.admission.admitCheckoutSession,
+            {
+              event: checkoutStartedEvent,
+              ...(timestamp === undefined ? {} : { timestamp }),
+              userId,
+            }
+          )
+        );
+        const scheduledJobs = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            ctx.db.system.query("_scheduled_functions").collect()
+          )
+        );
 
-      expect(admitted).toEqual({ kind: "admitted" });
-      expect(scheduledJobs).toEqual([
-        expect.objectContaining({
-          args: [
-            expect.objectContaining({
-              event: checkoutStartedEvent.name,
-              properties: JSON.stringify(checkoutStartedEvent.properties),
-              timestamp: NOW,
-            }),
-          ],
-          name: expect.stringContaining("deliverProductEvent"),
-        }),
-      ]);
-    })
+        expect(admitted).toEqual({ kind: "admitted" });
+        expect(scheduledJobs).toEqual([
+          expect.objectContaining({
+            args: [
+              expect.objectContaining({
+                event: checkoutStartedEvent.name,
+                properties: JSON.stringify(checkoutStartedEvent.properties),
+                ...(timestamp === undefined ? {} : { timestamp }),
+              }),
+            ],
+            name: expect.stringContaining("deliverProductEvent"),
+          }),
+        ]);
+      })
   );
 
   it.effect("withholds checkout while account deletion is prepared", () =>

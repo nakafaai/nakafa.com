@@ -4,7 +4,6 @@ import { updateMaterialGroupState } from "@/components/school/classes/materials/
 const group = {
   description: "Original",
   name: "Original",
-  scheduledAt: undefined,
   status: "draft" as const,
   updatedAt: 1,
 };

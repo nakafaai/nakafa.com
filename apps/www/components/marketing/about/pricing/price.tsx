@@ -16,7 +16,7 @@ export interface PriceProps {
 
 interface PricingPriceProps {
   Price: ComponentType<PriceProps>;
-  period?: string;
+  period?: string | undefined;
   plan: PricingPlan;
 }
 

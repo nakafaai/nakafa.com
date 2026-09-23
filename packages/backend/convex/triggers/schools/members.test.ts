@@ -27,7 +27,7 @@ describe("triggers/schools/members", () => {
           joinedAt: NOW,
           updatedAt: NOW,
           invitedAt: NOW,
-          invitedBy: hasActor ? users.admin.userId : undefined,
+          ...(hasActor ? { invitedBy: users.admin.userId } : {}),
         });
         const invited = await ctx.db.get("schoolMembers", id);
         assert(invited);

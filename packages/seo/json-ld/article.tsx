@@ -5,9 +5,9 @@ import type { Person } from "schema-dts";
 
 interface ArticleJsonLdProps {
   author: Person | Person[];
-  dateModified?: string;
+  dateModified?: string | undefined;
   datePublished: string;
-  description?: string;
+  description?: string | undefined;
   headline: string;
   image?: string;
   url: string;
@@ -70,7 +70,7 @@ export function ArticleJsonLd({
     datePublished,
     ...(dateModified === undefined ? {} : { dateModified }),
     author: authors,
-    image: absoluteImageUrl ? [absoluteImageUrl] : undefined,
+    ...(absoluteImageUrl ? { image: [absoluteImageUrl] } : {}),
     ...(description === undefined ? {} : { description }),
     publisher: ORGANIZATION,
   };

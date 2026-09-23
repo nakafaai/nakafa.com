@@ -147,14 +147,21 @@ export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
     }
     yield* validateBoundContent(ctx, route.releaseId, priorSequence, route);
     yield* ensureContentPath(ctx, route, sequence);
+    const contentKey =
+      route.change.operation === "bind"
+        ? route.change.contentKey
+        : prior?.contentKey;
+    if (contentKey === undefined) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Route ${route.change.appLocale}/${route.change.publicPath} lost its prior content identity.`
+      );
+    }
     const row = {
       appLocale: route.change.appLocale,
       batchHash,
       batchIndex,
-      contentKey:
-        route.change.operation === "bind"
-          ? route.change.contentKey
-          : prior?.contentKey,
+      contentKey,
       index: route.index,
       operation: route.change.operation,
       publicPath: route.change.publicPath,

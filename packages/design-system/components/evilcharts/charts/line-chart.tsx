@@ -45,7 +45,9 @@ import {
 // Constants
 export const STROKE_WIDTH = 1;
 
-export type CurveType = ComponentProps<typeof RechartsLine>["type"];
+export type CurveType = NonNullable<
+  ComponentProps<typeof RechartsLine>["type"]
+>;
 
 // Shared context
 
@@ -346,7 +348,7 @@ export function Tooltip({
       cursor={
         cursor ? { strokeDasharray: "3 3", strokeWidth: STROKE_WIDTH } : false
       }
-      defaultIndex={defaultIndex}
+      {...(defaultIndex === undefined ? {} : { defaultIndex })}
     />
   );
 }

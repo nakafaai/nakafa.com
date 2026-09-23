@@ -76,7 +76,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
             addComment({
               slug,
               text,
-              parentId: comment?._id,
+              ...(comment?._id === undefined ? {} : { parentId: comment?._id }),
             }),
           catch: (cause) => new CommentCreateError({ cause }),
         }).pipe(

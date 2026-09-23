@@ -113,7 +113,11 @@ export const readProgramContext = Effect.fn(
   return {
     context: {
       groupJson: storedGroup.rowJson,
-      mapping: match.context,
+      mapping: {
+        ...match.context,
+        materialContextParentPath: parent.publicPath,
+        materialContextPublicPath: group.publicPath,
+      },
       mappingJson: match.row.rowJson,
       parentJson: storedParent.rowJson,
       resolvedCanonicalPath: match.context.canonicalPath,

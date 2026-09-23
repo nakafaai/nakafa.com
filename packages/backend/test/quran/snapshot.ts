@@ -169,7 +169,9 @@ export async function activateQuranSnapshot(
         }),
   };
   await insertTestRelease(ctx, {
-    originReleaseId: options?.originReleaseId,
+    ...(options?.originReleaseId === undefined
+      ? {}
+      : { originReleaseId: options?.originReleaseId }),
     snapshots,
   });
   await ctx.db.insert("contentSnapshots", {

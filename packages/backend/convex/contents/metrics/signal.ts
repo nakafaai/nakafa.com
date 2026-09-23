@@ -105,9 +105,13 @@ export const applyPopularitySignal = Effect.fn(
           ...delta.ref,
           ...delta.context,
           applied: createApplied(delta),
-          description: delta.description,
+          ...(delta.description === undefined
+            ? {}
+            : { description: delta.description }),
           locale: delta.locale,
-          materialDomain: delta.materialDomain,
+          ...(delta.materialDomain === undefined
+            ? {}
+            : { materialDomain: delta.materialDomain }),
           route: delta.route,
           section: delta.section,
           scopeMode: delta.scopeMode,
@@ -127,6 +131,12 @@ export const applyPopularitySignal = Effect.fn(
       ctx.db.patch("learningPopularitySignals", currentRow._id, {
         ...delta.ref,
         ...delta.context,
+        contextMaterialKey: delta.context.contextMaterialKey,
+        contextNodeKey: delta.context.contextNodeKey,
+        contextParentPath: delta.context.contextParentPath,
+        contextProgramKey: delta.context.contextProgramKey,
+        contextPublicPath: delta.context.contextPublicPath,
+        contextSourcePath: delta.context.contextSourcePath,
         applied: mergeApplied(currentRow, delta),
         description: delta.description,
         locale: delta.locale,

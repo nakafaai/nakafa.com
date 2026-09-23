@@ -106,11 +106,17 @@ const insertCurriculumRoutes = Effect.fn(
                 appLocale: row.appLocale,
                 index: 10 + offset,
                 level: row.level,
-                contextPath: row.materialContextParentPath,
-                materialKey: row.materialKey,
+                ...(row.materialContextParentPath === undefined
+                  ? {}
+                  : { contextPath: row.materialContextParentPath }),
+                ...(row.materialKey === undefined
+                  ? {}
+                  : { materialKey: row.materialKey }),
                 nodeKey: row.nodeKey,
                 order: row.order,
-                parentPath: row.parentPath,
+                ...(row.parentPath === undefined
+                  ? {}
+                  : { parentPath: row.parentPath }),
                 programKey: row.programKey,
                 path: row.publicPath,
                 rowHash: record.rowHash,

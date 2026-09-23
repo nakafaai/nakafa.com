@@ -36,7 +36,9 @@ export function useSetPreferredCurriculumMutation(
           {
             preferredCurriculumProgramKey,
             program: {
-              countryCode: program.countryCode,
+              ...(program.countryCode === undefined
+                ? {}
+                : { countryCode: program.countryCode }),
               key: program.key,
               publicSlug: program.publicSlug,
               title: program.title,

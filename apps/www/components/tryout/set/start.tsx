@@ -43,7 +43,7 @@ export interface StartTryoutRequest {
 }
 
 interface StartTryoutButtonProps {
-  attempt?: StartAttempt;
+  attempt?: StartAttempt | undefined;
   request: StartTryoutRequest;
 }
 
@@ -133,10 +133,12 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     const program = startAttemptProgram({
       args: {
         countryKey: request.countryKey,
-        destinationSectionKey: directEntry
-          ? undefined
-          : request.destinationSectionKey,
-        entrySectionKey: request.entrySectionKey,
+        ...(directEntry
+          ? {}
+          : { destinationSectionKey: request.destinationSectionKey }),
+        ...(request.entrySectionKey === undefined
+          ? {}
+          : { entrySectionKey: request.entrySectionKey }),
         examKey: request.examKey,
         locale: request.locale,
         setKey: request.setKey,

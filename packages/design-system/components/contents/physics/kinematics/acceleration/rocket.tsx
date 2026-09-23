@@ -27,7 +27,11 @@ interface RocketAsset {
   rocket: Group;
 }
 
-export function RocketShip({ flameDirection }: { flameDirection?: -1 | 1 }) {
+export function RocketShip({
+  flameDirection,
+}: {
+  flameDirection?: -1 | 1 | undefined;
+}) {
   const { scene } = useGLTF(ACCELERATION_ROCKET_MODEL_PATH);
   const asset = useMemo(() => createRocketAsset(scene), [scene]);
 

@@ -156,7 +156,7 @@ function LabFact({
   label,
   value,
 }: {
-  indicatorColor?: string;
+  indicatorColor?: string | undefined;
   label: ReactNode;
   value: ReactNode;
 }) {

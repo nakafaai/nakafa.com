@@ -100,7 +100,10 @@ const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
     ),
     Effect.map((decoded) => ({
       ...decoded,
-      heads: decoded.heads.map((head) => ({ ...head })),
+      heads: decoded.heads.map(({ publicPath, ...head }) => ({
+        ...head,
+        ...(publicPath === undefined ? {} : { publicPath }),
+      })),
     }))
   );
 });

@@ -14,6 +14,7 @@ import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
+import { Struct } from "effect";
 
 /** Creates a new chat for the authenticated user. */
 export const createChat = mutation({
@@ -145,9 +146,9 @@ export const saveMessage = mutation({
       chatId: message.chatId,
       role: message.role,
       identifier: message.identifier,
-      modelId: message.modelId,
-      ninaContextSnapshot: message.ninaContextSnapshot,
-      ninaContextTransition: message.ninaContextTransition,
+      ...Struct.pick(message, ["modelId"]),
+      ...Struct.pick(message, ["ninaContextSnapshot"]),
+      ...Struct.pick(message, ["ninaContextTransition"]),
     });
 
     const partIds = await insertParts(ctx, messageId, parts);
@@ -192,9 +193,9 @@ export const createChatWithMessage = mutation({
       chatId,
       role: args.message.role,
       identifier: args.message.identifier,
-      modelId: args.message.modelId,
-      ninaContextSnapshot: args.message.ninaContextSnapshot,
-      ninaContextTransition: args.message.ninaContextTransition,
+      ...Struct.pick(args.message, ["modelId"]),
+      ...Struct.pick(args.message, ["ninaContextSnapshot"]),
+      ...Struct.pick(args.message, ["ninaContextTransition"]),
     });
 
     const partIds = await insertParts(ctx, messageId, args.parts);

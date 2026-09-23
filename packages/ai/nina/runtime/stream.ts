@@ -181,7 +181,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
         }
 
         const responseFailure = getNinaResponseFailure({
-          finishReason,
+          ...(finishReason === undefined ? {} : { finishReason }),
           // Optional hints may hit the work deadline after a valid main answer.
           isAborted:
             isAborted || requestSignal.aborted || cancellation.signal.aborted,

@@ -169,3 +169,25 @@ describe("readPublishedSearchDocuments", () => {
     expect(documents.map(({ route }) => route)).toEqual(expected);
   });
 });
+
+it("keeps the signed description in published search documents", async () => {
+  const t = createConvexTestWithBetterAuth();
+  await t.mutation((ctx) =>
+    insertRuntimeArticles(ctx, 1, (index) => {
+      const projection = testArticleProjection(index);
+      return {
+        ...projection,
+        metadata: { ...projection.metadata, description: "Signed summary" },
+      };
+    })
+  );
+  await t.mutation((ctx) =>
+    insertRuntimeIndex(ctx, testArticleProjection(0).contentKey, {
+      plainText: "article",
+    })
+  );
+  await activateSearch(t);
+  expect(await readArticles(t, ["article"], 10)).toMatchObject([
+    { description: "Signed summary" },
+  ]);
+});

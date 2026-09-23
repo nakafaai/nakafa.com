@@ -68,28 +68,33 @@ describe("submitForumPost", () => {
       })
     );
   });
-  it.effect("creates a text-only post without upload mutations", () =>
-    Effect.gen(function* () {
-      const mutations = makeMutations();
-      const result = yield* runSubmit({
-        files: [],
-        mutations,
-        post: {
-          body: "hello",
-          forumId,
-          parentId: undefined,
-        },
-      });
-      expect(Result.isSuccess(result)).toBe(true);
-      expect(mutations.createPost).toHaveBeenCalledWith({
-        attachmentUploadIds: undefined,
-        body: "hello",
-        forumId,
-        parentId: undefined,
-      });
-      expect(mutations.generateUploadUrl).not.toHaveBeenCalled();
-      expect(mutations.discardForumUploads).not.toHaveBeenCalled();
-    })
+  it.effect.each([undefined, postId])(
+    "creates a text-only post with parent %s without uploads",
+    (parentId) =>
+      Effect.gen(function* () {
+        const mutations = makeMutations();
+        const result = yield* runSubmit({
+          files: [],
+          mutations,
+          post: {
+            body: "hello",
+            forumId,
+            parentId,
+          },
+        });
+        expect(Result.isSuccess(result)).toBe(true);
+        expect(vi.mocked(mutations.createPost).mock.calls).toStrictEqual([
+          [
+            {
+              body: "hello",
+              forumId,
+              ...(parentId === undefined ? {} : { parentId }),
+            },
+          ],
+        ]);
+        expect(mutations.generateUploadUrl).not.toHaveBeenCalled();
+        expect(mutations.discardForumUploads).not.toHaveBeenCalled();
+      })
   );
   it.effect(
     "does not discard pending uploads when a text-only post fails",

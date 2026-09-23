@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { insertQuestionHead } from "@repo/backend/test/content/head";
 import { testMaterialPublicPath } from "@repo/backend/test/content/material";
 import {
   TEST_PROOF_RENDERER,
@@ -446,4 +447,16 @@ describe("contentRelease/proof/catalog", () => {
       },
     });
   });
+});
+
+it("includes question heads in canonical proof without public routes", async () => {
+  const { t } = await insertCatalogFixture(0);
+  await t.mutation(insertQuestionHead);
+  const page = await t.query(readCatalog, {
+    cursor: null,
+    releaseId: TEST_RELEASE_ID,
+  });
+  expect(page.heads).toHaveLength(1);
+  expect(page.heads[0]).toMatchObject({ family: "question" });
+  expect(page.heads[0]).not.toHaveProperty("publicPath");
 });

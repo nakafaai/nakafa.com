@@ -274,7 +274,7 @@ export async function insertRollbackItem(
       sourcePath: currentSourcePath,
     }),
     artifactLocale: "en",
-    priorSequence: previousExists ? 0 : undefined,
+    ...(previousExists ? { priorSequence: 0 } : {}),
     projectionBatchHash: TEST_DIGEST,
     projectionBatchIndex: 0,
     projectionJson: currentProjection,
@@ -296,7 +296,9 @@ export async function insertRollbackItem(
       releaseId: TEST_RELEASE_ID,
       rendererDomain,
       sequence: 1,
-      sourceHash: signedArtifact?.payload.sourceHash,
+      ...(signedArtifact?.payload.sourceHash === undefined
+        ? {}
+        : { sourceHash: signedArtifact?.payload.sourceHash }),
       sourcePath: currentSourcePath,
     },
     compiledCode,

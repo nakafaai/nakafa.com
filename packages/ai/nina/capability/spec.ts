@@ -34,10 +34,10 @@ export class EvidenceEnvelope extends Schema.Class<EvidenceEnvelope>(
   "EvidenceEnvelope"
 )({
   capability: LearningCapabilityNameSchema,
-  limitations: Schema.optional(
+  limitations: Schema.optionalKey(
     Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable)
   ),
-  refs: Schema.optional(Schema.Array(Schema.String).pipe(Schema.mutable)),
+  refs: Schema.optionalKey(Schema.Array(Schema.String).pipe(Schema.mutable)),
   status: EvidenceStatusSchema,
   summary: Schema.String,
 }) {}
@@ -66,7 +66,7 @@ export class CapabilityTrace extends Schema.Class<CapabilityTrace>(
   evidence: EvidenceEnvelope,
   responseMessageIdentifier: Schema.String,
   startedAt: Schema.Finite,
-  toolCallId: Schema.optional(Schema.String),
+  toolCallId: Schema.optionalKey(Schema.String),
 }) {}
 export type CapabilityTraceEncoded = Schema.Codec.Encoded<
   typeof CapabilityTrace

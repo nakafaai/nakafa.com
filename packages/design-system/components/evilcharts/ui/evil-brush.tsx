@@ -58,9 +58,9 @@ interface EvilBrushProps {
   /** Controlled end index */
   endIndex?: number;
   /** Format the handle label from the xDataKey value */
-  formatLabel?: (value: unknown, index: number) => string;
+  formatLabel?: ((value: unknown, index: number) => string) | undefined;
   /** Pixel height of the brush */
-  height?: number;
+  height?: number | undefined;
   /** Minimum number of data points that must remain selected */
   minSpan?: number;
 
@@ -81,7 +81,7 @@ interface EvilBrushProps {
   /** Visual variant of the mini chart */
   variant?: EvilBrushVariant;
   /** X-axis data key – used for handle labels */
-  xDataKey?: string;
+  xDataKey?: string | undefined;
 }
 
 /** Restricts a stored range to the indexes available in the current dataset. */
@@ -132,12 +132,12 @@ function EvilBrush({
 
   const { bind, range } = useBrushSelection({
     containerRef,
-    controlledEnd,
-    controlledStart,
-    defaultEndIndex,
+    ...(controlledEnd === undefined ? {} : { controlledEnd }),
+    ...(controlledStart === undefined ? {} : { controlledStart }),
+    ...(defaultEndIndex === undefined ? {} : { defaultEndIndex }),
     defaultStartIndex,
     minSpan,
-    onChange,
+    ...(onChange === undefined ? {} : { onChange }),
     totalPoints,
   });
   const rangeStartIndex = range.startIndex;

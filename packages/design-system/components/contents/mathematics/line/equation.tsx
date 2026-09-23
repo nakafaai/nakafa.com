@@ -52,7 +52,7 @@ export function LineEquation({
         <CardContent>
           <DeferredLineScene
             cameraPosition={cameraPosition}
-            cameraTarget={cameraTarget}
+            {...(cameraTarget === undefined ? {} : { cameraTarget })}
             lines={lines}
             showZAxis={showZAxis}
           />

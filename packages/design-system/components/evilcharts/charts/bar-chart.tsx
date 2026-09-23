@@ -252,14 +252,14 @@ export function EvilBarChart<
         <LoadingIndicator isLoading={isLoading} />
         <RechartsBarChart
           accessibilityLayer
-          barCategoryGap={barCategoryGap}
-          barGap={barGap}
+          {...(barCategoryGap === undefined ? {} : { barCategoryGap })}
+          {...(barGap === undefined ? {} : { barGap })}
           data={isLoading ? loadingData : displayData}
           id={chartId}
           layout={isHorizontal ? "vertical" : "horizontal"}
           onMouseEnter={() => setIsMouseInChart(true)}
           onMouseLeave={() => setIsMouseInChart(false)}
-          stackOffset={stackType === "percent" ? "expand" : undefined}
+          {...(stackType === "percent" ? { stackOffset: "expand" } : {})}
           {...chartProps}
         >
           {backgroundVariant && <ChartBackground variant={backgroundVariant} />}
@@ -396,7 +396,7 @@ export function Tooltip({ variant, roundness, defaultIndex }: TooltipProps) {
         />
       }
       cursor={false}
-      defaultIndex={defaultIndex}
+      {...(defaultIndex === undefined ? {} : { defaultIndex })}
     />
   );
 }

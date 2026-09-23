@@ -19,8 +19,8 @@ const MINIMUM_INITIAL_SCALE = 2 / 3;
 const MAXIMUM_INITIAL_SCALE = 4;
 
 interface CameraFraming {
-  readonly maxDistance?: number;
-  readonly minDistance?: number;
+  readonly maxDistance?: number | undefined;
+  readonly minDistance?: number | undefined;
   readonly position: readonly [number, number, number];
   readonly target: readonly [number, number, number];
 }

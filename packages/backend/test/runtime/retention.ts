@@ -16,6 +16,7 @@ import {
 } from "@repo/backend/test/content/state";
 import type { TestConvex } from "convex-test";
 import type { Schema } from "effect";
+import { Struct } from "effect";
 
 type SnapshotId = Schema.Schema.Type<typeof Sha256HashSchema>;
 
@@ -106,7 +107,7 @@ export async function seedRuntimeRetentionRow(
   return ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: "technical",
     bundleJson: "{}",
-    cleanupReleaseId: facts.cleanupReleaseId,
+    ...Struct.pick(facts, ["cleanupReleaseId"]),
     createdAt: 0,
     rendererJson: "{}",
     rendererManifestHash: facts.rendererManifestHash ?? TEST_DIGEST,

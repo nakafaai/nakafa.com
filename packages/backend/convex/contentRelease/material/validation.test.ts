@@ -63,7 +63,9 @@ describe("inactive material validation pages", () => {
             runConvexProgram(
               reconcileMaterialModel(ctx, {
                 ...stored,
-                cursor: firstCopy.cursor,
+                ...(firstCopy.cursor === undefined
+                  ? {}
+                  : { cursor: firstCopy.cursor }),
               })
             )
           )
@@ -89,7 +91,7 @@ describe("inactive material validation pages", () => {
             runConvexProgram(
               validateMaterialModel(ctx, {
                 ...stored,
-                cursor: first.cursor,
+                ...(first.cursor === undefined ? {} : { cursor: first.cursor }),
                 phase: "materialVerify",
               })
             )

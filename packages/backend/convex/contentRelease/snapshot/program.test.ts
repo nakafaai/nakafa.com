@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import {
@@ -212,3 +212,99 @@ describe("contentRelease/snapshot/program", () => {
     })
   );
 });
+
+it.live.each(["cross-table", "index", "identity", "json", "hash"] as const)(
+  "rejects changed immutable program identity: %s",
+  (condition) =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      yield* Effect.promise(async () => {
+        const program = data.rows[0];
+        assert(program?.record.kind === "program");
+        const t = convexTest(schema, convexModules);
+        const json = canonicalizeContentSnapshotRow(program);
+        await t.mutation((ctx) =>
+          runConvexProgram(
+            stageProgramRow(
+              ctx,
+              data.snapshotId,
+              0,
+              condition === "cross-table" ? findCurriculum(data) : program,
+              json
+            )
+          )
+        );
+        if (condition !== "cross-table") {
+          await t.mutation(async (ctx) => {
+            const row = await ctx.db.query("programCatalog").unique();
+            assert(row);
+            await ctx.db.patch(
+              "programCatalog",
+              row._id,
+              {
+                index: { index: 1 },
+                identity: { programKey: "different" },
+                json: { rowJson: "{}" },
+                hash: { rowHash: "changed" },
+              }[condition]
+            );
+          });
+        }
+        await expect(
+          t.mutation((ctx) =>
+            runConvexProgram(
+              stageProgramRow(ctx, data.snapshotId, 0, program, json)
+            )
+          )
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+      });
+    })
+);
+
+it.live.each(["index", "path", "node", "json", "hash", "bucket"] as const)(
+  "rejects changed immutable curriculum identity: %s",
+  (condition) =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      yield* Effect.promise(async () => {
+        const curriculum = findCurriculum(data);
+        const t = convexTest(schema, convexModules);
+        const json = canonicalizeContentSnapshotRow(curriculum);
+        await t.mutation((ctx) =>
+          runConvexProgram(
+            stageProgramRow(ctx, data.snapshotId, 0, curriculum, json)
+          )
+        );
+        expect(
+          await t.mutation((ctx) =>
+            runConvexProgram(
+              stageProgramRow(ctx, data.snapshotId, 0, curriculum, json)
+            )
+          )
+        ).toBe(true);
+        await t.mutation(async (ctx) => {
+          const row = await ctx.db.query("curriculumRoutes").unique();
+          assert(row);
+          await ctx.db.patch(
+            "curriculumRoutes",
+            row._id,
+            {
+              index: { index: 1 },
+              path: { path: "curriculum/different" },
+              node: { nodeKey: "different" },
+              json: { rowJson: "{}" },
+              hash: { rowHash: "changed" },
+              bucket: { bucket: row.bucket === "fff" ? "000" : "fff" },
+            }[condition]
+          );
+        });
+        await expect(
+          t.mutation((ctx) =>
+            runConvexProgram(
+              stageProgramRow(ctx, data.snapshotId, 0, curriculum, json)
+            )
+          )
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+      });
+    })
+);

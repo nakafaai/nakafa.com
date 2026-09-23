@@ -36,13 +36,13 @@ export interface TestIdentity {
 }
 
 interface TestReleaseEnvelope extends TestIdentity {
-  readonly activeAppLocales?: readonly ActiveAppLocaleCode[];
-  readonly base?: TestIdentity;
-  readonly originKind?: "git" | "rollback";
-  readonly originReleaseId?: string;
+  readonly activeAppLocales?: readonly ActiveAppLocaleCode[] | undefined;
+  readonly base?: TestIdentity | undefined;
+  readonly originKind?: "git" | "rollback" | undefined;
+  readonly originReleaseId?: string | undefined;
   readonly role: "candidate" | "recovery";
-  readonly scope?: PublicationScope;
-  readonly snapshots?: ContentSnapshotSet;
+  readonly scope?: PublicationScope | undefined;
+  readonly snapshots?: ContentSnapshotSet | undefined;
   readonly status: "aborted" | "completed" | "verified";
 }
 
@@ -54,16 +54,16 @@ interface TestReleaseOptions extends TestReleaseEnvelope {
 }
 
 interface TestStateOptions {
-  readonly active?: TestIdentity;
-  readonly article?: TestIdentity;
-  readonly articleSlot?: ModelSlot;
-  readonly candidate?: TestIdentity;
-  readonly material?: TestIdentity;
-  readonly materialSlot?: ModelSlot;
+  readonly active?: TestIdentity | undefined;
+  readonly article?: TestIdentity | undefined;
+  readonly articleSlot?: ModelSlot | undefined;
+  readonly candidate?: TestIdentity | undefined;
+  readonly material?: TestIdentity | undefined;
+  readonly materialSlot?: ModelSlot | undefined;
   readonly nextSequence: number;
-  readonly recovery?: TestIdentity;
-  readonly search?: TestIdentity;
-  readonly searchSlot?: ModelSlot;
+  readonly recovery?: TestIdentity | undefined;
+  readonly search?: TestIdentity | undefined;
+  readonly searchSlot?: ModelSlot | undefined;
 }
 
 /** Creates the exact zero-item signed envelope used by lifecycle tests. */

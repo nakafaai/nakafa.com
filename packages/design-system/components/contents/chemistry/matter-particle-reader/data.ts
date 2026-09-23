@@ -212,7 +212,7 @@ function molecule(
     formula,
     id,
     position,
-    scale,
+    ...(scale === undefined ? {} : { scale }),
   };
 }
 

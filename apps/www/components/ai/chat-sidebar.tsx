@@ -128,7 +128,7 @@ function AiChatSidebarHistory({ q }: { q?: string }) {
   );
 }
 
-function AiChatSidebarChats({ q }: { q?: string }) {
+function AiChatSidebarChats({ q }: { q?: string | undefined }) {
   const params = useParams<{ id: Id<"chats"> }>();
   const id = params.id;
   const searchQuery = q?.trim();

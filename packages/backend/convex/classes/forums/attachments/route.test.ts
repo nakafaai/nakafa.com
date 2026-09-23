@@ -144,7 +144,7 @@ describe("classes/forums/attachments/route", () => {
           yield* createPendingUpload();
         const response = yield* Effect.promise(() =>
           t.fetch(capabilityPath, {
-            body: bodyText,
+            ...(bodyText === undefined ? {} : { body: bodyText }),
             headers: {
               "content-type": "text/plain",
               origin: siteOrigin,

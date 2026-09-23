@@ -1,6 +1,6 @@
 import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import type { NakafaAgentReadableContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
 
 /** Builds the bounded UI preview for a full content read. */
@@ -31,7 +31,7 @@ export function previewQuran(result: NakafaAgentQuranReference) {
 }
 
 /** Builds the shared graph-backed content reference preview fields. */
-function previewContentRef<const Result extends NakafaAgentContentRef>(
+function previewContentRef<const Result extends NakafaAgentReadableContentRef>(
   result: Result
 ) {
   return {

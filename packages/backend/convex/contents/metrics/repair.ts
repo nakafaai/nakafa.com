@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/convex/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
 import { getOrThrow } from "convex-helpers/server/relationships";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 type PopularityCounter = Doc<"learningPopularityCounters">;
 type PopularitySignal = Doc<"learningPopularitySignals">;
@@ -133,30 +133,9 @@ function projectPopularityRefresh(
   score: number
 ): Refresh {
   return {
-    alignmentId: latestSignal.alignmentId,
-    assetId: latestSignal.assetId,
-    conceptId: latestSignal.conceptId,
-    contextMaterialKey:
-      latestSignal.contextMaterialKey ?? counter.contextMaterialKey,
-    contextMode: latestSignal.contextMode,
-    contextNodeKey: latestSignal.contextNodeKey ?? counter.contextNodeKey,
-    contextParentPath:
-      latestSignal.contextParentPath ?? counter.contextParentPath,
-    contextProgramKey:
-      latestSignal.contextProgramKey ?? counter.contextProgramKey,
-    contextPublicPath:
-      latestSignal.contextPublicPath ?? counter.contextPublicPath,
-    contextSourcePath:
-      latestSignal.contextSourcePath ?? counter.contextSourcePath,
-    description: latestSignal.description ?? counter.description,
+    ...Struct.pick({ ...counter, ...latestSignal }, refreshFields),
     latestDay: latestSignal.signalDay,
-    learningObjectId: latestSignal.learningObjectId,
-    lensId: latestSignal.lensId,
-    materialDomain: latestSignal.materialDomain ?? counter.materialDomain,
-    route: latestSignal.route,
     score,
-    sourcePath: latestSignal.sourcePath,
-    title: latestSignal.title,
   };
 }
 

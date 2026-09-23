@@ -141,7 +141,9 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
       value={{
         completedAction: "restart",
         activeAttempt: value.activeAttempt,
-        attempt: value.actionAttempt,
+        ...(value.actionAttempt === undefined
+          ? {}
+          : { attempt: value.actionAttempt }),
         locale: value.route.locale,
         returnHref: value.returnHref,
         section: startEntrySection,

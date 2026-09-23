@@ -5,6 +5,7 @@ import { truncateText } from "@repo/backend/convex/utils/text";
 import { cleanSlug } from "@repo/utilities/helper";
 import { ConvexError, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
+import { Struct } from "effect";
 
 /**
  * Vote action validator: -1 = downvote, 0 = remove vote, 1 = upvote
@@ -49,12 +50,14 @@ export const addComment = mutation({
       slug: cleanedSlug,
       userId: user.appUser._id,
       text: args.text,
-      parentId: args.parentId,
-      replyToUserId: parentComment?.userId,
+      ...Struct.pick(args, ["parentId"]),
+      ...(parentComment?.userId === undefined
+        ? {}
+        : { replyToUserId: parentComment?.userId }),
       // Store preview snippet (truncated, like Discord)
-      replyToText: parentComment
-        ? truncateText({ text: parentComment.text })
-        : undefined,
+      ...(parentComment
+        ? { replyToText: truncateText({ text: parentComment.text }) }
+        : {}),
       upvoteCount: 0,
       downvoteCount: 0,
       replyCount: 0,

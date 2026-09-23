@@ -33,6 +33,16 @@ describe("contents/views/impl", () => {
   it("records a first anonymous article view and schedules analytics", async () => {
     const t = createConvexTestWithBetterAuth();
     const article = await t.mutation((ctx) => insertArticle(ctx));
+    await expect(
+      t.mutation(api.contents.mutations.views.recordContentView, {
+        ...makeArticleViewArgs(article.contentId, "missing"),
+        publicPath: "articles/missing",
+      })
+    ).resolves.toEqual({
+      success: false,
+      isNewView: false,
+      alreadyViewed: false,
+    });
 
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
@@ -203,6 +213,12 @@ describe("contents/views/impl", () => {
       makeArticleViewArgs(identity.contentId, "shared-device")
     );
 
+    await expect(
+      firstSignedIn.mutation(
+        api.contents.mutations.views.recordContentView,
+        makeArticleViewArgs(identity.contentId, "shared-device")
+      )
+    ).resolves.toMatchObject({ alreadyViewed: true, isNewView: false });
     vi.setSystemTime(NOW + 1000);
 
     const result = await secondSignedIn.mutation(
@@ -249,6 +265,7 @@ describe("contents/views/impl", () => {
     expect(state.engagementQueue).toHaveLength(2);
     expect(state.viewerSignals).toHaveLength(2);
     expect(state.contentViewEvents.map(getScheduledDistinctId)).toEqual([
+      identity.firstUser.userId,
       identity.firstUser.userId,
       identity.secondUser.userId,
     ]);

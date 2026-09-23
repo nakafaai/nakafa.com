@@ -25,7 +25,7 @@ import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { insertRuntimeVersion } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 describe("immutable publication projections", () => {
   it.effect("rejects withdrawn or incomplete selected route bindings", () =>
@@ -36,13 +36,13 @@ describe("immutable publication projections", () => {
         runtime.query((ctx) =>
           runConvexProgram(
             Effect.gen(function* () {
-              for (const patch of [
-                { operation: "delete" as const },
-                { contentKey: undefined },
+              for (const binding of [
+                { ...fixture.binding, operation: "delete" as const },
+                Struct.omit(fixture.binding, ["contentKey"]),
               ]) {
                 expect(
                   yield* resolveBoundPublicProjection(
-                    { ...fixture.binding, ...patch },
+                    binding,
                     fixture.state.activeSequence
                   ).pipe(Effect.flip, Effect.orDie)
                 ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
@@ -108,20 +108,20 @@ describe("immutable publication projections", () => {
     Effect.gen(function* () {
       const fixture = makePageRuntimeSource();
       const runtime = yield* createTestPublication(fixture.source);
-      for (const patch of [
-        { compilerConfigHash: "not-a-digest" },
-        { sourcePath: "outside-corpus.mdx" },
-        { artifactHash: undefined },
+      for (const head of [
+        { ...fixture.head, compilerConfigHash: "not-a-digest" },
+        { ...fixture.head, sourcePath: "outside-corpus.mdx" },
+        Struct.omit(fixture.head, ["artifactHash"]),
       ]) {
         yield* Effect.promise(() =>
           runtime.query((ctx) =>
             runConvexProgram(
               Effect.gen(function* () {
                 expect(
-                  yield* contentHead(
-                    { ...fixture.head, ...patch },
-                    fixture.state.activeSequence
-                  ).pipe(Effect.flip, Effect.orDie)
+                  yield* contentHead(head, fixture.state.activeSequence).pipe(
+                    Effect.flip,
+                    Effect.orDie
+                  )
                 ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
               }).pipe(Effect.provide(convexPublicationLayer(ctx)))
             )
@@ -136,23 +136,22 @@ describe("immutable publication projections", () => {
     () =>
       Effect.gen(function* () {
         const fixture = makePageRuntimeSource();
-        const patches: readonly Partial<PublicationRow<"contentHeads">>[] = [
-          { projectionHash: undefined },
-          { family: "material" },
+        const heads: readonly PublicationRow<"contentHeads">[] = [
+          Struct.omit(fixture.head, ["projectionHash"]),
+          { ...fixture.head, family: "material" },
           {
+            ...fixture.head,
             projectionJson: canonicalizePublicPageProjection(
               makeTestPageProjection("id")
             ),
           },
-          { projectionHash: `sha256:${"f".repeat(64)}` },
-          { rendererDomain: undefined },
-          { sourcePath: undefined },
+          { ...fixture.head, projectionHash: `sha256:${"f".repeat(64)}` },
+          Struct.omit(fixture.head, ["rendererDomain"]),
+          Struct.omit(fixture.head, ["sourcePath"]),
         ];
-        for (const patch of patches) {
+        for (const head of heads) {
           const runtime = yield* createTestPublication(
-            new Map(fixture.source).set("contentHeads", [
-              { ...fixture.head, ...patch },
-            ])
+            new Map(fixture.source).set("contentHeads", [head])
           );
           yield* Effect.promise(() =>
             runtime.query((ctx) =>
@@ -172,7 +171,7 @@ describe("immutable publication projections", () => {
         }
         const runtime = yield* createTestPublication(
           new Map(fixture.source).set("contentHeads", [
-            { ...fixture.head, projectionJson: undefined },
+            Struct.omit(fixture.head, ["projectionJson"]),
           ])
         );
         yield* Effect.promise(() =>

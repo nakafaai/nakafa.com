@@ -22,7 +22,7 @@ import {
   NakafaAgentQuranReferenceOptionsSchema,
 } from "@repo/contents/_lib/agent/schema/quran/input";
 import { type FunctionReference, makeFunctionReference } from "convex/server";
-import { Effect, Option } from "effect";
+import { Effect, Option, Struct } from "effect";
 
 type QuranCatalogReference = FunctionReference<
   "query",
@@ -109,7 +109,9 @@ function referenceArgs(input: NakafaAgentQuranReferenceInput) {
     appLocale: input.locale,
     fromVerse: input.from_verse,
     surahNumber: input.surah,
-    toVerse: input.to_verse,
+    ...Struct.renameKeys(Struct.pick(input, ["to_verse"]), {
+      to_verse: "toVerse",
+    }),
   } satisfies QuranReferenceArgs;
 }
 

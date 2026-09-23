@@ -60,7 +60,7 @@ export function CountryFlagIcon({
   fallback = null,
 }: {
   className?: string;
-  countryCode?: string;
+  countryCode?: string | undefined;
   fallback?: ReactNode;
 }) {
   const flagSource = getFlagSource(countryCode);
