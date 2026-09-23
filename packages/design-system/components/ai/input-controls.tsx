@@ -233,8 +233,8 @@ export function PromptInputActionMenuItem({
 
 /** Props for the status-aware prompt submit control. */
 export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
-  status?: ChatStatus;
-  isPending?: boolean;
+  status?: ChatStatus | undefined;
+  isPending?: boolean | undefined;
 };
 
 type PromptInputSubmitState = "pending" | "ready" | "streaming";

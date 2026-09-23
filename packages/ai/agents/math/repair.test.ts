@@ -6,7 +6,7 @@ import {
 } from "@repo/ai/agents/math/schema";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import type { JSONSchema7, ToolCallRepairFunction, ToolSet } from "ai";
-import { generateText, InvalidToolInputError, NoSuchToolError, tool } from "ai";
+import { generateText, InvalidToolInputError, NoSuchToolError } from "ai";
 import { Effect } from "effect";
 
 const generateTextMock = vi.hoisted(() => vi.fn());
@@ -21,15 +21,15 @@ vi.mock("@repo/ai/config/app", () => ({
 }));
 
 const tools = {
-  algebra: tool({
+  algebra: {
     description: "Algebra",
     inputSchema: mathAlgebraInput,
-  }),
-  equation: tool({
+  },
+  equation: {
     description: "Equation",
     inputSchema: mathEquationInput,
-  }),
-};
+  },
+} satisfies ToolSet;
 
 const toolCall = {
   input: JSON.stringify({ operation: "simplify" }),
@@ -65,51 +65,56 @@ afterEach(() => {
 });
 
 describe("math tool repair", () => {
-  it.effect("repairs invalid math arguments from the original task", () =>
-    Effect.gen(function* () {
-      generateTextMock.mockResolvedValue({
-        output: {
-          expression: "(x^2 - 9)/(x - 3)",
-          operation: "simplify",
-        },
-      });
-
-      const repaired = yield* repairMathToolCall({
-        error: invalidInputError,
-        inputSchema,
-        messages: [],
-        modelId,
-        instructions: "instructions",
-        task: "Sederhanakan (x^2 - 9)/(x - 3)",
-        toolCall,
-        tools,
-      });
-
-      expect(repaired).toEqual({
-        ...toolCall,
-        input: JSON.stringify(
-          {
+  it.effect.each(["instructions", undefined])(
+    "repairs invalid math arguments with instructions %s",
+    (instructions) =>
+      Effect.gen(function* () {
+        generateTextMock.mockResolvedValue({
+          output: {
             expression: "(x^2 - 9)/(x - 3)",
             operation: "simplify",
           },
-          null,
-          2
-        ),
-      });
-      expect(generateTextMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: "nakafa-lite",
-          prompt: expect.stringContaining("# Original User Request"),
-          instructions: "instructions",
-        })
-      );
-      expect(inputSchema).toHaveBeenCalledWith(toolCall);
-      expect(generateTextMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          prompt: expect.not.stringContaining("student request"),
-        })
-      );
-    })
+        });
+
+        const repaired = yield* repairMathToolCall({
+          error: invalidInputError,
+          inputSchema,
+          messages: [],
+          modelId,
+          instructions,
+          task: "Sederhanakan (x^2 - 9)/(x - 3)",
+          toolCall,
+          tools,
+        });
+
+        expect(repaired).toEqual({
+          ...toolCall,
+          input: JSON.stringify(
+            {
+              expression: "(x^2 - 9)/(x - 3)",
+              operation: "simplify",
+            },
+            null,
+            2
+          ),
+        });
+        expect(generateTextMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            model: "nakafa-lite",
+            prompt: expect.stringContaining("# Original User Request"),
+            ...(instructions === undefined ? {} : { instructions }),
+          })
+        );
+        expect(generateTextMock.mock.calls[0]?.[0].instructions).toBe(
+          instructions
+        );
+        expect(inputSchema).toHaveBeenCalledWith(toolCall);
+        expect(generateTextMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            prompt: expect.not.stringContaining("student request"),
+          })
+        );
+      })
   );
 
   it.effect("keeps the failed operation when the repair model changes it", () =>

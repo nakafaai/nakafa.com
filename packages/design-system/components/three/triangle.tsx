@@ -32,7 +32,7 @@ const LABEL_OFFSET_HYPOTENUSE_Y = 3;
 
 interface Props {
   /** Angle in degrees */
-  angle?: number;
+  angle?: number | undefined;
   /** Size of the triangle (scale factor) */
   size?: number;
 }

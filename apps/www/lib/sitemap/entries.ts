@@ -64,7 +64,9 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.page")(
     for (const route of routes) {
       entries.push(
         ...getEntries(route.path, {
-          lastModified: route.lastModified,
+          ...(route.lastModified === undefined
+            ? {}
+            : { lastModified: route.lastModified }),
           locales,
         })
       );

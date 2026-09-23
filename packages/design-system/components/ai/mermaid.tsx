@@ -22,7 +22,7 @@ function getMermaidRenderErrorMessage(error: unknown) {
 interface MermaidProps {
   chart: string;
   className?: string;
-  config?: MermaidRenderConfig;
+  config?: MermaidRenderConfig | undefined;
   label: string;
 }
 /**

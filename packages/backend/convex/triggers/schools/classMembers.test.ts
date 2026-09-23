@@ -1,9 +1,11 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { schoolClassMembersHandler } from "@repo/backend/convex/triggers/schools/classMembers";
+import { createClassFixture } from "@repo/backend/test/classes";
 
 const NOW = Date.UTC(2026, 4, 29, 21, 0, 0);
 
@@ -144,4 +146,79 @@ describe("triggers/schools/classMembers", () => {
       ])
     );
   });
+});
+
+it("records role transitions with exact optional teacher metadata and tolerates removed invites", async () => {
+  const { t, users, classId, schoolId } = await createClassFixture();
+  await t.mutation(async (ctx) => {
+    const invite = await ctx.db.query("schoolClassInviteCodes").first();
+    assert(invite);
+    await ctx.db.delete("schoolClassInviteCodes", invite._id);
+    const id = await ctx.db.insert("schoolClassMembers", {
+      classId,
+      schoolId,
+      userId: users.outsider.userId,
+      role: "student",
+      updatedAt: 0,
+      inviteCodeId: invite._id,
+    });
+    const student = await ctx.db.get("schoolClassMembers", id);
+    assert(student);
+    await schoolClassMembersHandler(ctx, {
+      id,
+      operation: "insert",
+      oldDoc: null,
+      newDoc: student,
+    });
+    const teacher = {
+      ...student,
+      role: "teacher",
+      teacherRole: "assistant",
+    } as const;
+    await schoolClassMembersHandler(ctx, {
+      id,
+      operation: "update",
+      oldDoc: student,
+      newDoc: teacher,
+    });
+    await schoolClassMembersHandler(ctx, {
+      id,
+      operation: "update",
+      oldDoc: teacher,
+      newDoc: teacher,
+    });
+    await schoolClassMembersHandler(ctx, {
+      id,
+      operation: "update",
+      oldDoc: teacher,
+      newDoc: student,
+    });
+    await schoolClassMembersHandler(ctx, {
+      id,
+      operation: "delete",
+      oldDoc: { ...student, removedBy: users.admin.userId },
+      newDoc: null,
+    });
+  });
+  const state = await t.query(async (ctx) => ({
+    classroom: await ctx.db.get("schoolClasses", classId),
+    logs: await ctx.db.query("schoolActivityLogs").collect(),
+  }));
+  expect(state.classroom).toMatchObject({ studentCount: 0, teacherCount: 1 });
+  const change = state.logs.find(
+    (row) =>
+      row.metadata &&
+      "newTeacherRole" in row.metadata &&
+      row.metadata.newTeacherRole === "assistant"
+  );
+  expect(change?.metadata).toStrictEqual({
+    classId,
+    newTeacherRole: "assistant",
+  });
+  expect(state.logs).toContainEqual(
+    expect.objectContaining({
+      action: "class_member_removed",
+      userId: users.admin.userId,
+    })
+  );
 });

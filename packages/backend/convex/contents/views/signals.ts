@@ -20,7 +20,7 @@ import {
 } from "@repo/backend/convex/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/convex/contents/views/target";
 import type { FunctionReference } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 /** Generated internal mutation reference accepted by Convex's scheduler. */
 export type ScheduleContentAnalyticsPartitionReference = FunctionReference<
@@ -98,7 +98,7 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
     });
     const viewerKey = createPopularityViewerKey({
       deviceId: args.deviceId,
-      userId: input.userId,
+      ...Struct.pick(input, ["userId"]),
     });
     const existingSignal = yield* loadViewerSignal(db, scope, {
       contentId: route.content_id,
@@ -154,12 +154,12 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
           conceptId: route.conceptId,
           content_id: route.content_id,
           ...scope.context,
-          description: route.description,
+          ...Struct.pick(route, ["description"]),
           insertedAt: input.now,
           learningObjectId: route.learningObjectId,
           lensId: route.lensId,
           locale: args.locale,
-          materialDomain: route.materialDomain,
+          ...Struct.pick(route, ["materialDomain"]),
           partition,
           route: route.route,
           scopeMode: scope.scopeMode,

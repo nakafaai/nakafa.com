@@ -18,7 +18,7 @@ import {
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
-import { Effect, Result, Schema } from "effect";
+import { Effect, Result, Schema, Struct } from "effect";
 
 const productAnalyticsCaptureFailedCode = "PRODUCT_ANALYTICS_CAPTURE_FAILED";
 type ProductAnalyticsCtx = Pick<MutationCtx, "db" | "scheduler">;
@@ -99,7 +99,9 @@ export const captureProductEvent = Effect.fn(
           distinctId,
           event: event.name,
           properties: JSON.stringify(event.properties),
-          timestamp: timestamp?.getTime(),
+          ...(timestamp === undefined
+            ? {}
+            : { timestamp: timestamp.getTime() }),
         }),
     });
   },
@@ -182,8 +184,8 @@ export const deliverProductEvent = internalAction({
             disableGeoip: args.disableGeoip,
             distinctId: args.distinctId,
             event: args.event,
-            properties: args.properties,
-            timestamp: args.timestamp,
+            ...Struct.pick(args, ["properties"]),
+            ...Struct.pick(args, ["timestamp"]),
           }),
         isUserEligible: () =>
           ctx.runQuery(isProductAnalyticsUserEligibleReference, {

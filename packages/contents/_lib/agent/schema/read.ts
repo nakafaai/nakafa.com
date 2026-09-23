@@ -50,7 +50,7 @@ export const NakafaAgentMarkdownSchema =
   NakafaAgentReadableContentRefSchema.mapFields(
     (fields) => ({
       ...fields,
-      description: Schema.optional(
+      description: Schema.optionalKey(
         Schema.String.annotate({
           description:
             "Short content description when signed metadata provides one.",

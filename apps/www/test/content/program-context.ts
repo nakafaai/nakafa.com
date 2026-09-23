@@ -24,7 +24,7 @@ import {
 } from "@repo/backend/test/content/proof";
 import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
-import { Array as Arr, Effect, Stream, Struct } from "effect";
+import { Array as Arr, Effect, Stream } from "effect";
 import {
   testPublishedCurriculumRoutes,
   testPublishedProgram,
@@ -91,7 +91,12 @@ export const makeProgramContextRuntimeSource = Effect.fn(
   ]);
   const storedRoutes: PublicationRow<"curriculumRoutes">[] = curriculum.map(
     (record, index) => ({
-      ...Struct.pick(record.row, ["materialKey", "parentPath"]),
+      ...(record.row.materialKey === undefined
+        ? {}
+        : { materialKey: record.row.materialKey }),
+      ...(record.row.parentPath === undefined
+        ? {}
+        : { parentPath: record.row.parentPath }),
       ...(record.row.sitemap ? { bucket: getHashBucket(record.rowHash) } : {}),
       ...(record.row.materialContextParentPath === undefined
         ? {}

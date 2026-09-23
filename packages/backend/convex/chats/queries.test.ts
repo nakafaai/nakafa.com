@@ -328,8 +328,8 @@ it("keeps search and every optional list filter scoped to the right owner and vi
     for (const type of [undefined, "study"] as const) {
       const publicPage = await t.query(api.chats.queries.getChats, {
         userId: identity.userId,
-        q,
-        type,
+        ...(q === undefined ? {} : { q }),
+        ...(type === undefined ? {} : { type }),
         paginationOpts,
       });
       expect(publicPage.page).toEqual([
@@ -340,9 +340,9 @@ it("keeps search and every optional list filter scoped to the right owner and vi
       ]);
       for (const visibility of [undefined, "private", "public"] as const) {
         const ownPage = await owner.query(api.chats.queries.getOwnChats, {
-          q,
-          type,
-          visibility,
+          ...(q === undefined ? {} : { q }),
+          ...(type === undefined ? {} : { type }),
+          ...(visibility === undefined ? {} : { visibility }),
           paginationOpts,
         });
         expect(ownPage.page).toHaveLength(visibility ? 1 : 2);

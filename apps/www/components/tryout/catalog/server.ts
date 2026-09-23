@@ -166,7 +166,7 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
       catch: (cause) => new TryoutCatalogReadError({ cause }),
       try: () =>
         fetchQuery(api.tryouts.queries.sets.list, args, {
-          token,
+          ...(token === undefined ? {} : { token }),
           url: env.NEXT_PUBLIC_CONVEX_URL,
         }),
     });

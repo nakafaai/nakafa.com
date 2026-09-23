@@ -81,7 +81,9 @@ export async function insertProtectedRuntime(
       const questionKey = `question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-${index + 1}`;
       const question = testSignedArtifact("snbt-quant", {
         artifactLocale: appLocale,
-        compiledCode: options?.compiledCode,
+        ...(options?.compiledCode === undefined
+          ? {}
+          : { compiledCode: options?.compiledCode }),
         contentKey: `${questionKey}/question`,
         rawMdx:
           appLocale === "en"

@@ -65,7 +65,9 @@ export function CurriculumSelector({
       option.publicSlug
         ? [
             {
-              countryCode: option.countryCode,
+              ...(option.countryCode === undefined
+                ? {}
+                : { countryCode: option.countryCode }),
               key: option.programKey,
               publicSlug: option.publicSlug,
               title: option.title,

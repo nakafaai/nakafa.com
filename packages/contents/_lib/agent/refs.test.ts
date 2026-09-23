@@ -5,7 +5,7 @@ import {
   normalizeNakafaContentInput,
   parseNakafaUrlRoute,
 } from "@repo/contents/_lib/agent/refs";
-import { Option } from "effect";
+import { Option, Struct } from "effect";
 
 const graphProjection = {
   alignmentId: "alignment:catalog:article:example",
@@ -85,10 +85,9 @@ describe("Nakafa agent references", () => {
     });
     expect(
       Option.getOrUndefined(
-        createNakafaContentRefFromSummary({
-          ...summary,
-          markdown_url: undefined,
-        })
+        createNakafaContentRefFromSummary(
+          Struct.omit(summary, ["markdown_url"])
+        )
       )
     ).toStrictEqual({ ...graphProjection, url: summary.url });
     expect(

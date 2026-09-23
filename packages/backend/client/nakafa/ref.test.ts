@@ -8,7 +8,7 @@ import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { type FunctionReference, getFunctionName } from "convex/server";
-import { Effect, Option } from "effect";
+import { Effect, Option, Struct } from "effect";
 
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),
@@ -100,9 +100,8 @@ describe("resolveNakafaContentRef", () => {
     () =>
       Effect.gen(function* () {
         runtimeMocks.runtimeQuery.mockResolvedValueOnce({
-          ...articleRef,
+          ...Struct.omit(articleRef, ["markdown_url"]),
           description: "Citation-only reference.",
-          markdown_url: undefined,
           title: "Citation-only",
         });
 

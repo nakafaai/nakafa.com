@@ -30,7 +30,7 @@ export function BiologyCallouts({
   color,
   targets,
 }: {
-  callouts?: readonly BiologyLabCallout[];
+  callouts?: readonly BiologyLabCallout[] | undefined;
   color: string;
   targets: readonly BiologyCalloutTarget[];
 }) {
@@ -74,10 +74,10 @@ function BiologyCallout({
   target,
 }: {
   color: string;
-  fontSize?: ThreeFontSize | number;
+  fontSize?: ThreeFontSize | number | undefined;
   label: ReactNode;
   labelPosition: BiologyScenePoint;
-  target?: BiologyScenePoint;
+  target?: BiologyScenePoint | undefined;
 }) {
   if (!target) {
     return (

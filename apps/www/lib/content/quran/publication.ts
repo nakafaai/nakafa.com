@@ -53,7 +53,7 @@ export const readPublishedQuranMarkdown = Effect.fn(
   return yield* decodePublishedQuranMarkdown(result, {
     appLocale,
     surahNumber,
-    verseLimit,
+    ...(verseLimit === undefined ? {} : { verseLimit }),
   });
 });
 

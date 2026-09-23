@@ -16,7 +16,10 @@ export function compressMessages(messages: MyUIMessage[], tokenLimit?: number) {
 
   let retainedMessages = [...messages];
   const content = getMessagesText(retainedMessages);
-  const tokenCheck = isWithinLimit({ content, limit: tokenLimit });
+  const tokenCheck = isWithinLimit({
+    content,
+    ...(tokenLimit === undefined ? {} : { limit: tokenLimit }),
+  });
 
   if (tokenCheck !== false) {
     return {
@@ -40,7 +43,7 @@ export function compressMessages(messages: MyUIMessage[], tokenLimit?: number) {
     const testContent = getMessagesText(testMessages);
     const testTokenCheck = isWithinLimit({
       content: testContent,
-      limit: tokenLimit,
+      ...(tokenLimit === undefined ? {} : { limit: tokenLimit }),
     });
 
     if (testTokenCheck !== false) {
@@ -101,7 +104,7 @@ function getPartText(part: UIMessagePart<UIDataTypes, MyUITools>) {
 function formatTokenInfo(messageContent: string, tokenLimit?: number) {
   const tokenResult = isWithinLimit({
     content: messageContent,
-    limit: tokenLimit,
+    ...(tokenLimit === undefined ? {} : { limit: tokenLimit }),
   });
 
   if (tokenResult !== false) {

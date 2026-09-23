@@ -5,7 +5,7 @@ export const MODEL_BUILD_PAGE_ROWS = 32;
 export const MODEL_BUILD_PAGE_BYTES = 512 * 1024;
 
 export interface ModelBuildPage {
-  readonly cursor?: string;
+  readonly cursor?: string | undefined;
   readonly done: boolean;
   readonly itemIndex?: number;
   readonly processed: number;

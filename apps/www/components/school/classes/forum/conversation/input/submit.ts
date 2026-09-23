@@ -240,11 +240,10 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
   yield* Effect.tryPromise({
     try: () =>
       mutations.createPost({
-        attachmentUploadIds:
-          attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
+        ...(attachmentUploadIds.length > 0 ? { attachmentUploadIds } : {}),
         forumId: post.forumId,
         body: post.body,
-        parentId: post.parentId,
+        ...(post.parentId === undefined ? {} : { parentId: post.parentId }),
       }),
     catch: (cause) =>
       new ForumPostCreateError({

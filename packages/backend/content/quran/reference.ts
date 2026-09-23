@@ -21,7 +21,7 @@ import {
   quranTafsirAccessValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import { v } from "convex/values";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 const quranPassageFields = {
   ...quranSourceFields,
@@ -126,7 +126,7 @@ export const readQuranPassage = Effect.fn("contentRelease.readQuranPassage")(
       expectedSnapshotId: null,
       fromVerse: request.fromVerse,
       surahNumber: request.surahNumber,
-      toVerse: request.toVerse,
+      ...Struct.pick(request, ["toVerse"]),
     });
     if (loaded.passage === null || loaded.owner.snapshotId === null) {
       return {

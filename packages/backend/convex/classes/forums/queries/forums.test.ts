@@ -54,7 +54,7 @@ async function insertForum(
     nextPostSequence: postCount + 1,
     reactionCounts: [],
     lastPostAt,
-    lastPostBy,
+    ...(lastPostBy === undefined ? {} : { lastPostBy }),
     createdBy,
     updatedAt: lastPostAt,
   });

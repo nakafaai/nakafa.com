@@ -44,13 +44,13 @@ type CustomBarProps = {
   variant: BarVariant; // fill style of the bar
   barRadius: number; // corner radius of the bar
   colorSlots: number; // number of theme colors declared for this series
-  filter?: string; // optional glow filter reference
+  filter?: string | undefined; // optional glow filter reference
   isClickable: boolean; // whether the bar is selectable by click
   enableHoverHighlight: boolean; // whether hovering a column dims the others
   animationType?: ComposedAnimationType; // grow-in order for this bar
   dataLength?: number; // total bars in the series, drives the stagger
   isRevealActive?: boolean; // whether the owning bar series is in its intro window
-  onClick?: () => void; // fired when a clickable bar is clicked
+  onClick?: (() => void) | undefined; // fired when a clickable bar is clicked
 } & BarShapeProps;
 
 // Renders a single bar rectangle with its variant fill, glow, and hit area

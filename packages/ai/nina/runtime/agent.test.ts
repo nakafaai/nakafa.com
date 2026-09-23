@@ -44,14 +44,14 @@ interface CapturedMessageStreamOptions {
   readonly onError?: (error: unknown) => string;
 }
 interface FakeAgentState {
-  deltaMetadata?: MyMetadata;
-  finishMetadata?: MyMetadata;
-  responseFailure?: Error;
-  settings?: CapturedAgentSettings;
-  startMetadata?: MyMetadata;
-  streamErrorMessage?: string;
-  streamFailure?: Error;
-  streamOptions?: CapturedStreamOptions;
+  deltaMetadata?: MyMetadata | undefined;
+  finishMetadata?: MyMetadata | undefined;
+  responseFailure?: Error | undefined;
+  settings?: CapturedAgentSettings | undefined;
+  startMetadata?: MyMetadata | undefined;
+  streamErrorMessage?: string | undefined;
+  streamFailure?: Error | undefined;
+  streamOptions?: CapturedStreamOptions | undefined;
 }
 const fakeAgentState = vi.hoisted((): FakeAgentState => ({}));
 const toolLoopAgentMock = vi.hoisted(() => vi.fn());
@@ -73,7 +73,6 @@ function createUsage(): LanguageModelUsage {
       textTokens: 6,
     },
     outputTokens: 6,
-    raw: undefined,
     totalTokens: 10,
   };
 }

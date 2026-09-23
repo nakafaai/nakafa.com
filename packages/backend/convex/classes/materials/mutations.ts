@@ -67,10 +67,12 @@ export const createMaterialGroup = mutation({
       description: args.description,
       order,
       status: args.status,
-      scheduledAt: isScheduled ? args.scheduledAt : undefined,
+      ...(isScheduled && args.scheduledAt !== undefined
+        ? { scheduledAt: args.scheduledAt }
+        : {}),
       // Set publishedAt/publishedBy immediately when creating as "published"
-      publishedAt: isPublished ? now : undefined,
-      publishedBy: isPublished ? userId : undefined,
+      ...(isPublished ? { publishedAt: now } : {}),
+      ...(isPublished ? { publishedBy: userId } : {}),
       materialCount: 0,
       childGroupCount: 0,
       createdBy: userId,

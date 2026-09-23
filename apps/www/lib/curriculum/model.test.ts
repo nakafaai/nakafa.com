@@ -1,3 +1,4 @@
+import { Struct } from "effect";
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
@@ -124,6 +125,28 @@ describe("signed curriculum runtime", () => {
         value: "curriculum/merdeka",
       },
     ]);
+  });
+
+  it("omits the country for a global curriculum provider", async () => {
+    catalogMock.mockResolvedValueOnce({
+      entries: [
+        {
+          program: {
+            ...testPublishedProgram,
+            provider: Struct.omit(testPublishedProgram.provider, [
+              "homeCountry",
+            ]),
+          },
+          route: testProgramRoot,
+          translation: testPublishedProgram.translations[0],
+        },
+      ],
+      sourceRevision: revision,
+    });
+    const catalog = await readRuntimeCurriculumCatalog("en");
+    expect(readRuntimeCurriculumOptions(catalog, "en")[0]).not.toHaveProperty(
+      "countryCode"
+    );
   });
 
   it("builds route presentation from signed ancestors", async () => {

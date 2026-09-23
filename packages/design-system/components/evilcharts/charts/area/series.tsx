@@ -146,9 +146,9 @@ export function Area({
           // Clicking the selected area clears the selection, otherwise selects it
           selectDataKey(isSelected ? null : dataKey);
         }}
-        stackId={isStacked ? STACK_ID : undefined}
+        {...(isStacked ? { stackId: STACK_ID } : {})}
         stroke={getChartSeriesPaint(id, "colors", dataKey, colorsCount)}
-        strokeDasharray={isDashed ? "3 3" : undefined}
+        {...(isDashed ? { strokeDasharray: "3 3" } : {})}
         strokeOpacity={opacity.stroke}
         strokeWidth={STROKE_WIDTH}
         style={{

@@ -75,13 +75,7 @@ const ninaContextTransition = {
   toContextKey: "canonical:materi/matematika/integral/jumlahan-riemann",
 } satisfies NinaContextTransition;
 
-/** Adds the required Nina context fields for chat persistence tests. */
-function withNinaContext() {
-  return {
-    ninaContextSnapshot,
-    ninaContextTransition,
-  };
-}
+const ninaContext = { ninaContextSnapshot, ninaContextTransition };
 
 /** Returns one typed chat ID through the public persistence path. */
 const savedChatId = Effect.fn("ChatPersistenceTest.savedChatId")(function* () {
@@ -90,7 +84,7 @@ const savedChatId = Effect.fn("ChatPersistenceTest.savedChatId")(function* () {
   const chatId = yield* createChatWithMessage({
     message,
     modelId,
-    ...withNinaContext(),
+    ...ninaContext,
     token: "session-token",
   });
 
@@ -120,7 +114,7 @@ describe("app/api/chat/persistence", () => {
         const chatId = yield* createChatWithMessage({
           message,
           modelId,
-          ...withNinaContext(),
+          ...ninaContext,
           token: "session-token",
         });
 
@@ -153,7 +147,7 @@ describe("app/api/chat/persistence", () => {
         const error = yield* createChatWithMessage({
           message,
           modelId,
-          ...withNinaContext(),
+          ...ninaContext,
           token: "session-token",
         }).pipe(Effect.flip);
 
@@ -176,11 +170,13 @@ describe("app/api/chat/persistence", () => {
           chatId,
           message,
           modelId,
-          ...withNinaContext(),
+          ...ninaContext,
           token: "session-token",
         });
 
         expect(result).toBe(chatId);
+        expect(mocks.fetchMutation).toHaveBeenCalledTimes(1);
+        expect(mocks.fetchQuery).not.toHaveBeenCalled();
         expect(mocks.fetchMutation).toHaveBeenCalledWith(
           expect.anything(),
           {
@@ -209,7 +205,7 @@ describe("app/api/chat/persistence", () => {
         chatId,
         message,
         modelId,
-        ...withNinaContext(),
+        ...ninaContext,
         token: "session-token",
       }).pipe(Effect.flip);
 
@@ -281,35 +277,6 @@ describe("app/api/chat/persistence", () => {
   );
 
   it.effect(
-    "saves an existing chat rewrite through one atomic Convex mutation",
-    () =>
-      Effect.gen(function* () {
-        const chatId = yield* savedChatId();
-
-        yield* saveChatMessage({
-          chatId,
-          message,
-          modelId,
-          ...withNinaContext(),
-          token: "session-token",
-        });
-
-        expect(mocks.fetchQuery).not.toHaveBeenCalled();
-        expect(mocks.fetchMutation).toHaveBeenCalledTimes(1);
-        expect(mocks.fetchMutation).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.objectContaining({
-            message: expect.objectContaining({
-              chatId,
-              modelId,
-            }),
-          }),
-          { token: "session-token" }
-        );
-      })
-  );
-
-  it.effect(
     "loads rewrite-aware pinned context before saving a replacement",
     () =>
       Effect.gen(function* () {
@@ -325,7 +292,7 @@ describe("app/api/chat/persistence", () => {
           chatId,
           message,
           modelId,
-          ...withNinaContext(),
+          ...ninaContext,
           token: "session-token",
         });
 
@@ -341,54 +308,97 @@ describe("app/api/chat/persistence", () => {
       })
   );
 
-  it.effect("loads paginated messages until the page stream is done", () =>
-    Effect.gen(function* () {
-      const chatId = yield* savedChatId();
-      const newerMessage = { ...message, id: "newer" };
-      const olderMessage = { ...message, id: "older" };
-      mocks.fetchQuery
-        .mockResolvedValueOnce({
-          continueCursor: "cursor-1",
+  it.live.each([
+    { kind: "empty", parts: [] },
+    {
+      kind: "file",
+      parts: [
+        {
+          type: "file",
+          mediaType: "image/png",
+          url: "https://example.com/image.png",
+        },
+      ],
+    },
+    {
+      kind: "tool",
+      parts: [
+        {
+          type: "tool-math",
+          toolCallId: "math",
+          state: "output-error",
+          input: undefined,
+          errorText: "Unavailable",
+        },
+      ],
+    },
+    { kind: "text", parts: [{ type: "text", text: "tiny" }] },
+  ] satisfies { kind: string; parts: MyUIMessage["parts"] }[])(
+    "bounds long $kind histories to one newest page while preserving complete ordered messages",
+    ({ parts }) =>
+      Effect.gen(function* () {
+        const chatId = yield* savedChatId();
+        const messages = Array.from({ length: 50 }, (_, index) => ({
+          ...message,
+          id: String(index),
+          parts,
+        }));
+        mocks.fetchQuery.mockResolvedValue({
+          continueCursor: "older-history",
           isDone: false,
-          page: [newerMessage],
-        })
-        .mockResolvedValueOnce({
-          continueCursor: "",
-          isDone: true,
-          page: [olderMessage],
+          page: [...messages].reverse(),
         });
+        expect(yield* loadMessages({ chatId, token: "session-token" })).toEqual(
+          messages
+        );
+        expect(mocks.fetchQuery).toHaveBeenCalledTimes(1);
+        expect(mocks.fetchQuery).toHaveBeenCalledWith(
+          expect.anything(),
+          { chatId, paginationOpts: { cursor: null, numItems: 50 } },
+          { token: "session-token" }
+        );
+        expect(mocks.compressMessages).toHaveBeenCalledWith(messages);
+      })
+  );
 
-      const messages = yield* loadMessages({
-        chatId,
-        token: "session-token",
-      });
-
-      expect(messages).toEqual([olderMessage, newerMessage]);
-      expect(mocks.fetchQuery).toHaveBeenNthCalledWith(
-        1,
-        expect.anything(),
-        {
-          chatId,
-          paginationOpts: {
-            cursor: null,
-            numItems: expect.any(Number),
-          },
-        },
-        { token: "session-token" }
-      );
-      expect(mocks.fetchQuery).toHaveBeenNthCalledWith(
-        2,
-        expect.anything(),
-        {
-          chatId,
-          paginationOpts: {
-            cursor: "cursor-1",
-            numItems: expect.any(Number),
-          },
-        },
-        { token: "session-token" }
-      );
-    })
+  it.live(
+    "compresses older text while retaining the entire current message",
+    () =>
+      Effect.gen(function* () {
+        const { compressMessages } = yield* Effect.promise(() =>
+          vi.importActual<typeof import("@repo/ai/lib/message")>(
+            "@repo/ai/lib/message"
+          )
+        );
+        const chatId = yield* savedChatId();
+        mocks.compressMessages.mockImplementation(compressMessages);
+        const older = {
+          ...message,
+          id: "older",
+          parts: [{ type: "text", text: "large ".repeat(30_000) }],
+        } satisfies MyUIMessage;
+        const current = {
+          ...message,
+          id: "current",
+          parts: [
+            { type: "text", text: "Follow up" },
+            {
+              type: "file",
+              url: "https://example.com/chart.png",
+              mediaType: "image/png",
+            },
+          ],
+        } satisfies MyUIMessage;
+        mocks.fetchQuery.mockResolvedValue({
+          continueCursor: "older",
+          isDone: false,
+          page: [current, older],
+        });
+        expect(yield* loadMessages({ chatId, token: "session-token" })).toEqual(
+          [current]
+        );
+        expect(mocks.fetchQuery).toHaveBeenCalledTimes(1);
+      })
   );
 
   it.effect("maps message page failures into the query error contract", () =>
@@ -408,28 +418,6 @@ describe("app/api/chat/persistence", () => {
         operation: "load-messages",
       });
     })
-  );
-
-  it.effect(
-    "stops loading when compression trims the retained transcript",
-    () =>
-      Effect.gen(function* () {
-        const chatId = yield* savedChatId();
-        mocks.fetchQuery.mockResolvedValue({
-          continueCursor: "cursor-1",
-          isDone: false,
-          page: [message],
-        });
-        mocks.compressMessages.mockReturnValue({ messages: [], tokens: 0 });
-
-        const messages = yield* loadMessages({
-          chatId,
-          token: "session-token",
-        });
-
-        expect(messages).toEqual([]);
-        expect(mocks.fetchQuery).toHaveBeenCalledTimes(1);
-      })
   );
 });
 

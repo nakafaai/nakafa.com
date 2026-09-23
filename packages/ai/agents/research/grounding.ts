@@ -39,7 +39,10 @@ export function createGroundingWebSearchData({
   sources: unknown;
 }) {
   const groundingMetadata = getGroundingMetadata(providerMetadata);
-  const groundedSources = getGroundedSources({ groundingMetadata, sources });
+  const groundedSources = getGroundedSources({
+    ...(groundingMetadata === undefined ? {} : { groundingMetadata }),
+    sources,
+  });
   if (groundedSources.length === 0) {
     return;
   }

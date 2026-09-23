@@ -77,7 +77,9 @@ export const finalizeAccountDeletion: (
       retryAccountDeletionFinalizationReference,
       {
         authId: continuationAuthId,
-        expectedPreparation: continuationPreparation,
+        ...(continuationPreparation === undefined
+          ? {}
+          : { expectedPreparation: continuationPreparation }),
       }
     )
 ) {

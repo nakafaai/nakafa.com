@@ -4,12 +4,12 @@ import { EvilBrushHandle } from "@repo/design-system/components/evilcharts/ui/ev
 interface EvilBrushControlsProps {
   bind: BrushBindingFactory;
   data: Record<string, unknown>[];
-  formatLabel?: (value: unknown, index: number) => string;
+  formatLabel?: ((value: unknown, index: number) => string) | undefined;
   rangeEndIndex: number;
   rangeStartIndex: number;
   showLabels: boolean;
   totalPoints: number;
-  xDataKey?: string;
+  xDataKey?: string | undefined;
 }
 
 function getBrushLabel(

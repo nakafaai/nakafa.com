@@ -273,7 +273,11 @@ function Car({
   const yRotation = heading === "right" ? Math.PI / 2 : -Math.PI / 2;
 
   return (
-    <group position={position} rotation={[0, yRotation, 0]} scale={CAR_SCALE}>
+    <group
+      {...(position === undefined ? {} : { position })}
+      rotation={[0, yRotation, 0]}
+      scale={CAR_SCALE}
+    >
       <PhysicsCarModel bodyColor={accentColor} modelPath={modelPath} />
     </group>
   );

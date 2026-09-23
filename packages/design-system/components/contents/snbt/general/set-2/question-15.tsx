@@ -121,7 +121,9 @@ export function SalesChart({
             curveType="monotone"
             dataKey="grainPrice"
             lineProps={{
-              strokeDasharray: SALES_CUES.grainPrice.strokeDasharray,
+              ...(SALES_CUES.grainPrice.strokeDasharray === undefined
+                ? {}
+                : { strokeDasharray: SALES_CUES.grainPrice.strokeDasharray }),
               strokeWidth: 2,
             }}
           >
@@ -132,7 +134,11 @@ export function SalesChart({
             curveType="monotone"
             dataKey="governmentPrice"
             lineProps={{
-              strokeDasharray: SALES_CUES.governmentPrice.strokeDasharray,
+              ...(SALES_CUES.governmentPrice.strokeDasharray === undefined
+                ? {}
+                : {
+                    strokeDasharray: SALES_CUES.governmentPrice.strokeDasharray,
+                  }),
               strokeWidth: 2,
             }}
           >

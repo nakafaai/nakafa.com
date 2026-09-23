@@ -13,6 +13,7 @@ import {
 import { v } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import { nullable } from "convex-helpers/validators";
+import { Struct } from "effect";
 
 const publicCommentUserValidator = v.object({
   _id: userDataValidator.fields._id,
@@ -93,19 +94,9 @@ export const getCommentsBySlug = query({
         return {
           ...comment,
           viewerVote: viewerVotes.get(comment._id) ?? null,
-          user: user
-            ? {
-                _id: user._id,
-                image: user.image,
-                name: user.name,
-              }
-            : null,
+          user: user ? Struct.pick(user, ["_id", "image", "name"]) : null,
           replyToUser: replyToUser
-            ? {
-                _id: replyToUser._id,
-                image: replyToUser.image,
-                name: replyToUser.name,
-              }
+            ? Struct.pick(replyToUser, ["_id", "image", "name"])
             : null,
         };
       }),

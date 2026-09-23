@@ -18,7 +18,10 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
-import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
+import {
+  NakafaAgentDataReadError,
+  NakafaAgentInputError,
+} from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
@@ -380,3 +383,55 @@ function readFixtureLocale(value: unknown): ActiveAppLocaleCode {
   }
   return "en";
 }
+
+it.live(
+  "preserves published pre-Bismillah and maps missing publication to a typed failure",
+  () =>
+    Effect.gen(function* () {
+      runtimeMocks.runtimeQuery.mockResolvedValueOnce({
+        ...markdownResult({ appLocale: "id" }),
+        preBismillah: {
+          arabic: "بِسْمِ اللّٰهِ",
+          translation: translationDocument("id"),
+        },
+      });
+      const rendered = yield* readQuranMarkdown(
+        convexUrl,
+        readNakafaContentRefFixture("id", "quran/1", "quran")
+      );
+      expect(
+        Option.getOrUndefined(rendered)?.text.split("### Verse")[0]
+      ).toContain("Dengan nama Allah.");
+      runtimeMocks.runtimeQuery.mockResolvedValueOnce({
+        ...markdownResult({ appLocale: "id" }),
+        surah: null,
+      });
+      const error = yield* readQuranMarkdown(
+        convexUrl,
+        readNakafaContentRefFixture("id", "quran/1", "quran")
+      ).pipe(Effect.flip);
+      expect(error).toBeInstanceOf(NakafaAgentDataReadError);
+    })
+);
+
+it.live(
+  "omits an agent reference when a signed graph identity cannot form a public content ID",
+  () =>
+    Effect.gen(function* () {
+      const row = searchRow("en");
+      const search = QuranSearchRowSchema.make({
+        ...row,
+        graph: { ...row.graph, assetId: "asset:quran" },
+      });
+      runtimeMocks.runtimeQuery.mockResolvedValueOnce({
+        ...referenceResult({ appLocale: "en" }),
+        searchJson: encodeTestQuranRow(source.snapshotId, search),
+      });
+      const result = yield* readNakafaQuranReference(convexUrl, {
+        locale: "en",
+        surah: 1,
+        from_verse: 1,
+      });
+      expect(Option.isNone(result)).toBe(true);
+    })
+);

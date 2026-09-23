@@ -319,8 +319,8 @@ export function resolveCameraRefit({
   fitted: Effect.Success<ReturnType<typeof resolveCameraFit>>;
   initialZoom: ReturnType<typeof resolveOrthographicZoom>;
   limits: ReturnType<typeof resolveCameraDistanceLimits>;
-  near?: number;
-  far?: number;
+  near?: number | undefined;
+  far?: number | undefined;
   previous: { distance: number; target: Vector3; zoom: number } | null;
 }) {
   const position = (previous ? currentPosition : authoredPosition).clone();

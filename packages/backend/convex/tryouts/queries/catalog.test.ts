@@ -309,3 +309,46 @@ describe("public try-out catalog queries", () => {
       })
   );
 });
+
+it("preserves optional signed descriptions across every public catalog level", async () => {
+  const t = convexTest(schema, convexModules);
+  const description = "Signed catalog description";
+  const catalog = makeTryoutStartHierarchy("en", "visible").map((row) => ({
+    ...row,
+    description,
+  }));
+  await t.mutation((ctx) =>
+    activateTryoutSnapshot(ctx, {
+      catalog,
+      placements: [makeTryoutStartPlacement("en")],
+    })
+  );
+  const countryPath = `try-out/${TRYOUT_START_COUNTRY}`;
+  const country = await t.query(api.tryouts.queries.catalog.getCountryPage, {
+    appLocale: "en",
+    publicPath: countryPath,
+  });
+  const exam = await t.query(api.tryouts.queries.catalog.getExamPage, {
+    appLocale: "en",
+    publicPath: `${countryPath}/${TRYOUT_START_EXAM}`,
+  });
+  const set = await t.query(api.tryouts.queries.catalog.getSetPage, {
+    appLocale: "en",
+    publicPath: setPath,
+  });
+  const metadata = await t.query(api.tryouts.queries.catalog.getMetadata, {
+    kind: "country",
+    appLocale: "en",
+    publicPath: countryPath,
+  });
+  expect(country).toMatchObject({
+    country: { description },
+    exams: [{ description }],
+  });
+  expect(exam).toMatchObject({ tracks: [{ description }] });
+  expect(set).toMatchObject({
+    set: { description },
+    sections: [{ description }],
+  });
+  expect(metadata).toMatchObject({ route: { description } });
+});

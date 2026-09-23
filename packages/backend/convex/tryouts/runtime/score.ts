@@ -24,7 +24,7 @@ import {
   scoreRawAnswers,
 } from "@repo/backend/convex/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/score";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
@@ -315,9 +315,9 @@ function insertAttemptScore(
 
   return ctx.db.insert("tryoutScores", {
     ...score,
-    scaleVersionId: args.score.scaleVersionId,
-    theta: args.score.theta,
-    thetaSE: args.score.thetaSE,
+    ...Struct.pick(args.score, ["scaleVersionId"]),
+    ...Struct.pick(args.score, ["theta"]),
+    ...Struct.pick(args.score, ["thetaSE"]),
   });
 }
 

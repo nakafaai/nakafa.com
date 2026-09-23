@@ -1,4 +1,7 @@
+import workflowTest from "@convex-dev/workflow/test";
 import { describe, expect, it } from "@effect/vitest";
+import posthogTest from "@posthog/convex/test";
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   captureProductEvent,
   deliverProductAnalyticsProgram,
@@ -7,6 +10,9 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { workflow } from "@repo/backend/convex/workflow";
+import { internalActionGeneric } from "convex/server";
+import { v } from "convex/values";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -53,7 +59,13 @@ describe("analytics/capture", () => {
               })
             );
 
-            return await ctx.db.system.query("_scheduled_functions").collect();
+            const jobs = await ctx.db.system
+              .query("_scheduled_functions")
+              .collect();
+            for (const job of jobs) {
+              await ctx.scheduler.cancel(job._id);
+            }
+            return jobs;
           })
         );
 
@@ -210,3 +222,105 @@ describe("analytics/capture", () => {
       })
   );
 });
+
+it.each(["missing", "deleting"] as const)(
+  "refuses delivery for a %s user",
+  async (condition) => {
+    const t = convexTest(schema, convexModules);
+    const userId = await t.mutation(async (ctx) => {
+      const id = await ctx.db.insert("users", {
+        authId: "eligibility",
+        credits: 0,
+        creditsResetAt: NOW,
+        email: "eligibility@example.com",
+        name: "Eligibility",
+        plan: "free",
+      });
+      if (condition === "missing") {
+        await ctx.db.delete("users", id);
+      } else {
+        await ctx.db.patch("users", id, { deletionPreparedAt: NOW });
+      }
+      return id;
+    });
+    expect(
+      await t.query(internal.analytics.capture.isProductAnalyticsUserEligible, {
+        userId,
+      })
+    ).toBe(false);
+  }
+);
+
+it.each([false, true])(
+  "durably reconciles withdrawal during actual action delivery, unavailable=%s",
+  async (unavailable) => {
+    const t = convexTest(schema, convexModules);
+    workflowTest.register(t);
+    const userId = await t.mutation(async (ctx) => {
+      const id = await ctx.db.insert("users", {
+        authId: "overlap",
+        credits: 0,
+        creditsResetAt: NOW,
+        email: "overlap@example.com",
+        name: "Overlap",
+        plan: "free",
+      });
+      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId: id });
+      return id;
+    });
+    let notifyStarted: () => void = () => undefined;
+    let finishCapture: () => void = () => undefined;
+    const started = new Promise<void>((resolve) => {
+      notifyStarted = resolve;
+    });
+    const finished = new Promise<void>((resolve) => {
+      finishCapture = resolve;
+    });
+    t.registerComponent("posthog", posthogTest.schema, {
+      ...posthogTest.modules,
+      "./component/lib.ts": async () => ({
+        capture: internalActionGeneric({
+          args: {
+            disableGeoip: v.boolean(),
+            distinctId: v.string(),
+            event: v.string(),
+            properties: v.optional(v.string()),
+            timestamp: v.optional(v.number()),
+          },
+          returns: v.null(),
+          handler: async () => {
+            notifyStarted();
+            await finished;
+            return null;
+          },
+        }),
+      }),
+    });
+    const start = vi.spyOn(workflow, "start");
+    if (unavailable) {
+      start.mockRejectedValueOnce(new Error("workflow unavailable"));
+    }
+    const delivery = t.action(internal.analytics.capture.deliverProductEvent, {
+      disableGeoip: true,
+      distinctId: userId,
+      event: "content viewed",
+    });
+    await started;
+    await t.mutation((ctx) =>
+      ctx.db.patch("users", userId, { deletionPreparedAt: NOW })
+    );
+    finishCapture();
+    if (unavailable) {
+      await expect(delivery).rejects.toMatchObject({
+        data: {
+          code: "PRODUCT_ANALYTICS_CAPTURE_FAILED",
+          message: expect.stringContaining("workflow unavailable"),
+        },
+      });
+    } else {
+      await expect(delivery).resolves.toBeNull();
+    }
+    expect(start).toHaveBeenCalledOnce();
+    start.mockRestore();
+  }
+);

@@ -20,23 +20,29 @@ function requirePersistableToolState(state: string): ToolState {
   }
 }
 
-/** Returns tool result provider metadata only for tool states that carry it. */
-function getToolResultProviderMetadata(part: MyUIMessagePart) {
-  if (
-    part.type !== "tool-nakafa" &&
-    part.type !== "tool-deepResearch" &&
-    part.type !== "tool-math"
-  ) {
-    return;
-  }
-
-  switch (part.state) {
-    case "output-available":
-    case "output-error":
-      return toPersistedProviderMetadata(part.resultProviderMetadata);
-    default:
-      return;
-  }
+/** Persists metadata shared by every replayable tool invocation. */
+function toolFields(
+  part: Extract<
+    MyUIMessagePart,
+    { type: "tool-nakafa" | "tool-deepResearch" | "tool-math" }
+  >
+) {
+  const callMetadata = toPersistedProviderMetadata(part.callProviderMetadata);
+  const resultMetadata =
+    part.state === "output-available" || part.state === "output-error"
+      ? toPersistedProviderMetadata(part.resultProviderMetadata)
+      : undefined;
+  return {
+    toolToolCallId: part.toolCallId,
+    toolState: requirePersistableToolState(part.state),
+    ...(callMetadata === undefined
+      ? {}
+      : { toolCallProviderMetadata: callMetadata }),
+    ...(resultMetadata === undefined
+      ? {}
+      : { toolResultProviderMetadata: resultMetadata }),
+    ...(part.errorText === undefined ? {} : { toolErrorText: part.errorText }),
+  };
 }
 
 /** Maps one AI SDK UI message part into the flattened Convex chat part row. */
@@ -52,22 +58,24 @@ function mapUIMessagePartToDBPart(
         ...baseFields,
         type: part.type,
         textText: part.text,
-        textState: part.state,
+        ...(part.state === undefined ? {} : { textState: part.state }),
       };
-    case "reasoning":
+    case "reasoning": {
+      const metadata = toPersistedProviderMetadata(part.providerMetadata);
       return {
         ...baseFields,
         type: part.type,
         reasoningText: part.text,
-        reasoningState: part.state,
-        providerMetadata: toPersistedProviderMetadata(part.providerMetadata),
+        ...(part.state === undefined ? {} : { reasoningState: part.state }),
+        ...(metadata === undefined ? {} : { providerMetadata: metadata }),
       };
+    }
     case "file":
       return {
         ...baseFields,
         type: part.type,
         fileMediaType: part.mediaType,
-        fileFilename: part.filename,
+        ...(part.filename === undefined ? {} : { fileFilename: part.filename }),
         fileUrl: part.url,
       };
     case "step-start":
@@ -76,95 +84,36 @@ function mapUIMessagePartToDBPart(
         type: part.type,
       };
     case "tool-nakafa":
-      return {
-        ...baseFields,
-        type: part.type,
-        toolToolCallId: part.toolCallId,
-        toolState: requirePersistableToolState(part.state),
-        toolCallProviderMetadata: toPersistedProviderMetadata(
-          part.callProviderMetadata
-        ),
-        toolResultProviderMetadata: getToolResultProviderMetadata(part),
-        toolNakafaInput:
-          part.state === "input-streaming" ? undefined : part.input,
-        toolNakafaOutput: part.output,
-        toolErrorText: part.errorText,
-      };
+      return persistTool(part, order);
     case "tool-deepResearch":
-      return {
-        ...baseFields,
-        type: part.type,
-        toolToolCallId: part.toolCallId,
-        toolState: requirePersistableToolState(part.state),
-        toolCallProviderMetadata: toPersistedProviderMetadata(
-          part.callProviderMetadata
-        ),
-        toolResultProviderMetadata: getToolResultProviderMetadata(part),
-        toolDeepResearchInput:
-          part.state === "input-streaming" ? undefined : part.input,
-        toolDeepResearchOutput: part.output,
-        toolErrorText: part.errorText,
-      };
+      return persistTool(part, order);
     case "tool-math":
-      return {
-        ...baseFields,
-        type: part.type,
-        toolToolCallId: part.toolCallId,
-        toolState: requirePersistableToolState(part.state),
-        toolCallProviderMetadata: toPersistedProviderMetadata(
-          part.callProviderMetadata
-        ),
-        toolResultProviderMetadata: getToolResultProviderMetadata(part),
-        toolMathInput:
-          part.state === "input-streaming" ? undefined : part.input,
-        toolMathOutput: part.output,
-        toolErrorText: part.errorText,
-      };
+      return persistTool(part, order);
     case "data-suggestions":
       return {
         ...baseFields,
         type: part.type,
-        dataSuggestionsId: part.id,
+        ...(part.id === undefined ? {} : { dataSuggestionsId: part.id }),
         dataSuggestionsData: part.data.data,
       };
     case "data-nakafa":
       return {
         ...baseFields,
         type: part.type,
-        dataNakafaId: part.id,
+        ...(part.id === undefined ? {} : { dataNakafaId: part.id }),
         dataNakafaData: part.data,
       };
     case "data-math":
       return {
         ...baseFields,
         type: part.type,
-        dataMathId: part.id,
+        ...(part.id === undefined ? {} : { dataMathId: part.id }),
         dataMathData: part.data,
       };
     case "data-scrape-url":
-      return {
-        ...baseFields,
-        type: part.type,
-        dataScrapeUrlId: part.id,
-        dataScrapeUrlUrl: part.data.url,
-        dataScrapeUrlContent: part.data.content,
-        dataScrapeUrlTitle: part.data.title,
-        dataScrapeUrlDescription: part.data.description,
-        dataScrapeUrlFavicon: part.data.favicon,
-        dataScrapeUrlStatus: part.data.status,
-        dataScrapeUrlError: part.data.error,
-      };
+      return persistWebData(part, order);
     case "data-web-search":
-      return {
-        ...baseFields,
-        type: part.type,
-        dataWebSearchId: part.id,
-        dataWebSearchProvider: part.data.provider,
-        dataWebSearchQueries: part.data.queries,
-        dataWebSearchSources: part.data.sources,
-        dataWebSearchStatus: part.data.status,
-        dataWebSearchError: part.data.error,
-      };
+      return persistWebData(part, order);
     default:
       throw new ConvexError({
         code: "CHAT_PART_TYPE_UNSUPPORTED",
@@ -182,4 +131,98 @@ export function mapUIMessagePartsToDBParts({
   return messageParts.map((part, index) =>
     mapUIMessagePartToDBPart(part, index)
   );
+}
+
+/** Persists the tool invocation fields present in the UI message. */
+function persistTool(
+  part: Extract<
+    MyUIMessagePart,
+    { type: "tool-nakafa" | "tool-deepResearch" | "tool-math" }
+  >,
+  order: number
+): DBPart {
+  const baseFields = { order };
+  switch (part.type) {
+    case "tool-nakafa":
+      return {
+        ...baseFields,
+        type: part.type,
+        ...toolFields(part),
+        ...(part.state === "input-streaming" || part.input === undefined
+          ? {}
+          : { toolNakafaInput: part.input }),
+        ...(part.output === undefined ? {} : { toolNakafaOutput: part.output }),
+      };
+    case "tool-deepResearch":
+      return {
+        ...baseFields,
+        type: part.type,
+        ...toolFields(part),
+        ...(part.state === "input-streaming" || part.input === undefined
+          ? {}
+          : { toolDeepResearchInput: part.input }),
+        ...(part.output === undefined
+          ? {}
+          : { toolDeepResearchOutput: part.output }),
+      };
+    default:
+      return {
+        ...baseFields,
+        type: part.type,
+        ...toolFields(part),
+        ...(part.state === "input-streaming" || part.input === undefined
+          ? {}
+          : { toolMathInput: part.input }),
+        ...(part.output === undefined ? {} : { toolMathOutput: part.output }),
+      };
+  }
+}
+
+/** Persists the web evidence fields present in the UI message. */
+function persistWebData(
+  part: Extract<
+    MyUIMessagePart,
+    { type: "data-scrape-url" | "data-web-search" }
+  >,
+  order: number
+): DBPart {
+  const baseFields = { order };
+  switch (part.type) {
+    case "data-scrape-url":
+      return {
+        ...baseFields,
+        type: part.type,
+        ...(part.id === undefined ? {} : { dataScrapeUrlId: part.id }),
+        dataScrapeUrlUrl: part.data.url,
+        dataScrapeUrlContent: part.data.content,
+        ...(part.data.title === undefined
+          ? {}
+          : { dataScrapeUrlTitle: part.data.title }),
+        ...(part.data.description === undefined
+          ? {}
+          : { dataScrapeUrlDescription: part.data.description }),
+        ...(part.data.favicon === undefined
+          ? {}
+          : { dataScrapeUrlFavicon: part.data.favicon }),
+        dataScrapeUrlStatus: part.data.status,
+        ...(part.data.error === undefined
+          ? {}
+          : { dataScrapeUrlError: part.data.error }),
+      };
+    default:
+      return {
+        ...baseFields,
+        type: part.type,
+        ...(part.id === undefined ? {} : { dataWebSearchId: part.id }),
+        ...(part.data.provider === undefined
+          ? {}
+          : { dataWebSearchProvider: part.data.provider }),
+        dataWebSearchQueries: part.data.queries,
+        dataWebSearchSources: part.data.sources,
+        dataWebSearchStatus: part.data.status,
+        ...(part.data.error === undefined
+          ? {}
+          : { dataWebSearchError: part.data.error }),
+      };
+  }
 }

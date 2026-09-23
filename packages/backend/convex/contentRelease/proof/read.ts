@@ -17,7 +17,7 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getConvexSize, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 const proofRowValidator = v.object({
   index: v.number(),
@@ -322,7 +322,7 @@ const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
     const next = {
       index: row.index,
       itemJson: row.itemJson,
-      projectionJson: row.projectionJson,
+      ...Struct.pick(row, ["projectionJson"]),
       rollbackJson: row.rollbackJson,
     };
     const candidate = {

@@ -8,6 +8,18 @@ transaction commits. Concurrent requests cannot spend the same balance. A native
 Convex token bucket independently limits admission to a burst of five starts and
 ten starts per minute per user, including requests whose credits are refunded.
 
+The HTTP route reserves after required origin, request, locale, model and auth
+checks, before content verification, profile, curriculum and pinned-context
+reads. All later preparation belongs to the refund scope. A rejected turn does
+not perform optional preparation, and the route does not recheck a balance that
+reservation has already debited.
+
+Nina loads at most the newest 50 complete messages before applying its text-token
+budget. This is a conversation-context policy, independent of token count, so
+empty and non-text histories cannot trigger unbounded pagination. Whole messages
+preserve tool-call and tool-result parts together. The full transcript remains
+available for browsing, and compression retains the current message.
+
 Successful persistence closes the hold and completes its existing ledger entry.
 Failure refunds it at most once. A refund can restore only the allowance from
 which the hold was taken: both the reset timestamp and the plan grant identity
@@ -41,6 +53,15 @@ the same Convex transaction. Updates reuse the document already read for the
 counter calculation. There is no second trigger facade. The transaction rolls
 back both changes if either write fails. Read-only ranking consumers keep the
 same Aggregate contract.
+
+Popularity audit-row deletion is suspended. Completed finite-window cycles do
+not prove admitted-event coverage, authorized account withdrawals, contiguous
+queue progress, lifetime inclusion or rank-index consistency. Historical viewer
+rows have already been retired, so current counter totals cannot retroactively
+supply that proof. The remaining signals, durable lifetime counters and every
+public ranking window are preserved. Reintroducing deletion requires prospective
+accounting and a bounded, resumable integrity proof that detects concurrent
+writes and checks the counter/index relationship in both directions.
 
 Mutations that write only tables without registered triggers use native Convex
 builders. Mutations that own message, subscription, score, or other registered

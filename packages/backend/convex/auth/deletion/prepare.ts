@@ -14,18 +14,17 @@ import {
   accountDeletionPreparationOutcome,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { findSchoolOwnershipSuccessorPage } from "@repo/backend/convex/auth/deletion/successor";
+import { getOrThrow } from "convex-helpers/server/relationships";
 import { Clock, Effect } from "effect";
 
 type AccountDeletionPreparation = Doc<"accountDeletionPreparations">;
-type AccountDeletionPreparationProgress = Partial<
-  Pick<
-    AccountDeletionPreparation,
+type AccountDeletionPreparationProgress = {
+  [Key in
     | "pendingSchoolId"
     | "pendingSchoolNextCursor"
     | "schoolCursor"
-    | "successorCursor"
-  >
->;
+    | "successorCursor"]?: AccountDeletionPreparation[Key] | undefined;
+};
 type AppUser = Doc<"users">;
 
 /** Persists cursor progress and atomically renews its versioned recovery lease. */
@@ -253,12 +252,8 @@ export const prepareAccountDeletion: (
         })
       );
       preparation = yield* tryUserCleanup(() =>
-        ctx.db.get("accountDeletionPreparations", preparationId)
+        getOrThrow(ctx, "accountDeletionPreparations", preparationId)
       );
-
-      if (!preparation) {
-        return accountDeletionPreparationOutcome.temporarilyUnavailable;
-      }
     }
 
     const outcome = yield* reserveSchoolSuccessors(

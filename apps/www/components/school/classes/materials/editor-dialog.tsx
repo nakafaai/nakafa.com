@@ -100,11 +100,13 @@ export function CreateMaterialGroupDialog({
       errorMessage={t("create-material-group-failed")}
       formId="school-classes-materials-new-form"
       onSubmit={async (value) => {
+        const { scheduledAt, ...fields } = value;
         await createMaterialGroup({
-          ...value,
+          ...fields,
           classId,
-          scheduledAt:
-            value.status === "scheduled" ? value.scheduledAt : undefined,
+          ...(value.status === "scheduled" && scheduledAt !== undefined
+            ? { scheduledAt }
+            : {}),
         });
       }}
       open={open}
@@ -142,13 +144,13 @@ export function EditMaterialGroupDialog({
       errorMessage={t("update-material-group-failed")}
       formId={`edit-material-group-${group._id}`}
       onSubmit={async (value) => {
+        const { scheduledAt, ...fields } = value;
         await updateMaterialGroup({
           groupId: group._id,
-          name: value.name,
-          description: value.description,
-          status: value.status,
-          scheduledAt:
-            value.status === "scheduled" ? value.scheduledAt : undefined,
+          ...fields,
+          ...(value.status === "scheduled" && scheduledAt !== undefined
+            ? { scheduledAt }
+            : {}),
         });
       }}
       open={open}

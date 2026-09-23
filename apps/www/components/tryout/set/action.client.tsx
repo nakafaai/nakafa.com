@@ -40,7 +40,7 @@ export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {
     countryKey: value.set.countryKey,
     destinationHref: value.destination.href,
     destinationSectionKey: value.destination.sectionKey,
-    entrySectionKey,
+    ...(entrySectionKey === undefined ? {} : { entrySectionKey }),
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,

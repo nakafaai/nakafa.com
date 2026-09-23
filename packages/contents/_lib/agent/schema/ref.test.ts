@@ -119,6 +119,15 @@ describe("NakafaAgentContentRefSchema", () => {
     );
   });
 
+  it("rejects an explicitly undefined markdown URL at the runtime boundary", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(NakafaAgentContentRefSchema)({
+        ...quranRef,
+        markdown_url: undefined,
+      })
+    ).toThrow();
+  });
+
   it("rejects invalid canonical URLs", () => {
     expect(() =>
       Schema.decodeSync(NakafaAgentContentRefSchema)({

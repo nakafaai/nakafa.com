@@ -2,7 +2,7 @@ import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Struct } from "effect";
 
 /** Records membership lifecycle changes after invite usage is updated. */
 const recordSchoolMembership = Effect.fn("triggers.schools.recordMembership")(
@@ -57,7 +57,7 @@ const recordSchoolMembership = Effect.fn("triggers.schools.recordMembership")(
               metadata: {
                 invitedUserId: member.userId,
                 role: member.role,
-                invitedAt: member.invitedAt,
+                ...Struct.pick(member, ["invitedAt"]),
               },
             })
           );
@@ -118,7 +118,7 @@ const recordSchoolMembership = Effect.fn("triggers.schools.recordMembership")(
                 metadata: {
                   removedUserId: member.userId,
                   role: member.role,
-                  removedAt: member.removedAt,
+                  ...Struct.pick(member, ["removedAt"]),
                 },
               })
             );

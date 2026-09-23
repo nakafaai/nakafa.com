@@ -5,6 +5,7 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import type { WithoutSystemFields } from "convex/server";
+import { Struct } from "effect";
 
 /**
  * Helper function to create a notification and update unread count
@@ -69,12 +70,12 @@ export async function createNotification(
 
   await ctx.db.insert("notifications", {
     recipientId: args.recipientId,
-    actorId: args.actorId,
+    ...Struct.pick(args, ["actorId"]),
     type: args.type,
     entityType: args.entityType,
-    entityId: args.entityId,
-    previewTitle: args.previewTitle,
-    previewBody: args.previewBody,
+    ...Struct.pick(args, ["entityId"]),
+    ...Struct.pick(args, ["previewTitle"]),
+    ...Struct.pick(args, ["previewBody"]),
   });
 
   const existingCount = await ctx.db

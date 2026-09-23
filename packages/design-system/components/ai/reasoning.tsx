@@ -74,7 +74,7 @@ export const Reasoning = memo(
     const [isOpen, setIsOpen] = useControllableState({
       prop: open,
       defaultProp: defaultOpen,
-      onChange: onOpenChange,
+      ...(onOpenChange === undefined ? {} : { onChange: onOpenChange }),
     });
     const hasAutoClosedRef = useRef(false);
     const [timing, setTiming] = useState<ReasoningTiming>(() => ({

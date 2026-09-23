@@ -57,13 +57,17 @@ export function createOptimisticForumPost({
     isUnread: false,
     mentions: args.mentions ?? [],
     myReactions: [],
-    parentId: args.parentId,
+    ...(args.parentId === undefined ? {} : { parentId: args.parentId }),
     reactionCounts: [],
     reactionUsers: [],
     replyCount: 0,
-    replyToBody: parentPost?.body,
+    ...(parentPost?.body === undefined
+      ? {}
+      : { replyToBody: parentPost?.body }),
     replyToUser: parentPost?.user ?? null,
-    replyToUserId: parentPost?.createdBy,
+    ...(parentPost?.createdBy === undefined
+      ? {}
+      : { replyToUserId: parentPost?.createdBy }),
     sequence: getOptimisticForumPostSequence({ forum, posts }),
     updatedAt: now,
     user: currentUser,

@@ -158,3 +158,27 @@ describe("contentRelease/material/discovery", () => {
     }
   );
 });
+
+it("retains the signed description in material discovery", async () => {
+  const target = convexTest(schema, convexModules);
+  const projection = makeMaterialProjection("en", 1);
+  await activateMaterialCatalog(
+    target,
+    [
+      {
+        ...projection,
+        metadata: { ...projection.metadata, description: "Signed summary" },
+      },
+    ],
+    ["en"]
+  );
+  expect(
+    await target.query((ctx) =>
+      runConvexProgram(
+        readLatestMaterials("en", 1).pipe(
+          Effect.provide(convexMaterialLayer(ctx))
+        )
+      )
+    )
+  ).toMatchObject({ materials: [{ description: "Signed summary" }] });
+});

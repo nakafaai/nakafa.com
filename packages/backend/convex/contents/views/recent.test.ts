@@ -24,7 +24,9 @@ const target = {
   ...projection.graph,
   contentKey: projection.contentKey,
   content_id: projection.graph.assetId,
-  description: projection.metadata.description,
+  ...(projection.metadata.description === undefined
+    ? {}
+    : { description: projection.metadata.description }),
   kind: "curriculum-lesson",
   locale: "en",
   materialDomain: MaterialDomainSchema.make("mathematics"),

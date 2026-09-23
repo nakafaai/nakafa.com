@@ -15,8 +15,9 @@ function streamRequest(
   const init = {
     body,
     duplex: "half",
-    headers:
-      contentType === undefined ? undefined : { "content-type": contentType },
+    ...(contentType === undefined
+      ? {}
+      : { headers: { "content-type": contentType } }),
     method: "POST",
   } satisfies RequestInit & { readonly duplex: "half" };
   return new Request("https://example.test/internal/mcp", init);

@@ -3,7 +3,7 @@ import { readArticlePartition } from "@repo/backend/content/article/partition";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 const ARTICLE_DISCOVERY_LIMIT = 100;
 /** Validates one bounded discovery read before accessing an article index. */
@@ -31,11 +31,11 @@ function summarizeArticle(
     authors: projection.metadata.authors.map(({ name }) => ({ name })),
     category: projection.category,
     categoryTitle: projection.categoryTitle,
-    ...(projection.metadata.dateModified === undefined
-      ? {}
-      : { dateModified: projection.metadata.dateModified }),
+    ...Struct.pick(projection.metadata, ["dateModified"]),
     datePublished: projection.metadata.datePublished,
-    description: projection.metadata.description,
+    ...(projection.metadata.description === undefined
+      ? {}
+      : { description: projection.metadata.description }),
     official: projection.official,
     publicPath: projection.publicPath,
     route: {

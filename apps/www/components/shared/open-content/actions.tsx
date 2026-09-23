@@ -57,7 +57,7 @@ export function OpenContent({
 }: {
   children?: ReactNode;
   slug: string;
-  content?: string;
+  content?: string | undefined;
   copySourceUrl?: null | string;
   sourceUrl?: null | string;
 }) {
@@ -84,8 +84,8 @@ export function OpenContent({
     setIsCopying(true);
 
     const copyProgram = copyOpenContent({
-      content,
-      copySourceUrl,
+      ...(content === undefined ? {} : { content }),
+      ...(copySourceUrl === undefined ? {} : { copySourceUrl }),
       writeClipboard: (source) => navigator.clipboard.writeText(source),
     }).pipe(
       Effect.matchEffect({

@@ -98,7 +98,9 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
     return {
       route: {
         alternates,
-        description: current.description,
+        ...(current.description === undefined
+          ? {}
+          : { description: current.description }),
         publicPath: currentPublicPath,
         socialImageIdentity:
           current.kind === "exam"

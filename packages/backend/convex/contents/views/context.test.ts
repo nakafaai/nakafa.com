@@ -19,6 +19,7 @@ import {
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { api } from "@repo/backend/convex/_generated/api";
 import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/program";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import { resolveLearningContext } from "@repo/backend/convex/contents/views/context";
@@ -37,7 +38,7 @@ import {
 } from "@repo/backend/test/program/snapshot";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
-import { Data, Effect, Schema } from "effect";
+import { Data, Effect, Schema, Struct } from "effect";
 
 const PROGRAM_KEY = LearningProgramKeySchema.make("technical-program-1");
 const GROUP_KEY = CurriculumNodeKeySchema.make("test-group");
@@ -261,8 +262,8 @@ describe("contents/views/context", () => {
       }
       for (const unplaced of [
         { ...material, kind: "article" as const },
-        { ...material, materialKey: undefined },
-        { ...material, parentPath: undefined },
+        Struct.omit(material, ["materialKey"]),
+        Struct.omit(material, ["parentPath"]),
       ]) {
         expect(
           await runConvexProgram(
@@ -366,3 +367,44 @@ describe("contents/views/context", () => {
     })
   );
 });
+
+it.effect("records canonical and verified placement popularity scopes", () =>
+  Effect.gen(function* () {
+    const target = convexTest(schema, convexModules);
+    const data = yield* makeProgramSnapshotData();
+    yield* Effect.promise(() => activateProgramSnapshot(target, data));
+    yield* stagePlacement(
+      target,
+      data.snapshotId,
+      FUNCTION_MATERIAL.publicPath
+    );
+    yield* Effect.promise(() =>
+      target.mutation((ctx) => insertMaterialProjection(ctx, FUNCTION_MATERIAL))
+    );
+    const context = yield* readContext(target, FUNCTION_MATERIAL, PLACEMENT);
+    expect(context).toMatchObject({
+      contextMode: "placement",
+      contextNodeKey: GROUP_KEY,
+    });
+    expect(context).toHaveProperty("contextParentPath", SUBJECT_PATH);
+    expect(context).toHaveProperty("contextPublicPath", GROUP_PATH);
+    yield* Effect.promise(() =>
+      target.mutation(api.contents.mutations.views.recordContentView, {
+        contentId: FUNCTION_MATERIAL.graph.assetId,
+        publicPath: FUNCTION_MATERIAL.publicPath,
+        locale: "en",
+        section: "material",
+        deviceId: "placement",
+        context: PLACEMENT,
+      })
+    );
+    const scopes = yield* Effect.promise(() =>
+      target.query(async (ctx) =>
+        (await ctx.db.query("learningEngagementQueue").collect()).map(
+          (row) => row.scopeMode
+        )
+      )
+    );
+    expect(scopes.sort()).toEqual(["global", "placement"]);
+  })
+);

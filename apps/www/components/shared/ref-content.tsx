@@ -18,7 +18,7 @@ import { useTranslations } from "next-intl";
 
 interface Props {
   className?: string;
-  githubUrl?: string;
+  githubUrl?: string | undefined;
 }
 
 /** Renders source and community links for learn page catalogs. */

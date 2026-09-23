@@ -21,7 +21,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
-import { Effect, Option } from "effect";
+import { Effect, Option, Struct } from "effect";
 
 type ParsedQuranReferenceOptions = Effect.Success<
   ReturnType<typeof parseQuranReferenceOptions>
@@ -78,7 +78,9 @@ function referenceArgs(input: ParsedQuranReferenceOptions) {
     appLocale: input.locale,
     fromVerse: input.from_verse,
     surahNumber: input.surah,
-    toVerse: input.to_verse,
+    ...Struct.renameKeys(Struct.pick(input, ["to_verse"]), {
+      to_verse: "toVerse",
+    }),
   };
 }
 

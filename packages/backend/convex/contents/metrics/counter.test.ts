@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   buildMetricsBatch,
@@ -8,6 +8,7 @@ import { applyPopularityCounter } from "@repo/backend/convex/contents/metrics/co
 import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
@@ -81,6 +82,56 @@ function captureCounter(ctx: MutationCtx, counter: PopularityCounterDelta) {
 describe("contents/metrics/counter", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("clears absent newest metadata and keeps the ranking in the same transaction", async () => {
+    const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
+    const id = await target.mutation(async (ctx) => {
+      const counterId = await insertCounter(ctx, "replace", "lifetime");
+      const current = await ctx.db.get(counterId);
+      assert(current);
+      await learningPopularityRankings.insert(ctx, current);
+      const queueId = await insertQueue(ctx, "replace", "replace");
+      await ctx.db.patch(queueId, {
+        description: undefined,
+        materialDomain: undefined,
+      });
+      const queueItem = await ctx.db.get(queueId);
+      assert(queueItem);
+      const counter = [
+        ...buildMetricsBatch({
+          queueItems: [queueItem],
+          updatedAt: NOW,
+        }).counters.values(),
+      ].find(({ windowKey }) => windowKey === "lifetime");
+      assert(counter);
+      const read = vi.spyOn(ctx.db, "get");
+      await runConvexProgram(
+        applyPopularityCounter(ctx, {
+          ...counter,
+          updatedAt: NOW,
+        })
+      );
+      expect(read).not.toHaveBeenCalled();
+      return counterId;
+    });
+    const state = await target.query(async (ctx) => ({
+      counter: await ctx.db.get(id),
+      ranking: await learningPopularityRankings.paginate(ctx, {
+        namespace: ["material", "en", "global", "lifetime"],
+        pageSize: 10,
+      }),
+    }));
+    expect(state.counter).toMatchObject({
+      score: 2,
+      title: "Newest Vector Addition",
+    });
+    expect(state.counter).not.toHaveProperty("description");
+    expect(state.counter).not.toHaveProperty("materialDomain");
+    expect(state.ranking.page.map(({ key }) => key)).toEqual([
+      [-2, graph.content_id],
+    ]);
   });
 
   it("rolls back the counter when its transactional ranking write fails", async () => {

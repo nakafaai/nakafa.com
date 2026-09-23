@@ -159,7 +159,7 @@ export function Line({
         // motion.dev reveal mask drives the intro, wiping stroke and dots in together.
         isAnimationActive={false}
         stroke={getChartSeriesPaint(id, "line-colors", dataKey, colorsCount)}
-        strokeDasharray={isDashed ? "5 5" : undefined}
+        {...(isDashed ? { strokeDasharray: "5 5" } : {})}
         strokeOpacity={opacity.stroke}
         strokeWidth={STROKE_WIDTH}
         style={{

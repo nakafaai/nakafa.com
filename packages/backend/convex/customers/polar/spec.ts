@@ -25,11 +25,11 @@ export type CheckoutSessionResult = Infer<
 >;
 
 export interface PolarCustomerSource {
-  readonly email?: string | null;
-  readonly externalId?: string | null;
+  readonly email?: string | null | undefined;
+  readonly externalId?: string | null | undefined;
   readonly id: string;
-  readonly metadata?: Record<string, unknown> | null;
-  readonly name?: string | null;
+  readonly metadata?: Record<string, unknown> | null | undefined;
+  readonly name?: string | null | undefined;
 }
 
 export interface StoredPolarCustomer {

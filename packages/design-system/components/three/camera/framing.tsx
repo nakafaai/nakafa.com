@@ -92,7 +92,7 @@ export function CameraBounds({
   motion,
   objectRef,
 }: {
-  bounds?: CoordinateFrame;
+  bounds?: CoordinateFrame | undefined;
   children: ReactNode;
   exclude?: boolean;
   motion?: CameraMotionBounds;
@@ -141,7 +141,11 @@ export function CameraBounds({
               z: { min: travelMinZ, max: travelMaxZ },
             }
           : undefined;
-      framing.subjects.set(object, { rotation, scale, translation });
+      framing.subjects.set(object, {
+        rotation,
+        scale,
+        translation,
+      });
     } else if (
       minX !== undefined &&
       minY !== undefined &&

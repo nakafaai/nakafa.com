@@ -9,7 +9,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import type { CodeOptionsMultipleThemes } from "shiki";
 
 type CodeBlockFallbackProps = HTMLAttributes<HTMLDivElement> & {
-  preClassName?: string;
+  preClassName?: string | undefined;
 };
 
 /** Gives repeated code lines stable keys based on their source offsets. */
@@ -50,7 +50,7 @@ function CodeBlockFallback({
 export type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
   children: string;
   language?: string;
-  preClassName?: string;
+  preClassName?: string | undefined;
   syntaxHighlighting?: boolean;
   themes?: CodeOptionsMultipleThemes["themes"];
   transparentBackground?: boolean;
@@ -109,7 +109,9 @@ export function CodeBlockContent({
     const fiber = Effect.runFork(
       highlightCode({
         code: request.children,
-        language: request.language,
+        ...(request.language === undefined
+          ? {}
+          : { language: request.language }),
         preClassName: request.preClassName,
         themes: request.themes,
         transparentBackground: request.transparentBackground,

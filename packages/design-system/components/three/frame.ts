@@ -21,8 +21,8 @@ export type CoordinateTuple = readonly [number, number, number];
 
 interface AxisGeometry {
   readonly from: CoordinatePoint;
-  readonly negativeLabel?: CoordinatePoint;
-  readonly positiveLabel?: CoordinatePoint;
+  readonly negativeLabel: CoordinatePoint | undefined;
+  readonly positiveLabel: CoordinatePoint | undefined;
   readonly to: CoordinatePoint;
   readonly visible: boolean;
 }

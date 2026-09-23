@@ -41,7 +41,9 @@ const currentWeatherResponse = {
 };
 interface WeatherClientInput {
   makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response;
-  observeRequest?: (request: HttpClientRequest.HttpClientRequest) => void;
+  observeRequest?:
+    | ((request: HttpClientRequest.HttpClientRequest) => void)
+    | undefined;
 }
 /** Builds an Effect HTTP client with a deterministic OpenWeather response. */
 function makeWeatherClient({

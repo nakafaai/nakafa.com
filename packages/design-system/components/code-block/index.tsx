@@ -29,7 +29,9 @@ export function CodeBlock({
   const [value, onValueChange] = useControllableState({
     defaultProp: defaultValue ?? "",
     prop: controlledValue,
-    onChange: controlledOnValueChange,
+    ...(controlledOnValueChange === undefined
+      ? {}
+      : { onChange: controlledOnValueChange }),
   });
   const contextValue = useMemo(
     () => ({ value, onValueChange, data }),

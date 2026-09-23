@@ -257,7 +257,14 @@ function Molecule({
   );
 
   return (
-    <group position={item.position} rotation={item.rotation}>
+    <group
+      position={item.position}
+      {...(item.rotation === undefined
+        ? {}
+        : {
+            rotation: item.rotation,
+          })}
+    >
       <group scale={MOLECULE_SCALE}>
         {model.bonds.map((bondData) => {
           const start = atomsById.get(bondData.start);
@@ -383,7 +390,12 @@ function instance(
   position: Point,
   rotation?: Point
 ): MoleculeInstance {
-  return { id, modelId, position, rotation };
+  return {
+    id,
+    modelId,
+    position,
+    ...(rotation === undefined ? {} : { rotation }),
+  };
 }
 
 function molecule(

@@ -5,7 +5,7 @@ import {
   requirePermission,
 } from "@repo/backend/convex/lib/helpers/permissions";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 describe("school and class permission grants", () => {
   it("requires an explicit target and an active school grant", async () => {
@@ -65,10 +65,11 @@ describe("school and class permission grants", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          requirePermission(ctx, PERMISSIONS.CONTENT_READ, {
-            ...target,
-            schoolId: undefined,
-          }).pipe(Effect.as(true))
+          requirePermission(
+            ctx,
+            PERMISSIONS.CONTENT_READ,
+            Struct.omit(target, ["schoolId"])
+          ).pipe(Effect.as(true))
         )
       )
     ).resolves.toBe(true);

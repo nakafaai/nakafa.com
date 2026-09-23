@@ -52,7 +52,7 @@ type CustomBarProps = {
   isActive?: boolean;
   dataLength?: number;
   colorSlots: number;
-  onClick?: () => void;
+  onClick?: (() => void) | undefined;
 } & BarShapeProps;
 
 /**
@@ -83,6 +83,7 @@ export const CustomBar = (props: CustomBarProps) => {
     dataLength = 0,
     colorSlots,
     onClick,
+    ...rectangleProps
   } = props;
 
   const index = typeof props.index === "number" ? props.index : -1;
@@ -105,11 +106,11 @@ export const CustomBar = (props: CustomBarProps) => {
 
   const fillOpacity = getBarOpacity({
     isClickable,
-    selectedDataKey,
+    ...(selectedDataKey === undefined ? {} : { selectedDataKey }),
     dataKey,
-    enableHoverHighlight,
-    isMouseInChart,
-    isActive,
+    ...(enableHoverHighlight === undefined ? {} : { enableHoverHighlight }),
+    ...(isMouseInChart === undefined ? {} : { isMouseInChart }),
+    ...(isActive === undefined ? {} : { isActive }),
   });
   const cursorStyle =
     isClickable || enableHoverHighlight ? { cursor: "pointer" } : undefined;
@@ -138,7 +139,15 @@ export const CustomBar = (props: CustomBarProps) => {
   return (
     <g {...interactiveProps} style={cursorStyle}>
       {/* Full-height invisible rect keeps the whole column hoverable/clickable */}
-      <Rectangle {...props} fill="transparent" />
+      <Rectangle
+        {...rectangleProps}
+        {...(onClick === undefined ? {} : { onClick })}
+        fill="transparent"
+        height={height}
+        width={width}
+        x={x}
+        y={y}
+      />
       {/* The painted bar grows in from its baseline; the hit rect above stays put */}
       <RevealGroup animation={grow}>
         <Rectangle
@@ -261,12 +270,12 @@ const getBarOpacity = ({
   isMouseInChart,
   isActive,
 }: {
-  isClickable?: boolean;
-  selectedDataKey?: string | null;
+  isClickable?: boolean | undefined;
+  selectedDataKey?: string | null | undefined;
   dataKey: string;
-  enableHoverHighlight?: boolean;
-  isMouseInChart?: boolean;
-  isActive?: boolean;
+  enableHoverHighlight?: boolean | undefined;
+  isMouseInChart?: boolean | undefined;
+  isActive?: boolean | undefined;
 }) => {
   const isSelectedDataKey =
     selectedDataKey === null || selectedDataKey === dataKey;

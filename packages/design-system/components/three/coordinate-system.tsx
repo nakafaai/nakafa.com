@@ -28,17 +28,17 @@ interface Props {
   /** Background color of the canvas */
   backgroundColor?: CSSProperties["backgroundColor"];
   /** Explicit complete-content fit for finite illustrations. */
-  cameraFraming?: "content";
+  cameraFraming?: "content" | undefined;
   /** Farthest orbit distance from the camera target. */
   cameraMaxDistance?: number;
   /** Nearest orbit distance from the camera target. */
   cameraMinDistance?: number;
   /** Custom camera position */
-  cameraPosition?: [number, number, number];
+  cameraPosition?: [number, number, number] | undefined;
   /** Perspective or exact orthographic camera projection. */
-  cameraProjection?: CameraProjection;
+  cameraProjection?: CameraProjection | undefined;
   /** Custom point the camera looks at in Three.js world coordinates */
-  cameraTarget?: [number, number, number];
+  cameraTarget?: [number, number, number] | undefined;
   /** Children elements to render inside the coordinate system */
   children?: ReactNode;
   /** Additional class name */
@@ -156,7 +156,7 @@ export function CoordinateSystem({
             {/* Origin */}
             <Origin
               color={COLORS.SLATE}
-              position={origin ? [origin.x, origin.y, origin.z] : undefined}
+              {...(origin ? { position: [origin.x, origin.y, origin.z] } : {})}
               size={0.06}
               visible={showOrigin}
             />

@@ -43,7 +43,7 @@ import {
   TRYOUT_SECTION_PATH,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 /** Returns the coherent terminal reason for one fixture status. */
 function getEndReason(
@@ -257,7 +257,7 @@ export function tryoutSectionSnapshot(args: {
   const { row, rowHash } = args.signed.section;
 
   return {
-    publicPath: row.publicPath,
+    ...(row.publicPath === undefined ? {} : { publicPath: row.publicPath }),
     questionCount: row.questionCount,
     questionSourcePath: row.questionSourcePath,
     sectionIdentity: tryoutCatalogIdentity(row),
@@ -305,7 +305,7 @@ export async function insertTryoutAttempt(
     countsForCompetition: false,
     expiresAt: accessEndsAt,
     lastActivityAt: TRYOUT_TEST_NOW - 10_000,
-    scaleVersionId: args.scaleVersionId,
+    ...Struct.pick(args, ["scaleVersionId"]),
     scoreStatus: scoringStrategy === "irt" ? "provisional" : "official",
     scoringStrategy,
     sectionSnapshots: args.sectionSnapshots,

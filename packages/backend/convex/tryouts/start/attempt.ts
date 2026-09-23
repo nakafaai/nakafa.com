@@ -81,7 +81,9 @@ function buildAttemptValues(
     appLocale: input.args.locale,
     scoringStrategy: signedSet.scoringStrategy,
     sectionSnapshots: input.source.snapshot.sections.map(({ section }) => ({
-      publicPath: section.row.publicPath,
+      ...(section.row.publicPath === undefined
+        ? {}
+        : { publicPath: section.row.publicPath }),
       questionCount: section.row.questionCount,
       questionSourcePath: section.row.questionSourcePath,
       sectionIdentity: tryoutCatalogIdentity(section.row),

@@ -42,6 +42,11 @@ export function TryoutSectionRows({
         if (!publicPath) {
           return [];
         }
+        const status = getSectionStatus({
+          activeSectionKey,
+          completedSections,
+          sectionKey: section.sectionKey,
+        });
 
         return [
           {
@@ -61,11 +66,7 @@ export function TryoutSectionRows({
                 sectionKey: section.sectionKey,
               });
             },
-            status: getSectionStatus({
-              activeSectionKey,
-              completedSections,
-              sectionKey: section.sectionKey,
-            }),
+            ...(status === undefined ? {} : { status }),
             title: section.title,
             visual: {
               icon: getMaterialIcon(section.sectionKey),

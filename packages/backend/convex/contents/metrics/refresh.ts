@@ -18,7 +18,7 @@ import {
   learningPopularityScopeValues,
 } from "@repo/backend/convex/contents/popularity";
 import type { FunctionReference } from "convex/server";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Struct } from "effect";
 
 /** Generated internal mutation reference accepted by Convex refresh scheduling. */
 type RefreshLearningPopularityWindowPageReference = FunctionReference<
@@ -82,7 +82,7 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
 ) {
   const timestamp = yield* Clock.currentTimeMillis;
   const cycle = yield* getPopularityCyclePage(ctx, {
-    cursor: args.cursor,
+    ...Struct.pick(args, ["cursor"]),
     day: args.day,
     mode: "repair",
     scopeMode: args.scopeMode,

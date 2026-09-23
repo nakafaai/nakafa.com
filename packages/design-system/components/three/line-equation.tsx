@@ -123,12 +123,14 @@ export interface Props {
   /**
    * Optional cone arrowhead configuration.
    */
-  cone?: {
-    /** Position of the cone arrowhead */
-    position: "start" | "end" | "both";
-    /** Size of the arrowhead */
-    size?: number;
-  };
+  cone?:
+    | {
+        /** Position of the cone arrowhead */
+        position: "start" | "end" | "both";
+        /** Size of the arrowhead */
+        size?: number;
+      }
+    | undefined;
   /**
    * Number of points to use for the curve when smooth is true
    * Higher values will create a smoother curve but may impact performance

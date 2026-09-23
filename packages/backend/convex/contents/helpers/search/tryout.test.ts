@@ -71,7 +71,10 @@ describe("contents/helpers/search/tryout", () => {
     await t.mutation((ctx) =>
       activateTryoutSnapshot(ctx, {
         catalog: [
-          makeTryoutCatalogRow("en").record.row,
+          {
+            ...makeTryoutCatalogRow("en").record.row,
+            description: "Signed description",
+          },
           makeInternalSection("en"),
           makeTryoutCatalogRow("id").record.row,
           makeInternalSection("id"),

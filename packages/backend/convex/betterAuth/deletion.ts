@@ -5,7 +5,7 @@ import { mutation } from "@repo/backend/convex/betterAuth/_generated/server";
 import schema from "@repo/backend/convex/betterAuth/schema";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
-import { paginator } from "convex-helpers/server/pagination";
+import { stream } from "convex-helpers/server/stream";
 import { Effect, Result, Schema } from "effect";
 
 const oauthLinkVerificationSchema = Schema.fromJsonString(
@@ -31,7 +31,7 @@ const deleteUserVerificationPageProgram = Effect.fn(
   "betterAuth.deletion.deleteUserVerificationPage"
 )(function* (ctx: MutationCtx, authId: string, cursor: string | null) {
   const page = yield* tryUserCleanup(() =>
-    paginator(ctx.db, schema).query("verification").paginate({
+    stream(ctx.db, schema).query("verification").paginate({
       cursor,
       numItems: ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
     })

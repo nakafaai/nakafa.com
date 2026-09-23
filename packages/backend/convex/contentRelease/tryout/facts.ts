@@ -28,14 +28,15 @@ function catalogSetIdentity(row: TryoutCatalogRow) {
 /** Derives the exact indexed facts stored beside one signed catalog row. */
 export function tryoutCatalogFacts(record: TryoutCatalogRecord) {
   const { row } = record;
+  const setIdentity = catalogSetIdentity(row);
   return {
     assetId: row.graph.assetId,
     identity: tryoutCatalogIdentity(row),
     kind: row.kind,
     appLocale: row.appLocale,
     order: row.kind === "country" || row.kind === "exam" ? 0 : row.order,
-    publicPath: row.publicPath,
-    setIdentity: catalogSetIdentity(row),
+    ...(row.publicPath === undefined ? {} : { publicPath: row.publicPath }),
+    ...(setIdentity === undefined ? {} : { setIdentity }),
   };
 }
 

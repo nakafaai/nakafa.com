@@ -97,7 +97,9 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   if ("response" in scrapeResult) {
     markdown ??= scrapeResult.response.markdown;
     metadata = getDocumentMetadata({
-      metadata: scrapeResult.response.metadata,
+      ...(scrapeResult.response.metadata === undefined
+        ? {}
+        : { metadata: scrapeResult.response.metadata }),
     });
   }
   if (!markdown) {
@@ -122,7 +124,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   const processedContent = selectRelevantContent({
     content: markdown,
     maxLength,
-    query: selectionQuery,
+    ...(selectionQuery === undefined ? {} : { query: selectionQuery }),
   });
   yield* Effect.sync(() =>
     writer.write({

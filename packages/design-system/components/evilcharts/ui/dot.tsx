@@ -14,8 +14,8 @@ interface ChartDotProps {
   dataKey: string;
   fillOpacity?: number;
   /** Optional SVG <mask> id — lets the dot share an area's intro reveal wipe. */
-  maskId?: string;
-  type?: DotVariant;
+  maskId?: string | undefined;
+  type?: DotVariant | undefined;
 }
 
 const ChartDot = memo(function ChartDot({
@@ -93,13 +93,13 @@ const ChartDot = memo(function ChartDot({
 });
 
 interface DotVariantProps {
-  className?: string;
+  className?: string | undefined;
   cx: number;
   cy: number;
   dotId: string;
   fillOpacity: number;
   gradientUrl: string;
-  maskId?: string;
+  maskId?: string | undefined;
 }
 
 const DefaultDot = memo(

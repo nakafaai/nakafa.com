@@ -8,7 +8,7 @@ import {
 import { cn } from "cn";
 
 interface MarkdownCodeBlockProps {
-  readonly className?: string;
+  readonly className?: string | undefined;
   readonly code: string;
   readonly language: string;
 }

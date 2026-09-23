@@ -12,7 +12,7 @@ import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
 } from "@repo/backend/convex/credits/helpers/state";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Struct } from "effect";
 
 // Admission quota is independent of refundable credits. Five starts may burst;
 // ten per minute permits interactive retries without unbounded hold cycling.
@@ -83,7 +83,7 @@ export const reserveChatTurn = Effect.fn("ChatTurn.reserve")(function* (
         credits,
         creditsResetAt: state.creditsResetAt,
         transactionId,
-        planCreditGrantId: user.planCreditGrantId,
+        ...Struct.pick(user, ["planCreditGrantId"]),
       });
       await ctx.scheduler.runAfter(
         CHAT_TURN_EXPIRY_MS,

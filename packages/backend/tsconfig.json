@@ -1,23 +1,11 @@
 {
+  "extends": "../typescript-config/library.json",
   "compilerOptions": {
     "allowJs": true,
-    "strict": true,
-    "skipLibCheck": true,
     "jsx": "react-jsx",
     "target": "ESNext",
     "lib": ["ES2022", "dom", "ESNext.Array", "DOM.Iterable"],
-    "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "isolatedModules": true,
-    "noEmit": true,
-    "plugins": [
-      {
-        "name": "@effect/language-service",
-        "ignoreEffectSuggestionsInTscExitCode": false
-      }
-    ],
     "types": ["node", "vitest/globals"],
     "paths": {
       "@/*": ["./*"],

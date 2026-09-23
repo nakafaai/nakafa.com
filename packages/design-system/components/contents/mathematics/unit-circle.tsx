@@ -73,11 +73,13 @@ function Content({
   trigValues,
 }: {
   angle: number;
-  trigValues?: {
-    sin?: string;
-    cos?: string;
-    tan?: string;
-  };
+  trigValues?:
+    | {
+        sin?: string;
+        cos?: string;
+        tan?: string;
+      }
+    | undefined;
 }) {
   const t = useTranslations("Common");
   const format = useFormatter();

@@ -169,9 +169,9 @@ export function Line({
             // Clicking the selected line clears the selection, otherwise selects it
             selectDataKey(isSelected ? null : dataKey);
           }}
-          shape={enableBufferLine ? bufferLineShape : undefined}
+          {...(enableBufferLine ? { shape: bufferLineShape } : {})}
           stroke={getChartSeriesPaint(id, "colors", dataKey, colorsCount)}
-          strokeDasharray={getStrokeDasharray(enableBufferLine, isDashed)}
+          {...(!enableBufferLine && isDashed ? { strokeDasharray: "5 5" } : {})}
           strokeOpacity={opacity.stroke}
           strokeWidth={STROKE_WIDTH}
           style={{
@@ -221,15 +221,6 @@ const getOpacity = (selectedDataKey: string | null, dataKey: string) => {
   return selectedDataKey === dataKey
     ? { stroke: 1, dot: 1 }
     : { stroke: 0.3, dot: 0.3 };
-};
-
-// Resolves a line's stroke-dasharray, the buffer line manages its own dashes
-const getStrokeDasharray = (enableBufferLine: boolean, isDashed: boolean) => {
-  if (enableBufferLine) {
-    return;
-  }
-
-  return isDashed ? "5 5" : undefined;
 };
 
 // Reads marker configuration; the series owns the Recharts rendering slots.

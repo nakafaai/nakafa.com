@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import { readTryoutReference } from "@repo/backend/content/tryout/reference";
 import { resolveReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
@@ -11,7 +11,7 @@ import {
   makeTryoutStartPlacement,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 describe("try-out reference visibility", () => {
   it.effect(
@@ -84,3 +84,59 @@ describe("try-out reference visibility", () => {
       })
   );
 });
+
+it.effect(
+  "preserves public descriptions and rejects duplicate graph identities",
+  () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const catalog = makeTryoutStartHierarchy("id", "visible").map((row) => ({
+        ...row,
+        description: "Signed description",
+      }));
+      const country = catalog.find((row) => row.kind === "country");
+      assert(country);
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          activateTryoutSnapshot(ctx, {
+            catalog,
+            placements: [makeTryoutStartPlacement("id")],
+          })
+        )
+      );
+      const input = yield* resolveReferenceInput({
+        kind: "content",
+        contentId: country.graph.assetId,
+      });
+      assert(input);
+      const read = () =>
+        t.query((ctx) =>
+          runConvexProgram(
+            readTryoutReference(input).pipe(
+              Effect.provide(convexTryoutLayer(ctx))
+            )
+          )
+        );
+      expect(yield* Effect.promise(read)).toMatchObject({
+        description: "Signed description",
+      });
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const row = await ctx.db
+            .query("tryoutCatalog")
+            .filter((q) => q.eq(q.field("assetId"), country.graph.assetId))
+            .first();
+          assert(row);
+          await ctx.db.insert(
+            "tryoutCatalog",
+            Struct.omit(row, ["_id", "_creationTime"])
+          );
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(read()).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+    })
+);

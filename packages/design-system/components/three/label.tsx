@@ -30,7 +30,7 @@ type LabelAnchorX = "center" | "left" | "right";
 type LabelAnchorY = "bottom" | "middle" | "top";
 
 interface ThreeLabelProps {
-  anchorX?: LabelAnchorX;
+  anchorX?: LabelAnchorX | undefined;
   anchorY?: LabelAnchorY;
   children: ReactNode;
   color: string | Color;
@@ -43,8 +43,8 @@ interface ThreeLabelProps {
   minimumFontSize?: number;
   /** Enables scene-aware depth occlusion for labels attached to geometry. */
   occlude?: HtmlProps["occlude"];
-  outlineColor?: string;
-  outlineWidth?: number;
+  outlineColor?: string | undefined;
+  outlineWidth?: number | undefined;
   position: HtmlProps["position"];
   /** Screen-plane rotation in radians. */
   rotation?: number;
@@ -189,16 +189,18 @@ export function ThreeLabel({
             y: gapDirection(anchorY) * gap,
           },
           height,
-          pixels: minimumFontSize
+          ...(minimumFontSize
             ? {
-                width:
-                  (element.offsetWidth * minimumFontSize) /
-                  LABEL_BASE_FONT_SIZE,
-                height:
-                  (element.offsetHeight * minimumFontSize) /
-                  LABEL_BASE_FONT_SIZE,
+                pixels: {
+                  width:
+                    (element.offsetWidth * minimumFontSize) /
+                    LABEL_BASE_FONT_SIZE,
+                  height:
+                    (element.offsetHeight * minimumFontSize) /
+                    LABEL_BASE_FONT_SIZE,
+                },
               }
-            : undefined,
+            : {}),
           rotation,
           width,
         });
@@ -230,10 +232,10 @@ export function ThreeLabel({
   }
 
   return (
-    <group position={position} ref={group}>
+    <group {...(position === undefined ? {} : { position })} ref={group}>
       <Html
         distanceFactor={distanceFactor}
-        occlude={occlude}
+        {...(occlude === undefined ? {} : { occlude })}
         ref={measureLabel}
         style={{
           WebkitTextStroke:

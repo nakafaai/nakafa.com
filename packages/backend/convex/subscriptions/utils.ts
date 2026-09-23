@@ -15,9 +15,9 @@ const INTERVAL_MAP: Record<string, SubscriptionRecurringInterval> = {
  * SDK uses open enums that may include unrecognized values.
  */
 function normalizeRecurringInterval(
-  interval: string | null | undefined
+  interval: string
 ): SubscriptionRecurringInterval | null {
-  return (interval && INTERVAL_MAP[interval]) || null;
+  return INTERVAL_MAP[interval] ?? null;
 }
 
 /**
@@ -41,10 +41,11 @@ function getSchoolIdFromMetadata(
 export function convertToDatabaseSubscription(
   subscription: Subscription
 ): WithoutSystemFields<Doc<"subscriptions">> {
+  const schoolId = getSchoolIdFromMetadata(subscription.metadata);
   return {
     id: subscription.id,
     customerId: subscription.customerId,
-    schoolId: getSchoolIdFromMetadata(subscription.metadata),
+    ...(schoolId === undefined ? {} : { schoolId }),
     createdAt: subscription.createdAt.toISOString(),
     modifiedAt: subscription.modifiedAt?.toISOString() ?? null,
     productId: subscription.productId,
@@ -56,7 +57,7 @@ export function convertToDatabaseSubscription(
     ),
     status: subscription.status,
     currentPeriodStart: subscription.currentPeriodStart.toISOString(),
-    currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+    currentPeriodEnd: subscription.currentPeriodEnd.toISOString(),
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
     customerCancellationReason: subscription.customerCancellationReason,
     customerCancellationComment: subscription.customerCancellationComment,

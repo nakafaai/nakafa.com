@@ -177,10 +177,9 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
     yield* ensureContentKey(ctx, item, sequence);
     const rollback = yield* rollbackEvidence(ctx, item, prior, priorSequence);
     const row = {
-      artifactHash:
-        item.change.operation === "upsert"
-          ? item.change.artifactHash
-          : undefined,
+      ...(item.change.operation === "upsert"
+        ? { artifactHash: item.change.artifactHash }
+        : {}),
       artifactLocale: item.change.artifactLocale,
       artifactReady: false,
       contentKey: item.change.contentKey,
@@ -188,7 +187,9 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
       itemBatchHash: batchHash,
       itemBatchIndex: batchIndex,
       itemJson,
-      priorSequence: rollback.priorSequence,
+      ...(rollback.priorSequence === undefined
+        ? {}
+        : { priorSequence: rollback.priorSequence }),
       projectionReady: false,
       releaseId: item.releaseId,
       rollbackJson: rollback.rollbackJson,

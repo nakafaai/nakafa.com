@@ -4,7 +4,7 @@ import { readSchoolAuthRedirect } from "@/lib/auth/school";
 
 function schoolRequest(path: string, cookie?: string) {
   return new NextRequest(`http://localhost:3000${path}`, {
-    headers: cookie === undefined ? undefined : { cookie },
+    ...(cookie === undefined ? {} : { headers: { cookie } }),
   });
 }
 

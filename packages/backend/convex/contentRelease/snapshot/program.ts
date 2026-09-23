@@ -105,22 +105,22 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
   rowJson: string
 ) {
   const bucket = getHashBucket(record.rowHash);
-  if (record.row.sitemap && bucket === null) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Program snapshot ${snapshotId} has an invalid curriculum row hash.`
-    );
-  }
   const row = {
-    ...(record.row.sitemap && bucket !== null ? { bucket } : {}),
+    ...(record.row.sitemap ? { bucket } : {}),
     appLocale: record.row.appLocale,
     index,
     level: record.row.level,
-    contextPath: record.row.materialContextParentPath,
-    materialKey: record.row.materialKey,
+    ...(record.row.materialContextParentPath === undefined
+      ? {}
+      : { contextPath: record.row.materialContextParentPath }),
+    ...(record.row.materialKey === undefined
+      ? {}
+      : { materialKey: record.row.materialKey }),
     nodeKey: record.row.nodeKey,
     order: record.row.order,
-    parentPath: record.row.parentPath,
+    ...(record.row.parentPath === undefined
+      ? {}
+      : { parentPath: record.row.parentPath }),
     programKey: record.row.programKey,
     path: record.row.publicPath,
     rowHash: record.rowHash,

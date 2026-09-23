@@ -82,7 +82,9 @@ function foundResponse(title?: string) {
     artifact: JSON.parse(testArtifactJson()),
     delivery: "public",
     kind: "found",
-    projection: JSON.parse(testProjectionJson({ title })),
+    projection: JSON.parse(
+      testProjectionJson({ ...(title === undefined ? {} : { title }) })
+    ),
     projectionHash: TEST_DIGEST,
     release: JSON.parse(testReleaseJson()),
     rendererManifest: JSON.parse(testRendererJson()),
