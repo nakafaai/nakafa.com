@@ -23,12 +23,15 @@ test("chart articles retain server HTML after caching in every locale", async ({
             Effect.gen(function* () {
               for (const href of Object.values(pinnedRoutes.cabinet)) {
                 yield* Effect.promise(() => page.goto(href));
+                // Streamed segments can briefly retain a hidden article copy.
                 yield* Effect.promise(() =>
-                  expect(page.locator("article table")).toBeVisible()
+                  expect(page.getByRole("table")).toBeVisible()
                 );
                 yield* Effect.promise(() =>
                   expect(
-                    page.locator('article [data-slot="chart"]')
+                    page
+                      .locator('article [data-slot="chart"]')
+                      .filter({ visible: true })
                   ).toBeVisible()
                 );
                 // Parsing the response excludes content present only in RSC
