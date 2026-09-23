@@ -40,7 +40,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Continue Learning**: A signed-in user read model ranked from recent learning interactions. It must not be inferred for anonymous users.
 - **Popularity**: Aggregate learning interest derived from view events and durable counters. Product reads use bounded read models, not raw event scans.
 - **Lifetime counter**: A durable popularity count that continues after raw audit events expire.
-- **Integrity Module**: Permanent operational code that proves raw event coverage, checkpoint progress, lifetime counter inclusion, and rank-index consistency.
+- **Popularity integrity proof**: Evidence of admitted raw event coverage, authorized account withdrawals, contiguous queue progress, lifetime counter inclusion, and rank-index consistency. This proof is required before audit-row deletion and is not currently available; deletion remains suspended.
 
 ## Nina
 

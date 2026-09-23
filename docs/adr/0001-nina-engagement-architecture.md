@@ -32,9 +32,9 @@ NinaHarness and LearningCapability seams. Provider-backed evals are opt-in for
 provider behavior changes; deterministic suites are the default readiness gate.
 
 Learning engagement uses durable read models and counters for product reads. Raw
-learning view events are bounded audit data after integrity proof. Lifetime
-popularity is stored in durable counters/checkpoints, with Aggregate reserved for
-ranked read indexes where it simplifies bounded top-N reads.
+learning view events are eligible for bounded retention only after Popularity
+integrity proof. Lifetime popularity is stored in durable counters, with Aggregate
+reserved for ranked read indexes where it simplifies bounded top-N reads.
 
 ## Consequences
 
@@ -44,5 +44,6 @@ ranked read indexes where it simplifies bounded top-N reads.
 - LearningCapability traces are bounded operational data, not canonical chat
   transcripts.
 - App adapters can change deployment details without changing NinaHarness.
-- Popularity cleanup cannot happen until the Integrity Module proves raw
-  coverage, checkpoint progress, lifetime inclusion, and rank-index consistency.
+- Popularity audit-row cleanup requires Popularity integrity proof. That proof
+  is not currently available, so deletion remains suspended as recorded in
+  ADR 0008.
