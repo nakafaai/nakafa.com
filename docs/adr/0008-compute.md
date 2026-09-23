@@ -54,19 +54,36 @@ counter calculation. There is no second trigger facade. The transaction rolls
 back both changes if either write fails. Read-only ranking consumers keep the
 same Aggregate contract.
 
-Popularity audit-row deletion is suspended. Completed finite-window cycles do
-not prove admitted-event coverage, authorized account withdrawals, contiguous
-queue progress, lifetime inclusion or rank-index consistency. Historical viewer
-rows have already been retired, so current counter totals cannot retroactively
-supply that proof. The remaining signals, durable lifetime counters and every
-public ranking window are preserved. Reintroducing deletion requires prospective
-accounting and a bounded, resumable integrity proof that detects concurrent
-writes and checks the counter/index relationship in both directions.
+Popularity retention follows two separate consumer horizons. Viewer keys only
+deduplicate the current server-assigned UTC day, so prior-day keys can expire.
+Queued work carries its own complete event payload. Applying that payload,
+updating daily signals, lifetime and finite counters, updating Aggregate, and
+removing the queue row commit in the same mutation. Account deletion removes
+pending personal queue rows and viewer keys without reversing processed totals.
 
-Retired retention has no cron, scheduler entrypoints, checkpoint schema or
-application table. Its completed day and phase describe the retired deletion
-job, not learning engagement or integrity evidence. Historical decisions belong
-in version control, not unused application tables.
+Daily aggregate signals remain until every finite-window maintenance cycle has
+completed the current UTC day. Only signals older than the 365-day window then
+expire. Late queue processing excludes those days from finite counters and
+daily signals while still updating lifetime. Lifetime counters and their ranking
+entries are never deleted by retention.
+
+One hourly cron prunes bounded indexed pages and atomically schedules a next
+page when needed. Each page derives the current day again, so a chain crossing
+midnight waits for the new day's maintenance before deleting daily inputs.
+Maintenance rows are read only when an expired daily input exists. Missing or
+incomplete cycles retain those inputs while viewer-key expiration continues.
+The remaining indexed rows are the resume position; there is no separate
+checkpoint table, migration endpoint or compatibility handler. Retrying or
+overlapping pages is safe under Convex transaction serialization.
+
+This supersedes the earlier suspension, which incorrectly required complete
+historical forensic evidence before expiring operational inputs. Historical
+viewer keys are not a permanent event ledger and cannot reconstruct lifetime
+totals, including after account deletion. That limitation does not invalidate
+the authoritative counters or require retaining personal deduplication keys
+forever. Regression tests verify the transaction, window cutoff, delayed queue,
+restart and midnight behavior rather than treating cycle completion as a claim
+of historical data completeness.
 
 Mutations that write only tables without registered triggers use native Convex
 builders. Mutations that own message, subscription, score, or other registered

@@ -4,6 +4,8 @@ import {
   type ExpireLearningPopularityWindowPageResult,
   expireLearningPopularityWindowPageArgs,
   expireLearningPopularityWindowPageResultValidator,
+  type PruneLearningPopularityResult,
+  pruneLearningPopularityResultValidator,
   type RefreshLearningPopularityWindowPageResult,
   refreshLearningPopularityWindowPageArgs,
   refreshLearningPopularityWindowPageResultValidator,
@@ -20,7 +22,21 @@ import {
   refreshLearningPopularityWindowPage as refreshLearningPopularityWindowPageProgram,
   scheduleLearningPopularityRefreshes as scheduleLearningPopularityRefreshesProgram,
 } from "@repo/backend/convex/contents/metrics/refresh";
+import { pruneLearningPopularity as pruneLearningPopularityProgram } from "@repo/backend/convex/contents/metrics/retention";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+
+/** Removes expired deduplication keys and consumed daily window inputs. */
+export const pruneLearningPopularity = internalMutation({
+  args: {},
+  returns: pruneLearningPopularityResultValidator,
+  handler: async (ctx): Promise<PruneLearningPopularityResult> =>
+    await runConvexProgram(
+      pruneLearningPopularityProgram(
+        ctx,
+        internal.contents.mutations.popularity.pruneLearningPopularity
+      )
+    ),
+});
 
 /** Schedules daily expiry or a full repair after any missed cycle. */
 export const scheduleLearningPopularityExpiries = internalMutation({

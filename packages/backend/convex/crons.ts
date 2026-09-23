@@ -11,6 +11,7 @@ const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS = 24;
+const POPULARITY_RETENTION_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
@@ -101,6 +102,14 @@ crons.cron(
   "repair learning popularity windows",
   "15 0 * * 0",
   internal.contents.mutations.popularity.scheduleLearningPopularityRefreshes,
+  {}
+);
+
+/** Recovers bounded retention without keeping a separate checkpoint table. */
+crons.interval(
+  "prune expired popularity inputs",
+  { hours: POPULARITY_RETENTION_INTERVAL_HOURS },
+  internal.contents.mutations.popularity.pruneLearningPopularity,
   {}
 );
 

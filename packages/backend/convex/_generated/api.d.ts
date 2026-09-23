@@ -12313,6 +12313,17 @@ export declare const internal: {
             skipped: boolean;
           }
         >;
+        pruneLearningPopularity: FunctionReference<
+          "mutation",
+          "internal",
+          {},
+          {
+            hasMore: boolean;
+            signalsDeleted: number;
+            viewersDeleted: number;
+            waitingForMaintenance: boolean;
+          }
+        >;
         refreshLearningPopularityWindowPage: FunctionReference<
           "mutation",
           "internal",
