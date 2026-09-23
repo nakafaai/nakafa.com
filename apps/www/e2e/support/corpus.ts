@@ -13,6 +13,11 @@ export const pinnedRoutes = {
     en: "/en/articles/politics/regional-elections-turmoil",
     id: "/id/articles/politics/regional-elections-turmoil",
   },
+  cabinet: {
+    de: "/de/articles/politik/kabinett-merah-putih-und-koalitionspolitik",
+    en: "/en/articles/politics/merah-putih-cabinet-analysis",
+    id: "/id/articles/politics/merah-putih-cabinet-analysis",
+  },
   material: {
     de: "/de/faecher/mathematik/analytische-geometrie/hyperbel",
     en: "/en/subjects/mathematics/analytic-geometry/hyperbola",

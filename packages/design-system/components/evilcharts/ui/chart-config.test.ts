@@ -135,15 +135,17 @@ describe("chart config utilities", () => {
     expect(axisValueToPercentFormatter(0.456)).toBe("46%");
   });
 
-  it("creates deterministic loading data when randomness is controlled", () => {
-    vi.spyOn(Math, "random").mockReturnValue(0.5);
+  it("keeps loading geometry stable without reading request-time randomness", () => {
+    const random = vi.spyOn(Math, "random");
 
     expect(getLoadingData(2, 10, 20)).toEqual([
-      { loading: 15 },
-      { loading: 15 },
+      { loading: 13 },
+      { loading: 16 },
     ]);
-    expect(getLoadingData(1)).toEqual([{ loading: 35 }]);
+    expect(getLoadingData(1)).toEqual([{ loading: 24 }]);
     expect(getLoadingData()).toHaveLength(10);
+    expect(getLoadingData()).toEqual(getLoadingData());
+    expect(random).not.toHaveBeenCalled();
   });
 });
 

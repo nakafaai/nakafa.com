@@ -82,7 +82,11 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       yield* Effect.sync(() => expect(summaryLeft).toBe(titleLeft));
     }
 
-    const sectionHeading = page.locator("article h2 span").first();
+    const sectionHeading = page
+      .locator("article")
+      .getByRole("heading", { level: 2 })
+      .first()
+      .locator("span");
     yield* Effect.promise(() => expect(sectionHeading).toBeVisible());
     const sectionInk = yield* Effect.promise(() =>
       sectionHeading.evaluate(readSectionHeadingInk)
@@ -98,7 +102,11 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       expect(sectionInk.ink).not.toBe(sectionInk.decorationColor)
     );
     yield* Effect.sync(() => expect(sectionInk.thickness).toBeGreaterThan(1));
-    const subheading = page.locator("article h3 span").first();
+    const subheading = page
+      .locator("article")
+      .getByRole("heading", { level: 3 })
+      .first()
+      .locator("span");
     yield* Effect.promise(() => expect(subheading).toBeVisible());
     const subheadingInk = yield* Effect.promise(() =>
       subheading.evaluate(readSectionHeadingInk)
