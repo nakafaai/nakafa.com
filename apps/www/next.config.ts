@@ -212,6 +212,10 @@ const nextConfig = {
   headers: createAppHeaders,
   experimental: {
     ...config.experimental,
+    // Keep completed payloads keyed by concrete URL parameters. Runtime
+    // metadata can omit vary parameters and otherwise leak across lessons.
+    // https://github.com/vercel/next.js/pull/97804
+    varyParams: false,
     // Cold builds must fit the 8 GB production builder without retaining the
     // persistent compiler graph for disk-cache serialization.
     // https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopackFileSystemCache

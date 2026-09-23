@@ -38,7 +38,7 @@ describe("published material sitemap", () => {
 
         const inventory = yield* readPublishedMaterialBuckets("de");
         const pages = yield* Effect.forEach(inventory.buckets, (bucket) =>
-          readPublishedMaterialSitemap("de", bucket).pipe(
+          readPublishedMaterialSitemap("de", [bucket]).pipe(
             Effect.flatMap(Effect.fromNullishOr)
           )
         );
@@ -83,7 +83,7 @@ describe("published material sitemap", () => {
         buckets: ["abc"],
         materialCount: 1,
       });
-      expect(yield* readPublishedMaterialSitemap("en", "abc")).toMatchObject({
+      expect(yield* readPublishedMaterialSitemap("en", ["abc"])).toMatchObject({
         routes: [{ lastModified: "2025-04-27" }],
       });
     })

@@ -1,11 +1,9 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { convexMaterialLayer } from "@repo/backend/content/material/convex";
 import { readMaterialNavigation } from "@repo/backend/content/material/navigation";
-import {
-  readMaterialDelivery,
-  readMaterialLesson,
-} from "@repo/backend/content/material/read";
+import { readMaterialLesson } from "@repo/backend/content/material/read";
 import { api } from "@repo/backend/convex/_generated/api";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -24,67 +22,55 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("material navigation reuse", () => {
-  it("keeps lesson reads constant as the authenticated sibling group grows", async () => {
-    const target = convexTest(schema, convexModules);
-    const projections = ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) =>
-      Array.from({ length: 10 }, (_, index) =>
-        makeMaterialProjection(appLocale, index + 1)
-      )
-    );
-    await activateMaterialCatalog(target, projections);
-    const requested = makeMaterialProjection("en", 1);
-    const previous = await target.query(async (ctx) => {
-      const result = await runConvexProgram(
-        readMaterialDelivery("en", requested.publicPath).pipe(
-          Effect.provide(convexMaterialLayer(ctx))
+  it.each([2, 10])(
+    "keeps lesson reads constant for %i authenticated siblings",
+    async (siblingCount) => {
+      const target = convexTest(schema, convexModules);
+      const projections = ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) =>
+        Array.from({ length: siblingCount }, (_, index) =>
+          makeMaterialProjection(appLocale, index + 1)
         )
       );
-      return { result, metrics: await ctx.meta.getTransactionMetrics() };
-    });
-    const current = await target.query(async (ctx) => {
-      const result = await runConvexProgram(
-        readMaterialLesson("en", requested.publicPath).pipe(
-          Effect.provide(convexMaterialLayer(ctx))
-        )
-      );
-      return { result, metrics: await ctx.meta.getTransactionMetrics() };
-    });
-    const group = await target.query(async (ctx) => {
-      const result = await runConvexProgram(
-        readMaterialNavigation(
-          "en",
-          requested.materialKey,
-          MATERIAL_IDENTITY.releaseId
-        ).pipe(Effect.provide(convexMaterialLayer(ctx)))
-      );
-      return { result, metrics: await ctx.meta.getTransactionMetrics() };
-    });
-    const navigation = group.result;
+      await activateMaterialCatalog(target, projections);
+      const requested = makeMaterialProjection("en", 1);
+      const current = await target.query(async (ctx) => {
+        const result = await runConvexProgram(
+          readMaterialLesson("en", requested.publicPath).pipe(
+            Effect.provide(convexMaterialLayer(ctx))
+          )
+        );
+        return { result, metrics: await ctx.meta.getTransactionMetrics() };
+      });
+      const group = await target.query(async (ctx) => {
+        const result = await runConvexProgram(
+          readMaterialNavigation(
+            "en",
+            requested.materialKey,
+            MATERIAL_IDENTITY.releaseId
+          ).pipe(Effect.provide(convexMaterialLayer(ctx)))
+        );
+        return { result, metrics: await ctx.meta.getTransactionMetrics() };
+      });
+      const navigation = group.result;
 
-    expect(current.result.runtimeJson).toBe(previous.result.runtimeJson);
-    expect({
-      ...current.result.model,
-      siblingJson: navigation.siblingJson,
-    }).toEqual(previous.result.model);
-    expect(navigation.siblingJson).toHaveLength(10);
-    expect(previous.metrics.databaseQueries.used).toBe(31);
-    expect(current.metrics.databaseQueries.used).toBe(12);
-    expect(group.metrics.databaseQueries.used).toBe(23);
-    // The first cold pair costs 35 queries; reuse pays back on a second lesson.
-    expect(
-      current.metrics.databaseQueries.used * 2 +
-        group.metrics.databaseQueries.used
-    ).toBeLessThan(previous.metrics.databaseQueries.used * 2);
-    expect(current.metrics.bytesRead.used).toBeLessThan(
-      previous.metrics.bytesRead.used
-    );
-    const other = await target.query(api.contentRelease.material.lesson, {
-      appLocale: "en",
-      publicPath: makeMaterialProjection("en", 2).publicPath,
-    });
-    expect(other.materialKey).toBe(current.result.materialKey);
-    expect(other.model.activeReleaseId).toBe(navigation.activeReleaseId);
-  });
+      expect(current.result.model.projectionJson).toBe(
+        canonicalizeMaterialProjection(requested)
+      );
+      expect(navigation.siblingJson).toEqual(
+        projections
+          .filter((projection) => projection.appLocale === "en")
+          .map(canonicalizeMaterialProjection)
+      );
+      expect(current.metrics.databaseQueries.used).toBe(12);
+      expect(group.metrics.databaseQueries.used).toBe(3 + 2 * siblingCount);
+      const other = await target.query(api.contentRelease.material.lesson, {
+        appLocale: "en",
+        publicPath: makeMaterialProjection("en", 2).publicPath,
+      });
+      expect(other.materialKey).toBe(current.result.materialKey);
+      expect(other.model.activeReleaseId).toBe(navigation.activeReleaseId);
+    }
+  );
 
   it("returns an authenticated withdrawal without requesting a group", async () => {
     const target = convexTest(schema, convexModules);

@@ -7,7 +7,6 @@ import { readMaterialIdentity } from "@repo/backend/content/material/identity";
 import { readMaterialNavigation } from "@repo/backend/content/material/navigation";
 import { readMaterialPage } from "@repo/backend/content/material/page";
 import {
-  readMaterialDelivery,
   readMaterialLesson,
   readMaterialModel,
 } from "@repo/backend/content/material/read";
@@ -85,23 +84,6 @@ const materialIdentityValidator = v.object({
   activeReleaseId: v.union(v.string(), v.null()),
   managed: v.boolean(),
   publicPath: v.union(v.string(), v.null()),
-});
-
-/** Whole-shell delivery for previously deployed www consumers.
- * The signed content delivery owner can retire this after every consumer uses
- * lesson/navigation and production records no calls for seven complete days. */
-export const delivery = query({
-  args: { appLocale: appLocaleValidator, publicPath: v.string() },
-  returns: v.object({
-    model: materialModelValidator,
-    runtimeJson: v.union(v.string(), v.null()),
-  }),
-  handler: (ctx, { appLocale, publicPath }) =>
-    runConvexProgram(
-      readMaterialDelivery(appLocale, publicPath).pipe(
-        Effect.provide(convexMaterialLayer(ctx))
-      )
-    ),
 });
 
 /** Delivers the signed lesson while navigation uses a reusable group query. */
@@ -218,19 +200,18 @@ export const sitemapBuckets = query({
     ),
 });
 
-/** Returns one verified material sitemap partition. */
+/** Returns one bounded batch of verified material sitemap partitions. */
 export const sitemapPage = query({
   args: {
     appLocale: appLocaleValidator,
-    bucket: v.union(v.string(), v.array(v.string())),
+    bucket: v.array(v.string()),
   },
   returns: materialSitemapValidator,
   handler: (ctx, { appLocale, bucket: bucketId }) =>
     runConvexProgram(
-      readMaterialSitemap(
-        appLocale,
-        typeof bucketId === "string" ? [bucketId] : bucketId
-      ).pipe(Effect.provide(convexMaterialLayer(ctx)))
+      readMaterialSitemap(appLocale, bucketId).pipe(
+        Effect.provide(convexMaterialLayer(ctx))
+      )
     ),
 });
 

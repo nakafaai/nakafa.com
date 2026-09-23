@@ -28,7 +28,7 @@ import {
  * so their module graph never renders interactive renderers. */
 export const decodeMaterialModel = Effect.fn("NakafaMaterial.decodeModel")(
   function* (
-    source: FunctionReturnType<typeof api.contentRelease.material.delivery>,
+    source: Effect.Success<ReturnType<typeof assembleMaterialSource>>,
     locale: Locale,
     publicPath: string
   ) {
@@ -61,7 +61,7 @@ export const decodeMaterialModel = Effect.fn("NakafaMaterial.decodeModel")(
 export const decodeMaterialDelivery = Effect.fn(
   "NakafaMaterial.decodeDelivery"
 )(function* (
-  source: FunctionReturnType<typeof api.contentRelease.material.delivery>,
+  source: Effect.Success<ReturnType<typeof assembleMaterialSource>>,
   locale: Locale,
   publicPath: string
 ) {
