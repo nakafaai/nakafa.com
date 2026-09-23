@@ -219,7 +219,7 @@ const tables = {
     windowKey: learningPopularityFiniteWindowValidator,
   }).index("by_scopeMode_and_windowKey", ["scopeMode", "windowKey"]),
 
-  /** Durable singleton for one idempotent popularity retention chain. */
+  /** Frozen checkpoint from retired retention; retained as historical evidence. */
   learningPopularityRetention: defineTable({
     completedDay: v.optional(v.number()),
     day: v.number(),
