@@ -24,7 +24,7 @@ export function LineScene({
       showOrigin={
         !lines.some((line) => line.endpoints?.start || line.endpoints?.end)
       }
-      showZAxis={showZAxis ?? !isFrontalPlane}
+      showZAxis={showZAxis}
     >
       {lines.map((line, index) => (
         <LineEquation

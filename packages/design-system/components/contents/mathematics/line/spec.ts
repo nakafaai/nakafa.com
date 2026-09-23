@@ -1,5 +1,4 @@
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
-import type { ThreeLabelAnchorX } from "@repo/design-system/components/three/label";
 import type { LineEndpoints } from "@repo/design-system/lib/geometry/endpoint";
 import type { ReactNode } from "react";
 
@@ -11,12 +10,9 @@ export interface LinePoint {
 
 /** Serializable label contract passed from the server card to WebGL. */
 export interface ResolvedLineLabel {
-  anchorX?: ThreeLabelAnchorX;
   at?: number;
   fontSize?: ThreeFontSize | number;
   offset?: [number, number, number];
-  /** Fractional distance along the line, taking precedence over `at`. */
-  progress?: number;
   text: ReactNode;
 }
 
@@ -44,7 +40,7 @@ export interface LineSceneProps {
   cameraPosition: [number, number, number];
   cameraTarget?: [number, number, number];
   lines: readonly ResolvedLine[];
-  showZAxis?: boolean;
+  showZAxis: boolean;
 }
 
 type CircleLine = Omit<ResolvedLine, "points" | "smooth">;
