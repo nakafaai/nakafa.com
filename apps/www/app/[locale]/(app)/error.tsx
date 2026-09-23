@@ -10,10 +10,10 @@ import { useEffect } from "react";
 
 export default function ErrorPage({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   const t = useTranslations("Error");
 
@@ -40,7 +40,7 @@ export default function ErrorPage({
           </div>
 
           <div className="mx-auto grid w-fit grid-cols-2 gap-2">
-            <Button onClick={reset}>{t("retry")}</Button>
+            <Button onClick={retry}>{t("retry")}</Button>
             <a
               className={cn(buttonVariants({ variant: "secondary" }))}
               href="https://github.com/nakafaai/nakafa.com/issues"
