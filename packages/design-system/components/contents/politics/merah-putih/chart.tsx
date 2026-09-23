@@ -94,12 +94,13 @@ export function CabinetChart({
       <CardContent>
         <EvilBarChart
           chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
+          className="min-h-80"
           config={chartConfig}
           data={CabinetChartData}
           layout="horizontal"
         >
           <Grid horizontal={false} />
-          <YAxis dataKey="name" tickMargin={10} width={150} />
+          <YAxis dataKey="name" tickMargin={10} />
           <XAxis dataKey="cabinet" domain={[0, cabinetAxisMax]} hide />
           <Tooltip />
           <Bar

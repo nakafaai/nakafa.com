@@ -36,6 +36,45 @@ test("chart articles retain server HTML after caching in every locale", async ({
                       .filter({ visible: true })
                   ).toBeVisible()
                 );
+                for (const width of [390, 1280]) {
+                  yield* Effect.promise(async () => {
+                    await page.setViewportSize({ width, height: 900 });
+                    const chart = page
+                      .locator('article [data-slot="chart"]')
+                      .filter({ visible: true });
+                    await chart
+                      .locator('xpath=ancestor::*[@data-slot="card"]')
+                      .scrollIntoViewIfNeeded();
+                    await chart.scrollIntoViewIfNeeded();
+                    await expect
+                      .poll(() =>
+                        chart.evaluate((element) => {
+                          const bounds = element.getBoundingClientRect();
+                          const labels = Array.from(
+                            element.querySelectorAll(
+                              ".recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value"
+                            )
+                          );
+                          return {
+                            count: labels.length,
+                            clipped: labels
+                              .filter((label) => {
+                                const rect = label.getBoundingClientRect();
+                                return (
+                                  rect.width === 0 ||
+                                  rect.left < bounds.left - 1 ||
+                                  rect.right > bounds.right + 1 ||
+                                  rect.top < bounds.top - 1 ||
+                                  rect.bottom > bounds.bottom + 1
+                                );
+                              })
+                              .map((label) => label.textContent),
+                          };
+                        })
+                      )
+                      .toEqual({ count: 8, clipped: [] });
+                  });
+                }
                 // Parsing the response excludes content present only in RSC
                 // scripts or inserted later by client hydration.
                 yield* Effect.promise(() =>
