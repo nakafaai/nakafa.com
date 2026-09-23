@@ -14,12 +14,6 @@ export const HistogramChart = dynamic(() =>
   )
 );
 
-export const FunctionChart = dynamic(() =>
-  import(
-    "@repo/design-system/components/contents/mathematics/function-chart"
-  ).then(({ FunctionChart }) => FunctionChart)
-);
-
 export const ScatterDiagram = dynamic(() =>
   import(
     "@repo/design-system/components/contents/mathematics/scatter-diagram"
