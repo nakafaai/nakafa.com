@@ -2,10 +2,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
-import {
-  type ActiveContentReleaseId,
-  readActiveContentIdentity,
-} from "@/lib/content/published/active";
+import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/index/cache";
 import {
@@ -121,9 +118,7 @@ const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
     if (!publishedFamily) {
       return null;
     }
-    const active = yield* readActiveContentIdentity();
     const activeRoute = yield* readActiveContentRoute({
-      activeReleaseId: active?.releaseId ?? null,
       appLocale,
       family: publishedFamily,
       publicPath: cleanSlug,

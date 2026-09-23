@@ -4,7 +4,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Option, Schema } from "effect";
 import { env } from "@/env";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
-import { readActiveContentIdentity } from "@/lib/content/published/active";
+import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
@@ -117,21 +117,14 @@ const readArticleCategoryRedirect = Effect.fn(
 const readArticlePageRedirect = Effect.fn(
   "www.routing.publicHtml.articlePageMigration"
 )(function* (migration: ArticlePageMigration) {
-  const identity = yield* readActiveContentIdentity();
-  if (!identity) {
-    return null;
-  }
-
   const [previous, successor] = yield* Effect.all(
     [
       readActiveContentRoute({
-        activeReleaseId: identity.releaseId,
         appLocale: "de",
         family: "article",
         publicPath: migration.previousPath,
       }),
       readActiveContentRoute({
-        activeReleaseId: identity.releaseId,
         appLocale: "de",
         family: "article",
         publicPath: migration.successorPath,
@@ -139,6 +132,13 @@ const readArticlePageRedirect = Effect.fn(
     ],
     { concurrency: 2 }
   );
+
+  if (previous.activeReleaseId !== successor.activeReleaseId) {
+    return yield* new PublishedReleaseMismatchError({
+      actualReleaseId: successor.activeReleaseId,
+      expectedReleaseId: previous.activeReleaseId,
+    });
+  }
 
   if (previous.kind !== "missing" || successor.kind !== "found") {
     return null;

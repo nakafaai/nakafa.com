@@ -15,10 +15,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
-import {
-  PublishedProjectionError,
-  PublishedReleaseMismatchError,
-} from "@/lib/content/published/errors";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
 
 type ContentRouteArgs = FunctionArgs<
   typeof api.contentRelease.ownership.resolve
@@ -26,10 +23,6 @@ type ContentRouteArgs = FunctionArgs<
 type ContentRouteResult = FunctionReturnType<
   typeof api.contentRelease.ownership.resolve
 >;
-/** Active identity and route pair that must be read from one publication. */
-interface ActiveContentRouteInput extends ContentRouteArgs {
-  readonly activeReleaseId: ActiveContentReleaseId | null;
-}
 /** One active Aksara route selected without exposing executable code. */
 type ActiveContentRoute =
   | {
@@ -79,17 +72,11 @@ const decodeActiveProjection = Effect.fn(
   }
   return projection;
 });
-/** Resolves active ownership through one family-agnostic route seam. */
+/** Resolves ownership and its active release identity in one Convex query. */
 export const readActiveContentRoute = Effect.fn(
   "NakafaContent.readActiveContentRoute"
-)(function* (input: ActiveContentRouteInput) {
+)(function* (input: ContentRouteArgs) {
   const appLocale = AppLocaleSchema.make(input.appLocale);
-  if (input.activeReleaseId === null) {
-    return {
-      activeReleaseId: null,
-      kind: "unmanaged",
-    } satisfies ActiveContentRoute;
-  }
   const args = {
     appLocale,
     family: input.family,
@@ -104,23 +91,11 @@ export const readActiveContentRoute = Effect.fn(
     const activeReleaseId = yield* Schema.decodeEffect(
       Schema.NullOr(ReleaseIdSchema)
     )(result.activeReleaseId);
-    if (activeReleaseId !== input.activeReleaseId) {
-      return yield* new PublishedReleaseMismatchError({
-        actualReleaseId: activeReleaseId,
-        expectedReleaseId: input.activeReleaseId,
-      });
-    }
     return { activeReleaseId, kind: result.kind } satisfies ActiveContentRoute;
   }
   const activeReleaseId = yield* Schema.decodeEffect(ReleaseIdSchema)(
     result.activeReleaseId
   );
-  if (activeReleaseId !== input.activeReleaseId) {
-    return yield* new PublishedReleaseMismatchError({
-      actualReleaseId: activeReleaseId,
-      expectedReleaseId: input.activeReleaseId,
-    });
-  }
   if (result.kind === "missing") {
     return { activeReleaseId, kind: result.kind } satisfies ActiveContentRoute;
   }
