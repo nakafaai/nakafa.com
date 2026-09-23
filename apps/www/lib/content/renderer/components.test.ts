@@ -25,18 +25,22 @@ afterEach(() => {
 });
 
 describe("renderer components", () => {
-  it.effect("resolves the physics LineEquation artifact", () =>
-    Effect.gen(function* () {
-      const { resolveRendererComponents } = yield* Effect.promise(
-        () => import("@/lib/content/renderer/components")
-      );
-      const components = yield* resolveRendererComponents({
-        contentKey,
-        rendererDomain: "physics",
-        requiredComponents: ["LineEquation"],
-      });
-      expect(components.LineEquation).toBeDefined();
-    })
+  it.effect(
+    "resolves the physics LineEquation artifact",
+    () =>
+      Effect.gen(function* () {
+        const { resolveRendererComponents } = yield* Effect.promise(
+          () => import("@/lib/content/renderer/components")
+        );
+        const components = yield* resolveRendererComponents({
+          contentKey,
+          rendererDomain: "physics",
+          requiredComponents: ["LineEquation"],
+        });
+        expect(components.LineEquation).toBeDefined();
+      }),
+    // This integration seam loads the real physics renderer module graph.
+    15_000
   );
 
   it.effect(
