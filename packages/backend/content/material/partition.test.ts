@@ -34,7 +34,7 @@ describe("contentRelease/material/partition", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialPartition("en", "abc").pipe(
+          readMaterialPartition("en", ["abc"]).pipe(
             Effect.provide(convexMaterialLayer(ctx))
           )
         )
@@ -43,7 +43,7 @@ describe("contentRelease/material/partition", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialPartition("en", "invalid").pipe(
+          readMaterialPartition("en", ["invalid"]).pipe(
             Effect.provide(convexMaterialLayer(ctx))
           )
         )
@@ -56,7 +56,7 @@ describe("contentRelease/material/partition", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialPartition("en", "fff").pipe(
+          readMaterialPartition("en", ["fff"]).pipe(
             Effect.provide(convexMaterialLayer(ctx))
           )
         )
@@ -75,7 +75,7 @@ describe("contentRelease/material/partition", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialPartition("en", bucket.bucket).pipe(
+          readMaterialPartition("en", [bucket.bucket]).pipe(
             Effect.provide(convexMaterialLayer(ctx))
           )
         )
@@ -94,7 +94,7 @@ describe("contentRelease/material/partition", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialPartition("en", bucket.bucket).pipe(
+          readMaterialPartition("en", [bucket.bucket]).pipe(
             Effect.provide(convexMaterialLayer(ctx))
           )
         )

@@ -1,11 +1,13 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { convexMaterialLayer } from "@repo/backend/content/material/convex";
 import {
   readMaterialBuckets,
   readMaterialSitemap,
 } from "@repo/backend/content/material/sitemap";
+import { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_BUCKET_LIMIT } from "@repo/backend/convex/contentRelease/bucket";
+import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -18,6 +20,93 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("contentRelease/material/sitemap", () => {
+  it("batches sitemap buckets without repeating publication reads", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(
+      target,
+      Array.from({ length: 10 }, (_, index) =>
+        makeMaterialProjection("en", index + 1)
+      ),
+      ["en"]
+    );
+    const inventory = await target.query(
+      api.contentRelease.material.sitemapBuckets,
+      { appLocale: "en" }
+    );
+    const buckets = inventory.buckets.slice(0, MATERIAL_SITEMAP_BUCKET_LIMIT);
+    assert(buckets.length === MATERIAL_SITEMAP_BUCKET_LIMIT);
+    const previous = await Promise.all(
+      buckets.map((bucket) =>
+        target.query(async (ctx) => {
+          const page = await runConvexProgram(
+            readMaterialSitemap("en", [bucket]).pipe(
+              Effect.provide(convexMaterialLayer(ctx))
+            )
+          );
+          return { page, metrics: await ctx.meta.getTransactionMetrics() };
+        })
+      )
+    );
+    const current = await target.query(async (ctx) => {
+      const page = await runConvexProgram(
+        readMaterialSitemap("en", buckets).pipe(
+          Effect.provide(convexMaterialLayer(ctx))
+        )
+      );
+      return { page, metrics: await ctx.meta.getTransactionMetrics() };
+    });
+    expect(current.page?.routes).toEqual(
+      previous.flatMap(({ page }) => page?.routes ?? [])
+    );
+    expect(current.metrics.databaseQueries.used).toBe(2 + 2 * buckets.length);
+    expect(current.metrics.bytesRead.used).toBeLessThan(
+      previous.reduce((sum, { metrics }) => sum + metrics.bytesRead.used, 0)
+    );
+    await expect(
+      target.query(api.contentRelease.material.sitemapPage, {
+        appLocale: "en",
+        bucket: buckets,
+      })
+    ).resolves.toEqual(current.page);
+  });
+
+  it.each([
+    [],
+    ["abc", "abc"],
+    ["invalid"],
+    Array.from({ length: MATERIAL_SITEMAP_BUCKET_LIMIT + 1 }, (_, index) =>
+      index.toString(16).padStart(3, "0")
+    ),
+  ])(
+    "rejects an invalid batch before reading its catalog: %j",
+    async (...buckets) => {
+      const target = convexTest(schema, convexModules);
+      await expect(
+        target.query(api.contentRelease.material.sitemapPage, {
+          appLocale: "en",
+          bucket: buckets,
+        })
+      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
+    }
+  );
+
+  it("fails closed when any requested batch member is missing", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target);
+    const inventory = await target.query(
+      api.contentRelease.material.sitemapBuckets,
+      { appLocale: "en" }
+    );
+    const bucket = inventory.buckets[0];
+    assert(bucket && bucket !== "fff");
+    await expect(
+      target.query(api.contentRelease.material.sitemapPage, {
+        appLocale: "en",
+        bucket: [bucket, "fff"],
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
   it.effect("rejects an index larger than the complete partition space", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
@@ -68,7 +157,7 @@ describe("contentRelease/material/sitemap", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialSitemap("en", "abc").pipe(
+          readMaterialSitemap("en", ["abc"]).pipe(
             Effect.provide(convexMaterialLayer(ctx))
           )
         )
@@ -101,7 +190,7 @@ describe("contentRelease/material/sitemap", () => {
         result.buckets.map((bucket) =>
           target.query((ctx) =>
             runConvexProgram(
-              readMaterialSitemap(appLocale, bucket).pipe(
+              readMaterialSitemap(appLocale, [bucket]).pipe(
                 Effect.provide(convexMaterialLayer(ctx))
               )
             )

@@ -55,14 +55,14 @@ export const readMaterialBuckets = Effect.fn(
   };
 });
 
-/** Reads one complete bounded material sitemap partition. */
+/** Reads complete material sitemap buckets with one publication owner. */
 export const readMaterialSitemap = Effect.fn(
   "contentRelease.readMaterialSitemap"
 )(function* (
   appLocale: Parameters<typeof readMaterialPartition>[0],
-  bucket: string
+  buckets: readonly string[]
 ) {
-  const partition = yield* readMaterialPartition(appLocale, bucket);
+  const partition = yield* readMaterialPartition(appLocale, buckets);
   if (partition.kind !== "found") {
     return null;
   }

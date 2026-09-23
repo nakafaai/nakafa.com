@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
 import { Effect } from "effect";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
@@ -29,18 +30,13 @@ const activeMocks = vi.hoisted(() => ({
   readActiveContentIdentity: vi.fn(),
 }));
 
-vi.mock("@/lib/content/article/sitemap", () => ({
-  readPublishedArticleBuckets: articleMocks.readPublishedArticleBuckets,
-  readPublishedArticleSitemap: articleMocks.readPublishedArticleSitemap,
-}));
+vi.mock("@/lib/content/article/sitemap", () => articleMocks);
 vi.mock("@/lib/content/material/sitemap", () => materialMocks);
 vi.mock("@/lib/content/page/catalog", () => pageMocks);
 vi.mock("@/lib/content/program/sitemap", () => programMocks);
 vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
-vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: activeMocks.readActiveContentIdentity,
-}));
+vi.mock("@/lib/content/published/active", () => activeMocks);
 
 beforeEach(() => {
   activeMocks.readActiveContentIdentity.mockReset();
@@ -200,14 +196,12 @@ describe("sitemap route pages", () => {
           })
         );
         materialMocks.readPublishedMaterialSitemap.mockImplementation(
-          (locale, bucket) =>
+          (locale, buckets: string[]) =>
             Effect.succeed({
-              routes: [
-                {
-                  lastModified: "2026-07-25",
-                  publicPath: `subjects/mathematics/lesson-${locale}-${bucket}`,
-                },
-              ],
+              routes: buckets.map((bucket) => ({
+                lastModified: "2026-07-25",
+                publicPath: `subjects/mathematics/lesson-${locale}-${bucket}`,
+              })),
             })
         );
 
@@ -217,7 +211,43 @@ describe("sitemap route pages", () => {
         ]);
         expect(
           materialMocks.readPublishedMaterialSitemap
-        ).toHaveBeenCalledTimes(2);
+        ).toHaveBeenCalledExactlyOnceWith("en", ["001", "002"]);
+      })
+  );
+
+  it.effect(
+    "bounds the number of native queries for a full material partition",
+    () =>
+      Effect.gen(function* () {
+        const buckets = Array.from({ length: 32 }, (_, index) =>
+          index.toString(16).padStart(3, "0")
+        );
+        materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+          Effect.succeed({
+            activeReleaseId: "release-sitemap",
+            buckets,
+            materialCount: 32,
+          })
+        );
+        materialMocks.readPublishedMaterialSitemap.mockImplementation(
+          (_locale, batch: string[]) =>
+            Effect.succeed({
+              routes: batch.map((bucket) => ({
+                publicPath: `subjects/test/${bucket}`,
+              })),
+            })
+        );
+        expect(yield* readPaths("material_en_p0")).toEqual(
+          buckets.map((bucket) => `/subjects/test/${bucket}`)
+        );
+        expect(
+          materialMocks.readPublishedMaterialSitemap
+        ).toHaveBeenCalledTimes(Math.ceil(32 / MATERIAL_SITEMAP_BUCKET_LIMIT));
+        expect(
+          materialMocks.readPublishedMaterialSitemap.mock.calls.every(
+            ([, batch]) => batch.length <= MATERIAL_SITEMAP_BUCKET_LIMIT
+          )
+        ).toBe(true);
       })
   );
 
@@ -239,7 +269,7 @@ describe("sitemap route pages", () => {
     })
   );
 
-  it.effect("rejects partitions whose buckets all went missing", () =>
+  it.effect("rejects an empty partition result", () =>
     Effect.gen(function* () {
       materialMocks.readPublishedMaterialBuckets.mockReturnValue(
         Effect.succeed({
@@ -249,7 +279,7 @@ describe("sitemap route pages", () => {
         })
       );
       materialMocks.readPublishedMaterialSitemap.mockReturnValue(
-        Effect.succeed(null)
+        Effect.succeed({ routes: [] })
       );
 
       expect(yield* readFailure("material_en_p0")).toMatchObject({
@@ -257,6 +287,38 @@ describe("sitemap route pages", () => {
         pageId: "material_en_p0",
       });
     })
+  );
+
+  it.effect.each([1, MATERIAL_SITEMAP_BUCKET_LIMIT + 1])(
+    "rejects a missing singleton tail in a %i-bucket sitemap",
+    (length) =>
+      Effect.gen(function* () {
+        const buckets = Array.from({ length }, (_, index) =>
+          index.toString(16).padStart(3, "0")
+        );
+        materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+          Effect.succeed({
+            activeReleaseId: "release-materials",
+            buckets,
+            materialCount: buckets.length,
+          })
+        );
+        materialMocks.readPublishedMaterialSitemap.mockImplementation(
+          (_locale, batch: string[]) =>
+            Effect.succeed(
+              batch.length === 1
+                ? null
+                : {
+                    routes: batch.map((bucket) => ({
+                      publicPath: `subjects/test/${bucket}`,
+                    })),
+                  }
+            )
+        );
+        expect(yield* readFailure("material_en_p0")).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
+      })
   );
 
   it.effect("rejects partitions rendered across publication releases", () =>

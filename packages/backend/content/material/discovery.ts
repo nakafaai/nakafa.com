@@ -46,7 +46,7 @@ export const readMaterialBucket = Effect.fn(
   appLocale: Parameters<typeof loadMaterialOwner>[0],
   bucket: string
 ) {
-  const partition = yield* readMaterialPartition(appLocale, bucket);
+  const partition = yield* readMaterialPartition(appLocale, [bucket]);
   if (partition.kind === "unmanaged") {
     return {
       activeReleaseId: partition.activeReleaseId,
