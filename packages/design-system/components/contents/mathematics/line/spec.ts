@@ -1,3 +1,4 @@
+import type { LineLabel } from "@repo/design-system/components/three/line-equation";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import type { LineEndpoints } from "@repo/design-system/lib/geometry/endpoint";
 import type { ReactNode } from "react";
@@ -10,6 +11,7 @@ export interface LinePoint {
 
 /** Serializable label contract passed from the server card to WebGL. */
 export interface ResolvedLineLabel {
+  anchorX?: LineLabel["anchorX"];
   at?: number;
   fontSize?: ThreeFontSize | number;
   offset?: [number, number, number];

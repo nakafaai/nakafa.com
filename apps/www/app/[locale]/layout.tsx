@@ -134,7 +134,9 @@ async function PreviewUpdates() {
   // Local revisions follow saves and must stream from the running provider.
   await io();
   const preview = await readPreviewManifestForPrerender();
-  return <PreviewRefresh revision={preview.revision} />;
+  return (
+    <PreviewRefresh revision={preview.revision} status={preview.status} />
+  );
 }
 
 /** Prebuilds active shells or the single selected local preview shell. */

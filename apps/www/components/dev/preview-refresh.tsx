@@ -1,12 +1,22 @@
 "use client";
-import { PreviewEventSchema } from "@nakafa/aksara-contracts/preview/spec";
+import {
+  type LocalPreviewManifest,
+  PreviewEventSchema,
+} from "@nakafa/aksara-contracts/preview/spec";
 import { Result, Schema } from "effect";
 import { useEffect } from "react";
 /** Reloads the real route when Aksara finishes a local compilation attempt. */
-export function PreviewRefresh({ revision }: { revision: number }) {
+export function PreviewRefresh({
+  revision,
+  status,
+}: {
+  revision: number;
+  status: LocalPreviewManifest["status"];
+}) {
   useEffect(() => {
     const events = new EventSource("/api/internal/content/preview");
     let observedRevision = revision;
+    let observedStatus = status;
     /** Loads newer terminal revisions, including edits missed while disconnected. */
     function refresh(event: MessageEvent) {
       const decoded = Schema.decodeUnknownResult(
@@ -15,13 +25,17 @@ export function PreviewRefresh({ revision }: { revision: number }) {
       if (Result.isFailure(decoded)) {
         return;
       }
-      if (decoded.success.revision <= observedRevision) {
+      const update = decoded.success;
+      if (
+        update.revision < observedRevision ||
+        (update.revision === observedRevision &&
+          update.status === observedStatus) ||
+        update.status === "pending"
+      ) {
         return;
       }
-      observedRevision = decoded.success.revision;
-      if (decoded.success.status === "pending") {
-        return;
-      }
+      observedRevision = update.revision;
+      observedStatus = update.status;
       // Next preserves caught errors on router.refresh() at the same pathname.
       // A new document also recovers when a valid artifact failed while rendering.
       window.location.reload();
@@ -31,6 +45,6 @@ export function PreviewRefresh({ revision }: { revision: number }) {
       events.removeEventListener("update", refresh);
       events.close();
     };
-  }, [revision]);
+  }, [revision, status]);
   return null;
 }
