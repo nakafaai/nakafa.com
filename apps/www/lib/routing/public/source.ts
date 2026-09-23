@@ -8,7 +8,6 @@ import { Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
-import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import {
   isApplicationRoutePath,
@@ -206,9 +205,7 @@ function readMissingOwnedHtmlLocale({
       return null;
     }
 
-    const identity = yield* readActiveContentIdentity();
     const ownership = yield* readActiveContentRoute({
-      activeReleaseId: identity?.releaseId ?? null,
       appLocale,
       family,
       publicPath,
