@@ -128,9 +128,9 @@ export function MdxListItem(props: ListItemProps) {
   );
 }
 
-/** Renders italic MDX emphasis at the medium weight. */
+/** Renders italic MDX emphasis without changing the surrounding weight. */
 export function MdxEmphasis(props: EmProps) {
-  return <em className="font-medium" {...props} />;
+  return <em {...props} />;
 }
 
 /**

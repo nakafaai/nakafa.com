@@ -13,7 +13,7 @@ import { cva } from "class-variance-authority";
  * learner has already met, such as a satisfied requirement or a completed step.
  */
 export const emphasisVariants = cva(
-  "rounded-sm box-decoration-clone p-1 font-medium",
+  "rounded-sm box-decoration-clone p-1 font-[weight:inherit]",
   {
     variants: {
       variant: {
