@@ -61,6 +61,17 @@ export const scheduleLearningPopularityExpiriesResultValidator = v.object({
   skippedWindows: v.number(),
 });
 
+export const pruneLearningPopularityResultValidator = v.object({
+  hasMore: v.boolean(),
+  signalsDeleted: v.number(),
+  viewersDeleted: v.number(),
+  waitingForMaintenance: v.boolean(),
+});
+
+export type PruneLearningPopularityResult = Infer<
+  typeof pruneLearningPopularityResultValidator
+>;
+
 export const refreshLearningPopularityWindowPageArgs = {
   cursor: v.optional(v.string()),
   day: v.number(),
