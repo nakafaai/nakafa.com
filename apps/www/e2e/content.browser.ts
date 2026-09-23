@@ -108,7 +108,10 @@ const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
     route: LocalizedContentRoute,
     jsonLdTypes: readonly JsonLdType[]
   ) {
-    const dateBlock = page.locator("p.sr-only:has(time[datetime])");
+    // Screen-reader prose stays accessible; pending streamed copies do not.
+    const dateBlock = page
+      .getByRole("paragraph")
+      .filter({ has: page.locator("time[datetime]") });
     yield* Effect.promise(() => expect(dateBlock).toHaveCount(1));
     const style = yield* Effect.promise(() =>
       dateBlock.evaluate((element) => {
@@ -240,13 +243,16 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
   if (group.kind !== "material") {
     return;
   }
-  const scenes = page.locator('[data-slot="line-scene"]');
+  const scene = page
+    .locator('[data-slot="line-scene"]')
+    .filter({ visible: true })
+    .first();
   const canvases = page.locator("canvas");
-  yield* Effect.promise(() => expect(scenes.first()).toBeAttached());
+  yield* Effect.promise(() => expect(scene).toBeAttached());
   yield* Effect.promise(() => expect(canvases).toHaveCount(0));
-  yield* Effect.promise(() => scenes.first().scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
   yield* Effect.promise(() =>
-    expect(canvases.first()).toBeVisible({ timeout: 30_000 })
+    expect(scene.locator("canvas")).toBeVisible({ timeout: 30_000 })
   );
 });
 

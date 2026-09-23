@@ -54,7 +54,6 @@ const mockLocaleRouting = vi.hoisted(() => ({
 }));
 const runtimeMocks = vi.hoisted(() => ({
   readActive: vi.fn(),
-  readActiveIdentity: vi.fn(),
   hasArticleCategory: vi.fn(),
   readProgramPath: vi.fn(),
   readRedirect: vi.fn(),
@@ -107,9 +106,6 @@ vi.mock("@/lib/content/article/category", () => ({
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: runtimeMocks.readActive,
 }));
-vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: runtimeMocks.readActiveIdentity,
-}));
 vi.mock("@/lib/content/program/path", () => ({
   readPublishedProgramPath: runtimeMocks.readProgramPath,
 }));
@@ -128,9 +124,6 @@ describe("proxy", () => {
     runtimeMocks.readActive
       .mockReset()
       .mockReturnValue(activeRoute("unmanaged"));
-    runtimeMocks.readActiveIdentity
-      .mockReset()
-      .mockReturnValue(Effect.succeed({ releaseId: "release-active" }));
     runtimeMocks.hasArticleCategory
       .mockReset()
       .mockReturnValue(Effect.succeed(true));
@@ -484,7 +477,6 @@ describe("proxy", () => {
 
     expectHardNotFound(response, "en");
     expect(runtimeMocks.readActive).toHaveBeenCalledWith({
-      activeReleaseId: "release-active",
       appLocale: "en",
       family: "page",
       publicPath: "unknown-content-root/example",

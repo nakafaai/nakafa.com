@@ -8,7 +8,6 @@ import { createTestNativeQuery } from "@/test/runtime-query";
 
 const mockReadRuntimeContentReference = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
-const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockReadPublishedProgramPath = vi.hoisted(() => vi.fn());
 const mockMatchesPreviewRoute = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
@@ -21,9 +20,6 @@ vi.mock("@repo/backend/client/nakafa/query", () => ({
 }));
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: mockReadActiveContentRoute,
-}));
-vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
 vi.mock("@/lib/content/program/path", () => ({
   readPublishedProgramPath: mockReadPublishedProgramPath,
@@ -42,9 +38,6 @@ describe("projected public html route rejection", () => {
     mockReadActiveContentRoute.mockReturnValue(
       Effect.succeed({ activeReleaseId, kind: "unmanaged" })
     );
-    mockReadActiveContentIdentity
-      .mockReset()
-      .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
     mockReadPublishedProgramPath
       .mockReset()
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
@@ -208,7 +201,6 @@ describe("projected public html route rejection", () => {
       expect(rejection).toBe("de");
 
       expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-        activeReleaseId,
         appLocale: "de",
         family: "material",
         publicPath:
@@ -242,7 +234,6 @@ describe("projected public html route rejection", () => {
         const tombstone = yield* readRejection(pathname);
         expect(tombstone).toBe("en");
         expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-          activeReleaseId,
           appLocale: "en",
           family: "material",
           publicPath: "subjects/mathematics/new-topic/new-published-lesson",
@@ -252,7 +243,6 @@ describe("projected public html route rejection", () => {
 
   it.effect("fails closed when signed material ownership is unavailable", () =>
     Effect.gen(function* () {
-      mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
       mockReadActiveContentRoute.mockReturnValueOnce(
         Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
       );
@@ -262,7 +252,6 @@ describe("projected public html route rejection", () => {
       );
       expect(rejection).toBe("en");
       expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-        activeReleaseId: null,
         appLocale: "en",
         family: "material",
         publicPath: "subjects/chemistry/green-chemistry/definition",
@@ -312,7 +301,6 @@ describe("projected public html route rejection", () => {
         }
 
         expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
-        expect(mockReadActiveContentIdentity).not.toHaveBeenCalled();
       })
   );
 });

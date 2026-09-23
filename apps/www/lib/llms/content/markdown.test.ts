@@ -20,15 +20,11 @@ const mockClassifyQuranLlmsRoute = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
 const mockIsPublicLlmsLocaleIndexRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
-const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockResolvePublicLlmsSectionIndex = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
 
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: mockReadActiveContentRoute,
-}));
-vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
 
 vi.mock("@/lib/llms/index/cache", () => ({
@@ -88,9 +84,6 @@ describe("llms markdown content resolver", () => {
     mockIsPublicLlmsLocaleIndexRoute.mockReset().mockReturnValue(false);
     mockReadActiveContentRoute.mockReset();
     mockResolvePublicLlmsSectionIndex.mockReset().mockReturnValue(null);
-    mockReadActiveContentIdentity
-      .mockReset()
-      .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
 
     mockReadActiveContentRoute.mockImplementation(({ publicPath }) =>
       Effect.succeed(
@@ -125,6 +118,27 @@ describe("llms markdown content resolver", () => {
 
       yield* expectCacheFailure(PUBLISHED_PATH, error, "published");
       expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("pins the body to the release returned by route ownership", () =>
+    Effect.gen(function* () {
+      mockReadActiveContentRoute.mockReturnValueOnce(
+        Effect.succeed({ activeReleaseId: "release-next", kind: "found" })
+      );
+
+      expect(yield* readMarkdown(PUBLISHED_PATH)).toBe("Published markdown");
+      expect(mockReadActiveContentRoute).toHaveBeenCalledExactlyOnceWith({
+        appLocale: "en",
+        family: "material",
+        publicPath: PUBLISHED_PATH,
+      });
+      expect(mockGetCachedPublishedText).toHaveBeenCalledExactlyOnceWith({
+        activeReleaseId: "release-next",
+        appLocale: "en",
+        family: "material",
+        publicPath: PUBLISHED_PATH,
+      });
     })
   );
 
@@ -168,7 +182,6 @@ describe("llms markdown content resolver", () => {
           "Published article"
         );
         expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-          activeReleaseId,
           appLocale: "en",
           family: "article",
           publicPath: PUBLISHED_ARTICLE_PATH,
@@ -195,7 +208,6 @@ describe("llms markdown content resolver", () => {
 
   it.effect("fails closed when signed material ownership is unavailable", () =>
     Effect.gen(function* () {
-      mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
       mockReadActiveContentRoute.mockReturnValueOnce(
         Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
       );
@@ -375,7 +387,6 @@ describe("llms markdown content resolver", () => {
           true
         );
         expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-          activeReleaseId,
           appLocale: "en",
           family,
           publicPath: cleanSlug,
@@ -415,7 +426,6 @@ describe("llms markdown content resolver", () => {
         ).toBeNull();
         expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
         expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-          activeReleaseId,
           appLocale: "en",
           family: "material",
           publicPath: "subjects/mathematics/integral/invalid.segment",

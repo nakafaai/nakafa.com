@@ -6,7 +6,6 @@ import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source"
 
 const publishedMocks = vi.hoisted(() => ({
   hasArticleCategory: vi.fn(),
-  readActiveContentIdentity: vi.fn(),
   readActiveContentRoute: vi.fn(),
 }));
 const previewMocks = vi.hoisted(() => ({
@@ -23,9 +22,6 @@ class TestPublishedRouteError extends Data.TaggedError(
 vi.mock("@/lib/content/article/category", () => ({
   hasPublishedArticleCategory: publishedMocks.hasArticleCategory,
 }));
-vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: publishedMocks.readActiveContentIdentity,
-}));
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: publishedMocks.readActiveContentRoute,
 }));
@@ -37,10 +33,6 @@ describe("public HTML route rejection", () => {
   beforeEach(() => {
     publishedMocks.hasArticleCategory.mockReset();
     publishedMocks.hasArticleCategory.mockReturnValue(Effect.succeed(true));
-    publishedMocks.readActiveContentIdentity.mockReset();
-    publishedMocks.readActiveContentIdentity.mockReturnValue(
-      Effect.succeed({ releaseId: "release-active" })
-    );
     publishedMocks.readActiveContentRoute.mockReset();
     publishedMocks.readActiveContentRoute.mockReturnValue(
       Effect.succeed({
@@ -132,7 +124,6 @@ describe("public HTML route rejection", () => {
 
         expect(results).toEqual([null, "en", "en"]);
         expect(publishedMocks.readActiveContentRoute).toHaveBeenCalledWith({
-          activeReleaseId: "release-active",
           appLocale: "en",
           family: "article",
           publicPath: "articles/public-affairs/new-article",
@@ -183,7 +174,6 @@ describe("public HTML route rejection", () => {
         expect(publishedMocks.readActiveContentRoute).toHaveBeenNthCalledWith(
           1,
           {
-            activeReleaseId: "release-active",
             appLocale: "de",
             family: "page",
             publicPath: "impressum",
@@ -209,7 +199,6 @@ describe("public HTML route rejection", () => {
           appLocale: "en",
           publicPath: "articles/public-affairs/new-preview",
         });
-        expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
         expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
       })
   );
@@ -231,16 +220,12 @@ describe("public HTML route rejection", () => {
           appLocale: "de",
           publicPath: "neue-rechtliche-seite",
         });
-        expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
         expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
       })
   );
 
   it.effect("rejects article details when no active publication exists", () =>
     Effect.gen(function* () {
-      publishedMocks.readActiveContentIdentity.mockReturnValueOnce(
-        Effect.succeed(null)
-      );
       publishedMocks.readActiveContentRoute.mockReturnValueOnce(
         Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
       );
@@ -251,7 +236,6 @@ describe("public HTML route rejection", () => {
       });
       expect(rejection).toBe("en");
       expect(publishedMocks.readActiveContentRoute).toHaveBeenCalledWith({
-        activeReleaseId: null,
         appLocale: "en",
         family: "article",
         publicPath: "articles/public-affairs/unmanaged-article",
@@ -345,7 +329,6 @@ describe("public HTML route rejection", () => {
         });
         expect(rejection).toBeNull();
       }
-      expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
       expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
     })
   );
@@ -378,7 +361,6 @@ describe("public HTML route rejection", () => {
           });
           expect(rejection).toBe(pathname.startsWith("/en/") ? "en" : "de");
         }
-        expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
         expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
       })
   );
@@ -390,7 +372,6 @@ describe("public HTML route rejection", () => {
         pathname: "/de/Invalid_Page",
       });
       expect(rejection).toBe("de");
-      expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
       expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
     })
   );

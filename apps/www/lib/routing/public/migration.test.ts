@@ -9,7 +9,6 @@ import { createTestNativeQuery } from "@/test/runtime-query";
 const readNakafaRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const articleMocks = vi.hoisted(() => ({
   hasCategory: vi.fn(),
-  readActiveIdentity: vi.fn(),
   readActiveRoute: vi.fn(),
 }));
 
@@ -19,9 +18,6 @@ vi.mock("@repo/backend/client/nakafa/query", () => ({
 vi.mock("@/lib/content/article/category", () => ({
   hasPublishedArticleCategory: articleMocks.hasCategory,
 }));
-vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: articleMocks.readActiveIdentity,
-}));
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: articleMocks.readActiveRoute,
 }));
@@ -30,9 +26,6 @@ describe("public URL migration redirects", () => {
   beforeEach(() => {
     readNakafaRuntimeQueryMock.mockReset();
     articleMocks.hasCategory.mockReset();
-    articleMocks.readActiveIdentity
-      .mockReset()
-      .mockReturnValue(Effect.succeed({ releaseId: "release-current" }));
     articleMocks.readActiveRoute.mockReset();
   });
 
@@ -259,17 +252,65 @@ describe("public URL migration redirects", () => {
     "does not redirect an article without active signed ownership",
     () =>
       Effect.gen(function* () {
-        articleMocks.readActiveIdentity.mockReturnValueOnce(
-          Effect.succeed(null)
+        articleMocks.readActiveRoute.mockReturnValue(
+          Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
         );
-
         const redirect = yield* readPublicUrlMigrationRedirect({
           method: "GET",
           pathname: "/de/articles/politics/regional-elections-turmoil",
         });
         expect(redirect).toBeNull();
-        expect(articleMocks.readActiveRoute).not.toHaveBeenCalled();
+        expect(articleMocks.readActiveRoute).toHaveBeenCalledTimes(2);
       })
+  );
+
+  it.effect.each([
+    {
+      previousId: "release-previous",
+      previousKind: "missing",
+      successorId: "release-next",
+      successorKind: "found",
+    },
+    {
+      previousId: null,
+      previousKind: "unmanaged",
+      successorId: "release-next",
+      successorKind: "missing",
+    },
+    {
+      previousId: "release-previous",
+      previousKind: "found",
+      successorId: null,
+      successorKind: "unmanaged",
+    },
+  ])("rejects redirect reads spanning different publications", (state) =>
+    Effect.gen(function* () {
+      articleMocks.readActiveRoute
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: state.previousId,
+            kind: state.previousKind,
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: state.successorId,
+            kind: state.successorKind,
+          })
+        );
+
+      expect(
+        yield* readPublicUrlMigrationRedirect({
+          method: "GET",
+          pathname: "/de/articles/politics/regional-elections-turmoil",
+        }).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: state.successorId,
+        expectedReleaseId: state.previousId,
+      });
+      expect(articleMocks.readActiveRoute).toHaveBeenCalledTimes(2);
+    })
   );
 
   it.effect.each([
@@ -338,7 +379,6 @@ describe("public URL migration redirects", () => {
       expect(redirect).toBeNull();
       expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
       expect(articleMocks.hasCategory).not.toHaveBeenCalled();
-      expect(articleMocks.readActiveIdentity).not.toHaveBeenCalled();
     })
   );
 });

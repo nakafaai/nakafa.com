@@ -12,7 +12,6 @@ import { hasLocale } from "next-intl";
 import { env } from "@/env";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
-import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 
 interface ProjectedHtmlRouteInput {
@@ -28,10 +27,7 @@ const readProjectedMaterialRouteRejection = Effect.fn(
   appLocale: AppLocale,
   publicPath: string
 ) {
-  const identity = yield* readActiveContentIdentity();
-  const activeReleaseId = identity?.releaseId ?? null;
   const ownership = yield* readActiveContentRoute({
-    activeReleaseId,
     appLocale,
     family: "material",
     publicPath,
