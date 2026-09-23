@@ -25,7 +25,9 @@ test("chart articles retain server HTML after caching in every locale", async ({
                 yield* Effect.promise(() => page.goto(href));
                 // Streamed segments can briefly retain a hidden article copy.
                 yield* Effect.promise(() =>
-                  expect(page.getByRole("table")).toBeVisible()
+                  expect(
+                    page.locator("article").getByRole("table")
+                  ).toBeVisible()
                 );
                 yield* Effect.promise(() =>
                   expect(
