@@ -2,9 +2,7 @@
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import { Effect } from "effect";
-import { resolveRendererComponents } from "@/lib/content/renderer/components";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
@@ -27,14 +25,34 @@ afterEach(() => {
 });
 
 describe("renderer components", () => {
+  it.effect("resolves the physics LineEquation artifact", () =>
+    Effect.gen(function* () {
+      const { resolveRendererComponents } = yield* Effect.promise(
+        () => import("@/lib/content/renderer/components")
+      );
+      const components = yield* resolveRendererComponents({
+        contentKey,
+        rendererDomain: "physics",
+        requiredComponents: ["LineEquation"],
+      });
+      expect(components.LineEquation).toBeDefined();
+    })
+  );
+
   it.effect(
     "resolves semantic HTML plus exactly the signed custom requirements",
     () =>
       Effect.gen(function* () {
+        const { semanticMdxComponents } = yield* Effect.promise(
+          () => import("@repo/design-system/lib/markdown/semantic")
+        );
+        const { resolveRendererComponents } = yield* Effect.promise(
+          () => import("@/lib/content/renderer/components")
+        );
         const components = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "snbt-plain",
-          requiredComponents: ["InlineMath"],
+          requiredComponents: ["p", "InlineMath"],
         });
 
         expect(components).toMatchObject(semanticMdxComponents);
@@ -152,6 +170,9 @@ describe("renderer components", () => {
 
   it.effect("resolves only the signed renderer from its selected domain", () =>
     Effect.gen(function* () {
+      const { semanticMdxComponents } = yield* Effect.promise(
+        () => import("@repo/design-system/lib/markdown/semantic")
+      );
       const { resolveRendererComponents } = yield* Effect.promise(
         () => import("@/lib/content/renderer/components")
       );

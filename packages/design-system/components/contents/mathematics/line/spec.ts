@@ -1,5 +1,5 @@
-import type { LineLabel } from "@repo/design-system/components/three/line-equation";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
+import type { LineLabel } from "@repo/design-system/components/three/line-equation";
 import type { LineEndpoints } from "@repo/design-system/lib/geometry/endpoint";
 import type { ReactNode } from "react";
 
