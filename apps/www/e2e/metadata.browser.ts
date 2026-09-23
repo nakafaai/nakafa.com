@@ -15,21 +15,27 @@ class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing
 const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
   page: Page
 ) {
+  const heading = yield* Effect.promise(() =>
+    page.getByRole("heading", { level: 1 }).textContent()
+  );
   return yield* Effect.promise(() =>
-    page.evaluate(() => ({
-      title: document.title,
-      heading: document.querySelector("h1")?.textContent,
-      links: Array.from(
-        document.querySelectorAll<HTMLLinkElement>(
-          'link[rel="canonical"], link[rel="alternate"][hreflang]'
+    page.evaluate(
+      (visibleHeading) => ({
+        title: document.title,
+        heading: visibleHeading,
+        links: Array.from(
+          document.querySelectorAll<HTMLLinkElement>(
+            'link[rel="canonical"], link[rel="alternate"][hreflang]'
+          ),
+          (link) => ({
+            rel: link.rel,
+            locale: link.hreflang,
+            href: link.href,
+          })
         ),
-        (link) => ({
-          rel: link.rel,
-          locale: link.hreflang,
-          href: link.href,
-        })
-      ),
-    }))
+      }),
+      heading
+    )
   );
 });
 
@@ -72,7 +78,9 @@ for (const [locale, href] of Object.entries(pinnedRoutes.material)) {
                 );
                 yield* Effect.promise(() => reference.goto(destination));
                 yield* Effect.promise(() =>
-                  expect(reference.locator("h1")).toBeVisible()
+                  expect(
+                    reference.getByRole("heading", { level: 1 })
+                  ).toBeVisible()
                 );
                 yield* Effect.promise(() =>
                   expect(
