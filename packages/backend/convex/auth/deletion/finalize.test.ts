@@ -353,55 +353,67 @@ describe("auth/deletion/finalize", () => {
     });
   });
 
-  it("persists the preparation version when scheduling a transfer continuation", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-    const t = convexTest(schema, convexModules);
-    const scheduleCleanup = vi.fn(async () => undefined);
-    const seeded = await t.mutation(async (ctx) => {
-      const result = await seedPreparedDeletionSchool(
-        ctx,
-        "scheduled-finalize-owner",
-        NOW,
-        ATTEMPT_ID
-      );
-      await ctx.db.patch("users", result.successorId, {
-        deletionPreparedAt: NOW,
-      });
-      return result;
-    });
-    const expectedPreparation = {
-      attemptId: ATTEMPT_ID,
-      preparationId: seeded.preparationId,
-      recoveryGeneration: 0,
-    };
-
-    await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(
+  it.each([true, false])(
+    "preserves preparation presence in a transfer continuation: %s",
+    async (versioned) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(NOW);
+      const t = convexTest(schema, convexModules);
+      const scheduleCleanup = vi.fn(async () => undefined);
+      const seeded = await t.mutation(async (ctx) => {
+        const result = await seedPreparedDeletionSchool(
           ctx,
           "scheduled-finalize-owner",
-          expectedPreparation,
-          scheduleCleanup
-        )
-      )
-    );
+          NOW,
+          ATTEMPT_ID
+        );
+        await ctx.db.patch("users", result.successorId, {
+          deletionPreparedAt: NOW,
+        });
+        return result;
+      });
+      const expectedPreparation = versioned
+        ? {
+            attemptId: ATTEMPT_ID,
+            preparationId: seeded.preparationId,
+            recoveryGeneration: 0,
+          }
+        : undefined;
 
-    const jobs = await t.query((ctx) =>
-      ctx.db.system.query("_scheduled_functions").collect()
-    );
-    expect(jobs).toMatchObject([
-      {
-        args: [{ authId: "scheduled-finalize-owner", expectedPreparation }],
-        name: "customers/deletion/workflow:finalizeDeletedUserCleanup",
-        scheduledTime: NOW,
-        state: { kind: "pending" },
-      },
-    ]);
-    expect(scheduleCleanup).not.toHaveBeenCalled();
-    const continuation = jobs[0];
-    assert(continuation);
-    await t.mutation((ctx) => ctx.scheduler.cancel(continuation._id));
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-  });
+      await t.mutation((ctx) =>
+        runConvexProgram(
+          finalizeAccountDeletion(
+            ctx,
+            "scheduled-finalize-owner",
+            expectedPreparation,
+            scheduleCleanup
+          )
+        )
+      );
+
+      const jobs = await t.query((ctx) =>
+        ctx.db.system.query("_scheduled_functions").collect()
+      );
+      expect(jobs).toMatchObject([
+        {
+          args: [
+            {
+              authId: "scheduled-finalize-owner",
+              ...(expectedPreparation === undefined
+                ? {}
+                : { expectedPreparation }),
+            },
+          ],
+          name: "customers/deletion/workflow:finalizeDeletedUserCleanup",
+          scheduledTime: NOW,
+          state: { kind: "pending" },
+        },
+      ]);
+      expect(scheduleCleanup).not.toHaveBeenCalled();
+      const continuation = jobs[0];
+      assert(continuation);
+      await t.mutation((ctx) => ctx.scheduler.cancel(continuation._id));
+      await t.finishAllScheduledFunctions(vi.runAllTimers);
+    }
+  );
 });

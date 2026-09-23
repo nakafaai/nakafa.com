@@ -9,12 +9,12 @@ import type { Schema } from "effect";
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
 /** Creates one schema-valid technical signed artifact. */
 export function testArtifactJson(options?: {
-  readonly artifactHash?: string;
-  readonly artifactLocale?: ArtifactLocaleCode;
-  readonly compiledCode?: string;
-  readonly contentKey?: string;
-  readonly plainText?: string;
-  readonly rendererDomain?: RendererDomain;
+  readonly artifactHash?: string | undefined;
+  readonly artifactLocale?: ArtifactLocaleCode | undefined;
+  readonly compiledCode?: string | undefined;
+  readonly contentKey?: string | undefined;
+  readonly plainText?: string | undefined;
+  readonly rendererDomain?: RendererDomain | undefined;
 }) {
   const compiledCode = options?.compiledCode ?? "return {};";
   return JSON.stringify({

@@ -30,7 +30,7 @@ export const readTryoutReference = Effect.fn(
   return buildContentSearchDocument({
     ...row.graph,
     contentHash: stored.rowHash,
-    description: row.description,
+    ...(row.description === undefined ? {} : { description: row.description }),
     hasMarkdownSource: false,
     locale: input.publicLocale,
     route: row.publicPath,

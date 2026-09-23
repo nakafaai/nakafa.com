@@ -171,7 +171,7 @@ const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(function* (
   const release = yield* catalogRelease(ctx, releaseId);
   const stored = yield* loadCatalogKeys(ctx, cursor);
   const keys = stored.slice(0, PROOF_PAGE_LIMIT);
-  const heads: ContentHead[] = [];
+  const heads: (ContentHead & Infer<typeof contentHeadValidator>)[] = [];
   let nextCursor = cursor;
   let processed = 0;
   for (const key of keys) {
@@ -182,7 +182,11 @@ const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(function* (
     ).pipe(Effect.provide(convexPublicationLayer(ctx)));
     if (head) {
       // 128 schema-bounded heads fit below 652 KiB, within the proof ceiling.
-      heads.push(head);
+      const { publicPath, ...fields } = head;
+      heads.push({
+        ...fields,
+        ...(publicPath === undefined ? {} : { publicPath }),
+      });
     }
     nextCursor = {
       artifactLocale: key.artifactLocale,

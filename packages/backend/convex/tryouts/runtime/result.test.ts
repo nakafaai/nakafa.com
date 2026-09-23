@@ -4,7 +4,7 @@ import {
   type AttemptScore,
   getSectionScoreSnapshot,
 } from "@repo/backend/convex/tryouts/runtime/result";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 const completeScore: AttemptScore = {
   publishedScore: 72,
@@ -30,10 +30,8 @@ describe("tryouts/runtime/result", () => {
       });
       assert.deepStrictEqual(
         yield* getSectionScoreSnapshot({
-          ...completeScore,
+          ...Struct.omit(completeScore, ["theta", "thetaSE"]),
           scoringStrategy: "raw",
-          theta: undefined,
-          thetaSE: undefined,
         }),
         {
           publishedScore: 72,
@@ -47,10 +45,9 @@ describe("tryouts/runtime/result", () => {
 
   it.effect("rejects a partial score estimate in the typed error channel", () =>
     Effect.gen(function* () {
-      const failure = yield* getSectionScoreSnapshot({
-        ...completeScore,
-        thetaSE: undefined,
-      }).pipe(Effect.flip);
+      const failure = yield* getSectionScoreSnapshot(
+        Struct.omit(completeScore, ["thetaSE"])
+      ).pipe(Effect.flip);
 
       assert.ok(failure instanceof TryoutRuntimeError);
       assert.strictEqual(failure.code, "TRYOUT_SCORE_ESTIMATE_INCOMPLETE");

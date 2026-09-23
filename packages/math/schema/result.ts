@@ -18,7 +18,7 @@ export const MathResultSchema = Schema.Struct({
   operation: MathOperationSchema,
   primary: MathExpressionSchema,
   reason: Schema.String,
-  secondary: Schema.optional(MathExpressionSchema),
+  secondary: Schema.optionalKey(MathExpressionSchema),
   stepStatus: MathStepStatusSchema,
   steps: Schema.Array(MathStepSchema).pipe(Schema.mutable),
   status: MathStatusSchema,

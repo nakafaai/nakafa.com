@@ -57,7 +57,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   return [
     ...buildHeader({
       description,
-      source,
+      ...(source === undefined ? {} : { source }),
       title,
       url: `${BASE_URL}/${appLocale}/${publicPath}`,
     }),

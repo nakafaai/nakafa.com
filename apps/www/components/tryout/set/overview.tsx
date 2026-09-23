@@ -22,7 +22,9 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
             value={{
               activeAttempt: value.activeAttempt,
               currentHref: value.currentHref,
-              currentAttempt: value.actionAttempt,
+              ...(value.actionAttempt === undefined
+                ? {}
+                : { currentAttempt: value.actionAttempt }),
               destination: value.start.destination,
               entrySection: value.start.entrySection,
               locale: value.route.locale,
@@ -63,7 +65,9 @@ function TryoutSetSections({ value }: { value: TryoutSetView }) {
   return (
     <TryoutSectionRows
       value={{
-        attempt: value.actionAttempt,
+        ...(value.actionAttempt === undefined
+          ? {}
+          : { attempt: value.actionAttempt }),
         emptyLabel: tTryouts("list-empty"),
         questionUnitLabel: tTryouts("question-unit"),
         sections,

@@ -4,7 +4,7 @@ import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
 } from "@repo/ai/clients/weather/client";
-import { hasEnoughCredits, ModelIdSchema } from "@repo/ai/config/model";
+import { ModelIdSchema } from "@repo/ai/config/model";
 import { NinaHarness } from "@repo/ai/nina/harness/stream";
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
@@ -116,79 +116,73 @@ const handleChatRequest = Effect.fn("chat.respond")(function* (
     });
   }
 
-  const cleanPath = cleanSlug(slug);
-  const url = getCanonicalCurrentPageContentUrl({
-    locale,
-    slug: cleanPath,
-  });
-  const shouldVerify = isVerifiableContentPath(cleanPath);
-
-  const capturedAt = new Date();
-  const currentDate = capturedAt.toLocaleString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZoneName: "short",
-  });
-
-  const geo = geolocation(req);
-  const userLocation = {
-    latitude: geo.latitude ?? DEFAULT_LATITUDE,
-    longitude: geo.longitude ?? DEFAULT_LONGITUDE,
-    city: geo.city ?? "Unknown",
-    countryRegion: geo.countryRegion ?? "Unknown",
-    country: geo.country ?? "Unknown",
-  };
-
-  const [verified, userInfo, curriculumPreference] = yield* Effect.all([
-    shouldVerify ? getVerified(url) : Effect.succeed(false),
-    getUserInfo(token),
-    getCurriculumPreference(token, locale),
-  ]);
-  if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
-    return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
-      status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
-    });
-  }
-
-  const pinnedContext =
-    id && !verified
-      ? yield* loadPinnedNinaContext({
-          chatId: id,
-          messageIdentifier: message.id,
-          token,
-        })
-      : undefined;
-  const ninaSession = yield* resolveNinaLearningSession({
-    capturedAt: capturedAt.toISOString(),
-    locale,
-    ...(pinnedContext ? { pinnedContext } : {}),
-    rawContext: context,
-    slug,
-    url,
-    verified,
-  });
-
-  const logContext = {
-    service: "chat-api",
-    currentPage: {
-      locale,
-      slug: cleanPath,
-      url,
-      verified,
-    },
-    currentDate,
-    ninaContext: ninaSession.context.snapshot,
-    userLocation,
-    userRole: userInfo.role,
-    url,
-  };
-
   const turnId = yield* reserveChatTurn(selectedModel, token);
   return yield* Effect.gen(function* () {
+    const cleanPath = cleanSlug(slug);
+    const url = getCanonicalCurrentPageContentUrl({
+      locale,
+      slug: cleanPath,
+    });
+    const shouldVerify = isVerifiableContentPath(cleanPath);
+
+    const capturedAt = new Date();
+    const currentDate = capturedAt.toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZoneName: "short",
+    });
+
+    const geo = geolocation(req);
+    const userLocation = {
+      latitude: geo.latitude ?? DEFAULT_LATITUDE,
+      longitude: geo.longitude ?? DEFAULT_LONGITUDE,
+      city: geo.city ?? "Unknown",
+      countryRegion: geo.countryRegion ?? "Unknown",
+      country: geo.country ?? "Unknown",
+    };
+
+    const [verified, userInfo, curriculumPreference] = yield* Effect.all([
+      shouldVerify ? getVerified(url) : Effect.succeed(false),
+      getUserInfo(token),
+      getCurriculumPreference(token, locale),
+    ]);
+    const pinnedContext =
+      id && !verified
+        ? yield* loadPinnedNinaContext({
+            chatId: id,
+            messageIdentifier: message.id,
+            token,
+          })
+        : undefined;
+    const ninaSession = yield* resolveNinaLearningSession({
+      capturedAt: capturedAt.toISOString(),
+      locale,
+      ...(pinnedContext ? { pinnedContext } : {}),
+      rawContext: context,
+      slug,
+      url,
+      verified,
+    });
+
+    const logContext = {
+      service: "chat-api",
+      currentPage: {
+        locale,
+        slug: cleanPath,
+        url,
+        verified,
+      },
+      currentDate,
+      ninaContext: ninaSession.context.snapshot,
+      userLocation,
+      userRole: userInfo.role,
+      url,
+    };
+
     let chatId: Id<"chats">;
 
     if (id) {

@@ -88,3 +88,34 @@ describe("article reference integrity", () => {
       })
   );
 });
+
+it.effect("retains the signed description in an article reference", () =>
+  Effect.gen(function* () {
+    const t = convexTest(schema, convexModules);
+    const projection = testArticleProjection(0);
+    yield* Effect.promise(() =>
+      t.mutation((ctx) =>
+        insertRuntimeArticles(ctx, 1, () => ({
+          ...projection,
+          metadata: { ...projection.metadata, description: "Signed summary" },
+        }))
+      )
+    );
+    const input = yield* resolveReferenceInput({
+      kind: "route",
+      appLocale: "en",
+      publicPath: projection.publicPath,
+    });
+    assert(input);
+    const result = yield* Effect.promise(() =>
+      t.query((ctx) =>
+        runConvexProgram(
+          readArticleReference(input).pipe(
+            Effect.provide(convexArticleLayer(ctx))
+          )
+        )
+      )
+    );
+    expect(result).toMatchObject({ description: "Signed summary" });
+  })
+);

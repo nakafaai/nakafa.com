@@ -32,7 +32,7 @@ export type MarkdownContentProps = {
 
 interface MarkdownFrameProps {
   readonly children: ReactNode;
-  readonly className?: string;
+  readonly className?: string | undefined;
 }
 
 /** Renders one normalized, hardened markdown block. */

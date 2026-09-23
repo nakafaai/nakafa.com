@@ -4,9 +4,9 @@ import type { LearningResource, Person, WithContext } from "schema-dts";
 
 interface Props {
   author: Person | Person[];
-  dateModified?: string;
+  dateModified?: string | undefined;
   datePublished: string;
-  description?: string;
+  description?: string | undefined;
   educationalLevel: string;
   name: string;
 }

@@ -171,9 +171,9 @@ const nextConfig = {
   ...config,
   // Permit HMR only from the exact origin assigned by this Portless process.
   // https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
-  allowedDevOrigins: configEnv.PORTLESS_URL
-    ? [configEnv.PORTLESS_URL.hostname]
-    : undefined,
+  ...(configEnv.PORTLESS_URL
+    ? { allowedDevOrigins: [configEnv.PORTLESS_URL.hostname] }
+    : {}),
   cacheComponents: true,
   partialPrefetching: true,
   typescript: {

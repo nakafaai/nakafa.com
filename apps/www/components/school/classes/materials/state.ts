@@ -18,18 +18,19 @@ export function updateMaterialGroupState<T extends MaterialGroupState>(
   group: T,
   args: UpdatePatch,
   now: number
-): T {
+) {
   const status = args.status ?? group.status;
   const scheduledAt =
     status === "scheduled"
       ? (args.scheduledAt ?? group.scheduledAt)
       : undefined;
 
+  const { scheduledAt: _scheduledAt, ...fields } = group;
   return {
-    ...group,
+    ...fields,
     description: args.description ?? group.description,
     name: args.name ?? group.name,
-    scheduledAt,
+    ...(scheduledAt === undefined ? {} : { scheduledAt }),
     status,
     updatedAt: now,
   };

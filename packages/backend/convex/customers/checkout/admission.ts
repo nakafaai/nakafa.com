@@ -18,10 +18,9 @@ export const admitCheckoutSession = internalMutation({
           captureProductEvent(ctx, {
             distinctId: args.userId,
             event: args.event,
-            timestamp:
-              args.timestamp === undefined
-                ? undefined
-                : new Date(args.timestamp),
+            ...(args.timestamp === undefined
+              ? {}
+              : { timestamp: new Date(args.timestamp) }),
           }),
         loadUser: () => ctx.db.get("users", args.userId),
       })

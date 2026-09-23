@@ -65,7 +65,9 @@ const createNinaLearningSessionInput = Effect.fn(
   const clientContext = readClientNinaContextInput(rawContext);
   if (verified && isPublishedMaterialPath(locale, cleanPath)) {
     const published = yield* readPublishedNinaMaterial({
-      contextHint: clientContext.materialContextHint,
+      ...(clientContext.materialContextHint === undefined
+        ? {}
+        : { contextHint: clientContext.materialContextHint }),
       locale,
       publicPath: cleanPath,
       url,

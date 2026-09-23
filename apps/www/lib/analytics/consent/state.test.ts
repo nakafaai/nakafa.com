@@ -5,7 +5,7 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
-import { Option } from "effect";
+import { Option, Struct } from "effect";
 import {
   type BrowserAnalyticsUser,
   createBrowserAnalyticsIdentity,
@@ -37,7 +37,7 @@ const user = {
 } satisfies BrowserAnalyticsUser;
 const userWithoutRole = {
   ...user,
-  appUser: { ...user.appUser, role: undefined },
+  appUser: Struct.omit(user.appUser, ["role"]),
 } satisfies BrowserAnalyticsUser;
 describe("browser analytics consent state", () => {
   it("persists an anonymous denial after a signal or account withdrawal", () => {

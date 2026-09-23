@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/convex/triggers/helpers/classes";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
+import { Struct } from "effect";
 
 /**
  * Trigger handler for schoolClassMembers table changes.
@@ -22,14 +23,10 @@ export async function schoolClassMembersHandler(
   ctx: GenericMutationCtx<DataModel>,
   change: Change<DataModel, "schoolClassMembers">
 ) {
-  const member = change.newDoc;
-  const oldMember = change.oldDoc;
-
+  // biome-ignore lint/style/useDefaultSwitchClause: Convex Change is a closed union checked by TypeScript.
   switch (change.operation) {
     case "insert": {
-      if (!member) {
-        break;
-      }
+      const member = change.newDoc;
 
       if (member.inviteCodeId) {
         const inviteCode = await ctx.db.get(
@@ -64,9 +61,8 @@ export async function schoolClassMembersHandler(
     }
 
     case "update": {
-      if (!(member && oldMember)) {
-        break;
-      }
+      const member = change.newDoc;
+      const oldMember = change.oldDoc;
 
       if (oldMember.role !== member.role) {
         await handleRoleChange(ctx, change.id, member, oldMember);
@@ -84,8 +80,12 @@ export async function schoolClassMembersHandler(
           entityId: change.id,
           metadata: {
             classId: member.classId,
-            oldTeacherRole: oldMember.teacherRole,
-            newTeacherRole: member.teacherRole,
+            ...Struct.renameKeys(Struct.pick(oldMember, ["teacherRole"]), {
+              teacherRole: "oldTeacherRole",
+            }),
+            ...Struct.renameKeys(Struct.pick(member, ["teacherRole"]), {
+              teacherRole: "newTeacherRole",
+            }),
           },
         });
       }
@@ -93,9 +93,7 @@ export async function schoolClassMembersHandler(
     }
 
     case "delete": {
-      if (!oldMember) {
-        break;
-      }
+      const oldMember = change.oldDoc;
 
       await updateClassMemberCount(ctx, oldMember.classId, oldMember.role, -1);
 
@@ -112,10 +110,6 @@ export async function schoolClassMembersHandler(
           removedAt: oldMember.removedAt,
         },
       });
-      break;
-    }
-
-    default: {
       break;
     }
   }

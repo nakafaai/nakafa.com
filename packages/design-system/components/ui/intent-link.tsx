@@ -9,7 +9,7 @@ type LinkProps = ComponentProps<typeof Link>;
 type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
   href: string;
   intentActive?: boolean;
-  onIntent?: () => void;
+  onIntent?: (() => void) | undefined;
 };
 
 /**

@@ -44,7 +44,9 @@ import {
 } from "recharts";
 
 const STROKE_WIDTH = 0.8;
-export type CurveType = ComponentProps<typeof RechartsArea>["type"];
+export type CurveType = NonNullable<
+  ComponentProps<typeof RechartsArea>["type"]
+>;
 type StackType = "default" | "expanded" | "stacked";
 
 interface AreaChartContextValue {
@@ -217,7 +219,7 @@ export function EvilAreaChart<
           accessibilityLayer
           data={isLoading ? loadingData : displayData}
           id={chartId}
-          stackOffset={isExpanded ? "expand" : undefined}
+          {...(isExpanded ? { stackOffset: "expand" } : {})}
           {...chartProps}
         >
           {children}
@@ -281,11 +283,12 @@ export function YAxis({
     return null;
   }
 
+  const formatter = isExpanded ? axisValueToPercentFormatter : tickFormatter;
   return (
     <RechartsYAxis
       axisLine={axisLine}
       minTickGap={minTickGap}
-      tickFormatter={isExpanded ? axisValueToPercentFormatter : tickFormatter}
+      {...(formatter === undefined ? {} : { tickFormatter: formatter })}
       tickLine={tickLine}
       tickMargin={tickMargin}
       width={width}
@@ -349,7 +352,7 @@ export function Tooltip({
       cursor={
         cursor ? { strokeDasharray: "3 3", strokeWidth: STROKE_WIDTH } : false
       }
-      defaultIndex={defaultIndex}
+      {...(defaultIndex === undefined ? {} : { defaultIndex })}
     />
   );
 }

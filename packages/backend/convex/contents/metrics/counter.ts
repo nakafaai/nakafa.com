@@ -3,17 +3,21 @@ import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analyti
 import type { PopularityCounterDelta } from "@repo/backend/convex/contents/metrics/batch";
 import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
 import { getOrThrow } from "convex-helpers/server/relationships";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 /** Projects counter payload from the newest queued signal day. */
 function projectCounter(delta: PopularityCounterDelta) {
   return {
     ...delta.ref,
     ...delta.context,
-    description: delta.description,
+    ...(delta.description === undefined
+      ? {}
+      : { description: delta.description }),
     latestDay: delta.latestDay,
     locale: delta.locale,
-    materialDomain: delta.materialDomain,
+    ...(delta.materialDomain === undefined
+      ? {}
+      : { materialDomain: delta.materialDomain }),
     route: delta.route,
     section: delta.section,
     scopeMode: delta.scopeMode,
@@ -68,24 +72,28 @@ export const applyPopularityCounter = Effect.fn(
     return;
   }
 
-  const newest =
-    delta.latestDay >= currentRow.latestDay ? projectCounter(delta) : {};
-  const update = {
-    ...newest,
+  const projection =
+    delta.latestDay >= currentRow.latestDay
+      ? projectCounter(delta)
+      : Struct.omit(currentRow, ["_id", "_creationTime"]);
+  const updated = {
+    ...projection,
     score: currentRow.score + delta.viewCount,
     updatedAt: delta.updatedAt,
   };
 
+  // Replacement clears absent optional projection fields without an extra read.
   yield* Effect.tryPromise({
     try: () =>
-      ctx.db.patch("learningPopularityCounters", currentRow._id, update),
+      ctx.db.replace("learningPopularityCounters", currentRow._id, updated),
     catch: toContentAnalyticsIoError,
   });
   yield* Effect.tryPromise({
     try: () =>
       learningPopularityRankings.replace(ctx, currentRow, {
-        ...currentRow,
-        ...update,
+        ...updated,
+        _id: currentRow._id,
+        _creationTime: currentRow._creationTime,
       }),
     catch: toContentAnalyticsIoError,
   });

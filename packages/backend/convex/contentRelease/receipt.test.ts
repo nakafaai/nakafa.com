@@ -13,7 +13,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { TEST_PROOF_WORKFLOW_ID } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 /** Loads one typed release row and its decoded immutable manifest. */
 function fixture() {
@@ -149,10 +149,10 @@ describe("contentRelease/receipt", () => {
       expect(yield* stagedEvidence(verified, signed)).toBeUndefined();
 
       const corruptions: readonly Doc<"contentReleases">[] = [
-        { ...verified, proofAt: undefined },
+        Struct.omit(verified, ["proofAt"]),
         { ...verified, proofFailure: "failed" },
-        { ...verified, proofJson: undefined },
-        { ...verified, verifiedAt: undefined },
+        Struct.omit(verified, ["proofJson"]),
+        Struct.omit(verified, ["verifiedAt"]),
         { ...verified, checkedIndex: -1 },
       ];
       for (const corrupted of corruptions) {
@@ -178,14 +178,14 @@ describe("contentRelease/receipt", () => {
 
       const corruptions: readonly Doc<"contentReleases">[] = [
         { ...completed, status: "verified" },
-        { ...completed, completedAt: undefined },
-        { ...completed, proofAt: undefined },
+        Struct.omit(completed, ["completedAt"]),
+        Struct.omit(completed, ["proofAt"]),
         { ...completed, proofFailure: "failed" },
-        { ...completed, proofJson: undefined },
-        { ...completed, verifiedAt: undefined },
+        Struct.omit(completed, ["proofJson"]),
+        Struct.omit(completed, ["verifiedAt"]),
         { ...completed, checkedItems: 0 },
         { ...completed, checkedIndex: -1 },
-        { ...completed, receiptJson: undefined },
+        Struct.omit(completed, ["receiptJson"]),
         { ...completed, receiptJson: "{}" },
         {
           ...completed,
@@ -216,13 +216,13 @@ describe("contentRelease/receipt", () => {
 
       const corruptions: readonly Doc<"contentReleases">[] = [
         { ...completed, status: "verified" },
-        { ...completed, completedAt: undefined },
-        { ...completed, proofAt: undefined },
+        Struct.omit(completed, ["completedAt"]),
+        Struct.omit(completed, ["proofAt"]),
         { ...completed, proofFailure: "failed" },
-        { ...completed, proofJson: undefined },
+        Struct.omit(completed, ["proofJson"]),
         { ...completed, proofWorkflowId: TEST_PROOF_WORKFLOW_ID },
-        { ...completed, verifiedAt: undefined },
-        { ...completed, receiptJson: undefined },
+        Struct.omit(completed, ["verifiedAt"]),
+        Struct.omit(completed, ["receiptJson"]),
         { ...completed, stagedArtifacts: -1 },
         { ...completed, checkedItems: 2, checkedIndex: 1 },
         { ...completed, checkedIndex: -1 },

@@ -6,6 +6,7 @@ import {
   type LearningPopularityWindow,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
+import { Struct } from "effect";
 
 type QueuedLearningEngagement = Doc<"learningEngagementQueue">;
 type AnalyticsGraphRef = Pick<
@@ -34,16 +35,16 @@ function getAnalyticsGraphRef(
 
 /** Extracts verified learning-context storage fields from one queued view. */
 function getAnalyticsContext(item: QueuedLearningEngagement) {
-  return {
-    contextKey: item.contextKey,
-    contextMaterialKey: item.contextMaterialKey,
-    contextMode: item.contextMode,
-    contextNodeKey: item.contextNodeKey,
-    contextParentPath: item.contextParentPath,
-    contextProgramKey: item.contextProgramKey,
-    contextPublicPath: item.contextPublicPath,
-    contextSourcePath: item.contextSourcePath,
-  };
+  return Struct.pick(item, [
+    "contextKey",
+    "contextMaterialKey",
+    "contextMode",
+    "contextNodeKey",
+    "contextParentPath",
+    "contextProgramKey",
+    "contextPublicPath",
+    "contextSourcePath",
+  ]);
 }
 
 /** Encodes one metrics identity without delimiter collisions. */

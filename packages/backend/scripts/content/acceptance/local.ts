@@ -185,7 +185,7 @@ export const initializeLocalRuntime = Effect.fn(
       reportStderr: true,
       stderrPath: `${directory}/setup.log`,
       stdoutPath: `${directory}/setup.log`,
-      stdin,
+      ...(stdin === undefined ? {} : { stdin }),
     });
   });
   yield* command(["init"]);

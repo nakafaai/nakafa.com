@@ -16,7 +16,7 @@ function insertUser(ctx: MutationCtx, suffix: string, deletedAt?: number) {
       authId: `successor-${suffix}`,
       credits: 0,
       creditsResetAt: 0,
-      deletedAt,
+      ...(deletedAt === undefined ? {} : { deletedAt }),
       email: `successor-${suffix}@example.com`,
       name: `Successor ${suffix}`,
       plan: "free",

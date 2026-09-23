@@ -94,7 +94,9 @@ export async function generateMetadata({
   }
   if (resolved.attemptPage?.kind === "retained") {
     return createRetainedTryoutMetadata({
-      description: resolved.attemptPage.page.section.description,
+      ...(resolved.attemptPage.page.section.description === undefined
+        ? {}
+        : { description: resolved.attemptPage.page.section.description }),
       title: resolved.attemptPage.page.section.title,
     });
   }

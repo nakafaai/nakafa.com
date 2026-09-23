@@ -36,9 +36,9 @@ interface CameraMeasurement {
 }
 
 export interface CameraMotionBounds {
-  readonly rotation?: keyof CoordinateFrame | "all";
-  readonly scale?: number;
-  readonly translation?: CoordinateFrame;
+  readonly rotation?: keyof CoordinateFrame | "all" | undefined;
+  readonly scale?: number | undefined;
+  readonly translation?: CoordinateFrame | undefined;
 }
 
 export type CameraSubjectBounds = Box3 | false | CameraMotionBounds;

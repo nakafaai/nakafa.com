@@ -22,12 +22,12 @@ import {
 } from "react";
 
 interface PromptInputFilesOptions {
-  accept?: string;
+  accept?: string | undefined;
   controller: PromptInputController | null;
   inputRef: RefObject<HTMLInputElement | null>;
-  maxFileSize?: number;
-  maxFiles?: number;
-  onError?: (error: PromptInputFileConstraintError) => void;
+  maxFileSize?: number | undefined;
+  maxFiles?: number | undefined;
+  onError?: ((error: PromptInputFileConstraintError) => void) | undefined;
 }
 /** Owns local prompt files while delegating to a provider when one is present. */
 export function usePromptInputFiles({
@@ -100,7 +100,7 @@ export function usePromptInputFiles({
       const result = Effect.runSync(
         Effect.result(
           validatePromptInputFiles({
-            accept,
+            ...(accept === undefined ? {} : { accept }),
             currentFileCount: fileCountRef.current,
             files: Array.from(fileList),
             maxFileSize,

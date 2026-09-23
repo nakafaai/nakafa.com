@@ -13,12 +13,12 @@ type GeometricDotType = Extract<
 >;
 
 interface GeometricDotProps {
-  className?: string;
+  className?: string | undefined;
   cx: number;
   cy: number;
   fillOpacity: number;
   gradientUrl: string;
-  maskId?: string;
+  maskId?: string | undefined;
   type: GeometricDotType;
 }
 

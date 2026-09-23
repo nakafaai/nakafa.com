@@ -11,10 +11,12 @@ import { type ComponentProps, lazy } from "react";
 type RechartsModule = typeof import("recharts");
 
 /** Recharts interpolation supported by the miniature brush preview. */
-type EvilBrushCurveType = ComponentProps<RechartsModule["Area"]>["type"];
+type EvilBrushCurveType = NonNullable<
+  ComponentProps<RechartsModule["Area"]>["type"]
+>;
 
 interface EvilBrushPreviewProps {
-  barRadius?: number;
+  barRadius?: number | undefined;
   chartConfig: ChartConfig;
   chartId: string;
   connectNulls: boolean;
@@ -84,7 +86,9 @@ function renderEvilBrushPreview(
                 dataKey,
                 getColorsCount(chartConfig[dataKey] ?? {})
               )}
-              strokeDasharray={dashArray}
+              {...(dashArray === undefined
+                ? {}
+                : { strokeDasharray: dashArray })}
               strokeOpacity={0.5}
               strokeWidth={1}
               type={curveType}
@@ -122,7 +126,7 @@ function renderEvilBrushPreview(
               isAnimationActive={false}
               key={dataKey}
               radius={[radius, radius, radius, radius]}
-              stackId={stacked ? "zm-stack" : undefined}
+              {...(stacked ? { stackId: "zm-stack" } : {})}
             />
           ))}
         </BarChart>
@@ -151,14 +155,14 @@ function renderEvilBrushPreview(
             fillOpacity={1}
             isAnimationActive={false}
             key={dataKey}
-            stackId={stacked ? "zm-stack" : undefined}
+            {...(stacked ? { stackId: "zm-stack" } : {})}
             stroke={getChartSeriesPaint(
               chartId,
               "zm",
               dataKey,
               getColorsCount(chartConfig[dataKey] ?? {})
             )}
-            strokeDasharray={dashArray}
+            {...(dashArray === undefined ? {} : { strokeDasharray: dashArray })}
             strokeOpacity={0.5}
             strokeWidth={1}
             type={curveType}

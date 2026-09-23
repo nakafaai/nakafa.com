@@ -29,22 +29,22 @@ const initializeMermaid = Effect.fn("designSystem.mermaid.initialize")(
         new MermaidRenderError({ cause, operation: "initialize" }),
     });
     const mermaid = mermaidModule.default;
-    const config = {
+    const config: MermaidConfig = {
       theme: "default",
       fontFamily: "inherit",
       ...customConfig,
       securityLevel: "strict",
       startOnLoad: false,
       suppressErrorRendering: true,
-      dompurifyConfig: undefined,
       secure: [
         ...(mermaid.mermaidAPI.defaultConfig.secure ?? []),
         "securityLevel",
         "dompurifyConfig",
       ],
-    } satisfies MermaidConfig;
+    };
+    const { dompurifyConfig: _dompurifyConfig, ...securedConfig } = config;
     yield* Effect.try({
-      try: () => mermaid.initialize(config),
+      try: () => mermaid.initialize(securedConfig),
       catch: (cause) =>
         new MermaidRenderError({ cause, operation: "initialize" }),
     });

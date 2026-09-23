@@ -54,7 +54,6 @@ describe("tryouts/mutations/attempts", () => {
         expiresAt: NOW + 86_400_000,
         sectionSnapshots: [
           {
-            publicPath: undefined,
             questionCount: 1,
             questionSourcePath: "question-bank/tryout/frozen-entry",
             sectionIdentity: "tryout:section:frozen-entry",

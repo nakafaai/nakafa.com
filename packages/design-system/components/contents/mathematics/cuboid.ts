@@ -20,11 +20,16 @@ export function createCuboidLines({
   showPoints = false,
   width,
 }: CuboidLine): ResolvedLine[] {
-  const { edges } = createCuboid({ center, height, length, width });
+  const { edges } = createCuboid({
+    ...(center === undefined ? {} : { center }),
+    height,
+    length,
+    width,
+  });
 
   return edges.map(([start, end]) => ({
-    color,
-    lineWidth,
+    ...(color === undefined ? {} : { color }),
+    ...(lineWidth === undefined ? {} : { lineWidth }),
     points: [start, end],
     showPoints,
     smooth: false,

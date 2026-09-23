@@ -203,7 +203,12 @@ export function ElectabilityChart({
           <Line
             dataKey="anies_muhaimin"
             lineProps={{
-              strokeDasharray: ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray,
+              ...(ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray === undefined
+                ? {}
+                : {
+                    strokeDasharray:
+                      ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray,
+                  }),
               strokeWidth: 2,
             }}
           >
@@ -213,7 +218,12 @@ export function ElectabilityChart({
           <Line
             dataKey="prabowo_gibran"
             lineProps={{
-              strokeDasharray: ELECTABILITY_CUES.prabowoGibran.strokeDasharray,
+              ...(ELECTABILITY_CUES.prabowoGibran.strokeDasharray === undefined
+                ? {}
+                : {
+                    strokeDasharray:
+                      ELECTABILITY_CUES.prabowoGibran.strokeDasharray,
+                  }),
               strokeWidth: 2,
             }}
           >
@@ -223,7 +233,12 @@ export function ElectabilityChart({
           <Line
             dataKey="ganjar_mahfud"
             lineProps={{
-              strokeDasharray: ELECTABILITY_CUES.ganjarMahfud.strokeDasharray,
+              ...(ELECTABILITY_CUES.ganjarMahfud.strokeDasharray === undefined
+                ? {}
+                : {
+                    strokeDasharray:
+                      ELECTABILITY_CUES.ganjarMahfud.strokeDasharray,
+                  }),
               strokeWidth: 2,
             }}
           >

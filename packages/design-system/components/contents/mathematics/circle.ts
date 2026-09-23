@@ -104,14 +104,14 @@ export function createCircleArcLine({
   label,
   lineWidth,
   ...arc
-}: CircleArcLine) {
+}: CircleArcLine): ResolvedLine {
   const points = createCircleArcPoints(arc);
 
   if (label) {
     return {
       color,
       labels: [createCircleLineLabel(points.length, label)],
-      lineWidth,
+      ...(lineWidth === undefined ? {} : { lineWidth }),
       points,
       showPoints: false,
       smooth: false,
@@ -120,7 +120,7 @@ export function createCircleArcLine({
 
   return {
     color,
-    lineWidth,
+    ...(lineWidth === undefined ? {} : { lineWidth }),
     points,
     showPoints: false,
     smooth: false,
@@ -181,13 +181,13 @@ export function createCircleSegmentBoundaryLines({
   label,
   lineWidth = DEFAULT_SEGMENT_LINE_WIDTH,
   ...arc
-}: CircleArcLine) {
+}: CircleArcLine): ResolvedLine[] {
   const chordPoints = createCircleChordPoints(arc);
 
   return [
     createCircleArcLine({
       color,
-      label,
+      ...(label === undefined ? {} : { label }),
       lineWidth,
       ...arc,
     }),

@@ -63,8 +63,8 @@ export function useRecordContentView({
   const viewKey = createContentViewKey({
     authenticated: isAuthenticated,
     locale,
-    contentId,
-    context,
+    ...(contentId === undefined ? {} : { contentId }),
+    ...(context === undefined ? {} : { context }),
     signedInUserId,
   });
   const [deviceId, setDeviceId] = useLocalStorage({

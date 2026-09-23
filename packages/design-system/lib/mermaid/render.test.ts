@@ -9,7 +9,7 @@ import type { MermaidConfig } from "mermaid";
 type MermaidRenderer = typeof import("mermaid")["default"];
 const initialize = vi.fn<MermaidRenderer["initialize"]>();
 const render = vi.fn<MermaidRenderer["render"]>();
-const defaultConfig: MermaidConfig = {};
+let defaultConfig: MermaidConfig = {};
 const SVG = { svg: '<svg id="diagram"/>', diagramType: "flowchart" };
 
 beforeEach(() => {
@@ -50,7 +50,6 @@ describe("strict Mermaid rendering", () => {
           securityLevel: "strict",
           startOnLoad: false,
           suppressErrorRendering: true,
-          dompurifyConfig: undefined,
           secure: [
             "secure",
             "securityLevel",
@@ -71,7 +70,7 @@ describe("strict Mermaid rendering", () => {
     "protects strict security even when the library has no default secure list",
     () =>
       Effect.gen(function* () {
-        defaultConfig.secure = undefined;
+        defaultConfig = {};
         yield* renderMermaid("diagram", "graph TD; A-->B", {});
         expect(initialize).toHaveBeenCalledWith(
           expect.objectContaining({

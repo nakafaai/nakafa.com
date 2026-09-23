@@ -20,7 +20,7 @@ import {
 import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 
 export interface TryoutResponseFieldLabel {
-  readonly correctness?: boolean;
+  readonly correctness?: boolean | undefined;
   readonly id: string;
   readonly label: string;
 }

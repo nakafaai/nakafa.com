@@ -27,9 +27,7 @@ export function CollectionPageJsonLd({
     maintainer: ORGANIZATION,
     hasPart: items.map((item) => ({
       "@type": "WebPage",
-      name: item.name,
-      url: item.url,
-      description: item.description,
+      ...item,
     })),
     ...(datePublished && { datePublished }),
   };

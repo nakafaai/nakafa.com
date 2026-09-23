@@ -23,7 +23,9 @@ function toPublicCountry(country: TryoutCountry) {
   return {
     countryCode: country.countryCode,
     countryKey: country.countryKey,
-    description: country.description,
+    ...(country.description === undefined
+      ? {}
+      : { description: country.description }),
     publicPath: country.publicPath,
     title: country.title,
   };
@@ -32,7 +34,9 @@ function toPublicCountry(country: TryoutCountry) {
 /** Projects one signed exam into the existing public catalog contract. */
 function toPublicExam(exam: TryoutExam) {
   return {
-    description: exam.description,
+    ...(exam.description === undefined
+      ? {}
+      : { description: exam.description }),
     examKey: exam.examKey,
     publicPath: exam.publicPath,
     scoringStrategy: exam.scoringStrategy,
@@ -43,7 +47,9 @@ function toPublicExam(exam: TryoutExam) {
 /** Projects one signed track into the existing public catalog contract. */
 function toPublicTrack(track: TryoutTrack) {
   return {
-    description: track.description,
+    ...(track.description === undefined
+      ? {}
+      : { description: track.description }),
     publicPath: track.publicPath,
     readyQuestionCount: track.questionCount,
     readySetCount: track.setCount,
@@ -58,7 +64,7 @@ function toPublicTrack(track: TryoutTrack) {
 export function toPublicPublishedSet(set: TryoutSet) {
   return {
     countryKey: set.countryKey,
-    description: set.description,
+    ...(set.description === undefined ? {} : { description: set.description }),
     examKey: set.examKey,
     publicPath: set.publicPath,
     readyQuestionCount: set.questionCount,
@@ -76,8 +82,12 @@ export function toPublicPublishedSet(set: TryoutSet) {
 /** Projects one signed section into the existing public catalog contract. */
 export function toPublicPublishedSection(section: TryoutSection) {
   return {
-    description: section.description,
-    publicPath: section.publicPath,
+    ...(section.description === undefined
+      ? {}
+      : { description: section.description }),
+    ...(section.publicPath === undefined
+      ? {}
+      : { publicPath: section.publicPath }),
     questionCount: section.questionCount,
     sectionKey: section.sectionKey,
     timeLimitSeconds: section.timeLimitSeconds,

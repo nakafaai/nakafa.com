@@ -74,7 +74,7 @@ export const MathItemSchema = Schema.Struct({
   label: Schema.String.annotate({
     description: "Short student-facing label for the math item.",
   }),
-  latex: Schema.optional(
+  latex: Schema.optionalKey(
     Schema.String.annotate({
       description: "Optional LaTeX representation for display.",
     })
@@ -91,8 +91,8 @@ export const MathStepSchema = Schema.Struct({
   ),
   items: Schema.Array(MathItemSchema).pipe(Schema.mutable),
   primary: MathExpressionSchema,
-  relation: Schema.optional(MathExpressionSchema),
-  secondary: Schema.optional(MathExpressionSchema),
+  relation: Schema.optionalKey(MathExpressionSchema),
+  secondary: Schema.optionalKey(MathExpressionSchema),
 })
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   .annotate({

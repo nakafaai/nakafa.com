@@ -13,18 +13,12 @@ import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messagePa
 import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import { readConvexErrorData } from "@repo/backend/convex/lib/effect";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
-import type { FunctionReturnType } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import {
   ChatAdmissionError,
   ChatMutationError,
   ChatQueryError,
 } from "@/app/api/chat/errors";
-
-/** Generated Convex page shape returned by the chat-message pagination query. */
-type ChatMessagesPage = FunctionReturnType<
-  typeof convexApi.chats.queries.loadMessagesPage
->;
 
 /** Maps one UI message into the Convex payload shared by create/save mutations. */
 function createPersistedMessage({
@@ -188,10 +182,9 @@ export const loadPinnedNinaContext = Effect.fn("chat.loadPinnedNinaContext")(
 );
 
 /**
- * Fetches a chat transcript page-by-page until the retained context is enough
- * for model input. Older pages stop loading once compression would trim them.
- *
- * @returns An ordered array of UI messages for the given chat context.
+ * Keeps the newest 50 complete messages as Nina's conversation context, then
+ * applies the text token budget. The full transcript remains in Convex for
+ * browsing. Bounding messages also bounds histories with empty or file parts.
  */
 export const loadMessages = Effect.fn("chat.loadMessages")(function* ({
   chatId,
@@ -200,41 +193,25 @@ export const loadMessages = Effect.fn("chat.loadMessages")(function* ({
   readonly chatId: Id<"chats">;
   readonly token: string;
 }) {
-  let cursor: string | null = null;
-  let messages: MyUIMessage[] = [];
-
-  while (true) {
-    const page: ChatMessagesPage = yield* Effect.tryPromise({
-      try: () =>
-        fetchQuery(
-          convexApi.chats.queries.loadMessagesPage,
-          {
-            chatId,
-            paginationOpts: {
-              cursor,
-              numItems: CHAT_MESSAGES_PAGE_SIZE,
-            },
-          },
-          { token }
-        ),
-      catch: (cause) =>
-        new ChatQueryError({
-          cause,
-          message: "Unable to load the chat messages.",
-          operation: "load-messages",
-        }),
-    });
-    const nextMessages = mapDBMessagesToUIMessages([...page.page].reverse());
-    messages = [...nextMessages, ...messages];
-
-    const compressed = compressMessages(messages);
-
-    if (compressed.messages.length < messages.length || page.isDone) {
-      return compressed.messages;
-    }
-
-    cursor = page.continueCursor;
-  }
+  const page = yield* Effect.tryPromise({
+    try: () =>
+      fetchQuery(
+        convexApi.chats.queries.loadMessagesPage,
+        {
+          chatId,
+          paginationOpts: { cursor: null, numItems: CHAT_MESSAGES_PAGE_SIZE },
+        },
+        { token }
+      ),
+    catch: (cause) =>
+      new ChatQueryError({
+        cause,
+        message: "Unable to load the chat messages.",
+        operation: "load-messages",
+      }),
+  });
+  const messages = mapDBMessagesToUIMessages([...page.page].reverse());
+  return compressMessages(messages).messages;
 });
 
 /** Convex atomically debits before the server can invoke any provider. */

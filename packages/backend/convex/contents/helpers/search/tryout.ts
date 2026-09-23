@@ -74,7 +74,9 @@ function toTryoutSearchDocument(
     buildContentSearchDocument({
       ...row.graph,
       contentHash: entry.rowHash,
-      description: row.description,
+      ...(row.description === undefined
+        ? {}
+        : { description: row.description }),
       hasMarkdownSource: false,
       locale,
       route: row.publicPath,

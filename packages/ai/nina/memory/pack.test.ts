@@ -2,9 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   type NinaLearningSessionInput,
+  NinaLearningSessionSchema,
   openNinaLearningSession,
 } from "@repo/ai/nina/memory/pack";
-import { Effect, Exit } from "effect";
+import { Effect, Exit, Schema } from "effect";
 
 const learning = {
   assetId: "asset:id:material:mathematics:vector:addition",
@@ -87,6 +88,10 @@ describe("nina/memory/pack", () => {
           source: "pinned-chat",
         } satisfies NinaLearningSessionInput);
 
+        expect(session.context).not.toHaveProperty("placement");
+        expect(
+          yield* Schema.decodeEffect(NinaLearningSessionSchema)(session)
+        ).toEqual(session);
         expect(session.context.snapshot.tools).toMatchObject({
           allowPageFetch: false,
           evidenceScope: "general-learning",

@@ -40,7 +40,10 @@ async function setup() {
   const advance = (cursor?: string) =>
     t.mutation(async (ctx) => ({
       page: await runConvexProgram(
-        reconcileSearchModel(ctx, { ...build, cursor })
+        reconcileSearchModel(ctx, {
+          ...build,
+          ...(cursor === undefined ? {} : { cursor }),
+        })
       ),
       metrics: await ctx.meta.getTransactionMetrics(),
     }));

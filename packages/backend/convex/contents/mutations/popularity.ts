@@ -25,10 +25,7 @@ import {
   refreshLearningPopularityWindowPage as refreshLearningPopularityWindowPageProgram,
   scheduleLearningPopularityRefreshes as scheduleLearningPopularityRefreshesProgram,
 } from "@repo/backend/convex/contents/metrics/refresh";
-import {
-  claimLearningPopularityRetention as claimLearningPopularityRetentionProgram,
-  sweepLearningPopularityRetention as sweepLearningPopularityRetentionProgram,
-} from "@repo/backend/convex/contents/metrics/retention";
+import { getPopularitySignalDay } from "@repo/backend/convex/contents/popularity";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
 /** Schedules daily expiry or a full repair after any missed cycle. */
@@ -97,29 +94,27 @@ export const expireLearningPopularityWindowPage = internalMutation({
     ),
 });
 
-/** Claims today's retention chain once every finite window completed it. */
+/**
+ * Drains the retired cron without claiming unsafe deletion. ADR 0001 requires
+ * raw coverage, queue progress, lifetime and rank proof; finite cycles provide
+ * none of those guarantees. Retire this handler after queued jobs are cleared.
+ */
 export const claimLearningPopularityRetention = internalMutation({
   args: {},
   returns: claimLearningPopularityRetentionResultValidator,
-  handler: async (ctx): Promise<ClaimLearningPopularityRetentionResult> =>
-    await runConvexProgram(
-      claimLearningPopularityRetentionProgram(
-        ctx,
-        internal.contents.mutations.popularity.sweepLearningPopularityRetention
-      )
-    ),
+  handler: (): ClaimLearningPopularityRetentionResult => ({
+    claimed: false,
+    day: getPopularitySignalDay(Date.now()),
+  }),
 });
 
-/** Deletes one indexed page after all finite daily maintenance completes. */
+/** Drains previously scheduled pages while preserving unproven audit data. */
 export const sweepLearningPopularityRetention = internalMutation({
   args: sweepLearningPopularityRetentionArgs,
   returns: sweepLearningPopularityRetentionResultValidator,
-  handler: async (ctx, args): Promise<SweepLearningPopularityRetentionResult> =>
-    await runConvexProgram(
-      sweepLearningPopularityRetentionProgram(
-        ctx,
-        args,
-        internal.contents.mutations.popularity.sweepLearningPopularityRetention
-      )
-    ),
+  handler: (): SweepLearningPopularityRetentionResult => ({
+    deleted: 0,
+    done: true,
+    skipped: true,
+  }),
 });

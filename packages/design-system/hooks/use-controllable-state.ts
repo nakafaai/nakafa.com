@@ -4,8 +4,8 @@ import { useCallback, useState } from "react";
 
 interface UseControllableStateProps<T> {
   defaultProp: T;
-  onChange?: (value: T) => void;
-  prop?: T;
+  onChange?: ((value: T) => void) | undefined;
+  prop?: T | undefined;
 }
 
 type SetState<T> = (value: T) => void;

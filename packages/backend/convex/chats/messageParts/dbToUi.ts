@@ -5,8 +5,7 @@ import {
   requirePartField,
   requireToolState,
 } from "@repo/backend/convex/chats/messageParts/shared";
-import { ConvexError } from "convex/values";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 /** Rebuild one UI message part from the flattened persisted part row. */
 export function mapDBPartToUIMessagePart({
@@ -14,6 +13,7 @@ export function mapDBPartToUIMessagePart({
 }: {
   part: Doc<"messageParts">;
 }): MyUIMessagePart {
+  // biome-ignore lint/style/useDefaultSwitchClause: The persisted validator closes this union; TypeScript checks exhaustive returns.
   switch (part.type) {
     case "text":
       return {
@@ -23,7 +23,9 @@ export function mapDBPartToUIMessagePart({
           fieldName: "textText",
           partType: part.type,
         }),
-        state: part.textState,
+        ...Struct.renameKeys(Struct.pick(part, ["textState"]), {
+          textState: "state",
+        }),
       };
     case "reasoning":
       return {
@@ -33,8 +35,10 @@ export function mapDBPartToUIMessagePart({
           fieldName: "reasoningText",
           partType: part.type,
         }),
-        state: part.reasoningState,
-        providerMetadata: part.providerMetadata,
+        ...Struct.renameKeys(Struct.pick(part, ["reasoningState"]), {
+          reasoningState: "state",
+        }),
+        ...Struct.pick(part, ["providerMetadata"]),
       };
     case "file":
       return {
@@ -44,10 +48,8 @@ export function mapDBPartToUIMessagePart({
           fieldName: "fileMediaType",
           partType: part.type,
         }),
-        filename: requirePartField({
-          value: part.fileFilename,
-          fieldName: "fileFilename",
-          partType: part.type,
+        ...Struct.renameKeys(Struct.pick(part, ["fileFilename"]), {
+          fileFilename: "filename",
         }),
         url: requirePartField({
           value: part.fileUrl,
@@ -59,247 +61,17 @@ export function mapDBPartToUIMessagePart({
       return {
         type: part.type,
       };
-    case "tool-nakafa": {
-      const toolState = requireToolState(part);
-      switch (toolState) {
-        case "input-streaming":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: part.toolNakafaInput,
-          };
-        case "input-available":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: requirePartField({
-              value: part.toolNakafaInput,
-              fieldName: "toolNakafaInput",
-              partType: part.type,
-            }),
-          };
-        case "output-available":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: requirePartField({
-              value: part.toolNakafaInput,
-              fieldName: "toolNakafaInput",
-              partType: part.type,
-            }),
-            output: requirePartField({
-              value: part.toolNakafaOutput,
-              fieldName: "toolNakafaOutput",
-              partType: part.type,
-            }),
-            resultProviderMetadata: part.toolResultProviderMetadata,
-          };
-        case "output-error":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: part.toolNakafaInput,
-            errorText: requirePartField({
-              value: part.toolErrorText,
-              fieldName: "toolErrorText",
-              partType: part.type,
-            }),
-            resultProviderMetadata: part.toolResultProviderMetadata,
-          };
-        default:
-          throw new ConvexError({
-            code: "CHAT_TOOL_STATE_UNSUPPORTED",
-            message: `Unsupported persisted tool state: ${toolState}`,
-          });
-      }
-    }
-    case "tool-deepResearch": {
-      const toolState = requireToolState(part);
-      switch (toolState) {
-        case "input-streaming":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: part.toolDeepResearchInput,
-          };
-        case "input-available":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: requirePartField({
-              value: part.toolDeepResearchInput,
-              fieldName: "toolDeepResearchInput",
-              partType: part.type,
-            }),
-          };
-        case "output-available":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: requirePartField({
-              value: part.toolDeepResearchInput,
-              fieldName: "toolDeepResearchInput",
-              partType: part.type,
-            }),
-            output: requirePartField({
-              value: part.toolDeepResearchOutput,
-              fieldName: "toolDeepResearchOutput",
-              partType: part.type,
-            }),
-            resultProviderMetadata: part.toolResultProviderMetadata,
-          };
-        case "output-error":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: part.toolDeepResearchInput,
-            errorText: requirePartField({
-              value: part.toolErrorText,
-              fieldName: "toolErrorText",
-              partType: part.type,
-            }),
-            resultProviderMetadata: part.toolResultProviderMetadata,
-          };
-        default:
-          throw new ConvexError({
-            code: "CHAT_TOOL_STATE_UNSUPPORTED",
-            message: `Unsupported persisted tool state: ${toolState}`,
-          });
-      }
-    }
-    case "tool-math": {
-      const toolState = requireToolState(part);
-      switch (toolState) {
-        case "input-streaming":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: part.toolMathInput,
-          };
-        case "input-available":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: requirePartField({
-              value: part.toolMathInput,
-              fieldName: "toolMathInput",
-              partType: part.type,
-            }),
-          };
-        case "output-available":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: requirePartField({
-              value: part.toolMathInput,
-              fieldName: "toolMathInput",
-              partType: part.type,
-            }),
-            output: requirePartField({
-              value: part.toolMathOutput,
-              fieldName: "toolMathOutput",
-              partType: part.type,
-            }),
-            resultProviderMetadata: part.toolResultProviderMetadata,
-          };
-        case "output-error":
-          return {
-            type: part.type,
-            state: toolState,
-            toolCallId: requirePartField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            callProviderMetadata: part.toolCallProviderMetadata,
-            input: part.toolMathInput,
-            errorText: requirePartField({
-              value: part.toolErrorText,
-              fieldName: "toolErrorText",
-              partType: part.type,
-            }),
-            resultProviderMetadata: part.toolResultProviderMetadata,
-          };
-        default:
-          throw new ConvexError({
-            code: "CHAT_TOOL_STATE_UNSUPPORTED",
-            message: `Unsupported persisted tool state: ${toolState}`,
-          });
-      }
-    }
+    case "tool-nakafa":
+      return readNakafaTool(part);
+    case "tool-deepResearch":
+      return readResearchTool(part);
+    case "tool-math":
+      return readMathTool(part);
     case "data-suggestions":
       return {
         type: part.type,
-        id: requirePartField({
-          value: part.dataSuggestionsId,
-          fieldName: "dataSuggestionsId",
-          partType: part.type,
+        ...Struct.renameKeys(Struct.pick(part, ["dataSuggestionsId"]), {
+          dataSuggestionsId: "id",
         }),
         data: {
           data: requirePartField({
@@ -312,10 +84,8 @@ export function mapDBPartToUIMessagePart({
     case "data-nakafa":
       return {
         type: part.type,
-        id: requirePartField({
-          value: part.dataNakafaId,
-          fieldName: "dataNakafaId",
-          partType: part.type,
+        ...Struct.renameKeys(Struct.pick(part, ["dataNakafaId"]), {
+          dataNakafaId: "id",
         }),
         data: Schema.decodeUnknownSync(NakafaDataSchema)(
           projectPersistedNakafaData(
@@ -330,10 +100,8 @@ export function mapDBPartToUIMessagePart({
     case "data-math":
       return {
         type: part.type,
-        id: requirePartField({
-          value: part.dataMathId,
-          fieldName: "dataMathId",
-          partType: part.type,
+        ...Struct.renameKeys(Struct.pick(part, ["dataMathId"]), {
+          dataMathId: "id",
         }),
         data: requirePartField({
           value: part.dataMathData,
@@ -344,10 +112,8 @@ export function mapDBPartToUIMessagePart({
     case "data-scrape-url":
       return {
         type: part.type,
-        id: requirePartField({
-          value: part.dataScrapeUrlId,
-          fieldName: "dataScrapeUrlId",
-          partType: part.type,
+        ...Struct.renameKeys(Struct.pick(part, ["dataScrapeUrlId"]), {
+          dataScrapeUrlId: "id",
         }),
         data: {
           url: requirePartField({
@@ -374,10 +140,8 @@ export function mapDBPartToUIMessagePart({
     case "data-web-search":
       return {
         type: part.type,
-        id: requirePartField({
-          value: part.dataWebSearchId,
-          fieldName: "dataWebSearchId",
-          partType: part.type,
+        ...Struct.renameKeys(Struct.pick(part, ["dataWebSearchId"]), {
+          dataWebSearchId: "id",
         }),
         data: {
           provider: part.dataWebSearchProvider,
@@ -399,11 +163,6 @@ export function mapDBPartToUIMessagePart({
           error: part.dataWebSearchError,
         },
       };
-    default:
-      throw new ConvexError({
-        code: "CHAT_PART_TYPE_UNSUPPORTED",
-        message: `Unsupported persisted part type: ${part.type}`,
-      });
   }
 }
 
@@ -425,5 +184,214 @@ function projectPersistedNakafaData(data: PersistedNakafaData): unknown {
       ...result,
       meaning: { locale: "en", text: translation },
     },
+  };
+}
+
+/** Rebuilds the persisted tool-nakafa invocation at its recorded state. */
+function readNakafaTool(
+  part: Doc<"messageParts">
+): Extract<MyUIMessagePart, { type: "tool-nakafa" }> {
+  const toolState = requireToolState(part);
+  const fields = readToolFields(part);
+  // biome-ignore lint/style/useDefaultSwitchClause: The persisted validator closes this union; TypeScript checks exhaustive returns.
+  switch (toolState) {
+    case "input-streaming":
+      return {
+        type: "tool-nakafa",
+        state: toolState,
+        ...fields,
+        input: part.toolNakafaInput,
+      };
+    case "input-available":
+      return {
+        type: "tool-nakafa",
+        state: toolState,
+        ...fields,
+        input: requirePartField({
+          value: part.toolNakafaInput,
+          fieldName: "toolNakafaInput",
+          partType: part.type,
+        }),
+      };
+    case "output-available":
+      return {
+        type: "tool-nakafa",
+        state: toolState,
+        ...fields,
+        input: requirePartField({
+          value: part.toolNakafaInput,
+          fieldName: "toolNakafaInput",
+          partType: part.type,
+        }),
+        output: requirePartField({
+          value: part.toolNakafaOutput,
+          fieldName: "toolNakafaOutput",
+          partType: part.type,
+        }),
+        ...Struct.renameKeys(
+          Struct.pick(part, ["toolResultProviderMetadata"]),
+          { toolResultProviderMetadata: "resultProviderMetadata" }
+        ),
+      };
+    case "output-error":
+      return {
+        type: "tool-nakafa",
+        state: toolState,
+        ...fields,
+        input: part.toolNakafaInput,
+        errorText: requirePartField({
+          value: part.toolErrorText,
+          fieldName: "toolErrorText",
+          partType: part.type,
+        }),
+        ...Struct.renameKeys(
+          Struct.pick(part, ["toolResultProviderMetadata"]),
+          { toolResultProviderMetadata: "resultProviderMetadata" }
+        ),
+      };
+  }
+}
+
+/** Rebuilds the persisted tool-deepResearch invocation at its recorded state. */
+function readResearchTool(
+  part: Doc<"messageParts">
+): Extract<MyUIMessagePart, { type: "tool-deepResearch" }> {
+  const toolState = requireToolState(part);
+  const fields = readToolFields(part);
+  // biome-ignore lint/style/useDefaultSwitchClause: The persisted validator closes this union; TypeScript checks exhaustive returns.
+  switch (toolState) {
+    case "input-streaming":
+      return {
+        type: "tool-deepResearch",
+        state: toolState,
+        ...fields,
+        input: part.toolDeepResearchInput,
+      };
+    case "input-available":
+      return {
+        type: "tool-deepResearch",
+        state: toolState,
+        ...fields,
+        input: requirePartField({
+          value: part.toolDeepResearchInput,
+          fieldName: "toolDeepResearchInput",
+          partType: part.type,
+        }),
+      };
+    case "output-available":
+      return {
+        type: "tool-deepResearch",
+        state: toolState,
+        ...fields,
+        input: requirePartField({
+          value: part.toolDeepResearchInput,
+          fieldName: "toolDeepResearchInput",
+          partType: part.type,
+        }),
+        output: requirePartField({
+          value: part.toolDeepResearchOutput,
+          fieldName: "toolDeepResearchOutput",
+          partType: part.type,
+        }),
+        ...Struct.renameKeys(
+          Struct.pick(part, ["toolResultProviderMetadata"]),
+          { toolResultProviderMetadata: "resultProviderMetadata" }
+        ),
+      };
+    case "output-error":
+      return {
+        type: "tool-deepResearch",
+        state: toolState,
+        ...fields,
+        input: part.toolDeepResearchInput,
+        errorText: requirePartField({
+          value: part.toolErrorText,
+          fieldName: "toolErrorText",
+          partType: part.type,
+        }),
+        ...Struct.renameKeys(
+          Struct.pick(part, ["toolResultProviderMetadata"]),
+          { toolResultProviderMetadata: "resultProviderMetadata" }
+        ),
+      };
+  }
+}
+
+/** Rebuilds the persisted tool-math invocation at its recorded state. */
+function readMathTool(
+  part: Doc<"messageParts">
+): Extract<MyUIMessagePart, { type: "tool-math" }> {
+  const toolState = requireToolState(part);
+  const fields = readToolFields(part);
+  // biome-ignore lint/style/useDefaultSwitchClause: The persisted validator closes this union; TypeScript checks exhaustive returns.
+  switch (toolState) {
+    case "input-streaming":
+      return {
+        type: "tool-math",
+        state: toolState,
+        ...fields,
+        input: part.toolMathInput,
+      };
+    case "input-available":
+      return {
+        type: "tool-math",
+        state: toolState,
+        ...fields,
+        input: requirePartField({
+          value: part.toolMathInput,
+          fieldName: "toolMathInput",
+          partType: part.type,
+        }),
+      };
+    case "output-available":
+      return {
+        type: "tool-math",
+        state: toolState,
+        ...fields,
+        input: requirePartField({
+          value: part.toolMathInput,
+          fieldName: "toolMathInput",
+          partType: part.type,
+        }),
+        output: requirePartField({
+          value: part.toolMathOutput,
+          fieldName: "toolMathOutput",
+          partType: part.type,
+        }),
+        ...Struct.renameKeys(
+          Struct.pick(part, ["toolResultProviderMetadata"]),
+          { toolResultProviderMetadata: "resultProviderMetadata" }
+        ),
+      };
+    case "output-error":
+      return {
+        type: "tool-math",
+        state: toolState,
+        ...fields,
+        input: part.toolMathInput,
+        errorText: requirePartField({
+          value: part.toolErrorText,
+          fieldName: "toolErrorText",
+          partType: part.type,
+        }),
+        ...Struct.renameKeys(
+          Struct.pick(part, ["toolResultProviderMetadata"]),
+          { toolResultProviderMetadata: "resultProviderMetadata" }
+        ),
+      };
+  }
+}
+
+/** Reconstructs shared invocation identity and optional provider metadata. */
+function readToolFields(part: Doc<"messageParts">) {
+  return {
+    toolCallId: requirePartField({
+      value: part.toolToolCallId,
+      fieldName: "toolToolCallId",
+      partType: part.type,
+    }),
+    ...Struct.renameKeys(Struct.pick(part, ["toolCallProviderMetadata"]), {
+      toolCallProviderMetadata: "callProviderMetadata",
+    }),
   };
 }

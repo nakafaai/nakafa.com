@@ -39,7 +39,9 @@ export const getUserById = query({
     }
 
     return {
-      image: user.image ?? undefined,
+      ...(user.image === null || user.image === undefined
+        ? {}
+        : { image: user.image }),
       name: user.name,
     };
   },

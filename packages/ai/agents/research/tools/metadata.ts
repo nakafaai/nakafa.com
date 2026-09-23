@@ -6,9 +6,9 @@ export function getDocumentMetadata({
   metadata,
   title,
 }: {
-  description?: string;
-  metadata?: DocumentMetadata;
-  title?: string;
+  description?: string | undefined;
+  metadata?: DocumentMetadata | undefined;
+  title?: string | undefined;
 }) {
   const sourceTitle = firstText(title, metadata?.title, metadata?.ogTitle);
   const sourceDescription = firstText(

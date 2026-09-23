@@ -27,12 +27,14 @@ import { ShareButton } from "@/components/sidebar/actions/share";
 export type SidebarRightProps = {
   children: ReactNode;
   header?: ReactNode;
-  githubUrl?: string;
-  showComments?: boolean;
-  references?: {
-    title: string;
-    data: Reference[];
-  };
+  githubUrl?: string | undefined;
+  showComments?: boolean | undefined;
+  references?:
+    | {
+        title: string;
+        data: Reference[];
+      }
+    | undefined;
 } & ComponentProps<typeof Sidebar>;
 
 /** Outline heading slot, which can resolve independently from the panel. */
@@ -44,7 +46,7 @@ export function SidebarRightHeader({
 }: {
   title: string;
   href: string;
-  description?: string;
+  description?: string | undefined;
   descriptionLanguage?: string;
 }) {
   return (

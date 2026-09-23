@@ -121,7 +121,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         gateway: gatewayProviderOptions,
         google: getFastModelProviderOptions(modelId),
       },
-      instructions,
+      ...(instructions === undefined ? {} : { instructions }),
       timeout: backgroundGenerationTimeout,
     })
   ).pipe(Effect.option);

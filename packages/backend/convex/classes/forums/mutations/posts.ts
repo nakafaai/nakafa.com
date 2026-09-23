@@ -9,6 +9,7 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { truncateText } from "@repo/backend/convex/utils/text";
 import { ConvexError, v } from "convex/values";
+import { Struct } from "effect";
 
 /**
  * Create a new forum post.
@@ -90,11 +91,11 @@ export const createForumPost = mutation({
       createdBy: userId,
       forumId: args.forumId,
       mentions,
-      parentId: args.parentId,
+      ...Struct.pick(args, ["parentId"]),
       reactionCounts: [],
       replyCount: 0,
-      replyToBody,
-      replyToUserId,
+      ...(replyToBody === undefined ? {} : { replyToBody }),
+      ...(replyToUserId === undefined ? {} : { replyToUserId }),
       sequence,
       updatedAt: now,
     });

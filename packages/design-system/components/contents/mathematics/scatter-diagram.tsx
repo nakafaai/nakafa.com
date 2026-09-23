@@ -128,9 +128,9 @@ export function ScatterDiagram({
           <Grid vertical={false} />
           <XAxis
             dataKey="x"
-            domain={
-              xAxisDomain === "min-max" ? ["dataMin", "dataMax"] : undefined
-            }
+            {...(xAxisDomain === "min-max"
+              ? { domain: ["dataMin", "dataMax"] }
+              : {})}
             label={{
               value: xAxisLabel || "X",
               position: "bottom",
@@ -178,7 +178,9 @@ export function ScatterDiagram({
                 })),
                 dot: false,
                 legendType: "none",
-                strokeDasharray: regressionLineStyle?.strokeDasharray,
+                ...(regressionLineStyle?.strokeDasharray === undefined
+                  ? {}
+                  : { strokeDasharray: regressionLineStyle?.strokeDasharray }),
                 strokeWidth: 2,
                 tooltipType: "none",
               }}

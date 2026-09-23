@@ -154,3 +154,19 @@ describe("contentRelease/article/discovery", () => {
     });
   });
 });
+
+it("retains a signed article description in discovery", async () => {
+  const t = convexTest(schema, convexModules);
+  await t.mutation((ctx) =>
+    insertRuntimeArticles(ctx, 1, (index) => {
+      const projection = testLocalizedArticleProjection(index, "en");
+      return {
+        ...projection,
+        metadata: { ...projection.metadata, description: "Signed summary" },
+      };
+    })
+  );
+  expect(await t.query(latest, { appLocale: "en", limit: 1 })).toMatchObject({
+    articles: [{ description: "Signed summary" }],
+  });
+});

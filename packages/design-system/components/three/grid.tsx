@@ -68,7 +68,7 @@ export function CoordinateGrid({
   readonly cellColor: ColorRepresentation;
   readonly frame: CoordinateFrame;
   readonly infinite?: boolean;
-  readonly origin?: CoordinatePoint;
+  readonly origin?: CoordinatePoint | undefined;
   readonly sectionColor: ColorRepresentation;
 }) {
   const geometry = useMemo(

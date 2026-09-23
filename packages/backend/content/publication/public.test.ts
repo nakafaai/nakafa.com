@@ -15,7 +15,7 @@ import {
   makePageRuntimeSource,
 } from "@repo/backend/test/content/publication";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Struct } from "effect";
 
 describe("active public body selection", () => {
   it.effect(
@@ -106,24 +106,22 @@ describe("active public body selection", () => {
     () =>
       Effect.gen(function* () {
         const fixture = makePageRuntimeSource();
-        const incomplete: readonly Partial<PublicationRow<"contentHeads">>[] = [
-          { artifactHash: undefined },
-          { compilerConfigHash: undefined },
-          { projectionHash: undefined },
-          { projectionJson: undefined },
-          { rendererDomain: undefined },
-          { sourceHash: undefined },
-          { sourcePath: undefined },
+        const incomplete: readonly PublicationRow<"contentHeads">[] = [
+          Struct.omit(fixture.head, ["artifactHash"]),
+          Struct.omit(fixture.head, ["compilerConfigHash"]),
+          Struct.omit(fixture.head, ["projectionHash"]),
+          Struct.omit(fixture.head, ["projectionJson"]),
+          Struct.omit(fixture.head, ["rendererDomain"]),
+          Struct.omit(fixture.head, ["sourceHash"]),
+          Struct.omit(fixture.head, ["sourcePath"]),
         ];
         const sources = [
           new Map(fixture.source).set("contentBindings", [
-            { ...fixture.binding, contentKey: undefined },
+            Struct.omit(fixture.binding, ["contentKey"]),
           ]),
           new Map(fixture.source).set("contentHeads", []),
-          ...incomplete.map((patch) =>
-            new Map(fixture.source).set("contentHeads", [
-              { ...fixture.head, ...patch },
-            ])
+          ...incomplete.map((head) =>
+            new Map(fixture.source).set("contentHeads", [head])
           ),
         ];
         for (const source of sources) {

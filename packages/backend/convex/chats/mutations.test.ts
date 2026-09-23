@@ -228,66 +228,174 @@ describe("chats/mutations", () => {
     ]);
   });
 
-  it("allows transcript rewrites that exactly fill the bounded delete batch", async () => {
-    const t = createConvexTestWithBetterAuth();
-    posthogTest.register(t);
-    const identity = await t.mutation(
-      async (ctx) =>
-        await seedAuthenticatedUser(ctx, {
-          now: NOW,
-          suffix: "exact-rewrite-owner",
-        })
-    );
-    const owner = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-    const { chatId } = await owner.mutation(
-      api.chats.mutations.createChatWithMessage,
-      {
-        type: "study",
-        message: {
-          role: "user",
-          identifier: "user-rewrite-exact",
-          modelId: "nakafa-lite",
-        },
-        parts: [],
+  it.each([
+    CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE - 1,
+    CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE,
+  ])(
+    "keeps transcript rewrites atomic with %s tail messages",
+    async (tailCount) => {
+      const t = createConvexTestWithBetterAuth();
+      posthogTest.register(t);
+      const identity = await t.mutation(
+        async (ctx) =>
+          await seedAuthenticatedUser(ctx, {
+            now: NOW,
+            suffix: "exact-rewrite-owner",
+          })
+      );
+      const owner = t.withIdentity({
+        sessionId: identity.sessionId,
+        subject: identity.authUserId,
+      });
+      const { chatId } = await owner.mutation(
+        api.chats.mutations.createChatWithMessage,
+        {
+          type: "study",
+          message: {
+            role: "user",
+            identifier: "user-rewrite-exact",
+            modelId: "nakafa-lite",
+          },
+          parts: [],
+        }
+      );
+
+      await t.mutation(
+        async (ctx) => await insertGeneratedTailMessages(ctx, chatId, tailCount)
+      );
+
+      if (tailCount === CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE) {
+        await expect(
+          owner.mutation(api.chats.mutations.saveMessage, {
+            message: {
+              chatId,
+              role: "user",
+              identifier: "user-rewrite-exact",
+              modelId: "nakafa-lite",
+            },
+            parts: [],
+          })
+        ).rejects.toMatchObject({
+          data: { code: "CHAT_USER_MESSAGE_REWRITE_EXCEEDED" },
+        });
+        expect(
+          await t.query((ctx) => ctx.db.query("messages").collect())
+        ).toHaveLength(tailCount + 1);
+        return;
       }
-    );
+      const replacement = await owner.mutation(
+        api.chats.mutations.saveMessage,
+        {
+          message: {
+            chatId,
+            role: "user",
+            identifier: "user-rewrite-exact",
+            modelId: "nakafa-lite",
+          },
+          parts: [],
+        }
+      );
+      const messages = await t.query(
+        async (ctx) =>
+          await ctx.db
+            .query("messages")
+            .withIndex("by_chatId", (q) => q.eq("chatId", chatId))
+            .collect()
+      );
 
-    await t.mutation(
-      async (ctx) =>
-        await insertGeneratedTailMessages(
-          ctx,
+      expect(messages).toEqual([
+        expect.objectContaining({
+          _id: replacement.messageId,
           chatId,
-          CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE - 1
-        )
-    );
+          identifier: "user-rewrite-exact",
+          role: "user",
+        }),
+      ]);
+    }
+  );
+});
 
-    const replacement = await owner.mutation(api.chats.mutations.saveMessage, {
-      message: {
+it("enforces chat ownership for title, visibility, and deletion mutations", async () => {
+  const t = createConvexTestWithBetterAuth();
+  const [identity, outsider] = await t.mutation(async (ctx) =>
+    Promise.all([
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "chat-owner" }),
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "chat-outsider" }),
+    ])
+  );
+  const owner = t.withIdentity({
+    subject: identity.authUserId,
+    sessionId: identity.sessionId,
+  });
+  const stranger = t.withIdentity({
+    subject: outsider.authUserId,
+    sessionId: outsider.sessionId,
+  });
+  const chatId = await owner.mutation(api.chats.mutations.createChat, {
+    type: "study",
+  });
+  for (const client of [stranger, owner]) {
+    const writes = [
+      () =>
+        client.mutation(api.chats.mutations.updateChatTitle, {
+          chatId,
+          title: "Updated",
+        }),
+      () =>
+        client.mutation(api.chats.mutations.updateChatVisibility, {
+          chatId,
+          visibility: "public",
+        }),
+      () => client.mutation(api.chats.mutations.deleteChat, { chatId }),
+    ];
+    for (const write of writes) {
+      if (client === stranger) {
+        await expect(write()).rejects.toMatchObject({
+          data: { code: "FORBIDDEN" },
+        });
+      } else {
+        await write();
+      }
+    }
+  }
+  for (const write of [
+    () =>
+      owner.mutation(api.chats.mutations.updateChatTitle, {
         chatId,
-        role: "user",
-        identifier: "user-rewrite-exact",
-        modelId: "nakafa-lite",
-      },
+        title: "Missing",
+      }),
+    () =>
+      owner.mutation(api.chats.mutations.updateChatVisibility, {
+        chatId,
+        visibility: "private",
+      }),
+    () => owner.mutation(api.chats.mutations.deleteChat, { chatId }),
+  ]) {
+    await expect(write()).rejects.toMatchObject({
+      data: { code: "CHAT_NOT_FOUND" },
+    });
+  }
+});
+
+it("appends a new message without removing existing transcript rows", async () => {
+  const t = createConvexTestWithBetterAuth();
+  const identity = await t.mutation((ctx) =>
+    seedAuthenticatedUser(ctx, { now: NOW, suffix: "append" })
+  );
+  const owner = t.withIdentity({
+    subject: identity.authUserId,
+    sessionId: identity.sessionId,
+  });
+  const chatId = await owner.mutation(api.chats.mutations.createChat, {
+    type: "study",
+  });
+  for (const identifier of ["first", "second"]) {
+    await owner.mutation(api.chats.mutations.saveMessage, {
+      message: { chatId, identifier, role: "user" },
       parts: [],
     });
-    const messages = await t.query(
-      async (ctx) =>
-        await ctx.db
-          .query("messages")
-          .withIndex("by_chatId", (q) => q.eq("chatId", chatId))
-          .collect()
-    );
-
-    expect(messages).toEqual([
-      expect.objectContaining({
-        _id: replacement.messageId,
-        chatId,
-        identifier: "user-rewrite-exact",
-        role: "user",
-      }),
-    ]);
-  });
+  }
+  expect(
+    await t.query((ctx) => ctx.db.query("messages").collect())
+  ).toMatchObject([{ identifier: "first" }, { identifier: "second" }]);
 });

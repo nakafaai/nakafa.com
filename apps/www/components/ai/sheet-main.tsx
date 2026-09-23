@@ -96,7 +96,7 @@ function SheetConversation() {
     }
 
     sendMessage({
-      files: message.files,
+      ...(message.files === undefined ? {} : { files: message.files }),
       text: message.text,
     });
     setText("");

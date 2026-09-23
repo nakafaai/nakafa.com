@@ -114,7 +114,9 @@ export function readRuntimeCurriculumOptions(
   locale: Locale
 ) {
   return catalog.entries.map(({ program, route, translation }) => ({
-    countryCode: program.provider.homeCountry,
+    ...(program.provider.homeCountry === undefined
+      ? {}
+      : { countryCode: program.provider.homeCountry }),
     href: `/${locale}/${route.publicPath}`,
     programKey: route.programKey,
     publicSlug: translation.publicSlug,

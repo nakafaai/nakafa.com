@@ -81,7 +81,9 @@ function toArticleTarget(
     ...projection.graph,
     contentKey: projection.contentKey,
     content_id: projection.graph.assetId,
-    description: projection.metadata.description,
+    ...(projection.metadata.description === undefined
+      ? {}
+      : { description: projection.metadata.description }),
     kind: "article",
     locale,
     route: projection.publicPath,
@@ -102,7 +104,9 @@ const toMaterialTarget = Effect.fn("contents.views.toMaterialTarget")(
       ...projection.graph,
       contentKey: projection.contentKey,
       content_id: projection.graph.assetId,
-      description: projection.metadata.description,
+      ...(projection.metadata.description === undefined
+        ? {}
+        : { description: projection.metadata.description }),
       kind: "curriculum-lesson",
       locale,
       materialDomain,

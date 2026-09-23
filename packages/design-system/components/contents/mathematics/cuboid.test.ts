@@ -23,6 +23,7 @@ describe("cuboid visual geometry", () => {
       height: 6,
       kind: "cuboid",
       length: 4,
+      lineWidth: 2,
       width: 8,
     });
 
@@ -34,6 +35,7 @@ describe("cuboid visual geometry", () => {
       edges.every(
         (edge) =>
           edge.color === "slategray" &&
+          edge.lineWidth === 2 &&
           edge.points.length === 2 &&
           edge.showPoints === false &&
           edge.smooth === false

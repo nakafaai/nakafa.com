@@ -197,7 +197,7 @@ export function Axes({
   size?: number;
   showLabels?: boolean;
   showZAxis?: boolean;
-  origin?: CoordinatePoint;
+  origin?: CoordinatePoint | undefined;
 } & ComponentProps<"group">) {
   const axes = useMemo(() => {
     const geometry = createAxisGeometry(

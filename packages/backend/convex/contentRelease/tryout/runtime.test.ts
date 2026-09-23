@@ -400,7 +400,7 @@ describe("contentRelease/tryout runtime retention", () => {
       const t = convexTest(schema, convexModules);
       const rowId = await t.mutation(async (ctx) => {
         const stored = await seedRuntimeRetentionRow(ctx, {
-          cleanupReleaseId,
+          ...(cleanupReleaseId === undefined ? {} : { cleanupReleaseId }),
           originKind: "git",
           snapshotId: RETENTION_RESULT_SNAPSHOT,
           withState,

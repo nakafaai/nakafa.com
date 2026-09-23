@@ -32,11 +32,11 @@ export class PromptInputFileConstraintError extends Schema.TaggedError<PromptInp
 ) {}
 /** Inputs used to validate one picker, paste, or drop operation. */
 export interface ValidatePromptInputFilesOptions {
-  readonly accept?: string;
+  readonly accept?: string | undefined;
   readonly currentFileCount: number;
   readonly files: readonly File[];
-  readonly maxFileSize?: number;
-  readonly maxFiles?: number;
+  readonly maxFileSize?: number | undefined;
+  readonly maxFiles?: number | undefined;
 }
 /** Files accepted from one picker, paste, or drop operation. */
 export interface PromptInputFileSelection {

@@ -31,7 +31,7 @@ export const NakafaAgentQuranReferenceOptionsSchema = Schema.Struct({
       )
     )
   ).annotate({ description: "Surah number." }),
-  to_verse: Schema.optional(
+  to_verse: Schema.optionalKey(
     Schema.Finite.pipe(
       Schema.check(Schema.isInt()),
       Schema.check(Schema.isGreaterThan(0))

@@ -10,8 +10,8 @@ import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Graph content-view tracking inputs for a rendered learning page. */
 interface Props {
-  contentId?: string | null;
-  context?: LearningContextInput;
+  contentId?: string | null | undefined;
+  context?: LearningContextInput | undefined;
   delay?: number;
   enabled?: boolean;
   locale: RouteLocale;
@@ -64,10 +64,10 @@ function ActiveContentViewTracker({
   delay,
 }: PropsWithChildren<Omit<Props, "locale"> & { locale: Locale }>) {
   useRecordContentView({
-    contentId,
-    context,
+    ...(contentId === undefined ? {} : { contentId }),
+    ...(context === undefined ? {} : { context }),
     locale,
-    delay,
+    ...(delay === undefined ? {} : { delay }),
     publicPath,
     section,
   });

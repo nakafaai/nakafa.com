@@ -10,7 +10,7 @@ export function TryoutResponseLabel({
   id,
 }: {
   readonly children: string;
-  readonly correctness?: boolean;
+  readonly correctness?: boolean | undefined;
   readonly id: string;
 }) {
   const t = useTranslations("Exercises");

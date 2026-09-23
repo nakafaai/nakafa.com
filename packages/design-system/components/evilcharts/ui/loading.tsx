@@ -17,7 +17,7 @@ export const LoadingArea = ({
   curveType,
 }: {
   chartId: string;
-  curveType: ComponentProps<typeof RechartsArea>["type"];
+  curveType: NonNullable<ComponentProps<typeof RechartsArea>["type"]>;
 }) => (
   <>
     <RechartsArea
@@ -50,7 +50,7 @@ export const LoadingLine = ({
   strokeWidth,
 }: {
   chartId: string;
-  curveType: ComponentProps<typeof RechartsLine>["type"];
+  curveType: NonNullable<ComponentProps<typeof RechartsLine>["type"]>;
   strokeWidth: number;
 }) => (
   <>

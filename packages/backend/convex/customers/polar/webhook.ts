@@ -67,11 +67,12 @@ export const upsertPolarCustomerWebhook: (
       ctx.runQuery(
         internal.customers.queries.internal.customer.resolveWebhookTarget,
         {
-          externalId: normalizedCustomer.externalId ?? undefined,
-          metadataUserId:
-            typeof normalizedCustomer.metadata.userId === "string"
-              ? normalizedCustomer.metadata.userId
-              : undefined,
+          ...(normalizedCustomer.externalId === null
+            ? {}
+            : { externalId: normalizedCustomer.externalId }),
+          ...(typeof normalizedCustomer.metadata.userId === "string"
+            ? { metadataUserId: normalizedCustomer.metadata.userId }
+            : {}),
           polarCustomerId: normalizedCustomer.id,
         }
       )

@@ -126,7 +126,7 @@ export function Bar({
         isAnimationActive={false}
         radius={resolvedRadius}
         shape={<CustomBar {...customBarProps} animationType={revealType} />}
-        stackId={isStacked ? STACK_ID : undefined}
+        {...(isStacked ? { stackId: STACK_ID } : {})}
         style={
           isClickable || enableHoverHighlight
             ? { cursor: "pointer" }

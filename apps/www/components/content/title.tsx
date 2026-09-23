@@ -4,7 +4,7 @@ export function ContentTitle({
   description,
 }: {
   title: string;
-  description?: string;
+  description?: string | undefined;
 }) {
   return (
     <header className="relative py-20">

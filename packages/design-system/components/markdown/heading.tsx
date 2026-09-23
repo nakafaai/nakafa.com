@@ -79,9 +79,9 @@ export function Heading({
   ...props
 }: {
   Tag: HeadingTag;
-  className: string;
+  className?: string | undefined;
   enableLink?: boolean;
-  id?: string;
+  id?: string | undefined;
 } & HeadingProps) {
   const id =
     explicitId ?? createHeadingId(extractTextFromNode(props.children) ?? "");

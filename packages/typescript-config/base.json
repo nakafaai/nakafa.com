@@ -3,6 +3,7 @@
   "display": "Default",
   "compilerOptions": {
     "esModuleInterop": true,
+    "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": false,
     "isolatedModules": true,
@@ -19,7 +20,6 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "ES2022",
-    "strictNullChecks": true
+    "target": "ES2022"
   }
 }

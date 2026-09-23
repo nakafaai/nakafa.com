@@ -72,21 +72,21 @@ const DEFAULT_CAMERA_TARGET = [
 interface CameraControlsProps {
   autoRotate?: boolean;
   cameraPosition?: readonly [number, number, number];
-  cameraTarget?: readonly [number, number, number];
+  cameraTarget?: readonly [number, number, number] | undefined;
   enablePan?: boolean;
   enableRotate?: boolean;
   enableZoom?: boolean;
   fov?: number;
   /** Fits every finite subject only when the illustration explicitly needs it. */
-  framing?: "content";
+  framing?: "content" | undefined;
   maxAzimuthAngle?: number;
   /** Optional tighter dolly bound within the scene's initial framing limit. */
-  maxDistance?: number;
+  maxDistance?: number | undefined;
   maxPolarAngle?: number;
   minAzimuthAngle?: number;
-  minDistance?: number;
+  minDistance?: number | undefined;
   minPolarAngle?: number;
-  projection?: CameraProjection;
+  projection?: CameraProjection | undefined;
 }
 
 export function CameraControls(props: CameraControlsProps) {
@@ -428,16 +428,16 @@ export function CameraControls(props: CameraControlsProps) {
     <>
       {projection.kind === "orthographic" ? (
         <OrthographicCamera
-          far={projection.far}
+          {...(projection.far === undefined ? {} : { far: projection.far })}
           makeDefault
-          near={projection.near}
+          {...(projection.near === undefined ? {} : { near: projection.near })}
         />
       ) : (
         <PerspectiveCamera
-          far={projection.far}
+          {...(projection.far === undefined ? {} : { far: projection.far })}
           fov={projection.fov ?? fov}
           makeDefault
-          near={projection.near}
+          {...(projection.near === undefined ? {} : { near: projection.near })}
         />
       )}
       <OrbitControls
@@ -449,10 +449,10 @@ export function CameraControls(props: CameraControlsProps) {
         enableRotate={enableRotate}
         enableZoom={enableZoom}
         makeDefault
-        maxAzimuthAngle={maxAzimuthAngle}
-        maxPolarAngle={maxPolarAngle}
-        minAzimuthAngle={minAzimuthAngle}
-        minPolarAngle={minPolarAngle}
+        {...(maxAzimuthAngle === undefined ? {} : { maxAzimuthAngle })}
+        {...(maxPolarAngle === undefined ? {} : { maxPolarAngle })}
+        {...(minAzimuthAngle === undefined ? {} : { minAzimuthAngle })}
+        {...(minPolarAngle === undefined ? {} : { minPolarAngle })}
         onChange={handleChange}
         onEnd={handleEnd}
         onStart={handleStart}

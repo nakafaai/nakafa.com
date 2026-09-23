@@ -36,7 +36,9 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             email: authUser.email,
             authId: authUser._id,
             name: authUser.name,
-            image: authUser.image ?? undefined,
+            ...(authUser.image === null || authUser.image === undefined
+              ? {}
+              : { image: authUser.image }),
             plan: DEFAULT_USER_PLAN,
             credits: DEFAULT_USER_CREDITS,
             creditsResetAt: getCurrentCreditResetTimestamp(

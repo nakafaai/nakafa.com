@@ -87,7 +87,7 @@ export function BlockArt({
     containerRef,
     isCellHovered,
     isCellIdleAnimated,
-    onCellClick,
+    ...(onCellClick === undefined ? {} : { onCellClick }),
     rowCount,
     shouldReduceMotion,
     waveDuration,
