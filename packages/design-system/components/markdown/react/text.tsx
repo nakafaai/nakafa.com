@@ -15,9 +15,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
       {...props}
     />
   ),
-  em: ({ node: _node, ...props }) => (
-    <em className="font-medium" data-nakafa="italic" {...props} />
-  ),
+  em: ({ node: _node, ...props }) => <em data-nakafa="italic" {...props} />,
   h1: ({ node: _node, ...props }) => (
     <Heading
       className="mt-6 mb-4 text-2xl"
