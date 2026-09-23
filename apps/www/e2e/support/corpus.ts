@@ -18,6 +18,11 @@ export const pinnedRoutes = {
     en: "/en/articles/politics/merah-putih-cabinet-analysis",
     id: "/id/articles/politics/merah-putih-cabinet-analysis",
   },
+  growth: {
+    de: "/de/faecher/mathematik/potenzen-und-logarithmen/exponentielles-wachstum",
+    en: "/en/subjects/mathematics/exponential-logarithm/exponential-growth",
+    id: "/id/materi/matematika/eksponen-dan-logaritma/pertumbuhan-eksponen",
+  },
   material: {
     de: "/de/faecher/mathematik/analytische-geometrie/hyperbel",
     en: "/en/subjects/mathematics/analytic-geometry/hyperbola",
