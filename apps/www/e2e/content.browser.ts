@@ -6,6 +6,7 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/browser-context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;
@@ -243,16 +244,24 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
   if (group.kind !== "material") {
     return;
   }
-  const scene = page
-    .locator('[data-slot="line-scene"]')
+  yield* waitForCommittedAppRouter(page, route.href, route.href, 15_000);
+  const card = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.locator('[data-slot="line-scene"]') })
     .filter({ visible: true })
     .first();
+  const scene = card.locator('[data-slot="line-scene"]');
   const canvases = page.locator("canvas");
   yield* Effect.promise(() => expect(scene).toBeAttached());
   yield* Effect.promise(() => expect(canvases).toHaveCount(0));
-  yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
+  // Reveal the content-visibility card before scrolling its deferred scene.
   yield* Effect.promise(() =>
-    expect(scene.locator("canvas")).toBeVisible({ timeout: 30_000 })
+    expect(async () => {
+      await card.scrollIntoViewIfNeeded();
+      await expect(scene).toBeVisible();
+      await scene.scrollIntoViewIfNeeded();
+      expect(await scene.locator("canvas").isVisible()).toBe(true);
+    }).toPass({ timeout: 30_000 })
   );
 });
 
