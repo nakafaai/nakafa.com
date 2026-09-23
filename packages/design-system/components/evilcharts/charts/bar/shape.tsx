@@ -143,6 +143,10 @@ export const CustomBar = (props: CustomBarProps) => {
         {...rectangleProps}
         {...(onClick === undefined ? {} : { onClick })}
         fill="transparent"
+        height={height}
+        width={width}
+        x={x}
+        y={y}
       />
       {/* The painted bar grows in from its baseline; the hit rect above stays put */}
       <RevealGroup animation={grow}>
