@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import {
   getTryoutExamIcon,
   getTryoutTrackIcon,
@@ -23,7 +24,12 @@ describe("try-out icons", () => {
   });
 
   it("keeps subject track icons sourced from material icons", () => {
-    expect(getTryoutTrackIcon("subject", "mathematics")).toBeTruthy();
+    expect(getTryoutTrackIcon("subject", "compulsory-mathematics")).toEqual(
+      getMaterialIcon("mathematics")
+    );
+    expect(getTryoutTrackIcon("subject", "english-language")).toEqual(
+      getMaterialIcon("english-language")
+    );
   });
 
   it("gives year tracks a visible calendar identity", () => {

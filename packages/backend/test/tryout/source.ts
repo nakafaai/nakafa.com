@@ -33,9 +33,9 @@ import { Schema } from "effect";
 export const TRYOUT_START_NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
 export const TRYOUT_START_COUNTRY = "indonesia";
 export const TRYOUT_START_EXAM = "tka";
-export const TRYOUT_START_TRACK = "matematika";
+export const TRYOUT_START_TRACK = "matematika-wajib";
 export const TRYOUT_START_SET = "set-1";
-export const TRYOUT_START_SECTION = "matematika";
+export const TRYOUT_START_SECTION = "matematika-wajib";
 export const TRYOUT_REVISED_SECTION = "numerasi";
 export const TRYOUT_REUSED_SET = "set-2";
 export const TRYOUT_REUSED_SECTION = "aljabar";
@@ -54,12 +54,12 @@ const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_S
 const tryoutStartLocales: readonly ActiveAppLocaleCode[] =
   ACTIVE_APP_LOCALE_CODES;
 const tryoutTrackTitles = {
-  de: "Mathematik",
-  en: "Mathematics",
-  id: "Matematika",
+  de: "Pflichtmathematik",
+  en: "Compulsory Mathematics",
+  id: "Matematika Wajib",
 } as const satisfies Record<ActiveAppLocaleCode, string>;
 
-/** Activates the signed source that exactly matches the legacy start fixture. */
+/** Activates the signed source that exactly matches the signed start fixture. */
 export async function activateTryoutStartSource(
   ctx: MutationCtx,
   visibility: "internal-entry" | "visible",
@@ -308,14 +308,14 @@ export function makeTryoutStartCatalog(
       setKey: TRYOUT_START_SET,
       sourceRevision: "2026",
       timeLimitSeconds: 1800,
-      title: "Matematika",
+      title: tryoutTrackTitles[appLocale],
       trackKey: TRYOUT_START_TRACK,
       visibility,
     },
   ]);
 }
 
-/** Builds one localized signed placement matching the legacy question. */
+/** Builds one localized signed placement matching the signed question. */
 export function makeTryoutStartPlacement(
   appLocale: ActiveAppLocaleCode
 ): TryoutPlacement {

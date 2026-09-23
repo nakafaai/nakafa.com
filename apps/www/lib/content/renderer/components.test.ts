@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import { Effect } from "effect";
+import { resolveRendererComponents } from "@/lib/content/renderer/components";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
@@ -30,9 +31,6 @@ describe("renderer components", () => {
     "resolves semantic HTML plus exactly the signed custom requirements",
     () =>
       Effect.gen(function* () {
-        const { resolveRendererComponents } = yield* Effect.promise(
-          () => import("@/lib/content/renderer/components")
-        );
         const components = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "snbt-plain",

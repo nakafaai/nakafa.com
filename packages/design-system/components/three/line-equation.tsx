@@ -14,7 +14,10 @@ import {
   GRAPH_POINT_SEGMENTS,
   getCurveDivisions,
 } from "@repo/design-system/components/three/helpers/quality";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  ThreeLabel,
+  type ThreeLabelAnchorX,
+} from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { resolveArrowSize } from "@repo/design-system/lib/geometry/arrow";
 import {
@@ -103,12 +106,16 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
 }
 
 interface LineLabelStyle {
+  /** Horizontal alignment of the label around its resolved position. */
+  anchorX?: ThreeLabelAnchorX;
   /** Optional index into the points array where this label appears. */
   at?: number;
   /** Font size of the label. */
   fontSize?: ThreeFontSize | number;
   /** Optional [x,y,z] offset from the selected point. */
   offset?: [number, number, number];
+  /** Fractional distance along the line, taking precedence over `at`. */
+  progress?: number;
 }
 
 /** Semantic React content rendered at one line point. */
@@ -155,6 +162,34 @@ export interface Props {
 }
 
 const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
+
+/** Interpolates one label position by distance along a polyline. */
+function resolveProgressPosition(points: Vector3[], progress: number) {
+  const first = points[0];
+  const last = points.at(-1);
+  if (!(first && last)) {
+    return;
+  }
+  if (points.length === 1) {
+    return first.clone();
+  }
+
+  const segments = points.flatMap((start, index) => {
+    const end = points[index + 1];
+    return end ? [{ end, start }] : [];
+  });
+  const target = Math.min(1, Math.max(0, progress));
+  let distance = 0;
+  for (const { end, start } of segments) {
+    const length = start.distanceTo(end);
+    if (target <= distance + length) {
+      const segmentProgress = length === 0 ? 0 : (target - distance) / length;
+      return start.clone().lerp(end, segmentProgress);
+    }
+    distance += length;
+  }
+  return last.clone();
+}
 
 /**
  * Renders a 3D line or curve with optional point markers, labels, and arrowheads.
@@ -319,7 +354,10 @@ export function LineEquation({
       labels.flatMap((label, idx) => {
         const mid = Math.floor(vectorPoints.length / 2);
         const index = label.at ?? mid;
-        const base = vectorPoints[index];
+        const base =
+          label.progress === undefined
+            ? vectorPoints[index]
+            : resolveProgressPosition(vectorPoints, label.progress);
         if (!base) {
           return [];
         }
@@ -329,6 +367,7 @@ export function LineEquation({
 
         return [
           {
+            anchorX: label.anchorX,
             key: `label-${idx}`,
             position,
             fontSize: label.fontSize ?? DEFAULT_FONT_SIZE,
@@ -407,6 +446,7 @@ export function LineEquation({
       {/* Render custom labels at specified indices */}
       {labelData.map((data) => (
         <ThreeLabel
+          anchorX={data.anchorX}
           color={color}
           fontSize={data.fontSize}
           key={data.key}

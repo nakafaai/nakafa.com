@@ -38,7 +38,7 @@ export function LineEquation({
     DEFAULT_CAMERA_POSITION_Z,
   ],
   cameraTarget,
-  showZAxis = true,
+  showZAxis,
 }: Props) {
   const lines = resolveAuthoredLines(data);
 

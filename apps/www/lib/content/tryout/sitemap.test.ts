@@ -39,9 +39,9 @@ describe("published try-out sitemap", () => {
           paths: [
             "try-out/indonesia",
             "try-out/indonesia/tka",
-            "try-out/indonesia/tka/matematika",
-            "try-out/indonesia/tka/matematika/set-1",
-            "try-out/indonesia/tka/matematika/set-1/matematika",
+            "try-out/indonesia/tka/matematika-wajib",
+            "try-out/indonesia/tka/matematika-wajib/set-1",
+            "try-out/indonesia/tka/matematika-wajib/set-1/matematika-wajib",
           ],
         });
         expect(yield* readPublishedTryoutSitemap(locale, 1)).toBeNull();

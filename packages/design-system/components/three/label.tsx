@@ -26,11 +26,11 @@ import {
 } from "three";
 
 type HtmlProps = ComponentProps<typeof Html>;
-type LabelAnchorX = "center" | "left" | "right";
+export type ThreeLabelAnchorX = "center" | "left" | "right";
 type LabelAnchorY = "bottom" | "middle" | "top";
 
 interface ThreeLabelProps {
-  anchorX?: LabelAnchorX;
+  anchorX?: ThreeLabelAnchorX;
   anchorY?: LabelAnchorY;
   children: ReactNode;
   color: string | Color;
@@ -54,7 +54,7 @@ interface ThreeLabelProps {
 const LABEL_BASE_FONT_SIZE = 16;
 const LABEL_Z_INDEX_RANGE: [number, number] = [1, 0];
 
-function anchorOffset(anchor: LabelAnchorX | LabelAnchorY) {
+function anchorOffset(anchor: ThreeLabelAnchorX | LabelAnchorY) {
   if (anchor === "left" || anchor === "top") {
     return 0;
   }
@@ -66,7 +66,7 @@ function anchorOffset(anchor: LabelAnchorX | LabelAnchorY) {
   return -0.5;
 }
 
-function gapDirection(anchor: LabelAnchorX | LabelAnchorY) {
+function gapDirection(anchor: ThreeLabelAnchorX | LabelAnchorY) {
   if (anchor === "left" || anchor === "top") {
     return 1;
   }
@@ -76,7 +76,7 @@ function gapDirection(anchor: LabelAnchorX | LabelAnchorY) {
   return 0;
 }
 
-function anchorOrigin(anchor: LabelAnchorX | LabelAnchorY) {
+function anchorOrigin(anchor: ThreeLabelAnchorX | LabelAnchorY) {
   return anchor === "middle" ? "center" : anchor;
 }
 

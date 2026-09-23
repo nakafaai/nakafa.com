@@ -41,9 +41,9 @@ describe("public try-out catalog queries", () => {
         const examPath = `${countryPath}/${TRYOUT_START_EXAM}`;
         const trackPath = `${examPath}/${TRYOUT_START_TRACK}`;
         for (const [appLocale, title] of [
-          ["en", "Mathematics"],
-          ["id", "Matematika"],
-          ["de", "Mathematik"],
+          ["en", "Compulsory Mathematics"],
+          ["id", "Matematika Wajib"],
+          ["de", "Pflichtmathematik"],
         ] as const) {
           const [hub, country, exam, track] = yield* Effect.promise(() =>
             Promise.all([

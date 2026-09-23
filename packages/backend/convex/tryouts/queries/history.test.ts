@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/test/tryout/source";
 
 const NOW = Date.UTC(2026, 6, 12, 12, 0, 0);
-const SET_PATH = "try-out/indonesia/tka/matematika/set-1";
+const SET_PATH = "try-out/indonesia/tka/matematika-wajib/set-1";
 
 /** Inserts one terminal raw attempt and its immutable score snapshot. */
 async function insertHistoryAttempt(

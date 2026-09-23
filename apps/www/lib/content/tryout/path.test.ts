@@ -26,8 +26,8 @@ describe("published try-out localized paths", () => {
         const context = yield* createTestPublication(fixture.source);
         runtimeQueryMock.mockImplementation(createTestNativeQuery(context));
         for (const publicPath of [
-          "try-out/indonesia/tka/matematika/set-1",
-          "try-out/indonesia/tka/matematika/set-1/matematika",
+          "try-out/indonesia/tka/matematika-wajib/set-1",
+          "try-out/indonesia/tka/matematika-wajib/set-1/matematika-wajib",
         ]) {
           expect(
             yield* readPublishedTryoutLocalizedPath({
@@ -48,7 +48,7 @@ describe("published try-out localized paths", () => {
       expect(
         yield* readPublishedTryoutLocalizedPath({
           currentAppLocale: "id",
-          publicPath: "try-out/indonesia/tka/matematika/missing-set",
+          publicPath: "try-out/indonesia/tka/matematika-wajib/missing-set",
           targetAppLocale: "de",
         })
       ).toBeNull();

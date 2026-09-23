@@ -127,7 +127,6 @@ export const mathematicsComponentNames = {
   sequenceConceptTableChairsAnimation: "SequenceConceptTableChairsAnimation",
   triangle: "Triangle",
   unitCircle: "UnitCircle",
-  vector3d: "Vector3d",
   vectorChart: "VectorChart",
 } as const;
 
@@ -139,6 +138,7 @@ export const physicsComponentNames = {
   dimensionLab: "DimensionLab",
   displacementDistanceLab: "DisplacementDistanceLab",
   instantaneousVelocitySpeedLab: "InstantaneousVelocitySpeedLab",
+  lineEquation: "LineEquation",
   measurementToolsLab: "MeasurementToolsLab",
   nonUniformLinearMotionGraphCard: "NonUniformLinearMotionGraphCard",
   nonUniformLinearMotionLab: "NonUniformLinearMotionLab",
@@ -148,7 +148,6 @@ export const physicsComponentNames = {
   stoppingDistanceLab: "StoppingDistanceLab",
   uniformCircularMotionLab: "UniformCircularMotionLab",
   uniformLinearMotionLab: "UniformLinearMotionLab",
-  vector3d: "Vector3d",
   vectorConceptLab: "VectorConceptLab",
   velocitySpeedLab: "VelocitySpeedLab",
   verticalMovementLab: "VerticalMovementLab",
