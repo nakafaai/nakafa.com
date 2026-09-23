@@ -5777,6 +5777,52 @@ export declare const api: {
           }>;
         }
       >;
+      lesson: FunctionReference<
+        "query",
+        "public",
+        { appLocale: "en" | "id" | "de"; publicPath: string },
+        {
+          materialKey: string | null;
+          model: {
+            activeAppLocales: Array<"en" | "id" | "de">;
+            activeManifestHash: string | null;
+            activeReleaseId: string | null;
+            alternateJson: Array<string>;
+            projectionJson: string | null;
+            rendererDomain:
+              | "ai-ds"
+              | "biology"
+              | "chemistry"
+              | "mathematics"
+              | "physics"
+              | "politics"
+              | "site"
+              | "snbt-general"
+              | "snbt-math"
+              | "snbt-plain"
+              | "snbt-quant"
+              | "tka-math"
+              | null;
+            sourcePath: string | null;
+            sourceRevision: string | null;
+          };
+          runtimeJson: string | null;
+        }
+      >;
+      navigation: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          expectedActiveReleaseId: string;
+          materialKey: string;
+        },
+        {
+          activeManifestHash: string | null;
+          activeReleaseId: string | null;
+          siblingJson: Array<string>;
+        }
+      >;
       publication: FunctionReference<
         "query",
         "public",
@@ -5855,7 +5901,7 @@ export declare const api: {
       sitemapPage: FunctionReference<
         "query",
         "public",
-        { appLocale: "en" | "id" | "de"; bucket: string },
+        { appLocale: "en" | "id" | "de"; bucket: string | Array<string> },
         null | { routes: Array<{ lastModified: string; publicPath: string }> }
       >;
     };
