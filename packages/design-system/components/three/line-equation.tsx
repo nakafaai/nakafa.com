@@ -26,7 +26,7 @@ import {
   resolveLineMarkers,
 } from "@repo/design-system/lib/geometry/markers";
 import { Effect } from "effect";
-import { type ReactNode, useMemo } from "react";
+import { type ComponentProps, type ReactNode, useMemo } from "react";
 import {
   CatmullRomCurve3,
   Color,
@@ -103,6 +103,8 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
 }
 
 interface LineLabelStyle {
+  /** Horizontal alignment around the authored point. */
+  anchorX?: ComponentProps<typeof ThreeLabel>["anchorX"];
   /** Optional index into the points array where this label appears. */
   at?: number;
   /** Font size of the label. */
@@ -329,6 +331,7 @@ export function LineEquation({
 
         return [
           {
+            anchorX: label.anchorX,
             key: `label-${idx}`,
             position,
             fontSize: label.fontSize ?? DEFAULT_FONT_SIZE,
@@ -407,6 +410,7 @@ export function LineEquation({
       {/* Render custom labels at specified indices */}
       {labelData.map((data) => (
         <ThreeLabel
+          anchorX={data.anchorX}
           color={color}
           fontSize={data.fontSize}
           key={data.key}

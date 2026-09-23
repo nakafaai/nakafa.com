@@ -2,7 +2,6 @@
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import { Effect } from "effect";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
@@ -27,9 +26,29 @@ afterEach(() => {
 
 describe("renderer components", () => {
   it.effect(
+    "resolves both published and successor physics vector artifacts",
+    () =>
+      Effect.gen(function* () {
+        const { resolveRendererComponents } = yield* Effect.promise(
+          () => import("@/lib/content/renderer/components")
+        );
+        const components = yield* resolveRendererComponents({
+          contentKey,
+          rendererDomain: "physics",
+          requiredComponents: ["LineEquation", "Vector3d"],
+        });
+        expect(components.LineEquation).toBeDefined();
+        expect(components.Vector3d).toBeDefined();
+      })
+  );
+
+  it.effect(
     "resolves semantic HTML plus exactly the signed custom requirements",
     () =>
       Effect.gen(function* () {
+        const { semanticMdxComponents } = yield* Effect.promise(
+          () => import("@repo/design-system/lib/markdown/semantic")
+        );
         const { resolveRendererComponents } = yield* Effect.promise(
           () => import("@/lib/content/renderer/components")
         );
@@ -154,6 +173,9 @@ describe("renderer components", () => {
 
   it.effect("resolves only the signed renderer from its selected domain", () =>
     Effect.gen(function* () {
+      const { semanticMdxComponents } = yield* Effect.promise(
+        () => import("@repo/design-system/lib/markdown/semantic")
+      );
       const { resolveRendererComponents } = yield* Effect.promise(
         () => import("@/lib/content/renderer/components")
       );
