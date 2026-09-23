@@ -6,7 +6,7 @@ interface DependencyHold {
   readonly minimumDeclarations?: number;
 }
 
-export const CONTRACT_PACKAGE_VERSION = "0.41.0";
+export const CONTRACT_PACKAGE_VERSION = "0.42.0";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "19.2.8", dependency: "react", minimumDeclarations: 1 },
@@ -56,34 +56,34 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
-  { approved: "1.45.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.99", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "1.46.0", dependency: "convex", minimumDeclarations: 1 },
+  { approved: "7.0.109", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.102",
+    approved: "4.0.112",
     dependency: "@ai-sdk/react",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.69",
+    approved: "4.0.76",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.80",
+    approved: "4.0.88",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
   {
-    approved: "1.0.19",
+    approved: "1.0.22",
     dependency: "@ai-sdk/devtools",
     minimumDeclarations: 1,
   },
   {
-    approved: "1.6.31",
+    approved: "1.6.33",
     dependency: "better-auth",
     minimumDeclarations: 1,
   },
-  { approved: "1.6.31", dependency: "auth", minimumDeclarations: 1 },
+  { approved: "1.6.33", dependency: "auth", minimumDeclarations: 1 },
   {
     approved: "0.12.5",
     dependency: "@convex-dev/better-auth",
@@ -102,7 +102,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@nakafa/aksara-contracts",
   },
   {
-    approved: "2.5.13",
+    approved: "2.5.14",
     dependency: "@biomejs/biome",
     minimumDeclarations: 1,
   },
@@ -111,10 +111,10 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "7.11.1", dependency: "ultracite", minimumDeclarations: 1 },
-  { approved: "2.10.12", dependency: "turbo", minimumDeclarations: 1 },
+  { approved: "7.12.0", dependency: "ultracite", minimumDeclarations: 1 },
+  { approved: "2.11.2", dependency: "turbo", minimumDeclarations: 1 },
   {
-    approved: "2.10.12",
+    approved: "2.11.2",
     dependency: "@turbo/gen",
     minimumDeclarations: 1,
   },
@@ -148,35 +148,35 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "effect@rc",
-    "4.0.0-rc.115",
-    "Signed content contracts require the exact RC115 cohort.",
+    "4.0.0-rc.117",
+    "Signed content contracts require the exact RC117 cohort.",
   ],
   [
     "@effect/platform-node@rc",
-    "4.0.0-rc.115",
+    "4.0.0-rc.117",
     "The platform package must match the Effect cohort.",
   ],
   [
     "@effect/platform-node-shared@rc",
-    "4.0.0-rc.115",
+    "4.0.0-rc.117",
     "The transitive platform package must match the Effect cohort.",
   ],
   [
     "@effect/vitest@rc",
-    "4.0.0-rc.115",
+    "4.0.0-rc.117",
     "The test adapter must match the Effect cohort.",
   ],
   ["@effect/tsgo@latest", "0.45.0", "Compiler patching moves with TypeScript."],
-  ["vitest@latest", "5.0.0", "The Effect RC115 adapter requires Vitest 5."],
+  ["vitest@latest", "5.0.1", "The Effect RC117 adapter requires Vitest 5."],
   [
     "@vitest/coverage-istanbul@latest",
-    "5.0.0",
-    "Coverage must match the supported Vitest 5.0.0 runner.",
+    "5.0.1",
+    "Coverage must match the supported Vitest 5.0.1 runner.",
   ],
   [
     "@vitest/ui@latest",
-    "5.0.0",
-    "The test UI must match the supported Vitest 5.0.0 runner.",
+    "5.0.1",
+    "The test UI must match the supported Vitest 5.0.1 runner.",
   ],
   [
     "@nakafa/aksara-contracts@latest",
@@ -189,40 +189,44 @@ export const REGISTRY_REVIEWS = [
     "16.3.5",
     "Stable 16.3.5 backports image cache hardening, standalone NFTs with adapters, CSP nonces for loading and template, and the use-cache prerender signal fix.",
   ],
-  ["convex@latest", "1.45.0", "Convex acceptance uses an isolated deployment."],
-  ["ai@latest", "7.0.99", "AI SDK packages move as one reviewed cohort."],
+  [
+    "convex@latest",
+    "1.46.0",
+    "Additive validator `.optional()` and `FunctionReference_future`; acceptance uses an isolated deployment.",
+  ],
+  ["ai@latest", "7.0.109", "AI SDK packages move as one reviewed cohort."],
   [
     "@ai-sdk/react@latest",
-    "4.0.102",
+    "4.0.112",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/google@latest",
-    "4.0.69",
+    "4.0.76",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.80",
+    "4.0.88",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/devtools@latest",
-    "1.0.19",
+    "1.0.22",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "better-auth@latest",
-    "1.7.4",
-    "The Convex adapter requires the Better Auth 1.6 line. Its optional Vitest peer stops at 4, but only unused test-utils import Vitest; Nakafa auth runtime tests pass on 5.",
+    "1.7.5",
+    "@convex-dev/better-auth@0.12.5 declares the peer range >=1.6.11 <1.7.0, so runtime stays on the latest 1.6 patch (1.6.33) until the adapter opens 1.7. Its optional Vitest peer stops at 4, but only unused test-utils import Vitest; Nakafa auth runtime tests pass on 5.",
   ],
   [
     "@convex-dev/better-auth@latest",
     "0.12.5",
     "The adapter defines the accepted Better Auth peer range.",
   ],
-  ["@biomejs/biome@latest", "2.5.13", "Formatting is reviewed with Ultracite."],
-  ["ultracite@latest", "7.11.1", "Formatting is reviewed with Biome."],
+  ["@biomejs/biome@latest", "2.5.14", "Formatting is reviewed with Ultracite."],
+  ["ultracite@latest", "7.12.0", "Formatting is reviewed with Biome."],
   ["@types/node@24", "24.13.4", "Declarations remain on the Node 24 line."],
   ["node@24", "24.21.0", "The repository supports the Node 24 runtime line."],
   [
@@ -232,15 +236,19 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "react-doctor@latest",
-    "0.9.13",
+    "0.9.14",
     "The local and CI scanners move as one reviewed cohort.",
   ],
-  ["turbo@latest", "2.10.12", "Turbo and its generator move together."],
+  [
+    "turbo@latest",
+    "2.11.2",
+    "Turbo and its generator move together; 2.11 adds hash and scope-filtering performance work with no config change for this repository.",
+  ],
 ];
 
 export const SCRIPT_DEPENDENCY_HOLDS = [
   {
-    approved: "pnpm dlx react-doctor@0.9.13",
+    approved: "pnpm dlx react-doctor@0.9.14",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },
