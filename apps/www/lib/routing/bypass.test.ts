@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   isLocaleBypassPath,
-  isUnsupportedRootFilePath,
+  isUnsupportedSystemPath,
 } from "@/lib/routing/bypass";
 
 describe("routing bypass", () => {
@@ -45,11 +45,24 @@ describe("routing bypass", () => {
     "webmanifest",
     "txt",
   ])("recognizes unsupported root .%s files", (extension) => {
-    expect(isUnsupportedRootFilePath(`/missing.${extension}`)).toBe(true);
+    expect(isUnsupportedSystemPath(`/missing.${extension}`)).toBe(true);
   });
 
   it("keeps supported and nested assets outside the root rejection", () => {
-    expect(isUnsupportedRootFilePath("/missing.png")).toBe(false);
-    expect(isUnsupportedRootFilePath("/models/car.svg")).toBe(false);
+    expect(isUnsupportedSystemPath("/missing.png")).toBe(false);
+    expect(isUnsupportedSystemPath("/models/car.svg")).toBe(false);
+  });
+
+  it("rejects unknown well-known resources without intercepting published discovery", () => {
+    expect(
+      isUnsupportedSystemPath(
+        "/.well-known/appspecific/com.chrome.devtools.json"
+      )
+    ).toBe(true);
+    expect(isUnsupportedSystemPath("/.well-known/unknown")).toBe(true);
+    expect(
+      isUnsupportedSystemPath("/.well-known/agent-skills/index.json")
+    ).toBe(false);
+    expect(isUnsupportedSystemPath("/robots.txt")).toBe(false);
   });
 });

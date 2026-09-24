@@ -227,14 +227,19 @@ describe("proxy", () => {
     }
   );
 
-  it("returns a clean 404 for unsupported root files", async () => {
-    const response = await requestProxy("/missing-machine-document.xml");
+  it.each([
+    "/missing-machine-document.xml",
+    "/.well-known/appspecific/com.chrome.devtools.json",
+    "/.well-known/unknown",
+  ])("returns a clean 404 for unsupported system resource %s", async (path) => {
+    const response = await requestProxy(path);
     expect(response.status).toBe(404);
     expect(response.headers.get("content-type")).toBe(
       "text/plain; charset=utf-8"
     );
     expect(response.headers.get("x-robots-tag")).toBe("noindex");
     expectNoLocaleProxy();
+    expect(runtimeMocks.readActive).not.toHaveBeenCalled();
   });
 
   it.each([
