@@ -127,7 +127,6 @@ export const mathematicsComponentNames = {
   sequenceConceptTableChairsAnimation: "SequenceConceptTableChairsAnimation",
   triangle: "Triangle",
   unitCircle: "UnitCircle",
-  vector3d: "Vector3d",
   vectorChart: "VectorChart",
 } as const;
 
@@ -149,7 +148,6 @@ export const physicsComponentNames = {
   stoppingDistanceLab: "StoppingDistanceLab",
   uniformCircularMotionLab: "UniformCircularMotionLab",
   uniformLinearMotionLab: "UniformLinearMotionLab",
-  vector3d: "Vector3d",
   vectorConceptLab: "VectorConceptLab",
   velocitySpeedLab: "VelocitySpeedLab",
   verticalMovementLab: "VerticalMovementLab",
@@ -237,6 +235,4 @@ export const tkaMathComponentNames = {
   histogramChart: "HistogramChart",
   lineEquation: "LineEquation",
   numberLine: "NumberLine",
-  set1Question19Graph: "Set1Question19Graph",
-  set1Question30Illustration: "Set1Question30Illustration",
 } as const;

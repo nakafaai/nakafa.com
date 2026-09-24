@@ -24,11 +24,9 @@ import {
   FunctionExplorationVirusChart,
 } from "@/lib/content/renderer/client/mathematics/growth";
 import { SequenceConceptTableChairsAnimation } from "@/lib/content/renderer/client/mathematics/sequence";
-import { Vector3d } from "@/lib/content/renderer/client/mathematics/vector";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 export const domainRenderers = [
-  { name: mathematicsComponentNames.vector3d, component: Vector3d },
   {
     name: mathematicsComponentNames.bacterialGrowth,
     component: BacterialGrowth,
