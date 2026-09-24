@@ -1,10 +1,26 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/browser-context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+
+const revealChart = Effect.fn("NakafaE2E.revealChart")(function* (
+  chart: Locator
+) {
+  // Hydration can replace a streamed chart. Re-resolve its locator
+  // until the visible plot is in the viewport.
+  yield* Effect.promise(() =>
+    expect(async () => {
+      await chart
+        .locator('xpath=ancestor::*[@data-slot="card"]')
+        .scrollIntoViewIfNeeded();
+      await chart.scrollIntoViewIfNeeded();
+      await expect(chart.locator("svg.recharts-surface")).toBeInViewport();
+    }).toPass({ timeout: 5000 })
+  );
+});
 
 test("chart articles retain server HTML after caching in every locale", async ({
   baseURL,
@@ -37,15 +53,14 @@ test("chart articles retain server HTML after caching in every locale", async ({
                   ).toBeVisible()
                 );
                 for (const width of [390, 1280]) {
+                  yield* Effect.promise(() =>
+                    page.setViewportSize({ width, height: 900 })
+                  );
+                  const chart = page
+                    .locator('article [data-slot="chart"]')
+                    .filter({ visible: true });
+                  yield* revealChart(chart);
                   yield* Effect.promise(async () => {
-                    await page.setViewportSize({ width, height: 900 });
-                    const chart = page
-                      .locator('article [data-slot="chart"]')
-                      .filter({ visible: true });
-                    await chart
-                      .locator('xpath=ancestor::*[@data-slot="card"]')
-                      .scrollIntoViewIfNeeded();
-                    await chart.scrollIntoViewIfNeeded();
                     await expect
                       .poll(() =>
                         chart.evaluate((element) => {
@@ -122,6 +137,22 @@ test("chart articles retain server HTML after caching in every locale", async ({
   );
 });
 
+/** Verifies hydrated plots and their server tables after each navigation or reload. */
+const expectFunctionCharts = Effect.fn("NakafaE2E.expectFunctionCharts")(
+  function* (page: Page) {
+    const charts = page
+      .locator('article [data-slot="chart"]')
+      .filter({ visible: true });
+    yield* Effect.promise(() => expect(charts).toHaveCount(2));
+    for (const chart of yield* Effect.promise(() => charts.all())) {
+      yield* revealChart(chart);
+    }
+    yield* Effect.promise(() =>
+      expect(page.locator("article table:has(caption)")).toHaveCount(2)
+    );
+  }
+);
+
 test("function charts retain their tables and hydrate after a cached reload", async ({
   baseURL,
   browser,
@@ -149,26 +180,12 @@ test("function charts retain their tables and hydrate after a cached reload", as
               for (const href of Object.values(pinnedRoutes.growth)) {
                 yield* Effect.promise(() => page.goto(href));
                 for (const width of [1280, 390]) {
-                  yield* Effect.promise(async () => {
-                    await page.setViewportSize({ width, height: 900 });
-                    const charts = page
-                      .locator('article [data-slot="chart"]')
-                      .filter({ visible: true });
-                    await expect(charts).toHaveCount(2);
-                    for (const chart of await charts.all()) {
-                      await chart
-                        .locator('xpath=ancestor::*[@data-slot="card"]')
-                        .scrollIntoViewIfNeeded();
-                      await chart.scrollIntoViewIfNeeded();
-                      await expect(
-                        chart.locator("svg.recharts-surface")
-                      ).toBeVisible();
-                    }
-                    await expect(
-                      page.locator("article table:has(caption)")
-                    ).toHaveCount(2);
-                    await page.reload();
-                  });
+                  yield* Effect.promise(() =>
+                    page.setViewportSize({ width, height: 900 })
+                  );
+                  yield* expectFunctionCharts(page);
+                  yield* Effect.promise(() => page.reload());
+                  yield* expectFunctionCharts(page);
                 }
                 yield* Effect.promise(async () => {
                   const response = await context.request.get(href);
