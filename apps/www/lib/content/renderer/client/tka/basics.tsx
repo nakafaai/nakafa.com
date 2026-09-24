@@ -19,17 +19,3 @@ export const HistogramChart = dynamic(() =>
     ({ HistogramChart }) => HistogramChart
   )
 );
-
-/** Preserves signed dev answers while their successor publication is staged. */
-export const Set1Question19Graph = dynamic(() =>
-  import("@repo/design-system/components/contents/tka/mathematics/sine").then(
-    ({ Graph }) => Graph
-  )
-);
-
-/** Preserves the signed fence illustration through the paired corpus migration. */
-export const Set1Question30Illustration = dynamic(() =>
-  import("@repo/design-system/components/contents/tka/mathematics/fence").then(
-    ({ Illustration }) => Illustration
-  )
-);
