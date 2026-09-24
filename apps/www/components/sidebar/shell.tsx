@@ -1,6 +1,6 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
 import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import { DeferredAiSheet } from "@/components/ai/deferred-sheet";
 import { DeferredSearchCommand } from "@/components/shared/deferred-search-command";
 import { NavExplore } from "@/components/sidebar/explore";
@@ -39,7 +39,9 @@ export function AppShell({
             <DeferredAiSheet />
           </>
         )}
-        <div className="relative">{children}</div>
+        <div className="relative">
+          <Suspense fallback={null}>{children}</Suspense>
+        </div>
       </SidebarInset>
       <AppSidebar
         containerClassName="order-first"
