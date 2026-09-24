@@ -56,7 +56,7 @@ overrides:
   "@types/react": "19.2.18"
   "@types/react-dom": "19.2.7"
   "@effect/platform-node-shared": "4.0.0-rc.117"
-  "@react-email/ui@6.9.5>next": "16.3.5"
+  "@react-email/ui@6.9.5>next": "16.3.6"
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
   "@scalar/json-magic@0.15.0>undici": "7.29.0"
   "auth@1.6.33>@babel/core": "7.29.7"
@@ -65,7 +65,7 @@ overrides:
   "ip-address": "10.7.0"
   "lodash": "4.18.1"
   "mermaid@11.17.2>dompurify": "^3.4.13"
-  "next@16.3.5>postcss": "8.5.28"
+  "next@16.3.6>postcss": "8.5.28"
 
 # The tested test-utils-only exception is recorded in scripts/dependencies/policy.ts.
 peerDependencyRules:
