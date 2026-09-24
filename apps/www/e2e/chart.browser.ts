@@ -9,15 +9,17 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 const revealChart = Effect.fn("NakafaE2E.revealChart")(function* (
   chart: Locator
 ) {
-  // Hydration can replace a streamed chart. Re-resolve its locator
-  // until the visible plot is in the viewport.
+  // Hydration and reload scroll restoration can move a streamed chart.
+  // Keep each assertion short so the outer retry can scroll again.
   yield* Effect.promise(() =>
     expect(async () => {
       await chart
         .locator('xpath=ancestor::*[@data-slot="card"]')
         .scrollIntoViewIfNeeded();
       await chart.scrollIntoViewIfNeeded();
-      await expect(chart.locator("svg.recharts-surface")).toBeInViewport();
+      await expect(chart.locator("svg.recharts-surface")).toBeInViewport({
+        timeout: 100,
+      });
     }).toPass({ timeout: 5000 })
   );
 });
