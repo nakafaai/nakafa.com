@@ -1,5 +1,5 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";

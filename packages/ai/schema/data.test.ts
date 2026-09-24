@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { NakafaDataSchema } from "@repo/ai/schema/data";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { Schema } from "effect";
 
 const ref = readNakafaContentRefFixture("en", "quran/1", "quran");

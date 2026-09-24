@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Effect } from "effect";
 import {
   getCachedMetadataFromSlug,

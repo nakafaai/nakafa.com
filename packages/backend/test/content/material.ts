@@ -17,7 +17,7 @@ import {
   MaterialSectionSchema,
   materialPublicNamespace,
 } from "@nakafa/aksara-contracts/projection/material";
-import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/agent/refs";
 import { Effect, Option } from "effect";
 
 const TEST_MATERIAL_DOMAIN = "mathematics";

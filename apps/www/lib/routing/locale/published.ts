@@ -1,6 +1,6 @@
 import { isRenderableCurriculumLevel } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Effect, Option } from "effect";
 import {

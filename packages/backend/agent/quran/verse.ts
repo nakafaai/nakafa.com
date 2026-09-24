@@ -4,7 +4,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { parseQuranTranslation } from "@nakafa/aksara-contracts/quran/notes";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Effect } from "effect";
 
 /** Reads one exact locale-selected signed translation. */

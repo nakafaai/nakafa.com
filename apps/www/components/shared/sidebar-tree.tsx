@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu02Icon } from "@hugeicons/core-free-icons";
-import type { ParsedHeading } from "@repo/contents/_types/toc";
+import type { ParsedHeading } from "@repo/contents/toc";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarGroup,

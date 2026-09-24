@@ -1,5 +1,5 @@
 import type { createTestPublication } from "@repo/backend/test/content/publication";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 import { Effect } from "effect";
 

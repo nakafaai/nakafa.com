@@ -4,7 +4,7 @@ import { OPENAPI_PARAMETER_SCHEMAS } from "@repo/backend/agent/openapi/schema";
 import {
   NAKAFA_AGENT_DEFAULT_LIMIT,
   NAKAFA_AGENT_MAX_LIMIT,
-} from "@repo/contents/_types/agent/search";
+} from "@repo/contents/agent/search";
 
 interface ParameterInput {
   readonly description: string;

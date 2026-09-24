@@ -1,4 +1,4 @@
-import { getHeadings } from "@repo/contents/_lib/toc";
+import { getHeadings } from "@repo/contents/toc";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";

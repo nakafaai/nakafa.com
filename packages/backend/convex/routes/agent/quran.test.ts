@@ -15,7 +15,7 @@ import {
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/agent/constants";
 
 setupApiTest();
 

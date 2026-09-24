@@ -8,9 +8,8 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
-import type { Locale } from "@repo/contents/_types/content";
-import { LocaleSchema } from "@repo/contents/_types/content";
-import { Effect, Option, Schema } from "effect";
+import type { Locale } from "@repo/contents/content";
+import { Effect, Option } from "effect";
 
 export type ActiveContentReferenceInput = (
   | Extract<ContentReferenceInput, { readonly kind: "content" }>
@@ -53,39 +52,22 @@ export const resolveReferenceInput = Effect.fn(
     if (Option.isNone(owner)) {
       return null;
     }
-    const appLocale = Schema.decodeOption(ActiveAppLocaleSchema)(
-      owner.value.appLocale
-    );
-    if (Option.isNone(appLocale)) {
-      return null;
-    }
-    const publicLocale = Schema.decodeOption(LocaleSchema)(appLocale.value);
-    if (Option.isNone(publicLocale)) {
-      return null;
-    }
     return {
       ...input,
-      appLocale: appLocale.value,
+      appLocale: owner.value.appLocale,
       family: owner.value.family,
-      publicLocale: publicLocale.value,
+      publicLocale: owner.value.appLocale,
     } satisfies ActiveContentReferenceInput;
   }
-  const appLocale = Schema.decodeOption(ActiveAppLocaleSchema)(input.appLocale);
-  if (Option.isNone(appLocale)) {
-    return null;
-  }
-  const publicLocale = Schema.decodeOption(LocaleSchema)(appLocale.value);
-  if (Option.isNone(publicLocale)) {
-    return null;
-  }
-  const family = classifyPublicRoute(appLocale.value, input.publicPath);
+  const appLocale = ActiveAppLocaleSchema.make(input.appLocale);
+  const family = classifyPublicRoute(appLocale, input.publicPath);
   if (family === null) {
     return null;
   }
   return {
     ...input,
-    appLocale: appLocale.value,
+    appLocale,
     family,
-    publicLocale: publicLocale.value,
+    publicLocale: appLocale,
   } satisfies ActiveContentReferenceInput;
 });

@@ -5,7 +5,7 @@ import type { LearningContextInput } from "@repo/backend/convex/contents/context
 import {
   MATERIAL_CONTEXT_QUERY_PARAM,
   readMaterialContextHint,
-} from "@repo/contents/_types/route/material/context";
+} from "@repo/contents/route/material/context";
 import { useQuery } from "convex/react";
 import { Effect } from "effect";
 import { useSearchParams } from "next/navigation";

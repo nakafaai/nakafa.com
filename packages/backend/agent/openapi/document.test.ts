@@ -9,8 +9,8 @@ import { OPENAPI_RESPONSE_EXAMPLES } from "@repo/backend/agent/openapi/examples"
 import {
   NakafaApiHealthSchema,
   NakafaApiIndexSchema,
-} from "@repo/contents/_lib/agent/schema/api";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
+} from "@repo/contents/agent/schema/api";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
 import { dereference, validate } from "@scalar/openapi-parser";
 import { Effect, Predicate, Schema } from "effect";
 

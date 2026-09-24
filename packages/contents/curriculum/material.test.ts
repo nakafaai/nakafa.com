@@ -1,0 +1,20 @@
+import { describe, expect, it } from "@effect/vitest";
+import { BulbIcon, PiIcon } from "@hugeicons/core-free-icons";
+import { getMaterialIcon } from "@repo/contents/curriculum/material";
+import { PRESENTED_MATERIAL_DOMAINS } from "@repo/contents/taxonomy";
+
+describe("getMaterialIcon", () => {
+  it("resolves mathematics to the pi icon", () => {
+    expect(getMaterialIcon("mathematics")).toBe(PiIcon);
+  });
+
+  it("resolves every known material domain without the fallback icon", () => {
+    for (const material of PRESENTED_MATERIAL_DOMAINS) {
+      expect(getMaterialIcon(material)).not.toBe(BulbIcon);
+    }
+  });
+
+  it("uses the fallback icon for unknown material domains", () => {
+    expect(getMaterialIcon("unknown-material")).toBe(BulbIcon);
+  });
+});

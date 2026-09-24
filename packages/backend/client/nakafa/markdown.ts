@@ -2,11 +2,11 @@ import type { ContentRuntimeTarget } from "@repo/backend/client/content/public";
 import { readPublishedMarkdown } from "@repo/backend/client/nakafa/published";
 import { readQuranMarkdown } from "@repo/backend/client/nakafa/quran";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
-import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
+import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
 import type {
   NakafaAgentContentRef,
   NakafaAgentReadableContentRef,
-} from "@repo/contents/_lib/agent/schema/ref";
+} from "@repo/contents/agent/schema/ref";
 import { Effect, Option } from "effect";
 
 type PublishedRef = NakafaAgentReadableContentRef & {

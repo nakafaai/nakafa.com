@@ -11,16 +11,16 @@ import type { readQuranSurahs } from "@repo/backend/content/quran/catalog";
 import type { readQuranPassage } from "@repo/backend/content/quran/reference";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { QuranReferenceArgs } from "@repo/backend/convex/contentRelease/quran/spec";
-import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/agent/constants";
 import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
-import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
+} from "@repo/contents/agent/errors";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/agent/refs";
 import {
   type NakafaAgentQuranReferenceInput,
   NakafaAgentQuranReferenceOptionsSchema,
-} from "@repo/contents/_lib/agent/schema/quran/input";
+} from "@repo/contents/agent/schema/quran/input";
 import { type FunctionReference, makeFunctionReference } from "convex/server";
 import { Effect, Option, Struct } from "effect";
 
@@ -61,9 +61,7 @@ export const getNakafaQuranReference = Effect.fn(
     surahNumber: request.surah,
   }).pipe(Effect.mapError(quranReadError));
   const identity = yield* projectReferenceIdentity(reference.search, request);
-  return Option.some(
-    yield* projectNakafaQuranReference({ ...identity, reference })
-  );
+  return yield* projectNakafaQuranReference({ ...identity, reference });
 });
 
 /** Decodes and bounds one request against its signed catalog. */

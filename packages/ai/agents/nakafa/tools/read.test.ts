@@ -5,9 +5,9 @@ import {
   createNakafaTestService,
   createWriter,
 } from "@repo/ai/agents/nakafa/tools/test";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { Effect } from "effect";
 
 const ARTICLE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(

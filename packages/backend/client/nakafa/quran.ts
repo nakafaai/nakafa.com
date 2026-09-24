@@ -18,9 +18,9 @@ import {
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import { api } from "@repo/backend/convex/_generated/api";
-import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
-import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/agent/refs";
+import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
+import type { NakafaAgentContentRef } from "@repo/contents/agent/schema/ref";
 import { Effect, Option, Struct } from "effect";
 
 type ParsedQuranReferenceOptions = Effect.Success<

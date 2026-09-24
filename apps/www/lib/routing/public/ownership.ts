@@ -1,5 +1,5 @@
 import { SCHOOL_ROUTE_SLUGS } from "@repo/backend/convex/schools/slug";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 
 const APPLICATION_ROUTE_ROOTS = new Set([

@@ -5,7 +5,7 @@ import { SourceReferenceSchema } from "@repo/ai/lib/source";
 import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { PromptUserRoleSchema } from "@repo/ai/types/roles";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { LocaleSchema } from "@repo/contents/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Schema, Struct } from "effect";
 /** Canonical curriculum preference available to agents. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { nakafaDataValidator } from "@repo/backend/convex/chats/nakafa";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { validate } from "convex-helpers/validators";
 
 const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");

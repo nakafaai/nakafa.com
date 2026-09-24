@@ -8,7 +8,7 @@ import {
   TRANSACTION_READ_HEADROOM,
   TRANSACTION_READ_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
-import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 
 /** Defensive verse ceiling for one complete Quran page transaction. */
 export const QURAN_PAGE_VERSE_LIMIT = 300;

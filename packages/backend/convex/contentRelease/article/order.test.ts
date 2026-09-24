@@ -13,7 +13,7 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
-import { ARTICLE_PUBLICATION_CURSOR_PREFIX } from "@repo/contents/_types/publication";
+import { ARTICLE_PUBLICATION_CURSOR_PREFIX } from "@repo/contents/publication";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";

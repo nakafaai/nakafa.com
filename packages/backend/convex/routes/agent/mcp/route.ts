@@ -12,7 +12,7 @@ import {
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
-} from "@repo/contents/_lib/agent/errors";
+} from "@repo/contents/agent/errors";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Effect, Result } from "effect";
 import { Hono } from "hono";

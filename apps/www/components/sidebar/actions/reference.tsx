@@ -9,7 +9,7 @@ import {
   QuillWrite01Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import type { Reference } from "@repo/contents/_types/content";
+import type { Reference } from "@repo/contents/content";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Separator } from "@repo/design-system/components/ui/separator";

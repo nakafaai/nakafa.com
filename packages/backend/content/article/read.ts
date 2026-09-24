@@ -19,7 +19,7 @@ import {
   validatePublicationPage,
 } from "@repo/backend/convex/contentRelease/paging";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
-import { hasArticlePublicationCursorPrefix } from "@repo/contents/_types/publication";
+import { hasArticlePublicationCursorPrefix } from "@repo/contents/publication";
 import { Effect } from "effect";
 
 /** Returns a stable empty page when Aksara does not own articles yet. */

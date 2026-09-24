@@ -6,10 +6,10 @@ import {
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
+import authSchema from "@repo/backend/components/betterAuth/schema";
 import { components } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import authSchema from "@repo/backend/convex/betterAuth/schema";
 import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
@@ -20,8 +20,8 @@ import aggregateSchema from "@repo/backend/node_modules/@convex-dev/aggregate/sr
 import { convexTest, type TestConvex } from "convex-test";
 
 const betterAuthModules = import.meta.glob([
-  "./betterAuth/**/*.ts",
-  "!./betterAuth/**/*.test.ts",
+  "../components/betterAuth/**/*.ts",
+  "!../components/betterAuth/**/*.test.ts",
 ]);
 const aggregateModules = import.meta.glob([
   "../node_modules/@convex-dev/aggregate/src/component/**/*.ts",

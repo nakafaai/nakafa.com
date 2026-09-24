@@ -3,7 +3,7 @@ import "server-only";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
-import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
+import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { Effect } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
 import { readPublishedPage } from "@/lib/content/page/published";

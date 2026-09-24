@@ -2,7 +2,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { hasArticlePublicationCursorPrefix } from "@repo/contents/_types/publication";
+import { hasArticlePublicationCursorPrefix } from "@repo/contents/publication";
 import { Option, Schema } from "effect";
 import type { ArticlePageCursor } from "@/lib/content/article/catalog";
 

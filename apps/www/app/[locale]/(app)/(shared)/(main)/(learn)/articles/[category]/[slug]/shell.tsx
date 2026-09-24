@@ -1,5 +1,5 @@
 import type { ArticleRouteSlug } from "@nakafa/aksara-contracts/projection/article";
-import { getHeadings } from "@repo/contents/_lib/toc";
+import { getHeadings } from "@repo/contents/toc";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";

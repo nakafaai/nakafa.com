@@ -5,7 +5,7 @@ import {
   NAKAFA_BASE_URL,
   NAKAFA_PUBLIC_API_PATH,
   NAKAFA_PUBLIC_API_VERSION,
-} from "@repo/contents/_lib/agent/constants";
+} from "@repo/contents/agent/constants";
 
 const ETAG_CHECKSUM_MODULUS = 2_147_483_647;
 const ETAG_CHECKSUM_MULTIPLIER = 31;

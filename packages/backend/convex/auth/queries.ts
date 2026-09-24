@@ -1,5 +1,5 @@
+import authSchema from "@repo/backend/components/betterAuth/schema";
 import { query } from "@repo/backend/convex/_generated/server";
-import authSchema from "@repo/backend/convex/betterAuth/schema";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import schema from "@repo/backend/convex/schema";

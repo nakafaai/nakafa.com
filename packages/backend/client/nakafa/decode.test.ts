@@ -9,8 +9,8 @@ import {
 import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+} from "@repo/contents/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { Effect } from "effect";
 
 const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];

@@ -1,6 +1,6 @@
 "use client";
 
-import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
+import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import { TryoutList } from "@/components/tryout/catalog/list";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import {

@@ -17,8 +17,8 @@ import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/pagin
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_MCP_GUIDANCE,
-} from "@repo/contents/_lib/agent/constants";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+} from "@repo/contents/agent/constants";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
@@ -156,17 +156,22 @@ const readSignedArticleCategories = Effect.fn(
 /** Reads every locale's search inventory from active signed publications. */
 const readSignedInventory = Effect.fn("nakafa.taxonomy.readSignedInventory")(
   function* (convexUrl: string, selectedLocale: Locale) {
-    const inventories = yield* Effect.forEach(
-      ACTIVE_APP_LOCALE_CODES,
-      (locale) => readLocaleSignedInventory(convexUrl, locale),
-      { concurrency: ACTIVE_APP_LOCALE_CODES.length }
+    const [selectedInventory, otherInventories] = yield* Effect.all(
+      [
+        readLocaleSignedInventory(convexUrl, selectedLocale),
+        Effect.forEach(
+          ACTIVE_APP_LOCALE_CODES.filter((locale) => locale !== selectedLocale),
+          (locale) => readLocaleSignedInventory(convexUrl, locale),
+          { concurrency: "unbounded" }
+        ),
+      ],
+      { concurrency: "unbounded" }
     );
-    const selectedInventory = inventories.find(
-      ({ locale }) => locale === selectedLocale
+    const inventories = [selectedInventory, ...otherInventories].sort(
+      (left, right) =>
+        ACTIVE_APP_LOCALE_CODES.indexOf(left.locale) -
+        ACTIVE_APP_LOCALE_CODES.indexOf(right.locale)
     );
-    if (!selectedInventory) {
-      return yield* missingSignedInventory("selected locale", selectedLocale);
-    }
     return {
       contentCounts: inventories.map(({ count, locale }) => ({
         count,

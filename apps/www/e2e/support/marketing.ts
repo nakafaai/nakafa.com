@@ -1,5 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
-import type { Contributor } from "@repo/contents/_types/contributor";
+import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
 import { dragTouch } from "@/e2e/support/touch";
 

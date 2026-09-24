@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_types/agent/search";
+import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/agent/search";
 import { useQuery_experimental as useConvexQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale } from "next-intl";

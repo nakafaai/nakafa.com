@@ -1,7 +1,7 @@
 import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
+} from "@repo/contents/agent/errors";
 import { Cause, Effect, Schema } from "effect";
 
 type AgentToolError = NakafaAgentDataReadError | NakafaAgentInputError;

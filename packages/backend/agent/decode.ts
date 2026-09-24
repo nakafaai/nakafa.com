@@ -2,7 +2,7 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
+} from "@repo/contents/agent/errors";
 import { Effect, Schema } from "effect";
 
 export type AgentSchema = Schema.ConstraintDecoder<unknown, never>;

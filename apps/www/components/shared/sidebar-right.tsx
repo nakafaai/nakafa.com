@@ -1,5 +1,5 @@
 import { Menu02Icon } from "@hugeicons/core-free-icons";
-import type { Reference } from "@repo/contents/_types/content";
+import type { Reference } from "@repo/contents/content";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarContent,

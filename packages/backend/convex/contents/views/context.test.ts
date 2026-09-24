@@ -21,7 +21,10 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { api } from "@repo/backend/convex/_generated/api";
 import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/program";
-import type { LearningContextInput } from "@repo/backend/convex/contents/context";
+import {
+  type LearningContextInput,
+  toLearningContextQuery,
+} from "@repo/backend/convex/contents/context";
 import { resolveLearningContext } from "@repo/backend/convex/contents/views/context";
 import { validateIncomingContentTarget } from "@repo/backend/convex/contents/views/target";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -36,6 +39,7 @@ import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
+import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { Data, Effect, Schema, Struct } from "effect";
@@ -388,6 +392,18 @@ it.effect("records canonical and verified placement popularity scopes", () =>
     });
     expect(context).toHaveProperty("contextParentPath", SUBJECT_PATH);
     expect(context).toHaveProperty("contextPublicPath", GROUP_PATH);
+    expect(
+      readMaterialContextHint(
+        new URLSearchParams(toLearningContextQuery(context)).get("ctx")
+      )
+    ).toEqual({
+      nodeKey: GROUP_KEY,
+      programKey: PROGRAM_KEY,
+    });
+    expect(toLearningContextQuery({ ...context, contextProgramKey: "" })).toBe(
+      ""
+    );
+    expect(toLearningContextQuery({ ...context, contextNodeKey: "" })).toBe("");
     yield* Effect.promise(() =>
       target.mutation(api.contents.mutations.views.recordContentView, {
         contentId: FUNCTION_MATERIAL.graph.assetId,

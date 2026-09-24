@@ -1,8 +1,8 @@
-import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/agent/constants";
 import {
   PUBLIC_ROUTE_SURFACES,
   type PublicRouteSurface,
-} from "@repo/contents/_types/route/surface";
+} from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Schema } from "effect";
 import type { Locale } from "next-intl";

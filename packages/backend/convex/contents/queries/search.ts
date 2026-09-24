@@ -7,7 +7,7 @@ import {
   contentSearchResultValidator,
 } from "@repo/backend/convex/contents/helpers/search/schema";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { Effect } from "effect";
 
 /**

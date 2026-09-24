@@ -2,7 +2,7 @@ import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
-} from "@repo/contents/_lib/agent/errors";
+} from "@repo/contents/agent/errors";
 import type {
   FunctionArgs,
   FunctionReference,

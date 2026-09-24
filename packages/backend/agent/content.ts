@@ -17,17 +17,17 @@ import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
-} from "@repo/contents/_lib/agent/errors";
-import { createNakafaContentRefFromSummary } from "@repo/contents/_lib/agent/refs";
+} from "@repo/contents/agent/errors";
+import { createNakafaContentRefFromSummary } from "@repo/contents/agent/refs";
 import {
   type NakafaAgentMarkdown,
   NakafaAgentMarkdownSchema,
-} from "@repo/contents/_lib/agent/schema/read";
+} from "@repo/contents/agent/schema/read";
 import type {
   NakafaAgentContentRef,
   NakafaAgentReadableContentRef,
-} from "@repo/contents/_lib/agent/schema/ref";
-import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
+} from "@repo/contents/agent/schema/ref";
+import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { makeFunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
 import { Effect, Option, Schema } from "effect";

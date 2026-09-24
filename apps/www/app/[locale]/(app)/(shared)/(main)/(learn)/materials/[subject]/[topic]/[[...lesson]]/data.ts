@@ -1,4 +1,4 @@
-import { readNamespaceSegment } from "@repo/contents/_types/route/surface";
+import { readNamespaceSegment } from "@repo/contents/route/surface";
 import type { Locale } from "next-intl";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 

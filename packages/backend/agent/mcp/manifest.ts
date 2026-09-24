@@ -1,7 +1,7 @@
 import {
   NAKAFA_MCP_ENDPOINT,
   NAKAFA_MCP_SERVER_VERSION,
-} from "@repo/contents/_lib/agent/constants";
+} from "@repo/contents/agent/constants";
 
 /** Registry metadata for Nakafa's canonical remote MCP server. */
 export const NAKAFA_MCP_REGISTRY_MANIFEST = {

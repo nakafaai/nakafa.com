@@ -14,9 +14,9 @@ import type { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/try
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_MCP_GUIDANCE,
-} from "@repo/contents/_lib/agent/constants";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
+} from "@repo/contents/agent/constants";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
+import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";
 import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 

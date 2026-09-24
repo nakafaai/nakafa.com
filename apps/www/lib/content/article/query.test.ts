@@ -3,7 +3,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { encodeArticlePublicationCursor } from "@repo/contents/_types/publication";
+import { encodeArticlePublicationCursor } from "@repo/contents/publication";
 import { Option } from "effect";
 import {
   getArticleNextHref,

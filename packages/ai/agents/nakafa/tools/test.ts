@@ -10,15 +10,15 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import {
   getUnknownErrorMessage,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+} from "@repo/contents/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import {
   createNakafaContentRefFromGraphProjection,
   normalizeNakafaContentInput,
-} from "@repo/contents/_lib/agent/refs";
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
-import { NakafaAgentReadableContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
-import type { Locale } from "@repo/contents/_types/content";
+} from "@repo/contents/agent/refs";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
+import { NakafaAgentReadableContentRefSchema } from "@repo/contents/agent/schema/ref";
+import type { Locale } from "@repo/contents/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Option, Schema } from "effect";
 

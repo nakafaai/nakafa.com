@@ -2,7 +2,7 @@ import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
