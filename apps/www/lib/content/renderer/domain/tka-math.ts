@@ -3,10 +3,20 @@ import {
   HistogramChart,
   LineEquation,
   NumberLine,
+  Set1Question19Graph,
+  Set1Question30Illustration,
 } from "@/lib/content/renderer/client/tka/basics";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 export const domainRenderers = [
+  {
+    name: tkaMathComponentNames.set1Question19Graph,
+    component: Set1Question19Graph,
+  },
+  {
+    name: tkaMathComponentNames.set1Question30Illustration,
+    component: Set1Question30Illustration,
+  },
   {
     name: tkaMathComponentNames.histogramChart,
     component: HistogramChart,

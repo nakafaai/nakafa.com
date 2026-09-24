@@ -1,5 +1,6 @@
 import { physicsComponentNames } from "@repo/design-system/lib/markdown/names";
 import { LineEquation } from "@/lib/content/renderer/client/mathematics/equation";
+import { Vector3d } from "@/lib/content/renderer/client/mathematics/vector";
 import {
   AccelerationGraphCard,
   AccelerationLab,
@@ -36,6 +37,7 @@ import {
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 export const domainRenderers = [
+  { name: physicsComponentNames.vector3d, component: Vector3d },
   {
     name: physicsComponentNames.accelerationGraphCard,
     component: AccelerationGraphCard,
