@@ -6,9 +6,15 @@ import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { Effect } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
-import { readPublishedPage } from "@/lib/content/page/published";
-import { readPublishedArticle } from "@/lib/content/published/article";
-import { readPublishedMaterial } from "@/lib/content/published/material";
+import { decodeMaterialProjection } from "@/lib/content/material/decode";
+import {
+  type PublishedContentInput,
+  readPublishedContent,
+} from "@/lib/content/published/exchange";
+import {
+  decodePublishedArticle,
+  decodePublishedPage,
+} from "@/lib/content/published/projection";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader, getMdxDescription } from "@/lib/llms/format";
 import { getRawAksaraUrl } from "@/lib/utils/github";
@@ -20,9 +26,7 @@ type PublishedMarkdownFamily = Extract<
 
 /** Exact public content identity required for agent-facing markdown. */
 export interface PublishedMarkdownInput {
-  readonly activeReleaseId: Parameters<
-    typeof readPublishedArticle
-  >[0]["activeReleaseId"];
+  readonly activeReleaseId: PublishedContentInput["activeReleaseId"];
   readonly appLocale: AppLocale;
   readonly family: PublishedMarkdownFamily;
   readonly publicPath: string;
@@ -69,41 +73,19 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
 const readPublishedTextData = Effect.fn("www.llms.published.data")(function* (
   input: PublishedMarkdownInput
 ) {
-  if (input.family === "article") {
-    const data = yield* readPublishedArticle(input);
-    return {
-      artifactHash: data.artifact.artifactHash,
-      description: getMdxDescription(data.projection.metadata),
-      publicPath: data.projection.publicPath,
-      rawMdx: data.artifact.payload.rawMdx,
-      sourcePath: data.sourcePath,
-      sourceRevision: data.sourceRevision,
-      title: data.projection.metadata.title,
-    };
-  }
-
-  if (input.family === "page") {
-    const data = yield* readPublishedPage(input);
-    return {
-      artifactHash: data.artifact.artifactHash,
-      description: data.projection.metadata.description,
-      publicPath: data.projection.publicPath,
-      rawMdx: data.artifact.payload.rawMdx,
-      sourcePath: data.sourcePath,
-      sourceRevision: data.sourceRevision,
-      title: data.projection.metadata.title,
-    };
-  }
-
-  const data = yield* readPublishedMaterial(input);
+  const data = yield* readPublishedContent(input);
+  const projection = yield* {
+    article: decodePublishedArticle,
+    material: decodeMaterialProjection,
+    page: decodePublishedPage,
+  }[input.family](data.projection, input);
   return {
-    artifactHash: data.artifact.artifactHash,
-    description: getMdxDescription(data.metadata),
-    publicPath: data.projection.publicPath,
+    description: getMdxDescription(projection.metadata),
+    publicPath: projection.publicPath,
     rawMdx: data.artifact.payload.rawMdx,
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,
-    title: data.metadata.title,
+    title: projection.metadata.title,
   };
 });
 

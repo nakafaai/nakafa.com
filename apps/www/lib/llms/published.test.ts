@@ -6,11 +6,13 @@ import {
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { Data, Effect } from "effect";
-import { readPublishedPage } from "@/lib/content/page/published";
-import { readPublishedArticle } from "@/lib/content/published/article";
-import { readPublishedMaterial } from "@/lib/content/published/material";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
+import { readPublishedContent } from "@/lib/content/published/exchange";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
-import { getCachedPublishedText } from "@/lib/llms/published";
+import {
+  getCachedPublishedText,
+  type PublishedMarkdownInput,
+} from "@/lib/llms/published";
 import {
   testArticleArtifact,
   testArticleProjection,
@@ -26,9 +28,7 @@ import {
 
 const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
-const readArticleMock = vi.hoisted(() => vi.fn());
-const readMaterialMock = vi.hoisted(() => vi.fn());
-const readPageMock = vi.hoisted(() => vi.fn());
+const readContentMock = vi.hoisted(() => vi.fn());
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
 
 /** Test-only typed failure for the cached Promise boundary. */
@@ -81,9 +81,13 @@ const preparePublishedFixtures = Effect.fn(
   };
 
   yield* Effect.sync(() => {
-    readArticleMock.mockReturnValue(Effect.succeed(articleData));
-    readMaterialMock.mockReturnValue(Effect.succeed(materialData));
-    readPageMock.mockReturnValue(Effect.succeed(pageData));
+    readContentMock.mockImplementation((input: PublishedMarkdownInput) =>
+      Effect.succeed(
+        { article: articleData, material: materialData, page: pageData }[
+          input.family
+        ]
+      )
+    );
   });
 
   return { articleData, materialData, pageData } as const;
@@ -93,21 +97,13 @@ vi.mock("next/cache", () => ({
   cacheLife: cacheLifeMock,
   cacheTag: cacheTagMock,
 }));
-vi.mock("@/lib/content/published/material", () => ({
-  readPublishedMaterial: readMaterialMock,
-}));
-vi.mock("@/lib/content/published/article", () => ({
-  readPublishedArticle: readArticleMock,
-}));
-vi.mock("@/lib/content/page/published", () => ({
-  readPublishedPage: readPageMock,
+vi.mock("@/lib/content/published/exchange", () => ({
+  readPublishedContent: readContentMock,
 }));
 beforeEach(() => {
   cacheLifeMock.mockReset();
   cacheTagMock.mockReset();
-  readArticleMock.mockReset();
-  readMaterialMock.mockReset();
-  readPageMock.mockReset();
+  readContentMock.mockReset();
 });
 
 describe("published llms markdown", () => {
@@ -131,7 +127,7 @@ describe("published llms markdown", () => {
         expect(text).toContain(
           `https://raw.githubusercontent.com/nakafaai/aksara/${sourceRevision}/${previewSourcePath}`
         );
-        expect(readPublishedMaterial).toHaveBeenCalledWith({
+        expect(readPublishedContent).toHaveBeenCalledWith({
           activeReleaseId: materialData.activeReleaseId,
           appLocale: previewProjection.appLocale,
           family: "material",
@@ -160,7 +156,7 @@ describe("published llms markdown", () => {
 
         expect(text).toContain(testArticleProjection.metadata.description);
         expect(text).toContain(testArticleArtifact.payload.rawMdx);
-        expect(readPublishedArticle).toHaveBeenCalledWith({
+        expect(readPublishedContent).toHaveBeenCalledWith({
           activeReleaseId: articleData.activeReleaseId,
           appLocale: testArticleProjection.appLocale,
           family: "article",
@@ -188,7 +184,7 @@ describe("published llms markdown", () => {
 
         expect(text).toContain(testPageProjection.metadata.description);
         expect(text).toContain(testPageArtifact.payload.rawMdx);
-        expect(readPublishedPage).toHaveBeenCalledWith({
+        expect(readPublishedContent).toHaveBeenCalledWith({
           activeReleaseId: pageData.activeReleaseId,
           appLocale: testPageProjection.appLocale,
           family: "page",
@@ -205,7 +201,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { materialData } = yield* preparePublishedFixtures();
-        readMaterialMock.mockReturnValueOnce(
+        readContentMock.mockReturnValueOnce(
           Effect.succeed({ ...materialData, sourceRevision: null })
         );
         const text = yield* Effect.tryPromise(() =>
@@ -227,7 +223,7 @@ describe("published llms markdown", () => {
       Effect.gen(function* () {
         const { materialData } = yield* preparePublishedFixtures();
         const incompleteMdx = `${rawMdx}\n{`;
-        readMaterialMock.mockReturnValueOnce(
+        readContentMock.mockReturnValueOnce(
           Effect.succeed({
             ...materialData,
             artifact: {
@@ -259,3 +255,21 @@ describe("published llms markdown", () => {
       })
   );
 });
+
+it.effect("rejects a signed projection from a different family", () =>
+  Effect.gen(function* () {
+    const { materialData } = yield* preparePublishedFixtures();
+    readContentMock.mockReturnValueOnce(Effect.succeed(materialData));
+    const failure = yield* Effect.tryPromise({
+      catch: (cause) => new TestPublishedTextError({ cause }),
+      try: () =>
+        getCachedPublishedText({
+          activeReleaseId: materialData.activeReleaseId,
+          appLocale: previewProjection.appLocale,
+          family: "article",
+          publicPath: previewProjection.publicPath,
+        }),
+    }).pipe(Effect.flip);
+    expect(failure.cause).toBeInstanceOf(PublishedProjectionError);
+  })
+);

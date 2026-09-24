@@ -121,3 +121,75 @@ test("chart articles retain server HTML after caching in every locale", async ({
     )
   );
 });
+
+test("function charts retain their tables and hydrate after a cached reload", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      { baseURL: baseURL ?? "", serviceWorkers: "block" },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          const failedScripts: string[] = [];
+          page.on("response", (response) => {
+            if (
+              response.request().resourceType() === "script" &&
+              !response.ok()
+            ) {
+              failedScripts.push(response.url());
+            }
+          });
+          yield* withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              for (const href of Object.values(pinnedRoutes.growth)) {
+                yield* Effect.promise(() => page.goto(href));
+                for (const width of [1280, 390]) {
+                  yield* Effect.promise(async () => {
+                    await page.setViewportSize({ width, height: 900 });
+                    const charts = page
+                      .locator('article [data-slot="chart"]')
+                      .filter({ visible: true });
+                    await expect(charts).toHaveCount(2);
+                    for (const chart of await charts.all()) {
+                      await chart
+                        .locator('xpath=ancestor::*[@data-slot="card"]')
+                        .scrollIntoViewIfNeeded();
+                      await chart.scrollIntoViewIfNeeded();
+                      await expect(
+                        chart.locator("svg.recharts-surface")
+                      ).toBeVisible();
+                    }
+                    await expect(
+                      page.locator("article table:has(caption)")
+                    ).toHaveCount(2);
+                    await page.reload();
+                  });
+                }
+                yield* Effect.promise(async () => {
+                  const response = await context.request.get(href);
+                  expect(response.ok()).toBe(true);
+                  const html = await response.text();
+                  const serverTables = await page.evaluate((source) => {
+                    const document = new DOMParser().parseFromString(
+                      source,
+                      "text/html"
+                    );
+                    return document.querySelectorAll(
+                      "article table:has(caption)"
+                    ).length;
+                  }, html);
+                  expect(serverTables).toBe(2);
+                });
+              }
+              expect(failedScripts).toEqual([]);
+            })
+          );
+        })
+    )
+  );
+});
