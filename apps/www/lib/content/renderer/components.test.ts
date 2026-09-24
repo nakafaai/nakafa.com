@@ -26,6 +26,35 @@ afterEach(() => {
 
 describe("renderer components", () => {
   it.effect(
+    "resolves renderers required by the active dev release and its retained inverse",
+    () =>
+      Effect.gen(function* () {
+        const { resolveRendererComponents } = yield* Effect.promise(
+          () => import("@/lib/content/renderer/components")
+        );
+        for (const rendererDomain of ["mathematics", "physics"] as const) {
+          const components = yield* resolveRendererComponents({
+            contentKey,
+            rendererDomain,
+            requiredComponents: ["Vector3d"],
+          });
+          expect(components.Vector3d).toBeDefined();
+        }
+        const components = yield* resolveRendererComponents({
+          contentKey,
+          rendererDomain: "tka-math",
+          requiredComponents: [
+            "Set1Question19Graph",
+            "Set1Question30Illustration",
+          ],
+        });
+        expect(components.Set1Question19Graph).toBeDefined();
+        expect(components.Set1Question30Illustration).toBeDefined();
+      }),
+    15_000
+  );
+
+  it.effect(
     "resolves the physics LineEquation artifact",
     () =>
       Effect.gen(function* () {
