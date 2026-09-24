@@ -32,7 +32,7 @@ import {
 import { isOgRouteAliasPathname, readOgRouteAliasLocale } from "@/lib/og/route";
 import {
   isLocaleBypassPath,
-  isUnsupportedRootFilePath,
+  isUnsupportedSystemPath,
 } from "@/lib/routing/bypass";
 import { resolvePublicDocumentRoute } from "@/lib/routing/public/document";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
@@ -73,7 +73,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isUnsupportedRootFilePath(pathname)) {
+  if (isUnsupportedSystemPath(pathname)) {
     return new Response("Not Found\n", {
       status: 404,
       headers: {

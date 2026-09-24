@@ -20,7 +20,11 @@ export function isLocaleBypassPath(pathname: string) {
   return LOCALE_BYPASS_PATHS.has(pathname);
 }
 
-/** Rejects unsupported root files before they become invalid locales. */
-export function isUnsupportedRootFilePath(pathname: string) {
-  return UNSUPPORTED_ROOT_FILE_PATTERN.test(pathname);
+/** Rejects unknown system resources before they enter localized content routes. */
+export function isUnsupportedSystemPath(pathname: string) {
+  return (
+    !isLocaleBypassPath(pathname) &&
+    (pathname.startsWith("/.well-known/") ||
+      UNSUPPORTED_ROOT_FILE_PATTERN.test(pathname))
+  );
 }
