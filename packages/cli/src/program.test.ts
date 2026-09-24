@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import {
   Effect,
   FileSystem,

@@ -8,7 +8,7 @@ import { suggestionGenerationTimeout } from "@repo/ai/config/timeouts";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Locale } from "@repo/contents/_types/content";
+import type { Locale } from "@repo/contents/content";
 import {
   type ModelMessage,
   Output,

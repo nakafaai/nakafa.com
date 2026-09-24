@@ -1,4 +1,4 @@
-import { MATERIAL_CONTEXT_QUERY_PARAM } from "@repo/contents/_types/route/material/context";
+import { MATERIAL_CONTEXT_QUERY_PARAM } from "@repo/contents/route/material/context";
 import { routing } from "@repo/internationalization/src/routing";
 import { hasLocale } from "next-intl";
 

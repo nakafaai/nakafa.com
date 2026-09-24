@@ -2,7 +2,7 @@ import type {
   QuranViewSources,
   QuranViewTafsirAccess,
 } from "@repo/backend/client/quran/view";
-import type { Reference } from "@repo/contents/_types/content";
+import type { Reference } from "@repo/contents/content";
 
 type QuranReferenceSource =
   | QuranViewSources[keyof QuranViewSources]

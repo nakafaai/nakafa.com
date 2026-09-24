@@ -8,7 +8,7 @@ import { previewDocumentRoute } from "@nakafa/aksara-contracts/preview/document"
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { Effect, Option, Result, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";

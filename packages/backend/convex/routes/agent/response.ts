@@ -3,8 +3,8 @@ import type { AgentRateLimitError } from "@repo/backend/convex/routes/agent/limi
 import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
-import type { NakafaProblemDetails } from "@repo/contents/_lib/agent/schema/api";
+} from "@repo/contents/agent/errors";
+import type { NakafaProblemDetails } from "@repo/contents/agent/schema/api";
 import { type Cause, Effect } from "effect";
 
 export type AgentProblemStatus =

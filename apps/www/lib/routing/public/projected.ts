@@ -5,7 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { api } from "@repo/backend/convex/_generated/api";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";

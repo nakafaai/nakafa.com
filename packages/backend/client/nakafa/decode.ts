@@ -3,11 +3,11 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
-import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
-import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
+} from "@repo/contents/agent/errors";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
+import { NakafaAgentMarkdownSchema } from "@repo/contents/agent/schema/read";
+import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";
 import { Effect, Schema } from "effect";
 /** Maps signed Quran contract failures into the public agent read boundary. */
 export function toNakafaQuranDataReadError(error: QuranPublicationError) {

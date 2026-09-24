@@ -6,7 +6,7 @@ import {
 import { getNakafaContent } from "@repo/backend/agent/content";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { getNakafaMcpUsageMarkdown } from "@repo/contents/_lib/agent/usage";
+import { getNakafaMcpUsageMarkdown } from "@repo/contents/agent/usage";
 import { Effect, Option } from "effect";
 
 /** Registers the established static and templated Nakafa resources. */

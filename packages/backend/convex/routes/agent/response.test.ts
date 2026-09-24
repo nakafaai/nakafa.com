@@ -1,8 +1,26 @@
 import { describe, expect, it } from "@effect/vitest";
-import { logInternalFailure } from "@repo/backend/convex/routes/agent/response";
+import {
+  agentFailureResponse,
+  logInternalFailure,
+} from "@repo/backend/convex/routes/agent/response";
+import { NakafaAgentInputError } from "@repo/contents/agent/errors";
 import { Cause, Effect, Logger } from "effect";
 
 describe("agent responses", () => {
+  it("uses corrective input guidance when no cause is supplied", async () => {
+    const response = agentFailureResponse(
+      new NakafaAgentInputError({ message: "Choose a published locale." }),
+      "/search",
+      "request-locale"
+    );
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      code: "UNPROCESSABLE_REQUEST",
+      detail: "Choose a published locale.",
+      resolution: "Choose a published locale.",
+      request_id: "request-locale",
+    });
+  });
   it.effect("logs unexpected causes with the public request identity", () =>
     Effect.gen(function* () {
       const entries: Array<{

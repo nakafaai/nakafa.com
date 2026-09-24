@@ -10,7 +10,7 @@ import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { geolocation } from "@vercel/functions";
 import { Effect, Exit, Option, Schema } from "effect";

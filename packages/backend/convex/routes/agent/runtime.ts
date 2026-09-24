@@ -13,7 +13,7 @@ import {
 import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
+} from "@repo/contents/agent/errors";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Cause, Effect } from "effect";
 

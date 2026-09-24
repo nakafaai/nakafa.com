@@ -1,7 +1,7 @@
 import { buildContentSearchExcerpt } from "@repo/backend/convex/contents/helpers/search/excerpt";
 import type { ContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/groups";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
-import { NAKAFA_AGENT_MAX_OFFSET } from "@repo/contents/_types/agent/search";
+import { NAKAFA_AGENT_MAX_OFFSET } from "@repo/contents/agent/search";
 import type { Infer } from "convex/values";
 
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;

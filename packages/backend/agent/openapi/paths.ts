@@ -5,7 +5,7 @@ import {
   SEARCH_PARAMETERS,
   TAXONOMY_PARAMETERS,
 } from "@repo/backend/agent/openapi/parameters";
-import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/agent/constants";
 
 const JSON_CONTENT = "application/json";
 const PROBLEM_CONTENT = "application/problem+json";

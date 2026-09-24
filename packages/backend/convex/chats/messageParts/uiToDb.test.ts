@@ -4,8 +4,8 @@ import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messagePart
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import {
   type ProviderMetadata,
   readUIMessageStream,

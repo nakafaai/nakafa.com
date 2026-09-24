@@ -11,7 +11,7 @@ import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import {
   ARTICLE_PUBLICATION_CURSOR_PREFIX,
   encodeArticlePublicationCursor,
-} from "@repo/contents/_types/publication";
+} from "@repo/contents/publication";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

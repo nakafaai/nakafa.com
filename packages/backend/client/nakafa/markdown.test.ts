@@ -4,8 +4,8 @@ import {
   makeMaterialContentRef,
   makeMaterialProjection,
 } from "@repo/backend/test/content/material";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import type { NakafaAgentContentRef } from "@repo/contents/agent/schema/ref";
 import { Effect, Option, Struct } from "effect";
 
 const runtimeMocks = vi.hoisted(() => ({

@@ -2,8 +2,8 @@ import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import type { MaterialList } from "@repo/contents/_types/curriculum/material";
-import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
+import type { MaterialList } from "@repo/contents/curriculum/list";
+import { toContextualMaterialHref } from "@repo/contents/route/material/context";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";

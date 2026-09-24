@@ -11,8 +11,8 @@ import {
   type AgentApp,
   runMeteredRequest,
 } from "@repo/backend/convex/routes/agent/runtime";
-import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/_lib/agent/constants";
-import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
+import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/agent/constants";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { Effect, Option } from "effect";
 
 /** Registers the canonical content read and its matching preflight. */

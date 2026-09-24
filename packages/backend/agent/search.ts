@@ -11,7 +11,7 @@ import type {
 import {
   NakafaAgentSearchOptionsSchema,
   NakafaAgentSearchResultSchema,
-} from "@repo/contents/_lib/agent/schema/search";
+} from "@repo/contents/agent/schema/search";
 import { makeFunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
 import { Effect } from "effect";

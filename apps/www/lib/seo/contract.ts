@@ -1,6 +1,6 @@
 import { ProgramNavigationLevelSchema } from "@nakafa/aksara-contracts/program/spec";
 import { PublishedQuranSurahSchema } from "@repo/backend/content/quran/contract";
-import { GradeSchema, MaterialSchema } from "@repo/contents/_types/taxonomy";
+import { GradeSchema, MaterialSchema } from "@repo/contents/taxonomy";
 import { Schema } from "effect";
 
 /** Optional authored copy used by the SEO projection. */

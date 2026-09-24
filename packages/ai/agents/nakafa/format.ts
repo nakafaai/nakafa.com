@@ -1,7 +1,7 @@
-import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran/reference";
-import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
-import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
-import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
+import type { NakafaAgentQuranReference } from "@repo/contents/agent/schema/quran/reference";
+import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
+import type { NakafaAgentSearchResult } from "@repo/contents/agent/schema/search";
+import type { NakafaAgentTaxonomy } from "@repo/contents/agent/schema/taxonomy";
 import dedent from "dedent";
 
 /** Formats one taxonomy value with its canonical ID and localized label. */

@@ -19,7 +19,8 @@ import {
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
-import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
+import { ConvexError } from "convex/values";
 
 const MARKDOWN_PATH_PATTERN = /\.md$/;
 
@@ -51,6 +52,59 @@ async function activateArticleSearch(
 }
 
 describe("contents/queries/search:search", () => {
+  it.each([
+    { limit: 0, offset: 0, queries: [], code: "CONTENT_SEARCH_LIMIT_INVALID" },
+    {
+      limit: NAKAFA_AGENT_SEARCH_WINDOW + 1,
+      offset: 0,
+      queries: [],
+      code: "CONTENT_SEARCH_LIMIT_INVALID",
+    },
+    {
+      limit: 1,
+      offset: -1,
+      queries: [],
+      code: "CONTENT_SEARCH_OFFSET_INVALID",
+    },
+    {
+      limit: 1,
+      offset: NAKAFA_AGENT_SEARCH_WINDOW,
+      queries: [],
+      code: "CONTENT_SEARCH_OFFSET_INVALID",
+    },
+    {
+      limit: 1,
+      offset: 0,
+      queries: ["a", "b", "c", "d", "e"],
+      code: "CONTENT_SEARCH_QUERY_COUNT_INVALID",
+    },
+  ])(
+    "rejects unbounded search input: $code ($limit, $offset)",
+    async ({ code, ...input }) => {
+      const t = createConvexTestWithBetterAuth();
+      const result = t.query(api.contents.queries.search.search, {
+        ...input,
+        locale: "en",
+      });
+      await expect(result).rejects.toBeInstanceOf(ConvexError);
+      await expect(result).rejects.toMatchObject({ data: { code } });
+    }
+  );
+
+  it("deduplicates query wording before checking the request budget", async () => {
+    const t = await activateArticleSearch(1, () => "rational function");
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "en",
+      offset: 0,
+      section: "articles",
+      queries: ["  ", "rational", "RATIONAL", " rational ", "rational"],
+    });
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.content_id).toBe(
+      testArticleProjection(0).graph.assetId
+    );
+  });
   it("searches authenticated article text and returns a readable reference", async () => {
     const t = await activateArticleSearch(2, (index) =>
       index === 0

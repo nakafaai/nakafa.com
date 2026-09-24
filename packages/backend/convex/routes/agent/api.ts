@@ -31,12 +31,12 @@ import {
   NAKAFA_BASE_URL,
   NAKAFA_MCP_ENDPOINT,
   NAKAFA_PUBLIC_API_VERSION,
-} from "@repo/contents/_lib/agent/constants";
+} from "@repo/contents/agent/constants";
 import {
   NakafaApiHealthSchema,
   NakafaApiIndexSchema,
-} from "@repo/contents/_lib/agent/schema/api";
-import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
+} from "@repo/contents/agent/schema/api";
+import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/agent/schema/taxonomy";
 import { Effect } from "effect";
 import { Hono } from "hono";
 
@@ -134,30 +134,16 @@ export function registerAgentApiRoutes(app: AgentApp) {
   );
 }
 
-/** Returns one exact 404 or 405 for unmatched public API routes. */
+/** Returns the missing endpoint after the method guard has admitted a read. */
 function missingRouteResponse(request: Request, requestId: string) {
-  const instance = projectPublicApiPath(new URL(request.url).pathname);
-  if (request.method === "GET" || request.method === "OPTIONS") {
-    return problemResponse({
-      code: "ENDPOINT_NOT_FOUND",
-      detail: "The requested public API endpoint does not exist.",
-      instance,
-      requestId,
-      resolution: "Consult https://api.nakafa.com/openapi.json.",
-      status: 404,
-      title: "Endpoint not found",
-      type: "endpoint-not-found",
-    });
-  }
   return problemResponse({
-    code: "METHOD_NOT_ALLOWED",
-    detail: "The Nakafa public API supports GET and OPTIONS only.",
-    headers: { Allow: "GET, OPTIONS" },
-    instance,
+    code: "ENDPOINT_NOT_FOUND",
+    detail: "The requested public API endpoint does not exist.",
+    instance: projectPublicApiPath(new URL(request.url).pathname),
     requestId,
-    resolution: "Retry this endpoint with GET or OPTIONS.",
-    status: 405,
-    title: "Method not allowed",
-    type: "method-not-allowed",
+    resolution: "Consult https://api.nakafa.com/openapi.json.",
+    status: 404,
+    title: "Endpoint not found",
+    type: "endpoint-not-found",
   });
 }

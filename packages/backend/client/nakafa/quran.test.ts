@@ -21,8 +21,8 @@ import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+} from "@repo/contents/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 

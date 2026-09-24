@@ -7,8 +7,8 @@ import {
   formatTaxonomy,
 } from "@repo/ai/agents/nakafa/format";
 import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
 import { Schema } from "effect";
 
 const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];

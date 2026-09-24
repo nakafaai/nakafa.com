@@ -5,8 +5,8 @@ import {
   quranTafsirSourceId,
   quranTranslationSourceId,
 } from "@nakafa/aksara-contracts/quran/identity";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
 import { Schema } from "effect";
 
 const ARTIFACT = {

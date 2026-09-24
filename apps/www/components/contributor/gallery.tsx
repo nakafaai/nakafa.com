@@ -6,7 +6,7 @@ import {
   NewTwitterIcon,
 } from "@hugeicons/core-free-icons";
 import { useMounted } from "@mantine/hooks";
-import type { Contributor } from "@repo/contents/_types/contributor";
+import type { Contributor } from "@repo/contents/contributor";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Character } from "@repo/design-system/components/ui/character";

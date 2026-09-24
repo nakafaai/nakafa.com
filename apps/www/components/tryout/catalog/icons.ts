@@ -5,7 +5,7 @@ import {
   SchoolReportCardIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
+import { getMaterialIcon } from "@repo/contents/curriculum/material";
 
 /** Resolves one try-out exam identity to its stable selector icon. */
 export function getTryoutExamIcon(examKey: string): IconSvgElement {

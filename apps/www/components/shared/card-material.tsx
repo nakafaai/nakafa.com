@@ -6,7 +6,7 @@ import {
   Link04Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import type { MaterialList } from "@repo/contents/_types/curriculum/material";
+import type { MaterialList } from "@repo/contents/curriculum/list";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,

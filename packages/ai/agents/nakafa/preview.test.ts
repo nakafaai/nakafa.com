@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { previewQuran, previewRead } from "@repo/ai/agents/nakafa/preview";
 import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 
 describe("nakafa previews", () => {
   it("omits an unavailable content description", () => {

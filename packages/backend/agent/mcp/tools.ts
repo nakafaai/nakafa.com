@@ -1,5 +1,4 @@
 import type { McpServer } from "@modelcontextprotocol/server";
-import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { getNakafaContent } from "@repo/backend/agent/content";
 import { decodeAgentInput } from "@repo/backend/agent/decode";
 import {
@@ -11,21 +10,21 @@ import { getNakafaQuranReference } from "@repo/backend/agent/quran";
 import { searchNakafaContent } from "@repo/backend/agent/search";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { NakafaAgentInputError } from "@repo/contents/agent/errors";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
 import {
   NakafaAgentMarkdownSchema,
   NakafaAgentReadOptionsSchema,
-} from "@repo/contents/_lib/agent/schema/read";
+} from "@repo/contents/agent/schema/read";
 import {
   NakafaAgentSearchOptionsSchema,
   NakafaAgentSearchResultSchema,
-} from "@repo/contents/_lib/agent/schema/search";
+} from "@repo/contents/agent/schema/search";
 import {
   NakafaAgentTaxonomyOptionsSchema,
   NakafaAgentTaxonomySchema,
-} from "@repo/contents/_lib/agent/schema/taxonomy";
+} from "@repo/contents/agent/schema/taxonomy";
 import { Effect, Option } from "effect";
 
 const READ_ONLY_TOOL = {
@@ -129,21 +128,6 @@ export function registerNakafaMcpTools(
       ),
       title: "Read a Quran reference",
     },
-    (input) =>
-      runMcpTool(
-        getNakafaQuranReference(ctx, input).pipe(
-          Effect.flatMap(
-            Option.match({
-              onNone: () =>
-                new NakafaAgentInputError({
-                  cause: "The requested surah does not exist.",
-                  message: `Pass a surah number from 1 through ${QURAN_SURAH_COUNT}.`,
-                }),
-              onSome: Effect.succeed,
-            })
-          )
-        ),
-        requestId
-      )
+    (input) => runMcpTool(getNakafaQuranReference(ctx, input), requestId)
   );
 }

@@ -1,4 +1,4 @@
-import type { ParsedHeading } from "@repo/contents/_types/toc";
+import type { ParsedHeading } from "@repo/contents/toc";
 import type { ComponentProps } from "react";
 import {
   SidebarRight,

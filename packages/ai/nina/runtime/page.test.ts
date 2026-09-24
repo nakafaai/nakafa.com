@@ -5,7 +5,7 @@ import {
   getCanonicalNakafaContentUrl,
 } from "@repo/ai/nina/runtime/page";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import {
   NakafaAgentContentIdSchema,
   NakafaAgentContentRouteSchema,
@@ -13,8 +13,8 @@ import {
   NakafaAgentContentUrlSchema,
   NakafaAgentMarkdownUrlSchema,
   type NakafaAgentSection,
-} from "@repo/contents/_lib/agent/schema/ref";
-import type { Locale } from "@repo/contents/_types/content";
+} from "@repo/contents/agent/schema/ref";
+import type { Locale } from "@repo/contents/content";
 
 const englishLocale = "en" satisfies Locale;
 const materialSection = "material" satisfies NakafaAgentSection;

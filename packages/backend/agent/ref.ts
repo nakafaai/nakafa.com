@@ -2,8 +2,8 @@ import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/
 import {
   normalizeNakafaContentInput,
   parseNakafaUrlRoute,
-} from "@repo/contents/_lib/agent/refs";
-import { NakafaAgentContentIdSchema } from "@repo/contents/_lib/agent/schema/ref";
+} from "@repo/contents/agent/refs";
+import { NakafaAgentContentIdSchema } from "@repo/contents/agent/schema/ref";
 import { Option, Schema } from "effect";
 
 /** Produces one semantic lookup from a graph identity or public URL. */

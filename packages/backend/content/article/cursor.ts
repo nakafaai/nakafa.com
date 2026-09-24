@@ -8,7 +8,7 @@ import {
   ARTICLE_PUBLICATION_CURSOR_PREFIX,
   encodeArticlePublicationCursor,
   hasArticlePublicationCursorPrefix,
-} from "@repo/contents/_types/publication";
+} from "@repo/contents/publication";
 import { Effect, Schema } from "effect";
 
 const publicationFields = [

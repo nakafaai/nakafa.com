@@ -9,7 +9,7 @@ import {
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { toMcpObjectSchema } from "@repo/backend/agent/mcp/schema";
-import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { Effect, Schema, Struct } from "effect";
 
 const NonEmptyPromptStringSchema = Schema.Trim.pipe(

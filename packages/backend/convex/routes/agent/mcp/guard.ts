@@ -7,7 +7,7 @@ import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { env } from "@repo/backend/convex/_generated/server";
 import { mcpTransportErrorResponse } from "@repo/backend/convex/routes/agent/mcp/response";
 import { hasValidEdgeSecret } from "@repo/backend/convex/routes/agent/security";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Effect } from "effect";
 import type { MiddlewareHandler } from "hono";
 

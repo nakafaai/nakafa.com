@@ -5,11 +5,11 @@ import {
   createWriter,
   makeSnbtSectionRef,
 } from "@repo/ai/agents/nakafa/tools/test";
-import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
-import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
-import type { Locale } from "@repo/contents/_types/content";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import type { NakafaAgentSection } from "@repo/contents/agent/schema/ref";
+import { NakafaAgentSearchResultSchema } from "@repo/contents/agent/schema/search";
+import type { Locale } from "@repo/contents/content";
 import { Effect, Schema } from "effect";
 
 /** Extracts Nakafa search data parts from a recorded test writer stream. */

@@ -5,8 +5,8 @@ import {
   rankSearchResult,
 } from "@repo/ai/agents/nakafa/tools/search-result";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { NakafaAgentSearchInput } from "@repo/contents/_lib/agent/schema/search";
-import type { Locale } from "@repo/contents/_types/content";
+import type { NakafaAgentSearchInput } from "@repo/contents/agent/schema/search";
+import type { Locale } from "@repo/contents/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Result } from "effect";
 

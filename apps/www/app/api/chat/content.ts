@@ -1,6 +1,6 @@
 import { getCanonicalNakafaContentUrl } from "@repo/ai/nina/runtime/page";
-import type { Locale } from "@repo/contents/_types/content";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import type { Locale } from "@repo/contents/content";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { cleanSlug } from "@repo/utilities/helper";
 
 const verifiableContentNamespaces = new Set(["articles", "quran"]);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
+import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import {
   getTryoutExamIcon,
   getTryoutTrackIcon,

@@ -3,7 +3,7 @@ import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
+import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { env } from "@/env";

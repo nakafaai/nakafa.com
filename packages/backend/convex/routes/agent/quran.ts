@@ -1,73 +1,27 @@
-import { projectPublicApiPath } from "@repo/backend/agent/edge";
 import { getNakafaQuranReference } from "@repo/backend/agent/quran";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { readQuranInput } from "@repo/backend/convex/routes/agent/input";
 import {
   agentJsonResponse,
   agentOptionsResponse,
-  problemResponse,
 } from "@repo/backend/convex/routes/agent/response";
 import {
   type AgentApp,
   runMeteredRequest,
 } from "@repo/backend/convex/routes/agent/runtime";
-import type {
-  NakafaAgentDataReadError,
-  NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
-type ReadQuranReference = (
-  ctx: ActionCtx,
-  input: unknown
-) => Effect.Effect<
-  Option.Option<unknown>,
-  NakafaAgentDataReadError | NakafaAgentInputError
->;
-
-/** Registers the canonical Quran route in the stable public API namespace. */
+/** Registers the bounded signed Quran read and its matching preflight. */
 export function registerAgentQuranRoutes(api: AgentApp) {
-  registerQuranRoute(api, "/quran/:surah", (ctx, input) =>
-    getNakafaQuranReference(ctx, input)
-  );
-}
-
-/** Registers one Quran GET and its matching preflight. */
-function registerQuranRoute(
-  api: AgentApp,
-  path: "/quran/:surah",
-  readReference: ReadQuranReference
-) {
-  api.get(path, (context) =>
+  api.get("/quran/:surah", (context) =>
     runMeteredRequest(
       context.env,
       context.req.raw,
       context.get("requestId"),
       readQuranInput(new URL(context.req.url), context.req.param("surah")).pipe(
-        Effect.flatMap((input) => readReference(context.env, input)),
-        Effect.map(
-          Option.match({
-            onNone: () =>
-              quranNotFoundResponse(context.req.raw, context.get("requestId")),
-            onSome: agentJsonResponse,
-          })
-        )
+        Effect.flatMap((input) => getNakafaQuranReference(context.env, input)),
+        Effect.map(agentJsonResponse)
       )
     )
   );
-  api.options(path, () => agentOptionsResponse());
-}
-
-/** Returns a stable missing-Quran-reference problem. */
-function quranNotFoundResponse(request: Request, requestId: string) {
-  return problemResponse({
-    code: "QURAN_REFERENCE_NOT_FOUND",
-    detail: "The requested Quran reference was not found.",
-    instance: projectPublicApiPath(new URL(request.url).pathname),
-    requestId,
-    resolution: "Pass a surah number from 1 through 114.",
-    status: 404,
-    title: "Quran reference not found",
-    type: "quran-reference-not-found",
-  });
+  api.options("/quran/:surah", () => agentOptionsResponse());
 }

@@ -4,11 +4,11 @@ import {
   createNakafaContentRefFromSummary,
   normalizeNakafaContentInput,
   parseNakafaUrlRoute,
-} from "@repo/contents/_lib/agent/refs";
+} from "@repo/contents/agent/refs";
 import {
   NakafaAgentContentIdSchema,
   type NakafaAgentContentRef,
-} from "@repo/contents/_lib/agent/schema/ref";
+} from "@repo/contents/agent/schema/ref";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 

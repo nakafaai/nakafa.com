@@ -10,6 +10,7 @@ const coverageExcludes = [
   "**/*.test.ts",
   "**/_generated/**",
   "convex/**/schema.ts",
+  "components/betterAuth/schema.ts",
   "convex/crons.ts",
   "convex/http.ts",
   "convex/test.*.ts",
@@ -36,7 +37,7 @@ export default mergeConfig(config, {
         extends: true,
         test: {
           name: "convex",
-          include: ["convex/**/*.test.ts"],
+          include: ["convex/**/*.test.ts", "components/**/*.test.ts"],
           exclude: defaultExcludes,
           environment: "edge-runtime",
         },
@@ -46,7 +47,7 @@ export default mergeConfig(config, {
         test: {
           name: "backend",
           include: ["**/*.test.ts"],
-          exclude: ["convex/**", ...defaultExcludes],
+          exclude: ["convex/**", "components/**", ...defaultExcludes],
           environment: "node",
         },
       },

@@ -1,4 +1,4 @@
-import { getCategoryIcon } from "@repo/contents/_lib/curriculum/icons";
+import { getCategoryIcon } from "@repo/contents/curriculum/icons";
 import type { Locale } from "next-intl";
 
 const data = [

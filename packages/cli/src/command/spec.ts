@@ -1,10 +1,10 @@
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
-import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
+import { NakafaAgentSectionSchema } from "@repo/contents/agent/schema/ref";
 import {
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,
-} from "@repo/contents/_types/agent/search";
-import { LocaleSchema } from "@repo/contents/_types/content";
+} from "@repo/contents/agent/search";
+import { LocaleSchema } from "@repo/contents/content";
 import { Schema } from "effect";
 
 export const COMMAND_NAME = {
