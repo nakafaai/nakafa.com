@@ -5,6 +5,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import {
+  activateTryoutStartSource,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_NOW,
@@ -12,7 +13,6 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 import { Effect } from "effect";
 
 const identity = {
@@ -36,7 +36,7 @@ const startFixture = Effect.fn("attemptPage.test.startFixture")(function* (
         now: TRYOUT_START_NOW,
         suffix: "attempt-page-integrity",
       });
-      await seedTryoutStartSet(ctx, { userId: user.userId, visibility });
+      await activateTryoutStartSource(ctx, visibility, "raw");
       return user;
     })
   );

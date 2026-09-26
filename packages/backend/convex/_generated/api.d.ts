@@ -7466,6 +7466,20 @@ export declare const api: {
           { url: string }
         >;
       };
+      sessions: {
+        generateCheckoutLink: FunctionReference<
+          "action",
+          "public",
+          { locale: "en" | "id" | "de"; successUrl: string },
+          { url: string }
+        >;
+        generateCustomerPortalUrl: FunctionReference<
+          "action",
+          "public",
+          {},
+          { url: string }
+        >;
+      };
     };
   };
   learningPreferences: {

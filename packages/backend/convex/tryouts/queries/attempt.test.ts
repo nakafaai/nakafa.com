@@ -5,6 +5,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import {
+  activateTryoutStartSource,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_NOW,
@@ -12,7 +13,6 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 
 describe("tryouts/queries/attempt", () => {
   it("locks only one exact authenticated in-progress attempt", async () => {
@@ -24,10 +24,7 @@ describe("tryouts/queries/attempt", () => {
         now: TRYOUT_START_NOW,
         suffix: "set-lock",
       });
-      await seedTryoutStartSet(ctx, {
-        userId: user.userId,
-        visibility: "visible",
-      });
+      await activateTryoutStartSource(ctx, "visible", "raw");
       return user;
     });
 

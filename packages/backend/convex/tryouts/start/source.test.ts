@@ -19,7 +19,6 @@ import {
   TRYOUT_START_SET as SET,
   TRYOUT_START_TRACK as TRACK,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 import { Effect, Schema } from "effect";
 
 const startArgs: StartAttemptArgs = {
@@ -67,10 +66,7 @@ describe("tryouts/start/source", () => {
             now: NOW,
             suffix: "tryout-reused-runtime",
           });
-          await seedTryoutStartSet(ctx, {
-            userId: user.userId,
-            visibility: "visible",
-          });
+          await activateTryoutStartSource(ctx, "visible", "raw");
           const [release, state] = await Promise.all([
             ctx.db.query("contentReleases").unique(),
             ctx.db.query("contentState").unique(),
@@ -133,10 +129,7 @@ describe("tryouts/start/source", () => {
             now: NOW,
             suffix: "tryout-renamed-set",
           });
-          await seedTryoutStartSet(ctx, {
-            userId: user.userId,
-            visibility: "visible",
-          });
+          await activateTryoutStartSource(ctx, "visible", "raw");
           return user;
         })
       );

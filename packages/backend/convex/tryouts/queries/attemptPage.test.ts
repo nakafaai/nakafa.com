@@ -9,6 +9,7 @@ import {
   activateRenamedTryoutStartSource,
   activateReusedTryoutStartPath,
   activateRevisedTryoutStartEntry,
+  activateTryoutStartSource,
   TRYOUT_RENAMED_SET_PATH,
   TRYOUT_REUSED_SECTION,
   TRYOUT_REUSED_SET,
@@ -20,7 +21,6 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 import type { FunctionArgs, WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
@@ -65,7 +65,7 @@ const seedClient = Effect.fn("tryouts.queries.attemptPage.test.seedClient")(
           now: TRYOUT_START_NOW,
           suffix,
         });
-        await seedTryoutStartSet(ctx, { userId: user.userId, visibility });
+        await activateTryoutStartSource(ctx, visibility, "raw");
         return user;
       })
     );

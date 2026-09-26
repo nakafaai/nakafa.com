@@ -23,13 +23,13 @@ import { insertZeroRelease } from "@repo/backend/test/content/state";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { makeTryoutPlacementRow } from "@repo/backend/test/tryout/snapshot";
 import {
+  activateTryoutStartSource,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_NOW,
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -257,11 +257,7 @@ describe("contentRelease/snapshot/retention", () => {
         now: TRYOUT_START_NOW,
         suffix: "snapshot-retention",
       });
-      const fixture = await seedTryoutStartSet(ctx, {
-        scoringStrategy: "irt",
-        userId: identity.userId,
-        visibility: "visible",
-      });
+      const fixture = await activateTryoutStartSource(ctx, "visible", "irt");
       return { fixture, identity };
     });
     const authed = t.withIdentity({

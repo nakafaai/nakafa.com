@@ -4,12 +4,12 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout/runtime";
 import {
   activateRenamedTryoutStartSource,
   activateReusedTryoutStartPath,
+  activateTryoutStartSource,
   TRYOUT_START_COUNTRY as COUNTRY,
   TRYOUT_START_EXAM as EXAM,
   TRYOUT_START_NOW as NOW,
@@ -18,7 +18,6 @@ import {
   TRYOUT_START_TRACK as TRACK,
   TRYOUT_RENAMED_SET_PATH,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 import type { FunctionArgs } from "convex/server";
 
 const startArgs: FunctionArgs<
@@ -46,10 +45,11 @@ describe("tryouts/mutations/attempts", () => {
         now: NOW,
         suffix: "tryout-changed-entry-resume",
       });
-      const fixture = await seedTryoutStartSet(ctx, {
-        userId: identity.userId,
-        visibility: "internal-entry",
-      });
+      const fixture = await activateTryoutStartSource(
+        ctx,
+        "internal-entry",
+        "raw"
+      );
       const attemptId = await insertTryoutAttempt(ctx, {
         expiresAt: NOW + 86_400_000,
         sectionSnapshots: [
@@ -99,10 +99,11 @@ describe("tryouts/mutations/attempts", () => {
         now: NOW,
         suffix: "tryout-entry",
       });
-      const fixture = await seedTryoutStartSet(ctx, {
-        userId: identity.userId,
-        visibility: "internal-entry",
-      });
+      const fixture = await activateTryoutStartSource(
+        ctx,
+        "internal-entry",
+        "raw"
+      );
       return { fixture, identity };
     });
     const authed = t.withIdentity({
@@ -252,11 +253,7 @@ describe("tryouts/mutations/attempts", () => {
         now: NOW,
         suffix: "tryout-snapshot",
       });
-      const fixture = await seedTryoutStartSet(ctx, {
-        includeEntitlement: true,
-        userId: identity.userId,
-        visibility: "visible",
-      });
+      const fixture = await activateTryoutStartSource(ctx, "visible", "raw");
 
       return { fixture, identity };
     });
@@ -270,13 +267,13 @@ describe("tryouts/mutations/attempts", () => {
       { ...startArgs, destinationSectionKey: SECTION }
     );
 
-    const paidStart = await t.query(async (ctx) => ({
+    const storedStart = await t.query(async (ctx) => ({
       attempt: await ctx.db.get(attempt.attemptId),
     }));
 
-    expect(paidStart.attempt).toMatchObject({
-      accessSourceKind: tryoutEntitlementSourceKindCompetition,
-      countsForCompetition: true,
+    expect(storedStart.attempt).toMatchObject({
+      accessSourceKind: "free",
+      countsForCompetition: false,
     });
     expect(attempt.navigation).toEqual({
       publicPath: `${TRYOUT_RENAMED_SET_PATH}/${SECTION}`,

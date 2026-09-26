@@ -5,6 +5,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import {
+  activateTryoutStartSource,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_NOW,
@@ -12,7 +13,6 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 import type { FunctionArgs } from "convex/server";
 
 describe("tryouts/start/impl", () => {
@@ -24,10 +24,7 @@ describe("tryouts/start/impl", () => {
         now: TRYOUT_START_NOW,
         suffix: "tryout-resume-owner",
       });
-      await seedTryoutStartSet(ctx, {
-        userId: user.userId,
-        visibility: "internal-entry",
-      });
+      await activateTryoutStartSource(ctx, "internal-entry", "raw");
       return user;
     });
     const authed = t.withIdentity({
@@ -68,10 +65,7 @@ describe("tryouts/start/impl", () => {
         now: TRYOUT_START_NOW,
         suffix: "frozen-navigation",
       });
-      await seedTryoutStartSet(ctx, {
-        userId: user.userId,
-        visibility: "visible",
-      });
+      await activateTryoutStartSource(ctx, "visible", "raw");
       return user;
     });
     const authed = t.withIdentity({
@@ -125,10 +119,7 @@ describe("tryouts/start/impl", () => {
         now: TRYOUT_START_NOW,
         suffix: "expired-free-restart",
       });
-      await seedTryoutStartSet(ctx, {
-        userId: user.userId,
-        visibility: "internal-entry",
-      });
+      await activateTryoutStartSource(ctx, "internal-entry", "raw");
       return user;
     });
     const authed = t.withIdentity({
