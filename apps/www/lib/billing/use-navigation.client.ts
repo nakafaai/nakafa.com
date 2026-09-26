@@ -23,10 +23,10 @@ export function useBillingNavigation() {
   const t = useTranslations("Auth");
   const [isPending, startTransition] = useTransition();
   const createCheckout = useAction(
-    api.customers.actions.public.generateCheckoutLink
+    api.customers.actions.sessions.generateCheckoutLink
   );
   const createPortal = useAction(
-    api.customers.actions.public.generateCustomerPortalUrl
+    api.customers.actions.sessions.generateCustomerPortalUrl
   );
 
   function runBillingRequest(
