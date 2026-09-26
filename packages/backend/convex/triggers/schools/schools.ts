@@ -1,95 +1,65 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { buildSchoolChangesMetadata } from "@repo/backend/convex/triggers/helpers/metadata";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
+import { Effect } from "effect";
 
-/**
- * Trigger handler for schools table changes.
- *
- * Creates activity logs for school lifecycle events:
- * - On insert: Logs school creation with admin member info
- * - On update: Logs field changes (name, email, phone, address, etc.)
- * - On delete: Logs school deletion
- *
- * @param ctx - The Convex mutation context with database access
- * @param change - The change object containing operation details and document state
- */
-export async function schoolsHandler(
+/** Records school lifecycle changes in the same transaction as their source. */
+const recordSchool = Effect.fn("triggers.schools.recordSchool")(function* (
   ctx: GenericMutationCtx<DataModel>,
   change: Change<DataModel, "schools">
 ) {
-  const school = change.newDoc;
-  const oldSchool = change.oldDoc;
   const schoolId = change.id;
-
-  switch (change.operation) {
-    case "insert": {
-      if (!school) {
-        break;
-      }
-
-      const member = await ctx.db
-        .query("schoolMembers")
-        .withIndex("by_schoolId_and_userId_and_status", (q) =>
-          q.eq("schoolId", schoolId).eq("userId", school.createdBy)
-        )
-        .first();
-      const adminMember = isAdmin(member) ? member : null;
-
-      await ctx.db.insert("schoolActivityLogs", {
+  if (change.operation === "insert") {
+    const school = change.newDoc;
+    yield* Effect.promise(() =>
+      ctx.db.insert("schoolActivityLogs", {
         schoolId,
         userId: school.createdBy,
         action: "school_created",
         entityType: "schools",
         entityId: schoolId,
-        metadata: {
-          schoolName: school.name,
-          memberId: adminMember?._id,
-        },
-      });
-      break;
+        metadata: { schoolName: school.name },
+      })
+    );
+    return;
+  }
+  if (change.operation === "update") {
+    const school = change.newDoc;
+    const metadata = buildSchoolChangesMetadata(change.oldDoc, school);
+    if (!metadata) {
+      return;
     }
-
-    case "update": {
-      if (!(school && oldSchool)) {
-        break;
-      }
-
-      const changesMetadata = buildSchoolChangesMetadata(oldSchool, school);
-      if (changesMetadata) {
-        await ctx.db.insert("schoolActivityLogs", {
-          schoolId,
-          userId: school.updatedBy ?? school.createdBy,
-          action: "school_updated",
-          entityType: "schools",
-          entityId: schoolId,
-          metadata: changesMetadata,
-        });
-      }
-      break;
-    }
-
-    case "delete": {
-      if (!oldSchool) {
-        break;
-      }
-
-      await ctx.db.insert("schoolActivityLogs", {
+    yield* Effect.promise(() =>
+      ctx.db.insert("schoolActivityLogs", {
         schoolId,
-        userId: oldSchool.updatedBy ?? oldSchool.createdBy,
-        action: "school_deleted",
+        userId: school.updatedBy ?? school.createdBy,
+        action: "school_updated",
         entityType: "schools",
         entityId: schoolId,
-        metadata: {
-          schoolName: oldSchool.name,
-        },
-      });
-      break;
-    }
-
-    default: {
-      break;
-    }
+        metadata,
+      })
+    );
+    return;
   }
+  const school = change.oldDoc;
+  yield* Effect.promise(() =>
+    ctx.db.insert("schoolActivityLogs", {
+      schoolId,
+      userId: school.updatedBy ?? school.createdBy,
+      action: "school_deleted",
+      entityType: "schools",
+      entityId: schoolId,
+      metadata: { schoolName: school.name },
+    })
+  );
+});
+
+/** Runs the registered trigger at the native Convex transaction boundary. */
+export function schoolsHandler(
+  ctx: GenericMutationCtx<DataModel>,
+  change: Change<DataModel, "schools">
+) {
+  return runConvexProgram(recordSchool(ctx, change));
 }

@@ -1,113 +1,97 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { buildClassChangesMetadata } from "@repo/backend/convex/triggers/helpers/metadata";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
+import { Effect, Struct } from "effect";
 
-/**
- * Trigger handler for schoolClasses table changes.
- *
- * Manages class lifecycle events and activity logging:
- * - On insert: Logs class creation with metadata
- * - On update: Logs archive/unarchive events and field changes
- * - On delete: Logs class deletion and schedules bounded cleanup of class-owned data
- *
- * @param ctx - The Convex mutation context with database access
- * @param change - The change object containing operation details and document state
- */
-export async function schoolClassesHandler(
+/** Records class changes and schedules bounded cleanup after deletion. */
+const recordClass = Effect.fn("triggers.schools.recordClass")(function* (
   ctx: GenericMutationCtx<DataModel>,
   change: Change<DataModel, "schoolClasses">
 ) {
-  const classDoc = change.newDoc;
-  const oldClassDoc = change.oldDoc;
-  const classId: Id<"schoolClasses"> = change.id;
-
-  switch (change.operation) {
-    case "insert": {
-      if (!classDoc) {
-        break;
-      }
-
-      await ctx.db.insert("schoolActivityLogs", {
-        schoolId: classDoc.schoolId,
-        userId: classDoc.createdBy,
+  const classId = change.id;
+  if (change.operation === "insert") {
+    const classroom = change.newDoc;
+    yield* Effect.promise(() =>
+      ctx.db.insert("schoolActivityLogs", {
+        schoolId: classroom.schoolId,
+        userId: classroom.createdBy,
         action: "class_created",
         entityType: "schoolClasses",
         entityId: classId,
         metadata: {
-          className: classDoc.name,
-          subject: classDoc.subject,
-          year: classDoc.year,
+          className: classroom.name,
+          subject: classroom.subject,
+          year: classroom.year,
         },
-      });
-      break;
-    }
-
-    case "update": {
-      if (!(classDoc && oldClassDoc)) {
-        break;
-      }
-
-      if (oldClassDoc.isArchived !== classDoc.isArchived) {
-        await ctx.db.insert("schoolActivityLogs", {
-          schoolId: classDoc.schoolId,
+      })
+    );
+    return;
+  }
+  if (change.operation === "update") {
+    const classroom = change.newDoc;
+    if (change.oldDoc.isArchived !== classroom.isArchived) {
+      yield* Effect.promise(() =>
+        ctx.db.insert("schoolActivityLogs", {
+          schoolId: classroom.schoolId,
           userId:
-            classDoc.archivedBy ?? classDoc.updatedBy ?? classDoc.createdBy,
+            classroom.archivedBy ?? classroom.updatedBy ?? classroom.createdBy,
           action: "class_archived",
           entityType: "schoolClasses",
           entityId: classId,
           metadata: {
-            className: classDoc.name,
-            isArchived: classDoc.isArchived,
-            archivedAt: classDoc.archivedAt,
+            className: classroom.name,
+            isArchived: classroom.isArchived,
+            ...Struct.pick(classroom, ["archivedAt"]),
           },
-        });
-      }
-
-      const changesMetadata = buildClassChangesMetadata(oldClassDoc, classDoc);
-      if (changesMetadata) {
-        await ctx.db.insert("schoolActivityLogs", {
-          schoolId: classDoc.schoolId,
-          userId: classDoc.updatedBy ?? classDoc.createdBy,
+        })
+      );
+    }
+    const metadata = buildClassChangesMetadata(change.oldDoc, classroom);
+    if (metadata) {
+      yield* Effect.promise(() =>
+        ctx.db.insert("schoolActivityLogs", {
+          schoolId: classroom.schoolId,
+          userId: classroom.updatedBy ?? classroom.createdBy,
           action: "class_updated",
           entityType: "schoolClasses",
           entityId: classId,
-          metadata: changesMetadata,
-        });
-      }
-      break;
-    }
-
-    case "delete": {
-      if (!oldClassDoc) {
-        break;
-      }
-
-      await ctx.db.insert("schoolActivityLogs", {
-        schoolId: oldClassDoc.schoolId,
-        userId: oldClassDoc.updatedBy ?? oldClassDoc.createdBy,
-        action: "class_deleted",
-        entityType: "schoolClasses",
-        entityId: classId,
-        metadata: {
-          className: oldClassDoc.name,
-          subject: oldClassDoc.subject,
-          year: oldClassDoc.year,
-        },
-      });
-
-      await ctx.scheduler.runAfter(
-        0,
-        internal.triggers.schools.cleanup.cleanupDeletedClass,
-        { classId }
+          metadata,
+        })
       );
-
-      break;
     }
-
-    default: {
-      break;
-    }
+    return;
   }
+  const classroom = change.oldDoc;
+  yield* Effect.promise(() =>
+    ctx.db.insert("schoolActivityLogs", {
+      schoolId: classroom.schoolId,
+      userId: classroom.updatedBy ?? classroom.createdBy,
+      action: "class_deleted",
+      entityType: "schoolClasses",
+      entityId: classId,
+      metadata: {
+        className: classroom.name,
+        subject: classroom.subject,
+        year: classroom.year,
+      },
+    })
+  );
+  yield* Effect.promise(() =>
+    ctx.scheduler.runAfter(
+      0,
+      internal.triggers.schools.cleanup.cleanupDeletedClass,
+      { classId }
+    )
+  );
+});
+
+/** Runs the registered trigger at the native Convex transaction boundary. */
+export function schoolClassesHandler(
+  ctx: GenericMutationCtx<DataModel>,
+  change: Change<DataModel, "schoolClasses">
+) {
+  return runConvexProgram(recordClass(ctx, change));
 }
