@@ -498,6 +498,9 @@ importers:
 
   packages/backend:
     dependencies:
+      '@confect/core':
+        specifier: 10.0.0-next.24
+        version: 10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)
       '@convex-dev/aggregate':
         specifier: ^0.3.1
         version: 0.3.1(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.8)(react@19.2.8)(typescript@7.0.2)(zod@4.5.4)
@@ -1681,6 +1684,13 @@ packages:
   '@clack/prompts@1.8.1':
     resolution: {integrity: sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==}
     engines: {node: '>= 20.12.0'}
+
+  '@confect/core@10.0.0-next.24':
+    resolution: {integrity: sha512-0uinz21sJrekRbSjqanqDbqDdOGd4RdLoeasfnp+HsvyETOAOi1smqtEBCHo2LTb6nuwSyxDnAuqcTSXg0qiOQ==}
+    engines: {node: '>=24'}
+    peerDependencies:
+      convex: ^1.32.0
+      effect: ^4.0.0-rc.117
 
   '@convex-dev/aggregate@0.3.1':
     resolution: {integrity: sha512-BYjgZjsAm+rHc3OxyZwUn+A4cl/dRbMSsHSNsdTZuwP4EXd6NV3AAIKa+tI9C4LD++I8N4fXscmiTz+manFnQA==}
@@ -8574,6 +8584,11 @@ snapshots:
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
+
+  '@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)':
+    dependencies:
+      convex: 1.46.0(react@19.2.8)
+      effect: 4.0.0-rc.117
 
   '@convex-dev/aggregate@0.3.1(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.8)(react@19.2.8)(typescript@7.0.2)(zod@4.5.4)':
     dependencies:

@@ -1,45 +1,50 @@
+import { GenericId } from "@confect/core/GenericId";
+import {
+  compileSchema,
+  compileTableSchema,
+} from "@confect/core/SchemaToValidator";
 import {
   schoolClassEnrollMethodValidator,
   schoolClassMemberRoleValidator,
   schoolClassTeacherRoleValidator,
 } from "@repo/backend/convex/classes/schema";
 import { defineTable } from "convex/server";
-import type { Infer } from "convex/values";
 import { v } from "convex/values";
-import { literals } from "convex-helpers/validators";
+import { Schema } from "effect";
 
 /**
  * School type validator
  */
-export const schoolTypeValidator = literals(
+export const schoolTypeSchema = Schema.Literals([
   "elementary-school",
   "middle-school",
   "high-school",
   "vocational-school",
   "university",
-  "other"
-);
+  "other",
+]);
+export const schoolTypeValidator = compileSchema(schoolTypeSchema);
 
 /**
  * School member role validator
  */
-export const schoolMemberRoleValidator = literals(
+export const schoolMemberRoleSchema = Schema.Literals([
   "admin",
   "teacher",
   "student",
   "parent",
-  "demo"
-);
-export type SchoolMemberRole = Infer<typeof schoolMemberRoleValidator>;
+  "demo",
+]);
+export type SchoolMemberRole = typeof schoolMemberRoleSchema.Type;
 
 /**
  * School member status validator
  */
-export const schoolMemberStatusValidator = literals(
+const schoolMemberStatusSchema = Schema.Literals([
   "active",
   "invited",
-  "removed"
-);
+  "removed",
+]);
 
 /**
  * School base validator (without system fields)
@@ -66,8 +71,8 @@ export const schoolValidator = v.object({
 export const schoolMemberValidator = v.object({
   schoolId: v.id("schools"),
   userId: v.id("users"),
-  role: schoolMemberRoleValidator,
-  status: schoolMemberStatusValidator,
+  role: compileSchema(schoolMemberRoleSchema),
+  status: compileSchema(schoolMemberStatusSchema),
   invitedBy: v.optional(v.id("users")),
   invitedAt: v.optional(v.number()),
   inviteToken: v.optional(v.string()),
@@ -78,134 +83,188 @@ export const schoolMemberValidator = v.object({
   removedAt: v.optional(v.number()),
 });
 
-/**
- * School activity action validator
- */
-export const schoolActivityActionValidator = literals(
-  "school_created",
-  "school_updated",
-  "school_deleted",
-  "member_invited",
-  "member_joined",
-  "member_removed",
-  "member_role_changed",
-  "class_created",
-  "class_updated",
-  "class_archived",
-  "class_deleted",
-  "class_member_added",
-  "class_member_removed",
-  "class_member_role_changed"
+/** Activity fields shared by every operation-specific event. */
+const activityFields = {
+  schoolId: GenericId("schools"),
+  userId: GenericId("users"),
+  entityId: Schema.String,
+  ipAddress: Schema.optionalKey(Schema.String),
+  userAgent: Schema.optionalKey(Schema.String),
+};
+
+const classMemberRole = Schema.Literals(
+  schoolClassMemberRoleValidator.members.map((member) => member.value)
+);
+const teacherRole = Schema.Literals(
+  schoolClassTeacherRoleValidator.members.map((member) => member.value)
+);
+const enrollMethod = Schema.Literals(
+  schoolClassEnrollMethodValidator.members.map((member) => member.value)
 );
 
-/**
- * School activity entity type validator.
- */
-export const schoolActivityEntityTypeValidator = literals(
-  "schools",
-  "schoolMembers",
-  "schoolClasses",
-  "schoolClassMembers"
-);
-
-const schoolRoleMetadataValidator = v.object({
-  role: schoolMemberRoleValidator,
-});
-
-const classRoleMetadataValidator = v.object({
-  role: schoolClassMemberRoleValidator,
-});
-
-const schoolActivityMetadataValidator = v.optional(
-  v.union(
-    v.object({
-      schoolName: v.string(),
-      memberId: v.optional(v.string()),
+/** Couples an audit operation to its entity and exact metadata contract. */
+export const schoolActivitySchema = Schema.Union([
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("school_created"),
+    entityType: Schema.Literal("schools"),
+    metadata: Schema.Struct({
+      schoolName: Schema.String,
     }),
-    v.object({
-      schoolName: v.string(),
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("school_updated"),
+    entityType: Schema.Literal("schools"),
+    metadata: Schema.Struct({
+      schoolName: Schema.String,
+      oldName: Schema.optionalKey(Schema.String),
+      newName: Schema.optionalKey(Schema.String),
+      oldEmail: Schema.optionalKey(Schema.String),
+      newEmail: Schema.optionalKey(Schema.String),
+      oldPhone: Schema.optionalKey(Schema.String),
+      newPhone: Schema.optionalKey(Schema.String),
+      oldAddress: Schema.optionalKey(Schema.String),
+      newAddress: Schema.optionalKey(Schema.String),
+      oldCity: Schema.optionalKey(Schema.String),
+      newCity: Schema.optionalKey(Schema.String),
+      oldProvince: Schema.optionalKey(Schema.String),
+      newProvince: Schema.optionalKey(Schema.String),
+      oldType: Schema.optionalKey(schoolTypeSchema),
+      newType: Schema.optionalKey(schoolTypeSchema),
     }),
-    v.object({
-      schoolName: v.string(),
-      oldName: v.optional(v.string()),
-      newName: v.optional(v.string()),
-      oldEmail: v.optional(v.string()),
-      newEmail: v.optional(v.string()),
-      oldPhone: v.optional(v.string()),
-      newPhone: v.optional(v.string()),
-      oldAddress: v.optional(v.string()),
-      newAddress: v.optional(v.string()),
-      oldCity: v.optional(v.string()),
-      newCity: v.optional(v.string()),
-      oldProvince: v.optional(v.string()),
-      newProvince: v.optional(v.string()),
-      oldType: v.optional(schoolTypeValidator),
-      newType: v.optional(schoolTypeValidator),
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("school_deleted"),
+    entityType: Schema.Literal("schools"),
+    metadata: Schema.Struct({ schoolName: Schema.String }),
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("member_joined"),
+    entityType: Schema.Literal("schoolMembers"),
+    metadata: Schema.Struct({
+      role: schoolMemberRoleSchema,
+      joinedAt: Schema.Finite,
     }),
-    v.object({
-      ...schoolRoleMetadataValidator.fields,
-      joinedAt: v.number(),
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("member_invited"),
+    entityType: Schema.Literal("schoolMembers"),
+    metadata: Schema.Struct({
+      invitedUserId: Schema.String,
+      role: schoolMemberRoleSchema,
+      invitedAt: Schema.optionalKey(Schema.Finite),
     }),
-    v.object({
-      invitedUserId: v.string(),
-      ...schoolRoleMetadataValidator.fields,
-      invitedAt: v.optional(v.number()),
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("member_removed"),
+    entityType: Schema.Literal("schoolMembers"),
+    metadata: Schema.Struct({
+      removedUserId: Schema.String,
+      role: schoolMemberRoleSchema,
+      removedAt: Schema.optionalKey(Schema.Finite),
     }),
-    v.object({
-      oldRole: schoolMemberRoleValidator,
-      newRole: schoolMemberRoleValidator,
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("member_role_changed"),
+    entityType: Schema.Literal("schoolMembers"),
+    metadata: Schema.Struct({
+      oldRole: schoolMemberRoleSchema,
+      newRole: schoolMemberRoleSchema,
     }),
-    v.object({
-      removedUserId: v.string(),
-      ...schoolRoleMetadataValidator.fields,
-      removedAt: v.optional(v.number()),
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literals(["class_created", "class_deleted"]),
+    entityType: Schema.Literal("schoolClasses"),
+    metadata: Schema.Struct({
+      className: Schema.String,
+      subject: Schema.String,
+      year: Schema.String,
     }),
-    v.object({
-      className: v.string(),
-      subject: v.string(),
-      year: v.string(),
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("class_archived"),
+    entityType: Schema.Literal("schoolClasses"),
+    metadata: Schema.Struct({
+      className: Schema.String,
+      isArchived: Schema.Boolean,
+      archivedAt: Schema.optionalKey(Schema.Finite),
     }),
-    v.object({
-      className: v.string(),
-      isArchived: v.boolean(),
-      archivedAt: v.optional(v.number()),
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("class_updated"),
+    entityType: Schema.Literal("schoolClasses"),
+    metadata: Schema.Struct({
+      className: Schema.String,
+      oldName: Schema.optionalKey(Schema.String),
+      newName: Schema.optionalKey(Schema.String),
+      oldSubject: Schema.optionalKey(Schema.String),
+      newSubject: Schema.optionalKey(Schema.String),
+      oldYear: Schema.optionalKey(Schema.String),
+      newYear: Schema.optionalKey(Schema.String),
+      oldVisibility: Schema.optionalKey(Schema.String),
+      newVisibility: Schema.optionalKey(Schema.String),
     }),
-    v.object({
-      className: v.string(),
-      oldName: v.optional(v.string()),
-      newName: v.optional(v.string()),
-      oldSubject: v.optional(v.string()),
-      newSubject: v.optional(v.string()),
-      oldYear: v.optional(v.string()),
-      newYear: v.optional(v.string()),
-      oldVisibility: v.optional(v.string()),
-      newVisibility: v.optional(v.string()),
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("class_member_added"),
+    entityType: Schema.Literal("schoolClassMembers"),
+    metadata: Schema.Struct({
+      classId: Schema.String,
+      addedUserId: Schema.String,
+      role: classMemberRole,
+      teacherRole: Schema.optionalKey(teacherRole),
+      enrollMethod: Schema.optionalKey(enrollMethod),
     }),
-    v.object({
-      classId: v.string(),
-      addedUserId: v.string(),
-      ...classRoleMetadataValidator.fields,
-      teacherRole: schoolClassTeacherRoleValidator,
-      enrollMethod: schoolClassEnrollMethodValidator,
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("class_member_removed"),
+    entityType: Schema.Literal("schoolClassMembers"),
+    metadata: Schema.Struct({
+      classId: Schema.String,
+      removedUserId: Schema.String,
+      role: classMemberRole,
+      removedAt: Schema.optionalKey(Schema.Finite),
     }),
-    v.object({
-      classId: v.string(),
-      oldRole: schoolClassMemberRoleValidator,
-      newRole: schoolClassMemberRoleValidator,
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("class_member_role_changed"),
+    entityType: Schema.Literal("schoolClassMembers"),
+    metadata: Schema.Struct({
+      classId: Schema.String,
+      oldRole: classMemberRole,
+      newRole: classMemberRole,
     }),
-    v.object({
-      classId: v.string(),
-      oldTeacherRole: schoolClassTeacherRoleValidator,
-      newTeacherRole: schoolClassTeacherRoleValidator,
-    }),
-    v.object({
-      classId: v.string(),
-      removedUserId: v.string(),
-      ...classRoleMetadataValidator.fields,
-      removedAt: v.optional(v.number()),
-    })
-  )
-);
+  }),
+  Schema.Struct({
+    ...activityFields,
+    action: Schema.Literal("class_member_teacher_role_changed"),
+    entityType: Schema.Literal("schoolClassMembers"),
+    metadata: Schema.Union([
+      Schema.Struct({
+        classId: Schema.String,
+        oldTeacherRole: teacherRole,
+        newTeacherRole: Schema.optionalKey(teacherRole),
+      }),
+      Schema.Struct({
+        classId: Schema.String,
+        oldTeacherRole: Schema.optionalKey(teacherRole),
+        newTeacherRole: teacherRole,
+      }),
+    ]),
+  }),
+]);
 
 const tables = {
   schools: defineTable(schoolValidator)
@@ -224,7 +283,7 @@ const tables = {
 
   schoolInviteCodes: defineTable({
     schoolId: v.id("schools"),
-    role: schoolMemberRoleValidator,
+    role: compileSchema(schoolMemberRoleSchema),
     code: v.string(),
     enabled: v.boolean(),
     expiresAt: v.optional(v.number()),
@@ -236,16 +295,7 @@ const tables = {
     updatedAt: v.number(),
   }).index("by_code", ["code"]),
 
-  schoolActivityLogs: defineTable({
-    schoolId: v.id("schools"),
-    userId: v.id("users"),
-    action: schoolActivityActionValidator,
-    entityType: schoolActivityEntityTypeValidator,
-    entityId: v.string(),
-    metadata: schoolActivityMetadataValidator,
-    ipAddress: v.optional(v.string()),
-    userAgent: v.optional(v.string()),
-  })
+  schoolActivityLogs: defineTable(compileTableSchema(schoolActivitySchema))
     .index("by_schoolId", ["schoolId"])
     .index("by_userId", ["userId"])
     .index("by_metadata_invitedUserId", ["metadata.invitedUserId"])
