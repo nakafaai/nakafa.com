@@ -5,18 +5,13 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
-  tryoutEntitlementSourceKindCompetition,
-  tryoutEntitlementSourceKindSubscription,
-} from "@repo/backend/convex/tryoutAccess/schema";
-import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
-import {
-  ensureSubscriptionEntitlement,
-  isActiveProSubscription,
-  loadActiveProSubscription,
-} from "@repo/backend/convex/tryouts/access/subscription";
+  getIncludedAttemptAccess,
+  getTryoutStartAccess,
+} from "@repo/backend/convex/tryouts/access/impl";
+import { TryoutStartError } from "@repo/backend/convex/tryouts/start/spec";
 import { products } from "@repo/backend/convex/utils/polar/products";
-import { getOrThrow } from "convex-helpers/server/relationships";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const PERIOD_END = Date.UTC(2026, 6, 21, 12, 0, 0);
@@ -48,6 +43,7 @@ async function insertSubscription(
   ctx: MutationCtx,
   args: {
     currentPeriodEnd?: string | null;
+    productId?: string;
     status: string;
     subscriptionId: string;
   }
@@ -72,7 +68,7 @@ async function insertSubscription(
     id: args.subscriptionId,
     metadata: {},
     modifiedAt: null,
-    productId: products.pro.id,
+    productId: args.productId ?? products.pro.id,
     recurringInterval: null,
     startedAt: timestamp,
     status: args.status,
@@ -101,65 +97,23 @@ describe("tryouts/access/impl", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
-  it("renews one entitlement without moving its start or granting an expired period", async () => {
-    const t = convexTest(schema, convexModules);
-    const result = await t.mutation(async (ctx) => {
-      const userId = await insertUser(ctx);
-      const subscriptionId = await insertSubscription(ctx, {
-        status: "active",
-        subscriptionId: "renewed-period",
-      });
-      const subscription = await getOrThrow(
-        ctx,
-        "subscriptions",
-        subscriptionId
-      );
-      const args = {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        now: NOW,
-        subscription,
-        userId,
-      };
-      await runConvexProgram(ensureSubscriptionEntitlement(ctx, args));
-      await runConvexProgram(
-        ensureSubscriptionEntitlement(ctx, {
-          ...args,
-          now: NOW + 1000,
-          subscription: {
-            ...subscription,
-            currentPeriodEnd: new Date(PERIOD_END + 86_400_000).toISOString(),
-          },
-        })
-      );
-      await runConvexProgram(
-        ensureSubscriptionEntitlement(ctx, {
-          ...args,
-          subscription: {
-            ...subscription,
-            currentPeriodEnd: new Date(NOW).toISOString(),
-          },
-        })
-      );
-      return await ctx.db.query("tryoutEntitlements").collect();
-    });
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({
-      startsAt: NOW,
-      endsAt: PERIOD_END + 86_400_000,
-    });
-  });
 
-  it("rejects another product and preserves typed lookup failures", async () => {
-    const t = convexTest(schema, convexModules);
-    const userId = await t.mutation(insertUser);
-    await t.query(async (ctx) => {
-      vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
-        throw new Error("Subscription store unavailable");
-      });
-      await expect(
-        runConvexProgram(
-          loadActiveProSubscription(ctx, {
+  it.each([null, new Date(PERIOD_END).toISOString()])(
+    "reads subscription attribution without materializing an entitlement: %s",
+    async (currentPeriodEnd) => {
+      const t = convexTest(schema, convexModules);
+      const result = await t.mutation(async (ctx) => {
+        const userId = await insertUser(ctx);
+        await insertCustomer(ctx, userId);
+        await insertSubscription(ctx, {
+          currentPeriodEnd,
+          status: "active",
+          subscriptionId: "active-pro",
+        });
+        const access = await resolveAccess(ctx, userId);
+        expect(await resolveAccess(ctx, userId)).toEqual(access);
+        const advisory = await runConvexProgram(
+          getTryoutStartAccess(ctx, {
             countryKey: "indonesia",
             examKey: "snbt",
             now: NOW,
@@ -167,31 +121,26 @@ describe("tryouts/access/impl", () => {
             trackKey: "2027",
             userId,
           })
-        )
-      ).rejects.toMatchObject({ data: { code: "TRYOUT_START_FAILED" } });
-    });
-    await t.mutation(async (ctx) => {
-      const subscriptionId = await insertSubscription(ctx, {
-        status: "active",
-        subscriptionId: "other-product",
+        );
+        return {
+          access,
+          advisory,
+          entitlements: await ctx.db.query("tryoutEntitlements").collect(),
+        };
       });
-      const subscription = await getOrThrow(
-        ctx,
-        "subscriptions",
-        subscriptionId
-      );
-      expect(isActiveProSubscription(null, NOW)).toBe(false);
-      expect(isActiveProSubscription(subscription, NOW)).toBe(true);
-      expect(
-        isActiveProSubscription(
-          { ...subscription, productId: "another-product" },
-          NOW
-        )
-      ).toBe(false);
-    });
-  });
+      expect(result.access).toEqual({
+        accessEndsAt:
+          currentPeriodEnd === null ? Number.MAX_SAFE_INTEGER : PERIOD_END,
+        accessSourceKind: "subscription",
+        accessSubscriptionId: "active-pro",
+        countsForCompetition: false,
+      });
+      expect(result.advisory).toEqual({ kind: "included" });
+      expect(result.entitlements).toEqual([]);
+    }
+  );
 
-  it("finds live subscription access after more than ten expired records", async () => {
+  it("finds a live subscription after more than ten expired records", async () => {
     const t = convexTest(schema, convexModules);
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx);
@@ -205,249 +154,81 @@ describe("tryouts/access/impl", () => {
       }
       await insertSubscription(ctx, {
         status: "active",
-        subscriptionId: "live-subscription",
-      });
-      return await resolveAccess(ctx, userId);
-    });
-    expect(result).toMatchObject({
-      accessEndsAt: PERIOD_END,
-      accessSubscriptionId: "live-subscription",
-    });
-  });
-
-  it("creates an exam entitlement from an active Pro subscription", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const result = await t.mutation(async (ctx) => {
-      const userId = await insertUser(ctx);
-      await insertCustomer(ctx, userId);
-      await insertSubscription(ctx, {
-        status: "active",
-        subscriptionId: "sub-active-pro",
-      });
-
-      const access = await resolveAccess(ctx, userId);
-      expect(await resolveAccess(ctx, userId)).toEqual(access);
-      const entitlements = await ctx.db.query("tryoutEntitlements").collect();
-
-      return { access, entitlements };
-    });
-
-    expect(result.access).toEqual({
-      accessEndsAt: PERIOD_END,
-      accessSourceKind: tryoutEntitlementSourceKindSubscription,
-      accessSubscriptionId: "sub-active-pro",
-      countsForCompetition: false,
-    });
-    expect(result.entitlements).toHaveLength(1);
-    expect(result.entitlements[0]).toMatchObject({
-      countryKey: "indonesia",
-      examKey: "snbt",
-      sourceKind: tryoutEntitlementSourceKindSubscription,
-      subscriptionId: "sub-active-pro",
-    });
-  });
-
-  it("rejects a cached subscription entitlement when the subscription is not active", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await expect(
-      t.mutation(async (ctx) => {
-        const userId = await insertUser(ctx);
-        await insertCustomer(ctx, userId);
-        await insertSubscription(ctx, {
-          status: "canceled",
-          subscriptionId: "sub-canceled-pro",
-        });
-        await ctx.db.insert("tryoutEntitlements", {
-          countryKey: "indonesia",
-          endsAt: PERIOD_END,
-          examKey: "snbt",
-          sourceKind: tryoutEntitlementSourceKindSubscription,
-          startsAt: NOW,
-          subscriptionId: "sub-canceled-pro",
-          userId,
-        });
-
-        return await resolveAccess(ctx, userId);
-      })
-    ).resolves.toBeNull();
-  });
-
-  it("creates an unbounded entitlement from an active Pro subscription without a period end", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const result = await t.mutation(async (ctx) => {
-      const userId = await insertUser(ctx);
-      await insertCustomer(ctx, userId);
-      await insertSubscription(ctx, {
-        currentPeriodEnd: null,
-        status: "active",
-        subscriptionId: "sub-active-pro-without-period",
-      });
-
-      return await resolveAccess(ctx, userId);
-    });
-
-    expect(result).toEqual({
-      accessEndsAt: Number.MAX_SAFE_INTEGER,
-      accessSourceKind: tryoutEntitlementSourceKindSubscription,
-      accessSubscriptionId: "sub-active-pro-without-period",
-      countsForCompetition: false,
-    });
-  });
-
-  it("rejects active Pro subscriptions with an invalid period end", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await expect(
-      t.mutation(async (ctx) => {
-        const userId = await insertUser(ctx);
-        await insertCustomer(ctx, userId);
-        await insertSubscription(ctx, {
-          currentPeriodEnd: "not-a-date",
-          status: "active",
-          subscriptionId: "sub-active-pro-invalid-period",
-        });
-
-        return await resolveAccess(ctx, userId);
-      })
-    ).resolves.toBeNull();
-  });
-
-  it("rejects set entitlements from a different track", async () => {
-    const t = convexTest(schema, convexModules);
-    const userId = await t.mutation(async (ctx) => {
-      const insertedUserId = await insertUser(ctx);
-
-      await ctx.db.insert("tryoutEntitlements", {
-        countryKey: "indonesia",
-        endsAt: PERIOD_END,
-        examKey: "snbt",
-        setKey: "set-1",
-        sourceKind: tryoutEntitlementSourceKindCompetition,
-        startsAt: NOW,
-        trackKey: "2027",
-        userId: insertedUserId,
-      });
-
-      return insertedUserId;
-    });
-    const matching = await t.mutation((ctx) => resolveAccess(ctx, userId));
-
-    expect(matching).toMatchObject({
-      accessSourceKind: tryoutEntitlementSourceKindCompetition,
-      countsForCompetition: true,
-    });
-    await expect(
-      t.mutation((ctx) => resolveAccess(ctx, userId, { trackKey: "2028" }))
-    ).resolves.toBeNull();
-  });
-
-  it("accepts track entitlements for sets in the same track", async () => {
-    const t = convexTest(schema, convexModules);
-    const userId = await t.mutation(async (ctx) => {
-      const insertedUserId = await insertUser(ctx);
-
-      await ctx.db.insert("tryoutEntitlements", {
-        countryKey: "indonesia",
-        endsAt: PERIOD_END,
-        examKey: "snbt",
-        sourceKind: tryoutEntitlementSourceKindCompetition,
-        startsAt: NOW,
-        trackKey: "2027",
-        userId: insertedUserId,
-      });
-
-      return insertedUserId;
-    });
-    const matching = await t.mutation((ctx) =>
-      resolveAccess(ctx, userId, { setKey: "set-2" })
-    );
-
-    expect(matching).toMatchObject({
-      accessSourceKind: tryoutEntitlementSourceKindCompetition,
-      countsForCompetition: true,
-    });
-    await expect(
-      t.mutation((ctx) =>
-        resolveAccess(ctx, userId, {
-          setKey: "set-2",
-          trackKey: "2028",
-        })
-      )
-    ).resolves.toBeNull();
-  });
-  it("ignores future and orphaned subscription entitlements while allowing free participation", async () => {
-    const t = convexTest(schema, convexModules);
-    const result = await t.mutation(async (ctx) => {
-      const userId = await insertUser(ctx);
-      await ctx.db.insert("tryoutEntitlements", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        startsAt: NOW + 1,
-        endsAt: PERIOD_END,
-        sourceKind: "competition",
-        userId,
-      });
-      await ctx.db.insert("tryoutEntitlements", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        startsAt: NOW,
-        endsAt: PERIOD_END,
-        sourceKind: "subscription",
-        userId,
+        subscriptionId: "live",
       });
       return resolveAccess(ctx, userId);
     });
+    expect(result).toMatchObject({
+      accessEndsAt: PERIOD_END,
+      accessSubscriptionId: "live",
+    });
+  });
+
+  it.each([
+    { status: "canceled" },
+    { status: "active", currentPeriodEnd: new Date(NOW).toISOString() },
+    { status: "active", currentPeriodEnd: "not-a-date" },
+    { status: "active", productId: "another-product" },
+  ])(
+    "ignores a stale cached entitlement when the authoritative subscription is %o",
+    async (subscription) => {
+      const t = convexTest(schema, convexModules);
+      const result = await t.mutation(async (ctx) => {
+        const userId = await insertUser(ctx);
+        await insertCustomer(ctx, userId);
+        await insertSubscription(ctx, {
+          ...subscription,
+          subscriptionId: "stale-pro",
+        });
+        await ctx.db.insert("tryoutEntitlements", {
+          countryKey: "indonesia",
+          examKey: "snbt",
+          startsAt: NOW,
+          endsAt: PERIOD_END,
+          sourceKind: "subscription",
+          subscriptionId: "stale-pro",
+          userId,
+        });
+        return resolveAccess(ctx, userId);
+      });
+      expect(result).toBeNull();
+    }
+  );
+
+  it("keeps free participation available without a Polar customer", async () => {
+    const t = convexTest(schema, convexModules);
+    const result = await t.mutation(async (ctx) =>
+      resolveAccess(ctx, await insertUser(ctx))
+    );
     expect(result).toBeNull();
   });
-  it("retains the campaign and redeemed grant on included access", async () => {
+
+  it("preserves a typed database failure instead of granting access", async () => {
     const t = convexTest(schema, convexModules);
-    const result = await t.mutation(async (ctx) => {
-      const userId = await insertUser(ctx);
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
-        campaignKind: "competition",
-        enabled: true,
-        endsAt: PERIOD_END,
-        firstRedeemedAt: NOW,
-        name: "Competition",
-        redeemStatus: "active",
-        resultsFinalizedAt: null,
-        resultsStatus: "pending",
-        slug: "competition",
-        startsAt: NOW,
+    const userId = await t.mutation(insertUser);
+    const failure = await t.query((ctx) => {
+      vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
+        throw new Error("Subscription store unavailable");
       });
-      const linkId = await ctx.db.insert("tryoutAccessLinks", {
-        campaignId,
-        code: "competition",
-        enabled: true,
-        label: "Competition",
-      });
-      const grantId = await ctx.db.insert("tryoutAccessGrants", {
-        campaignId,
-        linkId,
-        userId,
-        endsAt: PERIOD_END,
-        redeemedAt: NOW,
-        status: "active",
-      });
-      await ctx.db.insert("tryoutEntitlements", {
-        accessCampaignId: campaignId,
-        accessGrantId: grantId,
-        countryKey: "indonesia",
-        examKey: "snbt",
-        endsAt: PERIOD_END,
-        sourceKind: "competition",
-        startsAt: NOW,
-        userId,
-      });
-      return { access: await resolveAccess(ctx, userId), campaignId, grantId };
+      return runConvexProgram(
+        getIncludedAttemptAccess(ctx, {
+          countryKey: "indonesia",
+          examKey: "snbt",
+          now: NOW,
+          setKey: "set-1",
+          trackKey: "2027",
+          userId,
+        }).pipe(
+          Effect.match({
+            onFailure: (error) => {
+              expect(error).toBeInstanceOf(TryoutStartError);
+              return error.code;
+            },
+            onSuccess: () => null,
+          })
+        )
+      );
     });
-    expect(result.access).toMatchObject({
-      accessCampaignId: result.campaignId,
-      accessGrantId: result.grantId,
-      countsForCompetition: true,
-    });
+    expect(failure).toBe("TRYOUT_START_FAILED");
   });
 });

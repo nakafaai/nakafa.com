@@ -4,6 +4,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { products } from "@repo/backend/convex/utils/polar/products";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import type { FunctionArgs } from "convex/server";
 
@@ -45,20 +46,37 @@ describe("tryouts/queries/access", () => {
     ).toEqual({ kind: "free-attempt" });
   });
 
-  it("shows included scoped access without restricting free starts", async () => {
+  it("shows included subscription access without restricting free starts", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
         now: TRYOUT_TEST_NOW,
         suffix: "start-access-included",
       });
-      await ctx.db.insert("tryoutEntitlements", {
-        countryKey: "indonesia",
-        endsAt: TRYOUT_TEST_NOW + 86_400_000,
-        examKey: "snbt",
-        sourceKind: "access-pass",
-        startsAt: TRYOUT_TEST_NOW,
+      await ctx.db.insert("customers", {
+        externalId: seeded.authUserId,
+        id: "advisory-customer",
+        metadata: {},
         userId: seeded.userId,
+      });
+      const timestamp = new Date(TRYOUT_TEST_NOW).toISOString();
+      await ctx.db.insert("subscriptions", {
+        amount: null,
+        cancelAtPeriodEnd: false,
+        checkoutId: null,
+        createdAt: timestamp,
+        currency: null,
+        currentPeriodEnd: null,
+        currentPeriodStart: timestamp,
+        customerId: "advisory-customer",
+        endedAt: null,
+        id: "advisory-subscription",
+        metadata: {},
+        modifiedAt: null,
+        productId: products.pro.id,
+        recurringInterval: null,
+        startedAt: timestamp,
+        status: "active",
       });
       return seeded;
     });

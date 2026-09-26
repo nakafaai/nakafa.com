@@ -12,6 +12,7 @@ import {
 } from "@repo/backend/convex/tryouts/runtime/attempt/page";
 import { readAttemptSetIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 import {
+  activateTryoutStartSource,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_NOW,
@@ -19,7 +20,6 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect, Struct } from "effect";
 
@@ -42,10 +42,7 @@ const startFixture = Effect.fn("frozenPage.test.startFixture")(function* () {
         now: TRYOUT_START_NOW,
         suffix: "frozen-page-integrity",
       });
-      await seedTryoutStartSet(ctx, {
-        userId: user.userId,
-        visibility: "visible",
-      });
+      await activateTryoutStartSource(ctx, "visible", "raw");
       return user;
     })
   );

@@ -14,6 +14,7 @@ import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectio
 import { createTryoutAttempt } from "@repo/backend/convex/tryouts/start/attempt";
 import { loadTryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
 import {
+  activateTryoutStartSource,
   TRYOUT_START_NOW as NOW,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
@@ -21,7 +22,6 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 
 describe("tryouts/start/attempt", () => {
   it.each([
@@ -37,10 +37,7 @@ describe("tryouts/start/attempt", () => {
           now: NOW,
           suffix: `full-window-${accessSourceKind}`,
         });
-        await seedTryoutStartSet(ctx, {
-          userId: user.userId,
-          visibility: "visible",
-        });
+        await activateTryoutStartSource(ctx, "visible", "raw");
         const args = {
           countryKey: TRYOUT_START_COUNTRY,
           examKey: TRYOUT_START_EXAM,
@@ -97,10 +94,7 @@ describe("tryouts/start/attempt", () => {
         now: NOW,
         suffix: "start-progress-failure",
       });
-      await seedTryoutStartSet(ctx, {
-        userId: user.userId,
-        visibility: "visible",
-      });
+      await activateTryoutStartSource(ctx, "visible", "raw");
       return user;
     });
     await expect(

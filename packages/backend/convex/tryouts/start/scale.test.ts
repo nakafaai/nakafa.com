@@ -16,6 +16,7 @@ import {
 } from "@repo/backend/test/tryout/section";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
+  activateTryoutStartSource,
   TRYOUT_START_COUNTRY as COUNTRY,
   TRYOUT_START_EXAM as EXAM,
   makeTryoutStartCatalog,
@@ -24,7 +25,6 @@ import {
   TRYOUT_START_SET as SET,
   TRYOUT_START_TRACK as TRACK,
 } from "@repo/backend/test/tryout/source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 
 const startArgs: StartAttemptArgs = {
@@ -51,11 +51,7 @@ describe("tryouts/start/scale", () => {
           now: NOW,
           suffix: "tryout-first-scale",
         });
-        const fixture = await seedTryoutStartSet(ctx, {
-          scoringStrategy: "irt",
-          userId: firstIdentity.userId,
-          visibility: "visible",
-        });
+        const fixture = await activateTryoutStartSource(ctx, "visible", "irt");
         return { firstIdentity, fixture };
       });
       const firstAuthed = t.withIdentity({
@@ -169,11 +165,7 @@ describe("tryouts/start/scale", () => {
         now: NOW,
         suffix: "tryout-incomplete-scale",
       });
-      const fixture = await seedTryoutStartSet(ctx, {
-        scoringStrategy: "irt",
-        userId: identity.userId,
-        visibility: "visible",
-      });
+      const fixture = await activateTryoutStartSource(ctx, "visible", "irt");
       await ctx.db.insert("irtScaleVersions", {
         model: "2pl",
         publishedAt: NOW,
@@ -203,11 +195,7 @@ describe("tryouts/start/scale", () => {
         now: NOW,
         suffix: "tryout-history-scale",
       });
-      const fixture = await seedTryoutStartSet(ctx, {
-        scoringStrategy: "irt",
-        userId: identity.userId,
-        visibility: "visible",
-      });
+      const fixture = await activateTryoutStartSource(ctx, "visible", "irt");
       for (let index = 0; index < 32; index += 1) {
         await ctx.db.insert("irtScaleVersions", {
           history: true,
@@ -251,15 +239,7 @@ describe("tryouts/start/scale", () => {
     const t = createConvexTestWithBetterAuth();
     await expect(
       t.mutation(async (ctx) => {
-        const identity = await seedAuthenticatedUser(ctx, {
-          now: NOW,
-          suffix: kind,
-        });
-        await seedTryoutStartSet(ctx, {
-          scoringStrategy: "irt",
-          userId: identity.userId,
-          visibility: "visible",
-        });
+        await activateTryoutStartSource(ctx, "visible", "irt");
         const active = await runConvexProgram(
           loadTryoutStartSource(ctx, startArgs)
         );
@@ -326,15 +306,7 @@ describe("tryouts/start/scale", () => {
   it("reuses the exact authenticated scale without creating another publication", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "exact-scale",
-      });
-      await seedTryoutStartSet(ctx, {
-        scoringStrategy: "irt",
-        userId: identity.userId,
-        visibility: "visible",
-      });
+      await activateTryoutStartSource(ctx, "visible", "irt");
       const source = await runConvexProgram(
         loadTryoutStartSource(ctx, startArgs)
       );
