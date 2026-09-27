@@ -58,6 +58,31 @@ describe("Nina presentation after an answer", () => {
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
     await f.t.action(run, { turnId: f.turnId });
     expect(model.doGenerateCalls).toHaveLength(1);
+    const prompt = model.doGenerateCalls[0]?.prompt;
+    expect(prompt?.at(-1)?.role).toBe("user");
+    expect(prompt?.at(-2)).toMatchObject({
+      role: "assistant",
+      content: [
+        {
+          type: "text",
+          text: "A limit describes the value approached.",
+        },
+      ],
+    });
+    const messages = await f.t.query(
+      components.nina.messages.listMessagesByThreadId,
+      {
+        threadId: f.threadId,
+        paginationOpts: { cursor: null, numItems: 10 },
+        order: "asc",
+      }
+    );
+    expect(
+      messages.page.filter((message) => message.message?.role === "user")
+    ).toHaveLength(2);
+    expect(messages.page.at(-1)?.message).toMatchObject({
+      role: "assistant",
+    });
     expect(
       (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.activeTurnId
     ).toBeUndefined();
@@ -65,6 +90,9 @@ describe("Nina presentation after an answer", () => {
       (await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId)))?.state
         .status
     ).toBe("complete");
+    expect(
+      (await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId)))?.suggestions
+    ).toEqual(["How does this relate to continuity?"]);
   });
 
   it("never overwrites an edited title, and replaces only the default title", async () => {
