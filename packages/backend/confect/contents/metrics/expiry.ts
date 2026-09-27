@@ -1,6 +1,11 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import type { ExpireLearningPopularityWindowPageArgs } from "@repo/backend/confect/contents/analytics/spec";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
 import { LEARNING_POPULARITY_REFRESH_BATCH_SIZE } from "@repo/backend/confect/contents/constants";
@@ -21,20 +26,17 @@ import {
   POPULARITY_DAY_MS,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Duration, Effect, flow, Struct } from "effect";
 
-type PopularityCounter = Doc<"learningPopularityCounters">;
+type PopularityCounter = Docs["learningPopularityCounters"];
 /** Loads the one daily signal leaving a finite popularity window. */
 const loadExpiringSignal = Effect.fn("contents.metrics.loadExpiringSignal")(
   function* (
-    ctx: MutationCtx,
     counter: PopularityCounter,
     windowKey: LearningPopularityFiniteWindow,
     day: number
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const signalDay =
       getPopularityWindowStartDay(windowKey, day) - POPULARITY_DAY_MS;
     return yield* database
@@ -59,21 +61,20 @@ const expirePopularityCounter = Effect.fn(
   "contents.metrics.expirePopularityCounter"
 )(
   function* (
-    ctx: MutationCtx,
     counter: PopularityCounter,
     windowKey: LearningPopularityFiniteWindow,
     day: number,
     updatedAt: number
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const signal = yield* loadExpiringSignal(ctx, counter, windowKey, day);
+    const ctx = yield* MutationCtxService;
+    const writer = yield* DatabaseWriter;
+    const signal = yield* loadExpiringSignal(counter, windowKey, day);
     const expiredCount = signal
       ? getAppliedCount(signal.applied, windowKey)
       : 0;
     const score = counter.score - expiredCount;
     if (expiredCount < 0 || score < 0) {
       const repair = yield* repairPopularityCounter(
-        ctx,
         counter,
         windowKey,
         day,
@@ -133,7 +134,7 @@ const expirePopularityCounter = Effect.fn(
 /** Claims and schedules one daily maintenance job per finite namespace. */
 export const scheduleLearningPopularityExpiries = Effect.fn(
   "contents.metrics.scheduleLearningPopularityExpiries"
-)(function* (ctx: MutationCtx) {
+)(function* () {
   const timestamp = yield* Clock.currentTimeMillis;
   const day = getPopularitySignalDay(timestamp);
   let expiryWindows = 0;
@@ -141,7 +142,7 @@ export const scheduleLearningPopularityExpiries = Effect.fn(
   let skippedWindows = 0;
   for (const scopeMode of learningPopularityScopeValues) {
     for (const windowKey of getFinitePopularityWindows()) {
-      const cycle = yield* beginPopularityCycle(ctx, {
+      const cycle = yield* beginPopularityCycle({
         day,
         forceRepair: false,
         scopeMode,
@@ -157,12 +158,14 @@ export const scheduleLearningPopularityExpiries = Effect.fn(
               .expireLearningPopularityWindowPage
           : refs.internal.contents.mutations.popularity
               .refreshLearningPopularityWindowPage;
-      const scheduler = yield* Scheduler.Scheduler.pipe(
-        Effect.provide(Scheduler.layer(ctx.scheduler))
-      );
+      const scheduler = yield* Scheduler;
       yield* scheduler
         .runAfter(Duration.zero, reference, {
-          ...(cycle.cursor === undefined ? {} : { cursor: cycle.cursor }),
+          ...(cycle.cursor === undefined
+            ? {}
+            : {
+                cursor: cycle.cursor,
+              }),
           day,
           scopeMode,
           windowKey,
@@ -186,12 +189,10 @@ export const scheduleLearningPopularityExpiries = Effect.fn(
 export const expireLearningPopularityWindowPage = Effect.fn(
   "contents.metrics.expireLearningPopularityWindowPage"
 )(
-  function* (ctx: MutationCtx, args: ExpireLearningPopularityWindowPageArgs) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const cycle = yield* getPopularityCyclePage(ctx, {
+  function* (args: ExpireLearningPopularityWindowPageArgs) {
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
+    const cycle = yield* getPopularityCyclePage({
       ...Struct.pick(args, ["cursor"]),
       day: args.day,
       mode: "expiry",
@@ -224,7 +225,6 @@ export const expireLearningPopularityWindowPage = Effect.fn(
     let repairedCounters = 0;
     for (const counter of page.page) {
       const result = yield* expirePopularityCounter(
-        ctx,
         counter,
         args.windowKey,
         args.day,
@@ -241,9 +241,9 @@ export const expireLearningPopularityWindowPage = Effect.fn(
       }
     }
     if (page.isDone) {
-      yield* completePopularityCycle(ctx, cycle.cycle, args.day);
+      yield* completePopularityCycle(cycle.cycle, args.day);
     } else {
-      yield* advancePopularityCycle(ctx, cycle.cycle, page.continueCursor);
+      yield* advancePopularityCycle(cycle.cycle, page.continueCursor);
       yield* scheduler
         .runAfter(
           Duration.millis(0),

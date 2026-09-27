@@ -1,6 +1,6 @@
-import { DatabaseReader, FunctionImpl, GroupImpl } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { resolvePolarCustomerWebhookTarget } from "@repo/backend/confect/customers/polar/target";
 import spec from "@repo/backend/confect/customers/queries/internal/customer.spec";
 import { Effect, Layer } from "effect";
@@ -11,8 +11,7 @@ const getCustomerByUserId = FunctionImpl.make(
   "getCustomerByUserId",
   Effect.fn("customers.queries.internal.customer.getCustomerByUserId")(
     function* (args) {
-      const ctx = yield* QueryCtxService;
-      const database = DatabaseReader.make(databaseSchema, ctx.db);
+      const database = yield* DatabaseReader;
       const customer = yield* database
         .table("customers")
         .get("by_userId", args.userId)
@@ -31,8 +30,7 @@ const getCustomerDeletionCheckpoint = FunctionImpl.make(
   Effect.fn(
     "customers.queries.internal.customer.getCustomerDeletionCheckpoint"
   )(function* (args) {
-    const ctx = yield* QueryCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const tombstone = yield* database
       .table("customerDeletionTombstones")
       .get("by_cleanupUserId", args.userId)
@@ -49,8 +47,7 @@ const resolveWebhookTarget = FunctionImpl.make(
   "resolveWebhookTarget",
   Effect.fn("customers.queries.internal.customer.resolveWebhookTarget")(
     function* (args) {
-      const ctx = yield* QueryCtxService;
-      return yield* resolvePolarCustomerWebhookTarget(ctx, args);
+      return yield* resolvePolarCustomerWebhookTarget(args);
     }
   )
 );

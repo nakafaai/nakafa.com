@@ -1,16 +1,18 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
 } from "@repo/backend/confect/credits/constants";
 import { getStoredCreditResetTimestamp } from "@repo/backend/confect/credits/state";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 describe("users/mutations", () => {
@@ -88,7 +90,9 @@ describe("users/mutations", () => {
           creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
           role: "student",
         });
-        await ctx.db.patch(user.userId, { role });
+        await ctx.db.patch(user.userId, {
+          role,
+        });
         return user;
       });
       const result = await t
@@ -103,7 +107,11 @@ describe("users/mutations", () => {
       }));
       const storedResetAt = await t.query(
         async (ctx) =>
-          await runConvexProgram(getStoredCreditResetTimestamp(ctx.db, "free"))
+          await Effect.runPromise(
+            getStoredCreditResetTimestamp("free").pipe(
+              Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+            )
+          )
       );
       expect(result).toEqual({
         role: role ?? null,

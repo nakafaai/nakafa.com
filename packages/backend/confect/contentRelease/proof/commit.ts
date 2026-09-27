@@ -1,11 +1,14 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type {
   ReleaseVerificationEvidence,
   SignedContentRelease,
 } from "@nakafa/aksara-contracts/release";
 import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { hasSameContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadStaged } from "@repo/backend/confect/contentRelease/model";
@@ -17,8 +20,6 @@ import {
   ROLLBACK_RETENTION_MS,
   type statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect, type Schema } from "effect";
 export type ReleaseStatus = Schema.Schema.Type<typeof statusValidator>;
 
@@ -56,9 +57,9 @@ export function matchesManifest(
 
 /** Marks every authenticated replacement manifest as verified and retained. */
 export const verifySnapshots = Effect.fn("contentRelease.commitSnapshots")(
-  function* (ctx: MutationCtx, release: SignedContentRelease, now: number) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (release: SignedContentRelease, now: number) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     for (const family of ContentSnapshotKindSchema.literals) {
       const state = release.manifest.snapshots[family];
       if (state.mode !== "replace" || state.resultSnapshotId === null) {
@@ -94,12 +95,11 @@ export const verifySnapshots = Effect.fn("contentRelease.commitSnapshots")(
 
 /** Commits server evidence only after every staged stream passed verification. */
 export const commitProgram = Effect.fn("contentRelease.commitProof")(function* (
-  ctx: MutationCtx,
   proofJson: string
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const writer = yield* DatabaseWriter;
   const proof = yield* decodeProofJson(proofJson);
-  const { release } = yield* loadStaged(ctx, proof.releaseId);
+  const { release } = yield* loadStaged(proof.releaseId);
   const signed = yield* decodeReleaseJson(release.releaseJson);
   const countersMatch =
     release.checkedItems === signed.manifest.itemCount &&
@@ -141,14 +141,14 @@ export const commitProgram = Effect.fn("contentRelease.commitProof")(function* (
     proofJson,
     updatedAt: now,
   } satisfies Pick<
-    Doc<"contentReleases">,
+    Docs["contentReleases"],
     "proofAt" | "proofJson" | "updatedAt"
   >;
   yield* ensureDocumentSize(`Content release ${proof.releaseId}`, {
     ...release,
     ...patch,
   });
-  yield* verifySnapshots(ctx, signed, now);
+  yield* verifySnapshots(signed, now);
   yield* writer
     .table("contentReleases")
     .patch(release._id, patch)

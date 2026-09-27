@@ -5,34 +5,36 @@ import {
 } from "@repo/backend/agent/edge";
 import { mcpTransportErrorResponse } from "@repo/backend/confect/routes/agent/mcp/response";
 import { hasValidEdgeSecret } from "@repo/backend/confect/routes/agent/security";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { env } from "@repo/backend/convex/_generated/server";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { Effect } from "effect";
-import type { MiddlewareHandler } from "hono";
+import { Config, Effect, Option } from "effect";
+import {
+  HttpRouter,
+  HttpServerRequest,
+  HttpServerResponse,
+} from "effect/unstable/http";
 
 const MAX_CONFIGURED_ORIGINS = 16;
 
 /** Protects the MCP origin before transport parsing or server construction. */
-export const guardMcpOrigin: MiddlewareHandler<{
-  Bindings: ActionCtx;
-  Variables: {
-    requestId: string;
-  };
-}> = async (context, next) => {
-  const result = await Effect.runPromise(
-    readMcpGuard(context.req.raw).pipe(
+export const guardMcpOrigin = HttpRouter.middleware((handler) =>
+  Effect.gen(function* () {
+    const request = yield* HttpServerRequest.toWeb(
+      yield* HttpServerRequest.HttpServerRequest
+    );
+    const result = yield* readMcpGuard(request).pipe(
       Effect.match({
         onFailure: () => "unavailable" as const,
         onSuccess: (value) => value,
       })
-    )
-  );
-  if (result === "allowed") {
-    return next();
-  }
-  return mcpTransportErrorResponse(result === "unavailable" ? 503 : 403);
-};
+    );
+    if (result === "allowed") {
+      return yield* handler;
+    }
+    return HttpServerResponse.fromWeb(
+      mcpTransportErrorResponse(result === "unavailable" ? 503 : 403)
+    );
+  })
+);
 
 /** Validates the edge secret and optional exact browser Origin. */
 const readMcpGuard = Effect.fn("agent.mcp.readGuard")(function* (
@@ -58,9 +60,9 @@ const readMcpGuard = Effect.fn("agent.mcp.readGuard")(function* (
 /** Reads a strict exact-origin allow-list from typed Convex configuration. */
 const readTrustedOrigins = Effect.fn("agent.mcp.readTrustedOrigins")(
   function* () {
-    const configured = yield* Effect.sync(
-      () => env[NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT]
-    );
+    const configured = yield* Config.option(
+      Config.String(NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT)
+    ).pipe(Effect.map(Option.getOrUndefined), Effect.mapError(invalidOrigins));
     const allowed = new Set<string>(NAKAFA_DEFAULT_MCP_BROWSER_ORIGINS);
     if (configured === undefined) {
       return allowed;

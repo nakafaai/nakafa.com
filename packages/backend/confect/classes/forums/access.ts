@@ -1,25 +1,19 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   loadActiveClass,
   requireClassAccess,
 } from "@repo/backend/confect/classes/access";
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /**
  * Load a forum by ID.
  */
 export const loadForum = Effect.fn("classes.forums.loadForum")(function* (
-  ctx: QueryCtx | MutationCtx,
   forumId: Id<"schoolClassForums">
 ) {
-  const forum = yield* DatabaseReader.make(databaseSchema, ctx.db)
+  const forum = yield* (yield* DatabaseReader)
     .table("schoolClassForums")
     .get(forumId)
     .pipe(
@@ -40,10 +34,9 @@ export const loadForum = Effect.fn("classes.forums.loadForum")(function* (
  * continues.
  */
 const loadOpenForum = Effect.fn("classes.forums.loadOpenForum")(function* (
-  ctx: QueryCtx | MutationCtx,
   forumId: Id<"schoolClassForums">
 ) {
-  const forum = yield* loadForum(ctx, forumId);
+  const forum = yield* loadForum(forumId);
   if (forum.status !== "open") {
     return yield* new ForumError({
       code: "FORUM_LOCKED",
@@ -57,14 +50,9 @@ const loadOpenForum = Effect.fn("classes.forums.loadOpenForum")(function* (
  */
 export const loadForumWithAccess = Effect.fn(
   "classes.forums.loadForumWithAccess"
-)(function* (
-  ctx: QueryCtx | MutationCtx,
-  forumId: Id<"schoolClassForums">,
-  userId: Id<"users">
-) {
-  const forum = yield* loadForum(ctx, forumId);
+)(function* (forumId: Id<"schoolClassForums">, userId: Id<"users">) {
+  const forum = yield* loadForum(forumId);
   const access = yield* requireClassAccess(
-    ctx,
     forum.classId,
     forum.schoolId,
     userId
@@ -80,15 +68,10 @@ export const loadForumWithAccess = Effect.fn(
  */
 export const loadOpenForumWithAccess = Effect.fn(
   "classes.forums.loadOpenForumWithAccess"
-)(function* (
-  ctx: QueryCtx | MutationCtx,
-  forumId: Id<"schoolClassForums">,
-  userId: Id<"users">
-) {
-  const forum = yield* loadOpenForum(ctx, forumId);
-  yield* loadActiveClass(ctx, forum.classId);
+)(function* (forumId: Id<"schoolClassForums">, userId: Id<"users">) {
+  const forum = yield* loadOpenForum(forumId);
+  yield* loadActiveClass(forum.classId);
   const access = yield* requireClassAccess(
-    ctx,
     forum.classId,
     forum.schoolId,
     userId
@@ -104,15 +87,10 @@ export const loadOpenForumWithAccess = Effect.fn(
  */
 export const loadActiveForumWithAccess = Effect.fn(
   "classes.forums.loadActiveForumWithAccess"
-)(function* (
-  ctx: QueryCtx | MutationCtx,
-  forumId: Id<"schoolClassForums">,
-  userId: Id<"users">
-) {
-  const forum = yield* loadForum(ctx, forumId);
-  yield* loadActiveClass(ctx, forum.classId);
+)(function* (forumId: Id<"schoolClassForums">, userId: Id<"users">) {
+  const forum = yield* loadForum(forumId);
+  yield* loadActiveClass(forum.classId);
   const access = yield* requireClassAccess(
-    ctx,
     forum.classId,
     forum.schoolId,
     userId

@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 /** The requested immutable attempt or section cannot accept this operation. */
@@ -14,4 +13,3 @@ export class TryoutAttemptStateError extends Schema.TaggedError<TryoutAttemptSta
     message: Schema.String,
   }
 ) {}
-export const TryoutAttemptStateErrorWire = failureWire(TryoutAttemptStateError);

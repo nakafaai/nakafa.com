@@ -1,4 +1,11 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { resend } from "@repo/backend/confect/emails/client";
 import {
   toWelcomeIntentError,
@@ -6,7 +13,6 @@ import {
 } from "@repo/backend/confect/emails/welcome/impl";
 import type { welcomeIntentReconciliationPhaseValidator } from "@repo/backend/confect/emails/welcome/reconciliation.spec";
 import { workflow } from "@repo/backend/confect/workflow";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Duration, Effect, flow, Result, type Schema } from "effect";
 export type WelcomeIntentReconciliationPhase = Schema.Schema.Type<
   typeof welcomeIntentReconciliationPhaseValidator
@@ -20,16 +26,16 @@ export const scheduleNextReconciliationPage = Effect.fn(
   "emails.welcome.scheduleReconciliation"
 )(
   function* (
-    ctx: MutationCtx,
     phase: WelcomeIntentReconciliationPhase,
-    page: { readonly continueCursor: string; readonly isDone: boolean }
+    page: {
+      readonly continueCursor: string;
+      readonly isDone: boolean;
+    }
   ) {
     if (page.isDone && phase !== "scheduled") {
       return;
     }
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
+    const scheduler = yield* Scheduler;
     yield* scheduler.runAfter(
       Duration.zero,
       refs.internal.emails.welcome.reconciliation
@@ -47,8 +53,9 @@ export const scheduleNextReconciliationPage = Effect.fn(
 export const reconcileWelcomeIntent = Effect.fn(
   "emails.welcome.reconcileIntent"
 )(
-  function* (ctx: MutationCtx, intent: Docs["welcomeEmailIntents"]) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (intent: Docs["welcomeEmailIntents"]) {
+    const ctx = yield* MutationCtxService;
+    const writer = yield* DatabaseWriter;
     const workflowId = "workflowId" in intent ? intent.workflowId : undefined;
     if (workflowId !== undefined) {
       const status = yield* tryWelcomeIntent(() =>
@@ -100,12 +107,8 @@ export const reconcileWelcomeIntent = Effect.fn(
 );
 export const reconcileWelcomeIntentLifecycleProgram = Effect.fn(
   "emails.welcome.reconcileLifecycle"
-)(function* (
-  ctx: MutationCtx,
-  phase: WelcomeIntentReconciliationPhase,
-  cursor: string | null
-) {
-  const page = yield* DatabaseReader.make(databaseSchema, ctx.db)
+)(function* (phase: WelcomeIntentReconciliationPhase, cursor: string | null) {
+  const page = yield* (yield* DatabaseReader)
     .table("welcomeEmailIntents")
     .index("by_phase", (query) => query.eq("phase", phase))
     .paginate({
@@ -116,13 +119,10 @@ export const reconcileWelcomeIntentLifecycleProgram = Effect.fn(
     })
     .pipe(Effect.mapError(toWelcomeIntentError));
   for (const intent of page.page) {
-    yield* reconcileWelcomeIntent(ctx, intent);
+    yield* reconcileWelcomeIntent(intent);
   }
-  yield* scheduleNextReconciliationPage(ctx, phase, page);
+  yield* scheduleNextReconciliationPage(phase, page);
   return null;
 });
 
 /** Finalizes terminal workflows, then releases non-cancellable email handles. */
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";

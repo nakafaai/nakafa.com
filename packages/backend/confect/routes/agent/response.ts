@@ -1,5 +1,5 @@
 import type { AgentHttpInputError } from "@repo/backend/confect/routes/agent/input";
-import type { AgentRateLimitError } from "@repo/backend/confect/routes/agent/limit";
+import type { AgentRateLimitError } from "@repo/backend/confect/routes/agent/quota";
 import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,

@@ -1,9 +1,10 @@
-import { FunctionImpl, GroupImpl, Scheduler } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   MutationCtx as MutationCtxService,
   QueryCtx as QueryCtxService,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import {
   toUserCleanupError,
@@ -33,8 +34,7 @@ const claimAccountDeletion = FunctionImpl.make(
   spec,
   "claimAccountDeletion",
   Effect.fn("auth.deletion.claimAccountDeletion")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* claimAccountDeletionProgram(ctx, args.authId, args.attemptId);
+    return yield* claimAccountDeletionProgram(args.authId, args.attemptId);
   })
 );
 const continueAccountDeletionCommit = FunctionImpl.make(
@@ -42,9 +42,7 @@ const continueAccountDeletionCommit = FunctionImpl.make(
   spec,
   "continueAccountDeletionCommit",
   Effect.fn("auth.deletion.continueAccountDeletionCommit")(function* (args) {
-    const ctx = yield* MutationCtxService;
     return yield* continueAccountDeletionCommitProgram(
-      ctx,
       args.authId,
       args.expectedPreparation
     );
@@ -59,11 +57,7 @@ const prepareCurrentAccountDeletion = FunctionImpl.make(
     const authUser = yield* Effect.promise(async () =>
       authReader.getAuthUser(ctx)
     );
-    return yield* prepareAccountDeletionProgram(
-      ctx,
-      authUser._id,
-      args.attemptId
-    );
+    return yield* prepareAccountDeletionProgram(authUser._id, args.attemptId);
   })
 );
 const cancelAccountDeletion = FunctionImpl.make(
@@ -71,9 +65,7 @@ const cancelAccountDeletion = FunctionImpl.make(
   spec,
   "cancelAccountDeletion",
   Effect.fn("auth.deletion.cancelAccountDeletion")(function* (args) {
-    const ctx = yield* MutationCtxService;
     return yield* cancelAccountDeletionBatch(
-      ctx,
       args.authId,
       args.expectedPreparation
     );
@@ -86,7 +78,6 @@ const cancelAccountDeletionAttempt = FunctionImpl.make(
   Effect.fn("auth.deletion.cancelAccountDeletionAttempt")(function* (args) {
     const ctx = yield* MutationCtxService;
     return yield* cancelAccountDeletionAttemptByToken(
-      ctx,
       args.attemptId,
       (authId) =>
         tryUserCleanup(() => authReader.getAnyUserById(ctx, authId)).pipe(
@@ -111,7 +102,6 @@ const getAccountDeletionAttemptStatus = FunctionImpl.make(
   Effect.fn("auth.deletion.getAccountDeletionAttemptStatus")(function* (args) {
     const ctx = yield* QueryCtxService;
     return yield* getAccountDeletionAttemptStatusProgram(
-      ctx,
       args.attemptId,
       (authId) =>
         tryUserCleanup(() => authReader.getAnyUserById(ctx, authId)).pipe(
@@ -125,14 +115,11 @@ const sweepAccountDeletionRetention = FunctionImpl.make(
   spec,
   "sweepAccountDeletionRetention",
   Effect.fn("auth.deletion.sweepAccountDeletionRetention")(function* () {
-    const ctx = yield* MutationCtxService;
     return yield* Effect.gen(function* () {
-      const scheduler = yield* Scheduler.Scheduler.pipe(
-        Effect.provide(Scheduler.layer(ctx.scheduler))
-      );
+      const scheduler = yield* Scheduler;
       const hasMoreCancellations =
-        yield* sweepAccountDeletionCancellationsProgram(ctx);
-      const hasMoreReceipts = yield* sweepAccountDeletionReceiptsProgram(ctx);
+        yield* sweepAccountDeletionCancellationsProgram();
+      const hasMoreReceipts = yield* sweepAccountDeletionReceiptsProgram();
       if (hasMoreCancellations || hasMoreReceipts) {
         yield* scheduler
           .runAfter(

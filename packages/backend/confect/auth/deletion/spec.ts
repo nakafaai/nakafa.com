@@ -1,6 +1,5 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE } from "@repo/backend/confect/auth/deletion/constants";
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 /** Raised when a browser attempt cannot prove its reversible phase was canceled. */
 export class AccountDeletionCancellationUnprovenError extends Schema.TaggedError<AccountDeletionCancellationUnprovenError>()(
@@ -10,10 +9,7 @@ export class AccountDeletionCancellationUnprovenError extends Schema.TaggedError
     message: Schema.String,
   }
 ) {}
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const AccountDeletionCancellationUnprovenErrorWire = failureWire(
-  AccountDeletionCancellationUnprovenError
-);
+
 export const accountDeletionRequestPhase = {
   deletion: "deletion",
   preparation: "preparation",

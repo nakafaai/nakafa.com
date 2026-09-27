@@ -1,4 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
 import { loadAttemptRuntimeBundle } from "@repo/backend/confect/tryouts/runtime/attempt/source";
 import { selectorIntegrity } from "@repo/backend/confect/tryouts/runtime/ownership";
 import type {
@@ -6,12 +8,10 @@ import type {
   TryoutQuestionSelector,
   TryoutSectionContentAccess,
 } from "@repo/backend/confect/tryouts/runtime/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
+type TryoutAttempt = Docs["tryoutAttempts"];
+type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 
 /** Projects protected selectors from already-loaded frozen placements. */
 export const projectTryoutSignedContent = Effect.fn(
@@ -19,22 +19,16 @@ export const projectTryoutSignedContent = Effect.fn(
 )(function* (input: {
   readonly answers: boolean;
   readonly attempt: TryoutAttempt;
-  readonly ctx: QueryCtx;
   readonly appLocale: AppLocaleCode;
   readonly placements: readonly TryoutPlacement[];
   readonly totalQuestions: number;
 }) {
-  if (input.attempt.appLocale !== input.appLocale) {
-    return yield* selectorIntegrity(
-      "Signed try-out attempt lost its locale or snapshot identity."
-    );
-  }
   if (input.placements.length !== input.totalQuestions) {
     return yield* selectorIntegrity(
       "Signed try-out section lost one or more frozen placements."
     );
   }
-  const bundle = yield* loadAttemptRuntimeBundle(input.ctx, input.attempt);
+  const bundle = yield* loadAttemptRuntimeBundle(input.attempt);
   const answers = input.answers
     ? yield* Effect.forEach(input.placements, (placement) =>
         makeAnswerSelector(
@@ -42,7 +36,8 @@ export const projectTryoutSignedContent = Effect.fn(
           bundle.bundleHash,
           input.appLocale,
           input.attempt.tryoutSnapshotId,
-          input.attempt.snapshotReleaseId
+          input.attempt.snapshotReleaseId,
+          input.attempt
         )
       )
     : [];
@@ -97,29 +92,35 @@ function makeQuestionSelector(
 }
 
 /** Builds one entitled answer selector from a frozen placement. */
-function makeAnswerSelector(
-  placement: TryoutPlacement,
-  bundleHash: string,
-  appLocale: AppLocaleCode,
-  snapshotId: string,
-  snapshotReleaseId: string
-) {
-  if (!(placement.answerArtifactHash && placement.answerContentKey)) {
-    return selectorIntegrity("Signed try-out answer selector is incomplete.");
+const makeAnswerSelector = Effect.fn("tryouts.selectors.makeAnswerSelector")(
+  function* (
+    placement: TryoutPlacement,
+    bundleHash: string,
+    appLocale: AppLocaleCode,
+    snapshotId: string,
+    snapshotReleaseId: string,
+    attempt: TryoutAttempt
+  ) {
+    if (!(placement.answerArtifactHash && placement.answerContentKey)) {
+      return yield* selectorIntegrity(
+        "Signed try-out answer selector is incomplete."
+      );
+    }
+    const answer = yield* readAttemptAnswer(attempt, placement, appLocale);
+    const selector: TryoutAnswerSelector = {
+      appLocale,
+      artifactHash: answer.artifactHash,
+      bundleHash,
+      contentHash: placement.contentHash,
+      contentKey: answer.contentKey,
+      delivery: "entitled",
+      questionOrder: placement.questionOrder,
+      sectionKey: placement.sectionKey,
+      snapshotReleaseId,
+      snapshotId,
+      sourcePath: placement.sourcePath,
+      sourceRevision: placement.sourceRevision,
+    };
+    return selector;
   }
-  const selector: TryoutAnswerSelector = {
-    appLocale,
-    artifactHash: placement.answerArtifactHash,
-    bundleHash,
-    contentHash: placement.contentHash,
-    contentKey: placement.answerContentKey,
-    delivery: "entitled",
-    questionOrder: placement.questionOrder,
-    sectionKey: placement.sectionKey,
-    snapshotReleaseId,
-    snapshotId,
-    sourcePath: placement.sourcePath,
-    sourceRevision: placement.sourceRevision,
-  };
-  return Effect.succeed(selector);
-}
+);

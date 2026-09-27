@@ -1,10 +1,14 @@
 "use client";
 
+import type { Ref } from "@confect/core";
+import { QueryResult, useQuery } from "@confect/react";
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
-import type { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
+import { products } from "@repo/backend/confect/utils/polar/products";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { type Preloaded, usePreloadedQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
+
 import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
 import { FormBlock } from "@/components/shared/form-block";
@@ -12,8 +16,8 @@ import { useBillingNavigation } from "@/lib/billing/use-navigation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 interface UserSettingsSubscriptionsProps {
-  preloadedSubscription: Preloaded<
-    typeof api.subscriptions.queries.hasActiveSubscription
+  initialSubscription: Ref.Returns<
+    typeof refs.public.subscriptions.queries.hasActiveSubscription
   >;
 }
 
@@ -22,14 +26,24 @@ interface UserSettingsSubscriptionsProps {
  * resolved, so the plan action never swaps between two labels.
  */
 export function UserSettingsSubscriptions({
-  preloadedSubscription,
+  initialSubscription,
 }: UserSettingsSubscriptionsProps) {
   const locale = useLocale();
   const t = useTranslations("Auth");
 
   const billing = useBillingNavigation();
 
-  const hasSubscription = usePreloadedQuery(preloadedSubscription);
+  const { isAuthenticated } = useConvexAuth();
+  const subscription = useQuery(
+    refs.public.subscriptions.queries.hasActiveSubscription,
+    isAuthenticated ? { productId: products.pro.id } : "skip"
+  );
+  if (QueryResult.isFailure(subscription)) {
+    throw subscription.error;
+  }
+  const hasSubscription = QueryResult.isSuccess(subscription)
+    ? subscription.value
+    : initialSubscription;
   const handleCheckout = () => {
     if (!isActiveLocale(locale)) {
       return;

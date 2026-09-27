@@ -51,6 +51,7 @@ describe("tryouts/queries/runtime", () => {
     });
     await expect(
       owner.query(api.tryouts.queries.runtime.getSetAttemptState, {
+        locale: "id",
         attemptId: seeded.attemptId,
       })
     ).rejects.toMatchObject({
@@ -90,6 +91,7 @@ describe("tryouts/queries/runtime", () => {
       });
       await expect(
         owner.query(api.tryouts.queries.runtime.getSectionAttemptState, {
+          locale: "id",
           attemptId: seeded.attemptId,
           sectionKey: TRYOUT_SECTION_KEY,
         })
@@ -151,6 +153,7 @@ describe("tryouts/queries/runtime", () => {
 
         const exact = yield* Effect.promise(() =>
           authed.query(api.tryouts.queries.runtime.getSetAttemptState, {
+            locale: "id",
             attemptId: started.attemptId,
           })
         );
@@ -201,6 +204,7 @@ describe("tryouts/queries/runtime", () => {
         );
         yield* Effect.promise(async () => {
           const args = {
+            locale: "id" as const,
             attemptId: started.attemptId,
             sectionKey: TRYOUT_START_SECTION,
           };
@@ -218,6 +222,7 @@ describe("tryouts/queries/runtime", () => {
           ).toBeNull();
           expect(
             await t.query(api.tryouts.queries.runtime.getSetAttemptState, {
+              locale: "id",
               attemptId: started.attemptId,
             })
           ).toBeNull();
@@ -234,7 +239,7 @@ describe("tryouts/queries/runtime", () => {
           expect(
             await outsider.query(
               api.tryouts.queries.runtime.getSetAttemptState,
-              { attemptId: started.attemptId }
+              { locale: "id", attemptId: started.attemptId }
             )
           ).toBeNull();
           expect(
@@ -251,6 +256,7 @@ describe("tryouts/queries/runtime", () => {
           })
         );
         const args = {
+          locale: "id" as const,
           attemptId: started.attemptId,
           sectionKey: TRYOUT_START_SECTION,
         };

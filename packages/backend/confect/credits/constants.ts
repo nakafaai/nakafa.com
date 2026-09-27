@@ -1,6 +1,9 @@
+/**
+ * Credit grant configuration per plan.
+ * Extensible for future plans: max, ultra, enterprise, etc.
+ */
 import type { CreditGrantType } from "@repo/backend/confect/credits/schema";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
-
 /**
  * Credit grant configuration per plan.
  * Extensible for future plans: max, ultra, enterprise, etc.

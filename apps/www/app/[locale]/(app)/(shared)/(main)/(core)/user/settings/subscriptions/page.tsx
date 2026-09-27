@@ -1,17 +1,14 @@
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
 import { products } from "@repo/backend/confect/utils/polar/products";
-import { api } from "@repo/backend/convex/_generated/api";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserSettingsSubscriptions } from "@/components/user/settings/subscriptions";
-import { preloadAuthQuery } from "@/lib/auth/server";
+import { env } from "@/env";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import {
-  admitUserSettingsRoute,
-  captureUserSettingsPreload,
-  preloadUserSettingsQuery,
-} from "@/lib/settings/server";
+import { admitUserSettingsRoute } from "@/lib/settings/server";
 
 export async function generateMetadata({
   params,
@@ -43,24 +40,21 @@ async function AuthenticatedSubscriptions({
 }: {
   params: PageProps<"/[locale]/user/settings/subscriptions">["params"];
 }) {
-  await admitUserSettingsRoute((await params).locale);
-
+  const { token } = await admitUserSettingsRoute((await params).locale);
   const subscription = await Effect.runPromise(
-    captureUserSettingsPreload(
-      preloadUserSettingsQuery(() =>
-        preloadAuthQuery(api.subscriptions.queries.hasActiveSubscription, {
+    HttpClient.HttpClient.pipe(
+      Effect.flatMap((client) =>
+        client.query(refs.public.subscriptions.queries.hasActiveSubscription, {
           productId: products.pro.id,
         })
+      ),
+      Effect.provide(
+        HttpClient.layer(
+          env.NEXT_PUBLIC_CONVEX_URL,
+          token ? { auth: token } : {}
+        )
       )
     )
   );
-
-  return Option.match(subscription, {
-    onNone: () => null,
-    onSome: (preloadedSubscription) => (
-      <UserSettingsSubscriptions
-        preloadedSubscription={preloadedSubscription}
-      />
-    ),
-  });
+  return <UserSettingsSubscriptions initialSubscription={subscription} />;
 }

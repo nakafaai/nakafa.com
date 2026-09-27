@@ -15,7 +15,7 @@ import {
   makePageRuntimeSource,
   TEST_PUBLICATION_RELEASE,
 } from "@repo/backend/test/content/publication";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import {
   getPublishedPageCatalog,
   readPublishedPageCatalog,
@@ -23,7 +23,6 @@ import {
   verifyPublishedPageCatalog,
 } from "@/lib/content/page/catalog";
 import { testPageProjection } from "@/test/content-page";
-import { createTestNativeQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -40,15 +39,28 @@ const dePageProjection = {
   artifactLocale: ArtifactLocaleSchema.make("de"),
   publicPath: PublicPathSchema.make("nutzungsbedingungen"),
 };
-
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: runtimeQueryMock,
-}));
-
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
 }));
-
 describe("published Page catalog", () => {
   beforeEach(() => {
     cacheMock.mockReset();
@@ -60,7 +72,6 @@ describe("published Page catalog", () => {
       })
     );
   });
-
   it.effect(
     "reads the inherited Page and active release identity from authenticated snapshot rows",
     () =>
@@ -85,30 +96,25 @@ describe("published Page catalog", () => {
           },
         ]);
         const context = yield* createTestPublication(fixture.source);
-        runtimeQueryMock.mockImplementation(createTestNativeQuery(context));
-
+        runtimeQueryMock.mockImplementation(context.query);
         expect(yield* readPublishedPageCatalog()).toEqual({
           activeReleaseId: fixture.state.activeReleaseId,
           projections: locales.map(({ projection }) => projection),
         });
       })
   );
-
   it.effect("decodes every verified Page projection with its release pin", () =>
     Effect.gen(function* () {
       const catalog = yield* readPublishedPageCatalog();
-
       expect(catalog).toEqual({
         activeReleaseId,
         projections: [testPageProjection],
       });
     })
   );
-
   it.effect("caches the complete signed Page catalog", () =>
     Effect.gen(function* () {
       const catalog = yield* Effect.tryPromise(() => getPublishedPageCatalog());
-
       expect(catalog).toEqual({
         activeReleaseId,
         projections: [testPageProjection],
@@ -116,26 +122,33 @@ describe("published Page catalog", () => {
       expect(cacheMock).toHaveBeenCalledWith("page");
     })
   );
-
   it.effect.each([
-    ["unmanaged", { activeReleaseId, managed: false, projectionJson: [] }],
+    [
+      "unmanaged",
+      {
+        activeReleaseId,
+        managed: false,
+        projectionJson: [],
+      },
+    ],
     [
       "missing release",
-      { activeReleaseId: null, managed: true, projectionJson: [] },
+      {
+        activeReleaseId: null,
+        managed: true,
+        projectionJson: [],
+      },
     ],
   ])("rejects an %s Page catalog", ([, result]) =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(Effect.succeed(result));
-
       const failure = yield* readPublishedPageCatalog().pipe(Effect.flip);
-
       expect(failure).toMatchObject({
         _tag: "PublishedProjectionError",
         publicPath: "pages",
       });
     })
   );
-
   it.effect("rejects malformed Page projection JSON", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(
@@ -145,16 +158,13 @@ describe("published Page catalog", () => {
           projectionJson: ["{"],
         })
       );
-
       const failure = yield* readPublishedPageCatalog().pipe(Effect.flip);
-
       expect(failure).toMatchObject({
         _tag: "PublishedProjectionError",
         publicPath: "pages",
       });
     })
   );
-
   it.effect.each(["search", "lehrplaene/merdeka"])(
     "rejects a Page shadowed by the application route %s",
     (publicPath) =>
@@ -172,9 +182,7 @@ describe("published Page catalog", () => {
             projectionJson: [JSON.stringify(projection)],
           })
         );
-
         const failure = yield* readPublishedPageCatalog().pipe(Effect.flip);
-
         expect(failure).toMatchObject({
           _tag: "PublishedProjectionError",
           appLocale: "de",
@@ -182,7 +190,6 @@ describe("published Page catalog", () => {
         });
       })
   );
-
   it.effect(
     "verifies the exact runtime Page against its localized catalog",
     () =>
@@ -195,7 +202,6 @@ describe("published Page catalog", () => {
           projection: testPageProjection,
         });
         expect(verified).toEqual([testPageProjection]);
-
         const independentlyCachedPage = {
           activeReleaseId: ReleaseIdSchema.make("release-next"),
           projection: testPageProjection,
@@ -203,7 +209,6 @@ describe("published Page catalog", () => {
         expect(
           yield* verifyPublishedPageCatalog(catalog, independentlyCachedPage)
         ).toEqual([testPageProjection]);
-
         const projectionFailure = yield* verifyPublishedPageCatalog(catalog, {
           projection: {
             ...testPageProjection,
@@ -216,7 +221,6 @@ describe("published Page catalog", () => {
         });
       })
   );
-
   it.effect("resolves signed locale counterparts without a route map", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValue(
@@ -230,7 +234,6 @@ describe("published Page catalog", () => {
           ].map((projection) => JSON.stringify(projection)),
         })
       );
-
       const found = yield* readPublishedPageLocalePath({
         currentLocale: "en",
         locale: "de",
@@ -240,14 +243,14 @@ describe("published Page catalog", () => {
         kind: "found",
         publicPath: "nutzungsbedingungen",
       });
-
       const unmanaged = yield* readPublishedPageLocalePath({
         currentLocale: "en",
         locale: "de",
         publicPath: "other-page",
       });
-      expect(unmanaged).toEqual({ kind: "unmanaged" });
-
+      expect(unmanaged).toEqual({
+        kind: "unmanaged",
+      });
       runtimeQueryMock.mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId,
@@ -260,11 +263,14 @@ describe("published Page catalog", () => {
         locale: "de",
         publicPath: "terms-of-service",
       });
-      expect(missing).toEqual({ kind: "missing" });
+      expect(missing).toEqual({
+        kind: "missing",
+      });
     })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

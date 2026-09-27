@@ -1,7 +1,8 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { triggers } from "@repo/backend/confect/functions";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { tryoutScoresHandler } from "@repo/backend/confect/triggers/tryouts/scores";
@@ -9,7 +10,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { ensureTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { convexTest } from "convex-test";
-import { Struct } from "effect";
+import { Effect, Struct } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 
@@ -108,7 +109,7 @@ describe("triggers/tryouts/scores", () => {
           )
       )
     ).rejects.toMatchObject({
-      data: { code: "TRYOUT_SCORE_ANALYTICS_FAILED" },
+      code: "TRYOUT_SCORE_ANALYTICS_FAILED",
     });
     await expect(
       t.query((ctx) => ctx.db.query("tryoutScores").collect())
@@ -117,7 +118,6 @@ describe("triggers/tryouts/scores", () => {
       t.query((ctx) => ctx.db.system.query("_scheduled_functions").collect())
     ).resolves.toEqual([]);
   });
-
   it("queues one deletion-aware event when a score is first inserted", async () => {
     const t = createTryoutScoreTriggerTest();
     const identity = await t.mutation(async (ctx) => {
@@ -126,13 +126,17 @@ describe("triggers/tryouts/scores", () => {
         decidedAt: NOW,
         userId,
       });
-      await runConvexProgram(
-        tryoutScoresHandler(ctx, {
+      await Effect.runPromise(
+        tryoutScoresHandler({
           id: score._id,
           newDoc: score,
           oldDoc: null,
           operation: "insert",
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       return {
         userId,
@@ -167,21 +171,29 @@ describe("triggers/tryouts/scores", () => {
     const t = createTryoutScoreTriggerTest();
     await t.mutation(async (ctx) => {
       const { score } = await insertScoreGraph(ctx);
-      await runConvexProgram(
-        tryoutScoresHandler(ctx, {
+      await Effect.runPromise(
+        tryoutScoresHandler({
           id: score._id,
           newDoc: score,
           oldDoc: score,
           operation: "update",
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
-      await runConvexProgram(
-        tryoutScoresHandler(ctx, {
+      await Effect.runPromise(
+        tryoutScoresHandler({
           id: score._id,
           newDoc: null,
           oldDoc: score,
           operation: "delete",
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
     });
     const scheduledJobs = await t.query(async (ctx) =>

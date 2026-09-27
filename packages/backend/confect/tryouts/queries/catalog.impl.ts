@@ -1,8 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/tryouts/queries/catalog.spec";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { readFeaturedTryout } from "@repo/backend/content/tryout/featured";
 import {
   readTryoutLocalizedPath,
@@ -23,9 +22,8 @@ const getFeaturedQuestion = FunctionImpl.make(
   spec,
   "getFeaturedQuestion",
   Effect.fn("tryouts.queries.catalog.getFeaturedQuestion")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readFeaturedTryout(args.appLocale).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
+      Effect.provide(tryoutLayer)
     );
   })
 );
@@ -34,10 +32,7 @@ const getMetadata = FunctionImpl.make(
   spec,
   "getMetadata",
   Effect.fn("tryouts.queries.catalog.getMetadata")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readTryoutMetadata(args).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
-    );
+    return yield* readTryoutMetadata(args).pipe(Effect.provide(tryoutLayer));
   })
 );
 const getLocalizedPath = FunctionImpl.make(
@@ -45,9 +40,8 @@ const getLocalizedPath = FunctionImpl.make(
   spec,
   "getLocalizedPath",
   Effect.fn("tryouts.queries.catalog.getLocalizedPath")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readTryoutLocalizedPath(args).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
+      Effect.provide(tryoutLayer)
     );
   })
 );
@@ -56,10 +50,7 @@ const getHubPage = FunctionImpl.make(
   spec,
   "getHubPage",
   Effect.fn("tryouts.queries.catalog.getHubPage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readTryoutHubPage(args).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
-    );
+    return yield* readTryoutHubPage(args).pipe(Effect.provide(tryoutLayer));
   })
 );
 const getCountryPage = FunctionImpl.make(
@@ -67,10 +58,7 @@ const getCountryPage = FunctionImpl.make(
   spec,
   "getCountryPage",
   Effect.fn("tryouts.queries.catalog.getCountryPage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readTryoutCountryPage(args).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
-    );
+    return yield* readTryoutCountryPage(args).pipe(Effect.provide(tryoutLayer));
   })
 );
 const getExamPage = FunctionImpl.make(
@@ -78,10 +66,7 @@ const getExamPage = FunctionImpl.make(
   spec,
   "getExamPage",
   Effect.fn("tryouts.queries.catalog.getExamPage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readTryoutExamPage(args).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
-    );
+    return yield* readTryoutExamPage(args).pipe(Effect.provide(tryoutLayer));
   })
 );
 const getTrackPage = FunctionImpl.make(
@@ -89,10 +74,7 @@ const getTrackPage = FunctionImpl.make(
   spec,
   "getTrackPage",
   Effect.fn("tryouts.queries.catalog.getTrackPage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readTryoutTrackPage(args).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
-    );
+    return yield* readTryoutTrackPage(args).pipe(Effect.provide(tryoutLayer));
   })
 );
 const getSetPage = FunctionImpl.make(
@@ -100,10 +82,7 @@ const getSetPage = FunctionImpl.make(
   spec,
   "getSetPage",
   Effect.fn("tryouts.queries.catalog.getSetPage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readTryoutSetPage(args).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
-    );
+    return yield* readTryoutSetPage(args).pipe(Effect.provide(tryoutLayer));
   })
 );
 const getSectionPage = FunctionImpl.make(
@@ -111,10 +90,7 @@ const getSectionPage = FunctionImpl.make(
   spec,
   "getSectionPage",
   Effect.fn("tryouts.queries.catalog.getSectionPage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readTryoutSectionPage(args).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
-    );
+    return yield* readTryoutSectionPage(args).pipe(Effect.provide(tryoutLayer));
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

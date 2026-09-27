@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Schema } from "effect";
 
 /** Proves one release is an exact active or verified-candidate rollback source. */
@@ -14,7 +14,7 @@ export default GroupSpec.make()
         rollbackOfManifestHash: Schema.String,
       }),
       returns: () => Schema.String,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -27,6 +27,6 @@ export default GroupSpec.make()
         rollbackOfManifestHash: Schema.String,
       }),
       returns: () => Schema.String,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

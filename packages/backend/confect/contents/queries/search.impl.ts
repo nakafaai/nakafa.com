@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { validateContentSearchInput } from "@repo/backend/confect/contents/helpers/search/input";
 import { readContentSearchDocuments } from "@repo/backend/confect/contents/helpers/search/read";
 import { buildContentSearchResult } from "@repo/backend/confect/contents/helpers/search/result";
@@ -22,18 +21,12 @@ const search = FunctionImpl.make(
   spec,
   "search",
   Effect.fn("contents.queries.search.search")(function* (args) {
-    const ctx = yield* QueryCtxService;
     const queryTexts = yield* validateContentSearchInput(args);
     const scanLimit = Math.min(
       args.offset + args.limit + 1,
       NAKAFA_AGENT_SEARCH_WINDOW
     );
-    return yield* readContentSearchDocuments(
-      ctx,
-      args,
-      queryTexts,
-      scanLimit
-    ).pipe(
+    return yield* readContentSearchDocuments(args, queryTexts, scanLimit).pipe(
       Effect.map((documents) =>
         buildContentSearchResult(args, documents, queryTexts)
       )

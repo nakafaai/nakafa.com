@@ -4,7 +4,6 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { cleanupForumData } from "@repo/backend/confect/classes/forums/cleanup";
@@ -73,7 +72,9 @@ const cleanupDeletedClass = FunctionImpl.make(
       yield* scheduler.runAfter(
         Duration.zero,
         refs.internal.triggers.schools.cleanup.cleanupDeletedForum,
-        { forumId: forum._id }
+        {
+          forumId: forum._id,
+        }
       );
       yield* writer
         .table("schoolClassForums")
@@ -111,15 +112,13 @@ const cleanupDeletedClass = FunctionImpl.make(
     return null;
   })
 );
-
 const cleanupDeletedForum = FunctionImpl.make(
   databaseSchema,
   spec,
   "cleanupDeletedForum",
   Effect.fn("triggers.schools.cleanup.cleanupDeletedForum")(function* (args) {
-    const ctx = yield* MutationCtx;
     const scheduler = yield* Scheduler;
-    if (yield* cleanupForumData(ctx, args.forumId)) {
+    if (yield* cleanupForumData(args.forumId)) {
       yield* scheduler.runAfter(
         Duration.zero,
         refs.internal.triggers.schools.cleanup.cleanupDeletedForum,
@@ -129,7 +128,6 @@ const cleanupDeletedForum = FunctionImpl.make(
     return null;
   })
 );
-
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(cleanupDeletedClass),
   Layer.provide(cleanupDeletedForum),

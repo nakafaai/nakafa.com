@@ -8,19 +8,23 @@ import {
 import { useClipboard } from "@mantine/hooks";
 import { Action, Actions } from "@repo/design-system/components/ai/actions";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "cn";
 import { useTranslations } from "next-intl";
 
 import { useChat } from "@/components/ai/context/use-chat";
-import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useMessage } from "@/components/ai/context/use-message";
+import { ninaResponseFeedback } from "@/components/ai/feedback";
 import { useViewer } from "@/lib/identity/client";
 
 export function AiChatMessageActions() {
   const t = useTranslations("Ai");
 
-  const messageId = useMessage((state) => state.message.id);
-  const role = useMessage((state) => state.message.role);
+  const order = useMessage((state) => state.message.order);
+  const canRetry = useMessage(
+    ({ message, turn }) =>
+      message.role !== "assistant" ||
+      turn?.state.status !== "failed" ||
+      ninaResponseFeedback[turn.state.reason ?? "unknown"].action === "retry"
+  );
   const text = useMessage((state) => {
     const textParts: string[] = [];
 
@@ -34,32 +38,33 @@ export function AiChatMessageActions() {
   });
   const hasText = text.trim().length > 0;
 
-  const regenerate = useChat((state) => state.chat.regenerate);
-  const status = useChat((state) => state.chat.status);
+  const { retry, busy } = useChat((state) => state);
 
-  const chat = useCurrentChat((s) => s.chat);
+  const chat = useChat((s) => s.chat);
 
   const currentUser = useViewer((s) => s.account);
   const showActions = chat?.userId === currentUser?.appUser._id;
 
   const clipboard = useClipboard({ timeout: 1000 });
 
-  const disabled = status === "submitted" || status === "streaming";
+  const disabled = busy;
 
   if (!showActions) {
     return null;
   }
 
   return (
-    <Actions className={cn(role === "assistant" && "my-6")}>
-      <Action
-        disabled={disabled}
-        label={t("retry-message")}
-        onClick={() => regenerate({ messageId })}
-        tooltip={t("retry-message")}
-      >
-        <HugeIcons icon={Refresh03Icon} />
-      </Action>
+    <Actions>
+      {canRetry ? (
+        <Action
+          disabled={disabled}
+          label={t("retry-message")}
+          onClick={() => retry(order)}
+          tooltip={t("retry-message")}
+        >
+          <HugeIcons icon={Refresh03Icon} />
+        </Action>
+      ) : null}
       {hasText ? (
         <Action
           label={t("copy-message")}

@@ -1,5 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { cleanupAttemptScale } from "@repo/backend/confect/tryouts/runtime/scale";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -12,13 +13,15 @@ class ScaleStorageUnavailable extends Data.TaggedError(
 )<{
   readonly message: string;
 }> {}
-
 afterEach(() => vi.restoreAllMocks());
 
 /** Seeds one attempt-owned historical scale graph. */
 function seedAttemptScale(
   suffix: string,
-  counts: { readonly items: number; readonly runs: number } = {
+  counts: {
+    readonly items: number;
+    readonly runs: number;
+  } = {
     items: 1,
     runs: 1,
   }
@@ -76,15 +79,20 @@ function seedAttemptScale(
     });
     const attempt = await ctx.db.get(runtime.attemptId);
     assert.ok(attempt);
-    return { attempt, scaleVersionId };
+    return {
+      attempt,
+      scaleVersionId,
+    };
   };
 }
-
 describe("tryouts/runtime/scale", () => {
   it("rolls back the whole child page and returns a typed failure when storage deletion fails", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(
-      seedAttemptScale("atomic-cleanup", { items: 2, runs: 1 })
+      seedAttemptScale("atomic-cleanup", {
+        items: 2,
+        runs: 1,
+      })
     );
     const read = () =>
       t.query(async (ctx) => ({
@@ -100,28 +108,48 @@ describe("tryouts/runtime/scale", () => {
         vi.spyOn(ctx.db, "delete")
           .mockImplementationOnce(original)
           .mockRejectedValueOnce(
-            new ScaleStorageUnavailable({ message: "storage unavailable" })
+            new ScaleStorageUnavailable({
+              message: "storage unavailable",
+            })
           );
-        return runConvexProgram(cleanupAttemptScale(ctx, seeded.attempt));
+        return Effect.runPromise(
+          cleanupAttemptScale(seeded.attempt).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        );
       })
-    ).rejects.toMatchObject({ data: { code: "TRYOUT_RUNTIME_FAILED" } });
+    ).rejects.toMatchObject({
+      code: "TRYOUT_RUNTIME_FAILED",
+    });
     expect(await read()).toEqual(before);
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(cleanupAttemptScale(ctx, seeded.attempt))
+        Effect.runPromise(
+          cleanupAttemptScale(seeded.attempt).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
     ).resolves.toBe(true);
     expect((await read()).items).toEqual([]);
   });
-
   it.effect("deletes every child page before deleting an owned scale", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
-        t.mutation(seedAttemptScale("bounded-cleanup", { items: 33, runs: 33 }))
+        t.mutation(
+          seedAttemptScale("bounded-cleanup", {
+            items: 33,
+            runs: 33,
+          })
+        )
       );
       const progress: boolean[] = [];
-
       for (let page = 0; page < 8; page += 1) {
         const attempt = yield* Effect.promise(() =>
           t.query((ctx) => ctx.db.get(seeded.attempt._id))
@@ -129,7 +157,13 @@ describe("tryouts/runtime/scale", () => {
         assert.ok(attempt);
         const changed = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(cleanupAttemptScale(ctx, attempt))
+            Effect.runPromiseWith(runtimeServices)(
+              cleanupAttemptScale(attempt).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         );
         progress.push(changed);
@@ -137,7 +171,6 @@ describe("tryouts/runtime/scale", () => {
           break;
         }
       }
-
       expect(progress).toEqual([true, true, true, true, true, false]);
       const state = yield* Effect.promise(() =>
         t.query(async (ctx) => ({
@@ -147,13 +180,17 @@ describe("tryouts/runtime/scale", () => {
           scale: await ctx.db.get(seeded.scaleVersionId),
         }))
       );
-      expect(state).toMatchObject({ items: [], runs: [], scale: null });
+      expect(state).toMatchObject({
+        items: [],
+        runs: [],
+        scale: null,
+      });
       expect(state.attempt?.scaleVersionId).toBeUndefined();
     })
   );
-
   it.effect("preserves a scale shared by another attempt", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
         t.mutation(seedAttemptScale("shared-attempt"))
@@ -171,10 +208,15 @@ describe("tryouts/runtime/scale", () => {
           });
         })
       );
-
       const changed = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(cleanupAttemptScale(ctx, seeded.attempt))
+          Effect.runPromiseWith(runtimeServices)(
+            cleanupAttemptScale(seeded.attempt).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
         )
       );
       expect(changed).toBe(false);
@@ -185,9 +227,9 @@ describe("tryouts/runtime/scale", () => {
       );
     })
   );
-
   it.effect("preserves a scale referenced by an immutable score", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
         t.mutation(seedAttemptScale("shared-score"))
@@ -212,19 +254,24 @@ describe("tryouts/runtime/scale", () => {
           })
         )
       );
-
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(cleanupAttemptScale(ctx, seeded.attempt))
+            Effect.runPromiseWith(runtimeServices)(
+              cleanupAttemptScale(seeded.attempt).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         ).resolves.toBe(false)
       );
     })
   );
-
   it.effect("ignores current scales and rejects a missing owned scale", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const attempt = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
@@ -241,7 +288,13 @@ describe("tryouts/runtime/scale", () => {
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(cleanupAttemptScale(ctx, attempt))
+            Effect.runPromiseWith(runtimeServices)(
+              cleanupAttemptScale(attempt).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         ).resolves.toBe(false)
       );
@@ -255,16 +308,27 @@ describe("tryouts/runtime/scale", () => {
             status: "official",
             tryoutSnapshotId: "snapshot:current-scale",
           });
-          await ctx.db.patch("tryoutAttempts", attempt._id, { scaleVersionId });
+          await ctx.db.patch("tryoutAttempts", attempt._id, {
+            scaleVersionId,
+          });
           const stored = await ctx.db.get(attempt._id);
           assert.ok(stored);
-          return { attempt: stored, scaleVersionId };
+          return {
+            attempt: stored,
+            scaleVersionId,
+          };
         })
       );
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(cleanupAttemptScale(ctx, current.attempt))
+            Effect.runPromiseWith(runtimeServices)(
+              cleanupAttemptScale(current.attempt).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         ).resolves.toBe(false)
       );
@@ -276,10 +340,16 @@ describe("tryouts/runtime/scale", () => {
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(cleanupAttemptScale(ctx, current.attempt))
+            Effect.runPromiseWith(runtimeServices)(
+              cleanupAttemptScale(current.attempt).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         ).rejects.toMatchObject({
-          data: { code: "TRYOUT_HISTORY_SCALE_MISSING" },
+          code: "TRYOUT_HISTORY_SCALE_MISSING",
         })
       );
     })

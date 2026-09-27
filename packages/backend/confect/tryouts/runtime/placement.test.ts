@@ -1,6 +1,7 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import schema from "@repo/backend/convex/schema";
@@ -35,7 +36,9 @@ const insertRuntime = Effect.fn("tryouts.runtime.placement.test.insertRuntime")(
         name: "Placement",
       })
     );
-    const set = makeTryoutSet({ publicPath: SET_ROUTE });
+    const set = makeTryoutSet({
+      publicPath: SET_ROUTE,
+    });
     const section = makeTryoutSection({
       publicPath: ROUTE,
       questionSourcePath: `packages/corpus/${SOURCE}`,
@@ -54,26 +57,26 @@ const insertRuntime = Effect.fn("tryouts.runtime.placement.test.insertRuntime")(
       })
     );
     const attempt = yield* Effect.promise(() => ctx.db.get(attemptId));
-
     if (!attempt) {
       return yield* Effect.die("Expected one signed attempt fixture.");
     }
-
-    return { attempt, source };
+    return {
+      attempt,
+      source,
+    };
   }
 );
-
 describe("tryouts/runtime/placement", () => {
   it.effect("freezes the exact signed placement facts", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
-
       const placement = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.gen(function* () {
               const runtime = yield* insertRuntime(ctx);
-              yield* createAttemptPlacements(ctx, runtime);
+              yield* createAttemptPlacements(runtime);
               return yield* Effect.promise(() =>
                 ctx.db
                   .query("tryoutAttemptPlacements")
@@ -86,27 +89,31 @@ describe("tryouts/runtime/placement", () => {
                   )
                   .unique()
               );
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           )
         )
       );
-
       expect(placement).toMatchObject({
         contentHash: TRYOUT_TEST_CONTENT_HASH,
-        responseSpec: { kind: "single-choice" },
+        responseSpec: {
+          kind: "single-choice",
+        },
         sourceRevision: "2027",
       });
       expect(placement).not.toHaveProperty("questionId");
     })
   );
-
   it.effect("rejects an incomplete signed placement snapshot", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
-
       const failure = yield* Effect.tryPromise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.gen(function* () {
               const runtime = yield* insertRuntime(ctx);
               const section = runtime.source.snapshot.sections[0];
@@ -115,38 +122,46 @@ describe("tryouts/runtime/placement", () => {
                   "Expected one signed section fixture."
                 );
               }
-
-              yield* createAttemptPlacements(ctx, {
+              yield* createAttemptPlacements({
                 attempt: runtime.attempt,
                 source: {
                   ...runtime.source,
                   snapshot: {
                     ...runtime.source.snapshot,
-                    sections: [{ ...section, placements: [] }],
+                    sections: [
+                      {
+                        ...section,
+                        placements: [],
+                      },
+                    ],
                   },
                 },
               });
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           )
         )
       ).pipe(Effect.flip);
       expect(failure.cause).toEqual(
         expect.objectContaining({
-          message: expect.stringContaining("TRYOUT_SECTION_SNAPSHOT_MISMATCH"),
+          _tag: "TryoutRuntimeError",
+          code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
         })
       );
     })
   );
-
   it.effect(
     "rejects a canonical placement beyond the section read budget",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
-
         const failure = yield* Effect.tryPromise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const runtime = yield* insertRuntime(ctx);
                 const section = runtime.source.snapshot.sections[0];
@@ -165,8 +180,7 @@ describe("tryouts/runtime/placement", () => {
                     "Expected one signed placement fixture."
                   );
                 }
-
-                yield* createAttemptPlacements(ctx, {
+                yield* createAttemptPlacements({
                   attempt: runtime.attempt,
                   source: {
                     ...runtime.source,
@@ -200,7 +214,11 @@ describe("tryouts/runtime/placement", () => {
                     },
                   },
                 });
-              })
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         ).pipe(Effect.flip);

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { chatResponseFailureCode } from "@repo/ai/config/generation";
+import { chatResponseFailureCode } from "@repo/backend/confect/nina/config/generation";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,

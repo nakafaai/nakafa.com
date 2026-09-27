@@ -1,7 +1,8 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   Empty,
   EmptyContent,
@@ -13,7 +14,6 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { useMutation } from "convex/react";
 import { Data, Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
@@ -28,7 +28,7 @@ class TryoutReviewImpressionError extends Data.TaggedError(
 export function TryoutReviewUpgrade() {
   const t = useTranslations("Tryouts");
   const trackPaywall = useMutation(
-    api.tryouts.mutations.access.trackPaywallView
+    refs.public.tryouts.mutations.access.trackPaywallView
   );
 
   useEffect(() => {
@@ -37,6 +37,13 @@ export function TryoutReviewUpgrade() {
         try: () => trackPaywall({ source: "review" }),
         catch: (cause) => new TryoutReviewImpressionError({ cause }),
       }).pipe(
+        Effect.flatMap((result) =>
+          Effect.fromResult(result).pipe(
+            Effect.mapError(
+              (cause) => new TryoutReviewImpressionError({ cause })
+            )
+          )
+        ),
         Effect.catchTag("TryoutReviewImpressionError", (error) =>
           reportClientException(error, { source: "tryout-paywall-view" })
         )

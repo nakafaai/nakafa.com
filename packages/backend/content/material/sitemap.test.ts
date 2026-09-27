@@ -1,10 +1,14 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { CONTENT_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/bucket";
 import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import { convexMaterialLayer } from "@repo/backend/content/material/convex";
+import { materialLayer } from "@repo/backend/content/material/confect";
 import {
   readMaterialBuckets,
   readMaterialSitemap,
@@ -17,43 +21,71 @@ import {
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 
 describe("contentRelease/material/sitemap", () => {
   it("batches sitemap buckets without repeating publication reads", async () => {
     const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(
-      target,
-      Array.from({ length: 10 }, (_, index) =>
-        makeMaterialProjection("en", index + 1)
-      ),
-      ["en"]
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog(
+          Array.from(
+            {
+              length: 10,
+            },
+            (_, index) => makeMaterialProjection("en", index + 1)
+          ),
+          ["en"]
+        ).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const inventory = await target.query(
       api.contentRelease.material.sitemapBuckets,
-      { appLocale: "en" }
+      {
+        appLocale: "en",
+      }
     );
     const buckets = inventory.buckets.slice(0, MATERIAL_SITEMAP_BUCKET_LIMIT);
     assert(buckets.length === MATERIAL_SITEMAP_BUCKET_LIMIT);
     const previous = await Promise.all(
       buckets.map((bucket) =>
         target.query(async (ctx) => {
-          const page = await runConvexProgram(
+          const page = await Effect.runPromise(
             readMaterialSitemap("en", [bucket]).pipe(
-              Effect.provide(convexMaterialLayer(ctx))
+              Effect.provide(
+                Layer.provideMerge(
+                  materialLayer,
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
             )
           );
-          return { page, metrics: await ctx.meta.getTransactionMetrics() };
+          return {
+            page,
+            metrics: await ctx.meta.getTransactionMetrics(),
+          };
         })
       )
     );
     const current = await target.query(async (ctx) => {
-      const page = await runConvexProgram(
+      const page = await Effect.runPromise(
         readMaterialSitemap("en", buckets).pipe(
-          Effect.provide(convexMaterialLayer(ctx))
+          Effect.provide(
+            Layer.provideMerge(
+              materialLayer,
+              ConfectDatabaseReader.layer(confectSchema, ctx.db)
+            )
+          )
         )
       );
-      return { page, metrics: await ctx.meta.getTransactionMetrics() };
+      return {
+        page,
+        metrics: await ctx.meta.getTransactionMetrics(),
+      };
     });
     expect(current.page?.routes).toEqual(
       previous.flatMap(({ page }) => page?.routes ?? [])
@@ -69,13 +101,15 @@ describe("contentRelease/material/sitemap", () => {
       })
     ).resolves.toEqual(current.page);
   });
-
   it.each([
     [],
     ["abc", "abc"],
     ["invalid"],
-    Array.from({ length: MATERIAL_SITEMAP_BUCKET_LIMIT + 1 }, (_, index) =>
-      index.toString(16).padStart(3, "0")
+    Array.from(
+      {
+        length: MATERIAL_SITEMAP_BUCKET_LIMIT + 1,
+      },
+      (_, index) => index.toString(16).padStart(3, "0")
     ),
   ])(
     "rejects an invalid batch before reading its catalog: %j",
@@ -86,16 +120,29 @@ describe("contentRelease/material/sitemap", () => {
           appLocale: "en",
           bucket: buckets,
         })
-      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
+      ).rejects.toMatchObject({
+        data: {
+          code: "CONTENT_RELEASE_LIMIT",
+        },
+      });
     }
   );
-
   it("fails closed when any requested batch member is missing", async () => {
     const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const inventory = await target.query(
       api.contentRelease.material.sitemapBuckets,
-      { appLocale: "en" }
+      {
+        appLocale: "en",
+      }
     );
     const bucket = inventory.buckets[0];
     assert(bucket && bucket !== "fff");
@@ -104,13 +151,27 @@ describe("contentRelease/material/sitemap", () => {
         appLocale: "en",
         bucket: [bucket, "fff"],
       })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+      },
+    });
   });
-
   it.effect("rejects an index larger than the complete partition space", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const target = convexTest(schema, convexModules);
-      yield* Effect.promise(() => activateMaterialCatalog(target));
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateMaterialCatalog().pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
       yield* Effect.promise(() =>
         target.mutation(async (ctx) => {
           for (let index = 0; index <= CONTENT_BUCKET_LIMIT; index += 1) {
@@ -126,25 +187,35 @@ describe("contentRelease/material/sitemap", () => {
       yield* Effect.promise(() =>
         expect(
           target.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               readMaterialBuckets("en").pipe(
-                Effect.provide(convexMaterialLayer(ctx))
+                Effect.provide(
+                  Layer.provideMerge(
+                    materialLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+        })
       );
     })
   );
-
   it("returns empty discovery before signed ownership", async () => {
     const target = convexTest(schema, convexModules);
-
     await expect(
       target.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readMaterialBuckets("en").pipe(
-            Effect.provide(convexMaterialLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                materialLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
@@ -156,30 +227,46 @@ describe("contentRelease/material/sitemap", () => {
     });
     await expect(
       target.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readMaterialSitemap("en", ["abc"]).pipe(
-            Effect.provide(convexMaterialLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                materialLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
     ).resolves.toBeNull();
   });
-
   it.each(ACTIVE_APP_LOCALE_CODES)(
     "lists and reads complete %s material partitions",
     async (appLocale) => {
       const target = convexTest(schema, convexModules);
       const first = makeMaterialProjection(appLocale, 1);
       const second = makeMaterialProjection(appLocale, 2);
-      await activateMaterialCatalog(target, [first, second]);
-      const result = await target.query((ctx) =>
-        runConvexProgram(
-          readMaterialBuckets(appLocale).pipe(
-            Effect.provide(convexMaterialLayer(ctx))
+      await target.mutation((ctx) =>
+        Effect.runPromise(
+          activateMaterialCatalog([first, second]).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
           )
         )
       );
-
+      const result = await target.query((ctx) =>
+        Effect.runPromise(
+          readMaterialBuckets(appLocale).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                materialLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
+        )
+      );
       expect(result).toMatchObject({
         activeReleaseId: MATERIAL_IDENTITY.releaseId,
         managed: true,
@@ -189,9 +276,14 @@ describe("contentRelease/material/sitemap", () => {
       const pages = await Promise.all(
         result.buckets.map((bucket) =>
           target.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromise(
               readMaterialSitemap(appLocale, [bucket]).pipe(
-                Effect.provide(convexMaterialLayer(ctx))
+                Effect.provide(
+                  Layer.provideMerge(
+                    materialLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
@@ -211,10 +303,17 @@ describe("contentRelease/material/sitemap", () => {
       );
     }
   );
-
   it("rejects malformed stored partition metadata", async () => {
     const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await target.mutation((ctx) =>
       ctx.db.insert("materialBuckets", {
         bucket: "invalid",
@@ -223,17 +322,21 @@ describe("contentRelease/material/sitemap", () => {
         slot: "blue",
       })
     );
-
     await expect(
       target.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readMaterialBuckets("en").pipe(
-            Effect.provide(convexMaterialLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                materialLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
 });

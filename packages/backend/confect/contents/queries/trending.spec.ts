@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   getTrendingSubjectsArgs,
   getTrendingSubjectsResultValidator,
@@ -15,7 +15,7 @@ export default GroupSpec.make().addFunction(
     error: () =>
       Schema.Union([
         TrendingSubjectIoErrorWire,
-        ReleaseErrorWire,
+        ReleaseError,
         ContentViewIoErrorWire,
       ]),
   })

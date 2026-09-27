@@ -1,7 +1,11 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
 import { readPublishedSearchDocuments } from "@repo/backend/confect/contents/helpers/search/published";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
@@ -14,6 +18,7 @@ import {
 } from "@repo/backend/test/material/catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
+import { Effect } from "effect";
 
 /** Reads one published article window through the production owner boundary. */
 function readArticles(
@@ -22,13 +27,16 @@ function readArticles(
   scanLimit: number
 ) {
   return t.query(async (ctx) => {
-    const owner = await runConvexProgram(loadSearchOwner(ctx));
+    const owner = await Effect.runPromise(
+      loadSearchOwner().pipe(
+        Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+      )
+    );
     if (!owner) {
       throw new Error("Expected one active search owner.");
     }
-    return runConvexProgram(
+    return Effect.runPromise(
       readPublishedSearchDocuments(
-        ctx,
         {
           limit: scanLimit,
           locale: "en",
@@ -40,7 +48,7 @@ function readArticles(
         scanLimit,
         owner,
         ["article"]
-      )
+      ).pipe(Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db)))
     );
   });
 }
@@ -61,7 +69,6 @@ async function activateSearch(
     });
   });
 }
-
 describe("readPublishedSearchDocuments", () => {
   it("keeps smaller pages stable across empty and overlapping queries", async () => {
     const t = createConvexTestWithBetterAuth();
@@ -73,10 +80,13 @@ describe("readPublishedSearchDocuments", () => {
       "beta",
       "gamma",
     ];
-    const texts = Array.from({ length: 20 }, (_, index) =>
-      index < 10 ? "alpha beta bounded search" : "gamma bounded search"
+    const texts = Array.from(
+      {
+        length: 20,
+      },
+      (_, index) =>
+        index < 10 ? "alpha beta bounded search" : "gamma bounded search"
     );
-
     await t.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, texts.length);
       for (const [index, text] of texts.entries()) {
@@ -87,21 +97,17 @@ describe("readPublishedSearchDocuments", () => {
       }
     });
     await activateSearch(t);
-
     const firstPage = await readArticles(t, queries, 2);
     const fullWindow = await readArticles(t, queries, 4);
-
     expect(firstPage).toHaveLength(2);
     expect(firstPage).toEqual(fullWindow.slice(0, firstPage.length));
     expect(
       new Set(fullWindow.map((document) => document.content_id)).size
     ).toBe(fullWindow.length);
   });
-
   it("fills the window when an exact route repeats in search hits", async () => {
     const t = createConvexTestWithBetterAuth();
     const exact = testArticleProjection(0);
-
     await t.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, 4);
       for (let index = 0; index < 4; index += 1) {
@@ -112,22 +118,30 @@ describe("readPublishedSearchDocuments", () => {
       }
     });
     await activateSearch(t);
-
     const documents = await readArticles(t, [exact.publicPath], 3);
-
     expect(documents).toHaveLength(3);
     expect(documents[0]?.content_id).toBe(exact.graph.assetId);
     expect(new Set(documents.map((document) => document.content_id)).size).toBe(
       documents.length
     );
   });
-
   it("browses current materials in stable public-path order", async () => {
     const t = createConvexTestWithBetterAuth();
-    const projections = Array.from({ length: 40 }, (_, index) =>
-      makeMaterialProjection("en", 1, index + 1)
+    const projections = Array.from(
+      {
+        length: 40,
+      },
+      (_, index) => makeMaterialProjection("en", 1, index + 1)
     );
-    await activateMaterialCatalog(t, projections);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog(projections).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await t.mutation(async (ctx) => {
       for (const projection of projections) {
         await insertRuntimeIndex(ctx, projection.contentKey, {
@@ -147,13 +161,16 @@ describe("readPublishedSearchDocuments", () => {
       });
     });
     const documents = await t.query(async (ctx) => {
-      const owner = await runConvexProgram(loadSearchOwner(ctx));
+      const owner = await Effect.runPromise(
+        loadSearchOwner().pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
+      );
       if (!owner) {
         expect.fail("Expected one active search owner.");
       }
-      return runConvexProgram(
+      return Effect.runPromise(
         readPublishedSearchDocuments(
-          ctx,
           {
             limit: 2,
             locale: "en",
@@ -165,10 +182,11 @@ describe("readPublishedSearchDocuments", () => {
           2,
           owner,
           ["material"]
+        ).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
         )
       );
     });
-
     const expected = projections
       .map(({ publicPath }) => publicPath)
       .sort()
@@ -176,7 +194,6 @@ describe("readPublishedSearchDocuments", () => {
     expect(documents.map(({ route }) => route)).toEqual(expected);
   });
 });
-
 it("keeps the signed description in published search documents", async () => {
   const t = createConvexTestWithBetterAuth();
   await t.mutation((ctx) =>
@@ -184,7 +201,10 @@ it("keeps the signed description in published search documents", async () => {
       const projection = testArticleProjection(index);
       return {
         ...projection,
-        metadata: { ...projection.metadata, description: "Signed summary" },
+        metadata: {
+          ...projection.metadata,
+          description: "Signed summary",
+        },
       };
     })
   );
@@ -195,6 +215,8 @@ it("keeps the signed description in published search documents", async () => {
   );
   await activateSearch(t);
   expect(await readArticles(t, ["article"], 10)).toMatchObject([
-    { description: "Signed summary" },
+    {
+      description: "Signed summary",
+    },
   ]);
 });

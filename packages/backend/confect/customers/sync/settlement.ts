@@ -8,18 +8,22 @@ import {
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
-interface CustomerSyncSettlementOperations {
-  readonly deleteLocalCustomer: () => Effect.Effect<void, CustomerSyncIoError>;
-  readonly deletePolarCustomer: () => Effect.Effect<void, PolarDeleteError>;
+interface CustomerSyncSettlementOperations<R = never> {
+  readonly deleteLocalCustomer: () => Effect.Effect<
+    void,
+    CustomerSyncIoError,
+    R
+  >;
+  readonly deletePolarCustomer: () => Effect.Effect<void, PolarDeleteError, R>;
 }
 
 /** Resolves the transactional write result without erasing cancelable state. */
 export const settleCustomerSync = Effect.fn(
   "customers.sync.settleCustomerSync"
-)(function* (
+)(function* <R>(
   result: CustomerUpsertResult,
   userId: Id<"users">,
-  operations: CustomerSyncSettlementOperations
+  operations: CustomerSyncSettlementOperations<R>
 ) {
   if (result.kind === "stored") {
     return result.customerId;

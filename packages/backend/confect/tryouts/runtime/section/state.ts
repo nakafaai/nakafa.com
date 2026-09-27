@@ -1,20 +1,21 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { loadAttemptSections } from "@repo/backend/confect/tryouts/runtime/attempt/sections";
 import { loadAttemptState } from "@repo/backend/confect/tryouts/runtime/attempt/state";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { loadSectionState } from "@repo/backend/confect/tryouts/runtime/section/questions";
 import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 /** Loads one exact section without repeating immutable catalog reads. */
 export const loadSectionAttemptState = Effect.fn(
   "tryouts.runtime.loadSectionAttemptState"
 )(function* (
-  ctx: QueryCtx,
-  attempt: Doc<"tryoutAttempts">,
-  sectionKey: string
+  attempt: Docs["tryoutAttempts"],
+  sectionKey: string,
+  appLocale: AppLocaleCode
 ) {
   const snapshot = attempt.sectionSnapshots.find(
     (section) => section.sectionKey === sectionKey
@@ -22,18 +23,19 @@ export const loadSectionAttemptState = Effect.fn(
   if (!snapshot) {
     return null;
   }
-  const sections = yield* loadAttemptSections(ctx, attempt);
+  const sections = yield* loadAttemptSections(attempt);
   const section =
     sections.find((candidate) => candidate.sectionKey === sectionKey) ?? null;
   const { current, loaded } = yield* Effect.all(
     {
-      current: loadAttemptState(ctx, {
+      current: loadAttemptState({
+        appLocale,
         attempt,
         sectionKey,
         sections,
       }),
       loaded: section
-        ? loadSectionState(ctx, attempt, section)
+        ? loadSectionState(attempt, section, appLocale)
         : Effect.succeed({
             content: noTryoutSectionContentAccess,
             runtime: null,
@@ -55,25 +57,23 @@ export const loadSectionAttemptState = Effect.fn(
 /** Reads one mutable section state through an exact owned attempt ID. */
 export const readSectionAttemptState = Effect.fn(
   "tryouts.runtime.readSectionAttemptState"
-)(function* (
-  ctx: QueryCtx,
-  args: {
-    readonly attemptId: Id<"tryoutAttempts">;
-    readonly sectionKey: string;
-  }
-) {
-  const auth = yield* getOptionalAppUserForRead(ctx);
+)(function* (args: {
+  readonly attemptId: Id<"tryoutAttempts">;
+  readonly locale: AppLocaleCode;
+  readonly sectionKey: string;
+}) {
+  const auth = yield* getOptionalAppUserForRead();
   if (!auth) {
     return null;
   }
-  const attempt = yield* readOwnedAttemptById(
-    ctx,
-    args.attemptId,
-    auth.appUser._id
-  );
+  const attempt = yield* readOwnedAttemptById(args.attemptId, auth.appUser._id);
   if (!attempt) {
     return null;
   }
-  const loaded = yield* loadSectionAttemptState(ctx, attempt, args.sectionKey);
+  const loaded = yield* loadSectionAttemptState(
+    attempt,
+    args.sectionKey,
+    args.locale
+  );
   return loaded?.state ?? null;
 });

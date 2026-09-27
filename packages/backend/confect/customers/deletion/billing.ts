@@ -1,53 +1,44 @@
-import { MutationRunner, QueryRunner } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { deleteLocalCustomer } from "@repo/backend/confect/customers/deletion/billingState";
 import { polarGateway } from "@repo/backend/confect/customers/polar/live";
-import type {
-  PolarCustomerError,
-  PolarDeleteError,
-} from "@repo/backend/confect/customers/polar/spec";
 import {
   CustomerSyncIoError,
   customerSyncIoError,
   customerSyncIoErrorCode,
 } from "@repo/backend/confect/customers/sync/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type DeletedUserBillingCleanupError =
-  | CustomerSyncIoError
-  | PolarCustomerError
-  | PolarDeleteError;
-
 /** Deletes external and local billing state using a durable Polar identity. */
-export const cleanupDeletedUserBilling: (
-  ctx: ActionCtx,
-  userId: Id<"users">,
-  authId: string
-) => Effect.Effect<null, DeletedUserBillingCleanupError> = Effect.fn(
+export const cleanupDeletedUserBilling = Effect.fn(
   "customers.deletion.cleanupDeletedUserBilling"
 )(
-  function* (ctx: ActionCtx, userId: Id<"users">, authId: string) {
-    const runQuery = yield* QueryRunner.QueryRunner.pipe(
-      Effect.provide(QueryRunner.layer(ctx.runQuery))
-    );
-    const runMutation = yield* MutationRunner.MutationRunner.pipe(
-      Effect.provide(MutationRunner.layer(ctx.runMutation))
-    );
+  function* (userId: Id<"users">, authId: string) {
+    const runQuery = yield* QueryRunner;
+    const runMutation = yield* MutationRunner;
     const [customer, checkpointPolarCustomerId] = yield* Effect.all(
       [
         runQuery(
           refs.internal.customers.queries.internal.customer.getCustomerByUserId,
-          { userId }
+          {
+            userId,
+          }
         ),
         runQuery(
           refs.internal.customers.queries.internal.customer
             .getCustomerDeletionCheckpoint,
-          { userId }
+          {
+            userId,
+          }
         ),
       ],
-      { concurrency: "unbounded" }
+      {
+        concurrency: "unbounded",
+      }
     ).pipe(Effect.orDie);
     if (
       checkpointPolarCustomerId &&
@@ -77,7 +68,7 @@ export const cleanupDeletedUserBilling: (
       }
     ).pipe(Effect.catchTag("SchemaError", Effect.die));
     yield* polarGateway.deleteCustomer(polarCustomerId);
-    yield* deleteLocalCustomer(ctx, polarCustomerId);
+    yield* deleteLocalCustomer(polarCustomerId);
     // Release only the retry lookup after both external and local deletion finish.
     yield* runMutation(
       refs.internal.customers.mutations.internal

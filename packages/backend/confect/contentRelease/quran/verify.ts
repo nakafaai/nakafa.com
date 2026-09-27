@@ -1,3 +1,4 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import {
   ReleaseError,
@@ -7,13 +8,12 @@ import { parseStoredJson } from "@repo/backend/confect/contentRelease/parse";
 import { quranRowFacts } from "@repo/backend/confect/contentRelease/quran/facts";
 import { quranRowDocumentLimit } from "@repo/backend/confect/contentRelease/quran/limits";
 import { PublishedQuranRowSchema } from "@repo/backend/content/quran/contract";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect, Schema } from "effect";
 /** Authenticates one immutable Quran row and every indexed fact. */
 export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
   function* <A, I>(
-    row: WithoutSystemFields<Doc<"quranRows">>,
+    row: WithoutSystemFields<Docs["quranRows"]>,
     snapshotId: string,
     payloadSchema: Schema.Codec<A, I, never, never>
   ) {

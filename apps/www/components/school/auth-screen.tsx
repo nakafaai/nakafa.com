@@ -3,6 +3,7 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { Authenticated, Unauthenticated } from "convex/react";
+
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { AuthGoogle } from "@/components/auth/google";

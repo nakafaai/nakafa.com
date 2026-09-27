@@ -1,20 +1,18 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   loadRelease,
   loadState,
 } from "@repo/backend/confect/contentRelease/model";
 import { loadTryoutRuntimeBundle } from "@repo/backend/confect/tryouts/runtime/signed";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, Option } from "effect";
 
-type ReadCtx = MutationCtx | QueryCtx;
 interface RuntimeRetentionOptions {
   readonly ignoredReleaseId?: string;
 }
@@ -22,12 +20,8 @@ interface RuntimeRetentionOptions {
 /** Checks whether one release still selects an immutable try-out pair. */
 const releaseRetainsRuntime = Effect.fn(
   "contentRelease.releaseRetainsTryoutRuntime"
-)(function* (
-  ctx: ReadCtx,
-  releaseId: string,
-  row: Doc<"tryoutRuntimeBundles">
-) {
-  const release = yield* loadRelease(ctx, releaseId);
+)(function* (releaseId: string, row: Docs["tryoutRuntimeBundles"]) {
+  const release = yield* loadRelease(releaseId);
   const { originKind, rendererManifestHash, snapshotTransitions } = release;
   const transition = snapshotTransitions.tryout;
   if (rendererManifestHash !== row.rendererManifestHash) {
@@ -47,11 +41,10 @@ const releaseRetainsRuntime = Effect.fn(
 export const readTryoutRuntimeRetention = Effect.fn(
   "contentRelease.readTryoutRuntimeRetention"
 )(function* (
-  ctx: ReadCtx,
-  row: Doc<"tryoutRuntimeBundles">,
+  row: Docs["tryoutRuntimeBundles"],
   options?: RuntimeRetentionOptions
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const [attempt, state] = yield* Effect.all([
     database
       .table("tryoutAttempts")
@@ -60,7 +53,7 @@ export const readTryoutRuntimeRetention = Effect.fn(
       )
       .first()
       .pipe(Effect.map(Option.getOrNull), Effect.orDie),
-    loadState(ctx),
+    loadState(),
   ]);
   const releaseIds = state
     ? [state.activeReleaseId, state.candidateReleaseId, state.recoveryReleaseId]
@@ -69,7 +62,7 @@ export const readTryoutRuntimeRetention = Effect.fn(
     if (
       releaseId &&
       releaseId !== options?.ignoredReleaseId &&
-      (yield* releaseRetainsRuntime(ctx, releaseId, row))
+      (yield* releaseRetainsRuntime(releaseId, row))
     ) {
       return {
         retainedByAttempt: attempt !== null,
@@ -86,9 +79,9 @@ export const readTryoutRuntimeRetention = Effect.fn(
 /** Reconciles permanent ownership after its attempt is deleted transactionally. */
 export const reconcileTryoutRuntimeAfterAttempt = Effect.fn(
   "contentRelease.reconcileTryoutRuntimeAfterAttempt"
-)(function* (ctx: MutationCtx, runtimeId: Id<"tryoutRuntimeBundles">) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (runtimeId: Id<"tryoutRuntimeBundles">) {
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const row = yield* database
     .table("tryoutRuntimeBundles")
     .get(runtimeId)
@@ -102,7 +95,7 @@ export const reconcileTryoutRuntimeAfterAttempt = Effect.fn(
       "A deleted try-out attempt referenced a missing permanent runtime."
     );
   }
-  const retention = yield* readTryoutRuntimeRetention(ctx, row);
+  const retention = yield* readTryoutRuntimeRetention(row);
   const cleanupReleaseId = retention.retainingReleaseId;
   if (cleanupReleaseId) {
     if (cleanupReleaseId !== row.cleanupReleaseId) {
@@ -127,12 +120,11 @@ export const reconcileTryoutRuntimeAfterAttempt = Effect.fn(
 /** Reads every permanent runtime pair addressed by one signed release. */
 export const readReleaseTryoutRuntime = Effect.fn(
   "contentRelease.readReleaseTryoutRuntime"
-)(function* (ctx: ReadCtx, release: SignedContentRelease) {
+)(function* (release: SignedContentRelease) {
   const transition = release.manifest.snapshots.tryout;
   const rendererManifestHash = release.manifest.rendererManifestHash;
   const result = transition.resultSnapshotId
     ? yield* loadTryoutRuntimeBundle(
-        ctx,
         transition.resultSnapshotId,
         rendererManifestHash
       )
@@ -143,7 +135,6 @@ export const readReleaseTryoutRuntime = Effect.fn(
     transition.baseSnapshotId !== null;
   const retainedBase = needsRetainedBase
     ? yield* loadTryoutRuntimeBundle(
-        ctx,
         transition.baseSnapshotId,
         rendererManifestHash
       )
@@ -157,8 +148,8 @@ export const readReleaseTryoutRuntime = Effect.fn(
 /** Requires every new or restored runtime pair before activation advances. */
 export const loadReleaseTryoutRuntime = Effect.fn(
   "contentRelease.loadReleaseTryoutRuntime"
-)(function* (ctx: ReadCtx, release: SignedContentRelease) {
-  const runtime = yield* readReleaseTryoutRuntime(ctx, release);
+)(function* (release: SignedContentRelease) {
+  const runtime = yield* readReleaseTryoutRuntime(release);
   const transition = release.manifest.snapshots.tryout;
   const requiresResult = transition.resultSnapshotId !== null;
   const requiresBase =

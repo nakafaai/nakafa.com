@@ -1,3 +1,4 @@
+/** Derives the canonical set identity shared by set and section rows. */
 import type {
   TryoutCatalogRecord,
   TryoutCatalogRow,

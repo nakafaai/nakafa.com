@@ -1,22 +1,18 @@
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Effect } from "effect";
 
 /** Emits one product analytics event after a graph content view is persisted. */
 export const learningViewsHandler = Effect.fn(
   "triggers.contents.captureContentViewEvent"
-)(function* (
-  ctx: GenericMutationCtx<DataModel>,
-  change: Change<DataModel, "learningViews">
-) {
+)(function* (change: Change<DataModel, "learningViews">) {
   const view = change.newDoc;
   if (!view?.userId) {
     return;
   }
   const userId = view.userId;
-  yield* captureProductEvent(ctx, {
+  yield* captureProductEvent({
     distinctId: userId,
     event: {
       name: "content viewed",

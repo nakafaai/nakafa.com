@@ -1,6 +1,9 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import {
   InvalidContentAnalyticsPartitionError,
   invalidContentAnalyticsPartitionCode,
@@ -12,7 +15,6 @@ import {
   CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/confect/contents/constants";
 import { isContentAnalyticsPartition } from "@repo/backend/confect/contents/helpers/partitions";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Duration, Effect, flow, Option } from "effect";
 
 /** Generated internal mutation reference that claims analytics partitions. */
@@ -23,11 +25,9 @@ import { Clock, Duration, Effect, flow, Option } from "effect";
 export const scheduleAllContentAnalyticsPartitions = Effect.fn(
   "contents.analytics.scheduleAllContentAnalyticsPartitions"
 )(
-  function* (ctx: MutationCtx) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* () {
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
     let enqueuedPartitions = 0;
     for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
       const queuedItem = yield* database
@@ -69,12 +69,10 @@ export const scheduleAllContentAnalyticsPartitions = Effect.fn(
 export const claimContentAnalyticsPartition = Effect.fn(
   "contents.analytics.claimContentAnalyticsPartition"
 )(
-  function* (ctx: MutationCtx, args: ScheduleContentAnalyticsPartitionArgs) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (args: ScheduleContentAnalyticsPartitionArgs) {
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     if (!isContentAnalyticsPartition(args.partition)) {
       return yield* new InvalidContentAnalyticsPartitionError({
         code: invalidContentAnalyticsPartitionCode,

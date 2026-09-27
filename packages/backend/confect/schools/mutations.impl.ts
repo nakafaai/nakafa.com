@@ -1,13 +1,12 @@
+import { FunctionImpl, GroupImpl } from "@confect/server";
+import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  FunctionImpl,
-  GroupImpl,
-} from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
+} from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { generateUniqueSlug } from "@repo/backend/confect/schools/allocation";
 import {
   SchoolCreateError,
@@ -32,10 +31,9 @@ const createSchool = FunctionImpl.make(
   spec,
   "createSchool",
   Effect.fn("schools.mutations.createSchool")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const user = yield* requireAuth(ctx);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAuth();
 
     // Check if school with same email already exists
     const existingSchoolByEmail = yield* database
@@ -54,7 +52,7 @@ const createSchool = FunctionImpl.make(
 
     // Generate unique slug
     const baseSlug = slugify(args.name);
-    const uniqueSlug = yield* generateUniqueSlug(ctx, baseSlug);
+    const uniqueSlug = yield* generateUniqueSlug(baseSlug);
     const now = yield* Clock.currentTimeMillis;
     const userId = user.appUser._id;
 
@@ -119,10 +117,9 @@ const joinSchool = FunctionImpl.make(
   spec,
   "joinSchool",
   Effect.fn("schools.mutations.joinSchool")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const user = yield* requireAuth(ctx);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAuth();
 
     // Find invite code
     const inviteCode = yield* database
@@ -191,5 +188,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(createSchool),
   Layer.provide(joinSchool),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

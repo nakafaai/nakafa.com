@@ -1,22 +1,18 @@
-import { DatabaseWriter, Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { buildClassChangesMetadata } from "@repo/backend/confect/triggers/helpers/metadata";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Duration, Effect, Struct } from "effect";
 
 /** Records class changes and schedules bounded cleanup after deletion. */
 export const schoolClassesHandler = Effect.fn("triggers.schools.recordClass")(
-  function* (
-    ctx: GenericMutationCtx<DataModel>,
-    change: Change<DataModel, "schoolClasses">
-  ) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (change: Change<DataModel, "schoolClasses">) {
+    const scheduler = yield* Scheduler;
+    const writer = yield* DatabaseWriter;
     const classId = change.id;
     if (change.operation === "insert") {
       const classroom = change.newDoc;

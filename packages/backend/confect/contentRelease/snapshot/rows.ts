@@ -1,46 +1,47 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 const CLEANUP_PAGE_COUNT = 2;
 const CLEANUP_PAGE_BYTES = CONTENT_DOCUMENT_LIMIT * CLEANUP_PAGE_COUNT;
-type CleanupPart = NonNullable<Doc<"contentSnapshots">["cleanupPart"]>;
+type CleanupPart = NonNullable<Docs["contentSnapshots"]["cleanupPart"]>;
 type SnapshotChild =
   | {
-      readonly row: Doc<"programCatalog">;
+      readonly row: Docs["programCatalog"];
       readonly table: "programCatalog";
     }
   | {
-      readonly row: Doc<"curriculumRoutes">;
+      readonly row: Docs["curriculumRoutes"];
       readonly table: "curriculumRoutes";
     }
   | {
-      readonly row: Doc<"programBuckets">;
+      readonly row: Docs["programBuckets"];
       readonly table: "programBuckets";
     }
   | {
-      readonly row: Doc<"quranRows">;
+      readonly row: Docs["quranRows"];
       readonly table: "quranRows";
     }
   | {
-      readonly row: Doc<"quranSearch">;
+      readonly row: Docs["quranSearch"];
       readonly table: "quranSearch";
     }
   | {
-      readonly row: Doc<"tryoutRuntimeBundles">;
+      readonly row: Docs["tryoutRuntimeBundles"];
       readonly table: "tryoutRuntimeBundles";
     }
   | {
-      readonly row: Doc<"tryoutCatalog">;
+      readonly row: Docs["tryoutCatalog"];
       readonly table: "tryoutCatalog";
     }
   | {
-      readonly row: Doc<"tryoutPlacements">;
+      readonly row: Docs["tryoutPlacements"];
       readonly table: "tryoutPlacements";
     };
 interface ChildPage {
@@ -63,13 +64,12 @@ function cleanupPage() {
 export const loadSnapshotChildren = Effect.fn(
   "contentRelease.loadSnapshotChildren"
 )(function* (
-  ctx: MutationCtx,
   family: ContentSnapshotKind,
   snapshotId: string,
   afterIndex: number,
   part?: CleanupPart
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   if (family === "program") {
     const selected = part ?? "program";
     if (
@@ -250,8 +250,8 @@ export const loadSnapshotChildren = Effect.fn(
 /** Deletes one child row through its domain-owned physical table. */
 export const deleteSnapshotChild = Effect.fn(
   "contentRelease.deleteSnapshotChild"
-)(function* (ctx: MutationCtx, child: SnapshotChild) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (child: SnapshotChild) {
+  const writer = yield* DatabaseWriter;
   if (child.table === "programCatalog") {
     yield* writer.table("programCatalog").delete(child.row._id);
     return;

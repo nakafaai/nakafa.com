@@ -1,5 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -7,6 +8,7 @@ import {
 import { schoolMembersHandler } from "@repo/backend/confect/triggers/schools/members";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 20, 30, 0);
 describe("triggers/schools/members", () => {
@@ -34,13 +36,17 @@ describe("triggers/schools/members", () => {
         });
         const invited = await ctx.db.get("schoolMembers", id);
         assert(invited);
-        await runConvexProgram(
-          schoolMembersHandler(ctx, {
+        await Effect.runPromise(
+          schoolMembersHandler({
             id,
             operation: "insert",
             oldDoc: null,
             newDoc: invited,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
         await ctx.db.patch("schoolMembers", id, {
           role: "teacher",
@@ -48,21 +54,29 @@ describe("triggers/schools/members", () => {
         });
         const joined = await ctx.db.get("schoolMembers", id);
         assert(joined);
-        await runConvexProgram(
-          schoolMembersHandler(ctx, {
+        await Effect.runPromise(
+          schoolMembersHandler({
             id,
             operation: "update",
             oldDoc: invited,
             newDoc: joined,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
-        await runConvexProgram(
-          schoolMembersHandler(ctx, {
+        await Effect.runPromise(
+          schoolMembersHandler({
             id,
             operation: "update",
             oldDoc: joined,
             newDoc: joined,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
         await ctx.db.patch("schoolMembers", id, {
           status: "removed",
@@ -71,30 +85,42 @@ describe("triggers/schools/members", () => {
         });
         const removed = await ctx.db.get("schoolMembers", id);
         assert(removed);
-        await runConvexProgram(
-          schoolMembersHandler(ctx, {
+        await Effect.runPromise(
+          schoolMembersHandler({
             id,
             operation: "update",
             oldDoc: joined,
             newDoc: removed,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
-        await runConvexProgram(
-          schoolMembersHandler(ctx, {
+        await Effect.runPromise(
+          schoolMembersHandler({
             id,
             operation: "update",
             oldDoc: removed,
             newDoc: removed,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
         await ctx.db.delete("schoolMembers", id);
-        await runConvexProgram(
-          schoolMembersHandler(ctx, {
+        await Effect.runPromise(
+          schoolMembersHandler({
             id,
             operation: "delete",
             oldDoc: removed,
             newDoc: null,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
         return id;
       });
@@ -135,13 +161,17 @@ describe("triggers/schools/members", () => {
       });
       const member = await ctx.db.get("schoolMembers", id);
       assert(member);
-      await runConvexProgram(
-        schoolMembersHandler(ctx, {
+      await Effect.runPromise(
+        schoolMembersHandler({
           id,
           operation: "insert",
           oldDoc: null,
           newDoc: member,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       return id;
     });

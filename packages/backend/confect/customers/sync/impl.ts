@@ -1,8 +1,11 @@
-import { MutationRunner, QueryRunner } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { deleteLocalCustomer } from "@repo/backend/confect/customers/deletion/billingState";
-import type { CustomerUpsertResult } from "@repo/backend/confect/customers/mutations/spec";
 import {
   ensureCustomer,
   normalizeStoredCustomer,
@@ -10,122 +13,92 @@ import {
 import { polarGateway } from "@repo/backend/confect/customers/polar/live";
 import {
   customerIdMetadataKey,
-  type PolarCustomerEmailConflict,
-  type PolarCustomerError,
-  type PolarDeleteError,
   type PolarMetadata,
-  type PolarUpdateError,
 } from "@repo/backend/confect/customers/polar/spec";
 import { convertToDatabaseCustomer } from "@repo/backend/confect/customers/records";
 import { settleCustomerSync } from "@repo/backend/confect/customers/sync/settlement";
 import {
-  type CustomerSyncIoError,
   customerSyncIoError,
   UserNotFound,
   userNotFoundCode,
 } from "@repo/backend/confect/customers/sync/spec";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect, flow } from "effect";
 
 type CustomerSyncUser = Pick<
-  Doc<"users">,
+  Docs["users"],
   "_id" | "authId" | "deletedAt" | "deletionPreparedAt" | "email" | "name"
 >;
-type CustomerSyncState = [CustomerSyncUser | null, Doc<"customers"> | null];
-type CustomerSyncError =
-  | CustomerSyncIoError
-  | PolarCustomerEmailConflict
-  | PolarCustomerError
-  | PolarDeleteError
-  | UserNotFound
-  | PolarUpdateError;
-type RequiredCustomerError = CustomerSyncError;
-export type RequiredCustomer = WithoutSystemFields<Doc<"customers">> & {
+export type RequiredCustomer = WithoutSystemFields<Docs["customers"]> & {
   readonly localCustomerId: Id<"customers">;
 };
 
 /** Loads the app user and any already-linked local customer row. */
-const loadCustomerSyncState: (
-  ctx: ActionCtx,
-  userId: Id<"users">
-) => Effect.Effect<CustomerSyncState, CustomerSyncIoError> = Effect.fn(
-  "customers.sync.loadCustomerSyncState"
-)(function* (ctx: ActionCtx, userId: Id<"users">) {
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
-  return yield* Effect.all([
-    runQuery(refs.internal.users.queries.getUserById, { userId }),
-    runQuery(
-      refs.internal.customers.queries.internal.customer.getCustomerByUserId,
-      { userId }
-    ),
-  ]).pipe(
-    Effect.mapError((error) =>
-      customerSyncIoError("Failed to load local customer sync state", error)
-    ),
-    Effect.catchDefect(
-      flow(
-        (error) =>
-          customerSyncIoError(
-            "Failed to load local customer sync state",
-            error
-          ),
-        Effect.fail
+const loadCustomerSyncState = Effect.fn("customers.sync.loadCustomerSyncState")(
+  function* (userId: Id<"users">) {
+    const runQuery = yield* QueryRunner;
+    return yield* Effect.all([
+      runQuery(refs.internal.users.queries.getUserById, {
+        userId,
+      }),
+      runQuery(
+        refs.internal.customers.queries.internal.customer.getCustomerByUserId,
+        {
+          userId,
+        }
+      ),
+    ]).pipe(
+      Effect.mapError((error) =>
+        customerSyncIoError("Failed to load local customer sync state", error)
+      ),
+      Effect.catchDefect(
+        flow(
+          (error) =>
+            customerSyncIoError(
+              "Failed to load local customer sync state",
+              error
+            ),
+          Effect.fail
+        )
       )
-    )
-  );
-});
+    );
+  }
+);
 
 /** Upserts the local customer row after Polar has been reconciled. */
-const saveLocalCustomer: (
-  ctx: ActionCtx,
-  customer: WithoutSystemFields<Doc<"customers">>
-) => Effect.Effect<CustomerUpsertResult, CustomerSyncIoError> = Effect.fn(
-  "customers.sync.saveLocalCustomer"
-)(function* (ctx: ActionCtx, customer: WithoutSystemFields<Doc<"customers">>) {
-  const runMutation = yield* MutationRunner.MutationRunner.pipe(
-    Effect.provide(MutationRunner.layer(ctx.runMutation))
-  );
-  return yield* runMutation(
-    refs.internal.customers.mutations.internal.upsertCustomer,
-    {
-      customer,
-    }
-  ).pipe(
-    Effect.mapError((error) =>
-      customerSyncIoError("Failed to save local customer row", error)
-    ),
-    Effect.catchDefect(
-      flow(
-        (error) =>
-          customerSyncIoError("Failed to save local customer row", error),
-        Effect.fail
+const saveLocalCustomer = Effect.fn("customers.sync.saveLocalCustomer")(
+  function* (customer: WithoutSystemFields<Docs["customers"]>) {
+    const runMutation = yield* MutationRunner;
+    return yield* runMutation(
+      refs.internal.customers.mutations.internal.upsertCustomer,
+      {
+        customer,
+      }
+    ).pipe(
+      Effect.mapError((error) =>
+        customerSyncIoError("Failed to save local customer row", error)
+      ),
+      Effect.catchDefect(
+        flow(
+          (error) =>
+            customerSyncIoError("Failed to save local customer row", error),
+          Effect.fail
+        )
       )
-    )
-  );
-});
+    );
+  }
+);
 
 /**
  * Reconciles Polar and local customer state for a known app user document.
  */
-export const syncCustomerForUser: (
-  ctx: ActionCtx,
-  input: {
-    readonly localCustomerId?: string | null;
-    readonly user: CustomerSyncUser;
-  }
-) => Effect.Effect<RequiredCustomer, CustomerSyncError> = Effect.fn(
+export const syncCustomerForUser = Effect.fn(
   "customers.sync.syncCustomerForUser"
-)(function* (
-  ctx: ActionCtx,
-  input: {
-    readonly localCustomerId?: string | null;
-    readonly user: CustomerSyncUser;
-  }
-) {
+)(function* (input: {
+  readonly localCustomerId?: string | null;
+  readonly user: CustomerSyncUser;
+}) {
   const metadata: PolarMetadata = {
     [customerIdMetadataKey]: input.user._id,
   };
@@ -152,9 +125,9 @@ export const syncCustomerForUser: (
     ...syncedPolarCustomer,
     userId: input.user._id,
   });
-  const result = yield* saveLocalCustomer(ctx, customer);
+  const result = yield* saveLocalCustomer(customer);
   const localCustomerId = yield* settleCustomerSync(result, input.user._id, {
-    deleteLocalCustomer: () => deleteLocalCustomer(ctx, syncedPolarCustomer.id),
+    deleteLocalCustomer: () => deleteLocalCustomer(syncedPolarCustomer.id),
     deletePolarCustomer: () =>
       polarGateway.deleteCustomer(syncedPolarCustomer.id),
   });
@@ -165,17 +138,14 @@ export const syncCustomerForUser: (
 });
 
 /** Reconciles customer data for a user id, returning null when the user vanished. */
-export const syncOptionalCustomer: (
-  ctx: ActionCtx,
-  userId: Id<"users">
-) => Effect.Effect<RequiredCustomer | null, CustomerSyncError> = Effect.fn(
+export const syncOptionalCustomer = Effect.fn(
   "customers.sync.syncOptionalCustomer"
-)(function* (ctx: ActionCtx, userId: Id<"users">) {
-  const [user, localCustomer] = yield* loadCustomerSyncState(ctx, userId);
+)(function* (userId: Id<"users">) {
+  const [user, localCustomer] = yield* loadCustomerSyncState(userId);
   if (!user || isAccountDeletionPending(user)) {
     return null;
   }
-  return yield* syncCustomerForUser(ctx, {
+  return yield* syncCustomerForUser({
     ...(localCustomer?.id === undefined
       ? {}
       : {
@@ -186,25 +156,22 @@ export const syncOptionalCustomer: (
 });
 
 /** Reconciles and returns the customer for an authenticated app user. */
-export const requireCustomer: (
-  ctx: ActionCtx,
-  userId: Id<"users">
-) => Effect.Effect<RequiredCustomer, RequiredCustomerError> = Effect.fn(
-  "customers.sync.requireCustomer"
-)(function* (ctx: ActionCtx, userId: Id<"users">) {
-  const [user, localCustomer] = yield* loadCustomerSyncState(ctx, userId);
-  if (!user || isAccountDeletionPending(user)) {
-    return yield* new UserNotFound({
-      code: userNotFoundCode,
-      message: `User not found for userId: ${userId}`,
+export const requireCustomer = Effect.fn("customers.sync.requireCustomer")(
+  function* (userId: Id<"users">) {
+    const [user, localCustomer] = yield* loadCustomerSyncState(userId);
+    if (!user || isAccountDeletionPending(user)) {
+      return yield* new UserNotFound({
+        code: userNotFoundCode,
+        message: `User not found for userId: ${userId}`,
+      });
+    }
+    return yield* syncCustomerForUser({
+      ...(localCustomer?.id === undefined
+        ? {}
+        : {
+            localCustomerId: localCustomer?.id,
+          }),
+      user,
     });
   }
-  return yield* syncCustomerForUser(ctx, {
-    ...(localCustomer?.id === undefined
-      ? {}
-      : {
-          localCustomerId: localCustomer?.id,
-        }),
-    user,
-  });
-});
+);

@@ -1,5 +1,7 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createCanonicalLearningContext,
   createContextKey,
@@ -7,7 +9,6 @@ import {
 } from "@repo/backend/confect/contents/context";
 import { upsertUserRecent } from "@repo/backend/confect/contents/views/recent";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -26,7 +27,9 @@ const target = {
   content_id: projection.graph.assetId,
   ...(projection.metadata.description === undefined
     ? {}
-    : { description: projection.metadata.description }),
+    : {
+        description: projection.metadata.description,
+      }),
   kind: "curriculum-lesson",
   locale: "en",
   materialDomain: MaterialDomainSchema.make("mathematics"),
@@ -60,16 +63,16 @@ const readRecents = Effect.fn("contents.views.test.readRecents")(function* (
     ctx.db.query("userLearningRecents").take(10)
   );
 });
-
 describe("contents/views/recent", () => {
   it.effect(
     "keeps one user recent row while the latest material context changes",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createConvexTestWithBetterAuth();
         const result = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const user = yield* Effect.promise(() =>
                   seedAuthenticatedUser(ctx, {
@@ -78,7 +81,6 @@ describe("contents/views/recent", () => {
                   })
                 );
                 yield* upsertUserRecent(
-                  ctx.db,
                   target,
                   createCanonicalLearningContext(),
                   {
@@ -86,13 +88,12 @@ describe("contents/views/recent", () => {
                     userId: user.userId,
                   }
                 );
-                yield* upsertUserRecent(ctx.db, target, placementContext, {
+                yield* upsertUserRecent(target, placementContext, {
                   lastViewedAt: NOW + 1000,
                   userId: user.userId,
                 });
                 const placementRecents = yield* readRecents(ctx);
                 yield* upsertUserRecent(
-                  ctx.db,
                   target,
                   createCanonicalLearningContext(),
                   {
@@ -105,11 +106,14 @@ describe("contents/views/recent", () => {
                   recents: yield* readRecents(ctx),
                   userId: user.userId,
                 };
-              })
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
-
         expect(result.placementRecents).toHaveLength(1);
         expect(result.placementRecents[0]).toMatchObject({
           content_id: target.content_id,

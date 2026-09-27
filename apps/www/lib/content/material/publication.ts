@@ -1,9 +1,8 @@
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import "server-only";
-
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { api } from "@repo/backend/convex/_generated/api";
-import { fetchQuery } from "convex/nextjs";
-import type { FunctionReturnType } from "convex/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
@@ -32,7 +31,10 @@ export const decodeMaterialModel = Effect.fn("NakafaMaterial.decodeModel")(
     locale: Locale,
     publicPath: string
   ) {
-    const input = { appLocale: AppLocaleSchema.make(locale), publicPath };
+    const input = {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    };
     const model = yield* decodePublishedMaterialRoute(
       source.model,
       locale,
@@ -50,10 +52,16 @@ export const decodeMaterialModel = Effect.fn("NakafaMaterial.decodeModel")(
     const data = yield* decodePublishedDelivery(input, source.runtimeJson);
     const narrowed = yield* decodeMaterialData(data, input);
     yield* verifyMaterialPublication(
-      { activeReleaseId: model.activeReleaseId, projection: model.projection },
+      {
+        activeReleaseId: model.activeReleaseId,
+        projection: model.projection,
+      },
       narrowed
     );
-    return { model, narrowed };
+    return {
+      model,
+      narrowed,
+    };
   }
 );
 
@@ -70,20 +78,26 @@ export const decodeMaterialDelivery = Effect.fn(
     return null;
   }
   const published = yield* renderMaterialArtifact(decoded.narrowed);
-  return { model: decoded.model, published };
+  return {
+    model: decoded.model,
+    published,
+  };
 });
 
 /** Authenticates the publication shared by a lesson and its cached navigation. */
 const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(
   function* (
-    source: FunctionReturnType<typeof api.contentRelease.material.lesson>,
-    navigation: FunctionReturnType<
-      typeof api.contentRelease.material.navigation
+    source: Ref.Returns<typeof refs.public.contentRelease.material.lesson>,
+    navigation: Ref.Returns<
+      typeof refs.public.contentRelease.material.navigation
     > | null,
     locale: Locale,
     publicPath: string
   ) {
-    const input = { appLocale: AppLocaleSchema.make(locale), publicPath };
+    const input = {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    };
     if (source.materialKey === null) {
       if (source.model.projectionJson !== null || navigation !== null) {
         return yield* makeMaterialProjectionError(input);
@@ -106,7 +120,10 @@ const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(
       }
     }
     return {
-      model: { ...source.model, siblingJson: navigation?.siblingJson ?? [] },
+      model: {
+        ...source.model,
+        siblingJson: navigation?.siblingJson ?? [],
+      },
       runtimeJson: source.runtimeJson,
     };
   }
@@ -123,37 +140,44 @@ async function readMaterialNavigation(
   "use cache";
 
   cacheLife("max");
-  return await fetchQuery(
-    api.contentRelease.material.navigation,
-    {
-      appLocale: AppLocaleSchema.make(locale),
-      expectedActiveReleaseId,
-      materialKey,
-    },
-    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.contentRelease.material.navigation, {
+        appLocale: AppLocaleSchema.make(locale),
+        expectedActiveReleaseId,
+        materialKey,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
   );
 }
-
 class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
   "MaterialReadError",
-  { cause: Schema.Unknown, stage: Schema.Literals(["lesson", "navigation"]) }
+  {
+    cause: Schema.Unknown,
+    stage: Schema.Literals(["lesson", "navigation"]),
+  }
 ) {}
 
 /** Starts native IO before Effect at the request-less prerendering seam. */
 async function fetchMaterialLesson(locale: Locale, publicPath: string) {
-  return await fetchQuery(
-    api.contentRelease.material.lesson,
-    {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    },
-    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.contentRelease.material.lesson, {
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
   );
 }
-
 const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
   function* (
-    source: FunctionReturnType<typeof api.contentRelease.material.lesson>,
+    source: Ref.Returns<typeof refs.public.contentRelease.material.lesson>,
     locale: Locale,
     publicPath: string
   ) {
@@ -165,7 +189,10 @@ const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
             try: () =>
               readMaterialNavigation(locale, materialKey, activeReleaseId),
             catch: (cause) =>
-              new MaterialReadError({ cause, stage: "navigation" }),
+              new MaterialReadError({
+                cause,
+                stage: "navigation",
+              }),
           })
         : null;
     return yield* assembleMaterialSource(
@@ -181,7 +208,7 @@ const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
  * Next serializes errors across cache boundaries, so a fresh lesson identity
  * proves the transition without relying on a preserved ConvexError class. */
 const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
-  initial: FunctionReturnType<typeof api.contentRelease.material.lesson>,
+  initial: Ref.Returns<typeof refs.public.contentRelease.material.lesson>,
   locale: Locale,
   publicPath: string
 ) {
@@ -189,7 +216,11 @@ const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
     Effect.catchTag("MaterialReadError", (error) =>
       Effect.tryPromise({
         try: () => fetchMaterialLesson(locale, publicPath),
-        catch: (cause) => new MaterialReadError({ cause, stage: "lesson" }),
+        catch: (cause) =>
+          new MaterialReadError({
+            cause,
+            stage: "lesson",
+          }),
       }).pipe(
         Effect.flatMap((source) =>
           source.model.activeReleaseId === initial.model.activeReleaseId
@@ -206,7 +237,7 @@ async function readMaterialDelivery(locale: Locale, publicPath: string) {
   "use cache";
 
   applyContentCache("material");
-  // Start native IO before Effect during request-less static rendering.
+  // The Confect request disables trace timing before static rendering suspends.
   // https://nextjs.org/docs/messages/next-prerender-current-time
   const source = await fetchMaterialLesson(locale, publicPath);
   return await Effect.runPromise(
@@ -241,5 +272,4 @@ async function readMaterialModel(locale: Locale, publicPath: string) {
     )
   );
 }
-
 export const getMaterialModel = cache(readMaterialModel);

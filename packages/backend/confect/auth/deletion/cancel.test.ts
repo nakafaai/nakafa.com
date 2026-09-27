@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { cancelAccountDeletionAttemptByToken } from "@repo/backend/confect/auth/deletion/attemptCancellation";
 import {
   cancelAccountDeletion,
@@ -10,7 +12,6 @@ import {
   ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
   ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -20,7 +21,6 @@ import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 9, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
-
 describe("auth/deletion/cancel", () => {
   it("restores access and removes every active reservation", async () => {
     const t = convexTest(schema, convexModules);
@@ -74,34 +74,37 @@ describe("auth/deletion/cancel", () => {
         successorMembershipId: membershipId,
         successorUserId: successorId,
       });
-
-      return { ownerId, preparationId, schoolId };
+      return {
+        ownerId,
+        preparationId,
+        schoolId,
+      };
     });
-
     await t.mutation((ctx) =>
-      runConvexProgram(
-        cancelAccountDeletion(ctx, "cancel-owner", {
+      Effect.runPromise(
+        cancelAccountDeletion("cancel-owner", {
           attemptId: ATTEMPT_ID,
           preparationId: seeded.preparationId,
           recoveryGeneration: 0,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       )
     );
-
     const state = await t.query(async (ctx) => ({
       owner: await ctx.db.get("users", seeded.ownerId),
       preparations: await ctx.db.query("accountDeletionPreparations").collect(),
       school: await ctx.db.get("schools", seeded.schoolId),
       transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
     }));
-
     expect(state.owner).not.toHaveProperty("deletionPreparedAt");
     expect(state.owner).not.toHaveProperty("deletedAt");
     expect(state.school?.createdBy).toBe(seeded.ownerId);
     expect(state.preparations).toHaveLength(0);
     expect(state.transfers).toHaveLength(0);
   });
-
   it("leaves a newer preparation untouched", async () => {
     const t = convexTest(schema, convexModules);
     const seeded = await t.mutation(async (ctx) => {
@@ -120,28 +123,31 @@ describe("auth/deletion/cancel", () => {
         recoveryGeneration: 1,
         userId: insertedUserId,
       });
-      return { preparationId, userId: insertedUserId };
+      return {
+        preparationId,
+        userId: insertedUserId,
+      };
     });
-
     await t.mutation((ctx) =>
-      runConvexProgram(
-        cancelAccountDeletion(ctx, "newer-owner", {
+      Effect.runPromise(
+        cancelAccountDeletion("newer-owner", {
           attemptId: ATTEMPT_ID,
           preparationId: seeded.preparationId,
           recoveryGeneration: 0,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       )
     );
-
     const state = await t.query(async (ctx) => ({
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
       user: await ctx.db.get("users", seeded.userId),
     }));
-
     expect(state.preparation?.recoveryGeneration).toBe(1);
     expect(state.user?.deletionPreparedAt).toBe(NOW + 1);
   });
-
   it("never cancels a finalized account", async () => {
     const t = convexTest(schema, convexModules);
     const seeded = await t.mutation(async (ctx) => {
@@ -161,28 +167,31 @@ describe("auth/deletion/cancel", () => {
         recoveryGeneration: 0,
         userId: insertedUserId,
       });
-      return { preparationId, userId: insertedUserId };
+      return {
+        preparationId,
+        userId: insertedUserId,
+      };
     });
-
     await t.mutation((ctx) =>
-      runConvexProgram(
-        cancelAccountDeletion(ctx, "finalized-owner", {
+      Effect.runPromise(
+        cancelAccountDeletion("finalized-owner", {
           attemptId: ATTEMPT_ID,
           preparationId: seeded.preparationId,
           recoveryGeneration: 0,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       )
     );
-
     const state = await t.query(async (ctx) => ({
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
       user: await ctx.db.get("users", seeded.userId),
     }));
-
     expect(state.preparation?.finalizedAt).toBe(NOW);
     expect(state.user?.deletedAt).toBe(NOW);
   });
-
   it("removes finalized metadata after workflow admission", async () => {
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation(async (ctx) => {
@@ -205,19 +214,22 @@ describe("auth/deletion/cancel", () => {
       });
       return insertedUserId;
     });
-
     const removed = await t.mutation((ctx) =>
-      runConvexProgram(cleanupFinalizedAccountDeletion(ctx, userId))
+      Effect.runPromise(
+        cleanupFinalizedAccountDeletion(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const preparationCount = await t.query(
       async (ctx) =>
         (await ctx.db.query("accountDeletionPreparations").collect()).length
     );
-
     expect(removed).toBe(true);
     expect(preparationCount).toBe(0);
   });
-
   it("does not let a stale cancellation delete a retried preparation", async () => {
     const t = convexTest(schema, convexModules);
     const seeded = await t.mutation(async (ctx) => {
@@ -264,7 +276,6 @@ describe("auth/deletion/cancel", () => {
         recoveryGeneration: 0,
         userId: ownerId,
       });
-
       for (
         let index = 0;
         index <= ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
@@ -277,24 +288,33 @@ describe("auth/deletion/cancel", () => {
           successorUserId: successorId,
         });
       }
-
-      return { ownerId, preparationId };
+      return {
+        ownerId,
+        preparationId,
+      };
     });
     const expectedPreparation = {
       attemptId: ATTEMPT_ID,
       preparationId: seeded.preparationId,
       recoveryGeneration: 0,
     };
-
     await t.mutation((ctx) =>
-      runConvexProgram(
-        cancelAccountDeletionBatch(ctx, "retry-owner", expectedPreparation)
+      Effect.runPromise(
+        cancelAccountDeletionBatch("retry-owner", expectedPreparation).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       )
     );
     await t.mutation((ctx) =>
-      runConvexProgram(
-        cancelAccountDeletionAttemptByToken(ctx, ATTEMPT_ID, () =>
+      Effect.runPromise(
+        cancelAccountDeletionAttemptByToken(ATTEMPT_ID, () =>
           Effect.succeed(true)
+        ).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
         )
       )
     );
@@ -309,7 +329,6 @@ describe("auth/deletion/cancel", () => {
         userId: seeded.ownerId,
       });
     });
-
     const canceled = await t.mutation(
       internal.auth.deletion.cancelAccountDeletion,
       {
@@ -324,12 +343,10 @@ describe("auth/deletion/cancel", () => {
       ),
       user: await ctx.db.get("users", seeded.ownerId),
     }));
-
     expect(canceled).toBe(false);
     expect(remaining.preparation?._id).toBe(retriedPreparationId);
     expect(remaining.user?.deletionPreparedAt).toBe(NOW + 1);
   });
-
   it("deletes expired cancellation tombstones in bounded pages", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -348,23 +365,35 @@ describe("auth/deletion/cancel", () => {
         canceledAt: Number.MAX_SAFE_INTEGER,
       });
     });
-
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(sweepAccountDeletionCancellationsProgram(ctx))
+        Effect.runPromise(
+          sweepAccountDeletionCancellationsProgram().pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
     ).resolves.toBe(true);
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(sweepAccountDeletionCancellationsProgram(ctx))
+        Effect.runPromise(
+          sweepAccountDeletionCancellationsProgram().pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
     ).resolves.toBe(false);
     const cancellations = await t.query((ctx) =>
       ctx.db.query("accountDeletionAttemptCancellations").collect()
     );
-
     expect(cancellations).toEqual([
-      expect.objectContaining({ attemptId: "future" }),
+      expect.objectContaining({
+        attemptId: "future",
+      }),
     ]);
   });
   it.each(["missing", "unlocked"])(
@@ -413,11 +442,16 @@ describe("auth/deletion/cancel", () => {
           ctx.db.query("accountDeletionAttemptCancellations").collect()
         )
       ).resolves.toEqual([
-        expect.objectContaining({ attemptId: ATTEMPT_ID, canceledAt: NOW }),
+        expect.objectContaining({
+          attemptId: ATTEMPT_ID,
+          canceledAt: NOW,
+        }),
       ]);
       await expect(
         t.query((ctx) => ctx.db.get("schools", seeded.schoolId))
-      ).resolves.toMatchObject({ createdBy: seeded.ownerId });
+      ).resolves.toMatchObject({
+        createdBy: seeded.ownerId,
+      });
     }
   );
 });

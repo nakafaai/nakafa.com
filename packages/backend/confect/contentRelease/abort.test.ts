@@ -1,8 +1,9 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { abortProgram } from "@repo/backend/confect/contentRelease/abort";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -21,12 +22,14 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 /** Runs one server-cursor abort page at the native Convex test boundary. */
 function abort(ctx: MutationCtx, releaseId = ABORT_RELEASE_ID) {
-  return runConvexProgram(abortProgram(ctx, releaseId));
+  return abortProgram(releaseId).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(confectSchema, ctx))
+  );
 }
-
 describe("contentRelease/abort", () => {
   it.each(["missing", "excess"])(
     "rejects %s abort rows without committing partial deletion",
@@ -60,23 +63,25 @@ describe("contentRelease/abort", () => {
         t.mutation(internal.contentRelease.manifest.abort, {
           releaseId: ABORT_RELEASE_ID,
         })
-      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+      ).rejects.toMatchObject({
+        data: {
+          code: "CONTENT_RELEASE_INTEGRITY",
+        },
+      });
       expect(await read()).toEqual(before);
     }
   );
   it("resumes durable deletion and accepts terminal response-loss retries", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(seedAbortRelease);
-
-    const completed = await t.mutation((ctx) => abort(ctx));
-    const repeated = await t.mutation((ctx) => abort(ctx));
+    const completed = await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
+    const repeated = await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
     const stored = await t.run(async (ctx) => ({
       items: await ctx.db.query("contentItems").collect(),
       keys: await ctx.db.query("contentKeys").collect(),
       release: await ctx.db.query("contentReleases").unique(),
       state: await ctx.db.query("contentState").unique(),
     }));
-
     expect(completed).toEqual({
       complete: true,
       processedItems: ABORT_ITEM_COUNT,
@@ -91,14 +96,18 @@ describe("contentRelease/abort", () => {
     const release = stored.release;
     assert(release);
     await t.mutation((ctx) =>
-      ctx.db.patch(release._id, { abortedRows: ABORT_ITEM_COUNT + 1 })
+      ctx.db.patch(release._id, {
+        abortedRows: ABORT_ITEM_COUNT + 1,
+      })
     );
     await expect(
       t.mutation(internal.contentRelease.manifest.abort, {
         releaseId: ABORT_RELEASE_ID,
       })
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+      },
     });
   });
   it("preserves staged rows when the release no longer owns its slot", async () => {
@@ -116,13 +125,14 @@ describe("contentRelease/abort", () => {
         releaseId: ABORT_RELEASE_ID,
       })
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+      },
     });
     expect(
       await t.query((ctx) => ctx.db.query("contentItems").collect())
     ).toHaveLength(ABORT_ITEM_COUNT);
   });
-
   it("resumes one byte-bounded large-row cleanup", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(seedAbortRelease);
@@ -139,13 +149,11 @@ describe("contentRelease/abort", () => {
         });
       }
     });
-
-    const first = await t.mutation((ctx) => abort(ctx));
+    const first = await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
     let completed = first;
     while (!completed.complete) {
-      completed = await t.mutation((ctx) => abort(ctx));
+      completed = await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
     }
-
     expect(first.complete).toBe(false);
     expect(first.processedItems).toBeGreaterThan(0);
     expect(first.processedItems).toBeLessThan(ABORT_ITEM_COUNT);
@@ -154,7 +162,6 @@ describe("contentRelease/abort", () => {
       processedItems: ABORT_ITEM_COUNT,
     });
   });
-
   it("removes staged path ownership before a later sequence can claim it", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -180,18 +187,17 @@ describe("contentRelease/abort", () => {
       if (!release) {
         throw new Error("Expected staged abort release.");
       }
-      await ctx.db.patch("contentReleases", release._id, { stagedRoutes: 1 });
+      await ctx.db.patch("contentReleases", release._id, {
+        stagedRoutes: 1,
+      });
     });
-
-    let receipt = await t.mutation((ctx) => abort(ctx));
+    let receipt = await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
     while (!receipt.complete) {
-      receipt = await t.mutation((ctx) => abort(ctx));
+      receipt = await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
     }
-
     const paths = await t.run((ctx) => ctx.db.query("contentPaths").take(1));
     expect(paths).toEqual([]);
   });
-
   it("requires recovery abort before candidate abort", async () => {
     const t = convexTest(schema, convexModules);
     const candidate = {
@@ -228,18 +234,22 @@ describe("contentRelease/abort", () => {
         recoverySequence: recovery.sequence,
       });
     });
-
-    await expect(t.mutation((ctx) => abort(ctx))).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
+    await expect(
+      t.mutation((ctx) => Effect.runPromise(abort(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_STATE",
     });
     await expect(
-      t.mutation((ctx) => abort(ctx, recovery.releaseId))
-    ).resolves.toMatchObject({ complete: true });
-    await expect(t.mutation((ctx) => abort(ctx))).resolves.toMatchObject({
+      t.mutation((ctx) => Effect.runPromise(abort(ctx, recovery.releaseId)))
+    ).resolves.toMatchObject({
+      complete: true,
+    });
+    await expect(
+      t.mutation((ctx) => Effect.runPromise(abort(ctx)))
+    ).resolves.toMatchObject({
       complete: true,
     });
   });
-
   it.each([false, true])(
     "starts artifact retention only after the final reference, shared: %s",
     async (shared) => {
@@ -274,7 +284,10 @@ describe("contentRelease/abort", () => {
             sequence: 0,
             role: "candidate",
             status: "completed",
-            ownership: { base: [], result: ContentFamilySchema.literals },
+            ownership: {
+              base: [],
+              result: ContentFamilySchema.literals,
+            },
           });
           await ctx.db.insert("contentHeads", {
             artifactHash,
@@ -294,9 +307,7 @@ describe("contentRelease/abort", () => {
         }
       });
       const startedAt = Date.now();
-
-      await t.mutation((ctx) => abort(ctx));
-
+      await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
       const artifact = await t.run((ctx) =>
         ctx.db.query("contentArtifacts").unique()
       );
@@ -309,7 +320,6 @@ describe("contentRelease/abort", () => {
       }
     }
   );
-
   it("preserves the active search entry while discarding a checked head", async () => {
     const t = convexTest(schema, convexModules);
     const contentKey = abortContentKey(0);
@@ -324,7 +334,9 @@ describe("contentRelease/abort", () => {
       if (!release) {
         throw new Error("Expected abort release.");
       }
-      await ctx.db.patch("contentReleases", release._id, { checkedItems: 1 });
+      await ctx.db.patch("contentReleases", release._id, {
+        checkedItems: 1,
+      });
       await ctx.db.insert("contentHeads", {
         artifactHash: `sha256:${"d".repeat(64)}`,
         compilerConfigHash: TEST_DIGEST,
@@ -354,19 +366,20 @@ describe("contentRelease/abort", () => {
         text: "active search entry",
       });
     });
-
-    await t.mutation((ctx) => abort(ctx));
-    await t.mutation((ctx) => abort(ctx));
+    await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
+    await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
     const stored = await t.run(async (ctx) => ({
       heads: await ctx.db.query("contentHeads").take(1),
       search: await ctx.db.query("contentIndex").take(1),
     }));
     expect(stored.heads).toEqual([]);
     expect(stored.search).toMatchObject([
-      { contentKey, releaseId: "release-before-abort" },
+      {
+        contentKey,
+        releaseId: "release-before-abort",
+      },
     ]);
   });
-
   it("rejects an active release and corrupted abort progress", async () => {
     const active = convexTest(schema, convexModules);
     const identity = {
@@ -386,9 +399,12 @@ describe("contentRelease/abort", () => {
       });
     });
     await expect(
-      active.mutation((ctx) => abort(ctx, identity.releaseId))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-
+      active.mutation((ctx) =>
+        Effect.runPromise(abort(ctx, identity.releaseId))
+      )
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_STATE",
+    });
     for (const abortedRows of [ABORT_ITEM_COUNT, undefined]) {
       const corrupt = convexTest(schema, convexModules);
       await corrupt.mutation(seedAbortRelease);
@@ -412,12 +428,13 @@ describe("contentRelease/abort", () => {
           releaseId: ABORT_RELEASE_ID,
         })
       ).rejects.toMatchObject({
-        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        data: {
+          code: "CONTENT_RELEASE_INTEGRITY",
+        },
       });
       expect(await read()).toEqual(before);
     }
   });
-
   it("fails closed before completion while directory ownership remains", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -429,9 +446,10 @@ describe("contentRelease/abort", () => {
         artifactLocale: "en",
       });
     });
-
-    await expect(t.mutation((ctx) => abort(ctx))).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    await expect(
+      t.mutation((ctx) => Effect.runPromise(abort(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
 });

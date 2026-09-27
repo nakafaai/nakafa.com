@@ -1,7 +1,9 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import type { stageEnvelopeValidator } from "@repo/backend/confect/contentRelease/envelope.spec";
 import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
 import {
@@ -18,7 +20,6 @@ import type { TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
 type StoredRollbackEnvelope = Schema.Schema.Type<typeof stageEnvelopeValidator>;
-
 export class UnexpectedRollbackTestState extends Data.TaggedError(
   "UnexpectedRollbackTestState"
 )<{
@@ -49,12 +50,19 @@ const storeAuthenticatedRelease = Effect.fn(
   );
   if (!(stored && state)) {
     return yield* Effect.die(
-      new UnexpectedRollbackTestState({ operation: "activate-release" })
+      new UnexpectedRollbackTestState({
+        operation: "activate-release",
+      })
     );
   }
+  const releaseDocument = yield* Schema.decodeEffect(contentReleases.Doc)(
+    stored
+  );
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", stored._id, {
-      receiptJson: JSON.stringify(makePublicationReceipt(stored, release)),
+      receiptJson: JSON.stringify(
+        makePublicationReceipt(releaseDocument, release)
+      ),
       releaseJson: JSON.stringify(release),
       rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
     })
@@ -74,6 +82,7 @@ export const activateAuthenticatedRelease = Effect.fn(
   itemCount: number,
   routeCount = itemCount
 ) {
+  const runtimeServices = yield* Effect.context<never>();
   const unsigned = yield* Schema.decodeEffect(
     Schema.fromJsonString(SignedContentReleaseSchema)
   )(
@@ -86,8 +95,12 @@ export const activateAuthenticatedRelease = Effect.fn(
   const release = testSignedRelease(unsigned.manifest);
   yield* Effect.promise(() =>
     target.mutation((ctx) =>
-      runConvexProgram(
-        storeAuthenticatedRelease(ctx, itemCount, routeCount, release)
+      Effect.runPromiseWith(runtimeServices)(
+        storeAuthenticatedRelease(ctx, itemCount, routeCount, release).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       )
     )
   );
@@ -141,7 +154,9 @@ export const readRollbackEnvelope = Effect.fn(
   );
   if (!stored) {
     return yield* Effect.die(
-      new UnexpectedRollbackTestState({ operation: "activate-release" })
+      new UnexpectedRollbackTestState({
+        operation: "activate-release",
+      })
     );
   }
   return {

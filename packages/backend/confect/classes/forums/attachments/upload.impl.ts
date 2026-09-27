@@ -10,7 +10,41 @@ import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/st
 import { FORUM_PENDING_UPLOAD_LEASE_MS } from "@repo/backend/confect/classes/forums/attachments/constants";
 import spec from "@repo/backend/confect/classes/forums/attachments/upload.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
-import { Clock, Effect, Layer } from "effect";
+import { Clock, Effect, Layer, Option } from "effect";
+
+/** Retire only this upload's blob after all upload capabilities have expired. */
+const cleanup = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "cleanup",
+  Effect.fn("classes.forums.attachments.upload.cleanup")(function* ({
+    storageId,
+  }) {
+    const reader = yield* DatabaseReader;
+    const pending = yield* reader
+      .table("schoolClassForumPendingUploads")
+      .index("by_storageId", (q) => q.eq("storageId", storageId))
+      .first();
+    if (Option.isSome(pending)) {
+      return null;
+    }
+    const attached = yield* reader
+      .table("schoolClassForumPostAttachments")
+      .index("by_fileId", (q) => q.eq("fileId", storageId))
+      .first();
+    if (Option.isSome(attached)) {
+      return null;
+    }
+    const stored = yield* reader
+      .table("_storage")
+      .get(storageId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+    if (stored) {
+      yield* (yield* StorageWriter).delete(storageId);
+    }
+    return null;
+  }, Effect.orDie)
+);
 
 const claim = FunctionImpl.make(
   databaseSchema,
@@ -171,6 +205,7 @@ const settle = FunctionImpl.make(
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(cleanup),
   Layer.provide(claim),
   Layer.provide(release),
   Layer.provide(settle),

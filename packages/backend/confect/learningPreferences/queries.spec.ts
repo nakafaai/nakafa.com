@@ -1,33 +1,15 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
-import { failureWire } from "@repo/backend/confect/failure";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
-  CurriculumPreferenceErrorWire,
+  CurriculumPreferenceError,
   currentLearningPreferenceValidator,
   currentTryoutPreferenceValidator,
   curriculumProgramOptionValidator,
-  LearningPreferencePersistenceErrorWire,
+  LearningPreferencePersistenceError,
 } from "@repo/backend/confect/learningPreferences/schema";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
-export const learningPreferenceIoFailedCode = "LEARNING_PREFERENCE_IO_FAILED";
-export const learningPreferenceIoFailedMessage =
-  "Unable to read learning preferences.";
-
-/** Raised when an authenticated preference query cannot read its user. */
-export class LearningPreferenceIoError extends Schema.TaggedError<LearningPreferenceIoError>()(
-  "LearningPreferenceIoError",
-  {
-    code: Schema.Literal(learningPreferenceIoFailedCode),
-    message: Schema.Literal(learningPreferenceIoFailedMessage),
-  }
-) {}
-
-/** Maps unknown authentication reads into the preference error channel. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const LearningPreferenceIoErrorWire = failureWire(
-  LearningPreferenceIoError
-);
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
@@ -37,8 +19,7 @@ export default GroupSpec.make()
       }),
       returns: () =>
         Schema.mutable(Schema.Array(curriculumProgramOptionValidator)),
-      error: () =>
-        Schema.Union([ReleaseErrorWire, CurriculumPreferenceErrorWire]),
+      error: () => Schema.Union([ReleaseError, CurriculumPreferenceError]),
     })
   )
   .addFunction(
@@ -50,12 +31,11 @@ export default GroupSpec.make()
       returns: () => currentLearningPreferenceValidator,
       error: () =>
         Schema.Union([
-          LearningPreferenceIoErrorWire,
-          LearningPreferencePersistenceErrorWire,
-          CurriculumPreferenceErrorWire,
-          ReleaseErrorWire,
+          LearningPreferencePersistenceError,
+          CurriculumPreferenceError,
+          ReleaseError,
         ]),
-    })
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicQuery({
@@ -65,10 +45,6 @@ export default GroupSpec.make()
       }),
       returns: () => currentTryoutPreferenceValidator,
       error: () =>
-        Schema.Union([
-          LearningPreferenceIoErrorWire,
-          LearningPreferencePersistenceErrorWire,
-          ReleaseErrorWire,
-        ]),
-    })
+        Schema.Union([LearningPreferencePersistenceError, ReleaseError]),
+    }).middleware(Session)
   );

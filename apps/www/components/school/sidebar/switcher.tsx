@@ -1,5 +1,7 @@
 "use client";
 
+import type { Ref } from "@confect/core";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   Add01Icon,
   Backpack01Icon,
@@ -11,8 +13,8 @@ import {
   UnfoldMoreIcon,
   UniversityIcon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,14 +35,14 @@ import {
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { useConvexAuth, usePaginatedQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
+import { useConvexAuth } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { DataFailure } from "@/components/shared/failure";
 import { useSchool } from "@/lib/context/use-school";
 
-type SchoolSwitcherPage = FunctionReturnType<
-  typeof api.schools.queries.getMySchoolsPage
+type SchoolSwitcherPage = Ref.Returns<
+  typeof refs.public.schools.queries.getMySchoolsPage
 >;
 
 /** Render the school switcher with a server-preloaded first page. */
@@ -55,15 +57,18 @@ export function SchoolSwitcher({
   const currentSchool = useSchool((state) => state.school);
   const { isAuthenticated, isLoading } = useConvexAuth();
   const [open, setOpen] = useState(false);
-  const { results, status, loadMore } = usePaginatedQuery(
-    api.schools.queries.getMySchoolsPage,
+  const pagination = usePaginatedQuery(
+    refs.public.schools.queries.getMySchoolsPage,
     open && isAuthenticated && !isLoading ? {} : "skip",
-    { initialNumItems: 20 }
+    {
+      initialNumItems: 20,
+    }
   );
-  const schools = results.length > 0 ? results : initialSchoolPage.page;
-
+  const { results } = pagination;
+  const schools = PaginatedQueryResult.isLoadingFirstPage(pagination)
+    ? initialSchoolPage.page
+    : results;
   const currentSchoolIcon = getSchoolIcon(currentSchool.type);
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -102,19 +107,17 @@ export function SchoolSwitcher({
                     target.scrollHeight -
                     target.scrollTop -
                     target.clientHeight;
-
                   if (remainingScroll > 48) {
                     return;
                   }
-
-                  if (status === "CanLoadMore") {
-                    loadMore(20);
+                  if (PaginatedQueryResult.isCanLoadMore(pagination)) {
+                    pagination.loadMore(20);
                   }
                 }}
               >
+                {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
                 {schools.map((school) => {
                   const schoolIcon = getSchoolIcon(school.type);
-
                   return (
                     <DropdownMenuItem
                       className="cursor-pointer"
@@ -158,7 +161,7 @@ export function SchoolSwitcher({
 }
 
 /** Return the icon used for one school type in the school switcher. */
-function getSchoolIcon(type: Doc<"schools">["type"]) {
+function getSchoolIcon(type: Docs["schools"]["type"]) {
   switch (type) {
     case "elementary-school":
       return Backpack01Icon;

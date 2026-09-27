@@ -1,10 +1,9 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type { PolarCheckoutLocale } from "@repo/backend/confect/customers/checkout/localization";
 import type { polarMetadataValidator } from "@repo/backend/confect/customers/schema";
-import type { ConvexTaggedError } from "@repo/backend/confect/failure";
-import { failureWire } from "@repo/backend/confect/failure";
+import { publicFailure } from "@repo/backend/confect/failure";
 import type { Effect } from "effect";
-import { Schema, SchemaTransformation, Struct } from "effect";
+import { Schema, Struct } from "effect";
 export const polarCheckoutErrorCode = "POLAR_CHECKOUT_ERROR";
 export const polarCustomerEmailConflictCode = "POLAR_CUSTOMER_EMAIL_CONFLICT";
 export const polarCustomerErrorCode = "POLAR_CUSTOMER_ERROR";
@@ -84,130 +83,98 @@ export interface PolarCustomerGateway {
     readonly metadata: PolarMetadata;
   }) => Effect.Effect<PolarCustomerSource, PolarUpdateError>;
 }
-export class PolarCheckoutError
-  extends Schema.TaggedError<PolarCheckoutError>()("PolarCheckoutError", {
+export class PolarCheckoutError extends Schema.TaggedError<PolarCheckoutError>()(
+  "PolarCheckoutError",
+  {
     code: Schema.Literal(polarCheckoutErrorCode),
     cause: Schema.optional(Schema.Unknown),
     message: Schema.String,
-  })
-  implements ConvexTaggedError
-{
+  }
+) {
   declare readonly code: typeof polarCheckoutErrorCode;
   declare readonly message: string;
 }
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const PolarCheckoutErrorWire = failureWire(PolarCheckoutError);
-export class PolarCustomerEmailConflict
-  extends Schema.TaggedError<PolarCustomerEmailConflict>()(
-    "PolarCustomerEmailConflict",
-    {
-      code: Schema.Literal(polarCustomerEmailConflictCode),
-      existingExternalId: Schema.NullOr(Schema.String),
-      message: Schema.String,
-      polarCustomerId: Schema.String,
-    }
-  )
-  implements ConvexTaggedError
-{
+export const PolarCheckoutErrorWire = publicFailure(PolarCheckoutError);
+export class PolarCustomerEmailConflict extends Schema.TaggedError<PolarCustomerEmailConflict>()(
+  "PolarCustomerEmailConflict",
+  {
+    code: Schema.Literal(polarCustomerEmailConflictCode),
+    existingExternalId: Schema.NullOr(Schema.String),
+    message: Schema.String,
+    polarCustomerId: Schema.String,
+  }
+) {
   declare readonly code: typeof polarCustomerEmailConflictCode;
   declare readonly existingExternalId: string | null;
   declare readonly message: string;
   declare readonly polarCustomerId: string;
 }
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
+/** Public errors omit customer identifiers while retaining their discriminant. */
 export const PolarCustomerEmailConflictWire = Schema.Struct(
-  Struct.pick(PolarCustomerEmailConflict.fields, ["code", "message"])
-).pipe(
-  Schema.decodeTo(
-    Schema.Struct(
-      Struct.pick(PolarCustomerEmailConflict.fields, [
-        "_tag",
-        "code",
-        "message",
-      ])
-    ),
-    SchemaTransformation.transform({
-      decode: (fields) => ({
-        ...fields,
-        _tag: PolarCustomerEmailConflict.fields._tag.schema.literal,
-      }),
-      encode: ({ code, message }) => ({
-        code,
-        message,
-      }),
-    })
-  )
+  Struct.pick(PolarCustomerEmailConflict.fields, ["_tag", "code", "message"])
 );
-export class PolarCustomerError
-  extends Schema.TaggedError<PolarCustomerError>()("PolarCustomerError", {
+export class PolarCustomerError extends Schema.TaggedError<PolarCustomerError>()(
+  "PolarCustomerError",
+  {
     code: Schema.Literal(polarCustomerErrorCode),
     cause: Schema.optional(Schema.Unknown),
     message: Schema.String,
-  })
-  implements ConvexTaggedError
-{
+  }
+) {
   declare readonly code: typeof polarCustomerErrorCode;
   declare readonly message: string;
 }
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const PolarCustomerErrorWire = failureWire(PolarCustomerError);
-export class PolarDeleteError
-  extends Schema.TaggedError<PolarDeleteError>()("PolarDeleteError", {
+export const PolarCustomerErrorWire = publicFailure(PolarCustomerError);
+export class PolarDeleteError extends Schema.TaggedError<PolarDeleteError>()(
+  "PolarDeleteError",
+  {
     code: Schema.Literal(polarDeleteErrorCode),
     cause: Schema.optional(Schema.Unknown),
     message: Schema.String,
-  })
-  implements ConvexTaggedError
-{
+  }
+) {
   declare readonly code: typeof polarDeleteErrorCode;
   declare readonly message: string;
 }
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const PolarDeleteErrorWire = failureWire(PolarDeleteError);
-export class PolarDuplicateEmailError
-  extends Schema.TaggedError<PolarDuplicateEmailError>()(
-    "PolarDuplicateEmailError",
-    {
-      code: Schema.Literal(polarDuplicateEmailCode),
-      cause: Schema.optional(Schema.Unknown),
-      message: Schema.String,
-    }
-  )
-  implements ConvexTaggedError
-{
+export const PolarDeleteErrorWire = publicFailure(PolarDeleteError);
+export class PolarDuplicateEmailError extends Schema.TaggedError<PolarDuplicateEmailError>()(
+  "PolarDuplicateEmailError",
+  {
+    code: Schema.Literal(polarDuplicateEmailCode),
+    cause: Schema.optional(Schema.Unknown),
+    message: Schema.String,
+  }
+) {
   declare readonly code: typeof polarDuplicateEmailCode;
   declare readonly message: string;
 }
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const PolarDuplicateEmailErrorWire = failureWire(
+export const PolarDuplicateEmailErrorWire = publicFailure(
   PolarDuplicateEmailError
 );
-export class PolarPortalError
-  extends Schema.TaggedError<PolarPortalError>()("PolarPortalError", {
+export class PolarPortalError extends Schema.TaggedError<PolarPortalError>()(
+  "PolarPortalError",
+  {
     code: Schema.Literal(polarPortalErrorCode),
     cause: Schema.optional(Schema.Unknown),
     message: Schema.String,
-  })
-  implements ConvexTaggedError
-{
+  }
+) {
   declare readonly code: typeof polarPortalErrorCode;
   declare readonly message: string;
 }
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const PolarPortalErrorWire = failureWire(PolarPortalError);
-export class PolarUpdateError
-  extends Schema.TaggedError<PolarUpdateError>()("PolarUpdateError", {
+export const PolarPortalErrorWire = publicFailure(PolarPortalError);
+export class PolarUpdateError extends Schema.TaggedError<PolarUpdateError>()(
+  "PolarUpdateError",
+  {
     code: Schema.Literal(polarUpdateErrorCode),
     cause: Schema.optional(Schema.Unknown),
     message: Schema.String,
-  })
-  implements ConvexTaggedError
-{
+  }
+) {
   declare readonly code: typeof polarUpdateErrorCode;
   declare readonly message: string;
 }
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const PolarUpdateErrorWire = failureWire(PolarUpdateError);
+export const PolarUpdateErrorWire = publicFailure(PolarUpdateError);
 export type PolarCustomerErrorUnion =
   | PolarCheckoutError
   | PolarCustomerEmailConflict
@@ -243,6 +210,3 @@ export class PolarCustomerWebhookTargetIoError extends Schema.TaggedError<PolarC
 
 /** Maps target lookup IO into one typed Convex failure. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const PolarCustomerWebhookTargetIoErrorWire = failureWire(
-  PolarCustomerWebhookTargetIoError
-);

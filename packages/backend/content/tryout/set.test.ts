@@ -1,3 +1,4 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import {
   ACTIVE_APP_LOCALE_CODES,
@@ -8,10 +9,10 @@ import {
   TryoutCatalogRowSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { TRYOUT_SET_QUESTION_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import {
   readTryoutSet,
   type TryoutSetIdentity,
@@ -28,7 +29,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 
 const identity: TryoutSetIdentity = {
   countryKey: TRYOUT_START_COUNTRY,
@@ -57,14 +58,17 @@ async function activateSet(
       placements: ACTIVE_APP_LOCALE_CODES.map(makeTryoutStartPlacement),
     })
   );
-  return { snapshotId, t };
+  return {
+    snapshotId,
+    t,
+  };
 }
-
 describe("contentRelease/tryout/set", () => {
   it.effect(
     "rejects more signed sections than questions and an incomplete section inventory",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         for (const questionCount of [1, 2]) {
           const { t } = yield* Effect.promise(() =>
             activateSet((rows) =>
@@ -85,64 +89,108 @@ describe("contentRelease/tryout/set", () => {
           yield* Effect.promise(() =>
             expect(
               t.query((ctx) =>
-                runConvexProgram(
+                Effect.runPromiseWith(runtimeServices)(
                   readTryoutSet(identity).pipe(
-                    Effect.provide(convexTryoutLayer(ctx))
+                    Effect.provide(
+                      Layer.provideMerge(
+                        tryoutLayer,
+                        ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                      )
+                    )
                   )
                 )
               )
             ).rejects.toMatchObject({
-              data: { code: "CONTENT_RELEASE_INTEGRITY" },
+              code: "CONTENT_RELEASE_INTEGRITY",
             })
           );
         }
       })
   );
-
   it("returns one complete verified set and its signed sections", async () => {
     const { snapshotId, t } = await activateSet();
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutSet(identity).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).resolves.toMatchObject({
       sections: [
         {
-          placements: [{ row: { questionOrder: 1, scope: "server" } }],
-          section: { row: { kind: "section", questionCount: 1 } },
+          placements: [
+            {
+              row: {
+                questionOrder: 1,
+                scope: "server",
+              },
+            },
+          ],
+          section: {
+            row: {
+              kind: "section",
+              questionCount: 1,
+            },
+          },
         },
       ],
-      set: { row: { kind: "set", questionCount: 1, sectionCount: 1 } },
+      set: {
+        row: {
+          kind: "set",
+          questionCount: 1,
+          sectionCount: 1,
+        },
+      },
       setIdentity: expect.any(String),
       snapshotId,
     });
   });
-
   it("fails closed before publication or when the set is missing", async () => {
     const unpublished = convexTest(schema, convexModules);
     await expect(
       unpublished.query((ctx) =>
-        runConvexProgram(
-          readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
-
-    const published = await activateSet();
-    await expect(
-      published.t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSet({ ...identity, setKey: "missing" }).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
+        Effect.runPromise(
+          readTryoutSet(identity).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_MISSING",
+    });
+    const published = await activateSet();
+    await expect(
+      published.t.query((ctx) =>
+        Effect.runPromise(
+          readTryoutSet({
+            ...identity,
+            setKey: "missing",
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_MISSING",
+    });
   });
-
   it("rejects signed set counts that do not match their sections", async () => {
     const { t } = await activateSet((rows) =>
       rows.map((row) => {
@@ -155,16 +203,23 @@ describe("contentRelease/tryout/set", () => {
         });
       })
     );
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutSet(identity).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("rejects a set whose indexed owner identity was changed", async () => {
     const { snapshotId, t } = await activateSet();
     const setIdentity = tryoutCatalogNodeIdentity({
@@ -182,22 +237,30 @@ describe("contentRelease/tryout/set", () => {
           index.eq("snapshotId", snapshotId).eq("identity", setIdentity)
         )
         .unique();
-
       if (!stored) {
         throw new Error("Expected one signed catalog row.");
       }
-      await ctx.db.patch(stored._id, { setIdentity: "changed-set" });
+      await ctx.db.patch(stored._id, {
+        setIdentity: "changed-set",
+      });
     });
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutSet(identity).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("rejects a set beyond the aggregate placement budget", async () => {
     const { t } = await activateSet((rows) =>
       rows.map((row) => {
@@ -210,16 +273,23 @@ describe("contentRelease/tryout/set", () => {
         });
       })
     );
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutSet(identity).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_LIMIT",
+    });
   });
-
   it("rejects an internal entry key bound to a visible section", async () => {
     const { t } = await activateSet((rows) =>
       rows.map((row) => {
@@ -233,16 +303,23 @@ describe("contentRelease/tryout/set", () => {
         });
       })
     );
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutSet(identity).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("rejects a set whose internal entry section is missing", async () => {
     const { t } = await activateSet(
       (rows) =>
@@ -257,25 +334,37 @@ describe("contentRelease/tryout/set", () => {
         }),
       "internal-entry"
     );
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutSet(identity).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("returns one set with its declared internal entry section", async () => {
     const { t } = await activateSet((rows) => rows, "internal-entry");
-
     const set = await t.query((ctx) =>
-      runConvexProgram(
-        readTryoutSet(identity).pipe(Effect.provide(convexTryoutLayer(ctx)))
+      Effect.runPromise(
+        readTryoutSet(identity).pipe(
+          Effect.provide(
+            Layer.provideMerge(
+              tryoutLayer,
+              ConfectDatabaseReader.layer(confectSchema, ctx.db)
+            )
+          )
+        )
       )
     );
-
     expect(set.sections.map(({ section }) => section.row.visibility)).toContain(
       "internal-entry"
     );

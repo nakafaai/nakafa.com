@@ -3,13 +3,14 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import messageParts from "@repo/backend/confect/_generated/tables/messageParts";
 import messages from "@repo/backend/confect/_generated/tables/messages";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ChatAccessFailure } from "@repo/backend/confect/chats/access/spec";
+import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
 } from "@repo/backend/confect/chats/schema";
-import { TranscriptFailure } from "@repo/backend/confect/chats/transcript/spec";
+import { TranscriptLimitExceeded } from "@repo/backend/confect/chats/transcript/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 
 /** Creates a new chat for the authenticated user. */
@@ -23,7 +24,9 @@ export default GroupSpec.make()
       }),
       returns: () => IdSchema("chats"),
       error: () => AuthFailure,
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -33,8 +36,10 @@ export default GroupSpec.make()
         title: Schema.String,
       }),
       returns: () => IdSchema("chats"),
-      error: () => Schema.Union([AuthFailure, ChatAccessFailure]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, ChatAccessError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -44,8 +49,10 @@ export default GroupSpec.make()
         visibility: chatVisibilityValidator,
       }),
       returns: () => IdSchema("chats"),
-      error: () => Schema.Union([AuthFailure, ChatAccessFailure]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, ChatAccessError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -67,8 +74,10 @@ export default GroupSpec.make()
           partIds: Schema.mutable(Schema.Array(IdSchema("messageParts"))),
         }),
       error: () =>
-        Schema.Union([ChatAccessFailure, TranscriptFailure, AuthFailure]),
-    }).middleware(Atomic)
+        Schema.Union([ChatAccessError, TranscriptLimitExceeded, AuthFailure]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -95,8 +104,10 @@ export default GroupSpec.make()
           messageId: IdSchema("messages"),
           partIds: Schema.mutable(Schema.Array(IdSchema("messageParts"))),
         }),
-      error: () => Schema.Union([AuthFailure, TranscriptFailure]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, TranscriptLimitExceeded]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -105,6 +116,8 @@ export default GroupSpec.make()
         chatId: IdSchema("chats"),
       }),
       returns: () => Schema.Null,
-      error: () => Schema.Union([AuthFailure, ChatAccessFailure]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, ChatAccessError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   );

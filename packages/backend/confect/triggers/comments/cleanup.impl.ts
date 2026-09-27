@@ -1,13 +1,11 @@
+import { FunctionImpl, GroupImpl } from "@confect/server";
+import refs from "@repo/backend/confect/_generated/refs";
+import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  FunctionImpl,
-  GroupImpl,
   Scheduler,
-} from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
+} from "@repo/backend/confect/_generated/services";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import {
   COMMENT_REPLY_CLEANUP_BATCH_SIZE,
@@ -22,12 +20,9 @@ const cleanupDeletedComment = FunctionImpl.make(
   "cleanupDeletedComment",
   Effect.fn("triggers.comments.cleanup.cleanupDeletedComment")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
-      const scheduler = yield* Scheduler.Scheduler.pipe(
-        Effect.provide(Scheduler.layer(ctx.scheduler))
-      );
-      const database = DatabaseReader.make(databaseSchema, ctx.db);
-      const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+      const scheduler = yield* Scheduler;
+      const database = yield* DatabaseReader;
+      const writer = yield* DatabaseWriter;
       const votes = yield* database
         .table("commentVotes")
         .index("by_commentId_and_userId", (q) =>

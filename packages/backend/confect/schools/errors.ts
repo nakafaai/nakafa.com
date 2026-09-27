@@ -1,6 +1,4 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
-
 export class SchoolReadError extends Schema.TaggedError<SchoolReadError>()(
   "SchoolReadError",
   {
@@ -8,7 +6,6 @@ export class SchoolReadError extends Schema.TaggedError<SchoolReadError>()(
     message: Schema.String,
   }
 ) {}
-
 export class SchoolCreateError extends Schema.TaggedError<SchoolCreateError>()(
   "SchoolCreateError",
   {
@@ -16,6 +13,3 @@ export class SchoolCreateError extends Schema.TaggedError<SchoolCreateError>()(
     message: Schema.String,
   }
 ) {}
-
-export const SchoolReadFailure = failureWire(SchoolReadError);
-export const SchoolCreateFailure = failureWire(SchoolCreateError);

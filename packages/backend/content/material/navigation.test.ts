@@ -1,9 +1,13 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import { convexMaterialLayer } from "@repo/backend/content/material/convex";
+import { materialLayer } from "@repo/backend/content/material/confect";
 import { readMaterialNavigation } from "@repo/backend/content/material/navigation";
 import { readMaterialLesson } from "@repo/backend/content/material/read";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -19,7 +23,7 @@ import {
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 
 describe("material navigation reuse", () => {
   it.each([2, 10])(
@@ -27,32 +31,60 @@ describe("material navigation reuse", () => {
     async (siblingCount) => {
       const target = convexTest(schema, convexModules);
       const projections = ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) =>
-        Array.from({ length: siblingCount }, (_, index) =>
-          makeMaterialProjection(appLocale, index + 1)
+        Array.from(
+          {
+            length: siblingCount,
+          },
+          (_, index) => makeMaterialProjection(appLocale, index + 1)
         )
       );
-      await activateMaterialCatalog(target, projections);
+      await target.mutation((ctx) =>
+        Effect.runPromise(
+          activateMaterialCatalog(projections).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
+      );
       const requested = makeMaterialProjection("en", 1);
       const current = await target.query(async (ctx) => {
-        const result = await runConvexProgram(
+        const result = await Effect.runPromise(
           readMaterialLesson("en", requested.publicPath).pipe(
-            Effect.provide(convexMaterialLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                materialLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         );
-        return { result, metrics: await ctx.meta.getTransactionMetrics() };
+        return {
+          result,
+          metrics: await ctx.meta.getTransactionMetrics(),
+        };
       });
       const group = await target.query(async (ctx) => {
-        const result = await runConvexProgram(
+        const result = await Effect.runPromise(
           readMaterialNavigation(
             "en",
             requested.materialKey,
             MATERIAL_IDENTITY.releaseId
-          ).pipe(Effect.provide(convexMaterialLayer(ctx)))
+          ).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                materialLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         );
-        return { result, metrics: await ctx.meta.getTransactionMetrics() };
+        return {
+          result,
+          metrics: await ctx.meta.getTransactionMetrics(),
+        };
       });
       const navigation = group.result;
-
       expect(current.result.model.projectionJson).toBe(
         canonicalizeMaterialProjection(requested)
       );
@@ -71,21 +103,38 @@ describe("material navigation reuse", () => {
       expect(other.model.activeReleaseId).toBe(navigation.activeReleaseId);
     }
   );
-
   it("returns an authenticated withdrawal without requesting a group", async () => {
     const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const result = await target.query(api.contentRelease.material.lesson, {
       appLocale: "en",
       publicPath: "subjects/test/missing",
     });
-    expect(result).toMatchObject({ materialKey: null, runtimeJson: null });
+    expect(result).toMatchObject({
+      materialKey: null,
+      runtimeJson: null,
+    });
     expect(result.model.projectionJson).toBeNull();
   });
-
   it("rejects navigation from a different active publication", async () => {
     const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const args = {
       appLocale: "en" as const,
       expectedActiveReleaseId: MATERIAL_IDENTITY.releaseId,
@@ -95,10 +144,22 @@ describe("material navigation reuse", () => {
       api.contentRelease.material.navigation,
       args
     );
-    await advanceMaterialCatalog(target);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        advanceMaterialCatalog().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await expect(
       target.query(api.contentRelease.material.navigation, args)
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+      },
+    });
     const after = await target.query(api.contentRelease.material.navigation, {
       ...args,
       expectedActiveReleaseId: "release-next",
@@ -106,10 +167,17 @@ describe("material navigation reuse", () => {
     expect(after.siblingJson).toEqual(before.siblingJson);
     expect(after.activeReleaseId).not.toBe(before.activeReleaseId);
   });
-
   it("rejects missing groups and corrupted sibling provenance", async () => {
     const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const args = {
       appLocale: "en" as const,
       expectedActiveReleaseId: MATERIAL_IDENTITY.releaseId,
@@ -120,7 +188,11 @@ describe("material navigation reuse", () => {
         ...args,
         materialKey: "lesson.test.missing",
       })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_MISSING",
+      },
+    });
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
@@ -132,19 +204,27 @@ describe("material navigation reuse", () => {
         )
         .unique();
       assert(row);
-      await ctx.db.patch("materialCatalog", row._id, { releaseId: "corrupt" });
+      await ctx.db.patch("materialCatalog", row._id, {
+        releaseId: "corrupt",
+      });
     });
     await expect(
       target.query(api.contentRelease.material.navigation, args)
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+      },
+    });
   });
-
   it("rejects a release that does not own material navigation", async () => {
     const target = convexTest(schema, convexModules);
     await target.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...MATERIAL_IDENTITY,
-        ownership: { base: [], result: [] },
+        ownership: {
+          base: [],
+          result: [],
+        },
         role: "candidate",
         status: "completed",
       });
@@ -159,6 +239,10 @@ describe("material navigation reuse", () => {
         expectedActiveReleaseId: MATERIAL_IDENTITY.releaseId,
         materialKey: "lesson.test.functions",
       })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_MISSING",
+      },
+    });
   });
 });

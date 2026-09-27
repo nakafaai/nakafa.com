@@ -10,7 +10,11 @@ it("requires a session and grants subscription UI access only for the current cu
   const query = api.subscriptions.queries.hasActiveSubscription;
   const args = { productId: "pro-product" };
   await expect(t.query(query, args)).rejects.toMatchObject({
-    data: "Unauthenticated",
+    data: {
+      _tag: "SessionRequired",
+      code: "UNAUTHENTICATED",
+      message: "Unauthenticated",
+    },
   });
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: Date.now() })

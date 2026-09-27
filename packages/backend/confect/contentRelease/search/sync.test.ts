@@ -1,14 +1,16 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { syncSearch } from "@repo/backend/confect/contentRelease/search/sync";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { insertArticleProjection } from "@repo/backend/test/article/release";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { insertCompletedRelease } from "@repo/backend/test/content/model";
 import { testUpsertJson } from "@repo/backend/test/content/release";
 import { testArticleProjection } from "@repo/backend/test/content/runtime";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const identity = {
   manifestHash: `sha256:${"6".repeat(64)}`,
@@ -23,7 +25,9 @@ async function stageBuild() {
     await insertCompletedRelease(ctx, identity, 1);
     await insertArticleProjection(ctx, identity, 0, testArticleProjection(0));
     await ctx.db.insert("contentModelBuilds", {
-      base: { kind: "empty" },
+      base: {
+        kind: "empty",
+      },
       generation: 1,
       itemIndex: -1,
       key: "primary",
@@ -53,15 +57,22 @@ function synchronize(t: Awaited<ReturnType<typeof stageBuild>>) {
     if (!(build && release)) {
       return expect.fail("Expected one release and inactive search build.");
     }
-    return runConvexProgram(
+    return Effect.runPromise(
       Effect.gen(function* () {
         const signed = yield* decodeReleaseJson(release.releaseJson);
-        return yield* syncSearch(ctx, build, release, signed);
-      })
+        return yield* syncSearch(
+          build,
+          yield* Schema.decodeEffect(contentReleases.Doc)(release),
+          signed
+        );
+      }).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
     );
   });
 }
-
 describe("inactive search publication synchronization", () => {
   it("indexes verified article text and removes its inherited tombstone", async () => {
     const t = await stageBuild();
@@ -84,7 +95,9 @@ describe("inactive search publication synchronization", () => {
       if (!head) {
         return expect.fail("Expected the article's immutable head.");
       }
-      await ctx.db.patch(head._id, { operation: "delete" });
+      await ctx.db.patch(head._id, {
+        operation: "delete",
+      });
     });
     expect(await synchronize(t)).toEqual({
       done: true,
@@ -95,7 +108,6 @@ describe("inactive search publication synchronization", () => {
       await t.query((ctx) => ctx.db.query("contentIndex").collect())
     ).toEqual([]);
   });
-
   it("leaves non-searchable page identities out of the search buffer", async () => {
     const t = await stageBuild();
     await t.mutation(async (ctx) => {
@@ -123,7 +135,6 @@ describe("inactive search publication synchronization", () => {
       await t.query((ctx) => ctx.db.query("contentIndex").collect())
     ).toEqual([]);
   });
-
   it.each([
     "missing artifact",
     "changed artifact",
@@ -143,7 +154,9 @@ describe("inactive search publication synchronization", () => {
       }
       if (failure === "changed artifact") {
         return ctx.db.patch(artifact._id, {
-          artifactJson: testArtifactJson({ contentKey: "test:other" }),
+          artifactJson: testArtifactJson({
+            contentKey: "test:other",
+          }),
         });
       }
       if (failure === "changed item") {
@@ -154,15 +167,15 @@ describe("inactive search publication synchronization", () => {
           }),
         });
       }
-      return ctx.db.patch(head._id, { artifactHash: undefined });
+      return ctx.db.patch(head._id, {
+        artifactHash: undefined,
+      });
     });
     await expect(synchronize(t)).rejects.toMatchObject({
-      data: {
-        code:
-          failure === "missing artifact"
-            ? "CONTENT_RELEASE_MISSING"
-            : "CONTENT_RELEASE_INTEGRITY",
-      },
+      code:
+        failure === "missing artifact"
+          ? "CONTENT_RELEASE_MISSING"
+          : "CONTENT_RELEASE_INTEGRITY",
     });
     expect(
       await t.query((ctx) => ctx.db.query("contentIndex").collect())

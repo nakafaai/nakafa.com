@@ -42,7 +42,7 @@ const initialize = (source = environment) => {
   mocks.command.mockImplementation(
     (spec: { args: readonly string[]; cwd: string }) =>
       Effect.gen(function* () {
-        if (spec.args[2] !== "init") {
+        if (spec.args[1] !== "init") {
           return;
         }
         const fs = yield* FileSystem.FileSystem;

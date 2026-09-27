@@ -1,8 +1,9 @@
+import { RegisteredFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
@@ -23,11 +24,17 @@ const CATALOG = {
   activeManifestHash: PIN.manifestHash,
   activeReleaseId: PIN.releaseId,
   managed: true,
-  rowJson: Array.from({ length: 114 }, (_, index) =>
-    encodeTestQuranRow(SNAPSHOT_ID, makeQuranSurah(index + 1))
+  rowJson: Array.from(
+    {
+      length: 114,
+    },
+    (_, index) => encodeTestQuranRow(SNAPSHOT_ID, makeQuranSurah(index + 1))
   ),
   snapshotId: SNAPSHOT_ID,
-  sourceOrigin: { kind: "git", sha: "a".repeat(40) },
+  sourceOrigin: {
+    kind: "git",
+    sha: "a".repeat(40),
+  },
   sourceRevision: "a".repeat(40),
 } satisfies FunctionReturnType<typeof api.contentRelease.quran.surahs>;
 
@@ -38,11 +45,15 @@ function queryResponses(
     readonly before?: typeof PIN | null;
     readonly after?: typeof PIN | null;
     readonly unmanaged?: "article taxonomy" | "article" | "material" | "quran";
+    readonly malformed?: string;
   } = {}
 ) {
   let pinRead = 0;
   return vi.spyOn(ctx, "runQuery").mockImplementation((...[reference]) => {
     const name = getFunctionName(reference);
+    if (name === options.malformed) {
+      return Promise.resolve(false);
+    }
     if (name === "contentRelease/runtime/active:read") {
       pinRead += 1;
       const pin = pinRead === 1 ? options.before : options.after;
@@ -72,8 +83,18 @@ function queryResponses(
     }
     if (name === "contentRelease/tryout:taxonomy") {
       return Promise.resolve({
-        countries: [{ id: "indonesia", label: "Indonesia" }],
-        exams: [{ id: "snbt", label: "SNBT" }],
+        countries: [
+          {
+            id: "indonesia",
+            label: "Indonesia",
+          },
+        ],
+        exams: [
+          {
+            id: "snbt",
+            label: "SNBT",
+          },
+        ],
         routeCount: 4,
       } satisfies FunctionReturnType<
         typeof api.contentRelease.tryout.taxonomy
@@ -88,8 +109,30 @@ function queryResponses(
     return expect.fail(`Unexpected taxonomy query ${name}.`);
   });
 }
-
 describe("agent/taxonomy", () => {
+  it.each([
+    "contentRelease/runtime/active:read",
+    "contentRelease/article/internal:readAgentTaxonomy",
+    "contentRelease/article:sitemapBuckets",
+    "contentRelease/material:sitemapBuckets",
+    "contentRelease/tryout:taxonomy",
+    "contentRelease/quran:surahs",
+  ])(
+    "rejects a malformed %s result before assembling taxonomy",
+    async (malformed) => {
+      await createConvexTestWithBetterAuth().action(async (ctx) => {
+        queryResponses(ctx, { malformed });
+        const error = await Effect.runPromise(
+          getNakafaTaxonomy().pipe(
+            Effect.flip,
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
+        );
+        expect(error._tag).toBe("NakafaAgentDataReadError");
+        expect(error.cause).toContain("Expected");
+      });
+    }
+  );
   it.each([undefined, "en", "id", "de"] satisfies (
     | ActiveAppLocaleCode
     | undefined
@@ -99,22 +142,48 @@ describe("agent/taxonomy", () => {
       const test = createConvexTestWithBetterAuth();
       await test.action(async (ctx) => {
         const queries = queryResponses(ctx);
-        const result = await runConvexProgram(
-          getNakafaTaxonomy(ctx, locale).pipe(Effect.orDie)
+        const result = await Effect.runPromise(
+          getNakafaTaxonomy(locale).pipe(
+            Effect.orDie,
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
         );
         expect(result).toMatchObject({
-          articles: { categories: ["politics"] },
+          articles: {
+            categories: ["politics"],
+          },
           content_counts: [
-            { count: 123, locale: "en" },
-            { count: 123, locale: "id" },
-            { count: 123, locale: "de" },
+            {
+              count: 123,
+              locale: "en",
+            },
+            {
+              count: 123,
+              locale: "id",
+            },
+            {
+              count: 123,
+              locale: "de",
+            },
           ],
           default_locale: "en",
           locale: locale ?? "en",
-          quran: { surah_count: 114 },
+          quran: {
+            surah_count: 114,
+          },
           tryout: {
-            countries: [{ id: "indonesia", label: "Indonesia" }],
-            exams: [{ id: "snbt", label: "SNBT" }],
+            countries: [
+              {
+                id: "indonesia",
+                label: "Indonesia",
+              },
+            ],
+            exams: [
+              {
+                id: "snbt",
+                label: "SNBT",
+              },
+            ],
           },
         });
         const taxonomyLocales = queries.mock.calls
@@ -124,19 +193,26 @@ describe("agent/taxonomy", () => {
           )
           .map(([, args]) => args);
         expect(taxonomyLocales).toHaveLength(3);
-        expect(taxonomyLocales).toContainEqual({ appLocale: locale ?? "en" });
+        expect(taxonomyLocales).toContainEqual({
+          appLocale: locale ?? "en",
+        });
       });
     }
   );
-
   it.each(["article taxonomy", "article", "material", "quran"] as const)(
     "fails closed when signed %s inventory is unavailable",
     async (unmanaged) => {
       const test = createConvexTestWithBetterAuth();
       await test.action(async (ctx) => {
-        queryResponses(ctx, { unmanaged });
-        const failure = await runConvexProgram(
-          getNakafaTaxonomy(ctx).pipe(Effect.flip, Effect.orDie)
+        queryResponses(ctx, {
+          unmanaged,
+        });
+        const failure = await Effect.runPromise(
+          getNakafaTaxonomy().pipe(
+            Effect.flip,
+            Effect.orDie,
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
         );
         expect(failure._tag).toBe("NakafaAgentDataReadError");
         expect(failure.cause).toContain(
@@ -145,24 +221,48 @@ describe("agent/taxonomy", () => {
       });
     }
   );
-
   it.each([
     {
       before: PIN,
-      after: { ...PIN, manifestHash: `sha256:${"3".repeat(64)}` },
+      after: {
+        ...PIN,
+        manifestHash: `sha256:${"3".repeat(64)}`,
+      },
     },
-    { before: PIN, after: { ...PIN, releaseId: "release-agent-next" } },
-    { before: PIN, after: { ...PIN, sequence: 2 } },
-    { before: PIN, after: null },
-    { before: null, after: PIN },
+    {
+      before: PIN,
+      after: {
+        ...PIN,
+        releaseId: "release-agent-next",
+      },
+    },
+    {
+      before: PIN,
+      after: {
+        ...PIN,
+        sequence: 2,
+      },
+    },
+    {
+      before: PIN,
+      after: null,
+    },
+    {
+      before: null,
+      after: PIN,
+    },
   ])(
     "rejects inventories assembled across a release transition: %j",
     async (options) => {
       const test = createConvexTestWithBetterAuth();
       await test.action(async (ctx) => {
         queryResponses(ctx, options);
-        const failure = await runConvexProgram(
-          getNakafaTaxonomy(ctx).pipe(Effect.flip, Effect.orDie)
+        const failure = await Effect.runPromise(
+          getNakafaTaxonomy().pipe(
+            Effect.flip,
+            Effect.orDie,
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
         );
         expect(failure).toMatchObject({
           _tag: "NakafaAgentDataReadError",

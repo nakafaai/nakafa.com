@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 /** A bounded transcript operation cannot be completed in one transaction. */
@@ -14,4 +13,3 @@ export class TranscriptLimitExceeded extends Schema.TaggedError<TranscriptLimitE
     message: Schema.String,
   }
 ) {}
-export const TranscriptFailure = failureWire(TranscriptLimitExceeded);

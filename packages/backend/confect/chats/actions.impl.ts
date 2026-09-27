@@ -1,12 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  ActionCtx as ActionCtxService,
-  Scheduler,
-} from "@repo/backend/confect/_generated/services";
-import { requireAuthForAction } from "@repo/backend/confect/auth/session";
+import { Scheduler } from "@repo/backend/confect/_generated/services";
+import { requireAuth } from "@repo/backend/confect/auth/session";
 import spec from "@repo/backend/confect/chats/actions.spec";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Duration, Effect, Layer } from "effect";
 
 /**
@@ -21,13 +19,15 @@ const scheduleSaveAssistantResponse = FunctionImpl.make(
   spec,
   "scheduleSaveAssistantResponse",
   Effect.fn("chats.actions.scheduleSaveAssistantResponse")(function* (args) {
-    const ctx = yield* ActionCtxService;
     const scheduler = yield* Scheduler;
-    const { appUser } = yield* requireAuthForAction(ctx);
+    const { appUser } = yield* requireAuth();
     yield* scheduler.runAfter(
       Duration.zero,
       refs.internal.chats.assistantResponses.saveAssistantResponse,
-      { userId: appUser._id, ...args }
+      {
+        userId: appUser._id,
+        ...args,
+      }
     );
     return null;
   })
@@ -37,13 +37,15 @@ const scheduleSaveAssistantFailure = FunctionImpl.make(
   spec,
   "scheduleSaveAssistantFailure",
   Effect.fn("chats.actions.scheduleSaveAssistantFailure")(function* (args) {
-    const ctx = yield* ActionCtxService;
     const scheduler = yield* Scheduler;
-    const { appUser } = yield* requireAuthForAction(ctx);
+    const { appUser } = yield* requireAuth();
     yield* scheduler.runAfter(
       Duration.zero,
       refs.internal.chats.assistantResponses.saveAssistantFailure,
-      { userId: appUser._id, ...args }
+      {
+        userId: appUser._id,
+        ...args,
+      }
     );
     return null;
   })
@@ -51,5 +53,6 @@ const scheduleSaveAssistantFailure = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(scheduleSaveAssistantResponse),
   Layer.provide(scheduleSaveAssistantFailure),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

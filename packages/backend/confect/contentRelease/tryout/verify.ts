@@ -1,10 +1,10 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
 import {
   tryoutCatalogFacts,
   tryoutPlacementFacts,
 } from "@repo/backend/confect/contentRelease/tryout/facts";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
@@ -12,7 +12,7 @@ import { Effect } from "effect";
 export const verifyTryoutCatalog = Effect.fn(
   "contentRelease.verifyTryoutCatalog"
 )(function* (
-  row: WithoutSystemFields<Doc<"tryoutCatalog">>,
+  row: WithoutSystemFields<Docs["tryoutCatalog"]>,
   snapshotId: string
 ) {
   const decoded = yield* decodeSnapshotRowJson(row.rowJson);
@@ -49,7 +49,7 @@ export const verifyTryoutCatalog = Effect.fn(
 export const verifyTryoutPlacement = Effect.fn(
   "contentRelease.verifyTryoutPlacement"
 )(function* (
-  row: WithoutSystemFields<Doc<"tryoutPlacements">>,
+  row: WithoutSystemFields<Docs["tryoutPlacements"]>,
   snapshotId: string
 ) {
   const decoded = yield* decodeSnapshotRowJson(row.rowJson);

@@ -1,5 +1,9 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+} from "@repo/backend/confect/_generated/services";
 import { resend } from "@repo/backend/confect/emails/client";
 import {
   deferWelcomeIntent,
@@ -7,15 +11,12 @@ import {
   tryWelcomeIntent,
 } from "@repo/backend/confect/emails/welcome/impl";
 import { WELCOME_EMAIL_FROM } from "@repo/backend/confect/emails/welcome/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
-export type WelcomeIntent = Doc<"welcomeEmailIntents">;
+export type WelcomeIntent = Docs["welcomeEmailIntents"];
 export const enqueueRenderedWelcomeProgram = Effect.fn(
   "emails.welcome.enqueueRendered"
 )(
   function* (
-    ctx: MutationCtx,
     intentId: WelcomeIntent["_id"],
     message: {
       readonly html: string;
@@ -23,8 +24,9 @@ export const enqueueRenderedWelcomeProgram = Effect.fn(
       readonly text: string;
     }
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const ctx = yield* MutationCtxService;
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const intent = yield* database
       .table("welcomeEmailIntents")
       .get(intentId)

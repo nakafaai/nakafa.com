@@ -4,6 +4,7 @@ import {
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
+import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
 import {
@@ -30,7 +31,7 @@ import {
   insertTestRelease,
 } from "@repo/backend/test/content/stage";
 import { convexTest } from "convex-test";
-import { Struct } from "effect";
+import { Schema, Struct } from "effect";
 
 const readCatalog = internal.contentRelease.proof.catalog.page;
 
@@ -116,7 +117,10 @@ async function insertBaseFixture(role: "candidate" | "recovery") {
         ? {
             completedAt: 1,
             receiptJson: JSON.stringify(
-              makePublicationReceipt(base, baseSigned)
+              makePublicationReceipt(
+                Schema.decodeSync(contentReleases.Doc)(base),
+                baseSigned
+              )
             ),
             status: "completed" as const,
           }

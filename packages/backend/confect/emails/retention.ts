@@ -1,14 +1,15 @@
-import { Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationCtx as MutationCtxService,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { components } from "@repo/backend/convex/_generated/api";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Duration, Effect } from "effect";
 export const scheduleRetainedEmailCleanup = Effect.fn(
   "emails.retention.scheduleCleanup"
-)(function* (ctx: MutationCtx) {
-  const scheduler = yield* Scheduler.Scheduler.pipe(
-    Effect.provide(Scheduler.layer(ctx.scheduler))
-  );
+)(function* () {
+  const ctx = yield* MutationCtxService;
+  const scheduler = yield* Scheduler;
   yield* Effect.promise(() =>
     ctx.scheduler.runAfter(0, components.resend.lib.cleanupOldEmails, {})
   );

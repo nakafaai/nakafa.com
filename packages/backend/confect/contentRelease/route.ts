@@ -1,6 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { ContentRouteItem } from "@nakafa/aksara-contracts/release/route/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
@@ -12,14 +14,13 @@ import {
   loadVersion,
 } from "@repo/backend/confect/contentRelease/model";
 import { decodeItemJson } from "@repo/backend/confect/contentRelease/parse";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Creates one permanent route directory entry without changing identity. */
 const ensureContentPath = Effect.fn("contentRelease.ensureContentPath")(
-  function* (ctx: MutationCtx, route: ContentRouteItem, sequence: number) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (route: ContentRouteItem, sequence: number) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const existing = yield* database
       .table("contentPaths")
       .get(
@@ -43,7 +44,6 @@ const ensureContentPath = Effect.fn("contentRelease.ensureContentPath")(
 /** Proves a bound content identity exists in the release result snapshot. */
 const validateBoundContent = Effect.fn("contentRelease.validateBoundContent")(
   function* (
-    ctx: MutationCtx,
     releaseId: string,
     sequence: number | undefined,
     route: ContentRouteItem
@@ -52,7 +52,6 @@ const validateBoundContent = Effect.fn("contentRelease.validateBoundContent")(
       return;
     }
     const staged = yield* loadIdentityItem(
-      ctx,
       releaseId,
       route.change.contentKey,
       route.change.appLocale
@@ -69,7 +68,6 @@ const validateBoundContent = Effect.fn("contentRelease.validateBoundContent")(
     }
     if (sequence !== undefined) {
       const prior = yield* loadVersion(
-        ctx,
         route.change.contentKey,
         route.change.appLocale,
         sequence
@@ -88,7 +86,6 @@ const validateBoundContent = Effect.fn("contentRelease.validateBoundContent")(
 /** Stores one immutable route version after deriving its prior owner. */
 export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
   function* (
-    ctx: MutationCtx,
     route: ContentRouteItem,
     routeJson: string,
     batchIndex: number,
@@ -96,8 +93,8 @@ export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
     sequence: number,
     priorSequence: number | undefined
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const atIndex = yield* database
       .table("contentBindings")
       .get("by_releaseId_and_index", route.releaseId, route.index)
@@ -127,7 +124,6 @@ export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
       priorSequence === undefined
         ? null
         : yield* loadRouteBinding(
-            ctx,
             route.change.appLocale,
             route.change.publicPath,
             priorSequence
@@ -148,8 +144,8 @@ export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
         `Route ${route.change.appLocale}/${route.change.publicPath} keeps its owner.`
       );
     }
-    yield* validateBoundContent(ctx, route.releaseId, priorSequence, route);
-    yield* ensureContentPath(ctx, route, sequence);
+    yield* validateBoundContent(route.releaseId, priorSequence, route);
+    yield* ensureContentPath(route, sequence);
     const contentKey =
       route.change.operation === "bind"
         ? route.change.contentKey

@@ -1,6 +1,5 @@
 "use node";
 
-import { QueryRunner } from "@confect/server";
 import { verifySignedContentArtifactIntegrity } from "@nakafa/aksara-contracts/artifact/integrity";
 import {
   canonicalizeRollbackPage,
@@ -18,6 +17,7 @@ import {
 } from "@nakafa/aksara-contracts/release/route/page";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   ReleaseError,
   releaseFail,
@@ -31,7 +31,6 @@ import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Schema } from "effect";
 
 type RollbackRequest = Extract<
@@ -40,7 +39,6 @@ type RollbackRequest = Extract<
     readonly operation: "rollbackPage" | "routePage";
   }
 >;
-type ReadContext = Pick<ActionCtx, "runQuery">;
 const textEncoder = new TextEncoder();
 /** Decodes one canonical stored page through its exact shared schema. */
 const decodePage = Effect.fn("contentRelease.decodeRollbackPage")(function* <
@@ -196,7 +194,6 @@ const verifyRollbackArtifacts = Effect.fn(
 /** Aggregates safe query transactions into one byte-bounded wire page. */
 const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
   function* (
-    ctx: ReadContext,
     request: Extract<
       RollbackRequest,
       {
@@ -205,9 +202,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
     >,
     total: number
   ) {
-    const runQuery = yield* QueryRunner.QueryRunner.pipe(
-      Effect.provide(QueryRunner.layer(ctx.runQuery))
-    );
+    const runQuery = yield* QueryRunner;
     if (request.afterIndex >= total) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
@@ -273,7 +268,6 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
 /** Aggregates safe route query transactions into one external page. */
 const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
   function* (
-    ctx: ReadContext,
     request: Extract<
       RollbackRequest,
       {
@@ -282,9 +276,7 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
     >,
     total: number
   ) {
-    const runQuery = yield* QueryRunner.QueryRunner.pipe(
-      Effect.provide(QueryRunner.layer(ctx.runQuery))
-    );
+    const runQuery = yield* QueryRunner;
     if (request.afterIndex >= total) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
@@ -324,17 +316,16 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
 );
 /** Reads one authenticated body or route rollback page. */
 export const readRollback = Effect.fn("contentRelease.readRollback")(function* (
-  ctx: ReadContext,
   request: RollbackRequest
 ) {
-  const bundle = yield* loadVerifiedRelease(ctx, request.rollbackOf);
+  const bundle = yield* loadVerifiedRelease(request.rollbackOf);
   yield* matchManifest(
     bundle.release,
     request.rollbackOfManifestHash,
     request.rollbackOf
   );
   if (request.operation === "rollbackPage") {
-    return yield* readBodyPage(ctx, request, bundle.release.manifest.itemCount);
+    return yield* readBodyPage(request, bundle.release.manifest.itemCount);
   }
-  return yield* readRoutePage(ctx, request, bundle.release.manifest.routeCount);
+  return yield* readRoutePage(request, bundle.release.manifest.routeCount);
 });

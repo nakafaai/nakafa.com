@@ -139,9 +139,8 @@ renderer compatibility checks.
 - `apps/api`: frameworkless Vercel ingress for the Convex REST runtime
 - `apps/cas`: Python CAS service at `https://cas.nakafa.local.nakafa.com`
 - `apps/email`: email preview application at `https://email.nakafa.local.nakafa.com`
-- `packages/backend`: Convex schema, functions, workflows, and integrations
+- `packages/backend`: Confect schema, functions, workflows, native Agent capabilities, and integrations
 - `packages/design-system`: shared React components and renderer implementations
-- `packages/ai`: Effect-native AI capabilities
 - `packages/contents`: Nakafa product, formatting, route-context, learner, and
   agent contracts
 - `packages/testing`: shared Vitest configuration

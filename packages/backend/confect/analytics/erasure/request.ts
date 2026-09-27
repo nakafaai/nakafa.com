@@ -1,3 +1,4 @@
+import { ActionCtx as ActionCtxService } from "@repo/backend/confect/_generated/services";
 import {
   AnalyticsErasureRequestError,
   analyticsErasureRequestFailedCode,
@@ -7,18 +8,17 @@ import { cleanupSource } from "@repo/backend/confect/privacy/spec";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 type StartAnalyticsErasure = (
-  ctx: ActionCtx,
   userId: Id<"users">
-) => Effect.Effect<unknown, AnalyticsErasureRequestError>;
+) => Effect.Effect<unknown, AnalyticsErasureRequestError, ActionCtxService>;
 
 /** Converts the Workflow SDK admission failure at its IO boundary. */
 const startAnalyticsErasure: StartAnalyticsErasure = Effect.fn(
   "analytics.erasure.start"
-)(function* (ctx, userId) {
+)(function* (userId) {
+  const ctx = yield* ActionCtxService;
   return yield* Effect.tryPromise({
     catch: (error) =>
       new AnalyticsErasureRequestError({
@@ -44,16 +44,11 @@ const startAnalyticsErasure: StartAnalyticsErasure = Effect.fn(
 });
 
 /** Persists a workflow before returning from an overlapping delivery action. */
-export const requestAnalyticsErasure: (
-  ctx: ActionCtx,
-  userId: Id<"users">,
-  startErasure?: StartAnalyticsErasure
-) => Effect.Effect<void, AnalyticsErasureRequestError> = Effect.fn(
-  "analytics.erasure.request"
-)(function* (
-  ctx: ActionCtx,
-  userId: Id<"users">,
-  startErasure: StartAnalyticsErasure = startAnalyticsErasure
-) {
-  yield* startErasure(ctx, userId);
-});
+export const requestAnalyticsErasure = Effect.fn("analytics.erasure.request")(
+  function* (
+    userId: Id<"users">,
+    startErasure: StartAnalyticsErasure = startAnalyticsErasure
+  ) {
+    yield* startErasure(userId);
+  }
+);

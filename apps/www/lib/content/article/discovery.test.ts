@@ -1,3 +1,4 @@
+import { HttpClient } from "@confect/js";
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
@@ -6,20 +7,15 @@ import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash"
 import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import {
   readPublishedArticleBucket,
   readPublishedCategoryArticles,
   readPublishedLatestArticles,
 } from "@/lib/content/article/discovery";
 import { makeArticleRuntimeSource } from "@/test/content/article";
-import {
-  createTestNativeQuery,
-  createTestRuntimeQuery,
-} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const runtimeReadMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
 const localeCases = [
   {
@@ -41,23 +37,48 @@ const localeCases = [
     articleRoute: "turbulenzen-vor-regionalwahlen",
   },
 ] as const;
-
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: runtimeReadMock,
-}));
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 
 /** Builds one source-owned locale summary returned by Convex discovery. */
 function articleSummary(selected: (typeof localeCases)[number]) {
   const publicPath = `articles/${selected.categoryRoute}/${selected.articleRoute}`;
   return {
-    authors: [{ name: "Nakafa" }],
+    authors: [
+      {
+        name: "Nakafa",
+      },
+    ],
     category: "politics",
     categoryTitle: selected.categoryTitle,
-    ...(selected.appLocale === "id" ? { dateModified: "2026-08-22" } : {}),
+    ...(selected.appLocale === "id"
+      ? {
+          dateModified: "2026-08-22",
+        }
+      : {}),
     datePublished: selected.appLocale === "de" ? "2026-08-22" : "2025-06-05",
     ...(selected.appLocale === "de"
       ? {}
-      : { description: "Reviewed article summary." }),
+      : {
+          description: "Reviewed article summary.",
+        }),
     official: false,
     publicPath,
     route: {
@@ -67,7 +88,6 @@ function articleSummary(selected: (typeof localeCases)[number]) {
     title: `Article ${selected.appLocale}`,
   };
 }
-
 describe("published article discovery", () => {
   it.effect(
     "discovers localized metadata through authenticated category and bucket reads",
@@ -75,14 +95,15 @@ describe("published article discovery", () => {
       Effect.gen(function* () {
         const fixture = yield* makeArticleRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
-        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
+        runtimeQueryMock.mockImplementation(context.query);
         const projection = testLocalizedArticleProjection(1, "de");
         const bucket = getHashBucket(hashContentProjection(projection));
-
         expect(yield* readPublishedArticleBucket("de", bucket)).toMatchObject({
           activeReleaseId: fixture.state.activeReleaseId,
           articles: expect.arrayContaining([
-            expect.objectContaining({ publicPath: projection.publicPath }),
+            expect.objectContaining({
+              publicPath: projection.publicPath,
+            }),
           ]),
         });
         for (const result of [
@@ -92,42 +113,45 @@ describe("published article discovery", () => {
           expect(result).toMatchObject({
             activeReleaseId: fixture.state.activeReleaseId,
             articles: [
-              { publicPath: "articles/politik/artikel-2", title: "Article 2" },
+              {
+                publicPath: "articles/politik/artikel-2",
+                title: "Article 2",
+              },
             ],
           });
         }
       })
   );
-
   beforeEach(() => {
     runtimeQueryMock.mockReset();
-    runtimeReadMock.mockImplementation(
-      createTestRuntimeQuery(runtimeQueryMock)
-    );
   });
-
   it.effect.each(localeCases)(
     "decodes $appLocale bucket, latest, and category reads from one active release",
     (selected) =>
       Effect.gen(function* () {
         const summary = articleSummary(selected);
         runtimeQueryMock
-          .mockResolvedValueOnce({
-            activeReleaseId,
-            articles: [summary],
-            managed: true,
-          })
-          .mockResolvedValueOnce({
-            activeReleaseId,
-            articles: [summary],
-            managed: true,
-          })
-          .mockResolvedValueOnce({
-            activeReleaseId,
-            articles: [summary],
-            managed: true,
-          });
-
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              articles: [summary],
+              managed: true,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              articles: [summary],
+              managed: true,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              articles: [summary],
+              managed: true,
+            })
+          );
         const [bucket, latest, category] = yield* Effect.all(
           [
             readPublishedArticleBucket(
@@ -147,20 +171,33 @@ describe("published article discovery", () => {
               activeReleaseId
             ),
           ],
-          { concurrency: 1 }
+          {
+            concurrency: 1,
+          }
         );
-
         expect(bucket).toMatchObject({
           activeReleaseId,
-          articles: [{ publicPath: summary.publicPath }],
+          articles: [
+            {
+              publicPath: summary.publicPath,
+            },
+          ],
         });
         expect(latest).toMatchObject({
           activeReleaseId,
-          articles: [{ route: summary.route }],
+          articles: [
+            {
+              route: summary.route,
+            },
+          ],
         });
         expect(category).toMatchObject({
           activeReleaseId,
-          articles: [{ categoryTitle: selected.categoryTitle }],
+          articles: [
+            {
+              categoryTitle: selected.categoryTitle,
+            },
+          ],
         });
         for (const result of [bucket, latest, category]) {
           const article = result.articles?.[0];
@@ -189,17 +226,17 @@ describe("published article discovery", () => {
         });
       })
   );
-
   it.effect.each(localeCases)(
     "rejects $appLocale discovery from a different active release",
     (selected) =>
       Effect.gen(function* () {
-        runtimeQueryMock.mockResolvedValueOnce({
-          activeReleaseId: ReleaseIdSchema.make("release-next"),
-          articles: [articleSummary(selected)],
-          managed: true,
-        });
-
+        runtimeQueryMock.mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: ReleaseIdSchema.make("release-next"),
+            articles: [articleSummary(selected)],
+            managed: true,
+          })
+        );
         const error = yield* readPublishedLatestArticles(
           selected.appLocale,
           10,
@@ -211,29 +248,37 @@ describe("published article discovery", () => {
         });
       })
   );
-
   it.effect(
     "rejects unmanaged, malformed, and unavailable discovery results",
     () =>
       Effect.gen(function* () {
         runtimeQueryMock
-          .mockResolvedValueOnce({
-            activeReleaseId,
-            articles: [],
-            managed: false,
-          })
-          .mockResolvedValueOnce({
-            activeReleaseId,
-            articles: [
-              {
-                ...articleSummary(localeCases[0]),
-                datePublished: "not-a-date",
-              },
-            ],
-            managed: true,
-          })
-          .mockRejectedValueOnce(new Error("runtime unavailable"));
-
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              articles: [],
+              managed: false,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              articles: [
+                {
+                  ...articleSummary(localeCases[0]),
+                  datePublished: "not-a-date",
+                },
+              ],
+              managed: true,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.fail(
+              new HttpClient.HttpClientError({
+                cause: new Error("runtime unavailable"),
+              })
+            )
+          );
         const unmanaged = yield* readPublishedLatestArticles("en", 10).pipe(
           Effect.flip
         );
@@ -243,49 +288,64 @@ describe("published article discovery", () => {
         const unavailable = yield* readPublishedLatestArticles("en", 10).pipe(
           Effect.flip
         );
-
-        expect(unmanaged).toMatchObject({ _tag: "PublishedProjectionError" });
-        expect(malformed).toMatchObject({ _tag: "PublishedProjectionError" });
-        expect(unavailable).toMatchObject({ _tag: "NakafaAgentDataReadError" });
+        expect(unmanaged).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
+        expect(malformed).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
+        expect(unavailable).toMatchObject({
+          _tag: "HttpClientError",
+        });
       })
   );
-
   it.effect(
     "distinguishes unmanaged, inactive, and absent discovery partitions",
     () =>
       Effect.gen(function* () {
         runtimeQueryMock
-          .mockResolvedValueOnce({
-            activeReleaseId,
-            articles: null,
-            managed: false,
-          })
-          .mockResolvedValueOnce({
-            activeReleaseId: null,
-            articles: null,
-            managed: true,
-          })
-          .mockResolvedValueOnce({
-            activeReleaseId,
-            articles: null,
-            managed: true,
-          })
-          .mockResolvedValueOnce({
-            activeReleaseId: null,
-            articles: [],
-            managed: true,
-          })
-          .mockResolvedValueOnce({
-            activeReleaseId,
-            articles: [],
-            managed: false,
-          })
-          .mockResolvedValueOnce({
-            activeReleaseId: null,
-            articles: [],
-            managed: true,
-          });
-
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              articles: null,
+              managed: false,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId: null,
+              articles: null,
+              managed: true,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              articles: null,
+              managed: true,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId: null,
+              articles: [],
+              managed: true,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              articles: [],
+              managed: false,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId: null,
+              articles: [],
+              managed: true,
+            })
+          );
         const unmanagedBucket = yield* readPublishedArticleBucket(
           "en",
           "abc"
@@ -309,14 +369,16 @@ describe("published article discovery", () => {
           "politics",
           10
         ).pipe(Effect.flip);
-
         expect(unmanagedBucket).toMatchObject({
           _tag: "PublishedProjectionError",
         });
         expect(inactiveBucket).toMatchObject({
           _tag: "PublishedProjectionError",
         });
-        expect(absentBucket).toEqual({ activeReleaseId, articles: null });
+        expect(absentBucket).toEqual({
+          activeReleaseId,
+          articles: null,
+        });
         expect(inactiveLatest).toMatchObject({
           _tag: "PublishedProjectionError",
         });
@@ -329,7 +391,8 @@ describe("published article discovery", () => {
       })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

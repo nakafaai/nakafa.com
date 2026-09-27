@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import {
   currentProgram,
   statusProgram,
@@ -13,8 +12,7 @@ const getStatus = FunctionImpl.make(
   spec,
   "getStatus",
   Effect.fn("contentRelease.status.getStatus")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* statusProgram(ctx, args.manifestHash, args.releaseId);
+    return yield* statusProgram(args.manifestHash, args.releaseId);
   })
 );
 const current = FunctionImpl.make(
@@ -22,8 +20,7 @@ const current = FunctionImpl.make(
   spec,
   "current",
   Effect.fn("contentRelease.status.current")(function* () {
-    const ctx = yield* QueryCtxService;
-    return yield* currentProgram(ctx);
+    return yield* currentProgram();
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

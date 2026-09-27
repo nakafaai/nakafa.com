@@ -1,16 +1,18 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { updateForumReadState } from "@repo/backend/confect/classes/forums/readState";
 import {
   insertClass,
   insertSchool,
 } from "@repo/backend/confect/classes/test.helpers";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 9, 0, 0);
 
@@ -75,11 +77,15 @@ describe("classes/forums/utils/readStateWrite:updateForumReadState", () => {
     const t = createConvexTestWithBetterAuth();
     const result = await t.mutation(async (ctx) => {
       const target = await insertForumReadStateTarget(ctx);
-      await runConvexProgram(
-        updateForumReadState(ctx, {
+      await Effect.runPromise(
+        updateForumReadState({
           ...target,
           lastReadSequence: 3,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       return await loadReadState(ctx, target);
     });
@@ -91,17 +97,25 @@ describe("classes/forums/utils/readStateWrite:updateForumReadState", () => {
     const t = createConvexTestWithBetterAuth();
     const result = await t.mutation(async (ctx) => {
       const target = await insertForumReadStateTarget(ctx);
-      await runConvexProgram(
-        updateForumReadState(ctx, {
+      await Effect.runPromise(
+        updateForumReadState({
           ...target,
           lastReadSequence: 5,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
-      await runConvexProgram(
-        updateForumReadState(ctx, {
+      await Effect.runPromise(
+        updateForumReadState({
           ...target,
           lastReadSequence: 4,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       return await loadReadState(ctx, target);
     });
@@ -113,17 +127,25 @@ describe("classes/forums/utils/readStateWrite:updateForumReadState", () => {
     const t = createConvexTestWithBetterAuth();
     const result = await t.mutation(async (ctx) => {
       const target = await insertForumReadStateTarget(ctx);
-      await runConvexProgram(
-        updateForumReadState(ctx, {
+      await Effect.runPromise(
+        updateForumReadState({
           ...target,
           lastReadSequence: 5,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
-      await runConvexProgram(
-        updateForumReadState(ctx, {
+      await Effect.runPromise(
+        updateForumReadState({
           ...target,
           lastReadSequence: 6,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       return await loadReadState(ctx, target);
     });

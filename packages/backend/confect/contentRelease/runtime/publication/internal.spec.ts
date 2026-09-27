@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import {
   publicBatchResultValidator,
@@ -17,7 +17,7 @@ export default GroupSpec.make()
         publicPath: Schema.String,
       }),
       returns: () => publicResultValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -27,6 +27,6 @@ export default GroupSpec.make()
         requests: Schema.mutable(Schema.Array(publicRequestValidator)),
       }),
       returns: () => publicBatchResultValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

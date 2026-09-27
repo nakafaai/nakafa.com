@@ -1,16 +1,15 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import schoolClassesTable from "@repo/backend/confect/_generated/tables/schoolClasses";
 import schoolClassInviteCodesTable from "@repo/backend/confect/_generated/tables/schoolClassInviteCodes";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ClassAccessFailure } from "@repo/backend/confect/classes/access/spec";
+import { ClassAccessError } from "@repo/backend/confect/classes/access/spec";
 import { schoolClassVisibilityValidator } from "@repo/backend/confect/classes/schema";
 import {
+  classMemberWithUserValidator,
   classRouteResultValidator,
-  paginatedClassesValidator,
-  paginatedPeopleValidator,
 } from "@repo/backend/confect/classes/validators";
-import { failureWire } from "@repo/backend/confect/failure";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 export class ClassQueryError extends Schema.TaggedError<ClassQueryError>()(
   "ClassQueryError",
@@ -24,21 +23,19 @@ export class ClassQueryError extends Schema.TaggedError<ClassQueryError>()(
     message: Schema.String,
   }
 ) {}
-export const ClassQueryFailure = failureWire(ClassQueryError);
 export default GroupSpec.make()
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "getClasses",
       args: () => ({
         schoolId: IdSchema("schools"),
         q: Schema.optionalKey(Schema.String),
         isArchived: Schema.optionalKey(Schema.Boolean),
         visibility: Schema.optionalKey(schoolClassVisibilityValidator),
-        paginationOpts: PaginationOptionsSchema,
       }),
-      returns: () => paginatedClassesValidator,
-      error: () => Schema.Union([AuthFailure, ClassAccessFailure]),
-    })
+      item: () => schoolClassesTable.Doc,
+      error: () => Schema.Union([AuthFailure, ClassAccessError]),
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicQuery({
@@ -47,21 +44,20 @@ export default GroupSpec.make()
         classId: Schema.String,
       }),
       returns: () => classRouteResultValidator,
-      error: () => Schema.Union([AuthFailure, ClassAccessFailure]),
-    })
+      error: () => Schema.Union([AuthFailure, ClassAccessError]),
+    }).middleware(Session)
   )
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "getPeople",
       args: () => ({
         classId: IdSchema("schoolClasses"),
         q: Schema.optionalKey(Schema.String),
-        paginationOpts: PaginationOptionsSchema,
       }),
-      returns: () => paginatedPeopleValidator,
+      item: () => classMemberWithUserValidator,
       error: () =>
-        Schema.Union([AuthFailure, ClassAccessFailure, ClassQueryFailure]),
-    })
+        Schema.Union([AuthFailure, ClassAccessError, ClassQueryError]),
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicQuery({
@@ -71,6 +67,6 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Array(schoolClassInviteCodesTable.Doc),
       error: () =>
-        Schema.Union([AuthFailure, ClassAccessFailure, ClassQueryFailure]),
-    })
+        Schema.Union([AuthFailure, ClassAccessError, ClassQueryError]),
+    }).middleware(Session)
   );

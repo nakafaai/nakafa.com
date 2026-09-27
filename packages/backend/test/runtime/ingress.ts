@@ -1,3 +1,4 @@
+import { RegisteredFunction } from "@confect/server";
 import {
   GitCommitShaSchema,
   ReleaseIdSchema,
@@ -9,8 +10,8 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { stagePublication } from "@repo/backend/confect/contentRelease/ingress/stage";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import type schema from "@repo/backend/convex/schema";
 import {
   TEST_KEY_ID,
@@ -26,7 +27,6 @@ import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { makeTryoutSnapshotManifest } from "@repo/backend/test/tryout/snapshot";
 import type { TestConvex } from "convex-test";
 import { Effect } from "effect";
-
 export const TEST_RUNTIME_RELEASE_ID = ReleaseIdSchema.make(
   "release-runtime-bundle"
 );
@@ -91,7 +91,9 @@ export const makeRuntimeIngressFixture = Effect.fn(
         sha: GitCommitShaSchema.make(options?.sourceGitSha ?? "a".repeat(40)),
       },
       rendererManifestHash: rendererManifest.hash,
-      scope: testPublicationScope({ snapshots }),
+      scope: testPublicationScope({
+        snapshots,
+      }),
       snapshots,
     })
   );
@@ -108,7 +110,6 @@ export const makeRuntimeIngressFixture = Effect.fn(
     snapshot,
   };
 });
-
 export type RuntimeIngressFixture = Effect.Success<
   ReturnType<typeof makeRuntimeIngressFixture>
 >;
@@ -120,11 +121,11 @@ export const stageRuntimeIngress = Effect.fn("test.runtime.stageIngress")(
     fixture: RuntimeIngressFixture,
     activeKeyId = TEST_KEY_ID
   ) {
+    const runtimeServices = yield* Effect.context<never>();
     return yield* Effect.tryPromise(() =>
       t.action((ctx) =>
-        runConvexProgram(
+        Effect.runPromiseWith(runtimeServices)(
           stagePublication(
-            ctx,
             {
               bundle: fixture.bundle,
               operation: "stageTryoutRuntimeBundle",
@@ -135,7 +136,8 @@ export const stageRuntimeIngress = Effect.fn("test.runtime.stageIngress")(
             Effect.provideService(
               ContentVerificationKeyResolver,
               TEST_KEY_RESOLVER
-            )
+            ),
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
           )
         )
       )

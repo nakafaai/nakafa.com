@@ -1,28 +1,41 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
-import { type Preloaded, usePreloadedQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
+import { useConvexAuth } from "convex/react";
+
 import { createContext, useContextSelector } from "use-context-selector";
 
 type ClassContextValue = Extract<
-  FunctionReturnType<typeof api.classes.queries.getClassRoute>,
+  Ref.Returns<typeof refs.public.classes.queries.getClassRoute>,
   { kind: "accessible" }
 >;
 
 const ClassContext = createContext<ClassContextValue | null>(null);
 
 /**
- * Hydrate and provide the reactive class route to the class client subtree.
+ * Provides the server-authorized first render and native reactive class data.
  */
 export function ClassContextProvider({
   children,
-  preloaded,
+  initialRoute,
 }: {
   children: React.ReactNode;
-  preloaded: Preloaded<typeof api.classes.queries.getClassRoute>;
+  initialRoute: ClassContextValue;
 }) {
-  const route = usePreloadedQuery(preloaded);
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const query = useQuery(
+    refs.public.classes.queries.getClassRoute,
+    isAuthenticated ? { classId: initialRoute.class._id } : "skip"
+  );
+  if (QueryResult.isFailure(query)) {
+    throw query.error;
+  }
+  if (!(isLoading || isAuthenticated)) {
+    return null;
+  }
+  const route = QueryResult.isSuccess(query) ? query.value : initialRoute;
 
   if (route.kind !== "accessible") {
     return null;

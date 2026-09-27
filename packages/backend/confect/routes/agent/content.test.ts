@@ -1,10 +1,12 @@
+import { RegisteredConvexFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { Effect } from "effect";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
   expectProblem,
@@ -27,23 +29,27 @@ import {
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 
 setupApiTest();
-
 describe("public agent content", () => {
   it("rejects a signed Quran reference with a noncanonical surah route", async () => {
     const test = createConvexTestWithBetterAuth();
     const search = makeQuranSearch("en", 1);
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
-        { ...search, route: PublicPathSchema.make("quran/01") },
+        {
+          ...search,
+          route: PublicPathSchema.make("quran/01"),
+        },
       ])
     );
     const response = await fetchApi(
       test,
       `/content?ref=${encodeURIComponent(search.graph.assetId)}`
     );
-    await expectProblem(response, { code: "SERVICE_UNAVAILABLE", status: 503 });
+    await expectProblem(response, {
+      code: "SERVICE_UNAVAILABLE",
+      status: 503,
+    });
   });
-
   it.each([
     {
       metadata: {
@@ -53,7 +59,9 @@ describe("public agent content", () => {
       expected: "Exact authored description.",
     },
     {
-      metadata: { subject: "Exact authored subject" },
+      metadata: {
+        subject: "Exact authored subject",
+      },
       expected: "Exact authored subject",
     },
   ])(
@@ -63,18 +71,30 @@ describe("public agent content", () => {
       const source = makeMaterialProjection("en", 1);
       const material = MaterialLessonProjectionSchema.make({
         ...source,
-        metadata: { ...source.metadata, ...metadata },
+        metadata: {
+          ...source.metadata,
+          ...metadata,
+        },
       });
-      await activateMaterialCatalog(test, [material], ["en"]);
+      await test.mutation((ctx) =>
+        Effect.runPromise(
+          activateMaterialCatalog([material], ["en"]).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
+      );
       const response = await fetchApi(
         test,
         `/content?ref=${encodeURIComponent(material.graph.assetId)}`
       );
       expect(response.status).toBe(200);
-      expect(await response.json()).toMatchObject({ description: expected });
+      expect(await response.json()).toMatchObject({
+        description: expected,
+      });
     }
   );
-
   it("renders a signed opening Bismillah once before the first verse", async () => {
     const test = createConvexTestWithBetterAuth();
     const bismillah = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
@@ -111,7 +131,6 @@ describe("public agent content", () => {
     );
     expect(body.text.split(bismillah)).toHaveLength(2);
   });
-
   it("reads authenticated article markdown through its canonical URL", async () => {
     const test = createConvexTestWithBetterAuth();
     const article = testArticleProjection(0);
@@ -120,7 +139,6 @@ describe("public agent content", () => {
       `https://nakafa.com/en/${article.publicPath}`
     );
     const response = await fetchApi(test, `/content?ref=${reference}`);
-
     expect(response.status).toBe(200);
     expectPublicJson(response);
     await expect(response.json()).resolves.toMatchObject({
@@ -132,16 +150,22 @@ describe("public agent content", () => {
       title: article.metadata.title,
     });
   });
-
   it("reads authenticated material markdown through its content ID", async () => {
     const test = createConvexTestWithBetterAuth();
     const material = makeMaterialProjection("en", 1);
-    await activateMaterialCatalog(test, [material], ["en"]);
+    await test.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([material], ["en"]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const response = await fetchApi(
       test,
       `/content?ref=${encodeURIComponent(material.graph.assetId)}`
     );
-
     expect(response.status).toBe(200);
     expectPublicJson(response);
     await expect(response.json()).resolves.toMatchObject({
@@ -153,30 +177,43 @@ describe("public agent content", () => {
       title: material.metadata.title,
     });
   });
-
-  it("keeps material topics citation-only without a runtime read", async () => {
-    const test = createConvexTestWithBetterAuth();
-    const material = makeMaterialProjection("en", 1);
-    const topic = await runConvexProgram(
-      deriveMaterialTopicReference(material)
-    );
-    await activateMaterialCatalog(test, [material], ["en"]);
-
-    const response = await fetchApi(
-      test,
-      `/content?ref=${encodeURIComponent(topic.graph.assetId)}`
-    );
-    const body = response.clone();
-
-    await expectProblem(response, {
-      code: "CONTENT_NOT_FOUND",
-      status: 404,
-    });
-    await expect(body.json()).resolves.toMatchObject({
-      resolution: expect.stringContaining("/v1/search"),
-    });
-  });
-
+  it.effect("keeps material topics citation-only without a runtime read", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const test = createConvexTestWithBetterAuth();
+      const material = makeMaterialProjection("en", 1);
+      const topic = yield* deriveMaterialTopicReference(material);
+      yield* Effect.promise(() =>
+        test.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateMaterialCatalog([material], ["en"]).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
+      const response = yield* Effect.promise(() =>
+        fetchApi(
+          test,
+          `/content?ref=${encodeURIComponent(topic.graph.assetId)}`
+        )
+      );
+      const body = response.clone();
+      yield* Effect.promise(() =>
+        expectProblem(response, {
+          code: "CONTENT_NOT_FOUND",
+          status: 404,
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(body.json()).resolves.toMatchObject({
+          resolution: expect.stringContaining("/v1/search"),
+        })
+      );
+    })
+  );
   it("reads Quran markdown through one transactionally pinned source", async () => {
     const test = createConvexTestWithBetterAuth();
     await test.mutation((ctx) =>
@@ -202,7 +239,6 @@ describe("public agent content", () => {
       test,
       "/content?ref=asset%3Aen%3Aquran%3Aquran-surah%3A1"
     );
-
     expect(response.status).toBe(200);
     expectPublicJson(response);
     const body = await response.json();
@@ -226,7 +262,6 @@ describe("public agent content", () => {
     expect(body.text).toContain("Version: technical-version");
     expect(body.text).toContain("Technical English Tafsir notice.");
   });
-
   it("fails closed when an article catalog identity is corrupted", async () => {
     const test = createConvexTestWithBetterAuth();
     const article = testArticleProjection(0);
@@ -244,7 +279,6 @@ describe("public agent content", () => {
       `https://nakafa.com/en/${article.publicPath}`
     );
     const response = await fetchApi(test, `/content?ref=${reference}`);
-
     await expectProblem(response, {
       code: "SERVICE_UNAVAILABLE",
       status: 503,

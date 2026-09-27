@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { envelopeProgram } from "@repo/backend/confect/contentRelease/envelope";
 import spec from "@repo/backend/confect/contentRelease/envelope.spec";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
@@ -11,8 +10,7 @@ const get = FunctionImpl.make(
   spec,
   "get",
   Effect.fn("contentRelease.envelope.get")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* envelopeProgram(ctx, args.releaseId, args.manifestHash);
+    return yield* envelopeProgram(args.releaseId, args.manifestHash);
   })
 );
 const byRelease = FunctionImpl.make(
@@ -20,8 +18,7 @@ const byRelease = FunctionImpl.make(
   spec,
   "byRelease",
   Effect.fn("contentRelease.envelope.byRelease")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* loadRelease(ctx, args.releaseId).pipe(
+    return yield* loadRelease(args.releaseId).pipe(
       Effect.map((release) => ({
         releaseJson: release.releaseJson,
         rendererJson: release.rendererJson,

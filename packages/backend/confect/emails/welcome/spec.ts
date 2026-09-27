@@ -2,7 +2,6 @@ import {
   ACCOUNT_DELETION_RECOVERY_DELAY_MS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
 } from "@repo/backend/confect/auth/deletion/constants";
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const WELCOME_EMAIL_FROM = "Nakafa <nakafa@notifications.nakafa.com>";
 const retryBase = 2;
@@ -46,8 +45,7 @@ export class WelcomeIntentError extends Schema.TaggedError<WelcomeIntentError>()
 ) {}
 
 /** Retryable pause while reversible account deletion is active. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const WelcomeIntentErrorWire = failureWire(WelcomeIntentError);
+
 export class WelcomeIntentDeferredError extends Schema.TaggedError<WelcomeIntentDeferredError>()(
   "WelcomeIntentDeferredError",
   {
@@ -56,6 +54,3 @@ export class WelcomeIntentDeferredError extends Schema.TaggedError<WelcomeIntent
   }
 ) {}
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const WelcomeIntentDeferredErrorWire = failureWire(
-  WelcomeIntentDeferredError
-);

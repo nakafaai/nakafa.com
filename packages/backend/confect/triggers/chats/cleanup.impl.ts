@@ -1,7 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { Scheduler } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { deleteMessageBatchFromPoint } from "@repo/backend/confect/chats/transcript/write";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import spec from "@repo/backend/confect/triggers/chats/cleanup.spec";
@@ -12,8 +16,17 @@ const cleanupDeletedChat = FunctionImpl.make(
   spec,
   "cleanupDeletedChat",
   Effect.fn("triggers.chats.cleanup.cleanupDeletedChat")(function* (args) {
+    const turns = yield* (yield* DatabaseReader)
+      .table("ninaTurns")
+      .index("by_chatId_and_order", (index) => index.eq("chatId", args.chatId))
+      .take(20)
+      .pipe(Effect.orDie);
+    const writer = yield* DatabaseWriter;
+    for (const turn of turns) {
+      yield* writer.table("ninaTurns").delete(turn._id).pipe(Effect.orDie);
+    }
     const deleteResult = yield* deleteMessageBatchFromPoint(args.chatId, 0);
-    if (!deleteResult.hasMore) {
+    if (!deleteResult.hasMore && turns.length < 20) {
       return null;
     }
     const scheduler = yield* Scheduler;

@@ -1,7 +1,8 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentSnapshotManifestSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { storeAuthenticatedTryoutRuntimeBundle } from "@repo/backend/confect/tryouts/runtime/signed";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
@@ -19,14 +20,18 @@ const TEST_RENDERER_HASH = testTextHash("test-attempt-runtime-renderer");
 /** Stores one authenticated fixture through the production runtime capability. */
 export const storeRuntimeFixture = Effect.fn("test.runtime.storeFixture")(
   function* (t: TestConvex<typeof schema>, fixture: RuntimeIngressFixture) {
+    const runtimeServices = yield* Effect.context<never>();
     return yield* Effect.promise(() =>
       t.mutation((ctx) =>
-        runConvexProgram(
+        Effect.runPromiseWith(runtimeServices)(
           storeAuthenticatedTryoutRuntimeBundle(
-            ctx,
             fixture.bundle,
             fixture.rendererManifest,
             1
+          ).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
           )
         )
       )
@@ -47,9 +52,11 @@ export async function ensureTestTryoutRuntimeBundle(
     )
     .first();
   if (existing) {
-    return { bundleHash: existing.bundleHash, bundleId: existing._id };
+    return {
+      bundleHash: existing.bundleHash,
+      bundleId: existing._id,
+    };
   }
-
   const bundleHash = testTextHash(
     `test-attempt-runtime:${sourceReleaseId}:${snapshotId}`
   );
@@ -65,7 +72,10 @@ export async function ensureTestTryoutRuntimeBundle(
     sourceManifestHash: testTextHash(`test-runtime-source:${sourceReleaseId}`),
     sourceReleaseId,
   });
-  return { bundleHash, bundleId };
+  return {
+    bundleHash,
+    bundleId,
+  };
 }
 
 /** Retains a valid permanent bundle for the active technical try-out snapshot. */
@@ -117,5 +127,8 @@ export async function insertTestTryoutRuntimeBundle(
   await ctx.db.patch("contentReleases", release._id, {
     tryoutRuntimeBundleHash: bundle.bundleHash,
   });
-  return { bundle, bundleId };
+  return {
+    bundle,
+    bundleId,
+  };
 }

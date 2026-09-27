@@ -201,3 +201,28 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
     });
   }
 }
+
+/** Seeds a snapshot backlog larger than one bounded compaction run. */
+export async function seedExpiredSnapshotBacklog(ctx: MutationCtx) {
+  await ctx.db.insert("contentState", {
+    articleSlot: "blue",
+    materialSlot: "blue",
+    searchSlot: "blue",
+    key: "primary",
+    nextSequence: 2,
+    updatedAt: 0,
+    compactFloor: 1,
+    compactFrom: 0,
+    compactPhase: "snapshots",
+    compactStartedAt: 1,
+  });
+  for (let index = 0; index < 70; index += 1) {
+    await ctx.db.insert("contentSnapshots", {
+      createdAt: 0,
+      family: "program",
+      retainUntil: 0,
+      snapshotId: `expired-${index}`,
+      snapshotJson: "{}",
+    });
+  }
+}

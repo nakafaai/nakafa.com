@@ -1,26 +1,26 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   CONTENT_BUCKET_SIZE,
   isProjectionBucket,
 } from "@repo/backend/confect/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Records one sitemap route in its immutable program-snapshot partition. */
 export const addProgramBucketRoute = Effect.fn(
   "contentRelease.addProgramBucketRoute"
 )(function* (
-  ctx: MutationCtx,
   snapshotId: string,
   index: number,
-  appLocale: Doc<"programBuckets">["appLocale"],
+  appLocale: Docs["programBuckets"]["appLocale"],
   bucket: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   if (!isProjectionBucket(bucket)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

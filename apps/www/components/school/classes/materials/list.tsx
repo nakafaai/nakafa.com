@@ -1,13 +1,14 @@
 "use client";
 
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { useDebouncedValue } from "@mantine/hooks";
+import refs from "@repo/backend/confect/_generated/refs";
 import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { MaterialGroupCard } from "@/components/school/classes/materials/item";
+import { DataFailure } from "@/components/shared/failure";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 import { searchParsers } from "@/lib/nuqs/search";
@@ -21,8 +22,8 @@ export function SchoolClassesMaterialsList() {
   const classId = useClass((state) => state.class._id);
   const { can } = useClassPermissions();
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
-  const { results, status, loadMore } = usePaginatedQuery(
-    api.classes.materials.queries.getMaterialGroups,
+  const pagination = usePaginatedQuery(
+    refs.public.classes.materials.queries.getMaterialGroups,
     {
       classId,
       q: debouncedQ,
@@ -31,8 +32,15 @@ export function SchoolClassesMaterialsList() {
       initialNumItems: 50,
     }
   );
+  const { results } = pagination;
   const canManage = can(PERMISSIONS.CONTENT_EDIT);
-  if (status === "LoadingFirstPage") {
+  if (
+    PaginatedQueryResult.isFailure(pagination) &&
+    pagination.results.length === 0
+  ) {
+    return <DataFailure />;
+  }
+  if (PaginatedQueryResult.isLoadingFirstPage(pagination)) {
     return null;
   }
   if (results.length === 0) {
@@ -45,19 +53,22 @@ export function SchoolClassesMaterialsList() {
     );
   }
   return (
-    <div className="flex flex-col">
-      <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
-        {results.map((group) => (
-          <MaterialGroupCard
-            canManage={canManage}
-            group={group}
-            key={group._id}
-          />
-        ))}
-      </section>
-      {status === "CanLoadMore" && (
-        <Intersection onIntersect={() => loadMore(25)} />
-      )}
-    </div>
+    <>
+      {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
+      <div className="flex flex-col">
+        <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
+          {results.map((group) => (
+            <MaterialGroupCard
+              canManage={canManage}
+              group={group}
+              key={group._id}
+            />
+          ))}
+        </section>
+        {PaginatedQueryResult.isCanLoadMore(pagination) && (
+          <Intersection onIntersect={() => pagination.loadMore(25)} />
+        )}
+      </div>
+    </>
   );
 }

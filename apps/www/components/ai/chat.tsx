@@ -1,144 +1,77 @@
 "use client";
 
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from "@repo/design-system/components/ai/conversation";
-import { PromptInput } from "@repo/design-system/components/ai/input";
-import {
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputToolbar,
-  PromptInputTools,
-} from "@repo/design-system/components/ai/input-controls";
-import { Message } from "@repo/design-system/components/ai/message";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useTranslations } from "next-intl";
 
-import { AiChatError } from "@/components/ai/chat-error";
 import { AiChatHeader } from "@/components/ai/chat-header";
-import { AiChatMessage } from "@/components/ai/chat-message";
-import { AiChatModel } from "@/components/ai/chat-model";
-import { AiChatPending } from "@/components/ai/chat-pending";
-import { ChatSpacing } from "@/components/ai/chat-spacing";
-import { useAi } from "@/components/ai/context/use-ai";
 import { useChat } from "@/components/ai/context/use-chat";
-import { useCurrentChat } from "@/components/ai/context/use-current-chat";
-import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
+import { NinaInput } from "@/components/ai/input";
+import { NinaTranscript } from "@/components/ai/transcript";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
 
 export function AiChat() {
   return (
-    <div className="relative flex size-full flex-col overflow-hidden">
+    <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
       <AiChatHeader />
 
-      <AiChatConversation />
+      <NinaTranscript />
 
       <AiChatToolbar />
     </div>
   );
 }
 
-function AiChatConversation() {
-  const messages = useChat((state) => state.chat.messages);
-
-  return (
-    <Conversation>
-      <ConversationContent className="mx-auto max-w-3xl">
-        {messages.map((message, index) => (
-          <Message
-            from={message.role === "user" ? "user" : "assistant"}
-            key={message.id}
-          >
-            {index === 0 ? <AiChatPaginationTrigger /> : null}
-            <AiChatMessage message={message} />
-          </Message>
-        ))}
-
-        <AiChatPending />
-
-        <AiChatError />
-
-        <ChatSpacing />
-      </ConversationContent>
-      <ConversationScrollButton />
-    </Conversation>
-  );
-}
-AiChatConversation.displayName = "AiChatConversation";
-
 function AiChatToolbar() {
-  const t = useTranslations("Ai");
-
   const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
 
-  const chat = useCurrentChat((s) => s.chat);
+  const canWrite = useChat((state) => state.canWrite);
 
   const isUserPending = useViewer((state) => state.isPending);
   const viewer = useViewer((state) => state.viewer);
 
-  const text = useAi((state) => state.text);
-  const setText = useAi((state) => state.setText);
-
-  const { sendMessage, status, stop } = useChat((state) => state.chat);
+  const { send, busy, isPending, cancel, isLoading } = useChat(
+    (state) => state
+  );
 
   function handleSubmit(message: PromptInputMessage) {
-    if (status === "streaming") {
-      stop();
-      return;
+    if (busy) {
+      cancel();
+      return false;
     }
 
     if (!message.text?.trim()) {
-      return;
+      return false;
     }
 
     if (isUserPending) {
-      return;
+      return false;
     }
 
     if (viewer === null) {
       router.push(authNavigation.readHref());
-      return;
+      return false;
     }
 
-    sendMessage({
+    return send({
       text: message.text,
       ...(message.files === undefined ? {} : { files: message.files }),
     });
-    setText("");
   }
 
   // only show when user is the owner of the chat
-  if (chat?.userId !== viewer?.id) {
+  if (!canWrite) {
     return null;
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-3xl shrink-0 px-4">
-      <PromptInput
-        className="rounded-none rounded-t-md border-b-0 shadow-none"
+    <div className="mx-auto grid w-full max-w-3xl shrink-0 px-4 pb-4">
+      <NinaInput
+        disabled={isPending || isLoading || isUserPending}
         onSubmit={handleSubmit}
-      >
-        <PromptInputTextarea
-          className="p-4"
-          onChange={(e) => setText(e.target.value)}
-          placeholder={t("text-placeholder")}
-          value={text}
-        />
-        <PromptInputToolbar>
-          <PromptInputTools>
-            <AiChatModel />
-          </PromptInputTools>
-          <PromptInputSubmit
-            disabled={status === "submitted" || isUserPending}
-            status={status}
-          />
-        </PromptInputToolbar>
-      </PromptInput>
+        status={busy ? "streaming" : "ready"}
+      />
     </div>
   );
 }

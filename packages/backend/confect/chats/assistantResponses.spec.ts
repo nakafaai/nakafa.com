@@ -2,13 +2,13 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import messageParts from "@repo/backend/confect/_generated/tables/messageParts";
 import messages from "@repo/backend/confect/_generated/tables/messages";
-import { ChatAccessFailure } from "@repo/backend/confect/chats/access/spec";
+import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import {
   messageGenerationErrorCodeValidator,
   modelIdValueValidator,
 } from "@repo/backend/confect/chats/schema";
-import { TranscriptFailure } from "@repo/backend/confect/chats/transcript/spec";
-import { ChatTurnFailure } from "@repo/backend/confect/chats/turns/spec";
+import { TranscriptLimitExceeded } from "@repo/backend/confect/chats/transcript/spec";
+import { ChatTurnError } from "@repo/backend/confect/chats/turns/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import { Schema } from "effect";
 
@@ -46,7 +46,7 @@ export default GroupSpec.make()
           }),
         ]),
       error: () =>
-        Schema.Union([ChatAccessFailure, TranscriptFailure, ChatTurnFailure]),
+        Schema.Union([ChatAccessError, TranscriptLimitExceeded, ChatTurnError]),
     }).middleware(Atomic)
   )
   .addFunction(
@@ -70,6 +70,6 @@ export default GroupSpec.make()
           }),
         ]),
       error: () =>
-        Schema.Union([ChatAccessFailure, TranscriptFailure, ChatTurnFailure]),
+        Schema.Union([ChatAccessError, TranscriptLimitExceeded, ChatTurnError]),
     }).middleware(Atomic)
   );

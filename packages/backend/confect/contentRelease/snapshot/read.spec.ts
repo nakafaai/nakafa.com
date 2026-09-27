@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { snapshotFamilyValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 export const rowPageValidator = Schema.Struct({
@@ -19,7 +19,7 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => Schema.String,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -31,6 +31,6 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => rowPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

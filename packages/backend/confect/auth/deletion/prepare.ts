@@ -1,24 +1,19 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
-  toUserCleanupError,
-  type UserCleanupError,
-} from "@repo/backend/confect/auth/cleanup/spec";
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import {
   cancelAccountDeletionBatch,
   hasAccountDeletionCancellation,
 } from "@repo/backend/confect/auth/deletion/cancel";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/confect/auth/deletion/constants";
-import {
-  type AccountDeletionPreparationOutcome,
-  accountDeletionPreparationOutcome,
-} from "@repo/backend/confect/auth/deletion/spec";
+import { accountDeletionPreparationOutcome } from "@repo/backend/confect/auth/deletion/spec";
 import { findSchoolOwnershipSuccessorPage } from "@repo/backend/confect/auth/deletion/successor";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect, flow, Option } from "effect";
 
-type AccountDeletionPreparation = Doc<"accountDeletionPreparations">;
+type AccountDeletionPreparation = Docs["accountDeletionPreparations"];
 type AccountDeletionPreparationProgress = {
   [Key in
     | "pendingSchoolId"
@@ -26,16 +21,15 @@ type AccountDeletionPreparationProgress = {
     | "schoolCursor"
     | "successorCursor"]?: AccountDeletionPreparation[Key] | undefined;
 };
-type AppUser = Doc<"users">;
+type AppUser = Docs["users"];
 
 /** Persists cursor progress and atomically renews its versioned recovery lease. */
 const advancePreparation = Effect.fn("auth.deletion.advancePreparation")(
   function* (
-    ctx: MutationCtx,
     preparation: AccountDeletionPreparation,
     progress: AccountDeletionPreparationProgress
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const writer = yield* DatabaseWriter;
     const progressedAt = yield* Clock.currentTimeMillis;
     yield* writer
       .table("accountDeletionPreparations")
@@ -51,12 +45,8 @@ const advancePreparation = Effect.fn("auth.deletion.advancePreparation")(
 
 /** Marks a fully reserved preparation ready and refreshes its recovery lease. */
 const completePreparation = Effect.fn("auth.deletion.completePreparation")(
-  function* (
-    ctx: MutationCtx,
-    user: AppUser,
-    preparation: AccountDeletionPreparation
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (user: AppUser, preparation: AccountDeletionPreparation) {
+    const writer = yield* DatabaseWriter;
     const readyAt = yield* Clock.currentTimeMillis;
     const recoveryGeneration = preparation.recoveryGeneration + 1;
     yield* writer
@@ -86,13 +76,12 @@ const reserveSchoolSuccessors = Effect.fn(
   "auth.deletion.reserveSchoolSuccessors"
 )(
   function* (
-    ctx: MutationCtx,
     user: AppUser,
     preparation: AccountDeletionPreparation,
     attemptId: string
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const schoolCursor = preparation.schoolCursor ?? null;
     let pendingSchoolId = preparation.pendingSchoolId;
     let pendingSchoolNextCursor = preparation.pendingSchoolNextCursor;
@@ -113,7 +102,7 @@ const reserveSchoolSuccessors = Effect.fn(
       pendingSchoolId = school._id;
       pendingSchoolNextCursor = schoolPage.continueCursor;
       successorCursor = null;
-      yield* advancePreparation(ctx, preparation, {
+      yield* advancePreparation(preparation, {
         pendingSchoolId,
         pendingSchoolNextCursor,
         schoolCursor: schoolCursor ?? undefined,
@@ -129,7 +118,7 @@ const reserveSchoolSuccessors = Effect.fn(
         Effect.orDie
       );
     if (!school || school.createdBy !== user._id) {
-      yield* advancePreparation(ctx, preparation, {
+      yield* advancePreparation(preparation, {
         pendingSchoolId: undefined,
         pendingSchoolNextCursor: undefined,
         schoolCursor: pendingSchoolNextCursor,
@@ -138,13 +127,12 @@ const reserveSchoolSuccessors = Effect.fn(
       return accountDeletionPreparationOutcome.continue;
     }
     const successor = yield* findSchoolOwnershipSuccessorPage(
-      ctx,
       school._id,
       user._id,
       successorCursor
     );
     if (successor.kind === "continue") {
-      yield* advancePreparation(ctx, preparation, {
+      yield* advancePreparation(preparation, {
         pendingSchoolId: school._id,
         pendingSchoolNextCursor,
         schoolCursor: schoolCursor ?? undefined,
@@ -153,7 +141,7 @@ const reserveSchoolSuccessors = Effect.fn(
       return accountDeletionPreparationOutcome.continue;
     }
     if (successor.kind === "not-found") {
-      yield* cancelAccountDeletionBatch(ctx, preparation.authId, {
+      yield* cancelAccountDeletionBatch(preparation.authId, {
         attemptId,
         preparationId: preparation._id,
         recoveryGeneration: preparation.recoveryGeneration,
@@ -169,7 +157,7 @@ const reserveSchoolSuccessors = Effect.fn(
         successorUserId: successor.successorMembership.userId,
       })
       .pipe(Effect.orDie);
-    yield* advancePreparation(ctx, preparation, {
+    yield* advancePreparation(preparation, {
       pendingSchoolId: undefined,
       pendingSchoolNextCursor: undefined,
       schoolCursor: pendingSchoolNextCursor,
@@ -181,96 +169,91 @@ const reserveSchoolSuccessors = Effect.fn(
 );
 
 /** Creates or advances the exact browser attempt's durable preparation. */
-export const prepareAccountDeletion: (
-  ctx: MutationCtx,
-  authId: string,
-  attemptId: string
-) => Effect.Effect<AccountDeletionPreparationOutcome, UserCleanupError> =
-  Effect.fn("auth.deletion.prepareAccountDeletion")(
-    function* (ctx: MutationCtx, authId: string, attemptId: string) {
-      const database = DatabaseReader.make(databaseSchema, ctx.db);
-      const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-      const user = yield* database
-        .table("users")
-        .get("by_authId", authId)
-        .pipe(
-          Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-          Effect.orDie
-        );
-      if (!user || user.deletedAt !== undefined) {
-        return accountDeletionPreparationOutcome.ready;
-      }
-      if (yield* hasAccountDeletionCancellation(ctx, attemptId)) {
-        return accountDeletionPreparationOutcome.temporarilyUnavailable;
-      }
-      let preparation = yield* database
-        .table("accountDeletionPreparations")
-        .get("by_authId", authId)
-        .pipe(
-          Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-          Effect.orDie
-        );
-      if (preparation?.finalizedAt !== undefined) {
-        return accountDeletionPreparationOutcome.temporarilyUnavailable;
-      }
-      if (preparation?.cancellationStartedAt !== undefined) {
-        return accountDeletionPreparationOutcome.temporarilyUnavailable;
-      }
-      if (
-        preparation &&
-        (preparation.attemptId !== attemptId || preparation.userId !== user._id)
-      ) {
-        return accountDeletionPreparationOutcome.temporarilyUnavailable;
-      }
-      if (preparation?.readyAt !== undefined) {
-        yield* completePreparation(ctx, user, preparation);
-        return accountDeletionPreparationOutcome.ready;
-      }
-      if (!preparation) {
-        const successorReservation = yield* database
-          .table("accountDeletionSchoolTransfers")
-          .index("by_successorUserId", (query) =>
-            query.eq("successorUserId", user._id)
-          )
-          .first()
-          .pipe(Effect.map(Option.getOrNull), Effect.orDie);
-        if (successorReservation) {
-          return accountDeletionPreparationOutcome.temporarilyUnavailable;
-        }
-        const preparationStartedAt = yield* Clock.currentTimeMillis;
-        const preparationId = yield* writer
-          .table("accountDeletionPreparations")
-          .insert({
-            attemptId,
-            authId,
-            recoveryAt:
-              preparationStartedAt + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
-            recoveryGeneration: 0,
-            userId: user._id,
-          })
-          .pipe(Effect.orDie);
-        yield* writer
-          .table("users")
-          .patch(user._id, {
-            deletionPreparedAt: preparationStartedAt,
-          })
-          .pipe(Effect.orDie);
-        preparation = yield* database
-          .table("accountDeletionPreparations")
-          .get(preparationId)
-          .pipe(Effect.orDie);
-      }
-      const outcome = yield* reserveSchoolSuccessors(
-        ctx,
-        user,
-        preparation,
-        attemptId
+export const prepareAccountDeletion = Effect.fn(
+  "auth.deletion.prepareAccountDeletion"
+)(
+  function* (authId: string, attemptId: string) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* database
+      .table("users")
+      .get("by_authId", authId)
+      .pipe(
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+        Effect.orDie
       );
-      if (outcome === accountDeletionPreparationOutcome.ready) {
-        yield* completePreparation(ctx, user, preparation);
-        return accountDeletionPreparationOutcome.ready;
+    if (!user || user.deletedAt !== undefined) {
+      return accountDeletionPreparationOutcome.ready;
+    }
+    if (yield* hasAccountDeletionCancellation(attemptId)) {
+      return accountDeletionPreparationOutcome.temporarilyUnavailable;
+    }
+    let preparation = yield* database
+      .table("accountDeletionPreparations")
+      .get("by_authId", authId)
+      .pipe(
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    if (preparation?.finalizedAt !== undefined) {
+      return accountDeletionPreparationOutcome.temporarilyUnavailable;
+    }
+    if (preparation?.cancellationStartedAt !== undefined) {
+      return accountDeletionPreparationOutcome.temporarilyUnavailable;
+    }
+    if (
+      preparation &&
+      (preparation.attemptId !== attemptId || preparation.userId !== user._id)
+    ) {
+      return accountDeletionPreparationOutcome.temporarilyUnavailable;
+    }
+    if (preparation?.readyAt !== undefined) {
+      yield* completePreparation(user, preparation);
+      return accountDeletionPreparationOutcome.ready;
+    }
+    if (!preparation) {
+      const successorReservation = yield* database
+        .table("accountDeletionSchoolTransfers")
+        .index("by_successorUserId", (query) =>
+          query.eq("successorUserId", user._id)
+        )
+        .first()
+        .pipe(Effect.map(Option.getOrNull), Effect.orDie);
+      if (successorReservation) {
+        return accountDeletionPreparationOutcome.temporarilyUnavailable;
       }
-      return outcome;
-    },
-    Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-  );
+      const preparationStartedAt = yield* Clock.currentTimeMillis;
+      const preparationId = yield* writer
+        .table("accountDeletionPreparations")
+        .insert({
+          attemptId,
+          authId,
+          recoveryAt: preparationStartedAt + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
+          recoveryGeneration: 0,
+          userId: user._id,
+        })
+        .pipe(Effect.orDie);
+      yield* writer
+        .table("users")
+        .patch(user._id, {
+          deletionPreparedAt: preparationStartedAt,
+        })
+        .pipe(Effect.orDie);
+      preparation = yield* database
+        .table("accountDeletionPreparations")
+        .get(preparationId)
+        .pipe(Effect.orDie);
+    }
+    const outcome = yield* reserveSchoolSuccessors(
+      user,
+      preparation,
+      attemptId
+    );
+    if (outcome === accountDeletionPreparationOutcome.ready) {
+      yield* completePreparation(user, preparation);
+      return accountDeletionPreparationOutcome.ready;
+    }
+    return outcome;
+  },
+  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+);

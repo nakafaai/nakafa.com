@@ -1,13 +1,20 @@
-import { CHAT_GENERATION_FAILURE_CODES } from "@repo/ai/config/generation";
-import { MODEL_IDS } from "@repo/ai/config/model";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
   ninaContextSnapshotValidator,
   ninaContextTransitionValidator,
 } from "@repo/backend/confect/chats/context";
 import { nakafaDataValidator } from "@repo/backend/confect/chats/nakafa";
+import { CHAT_GENERATION_FAILURE_CODES } from "@repo/backend/confect/nina/config/generation";
+import {
+  MODEL_IDS,
+  ModelIdSchema,
+} from "@repo/backend/confect/nina/config/model";
+import {
+  NinaContextSnapshotSchema,
+  NinaContextTransitionSchema,
+} from "@repo/backend/confect/nina/memory/pack";
 import { mathOperations } from "@repo/math/schema/operations";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 /**
  * Chat visibility validator
  */
@@ -23,6 +30,8 @@ export const chatTypeValidator = Schema.Literals(["study"]);
  * Chat base validator (without system fields)
  */
 export const chatValidator = Schema.Struct({
+  threadId: Schema.optionalKey(Schema.String),
+  activeTurnId: Schema.optionalKey(IdSchema("ninaTurns")),
   updatedAt: Schema.Finite,
   title: Schema.optionalKey(Schema.String),
   userId: IdSchema("users"),
@@ -53,7 +62,7 @@ export const messageRoleValidator = Schema.Literals([
  */
 /**
  * Model ID validator using literals for type safety.
- * References MODEL_IDS from @repo/ai/config/model for single source of truth.
+ * References MODEL_IDS from @repo/backend/confect/nina/config/model for single source of truth.
  */
 export const modelIdValueValidator = Schema.Literals([...MODEL_IDS]);
 export const modelIdValidator = Schema.optionalKey(modelIdValueValidator);
@@ -324,3 +333,35 @@ export const partValidator = Schema.Struct({
   dataWebSearchError: Schema.optionalKey(Schema.String),
   providerMetadata: providerMetadataValidator,
 });
+
+const ComponentUsageSchema = Schema.Struct({
+  input: Schema.Finite,
+  output: Schema.Finite,
+}).mapFields(Struct.map(Schema.mutableKey));
+/**
+ * Metadata stored on Nina UI messages.
+ */
+const chatMessageMetadataValidator = Schema.Struct({
+  credits: Schema.optional(Schema.Finite),
+  generationErrorCode: Schema.optional(
+    Schema.Literals(CHAT_GENERATION_FAILURE_CODES)
+  ),
+  generationStatus: Schema.optional(Schema.Literals(["complete", "failed"])),
+  model: ModelIdSchema,
+  ninaContextSnapshot: Schema.optional(NinaContextSnapshotSchema),
+  ninaContextTransition: Schema.optional(NinaContextTransitionSchema),
+  tokens: Schema.optional(
+    Schema.Struct({
+      breakdown: Schema.optional(
+        Schema.Struct({
+          main: ComponentUsageSchema,
+          subAgents: Schema.Record(Schema.String, ComponentUsageSchema),
+        }).mapFields(Struct.map(Schema.mutableKey))
+      ),
+      input: Schema.optional(Schema.Finite),
+      output: Schema.optional(Schema.Finite),
+      total: Schema.optional(Schema.Finite),
+    }).mapFields(Struct.map(Schema.mutableKey))
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
+export type ChatMessageMetadata = typeof chatMessageMetadataValidator.Type;

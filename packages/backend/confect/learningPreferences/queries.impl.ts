@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import {
   readCurrentTryoutCountry,
@@ -10,19 +9,9 @@ import {
   listCurriculumPrograms as listCurriculumProgramOptions,
   readCurrentCurriculumProgram,
 } from "@repo/backend/confect/learningPreferences/program";
-import spec, {
-  LearningPreferenceIoError,
-  learningPreferenceIoFailedCode,
-  learningPreferenceIoFailedMessage,
-} from "@repo/backend/confect/learningPreferences/queries.spec";
+import spec from "@repo/backend/confect/learningPreferences/queries.spec";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
-
-function toLearningPreferenceIoError() {
-  return new LearningPreferenceIoError({
-    code: learningPreferenceIoFailedCode,
-    message: learningPreferenceIoFailedMessage,
-  });
-}
 
 const listCurriculumPrograms = FunctionImpl.make(
   databaseSchema,
@@ -31,8 +20,7 @@ const listCurriculumPrograms = FunctionImpl.make(
   Effect.fn("learningPreferences.queries.listCurriculumPrograms")(function* ({
     locale,
   }) {
-    const ctx = yield* QueryCtxService;
-    return yield* listCurriculumProgramOptions(ctx, locale);
+    return yield* listCurriculumProgramOptions(locale);
   })
 );
 const getCurrent = FunctionImpl.make(
@@ -40,15 +28,12 @@ const getCurrent = FunctionImpl.make(
   spec,
   "getCurrent",
   Effect.fn("learningPreferences.queries.getCurrent")(function* ({ locale }) {
-    const ctx = yield* QueryCtxService;
     return yield* Effect.gen(function* () {
-      const user = yield* getOptionalAppUserForRead(ctx).pipe(
-        Effect.mapError(toLearningPreferenceIoError)
-      );
+      const user = yield* getOptionalAppUserForRead();
       if (!user) {
         return null;
       }
-      return yield* readCurrentCurriculumProgram(ctx, locale, user.appUser._id);
+      return yield* readCurrentCurriculumProgram(locale, user.appUser._id);
     });
   })
 );
@@ -57,15 +42,12 @@ const getCurrentTryout = FunctionImpl.make(
   spec,
   "getCurrentTryout",
   Effect.fn("learningPreferences.queries.getCurrentTryout")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* Effect.gen(function* () {
-      const user = yield* getOptionalAppUserForRead(ctx).pipe(
-        Effect.mapError(toLearningPreferenceIoError)
-      );
+      const user = yield* getOptionalAppUserForRead();
       if (!user) {
         return null;
       }
-      const preference = yield* readCurrentTryoutCountry(ctx, {
+      const preference = yield* readCurrentTryoutCountry({
         locale: args.locale,
         userId: user.appUser._id,
       });
@@ -83,5 +65,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(listCurriculumPrograms),
   Layer.provide(getCurrent),
   Layer.provide(getCurrentTryout),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

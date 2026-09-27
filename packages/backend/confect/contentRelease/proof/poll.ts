@@ -1,6 +1,9 @@
-import { DatabaseWriter } from "@confect/server";
 import type { WorkflowId, WorkflowStatus } from "@convex-dev/workflow";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+} from "@repo/backend/confect/_generated/services";
 import {
   type ReleaseError,
   releaseFail,
@@ -18,27 +21,22 @@ import { stagedEvidence } from "@repo/backend/confect/contentRelease/receipt";
 import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Context, Effect, Layer, type Schema } from "effect";
 export type ProofFailure = Schema.Schema.Type<typeof proofFailureValidator>;
 export type ProofPoll = Schema.Schema.Type<typeof proofPollValidator>;
-export type Release = Doc<"contentReleases">;
+export type Release = Docs["contentReleases"];
 export interface ProofPollCoordinatorService {
   /** Removes terminal component state after its outcome is persisted. */
   readonly cleanup: (
-    ctx: MutationCtx,
     workflowId: WorkflowId
   ) => Effect.Effect<boolean, ReleaseError>;
   /** Starts one retryable proof workflow under the caller's transaction. */
   readonly start: (
-    ctx: MutationCtx,
     manifestHash: string,
     releaseId: string
   ) => Effect.Effect<WorkflowId, ReleaseError>;
   /** Reads the durable component outcome without exposing it publicly. */
   readonly status: (
-    ctx: MutationCtx,
     workflowId: WorkflowId
   ) => Effect.Effect<WorkflowStatus, ReleaseError>;
 }
@@ -48,29 +46,30 @@ export class ProofPollCoordinator extends Context.Service<
   ProofPollCoordinator,
   ProofPollCoordinatorService
 >()("@repo/backend/contentRelease/ProofPollCoordinator") {}
-export const proofPollCoordinatorLive: ProofPollCoordinatorService = {
-  cleanup: (ctx, workflowId) =>
-    Effect.promise(() => workflow.cleanup(ctx, workflowId)),
-  start: (ctx, manifestHash, releaseId) =>
-    Effect.promise(() =>
-      workflow.start(
-        ctx,
-        internal.contentRelease.proof.workflow.verifyRelease,
-        {
-          manifestHash,
-          releaseId,
-        },
-        {
-          startAsync: true,
-        }
-      )
-    ),
-  status: (ctx, workflowId) =>
-    Effect.promise(() => workflow.status(ctx, workflowId)),
-};
-export const ProofPollCoordinatorLive = Layer.succeed(
+export const ProofPollCoordinatorLive = Layer.effect(
   ProofPollCoordinator,
-  proofPollCoordinatorLive
+  Effect.gen(function* () {
+    const ctx = yield* MutationCtxService;
+    return ProofPollCoordinator.of({
+      cleanup: Effect.fn("contentRelease.proof.cleanup")((workflowId) =>
+        Effect.promise(() => workflow.cleanup(ctx, workflowId))
+      ),
+      start: Effect.fn("contentRelease.proof.start")(
+        (manifestHash, releaseId) =>
+          Effect.promise(() =>
+            workflow.start(
+              ctx,
+              internal.contentRelease.proof.workflow.verifyRelease,
+              { manifestHash, releaseId },
+              { startAsync: true }
+            )
+          )
+      ),
+      status: Effect.fn("contentRelease.proof.status")((workflowId) =>
+        Effect.promise(() => workflow.status(ctx, workflowId))
+      ),
+    });
+  })
 );
 export type ProofWorkflowResolution =
   | {
@@ -115,8 +114,8 @@ export function resolveProofWorkflow(
 
 /** Requires one request to name the immutable staged release exactly. */
 const loadVerification = Effect.fn("contentRelease.loadVerification")(
-  function* (ctx: MutationCtx, manifestHash: string, releaseId: string) {
-    const { release } = yield* loadStaged(ctx, releaseId);
+  function* (manifestHash: string, releaseId: string) {
+    const { release } = yield* loadStaged(releaseId);
     const signed = yield* decodeReleaseJson(release.releaseJson);
     if (signed.manifestHash !== manifestHash) {
       return yield* releaseFail(
@@ -131,8 +130,8 @@ const loadVerification = Effect.fn("contentRelease.loadVerification")(
 
 /** Finalizes proof only after its coordinator completed successfully. */
 export const finalizeProof = Effect.fn("contentRelease.finalizeProof")(
-  function* (ctx: MutationCtx, release: Release, proofJson: string) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (release: Release, proofJson: string) {
+    const writer = yield* DatabaseWriter;
     yield* decodeProofJson(proofJson);
     const now = yield* Clock.currentTimeMillis;
     yield* writer
@@ -154,11 +153,10 @@ export const finalizeProof = Effect.fn("contentRelease.finalizeProof")(
 
 /** Persists one sanitized terminal coordinator failure exactly once. */
 export const failedProof = Effect.fn("contentRelease.failedProof")(function* (
-  ctx: MutationCtx,
   release: Release,
   reason: ProofFailure
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const writer = yield* DatabaseWriter;
   yield* writer
     .table("contentReleases")
     .patch(release._id, {
@@ -176,33 +174,33 @@ export const failedProof = Effect.fn("contentRelease.failedProof")(function* (
 });
 
 /** Starts once or polls one durable proof coordinator for a signed release. */
-export const pollProgram: (
-  ctx: MutationCtx,
+export const pollProgram = Effect.fn("contentRelease.pollProof")(function* (
   manifestHash: string,
   releaseId: string
-) => Effect.Effect<ProofPoll, ReleaseError, ProofPollCoordinator> = Effect.fn(
-  "contentRelease.pollProof"
-)(function* (ctx: MutationCtx, manifestHash: string, releaseId: string) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const release = yield* loadVerification(ctx, manifestHash, releaseId);
+) {
+  const writer = yield* DatabaseWriter;
+  const release = yield* loadVerification(manifestHash, releaseId);
   if (release.status === "verified") {
     const proofJson = yield* Effect.fromNullishOr(release.proofJson).pipe(
       Effect.orDie
     );
     yield* decodeProofJson(proofJson);
-    return { phase: "verified", proofJson } satisfies ProofPoll;
+    return {
+      phase: "verified",
+      proofJson,
+    } satisfies ProofPoll;
   }
   const activeWorkflowId = release.proofWorkflowId;
   if (release.status === "verifying" && activeWorkflowId) {
     const coordinator = yield* ProofPollCoordinator;
-    const status = yield* coordinator.status(ctx, activeWorkflowId);
+    const status = yield* coordinator.status(activeWorkflowId);
     const resolution = resolveProofWorkflow(status, release.proofJson);
     if (resolution.phase === "verifying") {
       return {
         phase: "verifying",
       } satisfies ProofPoll;
     }
-    const cleaned = yield* coordinator.cleanup(ctx, activeWorkflowId);
+    const cleaned = yield* coordinator.cleanup(activeWorkflowId);
     if (!cleaned) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -210,9 +208,9 @@ export const pollProgram: (
       );
     }
     if (resolution.phase === "ready") {
-      return yield* finalizeProof(ctx, release, resolution.proofJson);
+      return yield* finalizeProof(release, resolution.proofJson);
     }
-    return yield* failedProof(ctx, release, resolution.reason);
+    return yield* failedProof(release, resolution.reason);
   }
   if (release.status === "verifying" && release.proofFailure) {
     return {
@@ -220,13 +218,9 @@ export const pollProgram: (
       reason: release.proofFailure,
     } satisfies ProofPoll;
   }
-  yield* beginVerification(ctx, releaseId);
+  yield* beginVerification(releaseId);
   const coordinator = yield* ProofPollCoordinator;
-  const proofWorkflowId = yield* coordinator.start(
-    ctx,
-    manifestHash,
-    releaseId
-  );
+  const proofWorkflowId = yield* coordinator.start(manifestHash, releaseId);
   yield* writer
     .table("contentReleases")
     .patch(release._id, {

@@ -1,7 +1,7 @@
-import { FunctionImpl, GroupImpl, MutationRunner } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
+import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { drainDeletedUserDataProgram } from "@repo/backend/confect/auth/cleanup";
 import { cleanupDeletedUserProgram } from "@repo/backend/confect/auth/cleanup/impl";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
@@ -14,8 +14,7 @@ const cleanupDeletedUser = FunctionImpl.make(
   spec,
   "cleanupDeletedUser",
   Effect.fn("auth.cleanup.cleanupDeletedUser")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* cleanupDeletedUserProgram(ctx, args.userId);
+    return yield* cleanupDeletedUserProgram(args.userId);
   })
 );
 const drainDeletedUserData = FunctionImpl.make(
@@ -23,7 +22,7 @@ const drainDeletedUserData = FunctionImpl.make(
   spec,
   "drainDeletedUserData",
   Effect.fn("auth.cleanup.drainDeletedUserData")(function* (args) {
-    const runMutation = yield* MutationRunner.MutationRunner;
+    const runMutation = yield* MutationRunner;
     yield* drainDeletedUserDataProgram(
       runMutation(refs.internal.auth.cleanup.cleanupDeletedUser, {
         userId: args.userId,

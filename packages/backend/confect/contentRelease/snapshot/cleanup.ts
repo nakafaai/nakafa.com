@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { isSnapshotReferenced } from "@repo/backend/confect/contentRelease/snapshot/retention";
 import {
@@ -7,15 +10,13 @@ import {
   loadSnapshotChildren,
 } from "@repo/backend/confect/contentRelease/snapshot/rows";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Option } from "effect";
 
 /** Reads one resumable or newly expired immutable snapshot. */
 export const loadExpiredSnapshot = Effect.fn(
   "contentRelease.loadExpiredSnapshot"
-)(function* (ctx: MutationCtx, cutoff: number) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (cutoff: number) {
+  const database = yield* DatabaseReader;
   const retry = yield* database
     .table("contentSnapshots")
     .index("by_cleanupRetryAt_and_family_and_snapshotId", (query) =>
@@ -38,13 +39,12 @@ export const loadExpiredSnapshot = Effect.fn(
 /** Persists one incomplete physical cleanup page. */
 const persistCleanup = Effect.fn("contentRelease.persistSnapshotCleanup")(
   function* (
-    ctx: MutationCtx,
-    snapshot: Doc<"contentSnapshots">,
+    snapshot: Docs["contentSnapshots"],
     cutoff: number,
     cleanupIndex: number | undefined,
-    cleanupPart: Doc<"contentSnapshots">["cleanupPart"]
+    cleanupPart: Docs["contentSnapshots"]["cleanupPart"]
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const writer = yield* DatabaseWriter;
     yield* writer
       .table("contentSnapshots")
       .patch(snapshot._id, {
@@ -59,9 +59,9 @@ const persistCleanup = Effect.fn("contentRelease.persistSnapshotCleanup")(
 
 /** Advances the physical table sequence only after its current page is complete. */
 function nextCleanupPart(
-  family: Doc<"contentSnapshots">["family"],
-  part: Doc<"contentSnapshots">["cleanupPart"]
-): Doc<"contentSnapshots">["cleanupPart"] {
+  family: Docs["contentSnapshots"]["family"],
+  part: Docs["contentSnapshots"]["cleanupPart"]
+): Docs["contentSnapshots"]["cleanupPart"] {
   if (family === "program" && part === "program") {
     return "curriculum";
   }
@@ -82,9 +82,9 @@ function nextCleanupPart(
 
 /** Deletes one bounded snapshot page without exposing partial data. */
 export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
-  function* (ctx: MutationCtx, cutoff: number) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const snapshot = yield* loadExpiredSnapshot(ctx, cutoff);
+  function* (cutoff: number) {
+    const writer = yield* DatabaseWriter;
+    const snapshot = yield* loadExpiredSnapshot(cutoff);
     if (!snapshot) {
       return {
         cursor: null,
@@ -93,7 +93,6 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
       };
     }
     const referenced = yield* isSnapshotReferenced(
-      ctx,
       snapshot.family,
       snapshot.snapshotId
     );
@@ -117,14 +116,13 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
       };
     }
     const children = yield* loadSnapshotChildren(
-      ctx,
       snapshot.family,
       snapshot.snapshotId,
       snapshot.cleanupIndex ?? -1,
       snapshot.cleanupPart
     );
     for (const child of children.children) {
-      yield* deleteSnapshotChild(ctx, child);
+      yield* deleteSnapshotChild(child);
     }
     if (!children.done) {
       const last = children.children.at(-1);
@@ -141,7 +139,7 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
           `Snapshot ${snapshot.family}/${snapshot.snapshotId} lost its cleanup position.`
         );
       }
-      yield* persistCleanup(ctx, snapshot, cutoff, nextIndex, children.part);
+      yield* persistCleanup(snapshot, cutoff, nextIndex, children.part);
       return {
         cursor: null,
         deleted: children.children.length,
@@ -150,7 +148,7 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
     }
     const nextPart = nextCleanupPart(snapshot.family, children.part);
     if (nextPart !== undefined) {
-      yield* persistCleanup(ctx, snapshot, cutoff, undefined, nextPart);
+      yield* persistCleanup(snapshot, cutoff, undefined, nextPart);
       return {
         cursor: null,
         deleted: children.children.length,

@@ -1,10 +1,12 @@
 "use client";
+import { HttpClient } from "@confect/js";
+import { useMutation } from "@confect/react";
 import {
   Alert02Icon,
   Delete02Icon,
   Login01Icon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Alert,
@@ -15,11 +17,11 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useConvex, useMutation } from "convex/react";
 import { Effect, Result } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { FormBlock } from "@/components/shared/form-block";
+import { env } from "@/env";
 import {
   clearAccountDeletionAttempt,
   loadOrCreateAccountDeletionAttempt,
@@ -45,12 +47,11 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const locale = useLocale();
   const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
-  const convex = useConvex();
   const cancelAccountDeletion = useMutation(
-    api.auth.deletion.cancelAccountDeletionAttempt
+    refs.public.auth.deletion.cancelAccountDeletionAttempt
   );
   const prepareAccountDeletion = useMutation(
-    api.auth.deletion.prepareCurrentAccountDeletion
+    refs.public.auth.deletion.prepareCurrentAccountDeletion
   );
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<DialogError>(null);
@@ -80,9 +81,13 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
               persist: saveAccountDeletionAttempt,
               prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
               reconcile: (attemptId) =>
-                convex.query(
-                  api.auth.deletion.getAccountDeletionAttemptStatus,
-                  { attemptId }
+                Effect.flatMap(HttpClient.HttpClient, (client) =>
+                  client.query(
+                    refs.public.auth.deletion.getAccountDeletionAttemptStatus,
+                    { attemptId }
+                  )
+                ).pipe(
+                  Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL))
                 ),
             })
           ),

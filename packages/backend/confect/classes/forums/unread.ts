@@ -1,31 +1,30 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  QueryCtx as QueryCtxService,
+} from "@repo/backend/confect/_generated/services";
 import {
   forumPostsByAuthorSequence,
   forumPostsBySequence,
 } from "@repo/backend/confect/classes/forums/aggregate";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 /** Load the current viewer's read-state rows for one forum page. */
 const getForumReadStateMap = Effect.fn(
   "classes.forums.unread.getForumReadStateMap"
-)(function* (
-  ctx: QueryCtx,
-  {
-    forumIds,
-    userId,
-  }: {
-    forumIds: Id<"schoolClassForums">[];
-    userId: Id<"users">;
-  }
-) {
+)(function* ({
+  forumIds,
+  userId,
+}: {
+  forumIds: Id<"schoolClassForums">[];
+  userId: Id<"users">;
+}) {
   const readStates = yield* Effect.forEach(forumIds, (forumId) =>
     Effect.gen(function* () {
       return {
         forumId,
-        readState: yield* DatabaseReader.make(databaseSchema, ctx.db)
+        readState: yield* (yield* DatabaseReader)
           .table("schoolClassForumReadStates")
           .get("by_forumId_and_userId", forumId, userId)
           .pipe(
@@ -45,25 +44,26 @@ const getForumReadStateMap = Effect.fn(
  */
 export const getForumUnreadCounts = Effect.fn(
   "classes.forums.unread.getForumUnreadCounts"
-)(function* (
-  ctx: QueryCtx,
-  {
-    forums,
-    userId,
-  }: {
-    forums: Pick<
-      Doc<"schoolClassForums">,
-      "_id" | "nextPostSequence" | "postCount"
-    >[];
-    userId: Id<"users">;
-  }
-) {
-  const readStateByForumId = yield* getForumReadStateMap(ctx, {
+)(function* ({
+  forums,
+  userId,
+}: {
+  forums: Pick<
+    Docs["schoolClassForums"],
+    "_id" | "nextPostSequence" | "postCount"
+  >[];
+  userId: Id<"users">;
+}) {
+  const ctx = yield* QueryCtxService;
+  const readStateByForumId = yield* getForumReadStateMap({
     forumIds: forums.map((forum) => forum._id),
     userId,
   });
   const forumsWithUnreadPotential = forums
-    .map((forum, index) => ({ forum, index }))
+    .map((forum, index) => ({
+      forum,
+      index,
+    }))
     .filter(({ forum }) => {
       if (forum.postCount === 0) {
         return false;

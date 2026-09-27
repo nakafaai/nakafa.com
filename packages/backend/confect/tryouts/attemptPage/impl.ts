@@ -1,3 +1,6 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import type {
   TryoutSectionAttemptPageRequest,
@@ -10,6 +13,10 @@ import {
   readTryoutDestinationPaths,
 } from "@repo/backend/confect/tryouts/catalog/destination";
 import {
+  readAttemptDestination,
+  readAttemptSectionForPath,
+} from "@repo/backend/confect/tryouts/runtime/attempt/destination";
+import {
   readAttemptSectionPage,
   readAttemptSetPage,
 } from "@repo/backend/confect/tryouts/runtime/attempt/page";
@@ -21,11 +28,9 @@ import {
 import { loadSectionAttemptState } from "@repo/backend/confect/tryouts/runtime/section/state";
 import { loadSetAttemptState } from "@repo/backend/confect/tryouts/runtime/set/state";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutAttempt = Docs["tryoutAttempts"];
 type RedirectPageResult = Extract<
   NonNullable<TryoutSetAttemptPageResult>,
   {
@@ -54,47 +59,52 @@ type RetainedSectionPageResult = Extract<
 /** Resolves one current set overlay or exact frozen set page. */
 export const readSetAttemptPage = Effect.fn(
   "tryouts.attemptPage.readSetAttemptPage"
-)(function* (ctx: QueryCtx, request: TryoutSetAttemptPageRequest) {
-  const auth = yield* getOptionalAppUserForRead(ctx);
+)(function* (request: TryoutSetAttemptPageRequest) {
+  const auth = yield* getOptionalAppUserForRead();
   if (!auth) {
     return null;
   }
   if (request.kind === "current") {
-    const attempt = yield* readLatestProgressAttempt(
-      ctx,
-      request,
-      auth.appUser._id
-    );
+    const attempt = yield* readLatestProgressAttempt(request, auth.appUser._id);
     if (!attempt) {
       return null;
     }
     if (attempt.status === "in-progress") {
+      const publicPath = yield* readAttemptDestination(attempt, request.locale);
+      if (!publicPath) {
+        return null;
+      }
       const result: RedirectPageResult = {
         attemptId: attempt._id,
         kind: "redirect",
-        publicPath: attempt.setPublicPath,
+        publicPath,
       };
       return result;
     }
-    return yield* loadCurrentSetPage(ctx, attempt);
+    return yield* loadCurrentSetPage(attempt, request.locale);
   }
   const attempt = yield* readRetainedAttempt(
-    ctx,
     request.attemptId,
     auth.appUser._id
   );
-  if (!attempt || attempt.setPublicPath !== request.publicPath) {
+  if (!attempt) {
+    return null;
+  }
+  const destination = yield* readAttemptDestination(attempt, request.locale);
+  if (
+    request.publicPath !== attempt.setPublicPath &&
+    request.publicPath !== destination
+  ) {
     return null;
   }
   const identity = readAttemptSetIdentity(attempt);
-  if (identity.locale !== request.locale) {
+  if (!destination) {
     return null;
   }
   const { loaded, page, restartTarget } = yield* Effect.all(
     {
-      loaded: loadSetAttemptState(ctx, attempt),
+      loaded: loadSetAttemptState(attempt, request.locale),
       page: readAttemptSetPage(
-        ctx,
         {
           locale: request.locale,
           publicPath: request.publicPath,
@@ -102,7 +112,10 @@ export const readSetAttemptPage = Effect.fn(
         attempt,
         identity
       ),
-      restartTarget: readActiveTryoutRestartTarget(ctx, identity),
+      restartTarget: readActiveTryoutRestartTarget({
+        ...identity,
+        locale: request.locale,
+      }),
     },
     {
       concurrency: "unbounded",
@@ -122,17 +135,13 @@ export const readSetAttemptPage = Effect.fn(
 /** Resolves one current section redirect or exact frozen section page. */
 export const readSectionAttemptPage = Effect.fn(
   "tryouts.attemptPage.readSectionAttemptPage"
-)(function* (ctx: QueryCtx, request: TryoutSectionAttemptPageRequest) {
-  const auth = yield* getOptionalAppUserForRead(ctx);
+)(function* (request: TryoutSectionAttemptPageRequest) {
+  const auth = yield* getOptionalAppUserForRead();
   if (!auth) {
     return null;
   }
   if (request.kind === "current") {
-    const attempt = yield* readLatestProgressAttempt(
-      ctx,
-      request,
-      auth.appUser._id
-    );
+    const attempt = yield* readLatestProgressAttempt(request, auth.appUser._id);
     if (attempt?.status !== "in-progress") {
       return null;
     }
@@ -142,15 +151,22 @@ export const readSectionAttemptPage = Effect.fn(
     if (!snapshot?.publicPath) {
       return null;
     }
+    const publicPath = yield* readAttemptDestination(
+      attempt,
+      request.locale,
+      request.sectionKey
+    );
+    if (!publicPath) {
+      return null;
+    }
     const result: RedirectPageResult = {
       attemptId: attempt._id,
       kind: "redirect",
-      publicPath: snapshot.publicPath,
+      publicPath,
     };
     return result;
   }
   const attempt = yield* readRetainedAttempt(
-    ctx,
     request.attemptId,
     auth.appUser._id
   );
@@ -158,23 +174,36 @@ export const readSectionAttemptPage = Effect.fn(
     return null;
   }
   const identity = readAttemptSetIdentity(attempt);
-  if (identity.locale !== request.locale) {
-    return null;
-  }
-  const snapshot = attempt.sectionSnapshots.find(
-    (section) => section.publicPath === request.publicPath
+  const snapshot = yield* readAttemptSectionForPath(
+    attempt,
+    request.locale,
+    request.publicPath
   );
   if (!snapshot) {
     return null;
   }
+  if (
+    !(yield* readAttemptDestination(
+      attempt,
+      request.locale,
+      snapshot.sectionKey
+    ))
+  ) {
+    return null;
+  }
   const { destinations, loaded, page } = yield* Effect.all(
     {
-      destinations: readTryoutDestinationPaths(ctx, {
+      destinations: readTryoutDestinationPaths({
         ...identity,
+        locale: request.locale,
         sectionKey: snapshot.sectionKey,
       }),
-      loaded: loadSectionAttemptState(ctx, attempt, snapshot.sectionKey),
-      page: readAttemptSectionPage(ctx, request, attempt),
+      loaded: loadSectionAttemptState(
+        attempt,
+        snapshot.sectionKey,
+        request.locale
+      ),
+      page: readAttemptSectionPage(request, attempt),
     },
     {
       concurrency: "unbounded",
@@ -196,21 +225,20 @@ export const readSectionAttemptPage = Effect.fn(
 
 /** Loads the frozen display rows and mutable terminal state in parallel. */
 const loadCurrentSetPage = Effect.fn("tryouts.attemptPage.loadCurrentSetPage")(
-  function* (ctx: QueryCtx, attempt: TryoutAttempt) {
+  function* (attempt: TryoutAttempt, locale: AppLocaleCode) {
     const identity: TryoutSetIdentity = readAttemptSetIdentity(attempt);
     const { loaded, page, restartTarget } = yield* Effect.all(
       {
-        loaded: loadSetAttemptState(ctx, attempt),
+        loaded: loadSetAttemptState(attempt, locale),
         page: readAttemptSetPage(
-          ctx,
           {
-            locale: identity.locale,
+            locale,
             publicPath: attempt.setPublicPath,
           },
           attempt,
           identity
         ),
-        restartTarget: readActiveTryoutRestartTarget(ctx, identity),
+        restartTarget: readActiveTryoutRestartTarget({ ...identity, locale }),
       },
       {
         concurrency: "unbounded",
@@ -231,10 +259,11 @@ const loadCurrentSetPage = Effect.fn("tryouts.attemptPage.loadCurrentSetPage")(
 /** Normalizes one untrusted ID before applying exact ownership checks. */
 const readRetainedAttempt = Effect.fn(
   "tryouts.attemptPage.readRetainedAttempt"
-)(function* (ctx: QueryCtx, attemptId: string, userId: Doc<"users">["_id"]) {
+)(function* (attemptId: string, userId: Docs["users"]["_id"]) {
+  const ctx = yield* QueryCtxService;
   const normalized = ctx.db.normalizeId("tryoutAttempts", attemptId);
   if (!normalized) {
     return null;
   }
-  return yield* readOwnedAttemptById(ctx, normalized, userId);
+  return yield* readOwnedAttemptById(normalized, userId);
 });

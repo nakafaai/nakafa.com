@@ -1,141 +1,132 @@
 import { describe, expect, it } from "@effect/vitest";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { CONTENT_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/bucket";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { convexProgramLayer } from "@repo/backend/content/program/convex";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { programLayer } from "@repo/backend/content/program/confect";
 import {
   readProgramBuckets,
   readProgramSitemap,
 } from "@repo/backend/content/program/sitemap";
-import schema from "@repo/backend/convex/schema";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
-import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("contentRelease/program/sitemap", () => {
   it.effect("rejects an index larger than the complete partition space", () =>
     Effect.gen(function* () {
       const data = yield* makeProgramSnapshotData();
-      const target = convexTest(schema, convexModules);
-      yield* Effect.promise(() => activateProgramSnapshot(target, data));
-      yield* Effect.promise(() =>
-        target.mutation(async (ctx) => {
-          for (let index = 0; index <= CONTENT_BUCKET_LIMIT; index += 1) {
-            await ctx.db.insert("programBuckets", {
-              appLocale: "en",
-              bucket: "aaa",
-              index: index + 100,
-              routeCount: 1,
-              snapshotId: data.snapshotId,
-            });
-          }
-        })
-      );
-      yield* Effect.promise(() =>
-        expect(
-          target.query((ctx) =>
-            runConvexProgram(
-              readProgramBuckets("en").pipe(
-                Effect.provide(convexProgramLayer(ctx))
-              )
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const targetCtx = yield* MutationCtx;
+          yield* activateProgramSnapshot(data);
+          yield* Effect.gen(function* () {
+            for (let index = 0; index <= CONTENT_BUCKET_LIMIT; index += 1) {
+              yield* Effect.promise(() =>
+                targetCtx.db.insert("programBuckets", {
+                  appLocale: "en",
+                  bucket: "aaa",
+                  index: index + 100,
+                  routeCount: 1,
+                  snapshotId: data.snapshotId,
+                })
+              );
+            }
+          });
+          expect(
+            yield* readProgramBuckets("en").pipe(
+              Effect.provide(programLayer),
+              Effect.flip
             )
-          )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
+        })
       );
     })
   );
-
-  it("returns empty unmanaged discovery and no unmanaged page", async () => {
-    const target = convexTest(schema, convexModules);
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readProgramBuckets("en").pipe(Effect.provide(convexProgramLayer(ctx)))
-        )
-      )
-    ).resolves.toEqual({ buckets: [], managed: false, routeCount: 0 });
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readProgramSitemap("en", "abc").pipe(
-            Effect.provide(convexProgramLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toBeNull();
-  });
-
+  it.effect("returns empty unmanaged discovery and no unmanaged page", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const _targetCtx = yield* MutationCtx;
+          expect(
+            yield* readProgramBuckets("en").pipe(Effect.provide(programLayer))
+          ).toEqual({
+            buckets: [],
+            managed: false,
+            routeCount: 0,
+          });
+          expect(
+            yield* readProgramSitemap("en", "abc").pipe(
+              Effect.provide(programLayer)
+            )
+          ).toBeNull();
+        })
+      );
+    })
+  );
   it.live("lists and reads complete active curriculum sitemap partitions", () =>
     Effect.gen(function* () {
       const data = yield* makeProgramSnapshotData();
-      const target = convexTest(schema, convexModules);
-      yield* Effect.promise(() => activateProgramSnapshot(target, data));
-      const result = yield* Effect.promise(() =>
-        target.query((ctx) =>
-          runConvexProgram(
-            readProgramBuckets("en").pipe(
-              Effect.provide(convexProgramLayer(ctx))
-            )
-          )
-        )
-      );
-
-      expect(result).toMatchObject({ managed: true, routeCount: 2 });
-      expect(result.buckets.length).toBeGreaterThan(0);
-      const pages = yield* Effect.promise(() =>
-        Promise.all(
-          result.buckets.map((bucket) =>
-            target.query((ctx) =>
-              runConvexProgram(
-                readProgramSitemap("en", bucket).pipe(
-                  Effect.provide(convexProgramLayer(ctx))
-                )
-              )
-            )
-          )
-        )
-      );
-      expect(pages.flatMap((page) => page?.routes ?? [])).toEqual(
-        expect.arrayContaining([
-          { publicPath: "curriculum/technical-program-1" },
-          { publicPath: "curriculum/technical-program-2" },
-        ])
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const _targetCtx = yield* MutationCtx;
+          yield* activateProgramSnapshot(data);
+          const result = yield* readProgramBuckets("en").pipe(
+            Effect.provide(programLayer)
+          );
+          expect(result).toMatchObject({
+            managed: true,
+            routeCount: 2,
+          });
+          expect(result.buckets.length).toBeGreaterThan(0);
+          const pages = yield* Effect.forEach(result.buckets, (bucket) =>
+            readProgramSitemap("en", bucket).pipe(Effect.provide(programLayer))
+          );
+          expect(pages.flatMap((page) => page?.routes ?? [])).toEqual(
+            expect.arrayContaining([
+              {
+                publicPath: "curriculum/technical-program-1",
+              },
+              {
+                publicPath: "curriculum/technical-program-2",
+              },
+            ])
+          );
+        })
       );
     })
   );
-
   it.live("rejects malformed stored partition metadata", () =>
     Effect.gen(function* () {
       const data = yield* makeProgramSnapshotData();
-      const target = convexTest(schema, convexModules);
-      yield* Effect.promise(() => activateProgramSnapshot(target, data));
-      yield* Effect.promise(() =>
-        target.mutation((ctx) =>
-          ctx.db.insert("programBuckets", {
-            appLocale: "en",
-            bucket: "invalid",
-            index: 100,
-            routeCount: 0,
-            snapshotId: data.snapshotId,
-          })
-        )
-      );
-
-      yield* Effect.promise(() =>
-        expect(
-          target.query((ctx) =>
-            runConvexProgram(
-              readProgramBuckets("en").pipe(
-                Effect.provide(convexProgramLayer(ctx))
-              )
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const targetCtx = yield* MutationCtx;
+          yield* activateProgramSnapshot(data);
+          yield* Effect.promise(() =>
+            targetCtx.db.insert("programBuckets", {
+              appLocale: "en",
+              bucket: "invalid",
+              index: 100,
+              routeCount: 0,
+              snapshotId: data.snapshotId,
+            })
+          );
+          expect(
+            yield* readProgramBuckets("en").pipe(
+              Effect.provide(programLayer),
+              Effect.flip
             )
-          )
-        ).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
         })
       );
     })

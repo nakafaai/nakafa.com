@@ -5,12 +5,15 @@ import {
 } from "@modelcontextprotocol/server";
 import { getNakafaContent } from "@repo/backend/agent/content";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { getNakafaMcpUsageMarkdown } from "@repo/contents/agent/usage";
 import { Effect, Option } from "effect";
 
 /** Registers the established static and templated Nakafa resources. */
-export function registerNakafaMcpResources(server: McpServer, ctx: ActionCtx) {
+export const registerNakafaMcpResources = Effect.fn(
+  "agent.mcp.registerNakafaMcpResources"
+)(function* (server: McpServer) {
+  const runtimeServices = yield* Effect.context<QueryRunner>();
   server.registerResource(
     "nakafa_usage",
     "nakafa://usage",
@@ -38,8 +41,8 @@ export function registerNakafaMcpResources(server: McpServer, ctx: ActionCtx) {
       title: "Nakafa Taxonomy",
     },
     (uri) =>
-      Effect.runPromise(
-        getNakafaTaxonomy(ctx).pipe(
+      Effect.runPromiseWith(runtimeServices)(
+        getNakafaTaxonomy().pipe(
           Effect.map((taxonomy) => ({
             contents: [
               {
@@ -63,8 +66,8 @@ export function registerNakafaMcpResources(server: McpServer, ctx: ActionCtx) {
       title: "Nakafa Content",
     },
     (uri) =>
-      Effect.runPromise(
-        getNakafaContent(ctx, uri.toString()).pipe(
+      Effect.runPromiseWith(runtimeServices)(
+        getNakafaContent(uri.toString()).pipe(
           Effect.flatMap(
             Option.match({
               onNone: () =>
@@ -89,4 +92,4 @@ export function registerNakafaMcpResources(server: McpServer, ctx: ActionCtx) {
         )
       )
   );
-}
+});

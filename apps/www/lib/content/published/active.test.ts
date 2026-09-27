@@ -10,26 +10,32 @@ import {
   makeRuntimeSource,
   TEST_PUBLICATION_RELEASE,
 } from "@repo/backend/test/content/publication";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
-import {
-  createTestNativeQuery,
-  createTestRuntimeQuery,
-} from "@/test/runtime-query";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
-const readQueryMock = vi.hoisted(() => vi.fn());
-
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: readQueryMock,
-}));
-
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: fetchQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 beforeEach(() => {
   fetchQueryMock.mockReset();
-  readQueryMock.mockReset();
-  readQueryMock.mockImplementation(createTestRuntimeQuery(fetchQueryMock));
 });
-
 describe("published active identity", () => {
   it.effect(
     "reads the active identity through the native publication query",
@@ -38,8 +44,7 @@ describe("published active identity", () => {
         const context = yield* createTestPublication(
           makeRuntimeSource().source
         );
-        readQueryMock.mockImplementation(createTestNativeQuery(context));
-
+        fetchQueryMock.mockImplementation(context.query);
         expect(yield* readActiveContentIdentity()).toEqual({
           manifestHash: TEST_PUBLICATION_RELEASE.manifestHash,
           releaseId: TEST_PUBLICATION_RELEASE.manifest.releaseId,
@@ -56,26 +61,20 @@ describe("published active identity", () => {
           releaseId: ReleaseIdSchema.make("release-active"),
           sequence: 3,
         };
-        fetchQueryMock.mockResolvedValue(identity);
-
+        fetchQueryMock.mockReturnValue(Effect.succeed(identity));
         expect(yield* readActiveContentIdentity()).toEqual(identity);
-        expect(readQueryMock).toHaveBeenCalledWith(
-          "https://test.convex.cloud",
-          expect.anything(),
-          {}
-        );
+        expect(fetchQueryMock).toHaveBeenCalledWith(expect.anything(), {});
       })
   );
-
   it.effect("preserves the absence of an active release", () =>
     Effect.gen(function* () {
-      fetchQueryMock.mockResolvedValue(null);
-
+      fetchQueryMock.mockReturnValue(Effect.succeed(null));
       expect(yield* readActiveContentIdentity()).toBeNull();
     })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

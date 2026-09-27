@@ -1,3 +1,4 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   abortProgram,
   validateAbortedRelease,
@@ -9,12 +10,10 @@ import {
   ownsRole,
 } from "@repo/backend/confect/contentRelease/model";
 import { validateRecoveryRelation } from "@repo/backend/confect/contentRelease/recovery";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Builds the cumulative terminal receipt retained by an aborted recovery. */
-export function terminalReceipt(recovery: Doc<"contentReleases">) {
+export function terminalReceipt(recovery: Docs["contentReleases"]) {
   const total =
     recovery.checkedItems +
     recovery.stagedItems +
@@ -30,18 +29,17 @@ export function terminalReceipt(recovery: Doc<"contentReleases">) {
 
 /** Accepts healthy production by durably discarding its retained inverse. */
 export const acceptProgram = Effect.fn("contentRelease.accept")(function* (
-  ctx: MutationCtx,
   releaseId: string,
   recoveryId: string
 ) {
-  const candidate = yield* loadRelease(ctx, releaseId);
-  const recovery = yield* loadRelease(ctx, recoveryId);
+  const candidate = yield* loadRelease(releaseId);
+  const recovery = yield* loadRelease(recoveryId);
   const signed = yield* validateRecoveryRelation(candidate, recovery);
   if (recovery.status === "aborted") {
-    yield* validateAbortedRelease(ctx, recoveryId);
+    yield* validateAbortedRelease(recoveryId);
     return terminalReceipt(recovery);
   }
-  const state = yield* loadState(ctx);
+  const state = yield* loadState();
   if (
     !state ||
     state.activeReleaseId !== releaseId ||
@@ -64,5 +62,5 @@ export const acceptProgram = Effect.fn("contentRelease.accept")(function* (
       `Recovery ${recoveryId} lost its retained manifest identity.`
     );
   }
-  return yield* abortProgram(ctx, recoveryId);
+  return yield* abortProgram(recoveryId);
 });

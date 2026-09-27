@@ -2,7 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { articleApiPageValidator } from "@repo/backend/confect/contentRelease/article/spec";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   appLocaleValidator,
   artifactLocaleValidator,
@@ -119,7 +119,7 @@ export default GroupSpec.make()
           model: articleModelValidator,
           runtimeJson: Schema.Union([Schema.String, Schema.Null]),
         }),
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -132,7 +132,7 @@ export default GroupSpec.make()
         prefix: Schema.String,
       }),
       returns: () => articleApiPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -146,7 +146,7 @@ export default GroupSpec.make()
         publicPath: Schema.String,
       }),
       returns: () => articleModelValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -160,7 +160,7 @@ export default GroupSpec.make()
         paginationOpts: PaginationOptionsSchema,
       }),
       returns: () => articlePageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -173,7 +173,7 @@ export default GroupSpec.make()
         paginationOpts: PaginationOptionsSchema,
       }),
       returns: () => categoryPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -184,7 +184,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => articleBucketValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -195,7 +195,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => articleDiscoveryValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -207,7 +207,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => articleDiscoveryValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -217,7 +217,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => sitemapBucketsValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -228,6 +228,6 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => sitemapPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

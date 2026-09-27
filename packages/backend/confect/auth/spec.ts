@@ -1,5 +1,4 @@
-import { failureWire } from "@repo/backend/confect/failure";
-import { Schema, SchemaTransformation } from "effect";
+import { Schema } from "effect";
 export const accountUnavailableCode = "UNAUTHORIZED";
 export const accountUnavailableMessage = "User not found.";
 
@@ -29,26 +28,9 @@ export class AuthReadError extends Schema.TaggedError<AuthReadError>()(
     message: Schema.Literal("Unable to read authentication state."),
   }
 ) {}
-export const AccountUnavailableWire = failureWire(AccountUnavailable);
-const SessionRequiredWire = SessionRequired.fields.message.pipe(
-  Schema.decodeTo(
-    SessionRequired,
-    SchemaTransformation.transform({
-      decode: (message) => ({
-        _tag: SessionRequired.fields._tag.schema.literal,
-        code: SessionRequired.fields.code.literal,
-        message,
-      }),
-      encode: ({ message }) => message,
-    })
-  )
-);
-export const AuthReadErrorWire = failureWire(AuthReadError);
-
-/** Authentication failures retain their established transport payloads. */
 export const AuthFailure = Schema.Union([
-  SessionRequiredWire,
-  AccountUnavailableWire,
-  AuthReadErrorWire,
+  SessionRequired,
+  AccountUnavailable,
+  AuthReadError,
 ]);
 export type AuthFailure = typeof AuthFailure.Type;

@@ -1,6 +1,6 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { NakafaAgentSectionSchema } from "@repo/contents/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/content";
-import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema, Struct } from "effect";
 
 const UrlStringSchema = Schema.String.pipe(
@@ -36,9 +36,9 @@ const CountByLocaleSchema = Schema.Struct({
 /** Runtime schema for taxonomy input. */
 export const NakafaAgentTaxonomyOptionsSchema = Schema.Struct({
   locale: LocaleSchema.pipe(
-    Schema.withDecodingDefaultType(Effect.succeed(routing.defaultLocale))
+    Schema.withDecodingDefaultType(Effect.succeed(ACTIVE_APP_LOCALE_CODES[0]))
   ).annotate({
-    default: routing.defaultLocale,
+    default: ACTIVE_APP_LOCALE_CODES[0],
     description: "Locale used for localized labels and content counts.",
   }),
 })

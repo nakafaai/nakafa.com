@@ -1,8 +1,8 @@
-import { DatabaseReader } from "@confect/server";
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { TRYOUT_PROGRESS_IDENTITY_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
@@ -17,39 +17,30 @@ import type {
 } from "@repo/backend/confect/tryouts/sets/spec";
 import { emptySetPage } from "@repo/backend/confect/tryouts/sets/spec";
 import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
 import {
   readPublishedSetSections,
   readPublishedTrackSets,
 } from "@repo/backend/content/tryout/hierarchy";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type Progress = Doc<"tryoutSetProgress">;
-type User = Doc<"users">;
+type Progress = Docs["tryoutSetProgress"];
+type User = Docs["users"];
 
 /** Resolves one authorized, filtered, sorted page from the signed catalog. */
 export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
-  function* (ctx: QueryCtx, args: ListArgs) {
+  function* (args: ListArgs) {
     const [catalog, auth] = yield* Effect.all(
       [
-        loadTryoutCatalog(args.locale).pipe(
-          Effect.provide(convexTryoutLayer(ctx))
-        ),
-        getOptionalAppUserForRead(ctx),
+        loadTryoutCatalog(args.locale).pipe(Effect.provide(tryoutLayer)),
+        getOptionalAppUserForRead(),
       ],
       {
         concurrency: 2,
       }
     );
-    const joined = yield* readJoinedSets(
-      ctx,
-      catalog,
-      args,
-      auth?.appUser ?? null
-    );
+    const joined = yield* readJoinedSets(catalog, args, auth?.appUser ?? null);
     const scope = {
       snapshotId: catalog.snapshotId,
       viewerId: auth?.authUser._id ?? null,
@@ -86,7 +77,6 @@ export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
 /** Joins every authored set with at most one stable user progress row. */
 const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
   function* (
-    ctx: QueryCtx,
     catalog: PublishedCatalog,
     identity: TrackIdentity,
     user: User | null
@@ -96,7 +86,7 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
       return null;
     }
     const progress = user
-      ? yield* loadProgress(ctx, found.sets, identity.locale, user)
+      ? yield* loadProgress(found.sets, user)
       : new Map<string, Progress>();
     return yield* Effect.forEach(
       found.sets,
@@ -117,14 +107,12 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
 
 /** Loads progress only for the exact sets in the active signed catalog. */
 const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
-  ctx: QueryCtx,
   sets: readonly TryoutSet[],
-  appLocale: AppLocaleCode,
   user: User
 ) {
   const entries = yield* Effect.forEach(
     sets,
-    (set) => loadSetProgress(ctx, set, appLocale, user),
+    (set) => loadSetProgress(set, user),
     {
       concurrency: 16,
     }
@@ -147,25 +135,17 @@ const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
 
 /** Reads at most one user progress row for one exact authored route. */
 const loadSetProgress = Effect.fn("tryouts.sets.loadPublishedSetProgress")(
-  function* (
-    ctx: QueryCtx,
-    set: TryoutSet,
-    appLocale: AppLocaleCode,
-    user: User
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (set: TryoutSet, user: User) {
+    const database = yield* DatabaseReader;
     const rows = yield* database
       .table("tryoutSetProgress")
-      .index(
-        "by_userId_countryKey_examKey_trackKey_appLocale_setKey",
-        (query) =>
-          query
-            .eq("userId", user._id)
-            .eq("countryKey", set.countryKey)
-            .eq("examKey", set.examKey)
-            .eq("trackKey", set.trackKey)
-            .eq("appLocale", appLocale)
-            .eq("setKey", set.setKey)
+      .index("by_userId_and_set", (query) =>
+        query
+          .eq("userId", user._id)
+          .eq("countryKey", set.countryKey)
+          .eq("examKey", set.examKey)
+          .eq("trackKey", set.trackKey)
+          .eq("setKey", set.setKey)
       )
       .take(TRYOUT_PROGRESS_IDENTITY_LIMIT)
       .pipe(Effect.orDie);
@@ -186,7 +166,14 @@ const loadSetProgress = Effect.fn("tryouts.sets.loadPublishedSetProgress")(
       );
     }
     const identity = tryoutCatalogIdentity(set);
-    if (row.setIdentity && row.setIdentity !== identity) {
+    if (
+      row.setIdentity &&
+      row.setIdentity !==
+        tryoutCatalogIdentity({
+          ...set,
+          appLocale: AppLocaleSchema.make(row.appLocale),
+        })
+    ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         "Signed try-out progress conflicts with its route identity."

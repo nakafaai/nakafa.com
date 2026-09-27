@@ -9,6 +9,13 @@ export const forumAttachmentUploadOutcomeValidator = Schema.Literals([
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalMutation({
+      name: "cleanup",
+      args: () => ({ storageId: GenericId.GenericId("_storage") }),
+      returns: () => Schema.Null,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
       name: "claim",
       args: () => ({
         leaseId: Schema.String,

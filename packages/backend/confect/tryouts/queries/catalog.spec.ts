@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import {
   publicTryoutCountryValidator,
@@ -38,7 +38,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => featuredTryoutValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -46,7 +46,7 @@ export default GroupSpec.make()
       name: "getMetadata",
       args: () => tryoutMetadataArgsValidator,
       returns: () => tryoutMetadataReturnValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -54,7 +54,7 @@ export default GroupSpec.make()
       name: "getLocalizedPath",
       args: () => tryoutLocalizedPathArgsValidator,
       returns: () => Schema.Union([Schema.String, Schema.Null]),
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -68,7 +68,7 @@ export default GroupSpec.make()
           ),
           sourceRevision: Schema.Union([Schema.String, Schema.Null]),
         }),
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -84,7 +84,7 @@ export default GroupSpec.make()
             sourceRevision: Schema.Union([Schema.String, Schema.Null]),
           }),
         ]),
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -100,7 +100,7 @@ export default GroupSpec.make()
             tracks: Schema.mutable(Schema.Array(publicTryoutTrackValidator)),
           }),
         ]),
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -116,7 +116,7 @@ export default GroupSpec.make()
             track: publicTryoutTrackValidator,
           }),
         ]),
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -139,7 +139,7 @@ export default GroupSpec.make()
             track: publicTryoutTrackValidator,
           }),
         ]),
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -147,6 +147,6 @@ export default GroupSpec.make()
       name: "getSectionPage",
       args: () => tryoutPageArgsValidator.fields,
       returns: () => sectionPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

@@ -1,50 +1,45 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { compactSnapshots } from "@repo/backend/confect/contentRelease/snapshot/cleanup";
 // biome-ignore lint/performance/noNamespaceImport: Vitest spies on this module namespace to control the owning failure boundary.
 import * as snapshotRows from "@repo/backend/confect/contentRelease/snapshot/rows";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
-import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
-import { convexTest } from "convex-test";
+import {
+  insertExpiredProgram,
+  makeProgramSnapshotData,
+} from "@repo/backend/test/program/snapshot";
+import { insertExpiredQuran } from "@repo/backend/test/quran/snapshot";
+import { convexTest, type TestConvex } from "convex-test";
 import { Effect } from "effect";
 
-/** Inserts one expired manifest and a requested number of physical rows. */
-async function insertExpiredProgram(
-  ctx: MutationCtx,
-  snapshotId: string,
-  rowCount: number,
-  cleanupAt?: number
-) {
-  await ctx.db.insert("contentSnapshots", {
-    ...(cleanupAt === undefined ? {} : { cleanupAt }),
-    createdAt: 0,
-    family: "program",
-    retainUntil: 0,
-    snapshotId,
-    snapshotJson: "{}",
-  });
-  for (let index = 0; index < rowCount; index += 1) {
-    await ctx.db.insert("programCatalog", {
-      displayOrder: index,
-      index,
-      programKey: `program-${index}`,
-      rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
-      rowJson: "{}",
-      snapshotId,
-    });
-  }
+/** Executes one cleanup transaction through Confect's native mutation services. */
+function runCompactPage(t: TestConvex<typeof schema>) {
+  return t.mutation((ctx) =>
+    Effect.runPromise(
+      compactSnapshots(0).pipe(
+        Effect.provide(mutationLayer(confectSchema, ctx))
+      )
+    )
+  );
 }
-
 describe("contentRelease/snapshot/cleanup", () => {
   afterEach(() => vi.restoreAllMocks());
-
   it.each([
-    { family: "program", cleanupPart: "quran" },
-    { family: "quran", cleanupPart: "catalog" },
-    { family: "tryout", cleanupPart: "program" },
+    {
+      family: "program",
+      cleanupPart: "quran",
+    },
+    {
+      family: "quran",
+      cleanupPart: "catalog",
+    },
+    {
+      family: "tryout",
+      cleanupPart: "program",
+    },
   ] as const)(
     "preserves rows when $family cleanup names a foreign part",
     async (snapshot) => {
@@ -60,13 +55,12 @@ describe("contentRelease/snapshot/cleanup", () => {
         })
       );
       const before = await t.query((ctx) => ctx.db.get(id));
-      await expect(
-        t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+      await expect(runCompactPage(t)).rejects.toMatchObject({
+        code: "CONTENT_RELEASE_INTEGRITY",
+      });
       expect(await t.query((ctx) => ctx.db.get(id))).toEqual(before);
     }
   );
-
   it("rejects an incomplete empty page instead of committing a lost cleanup cursor", async () => {
     const snapshotId = `sha256:${"c".repeat(64)}`;
     const t = convexTest(schema, convexModules);
@@ -78,20 +72,15 @@ describe("contentRelease/snapshot/cleanup", () => {
         part: "program",
       })
     );
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: `Snapshot program/${snapshotId} lost its cleanup page.`,
-      },
+    await expect(runCompactPage(t)).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+      message: `Snapshot program/${snapshotId} lost its cleanup page.`,
     });
     const snapshot = await t.query((ctx) =>
       ctx.db.query("contentSnapshots").unique()
     );
     expect(snapshot?.cleanupAt).toBeUndefined();
   });
-
   it("rolls back child deletion when an incomplete page has no valid position", async () => {
     const snapshotId = `sha256:${"d".repeat(64)}`;
     const t = convexTest(schema, convexModules);
@@ -113,24 +102,24 @@ describe("contentRelease/snapshot/cleanup", () => {
     assert(bundle);
     vi.spyOn(snapshotRows, "loadSnapshotChildren").mockReturnValueOnce(
       Effect.succeed({
-        children: [{ row: bundle, table: "tryoutRuntimeBundles" }],
+        children: [
+          {
+            row: bundle,
+            table: "tryoutRuntimeBundles",
+          },
+        ],
         done: false,
         part: "program",
       })
     );
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: `Snapshot program/${snapshotId} lost its cleanup position.`,
-      },
+    await expect(runCompactPage(t)).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+      message: `Snapshot program/${snapshotId} lost its cleanup position.`,
     });
     await expect(
       t.query((ctx) => ctx.db.get("tryoutRuntimeBundles", bundle._id))
     ).resolves.toEqual(bundle);
   });
-
   it("ignores unexpired snapshots without a cleanup retry", async () => {
     const snapshotId = `sha256:${"6".repeat(64)}`;
     const t = convexTest(schema, convexModules);
@@ -143,15 +132,17 @@ describe("contentRelease/snapshot/cleanup", () => {
         snapshotJson: "{}",
       })
     );
-
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 0, done: true });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 0,
+      done: true,
+    });
     await expect(
       t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-    ).resolves.toMatchObject({ snapshotId });
+    ).resolves.toMatchObject({
+      snapshotId,
+    });
   });
-
   it("deletes expired snapshots through resumable bounded pages", async () => {
     const snapshotId = `sha256:${"7".repeat(64)}`;
     const t = convexTest(schema, convexModules);
@@ -179,10 +170,11 @@ describe("contentRelease/snapshot/cleanup", () => {
         snapshotId,
       });
     });
-
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 2,
+      done: false,
+    });
     await expect(
       t.run(async (ctx) => ({
         curriculum: await ctx.db.query("curriculumRoutes").collect(),
@@ -190,8 +182,16 @@ describe("contentRelease/snapshot/cleanup", () => {
         snapshot: await ctx.db.query("contentSnapshots").unique(),
       }))
     ).resolves.toMatchObject({
-      curriculum: [{ index: 3 }],
-      programs: [{ index: 2 }],
+      curriculum: [
+        {
+          index: 3,
+        },
+      ],
+      programs: [
+        {
+          index: 2,
+        },
+      ],
       snapshot: {
         cleanupAt: 0,
         cleanupIndex: 1,
@@ -199,20 +199,27 @@ describe("contentRelease/snapshot/cleanup", () => {
         cleanupRetryAt: 0,
       },
     });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 0, done: true });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 1,
+      done: false,
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 1,
+      done: false,
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 2,
+      done: false,
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 0,
+      done: true,
+    });
   });
-
   it("keeps near-limit snapshot bodies inside one bounded transaction", async () => {
     const snapshotId = `sha256:${"8".repeat(64)}`;
     const t = convexTest(schema, convexModules);
@@ -229,28 +236,36 @@ describe("contentRelease/snapshot/cleanup", () => {
         });
       }
     });
-
-    const first = await t.mutation((ctx) =>
-      runConvexProgram(compactSnapshots(ctx, 0))
-    );
+    const first = await runCompactPage(t);
     const pending = await t.run(async (ctx) => ({
       rows: await ctx.db.query("programCatalog").take(3),
       snapshot: await ctx.db.query("contentSnapshots").unique(),
     }));
-    expect(first).toEqual({ cursor: null, deleted: 2, done: false });
+    expect(first).toEqual({
+      cursor: null,
+      deleted: 2,
+      done: false,
+    });
     expect(pending.rows).toHaveLength(1);
-    expect(pending.snapshot).toMatchObject({ cleanupIndex: 1 });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 0, done: false });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
+    expect(pending.snapshot).toMatchObject({
+      cleanupIndex: 1,
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 1,
+      done: false,
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 0,
+      done: false,
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 1,
+      done: false,
+    });
   });
-
   it("cleans try-out tables in separate durable physical phases", async () => {
     const snapshotId = `sha256:${"9".repeat(64)}`;
     const t = convexTest(schema, convexModules);
@@ -312,16 +327,21 @@ describe("contentRelease/snapshot/cleanup", () => {
         });
       }
     });
-
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 1,
+      done: false,
+    });
     await expect(
       t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-    ).resolves.toMatchObject({ cleanupPart: "placement" });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
+    ).resolves.toMatchObject({
+      cleanupPart: "placement",
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 1,
+      done: false,
+    });
     await expect(
       t.run(async (ctx) => ({
         catalog: await ctx.db.query("tryoutCatalog").take(1),
@@ -332,82 +352,78 @@ describe("contentRelease/snapshot/cleanup", () => {
       catalog: [],
       placement: [],
       runtime: [
-        expect.objectContaining({ snapshotId }),
-        expect.objectContaining({ snapshotId }),
-        expect.objectContaining({ snapshotId }),
+        expect.objectContaining({
+          snapshotId,
+        }),
+        expect.objectContaining({
+          snapshotId,
+        }),
+        expect.objectContaining({
+          snapshotId,
+        }),
       ],
     });
     await expect(
       t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-    ).resolves.toMatchObject({ cleanupPart: "runtime" });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
+    ).resolves.toMatchObject({
+      cleanupPart: "runtime",
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 2,
+      done: false,
+    });
     await expect(
       t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-    ).resolves.toMatchObject({ cleanupPart: "runtime" });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
+    ).resolves.toMatchObject({
+      cleanupPart: "runtime",
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 2,
+      done: false,
+    });
     await expect(
       t.run(async (ctx) => ({
         runtime: await ctx.db.query("tryoutRuntimeBundles").take(1),
         snapshot: await ctx.db.query("contentSnapshots").take(1),
       }))
-    ).resolves.toEqual({ runtime: [], snapshot: [] });
+    ).resolves.toEqual({
+      runtime: [],
+      snapshot: [],
+    });
   });
-
   it("cleans signed Quran rows and search projections in separate phases", async () => {
     const snapshotId = `sha256:${"a".repeat(64)}`;
     const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSnapshots", {
-        createdAt: 0,
-        family: "quran",
-        retainUntil: 0,
-        snapshotId,
-        snapshotJson: "{}",
-      });
-      await ctx.db.insert("quranRows", {
-        identity: "search:en:1",
-        index: 0,
-        kind: "quran-search",
-        appLocale: "en",
-        rowHash: `sha256:${"b".repeat(64)}`,
-        rowJson: "{}",
-        snapshotId,
-        surahNumber: 1,
-      });
-      await ctx.db.insert("quranSearch", {
-        assetId: "asset:en:quran:quran-search:1",
-        identity: "search:en:1",
-        index: 0,
-        appLocale: "en",
-        rowHash: `sha256:${"b".repeat(64)}`,
-        snapshotId,
-        surahNumber: 1,
-        text: "technical search",
-      });
+    await t.mutation((ctx) => insertExpiredQuran(ctx, snapshotId));
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 1,
+      done: false,
     });
-
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
     await expect(
       t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-    ).resolves.toMatchObject({ cleanupPart: "quran-search" });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
+    ).resolves.toMatchObject({
+      cleanupPart: "quran-search",
+    });
+    await expect(runCompactPage(t)).resolves.toEqual({
+      cursor: null,
+      deleted: 2,
+      done: false,
+    });
     await expect(
       t.run(async (ctx) => ({
         rows: await ctx.db.query("quranRows").take(1),
         search: await ctx.db.query("quranSearch").take(1),
         snapshot: await ctx.db.query("contentSnapshots").take(1),
       }))
-    ).resolves.toEqual({ rows: [], search: [], snapshot: [] });
+    ).resolves.toEqual({
+      rows: [],
+      search: [],
+      snapshot: [],
+    });
   });
-
   it.live(
     "extends retained snapshots selected by protected release history",
     () =>
@@ -416,26 +432,30 @@ describe("contentRelease/snapshot/cleanup", () => {
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            insertTestRelease(ctx, { snapshots: data.snapshots })
+            insertTestRelease(ctx, {
+              snapshots: data.snapshots,
+            })
           )
         );
         yield* Effect.promise(() =>
           t.mutation((ctx) => insertExpiredProgram(ctx, data.snapshotId, 0))
         );
-
         yield* Effect.promise(() =>
-          expect(
-            t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-          ).resolves.toEqual({ cursor: null, deleted: 0, done: false })
+          expect(runCompactPage(t)).resolves.toEqual({
+            cursor: null,
+            deleted: 0,
+            done: false,
+          })
         );
         yield* Effect.promise(() =>
           expect(
             t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-          ).resolves.toMatchObject({ retainUntil: expect.any(Number) })
+          ).resolves.toMatchObject({
+            retainUntil: expect.any(Number),
+          })
         );
       })
   );
-
   it.live(
     "fails closed when a partially cleaned snapshot becomes referenced",
     () =>
@@ -444,18 +464,17 @@ describe("contentRelease/snapshot/cleanup", () => {
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            insertTestRelease(ctx, { snapshots: data.snapshots })
+            insertTestRelease(ctx, {
+              snapshots: data.snapshots,
+            })
           )
         );
         yield* Effect.promise(() =>
           t.mutation((ctx) => insertExpiredProgram(ctx, data.snapshotId, 0, 0))
         );
-
         yield* Effect.promise(() =>
-          expect(
-            t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-          ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          expect(runCompactPage(t)).rejects.toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
           })
         );
       })

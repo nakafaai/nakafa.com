@@ -1,4 +1,5 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   syncArticles,
   verifyArticleBuild,
@@ -11,18 +12,15 @@ import { reconcileMaterialModel } from "@repo/backend/confect/contentRelease/mod
 import { reconcileSearchModel } from "@repo/backend/confect/contentRelease/models/search";
 import { syncSearch } from "@repo/backend/confect/contentRelease/search/sync";
 import { validateSearchModel } from "@repo/backend/confect/contentRelease/search/validation";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type ModelBuild = Doc<"contentModelBuilds">;
+type ModelBuild = Docs["contentModelBuilds"];
 
 /** Advances exactly one bounded inactive-buffer phase page. */
 export const advanceModelPage = Effect.fn("contentRelease.advanceModelPage")(
   function* (
-    ctx: MutationCtx,
     build: ModelBuild,
-    release: Doc<"contentReleases">,
+    release: Docs["contentReleases"],
     signed: SignedContentRelease
   ) {
     if (
@@ -30,34 +28,34 @@ export const advanceModelPage = Effect.fn("contentRelease.advanceModelPage")(
       build.phase === "articleCategories" ||
       build.phase === "articleBuckets"
     ) {
-      return yield* reconcileArticleModel(ctx, build);
+      return yield* reconcileArticleModel(build);
     }
     if (build.phase === "articleApply") {
-      return yield* syncArticles(ctx, build, release, signed);
+      return yield* syncArticles(build, release, signed);
     }
     if (build.phase === "articleVerify") {
-      return yield* verifyArticleBuild(ctx, build);
+      return yield* verifyArticleBuild(build);
     }
     if (
       build.phase === "materialCatalog" ||
       build.phase === "materialBuckets"
     ) {
-      return yield* reconcileMaterialModel(ctx, build);
+      return yield* reconcileMaterialModel(build);
     }
     if (build.phase === "materialApply") {
-      return yield* syncMaterials(ctx, build, release, signed);
+      return yield* syncMaterials(build, release, signed);
     }
     if (build.phase === "materialVerify") {
-      return yield* validateMaterialModel(ctx, build);
+      return yield* validateMaterialModel(build);
     }
     if (build.phase === "search") {
-      return yield* reconcileSearchModel(ctx, build);
+      return yield* reconcileSearchModel(build);
     }
     if (build.phase === "searchApply") {
-      return yield* syncSearch(ctx, build, release, signed);
+      return yield* syncSearch(build, release, signed);
     }
     if (build.phase === "searchVerify") {
-      return yield* validateSearchModel(ctx, build, release);
+      return yield* validateSearchModel(build, release);
     }
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",

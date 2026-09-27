@@ -9,7 +9,6 @@ import {
   completedReceipt,
   stagedEvidence,
 } from "@repo/backend/confect/contentRelease/receipt";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /**
@@ -25,7 +24,6 @@ import { Effect } from "effect";
  * an absent base release is the only genesis shape this anchor can receive.
  */
 const loadBase = Effect.fn("contentRelease.loadSnapshotBase")(function* (
-  ctx: QueryCtx,
   releaseId: null | string,
   manifestHash: null | string,
   expectedSequence?: number
@@ -33,7 +31,7 @@ const loadBase = Effect.fn("contentRelease.loadSnapshotBase")(function* (
   if (releaseId === null) {
     return 0;
   }
-  const release = yield* loadRelease(ctx, releaseId);
+  const release = yield* loadRelease(releaseId);
   if (
     release.status !== "completed" ||
     release.manifestHash !== manifestHash ||
@@ -79,15 +77,15 @@ function hasExactBase(
 /** Loads one exact active or verified-candidate immutable snapshot. */
 export const loadReadableSnapshot = Effect.fn(
   "contentRelease.loadReadableSnapshot"
-)(function* (ctx: QueryCtx, releaseId: string, manifestHash: string) {
-  const state = yield* loadState(ctx);
+)(function* (releaseId: string, manifestHash: string) {
+  const state = yield* loadState();
   if (!state) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       `Release ${releaseId} has no publication snapshot.`
     );
   }
-  const release = yield* loadRelease(ctx, releaseId);
+  const release = yield* loadRelease(releaseId);
   const signed = yield* decodeReleaseJson(release.releaseJson);
   const isActive =
     state.activeReleaseId === releaseId &&
@@ -123,7 +121,6 @@ export const loadReadableSnapshot = Effect.fn(
     yield* stagedEvidence(release, signed);
   }
   const baseSequence = yield* loadBase(
-    ctx,
     signed.manifest.baseReleaseId,
     signed.manifest.baseManifestHash,
     isCandidate ? state.activeSequence : undefined

@@ -1,4 +1,3 @@
-import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import schoolClassForumPostsTable from "@repo/backend/confect/_generated/tables/schoolClassForumPosts";
 import schoolClassForumsTable from "@repo/backend/confect/_generated/tables/schoolClassForums";
@@ -57,9 +56,6 @@ export const forumDetailValidator = Schema.Struct({
 });
 
 /** Paginated forum list payload used by the class forum sidebar. */
-export const paginatedForumsValidator = PaginationResultSchema(
-  forumListItemValidator
-);
 
 /** Mutation result for toggling a reaction on a forum or forum post. */
 export const forumReactionToggleResultValidator = Schema.Struct({

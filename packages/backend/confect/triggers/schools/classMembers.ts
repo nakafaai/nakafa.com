@@ -1,11 +1,12 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import type {
   DataModel,
   Doc,
   Id,
 } from "@repo/backend/convex/_generated/dataModel";
-import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Clock, Effect, Struct } from "effect";
 
@@ -23,12 +24,9 @@ import { Clock, Effect, Struct } from "effect";
  */
 export const schoolClassMembersHandler = Effect.fn(
   "triggers.schools.recordClassMember"
-)(function* (
-  ctx: GenericMutationCtx<DataModel>,
-  change: Change<DataModel, "schoolClassMembers">
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (change: Change<DataModel, "schoolClassMembers">) {
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   // biome-ignore lint/style/useDefaultSwitchClause: Convex Change is a closed union checked by TypeScript.
   switch (change.operation) {
     case "insert": {
@@ -52,7 +50,7 @@ export const schoolClassMembersHandler = Effect.fn(
             .pipe(Effect.orDie);
         }
       }
-      yield* updateClassMemberCount(ctx, member.classId, member.role, 1);
+      yield* updateClassMemberCount(member.classId, member.role, 1);
       yield* writer
         .table("schoolActivityLogs")
         .insert({
@@ -75,7 +73,7 @@ export const schoolClassMembersHandler = Effect.fn(
       const member = change.newDoc;
       const oldMember = change.oldDoc;
       if (oldMember.role !== member.role) {
-        yield* handleRoleChange(ctx, change.id, member, oldMember);
+        yield* handleRoleChange(change.id, member, oldMember);
       }
       if (
         oldMember.teacherRole !== member.teacherRole &&
@@ -105,7 +103,7 @@ export const schoolClassMembersHandler = Effect.fn(
     }
     case "delete": {
       const oldMember = change.oldDoc;
-      yield* updateClassMemberCount(ctx, oldMember.classId, oldMember.role, -1);
+      yield* updateClassMemberCount(oldMember.classId, oldMember.role, -1);
       yield* writer
         .table("schoolActivityLogs")
         .insert({
@@ -133,13 +131,12 @@ export const schoolClassMembersHandler = Effect.fn(
 const updateClassMemberCount = Effect.fn(
   "triggers.schools.updateClassMemberCount"
 )(function* (
-  ctx: GenericMutationCtx<DataModel>,
   classId: Id<"schoolClasses">,
   role: Doc<"schoolClassMembers">["role"],
   delta: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const classDoc = yield* database
     .table("schoolClasses")
     .get(classId)
@@ -148,21 +145,20 @@ const updateClassMemberCount = Effect.fn(
     return;
   }
   const field = role === "teacher" ? "teacherCount" : "studentCount";
-  yield* writer
-    .table("schoolClasses")
-    .patch(classId, { [field]: Math.max(classDoc[field] + delta, 0) });
+  yield* writer.table("schoolClasses").patch(classId, {
+    [field]: Math.max(classDoc[field] + delta, 0),
+  });
 }, Effect.orDie);
 
 /** Transfer a changed membership between class counters and record its audit row. */
 const handleRoleChange = Effect.fn("triggers.schools.changeClassRole")(
   function* (
-    ctx: GenericMutationCtx<DataModel>,
     memberId: Id<"schoolClassMembers">,
     member: Doc<"schoolClassMembers">,
     oldMember: Doc<"schoolClassMembers">
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const classDoc = yield* database.table("schoolClasses").get(member.classId);
     const teacherDelta = member.role === "teacher" ? 1 : -1;
     yield* writer.table("schoolClasses").patch(member.classId, {

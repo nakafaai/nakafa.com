@@ -2,7 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import {
-  SubscriptionRecordIoErrorWire,
+  SubscriptionRecordIoError,
   subscriptionRecordArgs,
 } from "@repo/backend/confect/subscriptions/records/spec";
 import { Schema } from "effect";
@@ -18,7 +18,7 @@ export default GroupSpec.make()
       name: "createSubscription",
       args: () => subscriptionRecordArgs,
       returns: () => Schema.NullOr(IdSchema("subscriptions")),
-      error: () => SubscriptionRecordIoErrorWire,
+      error: () => SubscriptionRecordIoError,
     }).middleware(Atomic)
   )
   .addFunction(
@@ -26,6 +26,6 @@ export default GroupSpec.make()
       name: "updateSubscription",
       args: () => subscriptionRecordArgs,
       returns: () => Schema.Null,
-      error: () => SubscriptionRecordIoErrorWire,
+      error: () => SubscriptionRecordIoError,
     }).middleware(Atomic)
   );

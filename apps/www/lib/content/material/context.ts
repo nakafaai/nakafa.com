@@ -1,8 +1,7 @@
+import { HttpClient } from "@confect/js";
 import "server-only";
-
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -23,13 +22,13 @@ export const readPublishedMaterialContext = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.program.context,
-    {
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.program.context, {
       ...(expectedActiveReleaseId === undefined
         ? {}
-        : { expectedActiveReleaseId }),
+        : {
+            expectedActiveReleaseId,
+          }),
       contentKey: material.contentKey,
       appLocale,
       materialKey: material.materialKey,
@@ -37,8 +36,8 @@ export const readPublishedMaterialContext = Effect.fn(
       parentPath: material.parentPath,
       programKey: context.programKey,
       publicPath: material.publicPath,
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   return yield* decodePublishedMaterialContext(
     locale,
     material,

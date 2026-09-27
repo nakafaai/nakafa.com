@@ -1,12 +1,10 @@
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
-import { failureWire } from "@repo/backend/confect/failure";
 import {
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,
   NAKAFA_AGENT_MAX_QUERIES,
 } from "@repo/contents/agent/search";
 import { Effect, Schema } from "effect";
-
 export class ContentSearchInputError extends Schema.TaggedError<ContentSearchInputError>()(
   "ContentSearchInputError",
   {
@@ -18,8 +16,6 @@ export class ContentSearchInputError extends Schema.TaggedError<ContentSearchInp
     message: Schema.String,
   }
 ) {}
-export const ContentSearchInputFailure = failureWire(ContentSearchInputError);
-
 type ContentSearchInput = Schema.Schema.Type<
   typeof contentSearchInputValidator
 >;

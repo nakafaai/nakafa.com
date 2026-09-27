@@ -1,5 +1,7 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { deleteForumPendingUpload } from "@repo/backend/confect/classes/forums/attachments/impl";
 import {
@@ -7,7 +9,6 @@ import {
   cleanupForumPostData,
 } from "@repo/backend/confect/classes/forums/cleanup";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Option } from "effect";
 
 const REACTION_BATCH_SIZE = 50;
@@ -17,9 +18,9 @@ const REPLY_REFERENCE_BATCH_SIZE = 25;
 
 /** Deletes one bounded batch of a user's class-forum reactions. */
 const cleanupForumReactions = Effect.fn("auth.cleanup.cleanupForumReactions")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const postReactions = yield* database
       .table("schoolClassForumPostReactions")
       .index("by_userId", (query) => query.eq("userId", userId))
@@ -46,9 +47,9 @@ const cleanupForumReactions = Effect.fn("auth.cleanup.cleanupForumReactions")(
 
 /** Deletes one bounded batch of class-forum read state and pending uploads. */
 const cleanupForumState = Effect.fn("auth.cleanup.cleanupForumState")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const readStates = yield* database
       .table("schoolClassForumReadStates")
       .index("by_userId", (query) => query.eq("userId", userId))
@@ -66,7 +67,7 @@ const cleanupForumState = Effect.fn("auth.cleanup.cleanupForumState")(
       .take(UPLOAD_BATCH_SIZE)
       .pipe(Effect.orDie);
     for (const upload of uploads) {
-      yield* deleteForumPendingUpload(ctx, upload).pipe(
+      yield* deleteForumPendingUpload(upload).pipe(
         Effect.mapError(toUserCleanupError)
       );
     }
@@ -78,31 +79,27 @@ const cleanupForumState = Effect.fn("auth.cleanup.cleanupForumState")(
 /** Removes reply previews that quote content owned by the deleted user. */
 const cleanupForumReplyReferences = Effect.fn(
   "auth.cleanup.cleanupForumReplyReferences"
-)(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const replies = yield* database
-      .table("schoolClassForumPosts")
-      .index("by_replyToUserId", (query) => query.eq("replyToUserId", userId))
-      .take(REPLY_REFERENCE_BATCH_SIZE);
-    for (const reply of replies) {
-      yield* writer.table("schoolClassForumPosts").patch(reply._id, {
-        replyToBody: undefined,
-        replyToUserId: undefined,
-      });
-    }
-    return replies.length > 0;
-  },
-  Effect.orDie,
-  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-);
+)(function* (userId: Id<"users">) {
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const replies = yield* database
+    .table("schoolClassForumPosts")
+    .index("by_replyToUserId", (query) => query.eq("replyToUserId", userId))
+    .take(REPLY_REFERENCE_BATCH_SIZE);
+  for (const reply of replies) {
+    yield* writer.table("schoolClassForumPosts").patch(reply._id, {
+      replyToBody: undefined,
+      replyToUserId: undefined,
+    });
+  }
+  return replies.length > 0;
+}, Effect.mapError(toUserCleanupError));
 
 /** Deletes authored forum roots only after every dependent row is gone. */
 const cleanupForumRoots = Effect.fn("auth.cleanup.cleanupForumRoots")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const forum = yield* database
       .table("schoolClassForums")
       .index("by_createdBy", (query) => query.eq("createdBy", userId))
@@ -111,7 +108,7 @@ const cleanupForumRoots = Effect.fn("auth.cleanup.cleanupForumRoots")(
     if (!forum) {
       return false;
     }
-    const removedDependencies = yield* cleanupForumData(ctx, forum._id).pipe(
+    const removedDependencies = yield* cleanupForumData(forum._id).pipe(
       Effect.mapError(toUserCleanupError)
     );
     if (removedDependencies) {
@@ -125,8 +122,8 @@ const cleanupForumRoots = Effect.fn("auth.cleanup.cleanupForumRoots")(
 
 /** Deletes one bounded batch of authored forum threads. */
 const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
     const post = yield* database
       .table("schoolClassForumPosts")
       .index("by_createdBy", (query) => query.eq("createdBy", userId))
@@ -135,7 +132,7 @@ const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
     if (!post) {
       return false;
     }
-    return yield* cleanupForumPostData(ctx, post._id).pipe(
+    return yield* cleanupForumPostData(post._id).pipe(
       Effect.mapError(toUserCleanupError)
     );
   },
@@ -145,18 +142,18 @@ const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
 /** Deletes one bounded batch of personal school community data. */
 export const cleanupUserSchoolCommunity = Effect.fn(
   "auth.cleanup.cleanupUserSchoolCommunity"
-)(function* (ctx: MutationCtx, userId: Id<"users">) {
-  if (yield* cleanupForumReactions(ctx, userId)) {
+)(function* (userId: Id<"users">) {
+  if (yield* cleanupForumReactions(userId)) {
     return true;
   }
-  if (yield* cleanupForumState(ctx, userId)) {
+  if (yield* cleanupForumState(userId)) {
     return true;
   }
-  if (yield* cleanupForumReplyReferences(ctx, userId)) {
+  if (yield* cleanupForumReplyReferences(userId)) {
     return true;
   }
-  if (yield* cleanupForumRoots(ctx, userId)) {
+  if (yield* cleanupForumRoots(userId)) {
     return true;
   }
-  return yield* cleanupForumPosts(ctx, userId);
+  return yield* cleanupForumPosts(userId);
 });

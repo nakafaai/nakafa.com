@@ -19,19 +19,15 @@ export function PostReactions({ post }: { post: ForumPost }) {
   const t = useTranslations("Common");
   const [isPending, startTransition] = useTransition();
   const toggleReaction = usePostReactionMutation();
-
   if (isOptimisticForumPost(post) || post.reactionUsers.length === 0) {
     return null;
   }
-
   const myReactions = new Set(post.myReactions);
-
   return (
     <div className="flex flex-wrap items-center gap-1">
       {post.reactionUsers.map(({ emoji, count, reactors }) => {
         const isMyReaction = myReactions.has(emoji);
         const moreCount = count - reactors.length;
-
         return (
           <HoverCard key={emoji}>
             <HoverCardTrigger
@@ -42,16 +38,22 @@ export function PostReactions({ post }: { post: ForumPost }) {
                     startTransition(() =>
                       Effect.runPromise(
                         Effect.tryPromise(() =>
-                          toggleReaction({ postId: post._id, emoji })
+                          toggleReaction({
+                            postId: post._id,
+                            emoji,
+                          })
                         ).pipe(
+                          Effect.flatMap(Effect.fromResult),
                           Effect.asVoid,
-                          Effect.catchTag("UnknownError", ({ cause: error }) =>
-                            Effect.sync(() => {
-                              captureException(error, {
-                                source: "post-reaction-toggle",
-                              });
-                            })
-                          )
+                          Effect.matchEffect({
+                            onFailure: (error) =>
+                              Effect.sync(() => {
+                                captureException(error, {
+                                  source: "post-reaction-toggle",
+                                });
+                              }),
+                            onSuccess: () => Effect.void,
+                          })
                         )
                       )
                     );
@@ -79,7 +81,9 @@ export function PostReactions({ post }: { post: ForumPost }) {
                         names: reactors.join(", "),
                         count: moreCount,
                       })
-                    : t("reacted-by", { names: reactors.join(", ") })}
+                    : t("reacted-by", {
+                        names: reactors.join(", "),
+                      })}
                 </p>
               </div>
             </HoverCardContent>

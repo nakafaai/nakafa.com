@@ -1,8 +1,9 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { useConvexAuth } from "convex/react";
+
 import type { Locale } from "next-intl";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { isActiveLocale } from "@/lib/i18n/active";
@@ -13,14 +14,20 @@ export function usePreferredTryoutHref(locale: Locale) {
   const activeLocale = isActiveLocale(locale);
   const queryArgs =
     isAuthenticated && !isLoading && activeLocale ? { locale } : "skip";
-  const preference = useQueryWithStatus(
-    api.learningPreferences.queries.getCurrentTryout,
+  const preference = useQuery(
+    refs.public.learningPreferences.queries.getCurrentTryout,
     queryArgs
   );
 
-  if (!(activeLocale && preference.isSuccess && preference.data)) {
+  if (QueryResult.isFailure(preference)) {
+    throw preference.error;
+  }
+
+  if (
+    !(activeLocale && QueryResult.isSuccess(preference) && preference.value)
+  ) {
     return null;
   }
 
-  return getTryoutPublicPathHref(preference.data.country.publicPath);
+  return getTryoutPublicPathHref(preference.value.country.publicPath);
 }

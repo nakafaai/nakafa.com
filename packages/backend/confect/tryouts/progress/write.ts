@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { ensureTryoutProgressWithinReadBudget } from "@repo/backend/confect/tryouts/progress/size";
 import { TryoutProgressError } from "@repo/backend/confect/tryouts/progress/spec";
 import { readAttemptSetIdentity } from "@repo/backend/confect/tryouts/runtime/lookup";
@@ -7,11 +10,9 @@ import {
   getTryoutStatusRank,
   type TryoutStatus,
 } from "@repo/backend/confect/tryouts/status";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutAttempt = Docs["tryoutAttempts"];
 interface ProgressIdentity {
   readonly appLocale: NonNullable<TryoutAttempt["appLocale"]>;
   readonly countryKey: TryoutAttempt["countryKey"];
@@ -21,30 +22,35 @@ interface ProgressIdentity {
   readonly trackKey: TryoutAttempt["trackKey"];
 }
 
-/** Expected failure while persisting compact try-out progress. */
-
 /** Stores the latest compact attempt state used by set discovery queries. */
 export const writeTryoutSetProgress = Effect.fn(
   "tryouts.progress.writeTryoutSetProgress"
 )(
-  function* (
-    ctx: Pick<MutationCtx, "db">,
-    args: {
-      attempt: TryoutAttempt;
-      publishedScore: number | null;
-      status: TryoutStatus;
-      updatedAt: number;
-    }
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (args: {
+    attempt: TryoutAttempt;
+    publishedScore: number | null;
+    status: TryoutStatus;
+    updatedAt: number;
+  }) {
+    const writer = yield* DatabaseWriter;
     yield* validateProgressScore(args.status, args.publishedScore);
     const identity = readProgressIdentity(args.attempt);
-    const current = yield* loadProgress(ctx, args.attempt, identity);
+    const current = yield* loadProgress(args.attempt, identity);
     if (current) {
       yield* ensureTryoutProgressWithinReadBudget(current);
     }
-    if (current && current.attemptNumber > args.attempt.attemptNumber) {
-      return current._id;
+    if (current && current.latestAttemptId !== args.attempt._id) {
+      const latest = yield* (yield* DatabaseReader)
+        .table("tryoutAttempts")
+        .get(current.latestAttemptId)
+        .pipe(Effect.orDie);
+      if (
+        latest.startedAt > args.attempt.startedAt ||
+        (latest.startedAt === args.attempt.startedAt &&
+          latest._creationTime > args.attempt._creationTime)
+      ) {
+        return current._id;
+      }
     }
     const values = {
       attemptNumber: args.attempt.attemptNumber,
@@ -96,14 +102,20 @@ function readProgressIdentity(attempt: TryoutAttempt) {
 
 /** Loads the one compact progress row owned by the attempt identity. */
 const loadProgress = Effect.fn("tryouts.progress.loadProgress")(function* (
-  ctx: Pick<MutationCtx, "db">,
   attempt: TryoutAttempt,
   identity: ProgressIdentity
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   return yield* database
     .table("tryoutSetProgress")
-    .get("by_userId_and_setIdentity", attempt.userId, identity.setIdentity)
+    .get(
+      "by_userId_and_set",
+      attempt.userId,
+      identity.countryKey,
+      identity.examKey,
+      identity.trackKey,
+      identity.setKey
+    )
     .pipe(
       Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
       Effect.orDie

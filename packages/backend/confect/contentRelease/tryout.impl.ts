@@ -1,10 +1,9 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { readTryoutTaxonomy } from "@repo/backend/confect/contentRelease/tryout/taxonomy";
 import spec from "@repo/backend/confect/contentRelease/tryout.spec";
 import { readTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import {
   readTryoutSitemapCount,
   readTryoutSitemapPage,
@@ -16,9 +15,8 @@ const catalog = FunctionImpl.make(
   spec,
   "catalog",
   Effect.fn("contentRelease.tryout.catalog")(function* ({ appLocale }) {
-    const ctx = yield* QueryCtxService;
     return yield* readTryoutCatalog(appLocale).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
+      Effect.provide(tryoutLayer)
     );
   })
 );
@@ -27,9 +25,8 @@ const sitemapCount = FunctionImpl.make(
   spec,
   "sitemapCount",
   Effect.fn("contentRelease.tryout.sitemapCount")(function* ({ appLocale }) {
-    const ctx = yield* QueryCtxService;
     return yield* readTryoutSitemapCount(appLocale).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
+      Effect.provide(tryoutLayer)
     );
   })
 );
@@ -41,9 +38,8 @@ const sitemapPage = FunctionImpl.make(
     appLocale,
     page,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readTryoutSitemapPage(appLocale, page).pipe(
-      Effect.provide(convexTryoutLayer(ctx))
+      Effect.provide(tryoutLayer)
     );
   })
 );
@@ -52,8 +48,7 @@ const taxonomy = FunctionImpl.make(
   spec,
   "taxonomy",
   Effect.fn("contentRelease.tryout.taxonomy")(function* ({ appLocale }) {
-    const ctx = yield* QueryCtxService;
-    return yield* readTryoutTaxonomy(ctx, appLocale);
+    return yield* readTryoutTaxonomy(appLocale);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

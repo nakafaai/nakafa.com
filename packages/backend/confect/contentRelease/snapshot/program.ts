@@ -1,6 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import {
   ensureDocumentSize,
@@ -8,7 +10,6 @@ import {
 } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { addProgramBucketRoute } from "@repo/backend/confect/contentRelease/program/bucket";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 type ProgramRow = Extract<
@@ -32,8 +33,8 @@ type CurriculumRecord = Extract<
 
 /** Rejects any global row-index collision across the two program tables. */
 const loadProgramIndex = Effect.fn("contentRelease.loadProgramIndex")(
-  function* (ctx: MutationCtx, snapshotId: string, index: number) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (snapshotId: string, index: number) {
+    const database = yield* DatabaseReader;
     return yield* Effect.all([
       database
         .table("programCatalog")
@@ -55,16 +56,14 @@ const loadProgramIndex = Effect.fn("contentRelease.loadProgramIndex")(
 
 /** Stores one immutable learning-program catalog row. */
 const stageProgram = Effect.fn("contentRelease.stageProgram")(function* (
-  ctx: MutationCtx,
   snapshotId: string,
   index: number,
   record: ProgramRecord,
   rowJson: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const [storedProgram, storedCurriculum] = yield* loadProgramIndex(
-    ctx,
     snapshotId,
     index
   );
@@ -109,14 +108,13 @@ const stageProgram = Effect.fn("contentRelease.stageProgram")(function* (
 
 /** Stores one immutable localized curriculum route row. */
 const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
-  ctx: MutationCtx,
   snapshotId: string,
   index: number,
   record: CurriculumRecord,
   rowJson: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const bucket = getHashBucket(record.rowHash);
   const row = {
     ...(record.row.sitemap
@@ -152,7 +150,6 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
     sourcePath: record.row.sourcePath,
   };
   const [storedProgram, storedCurriculum] = yield* loadProgramIndex(
-    ctx,
     snapshotId,
     index
   );
@@ -213,7 +210,6 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
   yield* writer.table("curriculumRoutes").insert(row).pipe(Effect.orDie);
   if (row.bucket !== undefined) {
     yield* addProgramBucketRoute(
-      ctx,
       snapshotId,
       index,
       record.row.appLocale,
@@ -225,13 +221,12 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
 
 /** Stores one decoded program-family row in its cohesive physical table. */
 export function stageProgramRow(
-  ctx: MutationCtx,
   snapshotId: string,
   index: number,
   source: ProgramRow,
   rowJson: string
 ) {
   return source.record.kind === "program"
-    ? stageProgram(ctx, snapshotId, index, source.record, rowJson)
-    : stageCurriculum(ctx, snapshotId, index, source.record, rowJson);
+    ? stageProgram(snapshotId, index, source.record, rowJson)
+    : stageCurriculum(snapshotId, index, source.record, rowJson);
 }

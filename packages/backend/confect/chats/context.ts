@@ -1,8 +1,8 @@
+import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import {
   NINA_CONTEXT_SOURCES,
   NINA_CONTEXT_TRANSITION_REASONS,
-} from "@repo/ai/nina/memory/pack";
-import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
+} from "@repo/backend/confect/nina/memory/pack";
 import { Schema } from "effect";
 
 const ninaContextSourceValidator = Schema.Literals([...NINA_CONTEXT_SOURCES]);

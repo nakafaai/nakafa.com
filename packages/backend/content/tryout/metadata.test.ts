@@ -1,9 +1,10 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import {
   readTryoutLocalizedPath,
   readTryoutMetadata,
@@ -24,7 +25,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 
 /** Activates the smallest coherent two-locale catalog. */
 async function activateCatalog() {
@@ -43,48 +44,65 @@ async function activateCatalog() {
   );
   return t;
 }
-
 describe("tryouts/catalog/metadata", () => {
   it("requires an active signed try-out publication", async () => {
     const t = convexTest(schema, convexModules);
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutMetadata({
             kind: "country",
             appLocale: "en",
             publicPath: "try-out/indonesia",
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_MISSING",
+    });
   });
-
   it("returns signed copy and both localized canonical paths", async () => {
     const t = await activateCatalog();
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutMetadata({
             kind: "country",
             appLocale: "en",
             publicPath: "try-out/indonesia",
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).resolves.toMatchObject({
       route: {
         alternates: [
-          { appLocale: "en", publicPath: "try-out/indonesia" },
-          { appLocale: "id", publicPath: "try-out/indonesia" },
+          {
+            appLocale: "en",
+            publicPath: "try-out/indonesia",
+          },
+          {
+            appLocale: "id",
+            publicPath: "try-out/indonesia",
+          },
         ],
         publicPath: "try-out/indonesia",
       },
     });
   });
-
   it("returns stable exam identity with a localized German route", async () => {
     const t = convexTest(schema, convexModules);
     const catalog = Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
@@ -106,15 +124,21 @@ describe("tryouts/catalog/metadata", () => {
         placements: [makeTryoutStartPlacement("de")],
       })
     );
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutMetadata({
             kind: "exam",
             appLocale: "de",
             publicPath: "try-out/indonesien/tka",
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).resolves.toMatchObject({
@@ -127,7 +151,6 @@ describe("tryouts/catalog/metadata", () => {
       },
     });
   });
-
   it("reads exact alternates without loading another complete catalog", async () => {
     const t = await activateCatalog();
     await t.mutation(async (ctx) => {
@@ -151,27 +174,38 @@ describe("tryouts/catalog/metadata", () => {
         snapshotId: source.snapshotId,
       });
     });
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutMetadata({
             kind: "country",
             appLocale: "en",
             publicPath: "try-out/indonesia",
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).resolves.toMatchObject({
       route: {
         alternates: [
-          { appLocale: "en", publicPath: "try-out/indonesia" },
-          { appLocale: "id", publicPath: "try-out/indonesia" },
+          {
+            appLocale: "en",
+            publicPath: "try-out/indonesia",
+          },
+          {
+            appLocale: "id",
+            publicPath: "try-out/indonesia",
+          },
         ],
       },
     });
   });
-
   it("resolves one exact localized path through signed identity", async () => {
     const t = convexTest(schema, convexModules);
     const englishPath = PublicPathSchema.make("try-out/indonesia");
@@ -189,47 +223,66 @@ describe("tryouts/catalog/metadata", () => {
         ],
       })
     );
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutLocalizedPath({
             currentAppLocale: "en",
             publicPath: englishPath,
             targetAppLocale: "id",
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).resolves.toBe(indonesian.publicPath);
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutLocalizedPath({
             currentAppLocale: "en",
             publicPath: "try-out/missing",
             targetAppLocale: "id",
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).resolves.toBeNull();
   });
-
   it("rejects a route requested through the wrong hierarchy kind", async () => {
     const t = await activateCatalog();
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutMetadata({
             kind: "exam",
             appLocale: "en",
             publicPath: "try-out/indonesia",
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).resolves.toEqual({ route: null });
+    ).resolves.toEqual({
+      route: null,
+    });
   });
-
   it("omits an absent localized counterpart", async () => {
     const t = await activateCatalog();
     await t.mutation(async (ctx) => {
@@ -242,24 +295,34 @@ describe("tryouts/catalog/metadata", () => {
       }
       await ctx.db.delete("tryoutCatalog", alternate._id);
     });
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutMetadata({
             kind: "country",
             appLocale: "en",
             publicPath: "try-out/indonesia",
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).resolves.toMatchObject({
       route: {
-        alternates: [{ appLocale: "en", publicPath: "try-out/indonesia" }],
+        alternates: [
+          {
+            appLocale: "en",
+            publicPath: "try-out/indonesia",
+          },
+        ],
       },
     });
   });
-
   it("omits a localized internal section without a public path", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
@@ -282,37 +345,55 @@ describe("tryouts/catalog/metadata", () => {
       TRYOUT_START_SET,
       TRYOUT_START_SECTION,
     ].join("/");
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutMetadata({
             kind: "section",
             appLocale: "en",
             publicPath,
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).resolves.toMatchObject({
       route: {
-        alternates: [{ appLocale: "en", publicPath }],
+        alternates: [
+          {
+            appLocale: "en",
+            publicPath,
+          },
+        ],
       },
     });
   });
-
   it("rejects unknown paths after signed ownership activates", async () => {
     const t = await activateCatalog();
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutMetadata({
             kind: "country",
             appLocale: "id",
             publicPath: "try-out/missing",
-          }).pipe(Effect.provide(convexTryoutLayer(ctx)))
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).resolves.toEqual({ route: null });
+    ).resolves.toEqual({
+      route: null,
+    });
   });
 });

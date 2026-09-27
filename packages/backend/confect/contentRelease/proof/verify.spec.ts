@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Schema } from "effect";
 export const artifactProofReceiptValidator = Schema.Struct({
   batchIndex: Schema.Finite,
@@ -15,7 +15,7 @@ export default GroupSpec.makeNode()
         releaseId: Schema.String,
       }),
       returns: () => artifactProofReceiptValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -27,6 +27,6 @@ export default GroupSpec.makeNode()
         verifiedArtifacts: Schema.Finite,
       }),
       returns: () => Schema.Null,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

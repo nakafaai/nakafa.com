@@ -11,15 +11,10 @@ import {
 } from "@repo/backend/confect/learningPreferences/schema";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { readVerifiedProgramCatalog } from "@repo/backend/content/program/catalog";
-import { convexProgramLayer } from "@repo/backend/content/program/convex";
+import { programLayer } from "@repo/backend/content/program/confect";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Clock, Effect } from "effect";
 
-type ProgramCtx = MutationCtx | QueryCtx;
 const CURRICULUM_PROGRAM_LIMIT = 50;
 const curriculumPreferenceIoFailedMessage =
   "Unable to read or persist curriculum preferences.";
@@ -39,9 +34,9 @@ function toPreferenceIoError() {
 }
 /** Reads the complete program catalog from the signed active snapshot. */
 const listSignedPrograms = Effect.fn("learningPreferences.listSignedPrograms")(
-  function* (ctx: ProgramCtx, locale: Locale) {
+  function* (locale: Locale) {
     const catalog = yield* readVerifiedProgramCatalog(locale).pipe(
-      Effect.provide(convexProgramLayer(ctx))
+      Effect.provide(programLayer)
     );
     if (!catalog.managed) {
       return yield* releaseFail(
@@ -54,8 +49,8 @@ const listSignedPrograms = Effect.fn("learningPreferences.listSignedPrograms")(
 );
 /** Reads one signed program by its stable Aksara key. */
 const readSignedProgram = Effect.fn("learningPreferences.readSignedProgram")(
-  function* (ctx: ProgramCtx, locale: Locale, programKey: string) {
-    const programs = yield* listSignedPrograms(ctx, locale);
+  function* (locale: Locale, programKey: string) {
+    const programs = yield* listSignedPrograms(locale);
     return programs.find((program) => program.key === programKey) ?? null;
   }
 );
@@ -86,8 +81,8 @@ const toCurriculumProgramOption = Effect.fn(
 /** Reads one localized school curriculum from the signed active snapshot. */
 export const readCurriculumProgram = Effect.fn(
   "learningPreferences.readCurriculumProgram"
-)(function* (ctx: QueryCtx | MutationCtx, locale: Locale, programKey: string) {
-  const program = yield* readSignedProgram(ctx, locale, programKey);
+)(function* (locale: Locale, programKey: string) {
+  const program = yield* readSignedProgram(locale, programKey);
   if (program?.kind !== "school-curriculum") {
     return null;
   }
@@ -96,8 +91,8 @@ export const readCurriculumProgram = Effect.fn(
 /** Lists every school curriculum from the signed active snapshot. */
 export const listCurriculumPrograms = Effect.fn(
   "learningPreferences.listCurriculumPrograms"
-)(function* (ctx: QueryCtx, locale: Locale) {
-  const programs = yield* listSignedPrograms(ctx, locale);
+)(function* (locale: Locale) {
+  const programs = yield* listSignedPrograms(locale);
   const curricula = programs.filter(
     (program) => program.kind === "school-curriculum"
   );
@@ -114,15 +109,14 @@ export const listCurriculumPrograms = Effect.fn(
 /** Resolves the learner's explicit preference against the signed catalog. */
 export const readCurrentCurriculumProgram = Effect.fn(
   "learningPreferences.readCurrentCurriculumProgram"
-)(function* (ctx: QueryCtx, locale: Locale, userId: Id<"users">) {
-  const preference = yield* readLearningPreferenceByUserId(ctx, userId).pipe(
+)(function* (locale: Locale, userId: Id<"users">) {
+  const preference = yield* readLearningPreferenceByUserId(userId).pipe(
     Effect.mapError(toPreferenceIoError)
   );
   if (!preference?.preferredCurriculumProgramKey) {
     return null;
   }
   const program = yield* readCurriculumProgram(
-    ctx,
     locale,
     preference.preferredCurriculumProgramKey
   );
@@ -137,13 +131,8 @@ export const readCurrentCurriculumProgram = Effect.fn(
 /** Saves one verified curriculum preference under signed Aksara ownership. */
 export const saveCurriculumProgram = Effect.fn(
   "learningPreferences.saveCurriculumProgram"
-)(function* (
-  ctx: MutationCtx,
-  locale: Locale,
-  programKey: string,
-  userId: Id<"users">
-) {
-  const program = yield* readCurriculumProgram(ctx, locale, programKey);
+)(function* (locale: Locale, programKey: string, userId: Id<"users">) {
+  const program = yield* readCurriculumProgram(locale, programKey);
   if (!program) {
     return yield* new CurriculumPreferenceError({
       code: curriculumProgramNotFoundCode,
@@ -152,7 +141,6 @@ export const saveCurriculumProgram = Effect.fn(
   }
   const now = yield* Clock.currentTimeMillis;
   yield* setPreferredCurriculumProgram({
-    ctx,
     now,
     programKey: program.key,
     userId,

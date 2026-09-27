@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   quranAppLocaleValidator,
   quranReferenceArgsValidator,
@@ -30,7 +30,7 @@ export default GroupSpec.make()
       name: "attribution",
       args: () => ({}),
       returns: () => attributionValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -38,7 +38,7 @@ export default GroupSpec.make()
       name: "surahs",
       args: () => ({}),
       returns: () => surahCatalogValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -49,7 +49,7 @@ export default GroupSpec.make()
         surahNumber: Schema.Finite,
       }),
       returns: () => quranDocumentValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -61,7 +61,7 @@ export default GroupSpec.make()
         verseLimit: Schema.optionalKey(Schema.Finite),
       }),
       returns: () => quranMarkdownValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -72,7 +72,7 @@ export default GroupSpec.make()
         surahNumber: Schema.Finite,
       }),
       returns: () => quranViewValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -85,7 +85,7 @@ export default GroupSpec.make()
         verseNumber: Schema.Finite,
       }),
       returns: () => quranInterpretationValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -93,6 +93,6 @@ export default GroupSpec.make()
       name: "passage",
       args: () => quranReferenceArgsValidator.fields,
       returns: () => quranPassageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

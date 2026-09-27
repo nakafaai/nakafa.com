@@ -1,4 +1,3 @@
-import { QueryRunner } from "@confect/server";
 import {
   decodePublicContentRuntimeRequest,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
@@ -7,6 +6,7 @@ import {
   PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   encodeRuntimeResult,
   failureResult,
@@ -15,7 +15,6 @@ import {
   decodePublicRuntimeRow,
   PublicRuntimeReadError,
 } from "@repo/backend/content/publication/exchange";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Result, Schema } from "effect";
 
 /** Request JSON could not satisfy the exact public runtime contract. */
@@ -44,10 +43,8 @@ const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
 );
 /** Reads one active public artifact for Nakafa verification. */
 const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
-  function* (ctx: ActionCtx, request: PublicContentRuntimeRequest) {
-    const runQuery = yield* QueryRunner.QueryRunner.pipe(
-      Effect.provide(QueryRunner.layer(ctx.runQuery))
-    );
+  function* (request: PublicContentRuntimeRequest) {
+    const runQuery = yield* QueryRunner;
     const row = yield* runQuery(
       refs.internal.contentRelease.runtime.publication.internal.read,
       {
@@ -64,14 +61,14 @@ const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
 /** Decodes, resolves, and safely encodes one public runtime request. */
 export const dispatchProgram = Effect.fn(
   "contentRelease.publicRuntimeDispatch"
-)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+)(function* (source: string, byteLength: number) {
   const decoded = yield* decodePublicRequest(source, byteLength).pipe(
     Effect.result
   );
   if (Result.isFailure(decoded)) {
     return failureResult("CONTENT_RUNTIME_INVALID", 400);
   }
-  const resolved = yield* resolvePublicRuntime(ctx, decoded.success).pipe(
+  const resolved = yield* resolvePublicRuntime(decoded.success).pipe(
     Effect.result
   );
   if (Result.isFailure(resolved)) {

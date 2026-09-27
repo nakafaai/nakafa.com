@@ -1,21 +1,22 @@
 "use client";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+
+import type { Ref } from "@confect/core";
+import type { InvokeReturn } from "@confect/react";
+import type refs from "@repo/backend/confect/_generated/refs";
+
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-type SavePreferredTryoutArgs = FunctionArgs<
-  typeof api.learningPreferences.mutations.setPreferredTryoutCountry
+type SavePreferredTryoutArgs = Ref.Args<
+  typeof refs.public.learningPreferences.mutations.setPreferredTryoutCountry
 >;
 type SavePreferredTryout = (
   args: SavePreferredTryoutArgs
-) => Promise<
-  FunctionReturnType<
-    typeof api.learningPreferences.mutations.setPreferredTryoutCountry
-  >
+) => InvokeReturn<
+  typeof refs.public.learningPreferences.mutations.setPreferredTryoutCountry
 >;
 /** Expected failure when a background try-out preference save fails. */
 class TryoutPreferenceSaveError extends Schema.TaggedError<TryoutPreferenceSaveError>()(
@@ -49,7 +50,9 @@ export function saveTryoutPreference({
       }),
     catch: (cause) => new TryoutPreferenceSaveError({ cause }),
   }).pipe(
-    Effect.catch((error) =>
+    Effect.flatMap(Effect.fromResult),
+    Effect.mapError((cause) => new TryoutPreferenceSaveError({ cause })),
+    Effect.catchTag("TryoutPreferenceSaveError", (error) =>
       reportClientException(error, { countryKey, source }).pipe(
         Effect.andThen(
           Effect.sync(() => {

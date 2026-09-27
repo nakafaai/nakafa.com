@@ -1,5 +1,6 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { assert, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { loadSectionState } from "@repo/backend/confect/tryouts/runtime/section/questions";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
@@ -9,6 +10,7 @@ it.effect(
   "keeps completed sections hidden until the whole attempt is terminal",
   () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
         t.mutation((ctx) =>
@@ -28,11 +30,17 @@ it.effect(
           );
           assert.isNotNull(attempt);
           assert.isNotNull(section);
-          return runConvexProgram(loadSectionState(ctx, attempt, section));
+          return Effect.runPromiseWith(runtimeServices)(
+            loadSectionState(attempt, section).pipe(
+              Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+            )
+          );
         })
       );
       assert.deepStrictEqual(state, {
-        content: { kind: "none" },
+        content: {
+          kind: "none",
+        },
         runtime: null,
       });
     })

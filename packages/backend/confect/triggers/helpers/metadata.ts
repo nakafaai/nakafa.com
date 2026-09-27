@@ -3,6 +3,9 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 /**
  * Build changed fields metadata for school updates
  */
+/**
+ * Build changed fields metadata for school updates
+ */
 export function buildSchoolChangesMetadata(
   oldSchool: Doc<"schools">,
   school: Doc<"schools">

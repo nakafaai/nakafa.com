@@ -1,10 +1,11 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE,
   ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import { finalizeSchoolTransfers } from "@repo/backend/confect/auth/deletion/transfers";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -12,13 +13,12 @@ import {
   seedPreparedDeletionSchool,
 } from "@repo/backend/test/deletion/seed";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 10);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
-
 describe("reserved deletion school transfers", () => {
   afterEach(() => vi.restoreAllMocks());
-
   it("continues fallback past a full page of unavailable successors", async () => {
     const t = convexTest(schema, convexModules);
     const seeded = await t.mutation(async (ctx) => {
@@ -39,7 +39,9 @@ describe("reserved deletion school transfers", () => {
         const userId = await seedDeletionUser(
           ctx,
           `fallback-deleting-${index}`,
-          { deletionPreparedAt: NOW }
+          {
+            deletionPreparedAt: NOW,
+          }
         );
         await ctx.db.insert("schoolMembers", {
           joinedAt: NOW,
@@ -59,14 +61,21 @@ describe("reserved deletion school transfers", () => {
         updatedAt: NOW,
         userId: activeSuccessorId,
       });
-      return { ...result, activeSuccessorId };
+      return {
+        ...result,
+        activeSuccessorId,
+      };
     });
     const advance = () =>
       t.mutation(async (ctx) => {
         const owner = await ctx.db.get("users", seeded.ownerId);
         assert(owner);
-        return runConvexProgram(
-          finalizeSchoolTransfers(ctx, owner, seeded.preparationId, NOW)
+        return Effect.runPromise(
+          finalizeSchoolTransfers(owner, seeded.preparationId, NOW).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
       });
     await expect(advance()).resolves.toBe(true);
@@ -86,7 +95,6 @@ describe("reserved deletion school transfers", () => {
       t.query((ctx) => ctx.db.query("accountDeletionSchoolTransfers").collect())
     ).resolves.toEqual([]);
   });
-
   it("bounds each transaction and drops completed duplicate reservations on the next page", async () => {
     const t = convexTest(schema, convexModules);
     const seeded = await t.mutation(async (ctx) => {
@@ -114,8 +122,12 @@ describe("reserved deletion school transfers", () => {
       t.mutation(async (ctx) => {
         const owner = await ctx.db.get("users", seeded.ownerId);
         assert(owner);
-        return runConvexProgram(
-          finalizeSchoolTransfers(ctx, owner, seeded.preparationId, NOW)
+        return Effect.runPromise(
+          finalizeSchoolTransfers(owner, seeded.preparationId, NOW).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
       });
     await expect(advance()).resolves.toBe(true);
@@ -130,12 +142,15 @@ describe("reserved deletion school transfers", () => {
       t.query((ctx) =>
         ctx.db.get("schoolMembers", seeded.successorMembershipId)
       )
-    ).resolves.toMatchObject({ role: "admin" });
+    ).resolves.toMatchObject({
+      role: "admin",
+    });
     await expect(
       t.query((ctx) => ctx.db.get("schools", seeded.schoolId))
-    ).resolves.toMatchObject({ createdBy: seeded.successorId });
+    ).resolves.toMatchObject({
+      createdBy: seeded.successorId,
+    });
   });
-
   it("retains reservations when reading the owned school fails", async () => {
     const t = convexTest(schema, convexModules);
     const seeded = await t.mutation((ctx) =>
@@ -148,22 +163,26 @@ describe("reserved deletion school transfers", () => {
         vi.spyOn(ctx.db, "get").mockRejectedValueOnce(
           new Error("school unavailable")
         );
-        return runConvexProgram(
-          finalizeSchoolTransfers(ctx, owner, seeded.preparationId, NOW)
+        return Effect.runPromise(
+          finalizeSchoolTransfers(owner, seeded.preparationId, NOW).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
       })
     ).rejects.toMatchObject({
-      data: {
-        code: "USER_CLEANUP_FAILED",
-        message: "Unable to complete account cleanup.",
-      },
+      code: "USER_CLEANUP_FAILED",
+      message: "Unable to complete account cleanup.",
     });
     await expect(
       t.query((ctx) => ctx.db.query("accountDeletionSchoolTransfers").collect())
     ).resolves.toHaveLength(1);
     await expect(
       t.query((ctx) => ctx.db.get("schools", seeded.schoolId))
-    ).resolves.toMatchObject({ createdBy: seeded.ownerId });
+    ).resolves.toMatchObject({
+      createdBy: seeded.ownerId,
+    });
   });
   it.each(["school", "membership", "user"])(
     "retires a reservation with a missing %s without deleting shared school data",
@@ -189,8 +208,12 @@ describe("reserved deletion school transfers", () => {
         t.mutation(async (ctx) => {
           const owner = await ctx.db.get("users", seeded.ownerId);
           assert(owner);
-          return runConvexProgram(
-            finalizeSchoolTransfers(ctx, owner, seeded.preparationId, NOW)
+          return Effect.runPromise(
+            finalizeSchoolTransfers(owner, seeded.preparationId, NOW).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
         });
       await expect(advance()).resolves.toBe(missing !== "school");
@@ -206,7 +229,9 @@ describe("reserved deletion school transfers", () => {
       if (missing === "school") {
         expect(school).toBeNull();
       } else {
-        expect(school).toMatchObject({ createdBy: seeded.ownerId });
+        expect(school).toMatchObject({
+          createdBy: seeded.ownerId,
+        });
       }
     }
   );

@@ -1,8 +1,8 @@
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
   EVIDENCE_STATUS_VALUES,
   LEARNING_CAPABILITY_NAME_VALUES,
-} from "@repo/ai/nina/capability/spec";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+} from "@repo/backend/confect/nina/capability/spec";
 import { Schema } from "effect";
 export const CAPABILITY_TRACE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 export const CAPABILITY_TRACE_BATCH_SIZE = 100;

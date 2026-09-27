@@ -1,25 +1,25 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
-  toUserCleanupError,
-  type UserCleanupError,
-} from "@repo/backend/confect/auth/cleanup/spec";
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
+import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import {
   ACCOUNT_DELETION_ATTEMPT_RETENTION_MS,
   ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
   ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/confect/auth/deletion/spec";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Clock, Duration, Effect, flow } from "effect";
 /** Proves that one opaque attempt was already canceled. */
 export const hasAccountDeletionCancellation = Effect.fn(
   "auth.deletion.hasAccountDeletionCancellation"
 )(
-  function* (ctx: MutationCtx, attemptId: string) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (attemptId: string) {
+    const database = yield* DatabaseReader;
     const cancellation = yield* database
       .table("accountDeletionAttemptCancellations")
       .get("by_attemptId", attemptId)
@@ -36,9 +36,9 @@ export const hasAccountDeletionCancellation = Effect.fn(
 const recordAccountDeletionCancellation = Effect.fn(
   "auth.deletion.recordAccountDeletionCancellation"
 )(
-  function* (ctx: MutationCtx, attemptId: string) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    if (yield* hasAccountDeletionCancellation(ctx, attemptId)) {
+  function* (attemptId: string) {
+    const writer = yield* DatabaseWriter;
+    if (yield* hasAccountDeletionCancellation(attemptId)) {
       return;
     }
     const canceledAt = yield* Clock.currentTimeMillis;
@@ -57,9 +57,9 @@ const recordAccountDeletionCancellation = Effect.fn(
 export const sweepAccountDeletionCancellationsProgram = Effect.fn(
   "auth.deletion.sweepAccountDeletionCancellations"
 )(
-  function* (ctx: MutationCtx) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* () {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const now = yield* Clock.currentTimeMillis;
     const cancellations = yield* database
       .table("accountDeletionAttemptCancellations")
@@ -85,12 +85,9 @@ export const sweepAccountDeletionCancellationsProgram = Effect.fn(
 export const deleteAccountDeletionPreparation = Effect.fn(
   "auth.deletion.deleteAccountDeletionPreparation"
 )(
-  function* (
-    ctx: MutationCtx,
-    preparation: Doc<"accountDeletionPreparations">
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (preparation: Docs["accountDeletionPreparations"]) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const transfers = yield* database
       .table("accountDeletionSchoolTransfers")
       .index("by_preparationId", (query) =>
@@ -126,12 +123,11 @@ export const cancelPreparedAccountDeletion = Effect.fn(
   "auth.deletion.cancelPreparedAccountDeletion"
 )(
   function* (
-    ctx: MutationCtx,
-    preparation: Doc<"accountDeletionPreparations"> &
+    preparation: Docs["accountDeletionPreparations"] &
       Pick<AccountDeletionPreparationVersion, "attemptId">
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const writer = yield* DatabaseWriter;
+    const database = yield* DatabaseReader;
     if (preparation.cancellationStartedAt === undefined) {
       const cancellationStartedAt = yield* Clock.currentTimeMillis;
       yield* writer
@@ -141,7 +137,7 @@ export const cancelPreparedAccountDeletion = Effect.fn(
         })
         .pipe(Effect.orDie);
     }
-    const hasMore = yield* deleteAccountDeletionPreparation(ctx, preparation);
+    const hasMore = yield* deleteAccountDeletionPreparation(preparation);
     if (hasMore) {
       return true;
     }
@@ -160,26 +156,21 @@ export const cancelPreparedAccountDeletion = Effect.fn(
         })
         .pipe(Effect.orDie);
     }
-    yield* recordAccountDeletionCancellation(ctx, preparation.attemptId);
+    yield* recordAccountDeletionCancellation(preparation.attemptId);
     return false;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
 
 /** Restores app access after Better Auth aborts before removing the auth user. */
-export const cancelAccountDeletion: (
-  ctx: MutationCtx,
-  authId: string,
-  expectedPreparation: AccountDeletionPreparationVersion
-) => Effect.Effect<boolean, UserCleanupError> = Effect.fn(
+export const cancelAccountDeletion = Effect.fn(
   "auth.deletion.cancelAccountDeletion"
 )(
   function* (
-    ctx: MutationCtx,
     authId: string,
     expectedPreparation: AccountDeletionPreparationVersion
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const preparation = yield* database
       .table("accountDeletionPreparations")
       .get("by_authId", authId)
@@ -197,7 +188,7 @@ export const cancelAccountDeletion: (
     ) {
       return false;
     }
-    return yield* cancelPreparedAccountDeletion(ctx, {
+    return yield* cancelPreparedAccountDeletion({
       ...preparation,
       attemptId: expectedPreparation.attemptId,
     });
@@ -209,18 +200,11 @@ export const cancelAccountDeletion: (
 export const cancelAccountDeletionBatch = Effect.fn(
   "auth.deletion.cancelAccountDeletionBatch"
 )(function* (
-  ctx: MutationCtx,
   authId: string,
   expectedPreparation: AccountDeletionPreparationVersion
 ) {
-  const scheduler = yield* Scheduler.Scheduler.pipe(
-    Effect.provide(Scheduler.layer(ctx.scheduler))
-  );
-  const hasMore = yield* cancelAccountDeletion(
-    ctx,
-    authId,
-    expectedPreparation
-  );
+  const scheduler = yield* Scheduler;
+  const hasMore = yield* cancelAccountDeletion(authId, expectedPreparation);
   if (hasMore) {
     yield* scheduler
       .runAfter(
@@ -237,14 +221,11 @@ export const cancelAccountDeletionBatch = Effect.fn(
 });
 
 /** Removes finalized preparation metadata once its cleanup workflow is active. */
-export const cleanupFinalizedAccountDeletion: (
-  ctx: MutationCtx,
-  userId: Id<"users">
-) => Effect.Effect<boolean, UserCleanupError> = Effect.fn(
+export const cleanupFinalizedAccountDeletion = Effect.fn(
   "auth.deletion.cleanupFinalizedAccountDeletion"
 )(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
     const preparation = yield* database
       .table("accountDeletionPreparations")
       .get("by_userId", userId)
@@ -255,7 +236,7 @@ export const cleanupFinalizedAccountDeletion: (
     if (!preparation) {
       return false;
     }
-    yield* deleteAccountDeletionPreparation(ctx, preparation);
+    yield* deleteAccountDeletionPreparation(preparation);
     return true;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))

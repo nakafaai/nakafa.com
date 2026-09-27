@@ -1,8 +1,9 @@
+import type { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type refs from "@repo/backend/confect/_generated/refs";
+
 import { Effect, Schema } from "effect";
 import { decodePublishedMaterialContext } from "@/lib/content/material/projection";
 import { previewProjection } from "@/test/content-preview";
@@ -26,7 +27,7 @@ const result = {
   mappingJson: testCurriculumRowJson(mapping),
   parentJson: testCurriculumRowJson(testProgramSubject),
   resolvedCanonicalPath: mapping.canonicalPath ?? null,
-} satisfies FunctionReturnType<typeof api.contentRelease.program.context>;
+} satisfies Ref.Returns<typeof refs.public.contentRelease.program.context>;
 
 describe("published material context projection", () => {
   it.effect("builds the return link only from verified curriculum rows", () =>
@@ -159,7 +160,7 @@ describe("published material context projection", () => {
     ["malformed row", { ...result, groupJson: "{" }],
   ] satisfies [
     string,
-    FunctionReturnType<typeof api.contentRelease.program.context>,
+    Ref.Returns<typeof refs.public.contentRelease.program.context>,
   ][])("rejects %s with the typed projection error", ([, input]) =>
     Effect.gen(function* () {
       expect(

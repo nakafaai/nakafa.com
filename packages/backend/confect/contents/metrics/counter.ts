@@ -1,9 +1,11 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+} from "@repo/backend/confect/_generated/services";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
 import type { PopularityCounterDelta } from "@repo/backend/confect/contents/metrics/batch";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Struct } from "effect";
 
 /** Projects counter payload from the newest queued signal day. */
@@ -37,13 +39,13 @@ export const applyPopularityCounter = Effect.fn(
   "contents.metrics.applyPopularityCounter"
 )(
   function* (
-    ctx: MutationCtx,
     delta: PopularityCounterDelta & {
       readonly updatedAt: number;
     }
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const ctx = yield* MutationCtxService;
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const currentRow = yield* database
       .table("learningPopularityCounters")
       .get(

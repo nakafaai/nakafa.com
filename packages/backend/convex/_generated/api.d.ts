@@ -49,7 +49,7 @@ export declare const api: {
         "query",
         "public",
         {},
-        null | {
+        {
           appUser: {
             _creationTime: number;
             _id: Id<"users">;
@@ -68,19 +68,12 @@ export declare const api: {
             role?: "teacher" | "student" | "parent" | "administrator";
           };
           authUser: {
-            _creationTime: number;
             _id: string;
-            createdAt: number;
-            displayUsername?: null | string;
             email: string;
-            emailVerified: boolean;
-            image?: null | string;
+            image?: string | null;
             name: string;
-            updatedAt: number;
-            userId?: null | string;
-            username?: null | string;
           };
-        }
+        } | null
       >;
       getUserById: FunctionReference<
         "query",
@@ -3325,6 +3318,8 @@ export declare const api: {
         {
           _creationTime: number;
           _id: Id<"chats">;
+          activeTurnId?: Id<"ninaTurns">;
+          threadId?: string;
           title?: string;
           type: "study";
           updatedAt: number;
@@ -3355,6 +3350,8 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"chats">;
+            activeTurnId?: Id<"ninaTurns">;
+            threadId?: string;
             title?: string;
             type: "study";
             updatedAt: number;
@@ -3393,6 +3390,8 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"chats">;
+            activeTurnId?: Id<"ninaTurns">;
+            threadId?: string;
             title?: string;
             type: "study";
             updatedAt: number;
@@ -5231,6 +5230,52 @@ export declare const api: {
         }>
       >;
       getPeople: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"schoolClasses">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          q?: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"schoolClassMembers">;
+            addedBy?: Id<"users">;
+            classId: Id<"schoolClasses">;
+            enrollMethod?:
+              "by_code" | "teacher" | "admin" | "invite" | "public";
+            inviteCodeId?: Id<"schoolClassInviteCodes">;
+            removedAt?: number;
+            removedBy?: Id<"users">;
+            role: "teacher" | "student";
+            schoolId: Id<"schools">;
+            teacherRole?: "primary" | "co-teacher" | "assistant";
+            updatedAt: number;
+            user: {
+              _id: Id<"users">;
+              email: string;
+              image?: string | null;
+              name: string;
+            };
+            userId: Id<"users">;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+    roster: {
+      list: FunctionReference<
         "query",
         "public",
         {
@@ -7541,6 +7586,260 @@ export declare const api: {
       >;
     };
   };
+  nina: {
+    conversation: {
+      get: FunctionReference<
+        "query",
+        "public",
+        { chatId: Id<"chats"> },
+        {
+          chat: {
+            _creationTime: number;
+            _id: Id<"chats">;
+            activeTurnId?: Id<"ninaTurns">;
+            threadId?: string;
+            title?: string;
+            type: "study";
+            updatedAt: number;
+            userId: Id<"users">;
+            visibility: "private" | "public";
+          };
+          turn: {
+            credits?: number;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            promptMessageId: string;
+            promptedAt?: number;
+            state:
+              | { status: "queued" }
+              | { startedAt: number; status: "running" }
+              | { finishedAt: number; status: "complete" }
+              | {
+                  finishedAt: number;
+                  reason?:
+                    | "provider-busy"
+                    | "provider-unavailable"
+                    | "service-configuration"
+                    | "request-rejected"
+                    | "input-too-large"
+                    | "response-timeout"
+                    | "content-blocked"
+                    | "response-limit"
+                    | "interrupted"
+                    | "unknown";
+                  status: "failed";
+                }
+              | { finishedAt: number; status: "cancelled" }
+              | { status: "unanswered" };
+            suggestions?: Array<string>;
+            tokens?: { input?: number; output?: number; total?: number };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+          } | null;
+        }
+      >;
+    };
+    lifecycle: {
+      cancel: FunctionReference<
+        "mutation",
+        "public",
+        { chatId: Id<"chats"> },
+        null
+      >;
+    };
+    messages: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          chatId: Id<"chats">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          streamArgs?:
+            | { kind: "list"; startOrder?: number }
+            | {
+                cursors: Array<{ cursor: number; streamId: string }>;
+                kind: "deltas";
+              };
+          threadId: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            agentName?: string;
+            id: string;
+            key: string;
+            metadata?: {
+              credits?: number;
+              modelId?: "nakafa-lite" | "nakafa-pro";
+              order: number;
+              promptMessageId: string;
+              promptedAt?: number;
+              state:
+                | { status: "queued" }
+                | { startedAt: number; status: "running" }
+                | { finishedAt: number; status: "complete" }
+                | {
+                    finishedAt: number;
+                    reason?:
+                      | "provider-busy"
+                      | "provider-unavailable"
+                      | "service-configuration"
+                      | "request-rejected"
+                      | "input-too-large"
+                      | "response-timeout"
+                      | "content-blocked"
+                      | "response-limit"
+                      | "interrupted"
+                      | "unknown";
+                    status: "failed";
+                  }
+                | { finishedAt: number; status: "cancelled" }
+                | { status: "unanswered" };
+              suggestions?: Array<string>;
+              tokens?: { input?: number; output?: number; total?: number };
+              usage: Array<{
+                agent:
+                  | "nina"
+                  | "nakafa"
+                  | "research"
+                  | "math"
+                  | "math-repair"
+                  | "suggestions"
+                  | "title"
+                  | "nina-repair";
+                calls: number;
+                input: number;
+                model: string;
+                output: number;
+                provider: string;
+              }>;
+            };
+            order: number;
+            parts: Array<any>;
+            role: "user" | "assistant" | "system";
+            status: "streaming" | "pending" | "success" | "failed";
+            stepOrder: number;
+            text: string;
+            userId?: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+          streams:
+            | {
+                kind: "list";
+                messages: Array<{
+                  agentName?: string;
+                  format?: "UIMessageChunk" | "TextStreamPart";
+                  model?: string;
+                  order: number;
+                  provider?: string;
+                  providerOptions?: Record<string, Record<string, any>>;
+                  status: "streaming" | "finished" | "aborted";
+                  stepOrder: number;
+                  streamId: string;
+                  userId?: string;
+                }>;
+              }
+            | {
+                deltas: Array<{
+                  end: number;
+                  parts: Array<any>;
+                  start: number;
+                  streamId: string;
+                }>;
+                kind: "deltas";
+              };
+        }
+      >;
+    };
+    turns: {
+      start: FunctionReference<
+        "mutation",
+        "public",
+        {
+          chatId?: Id<"chats">;
+          input:
+            | {
+                kind: "message";
+                page: {
+                  locale: "en" | "id" | "de";
+                  materialContextHint?: string;
+                  slug: string;
+                };
+                prompt: { text: string; uploadIds?: Array<Id<"ninaUploads">> };
+              }
+            | {
+                kind: "retry";
+                order: number;
+                page?: {
+                  locale: "en" | "id" | "de";
+                  materialContextHint?: string;
+                  slug: string;
+                };
+              };
+          modelId: "nakafa-lite" | "nakafa-pro";
+          requestId: string;
+        },
+        {
+          chatId: Id<"chats">;
+          order: number;
+          prompt: {
+            files: Array<{
+              filename?: string;
+              mediaType: string;
+              type: "file";
+              url: string;
+            }>;
+            text: string;
+          };
+          promptMessageId: string;
+          threadId: string;
+          turnId: Id<"ninaTurns">;
+        }
+      >;
+    };
+    uploads: {
+      save: FunctionReference<
+        "action",
+        "public",
+        {
+          bytes: ArrayBuffer;
+          filename: string;
+          mediaType:
+            | "image/jpeg"
+            | "image/png"
+            | "image/webp"
+            | "image/gif"
+            | "application/pdf"
+            | "text/plain";
+        },
+        Id<"ninaUploads">
+      >;
+    };
+  };
   onboarding: {
     mutations: {
       admit: FunctionReference<
@@ -8964,7 +9263,11 @@ export declare const api: {
         getSectionAttemptState: FunctionReference<
           "query",
           "public",
-          { attemptId: Id<"tryoutAttempts">; sectionKey: string },
+          {
+            attemptId: Id<"tryoutAttempts">;
+            locale: "en" | "id" | "de";
+            sectionKey: string;
+          },
           null | {
             attempt: {
               activeSectionKey: string | null;
@@ -9091,7 +9394,7 @@ export declare const api: {
         getSetAttemptState: FunctionReference<
           "query",
           "public",
-          { attemptId: Id<"tryoutAttempts"> },
+          { attemptId: Id<"tryoutAttempts">; locale: "en" | "id" | "de" },
           null | {
             attempt: {
               activeSectionKey: string | null;
@@ -10623,6 +10926,12 @@ export declare const internal: {
             "internal",
             { leaseId: string; uploadId: string; uploadToken: string },
             boolean
+          >;
+          cleanup: FunctionReference<
+            "mutation",
+            "internal",
+            { storageId: Id<"_storage"> },
+            null
           >;
           release: FunctionReference<
             "mutation",
@@ -12342,7 +12651,18 @@ export declare const internal: {
                   name: "chat response failed";
                   properties: {
                     chat_type: "study";
-                    error_code: "CHAT_RESPONSE_FAILED";
+                    error_code:
+                      | "CHAT_RESPONSE_FAILED"
+                      | "provider-busy"
+                      | "provider-unavailable"
+                      | "service-configuration"
+                      | "request-rejected"
+                      | "input-too-large"
+                      | "response-timeout"
+                      | "content-blocked"
+                      | "response-limit"
+                      | "interrupted"
+                      | "unknown";
                     model_id?: "nakafa-lite" | "nakafa-pro";
                   };
                 }
@@ -12711,6 +13031,578 @@ export declare const internal: {
       };
     };
   };
+  migration: {
+    nina: {
+      convert: FunctionReference<
+        "mutation",
+        "internal",
+        { chatId: Id<"chats"> },
+        { messages: number; threadId: string; turns: number }
+      >;
+      list: FunctionReference<
+        "query",
+        "internal",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        { chatIds: Array<Id<"chats">>; cursor: string; done: boolean }
+      >;
+    };
+  };
+  nina: {
+    lifecycle: {
+      claim: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        | {
+            _creationTime: number;
+            _id: Id<"ninaTurns">;
+            chatId: Id<"chats">;
+            credits: number;
+            creditsResetAt: number;
+            fingerprint: string;
+            modelId: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            page: {
+              locale: "en" | "id" | "de";
+              needsFetch: boolean;
+              nina: {
+                learning: {
+                  assetId?: string;
+                  contentId?: string;
+                  locale: "en" | "id" | "de";
+                  materialKey?: string;
+                  section?: string;
+                  slug: string;
+                  sourcePath?: string;
+                  title?: string;
+                  url: string;
+                  verified: boolean;
+                };
+                placement?: {
+                  mode: "placement";
+                  nodeKey: string;
+                  parentHref: string;
+                  parentTitle: string;
+                  programKey: string;
+                };
+                snapshot: {
+                  capturedAt: string;
+                  learning: {
+                    assetId?: string;
+                    contentId?: string;
+                    locale: "en" | "id" | "de";
+                    materialKey?: string;
+                    section?: string;
+                    slug: string;
+                    sourcePath?: string;
+                    title?: string;
+                    url: string;
+                    verified: boolean;
+                  };
+                  placement?: {
+                    mode: "placement";
+                    nodeKey: string;
+                    parentHref: string;
+                    parentTitle: string;
+                    programKey: string;
+                  };
+                  source: "current-page" | "pinned-chat" | "message";
+                  tools: {
+                    allowDeepResearch: boolean;
+                    allowMath: boolean;
+                    allowNakafa: boolean;
+                    allowPageFetch: boolean;
+                    evidenceScope: "verified-page" | "general-learning";
+                  };
+                };
+                tools: {
+                  allowDeepResearch: boolean;
+                  allowMath: boolean;
+                  allowNakafa: boolean;
+                  allowPageFetch: boolean;
+                  evidenceScope: "verified-page" | "general-learning";
+                };
+                transition: {
+                  fromContextKey?: string;
+                  reason: "same-context" | "page-context";
+                  toContextKey: string;
+                };
+              };
+              slug: string;
+              url: string;
+              verified: boolean;
+            };
+            phase: "active";
+            planCreditGrantId?: Id<"creditTransactions">;
+            promptMessageId: string;
+            promptedAt?: number;
+            requestId: string;
+            snapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            state:
+              { status: "queued" } | { startedAt: number; status: "running" };
+            suggestions?: Array<string>;
+            threadId: string;
+            tokens?: { input?: number; output?: number; total?: number };
+            transactionId: Id<"creditTransactions">;
+            transition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+            user: {
+              curriculumPreference?: {
+                program: { key: string; title: string };
+              };
+              role?: "teacher" | "student" | "parent" | "administrator";
+            };
+            userId: Id<"users">;
+          }
+        | {
+            _creationTime: number;
+            _id: Id<"ninaTurns">;
+            chatId: Id<"chats">;
+            credits?: number;
+            fingerprint?: string;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            page?: {
+              locale: "en" | "id" | "de";
+              needsFetch: boolean;
+              nina: {
+                learning: {
+                  assetId?: string;
+                  contentId?: string;
+                  locale: "en" | "id" | "de";
+                  materialKey?: string;
+                  section?: string;
+                  slug: string;
+                  sourcePath?: string;
+                  title?: string;
+                  url: string;
+                  verified: boolean;
+                };
+                placement?: {
+                  mode: "placement";
+                  nodeKey: string;
+                  parentHref: string;
+                  parentTitle: string;
+                  programKey: string;
+                };
+                snapshot: {
+                  capturedAt: string;
+                  learning: {
+                    assetId?: string;
+                    contentId?: string;
+                    locale: "en" | "id" | "de";
+                    materialKey?: string;
+                    section?: string;
+                    slug: string;
+                    sourcePath?: string;
+                    title?: string;
+                    url: string;
+                    verified: boolean;
+                  };
+                  placement?: {
+                    mode: "placement";
+                    nodeKey: string;
+                    parentHref: string;
+                    parentTitle: string;
+                    programKey: string;
+                  };
+                  source: "current-page" | "pinned-chat" | "message";
+                  tools: {
+                    allowDeepResearch: boolean;
+                    allowMath: boolean;
+                    allowNakafa: boolean;
+                    allowPageFetch: boolean;
+                    evidenceScope: "verified-page" | "general-learning";
+                  };
+                };
+                tools: {
+                  allowDeepResearch: boolean;
+                  allowMath: boolean;
+                  allowNakafa: boolean;
+                  allowPageFetch: boolean;
+                  evidenceScope: "verified-page" | "general-learning";
+                };
+                transition: {
+                  fromContextKey?: string;
+                  reason: "same-context" | "page-context";
+                  toContextKey: string;
+                };
+              };
+              slug: string;
+              url: string;
+              verified: boolean;
+            };
+            phase: "settled";
+            promptMessageId: string;
+            promptedAt?: number;
+            requestId?: string;
+            snapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            state:
+              | { finishedAt: number; status: "complete" }
+              | {
+                  finishedAt: number;
+                  reason?:
+                    | "provider-busy"
+                    | "provider-unavailable"
+                    | "service-configuration"
+                    | "request-rejected"
+                    | "input-too-large"
+                    | "response-timeout"
+                    | "content-blocked"
+                    | "response-limit"
+                    | "interrupted"
+                    | "unknown";
+                  status: "failed";
+                }
+              | { finishedAt: number; status: "cancelled" };
+            suggestions?: Array<string>;
+            threadId: string;
+            tokens?: { input?: number; output?: number; total?: number };
+            transactionId?: Id<"creditTransactions">;
+            transition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+            user?: {
+              curriculumPreference?: {
+                program: { key: string; title: string };
+              };
+              role?: "teacher" | "student" | "parent" | "administrator";
+            };
+            userId: Id<"users">;
+          }
+        | {
+            _creationTime: number;
+            _id: Id<"ninaTurns">;
+            chatId: Id<"chats">;
+            credits?: number;
+            fingerprint?: string;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            page?: {
+              locale: "en" | "id" | "de";
+              needsFetch: boolean;
+              nina: {
+                learning: {
+                  assetId?: string;
+                  contentId?: string;
+                  locale: "en" | "id" | "de";
+                  materialKey?: string;
+                  section?: string;
+                  slug: string;
+                  sourcePath?: string;
+                  title?: string;
+                  url: string;
+                  verified: boolean;
+                };
+                placement?: {
+                  mode: "placement";
+                  nodeKey: string;
+                  parentHref: string;
+                  parentTitle: string;
+                  programKey: string;
+                };
+                snapshot: {
+                  capturedAt: string;
+                  learning: {
+                    assetId?: string;
+                    contentId?: string;
+                    locale: "en" | "id" | "de";
+                    materialKey?: string;
+                    section?: string;
+                    slug: string;
+                    sourcePath?: string;
+                    title?: string;
+                    url: string;
+                    verified: boolean;
+                  };
+                  placement?: {
+                    mode: "placement";
+                    nodeKey: string;
+                    parentHref: string;
+                    parentTitle: string;
+                    programKey: string;
+                  };
+                  source: "current-page" | "pinned-chat" | "message";
+                  tools: {
+                    allowDeepResearch: boolean;
+                    allowMath: boolean;
+                    allowNakafa: boolean;
+                    allowPageFetch: boolean;
+                    evidenceScope: "verified-page" | "general-learning";
+                  };
+                };
+                tools: {
+                  allowDeepResearch: boolean;
+                  allowMath: boolean;
+                  allowNakafa: boolean;
+                  allowPageFetch: boolean;
+                  evidenceScope: "verified-page" | "general-learning";
+                };
+                transition: {
+                  fromContextKey?: string;
+                  reason: "same-context" | "page-context";
+                  toContextKey: string;
+                };
+              };
+              slug: string;
+              url: string;
+              verified: boolean;
+            };
+            phase: "unanswered";
+            promptMessageId: string;
+            promptedAt?: number;
+            requestId?: string;
+            snapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            state: { status: "unanswered" };
+            suggestions?: Array<string>;
+            threadId: string;
+            tokens?: { input?: number; output?: number; total?: number };
+            transactionId?: Id<"creditTransactions">;
+            transition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+            user?: {
+              curriculumPreference?: {
+                program: { key: string; title: string };
+              };
+              role?: "teacher" | "student" | "parent" | "administrator";
+            };
+            userId: Id<"users">;
+          }
+        | null
+      >;
+      recover: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          failure?:
+            | "provider-busy"
+            | "provider-unavailable"
+            | "service-configuration"
+            | "request-rejected"
+            | "input-too-large"
+            | "response-timeout"
+            | "content-blocked"
+            | "response-limit"
+            | "interrupted"
+            | "unknown";
+          turnId: Id<"ninaTurns">;
+        },
+        null
+      >;
+    };
+    presentation: {
+      save: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          suggestions?: Array<string>;
+          title?: string;
+          turnId: Id<"ninaTurns">;
+        },
+        null
+      >;
+    };
+    response: {
+      run: FunctionReference<
+        "action",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
+      >;
+    };
+    uploads: {
+      complete: FunctionReference<
+        "mutation",
+        "internal",
+        { fileId: string; uploadId: Id<"ninaUploads"> },
+        null
+      >;
+      discard: FunctionReference<
+        "mutation",
+        "internal",
+        { uploadId: Id<"ninaUploads"> },
+        null
+      >;
+      reserve: FunctionReference<"mutation", "internal", {}, Id<"ninaUploads">>;
+    };
+    usage: {
+      record: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          turnId: Id<"ninaTurns">;
+          usage: {
+            agent:
+              | "nina"
+              | "nakafa"
+              | "research"
+              | "math"
+              | "math-repair"
+              | "suggestions"
+              | "title"
+              | "nina-repair";
+            input: number;
+            model: string;
+            output: number;
+            provider: string;
+          };
+        },
+        null
+      >;
+    };
+  };
   privacy: {
     recovery: {
       cleanupWorkflowStorage: FunctionReference<
@@ -12740,11 +13632,23 @@ export declare const internal: {
       >;
     };
   };
+  routes: {
+    agent: {
+      quota: {
+        consume: FunctionReference<
+          "mutation",
+          "internal",
+          { key: string },
+          null
+        >;
+      };
+    };
+  };
   storage: {
     sweep: FunctionReference<
       "mutation",
       "internal",
-      { continuation?: { before: number; cursor: string } },
+      {},
       { deleted: number; done: boolean; scanned: number }
     >;
   };
@@ -12960,6 +13864,7 @@ export declare const internal: {
 
 export declare const components: {
   betterAuth: import("@repo/backend/components/betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
+  nina: import("@convex-dev/agent/_generated/component.js").ComponentApi<"nina">;
   agentRateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"agentRateLimiter">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;

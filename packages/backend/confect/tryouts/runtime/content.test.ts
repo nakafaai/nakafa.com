@@ -1,5 +1,6 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { assert, describe, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import type { TryoutSectionScore } from "@repo/backend/confect/tryouts/score";
@@ -41,7 +42,9 @@ describe("try-out review entitlement", () => {
             await ctx.db.patch(
               "tryoutSectionAttempts",
               fixture.sectionAttemptId,
-              { score }
+              {
+                score,
+              }
             );
             await ctx.db.insert("tryoutScores", {
               ...score,
@@ -61,6 +64,7 @@ describe("try-out review entitlement", () => {
           subject: seeded.identity.authUserId,
         });
         const request = {
+          locale: "id" as const,
           attemptId: seeded.attemptId,
           sectionKey: TRYOUT_SECTION_KEY,
         };
@@ -80,7 +84,9 @@ describe("try-out review entitlement", () => {
         }
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch("users", seeded.identity.userId, { plan: "free" })
+            ctx.db.patch("users", seeded.identity.userId, {
+              plan: "free",
+            })
           )
         );
         const free = yield* Effect.promise(() =>
@@ -106,7 +112,9 @@ describe("try-out review entitlement", () => {
         }
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch("users", seeded.identity.userId, { plan: "pro" })
+            ctx.db.patch("users", seeded.identity.userId, {
+              plan: "pro",
+            })
           )
         );
         assert.deepStrictEqual(
@@ -120,11 +128,11 @@ describe("try-out review entitlement", () => {
         );
       })
   );
-
   it.effect(
     "does not release review content after its account has been removed",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* Effect.promise(() =>
           t.mutation((ctx) =>
@@ -144,12 +152,19 @@ describe("try-out review entitlement", () => {
         );
         const access = yield* Effect.promise(() =>
           t.query((ctx) =>
-            runConvexProgram(
-              readTryoutSectionContentAccess(ctx, attempt, "completed")
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutSectionContentAccess(attempt, "completed").pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
             )
           )
         );
-        assert.deepStrictEqual(access, { answers: false, questions: false });
+        assert.deepStrictEqual(access, {
+          answers: false,
+          questions: false,
+        });
       })
   );
 });

@@ -4,17 +4,11 @@ import {
 } from "@nakafa/aksara-contracts/content";
 import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
 import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
-
-type ReadCtx = MutationCtx | QueryCtx;
 
 /** Returns every family once in the canonical shared-contract order. */
 export function mergeManagedFamilies(
@@ -56,7 +50,7 @@ export const loadReleaseFamilies = Effect.fn(
   "contentRelease.loadReleaseFamilies"
 )(function* (
   release: Pick<
-    Doc<"contentReleases">,
+    Docs["contentReleases"],
     "baseFamilies" | "releaseId" | "resultFamilies"
   >
 ) {
@@ -82,20 +76,19 @@ export const loadReleaseFamilies = Effect.fn(
 /** Derives immutable base and result families from the signed release graph. */
 export const deriveReleaseFamilies = Effect.fn(
   "contentRelease.deriveReleaseFamilies"
-)(function* (ctx: ReadCtx, manifest: ContentReleaseManifest) {
+)(function* (manifest: ContentReleaseManifest) {
   const base =
     manifest.baseReleaseId === null
       ? []
-      : (yield* loadReleaseFamilies(
-          yield* loadRelease(ctx, manifest.baseReleaseId)
-        )).result;
+      : (yield* loadReleaseFamilies(yield* loadRelease(manifest.baseReleaseId)))
+          .result;
   if (manifest.origin.kind === "git") {
     return {
       base,
       result: mergeManagedFamilies(base, manifest.scope.families),
     };
   }
-  const origin = yield* loadRelease(ctx, manifest.origin.releaseId);
+  const origin = yield* loadRelease(manifest.origin.releaseId);
   const signedOrigin = yield* decodeReleaseJson(origin.releaseJson);
   if (!hasSamePublicationScope(manifest.scope, signedOrigin.manifest.scope)) {
     return yield* releaseFail(

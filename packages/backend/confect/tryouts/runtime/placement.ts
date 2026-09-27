@@ -1,10 +1,13 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
@@ -13,17 +16,11 @@ import {
 } from "@repo/backend/confect/tryouts/runtime/error";
 import type { TryoutSnapshotSource } from "@repo/backend/confect/tryouts/start/source";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { getDocumentSize } from "convex/values";
-import { Effect, flow } from "effect";
+import { Effect } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
-type TryoutReadContext = Pick<QueryCtx, "db">;
 
 /** Loads the immutable section snapshot for one attempt section key. */
 export const requireSectionSnapshot = Effect.fn(
@@ -47,29 +44,22 @@ export const requireSectionSnapshot = Effect.fn(
  */
 export const loadAttemptPlacements = Effect.fn(
   "tryouts.runtime.loadAttemptPlacements"
-)(function* (ctx: TryoutReadContext, attempt: TryoutAttempt) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (attempt: TryoutAttempt) {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("tryoutAttemptPlacements")
     .index("by_tryoutAttemptId_and_questionOrder", (query) =>
       query.eq("tryoutAttemptId", attempt._id)
     )
     .take(attempt.totalQuestions + 1)
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-    );
+    .pipe(Effect.mapError(toTryoutRuntimeError));
 });
 
 /** Loads one bounded section placement inventory for finalization. */
 export const loadSectionPlacements = Effect.fn(
   "tryouts.runtime.loadSectionPlacements"
-)(function* (
-  ctx: TryoutReadContext,
-  attempt: TryoutAttempt,
-  snapshot: TryoutSectionSnapshot
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (attempt: TryoutAttempt, snapshot: TryoutSectionSnapshot) {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("tryoutAttemptPlacements")
     .index("by_tryoutAttemptId_and_sectionKey_and_questionOrder", (query) =>
@@ -78,23 +68,17 @@ export const loadSectionPlacements = Effect.fn(
         .eq("sectionKey", snapshot.sectionKey)
     )
     .take(snapshot.questionCount + 1)
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-    );
+    .pipe(Effect.mapError(toTryoutRuntimeError));
 });
 
 /** Freezes the authenticated signed placement snapshot. */
 export const createAttemptPlacements = Effect.fn(
   "tryouts.runtime.createAttemptPlacements"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    readonly attempt: TryoutAttempt;
-    readonly source: TryoutSnapshotSource;
-  }
-) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (args: {
+  readonly attempt: TryoutAttempt;
+  readonly source: TryoutSnapshotSource;
+}) {
+  const writer = yield* DatabaseWriter;
   for (const source of args.source.snapshot.sections) {
     const sectionIdentity = tryoutCatalogIdentity(source.section.row);
     const snapshot = args.attempt.sectionSnapshots.find(
@@ -139,10 +123,7 @@ export const createAttemptPlacements = Effect.fn(
       yield* writer
         .table("tryoutAttemptPlacements")
         .insert(frozenPlacement)
-        .pipe(
-          Effect.orDie,
-          Effect.catchDefect(flow(toTryoutStartError, Effect.fail))
-        );
+        .pipe(Effect.mapError(toTryoutStartError));
     }
   }
 });

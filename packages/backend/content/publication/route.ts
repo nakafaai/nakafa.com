@@ -1,19 +1,19 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { resolveBoundPublicProjection } from "@repo/backend/content/publication/projection";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { PublicationSource } from "@repo/backend/content/publication/source";
 import type { routeResultValidator } from "@repo/backend/content/publication/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, Option, type Schema } from "effect";
 /** Resolves one public route from the exact active publication sequence. */
 export const resolveActiveRoute = Effect.fn(
   "contentRelease.resolveActiveRoute"
 )(function* (
   family: ContentFamily,
-  rawAppLocale: Doc<"contentPaths">["appLocale"],
+  rawAppLocale: Docs["contentPaths"]["appLocale"],
   publicPath: string
 ) {
   const appLocale = AppLocaleSchema.make(rawAppLocale);
@@ -110,7 +110,7 @@ export const readRouteOwnership = Effect.fn(
 )(
   (
     family: ContentFamily,
-    appLocale: Doc<"contentPaths">["appLocale"],
+    appLocale: Docs["contentPaths"]["appLocale"],
     publicPath: string
   ) =>
     resolveActiveRoute(family, appLocale, publicPath).pipe(

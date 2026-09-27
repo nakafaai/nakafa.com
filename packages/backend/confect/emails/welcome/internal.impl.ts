@@ -1,9 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  MutationCtx as MutationCtxService,
-  QueryCtx as QueryCtxService,
-} from "@repo/backend/confect/_generated/services";
 import { readWelcomeIntentInput } from "@repo/backend/confect/emails/welcome/input";
 import { enqueueRenderedWelcomeProgram } from "@repo/backend/confect/emails/welcome/internal";
 import spec from "@repo/backend/confect/emails/welcome/internal.spec";
@@ -16,8 +12,7 @@ const readIntentInput = FunctionImpl.make(
   Effect.fn("emails.welcome.internal.readIntentInput")(function* ({
     intentId,
   }) {
-    const ctx = yield* QueryCtxService;
-    return yield* readWelcomeIntentInput(ctx, intentId);
+    return yield* readWelcomeIntentInput(intentId);
   })
 );
 const enqueueRenderedWelcome = FunctionImpl.make(
@@ -28,8 +23,7 @@ const enqueueRenderedWelcome = FunctionImpl.make(
     intentId,
     ...message
   }) {
-    const ctx = yield* MutationCtxService;
-    return yield* enqueueRenderedWelcomeProgram(ctx, intentId, message);
+    return yield* enqueueRenderedWelcomeProgram(intentId, message);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

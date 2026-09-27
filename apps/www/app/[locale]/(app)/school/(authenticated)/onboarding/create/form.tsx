@@ -1,6 +1,8 @@
 "use client";
+
+import { useMutation } from "@confect/react";
 import { PartyIcon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -20,7 +22,6 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import { Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -38,7 +39,7 @@ export function SchoolOnboardingCreateForm() {
     value: option.value,
   }));
   const router = useRouter();
-  const createSchool = useMutation(api.schools.mutations.createSchool);
+  const createSchool = useMutation(refs.public.schools.mutations.createSchool);
   const form = useForm({
     defaultValues: schoolCreateDefaultValues,
     validators: {
@@ -46,21 +47,26 @@ export function SchoolOnboardingCreateForm() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(async () => {
-          const { slug } = await createSchool(value);
-          router.push(`/school/${slug}`);
-        }).pipe(
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            reportClientException(error, {
-              source: "school-onboarding-create",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  toast.error(t("school-creation-failed"));
-                })
-              )
-            )
-          )
+        Effect.tryPromise(() => createSchool(value)).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap(({ slug }) =>
+            Effect.sync(() => {
+              router.push(`/school/${slug}`);
+            })
+          ),
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "school-onboarding-create",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(t("school-creation-failed"));
+                  })
+                )
+              ),
+            onSuccess: () => Effect.void,
+          })
         )
       );
     },

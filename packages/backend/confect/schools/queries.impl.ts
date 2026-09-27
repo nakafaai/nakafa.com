@@ -1,7 +1,8 @@
-import { DatabaseReader, FunctionImpl, GroupImpl } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { SchoolReadError } from "@repo/backend/confect/schools/errors";
 import { getSchoolMembership } from "@repo/backend/confect/schools/membership";
 import spec from "@repo/backend/confect/schools/queries.spec";
@@ -13,9 +14,8 @@ const getSchoolBySlug = FunctionImpl.make(
   spec,
   "getSchoolBySlug",
   Effect.fn("schools.queries.getSchoolBySlug")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const user = yield* requireAuth(ctx);
+    const database = yield* DatabaseReader;
+    const user = yield* requireAuth();
     const school = yield* database
       .table("schools")
       .get("by_slug", args.slug)
@@ -29,11 +29,7 @@ const getSchoolBySlug = FunctionImpl.make(
         message: `School not found for slug: ${args.slug}`,
       });
     }
-    const membership = yield* getSchoolMembership(
-      ctx,
-      school._id,
-      user.appUser._id
-    );
+    const membership = yield* getSchoolMembership(school._id, user.appUser._id);
     if (!membership) {
       return yield* new SchoolReadError({
         code: "MEMBERSHIP_NOT_FOUND",
@@ -51,9 +47,8 @@ const getMySchoolLandingState = FunctionImpl.make(
   spec,
   "getMySchoolLandingState",
   Effect.fn("schools.queries.getMySchoolLandingState")(function* () {
-    const ctx = yield* QueryCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const user = yield* requireAuth(ctx);
+    const database = yield* DatabaseReader;
+    const user = yield* requireAuth();
     const memberships = yield* database
       .table("schoolMembers")
       .index("by_userId_and_status", (q) =>
@@ -95,9 +90,8 @@ const getMySchoolsPage = FunctionImpl.make(
   spec,
   "getMySchoolsPage",
   Effect.fn("schools.queries.getMySchoolsPage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const user = yield* requireAuth(ctx);
+    const database = yield* DatabaseReader;
+    const user = yield* requireAuth();
     const memberships = yield* database
       .table("schoolMembers")
       .index("by_userId_and_status", (q) =>
@@ -139,5 +133,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getSchoolBySlug),
   Layer.provide(getMySchoolLandingState),
   Layer.provide(getMySchoolsPage),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

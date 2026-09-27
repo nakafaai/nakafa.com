@@ -2,7 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import customersTable from "@repo/backend/confect/_generated/tables/customers";
 import {
-  PolarCustomerWebhookTargetIoErrorWire,
+  PolarCustomerWebhookTargetIoError,
   polarCustomerWebhookTargetValidator,
 } from "@repo/backend/confect/customers/polar/spec";
 import { Schema } from "effect";
@@ -34,6 +34,6 @@ export default GroupSpec.make()
         polarCustomerId: Schema.String,
       }),
       returns: () => polarCustomerWebhookTargetValidator,
-      error: () => PolarCustomerWebhookTargetIoErrorWire,
+      error: () => PolarCustomerWebhookTargetIoError,
     })
   );

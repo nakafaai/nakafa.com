@@ -1,6 +1,6 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { parseMaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
@@ -40,7 +40,6 @@ export async function readOgMetadata(
   if (slug[0] === "articles") {
     return await readArticleOgMetadata(locale, slug);
   }
-
   const params = parseMaterialParams(locale, slug);
   if (!params) {
     const input = await Effect.runPromise(
@@ -54,30 +53,29 @@ export async function readOgMetadata(
       return await readDefaultOgCopy(locale, slug);
     }
     const reference = await Effect.runPromise(
-      readNakafaRuntimeQuery(
-        env.NEXT_PUBLIC_CONVEX_URL,
-        api.contentRelease.reference.read,
-        {
+      Effect.flatMap(HttpClient.HttpClient, (client) =>
+        client.query(refs.public.contentRelease.reference.read, {
           input: {
             appLocale: locale,
             kind: "route",
             publicPath: slug.join("/"),
           },
-        }
-      )
+        })
+      ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)))
     );
     if (!reference) {
       return null;
     }
     return await readDefaultOgCopy(locale, slug);
   }
-
   const owner = await resolveMaterialOwner(Promise.resolve(params));
   if (!owner) {
     return null;
   }
   if (owner.kind === "preview") {
-    return toMaterialMetadataCopy({ metadata: owner.preview.metadata });
+    return toMaterialMetadataCopy({
+      metadata: owner.preview.metadata,
+    });
   }
   const publication = await getMaterialModel(owner.locale, owner.publicPath);
   if (!publication?.model.projection) {

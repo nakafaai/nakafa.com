@@ -79,11 +79,14 @@ function InfoCustomizeButton() {
             image,
           })
         ).pipe(
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            reportClientException(error, {
-              source: "school-class-image-update",
-            })
-          )
+          Effect.flatMap(Effect.fromResult),
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "school-class-image-update",
+              }),
+            onSuccess: () => Effect.void,
+          })
         )
       );
     });

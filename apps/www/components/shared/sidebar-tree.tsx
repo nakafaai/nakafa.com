@@ -19,7 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { slugify } from "@repo/design-system/lib/routing/slug";
+import { slugify } from "@repo/utilities/slug";
 import { useTranslations } from "next-intl";
 import { TocProvider, useToc } from "@/lib/context/use-toc";
 import { useVirtual } from "@/lib/context/use-virtual";

@@ -1,16 +1,18 @@
 "use client";
 
+import type { Ref } from "@confect/core";
+
 import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import type { FunctionReturnType } from "convex/server";
+
 import { useTranslations } from "next-intl";
 import { MaterialRow } from "@/components/home/material-row";
 
-type RecentlyViewedSubject = FunctionReturnType<
-  typeof api.contents.queries.recent.getRecentlyViewed
+type RecentlyViewedSubject = Ref.Returns<
+  typeof refs.public.contents.queries.recent.getRecentlyViewed
 >[number];
 
 /**

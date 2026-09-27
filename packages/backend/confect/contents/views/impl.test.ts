@@ -486,8 +486,9 @@ describe("contents/views/impl", () => {
         )
     ).rejects.toMatchObject({
       data: {
-        code: "CONTENT_VIEW_IO_FAILED",
-        message: "Unable to record the content view.",
+        _tag: "AuthReadError",
+        code: "AUTH_READ_FAILED",
+        message: "Unable to read authentication state.",
       },
     });
   });

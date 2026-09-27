@@ -1,5 +1,4 @@
 import subscriptions from "@repo/backend/confect/_generated/tables/subscriptions";
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const subscriptionRecordIoFailedCode = "SUBSCRIPTION_RECORD_IO_FAILED";
 export const subscriptionRecordValidator = subscriptions.Fields;
@@ -19,6 +18,3 @@ export class SubscriptionRecordIoError extends Schema.TaggedError<SubscriptionRe
   }
 ) {}
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const SubscriptionRecordIoErrorWire = failureWire(
-  SubscriptionRecordIoError
-);

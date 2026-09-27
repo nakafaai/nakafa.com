@@ -23,31 +23,10 @@ export default Table.make(() =>
     statusRank: tryoutStatusRankValidator,
     updatedAt: Schema.Finite,
   })
-)
-  .index("by_userId_and_setIdentity", ["userId", "setIdentity"])
-  .index("by_userId_countryKey_examKey_trackKey_appLocale_setKey", [
-    "userId",
-    "countryKey",
-    "examKey",
-    "trackKey",
-    "appLocale",
-    "setKey",
-  ])
-  .index("by_userId_and_track_and_publishedScore_and_setKey", [
-    "userId",
-    "countryKey",
-    "examKey",
-    "trackKey",
-    "appLocale",
-    "publishedScore",
-    "setKey",
-  ])
-  .index("by_userId_and_track_and_statusRank_and_setKey", [
-    "userId",
-    "countryKey",
-    "examKey",
-    "trackKey",
-    "appLocale",
-    "statusRank",
-    "setKey",
-  ]);
+).index("by_userId_and_set", [
+  "userId",
+  "countryKey",
+  "examKey",
+  "trackKey",
+  "setKey",
+]);

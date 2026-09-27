@@ -1,6 +1,10 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import {
   CONTENT_ANALYTICS_GROUP_SIZE,
   CONTENT_ANALYTICS_PAGE_BYTES,
@@ -19,7 +23,6 @@ import {
 import { isContentAnalyticsPartition } from "@repo/backend/confect/contents/helpers/partitions";
 import { applyContentAnalyticsBatch } from "@repo/backend/confect/contents/metrics/apply";
 import { groupMetricsQueueItems } from "@repo/backend/confect/contents/metrics/batch";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Duration, Effect, flow } from "effect";
 
 /** Generated internal mutation reference that continues one claimed drain. */
@@ -27,12 +30,11 @@ import { Clock, Duration, Effect, flow } from "effect";
 /** Applies and acknowledges one complete popularity identity group. */
 const applyQueueGroup = Effect.fn("contents.analytics.applyQueueGroup")(
   function* (
-    ctx: MutationCtx,
     queueItems: Parameters<typeof groupMetricsQueueItems>[0],
     updatedAt: number
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    yield* applyContentAnalyticsBatch(ctx, {
+    const writer = yield* DatabaseWriter;
+    yield* applyContentAnalyticsBatch({
       queueItems,
       updatedAt,
     });
@@ -47,12 +49,11 @@ const applyQueueGroup = Effect.fn("contents.analytics.applyQueueGroup")(
 export const processClaimedContentAnalyticsPartition = Effect.fn(
   "contents.analytics.processClaimedContentAnalyticsPartition"
 )(
-  function* (ctx: MutationCtx, args: ProcessContentAnalyticsPartitionArgs) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (args: ProcessContentAnalyticsPartitionArgs) {
+    const ctx = yield* MutationCtxService;
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     if (!isContentAnalyticsPartition(args.partition)) {
       return yield* new InvalidContentAnalyticsPartitionError({
         code: invalidContentAnalyticsPartitionCode,
@@ -97,7 +98,7 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
       CONTENT_ANALYTICS_GROUP_SIZE
     );
     for (const group of groups) {
-      yield* applyQueueGroup(ctx, group, now);
+      yield* applyQueueGroup(group, now);
       processed += group.length;
       const metrics = yield* Effect.tryPromise({
         try: () => ctx.meta.getTransactionMetrics(),

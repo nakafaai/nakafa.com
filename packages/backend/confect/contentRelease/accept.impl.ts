@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import { acceptProgram } from "@repo/backend/confect/contentRelease/accept";
 import spec from "@repo/backend/confect/contentRelease/accept.spec";
 import { Effect, Layer } from "effect";
@@ -11,8 +10,7 @@ const accept = FunctionImpl.make(
   spec,
   "accept",
   Effect.fn("contentRelease.accept.accept")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* acceptProgram(ctx, args.releaseId, args.recoveryId);
+    return yield* acceptProgram(args.releaseId, args.recoveryId);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

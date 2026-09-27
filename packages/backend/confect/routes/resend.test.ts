@@ -2,24 +2,11 @@
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { resend } from "@repo/backend/confect/emails/client";
-import {
-  RESEND_WEBHOOK_PATH,
-  registerResendRoutes,
-} from "@repo/backend/confect/routes/resend";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { HonoWithConvex } from "convex-helpers/server/hono";
+import { RESEND_WEBHOOK_PATH } from "@repo/backend/confect/routes/resend";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { Effect } from "effect";
-import { Hono } from "hono";
 
-function createApp() {
-  const app: HonoWithConvex<ActionCtx> = new Hono();
-  registerResendRoutes(app);
-  return app;
-}
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
+afterEach(() => vi.restoreAllMocks());
 
 describe("Resend webhook route", () => {
   it.effect(
@@ -35,34 +22,26 @@ describe("Resend webhook route", () => {
             expect(await request.text()).toBe('{"type":"email.delivered"}');
             return new Response(null, { status: 201 });
           });
-
-        const response = yield* Effect.promise(
-          async () =>
-            await createApp().request(RESEND_WEBHOOK_PATH, {
-              body: '{"type":"email.delivered"}',
-              headers: {
-                "content-type": "application/json",
-                "svix-id": "message-id",
-                "svix-signature": "signature",
-                "svix-timestamp": "timestamp",
-              },
-              method: "POST",
-            })
-        );
-
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        const response = yield* target.fetch(RESEND_WEBHOOK_PATH, {
+          body: '{"type":"email.delivered"}',
+          headers: {
+            "content-type": "application/json",
+            "svix-id": "message-id",
+            "svix-signature": "signature",
+            "svix-timestamp": "timestamp",
+          },
+          method: "POST",
+        });
         expect(response.status).toBe(201);
         expect(handleWebhook).toHaveBeenCalledOnce();
       })
   );
-
   it.effect("does not expose the provider endpoint to other methods", () =>
     Effect.gen(function* () {
       const handleWebhook = vi.spyOn(resend, "handleResendEventWebhook");
-
-      const response = yield* Effect.promise(
-        async () => await createApp().request(RESEND_WEBHOOK_PATH)
-      );
-
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      const response = yield* target.fetch(RESEND_WEBHOOK_PATH);
       expect(response.status).toBe(404);
       expect(handleWebhook).not.toHaveBeenCalled();
     })

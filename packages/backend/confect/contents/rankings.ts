@@ -1,8 +1,9 @@
 import { TableAggregate } from "@convex-dev/aggregate";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { components } from "@repo/backend/convex/_generated/api";
-import type { DataModel, Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 
-type LearningPopularityCounter = Doc<"learningPopularityCounters">;
+type LearningPopularityCounter = Docs["learningPopularityCounters"];
 export type LearningPopularityRankingNamespace = [
   LearningPopularityCounter["section"],
   LearningPopularityCounter["locale"],

@@ -1,6 +1,6 @@
-import { DatabaseReader } from "@confect/server";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadModelItems } from "@repo/backend/confect/contentRelease/models/items";
 import type { ModelBuildPage } from "@repo/backend/confect/contentRelease/models/spec";
@@ -13,22 +13,19 @@ import {
   deleteSearchEntry,
   writeSearchEntry,
 } from "@repo/backend/confect/contentRelease/search/write";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type ModelBuild = Doc<"contentModelBuilds">;
+type ModelBuild = Docs["contentModelBuilds"];
 
 /** Loads the signed artifact selected by one candidate public projection. */
 const loadSearchArtifact = Effect.fn("contentRelease.loadSearchArtifact")(
   function* (
-    ctx: MutationCtx,
-    head: Pick<Doc<"contentHeads">, "contentKey" | "artifactLocale">,
+    head: Pick<Docs["contentHeads"], "contentKey" | "artifactLocale">,
     artifactHash: string
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const row = yield* database
       .table("contentArtifacts")
       .get("by_artifactHash", artifactHash)
@@ -59,9 +56,8 @@ const loadSearchArtifact = Effect.fn("contentRelease.loadSearchArtifact")(
 
 /** Applies one release identity to the inactive search buffer. */
 const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
-  ctx: MutationCtx,
   build: ModelBuild,
-  row: Doc<"contentItems">
+  row: Docs["contentItems"]
 ) {
   const item = yield* decodeItemJson(row.itemJson);
   if (
@@ -80,10 +76,9 @@ const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
     row.contentKey,
     row.artifactLocale,
     build.sequence
-  ).pipe(Effect.provide(convexPublicationLayer(ctx)));
+  ).pipe(Effect.provide(publicationLayer));
   if (!projection) {
     return yield* deleteSearchEntry(
-      ctx,
       build.slots.searchTargetSlot,
       row.contentKey,
       row.artifactLocale
@@ -96,12 +91,10 @@ const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
     );
   }
   const artifact = yield* loadSearchArtifact(
-    ctx,
     projection,
     projection.artifactHash
   );
   yield* writeSearchEntry(
-    ctx,
     build.slots.searchTargetSlot,
     {
       ...projection,
@@ -115,14 +108,13 @@ const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
 
 /** Applies one bounded release page to the inactive search buffer. */
 export const syncSearch = Effect.fn("contentRelease.syncSearch")(function* (
-  ctx: MutationCtx,
   build: ModelBuild,
-  release: Doc<"contentReleases">,
+  release: Docs["contentReleases"],
   signed: SignedContentRelease
 ) {
-  const page = yield* loadModelItems(ctx, release, signed, build.itemIndex);
+  const page = yield* loadModelItems(release, signed, build.itemIndex);
   for (const row of page.rows) {
-    yield* syncSearchItem(ctx, build, row);
+    yield* syncSearchItem(build, row);
   }
   return {
     done: page.done,

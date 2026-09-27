@@ -3,19 +3,18 @@
 import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/chats/constants";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 
-import { useCurrentChat } from "@/components/ai/context/use-current-chat";
+import { useChat } from "@/components/ai/context/use-chat";
 
 export function AiChatPaginationTrigger() {
-  const status = useCurrentChat((state) => state.messageStatus);
-  const loadMoreMessages = useCurrentChat((state) => state.loadMoreMessages);
+  const pagination = useChat((state) => state.pagination);
 
-  if (status !== "CanLoadMore") {
+  if (pagination.status !== "CanLoadMore") {
     return null;
   }
 
   return (
     <Intersection
-      onIntersect={() => loadMoreMessages(CHAT_MESSAGES_PAGE_SIZE)}
+      onIntersect={() => pagination.loadMore(CHAT_MESSAGES_PAGE_SIZE)}
     />
   );
 }

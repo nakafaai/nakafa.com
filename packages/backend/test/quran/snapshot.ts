@@ -28,7 +28,10 @@ import {
   quranSearchFacts,
 } from "@repo/backend/confect/contentRelease/quran/facts";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx as ConvexMutationCtx,
+  MutationCtx,
+} from "@repo/backend/convex/_generated/server";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -247,5 +250,39 @@ export async function restoreAbsentQuranSnapshot(
     activeReleaseId: recovery.releaseId,
     activeSequence: recovery.sequence,
     nextSequence: recovery.sequence + 1,
+  });
+}
+
+/** Seeds both physical Quran phases for interrupted cleanup scenarios. */
+export async function insertExpiredQuran(
+  ctx: ConvexMutationCtx,
+  snapshotId: string
+) {
+  await ctx.db.insert("contentSnapshots", {
+    createdAt: 0,
+    family: "quran",
+    retainUntil: 0,
+    snapshotId,
+    snapshotJson: "{}",
+  });
+  await ctx.db.insert("quranRows", {
+    identity: "search:en:1",
+    index: 0,
+    kind: "quran-search",
+    appLocale: "en",
+    rowHash: `sha256:${"b".repeat(64)}`,
+    rowJson: "{}",
+    snapshotId,
+    surahNumber: 1,
+  });
+  await ctx.db.insert("quranSearch", {
+    assetId: "asset:en:quran:quran-search:1",
+    identity: "search:en:1",
+    index: 0,
+    appLocale: "en",
+    rowHash: `sha256:${"b".repeat(64)}`,
+    snapshotId,
+    surahNumber: 1,
+    text: "technical search",
   });
 }

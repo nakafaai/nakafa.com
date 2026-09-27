@@ -1,12 +1,12 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import {
   deleteExpiredCapabilityTraces,
   saveCapabilityTrace,
 } from "@repo/backend/confect/chats/traces/impl";
 import spec from "@repo/backend/confect/chats/traces/mutations.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Clock, Effect, Layer } from "effect";
 
 const save = FunctionImpl.make(
@@ -14,8 +14,7 @@ const save = FunctionImpl.make(
   spec,
   "save",
   Effect.fn("chats.traces.mutations.save")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* saveCapabilityTrace(ctx, args.chatId, args.trace);
+    return yield* saveCapabilityTrace(args.chatId, args.trace);
   })
 );
 const deleteExpiredBatch = FunctionImpl.make(
@@ -41,5 +40,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(deleteExpiredBatch),
   Layer.provide(sweepExpired),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   cleanupForumData,
   cleanupForumPostData,
@@ -7,11 +9,11 @@ import {
   insertClass,
   insertSchool,
 } from "@repo/backend/confect/classes/test.helpers";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 8, 19);
 afterEach(() => vi.restoreAllMocks());
@@ -104,7 +106,13 @@ describe("forum cleanup storage ownership", () => {
       };
     });
     await t.mutation((ctx) =>
-      runConvexProgram(cleanupForumPostData(ctx, rows.postId))
+      Effect.runPromise(
+        cleanupForumPostData(rows.postId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     expect(await t.run((ctx) => ctx.storage.get(attachmentBlob))).toBeNull();
     expect(
@@ -116,7 +124,13 @@ describe("forum cleanup storage ownership", () => {
       await t.query((ctx) => ctx.db.get("schoolClassForumPosts", rows.postId))
     ).not.toBeNull();
     await t.mutation((ctx) =>
-      runConvexProgram(cleanupForumData(ctx, rows.forumId))
+      Effect.runPromise(
+        cleanupForumData(rows.forumId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     expect(await t.run((ctx) => ctx.storage.get(uploadBlob))).toBeNull();
     expect(
@@ -134,13 +148,17 @@ describe("forum cleanup storage ownership", () => {
         vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
           throw new Error("database unavailable");
         });
-        return runConvexProgram(cleanupForumData(ctx, rows.forumId));
+        return Effect.runPromise(
+          cleanupForumData(rows.forumId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        );
       })
     ).rejects.toMatchObject({
-      data: {
-        code: "FORUM_CLEANUP_FAILED",
-        message: "database unavailable",
-      },
+      code: "FORUM_CLEANUP_FAILED",
+      message: "database unavailable",
     });
     expect(
       await t.query((ctx) => ctx.db.get("schoolClassForums", rows.forumId))

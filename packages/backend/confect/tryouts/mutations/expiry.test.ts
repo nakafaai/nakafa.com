@@ -1,5 +1,6 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
   reconcileMissedAttemptExpiries,
@@ -7,17 +8,13 @@ import {
 } from "@repo/backend/confect/tryouts/mutations/expiry";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
-  insertTryoutAttempt,
-  insertTryoutAttemptPlacement,
-  insertTryoutSectionAttempt,
-  insertTryoutUser,
-  seedTryoutContentAccessState,
-} from "@repo/backend/test/tryout/runtime";
-import { makeTryoutSet } from "@repo/backend/test/tryouts";
-import { Data } from "effect";
+  seedExpiredTryout,
+  seedExpirySweep,
+} from "@repo/backend/test/tryout/expiry";
+import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
+import { Data, Effect } from "effect";
 
 class SchedulerUnavailable extends Data.TaggedError("SchedulerUnavailable") {}
-
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const EXPIRED_AT = NOW - 60_000;
 const ACTIVE_EXPIRES_AT = NOW + 3_600_000;
@@ -28,47 +25,40 @@ const ATTEMPT_RECONCILIATION_NAME =
   "tryouts/mutations/expiry:reconcileAttempts";
 const SECTION_RECONCILIATION_NAME =
   "tryouts/mutations/expiry:reconcileSections";
-
 describe("tryouts/mutations/expiry", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
   });
-
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
-
   it.each(["attempt", "section"] as const)(
     "rolls back the %s sweep if expiry scheduling fails",
     async (phase) => {
       const t = createConvexTestWithBetterAuth();
-      const seeded = await t.mutation(async (ctx) => {
-        const fixture = await seedTryoutContentAccessState(ctx, {
-          attemptStatus: "in-progress",
-          sectionStatus: "in-progress",
-          suffix: `scheduler-${phase}`,
-        });
-        await ctx.db.patch(fixture.attemptId, { expiresAt: EXPIRED_AT });
-        await ctx.db.patch(fixture.sectionAttemptId, { expiresAt: EXPIRED_AT });
-        return fixture;
-      });
+      const seeded = await t.mutation((ctx) =>
+        seedExpiredTryout(ctx, `scheduler-${phase}`, EXPIRED_AT)
+      );
       await expect(
         t.mutation((ctx) => {
           vi.spyOn(ctx.scheduler, "runAfter").mockRejectedValueOnce(
             new SchedulerUnavailable()
           );
-          return runConvexProgram(
-            phase === "attempt"
-              ? reconcileMissedAttemptExpiries(ctx, NOW)
-              : reconcileMissedSectionExpiries(ctx, {
+          return Effect.runPromise(
+            (phase === "attempt"
+              ? reconcileMissedAttemptExpiries(NOW)
+              : reconcileMissedSectionExpiries({
                   before: NOW,
                   scheduledAttemptIds: [],
                 })
+            ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
           );
         })
-      ).rejects.toMatchObject({ data: { code: "TRYOUT_RUNTIME_FAILED" } });
+      ).rejects.toMatchObject({
+        code: "TRYOUT_RUNTIME_FAILED",
+      });
       expect(
         await t.query((ctx) =>
           ctx.db.system.query("_scheduled_functions").collect()
@@ -76,78 +66,25 @@ describe("tryouts/mutations/expiry", () => {
       ).toEqual([]);
       expect(
         await t.query((ctx) => ctx.db.get(seeded.attemptId))
-      ).toMatchObject({ status: "in-progress" });
+      ).toMatchObject({
+        status: "in-progress",
+      });
       expect(
         await t.query((ctx) => ctx.db.query("tryoutScores").collect())
       ).toEqual([]);
     }
   );
-
   it("queues isolated attempt and section expiry jobs idempotently", async () => {
     const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation(async (ctx) => {
-      const expired = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "expiry-sweep-attempt",
-      });
-      await ctx.db.patch(expired.attemptId, {
-        expiresAt: EXPIRED_AT,
-        scoreStatus: "official",
-        scoringStrategy: "raw",
-      });
-      await ctx.db.patch(expired.sectionAttemptId, {
-        expiresAt: EXPIRED_AT,
-      });
-
-      const expiredAttempt = await ctx.db.get(expired.attemptId);
-      if (!expiredAttempt) {
-        throw new Error("Expected the expired attempt fixture.");
-      }
-
-      const activeUserId = await insertTryoutUser(ctx, {
-        authId: "auth-expiry-sweep-section",
-        email: "expiry-sweep-section@example.com",
-        name: "Expiry Sweep Section",
-      });
-      const activeAttemptId = await insertTryoutAttempt(ctx, {
-        expiresAt: ACTIVE_EXPIRES_AT,
-        scoringStrategy: "raw",
-        sectionSnapshots: expiredAttempt.sectionSnapshots,
-        set: makeTryoutSet(),
-        snapshotId: expiredAttempt.tryoutSnapshotId,
-        snapshotReleaseId: expiredAttempt.snapshotReleaseId,
-        userId: activeUserId,
-      });
-      const expiredPlacement = await ctx.db.get(expired.placementId);
-      if (!expiredPlacement) {
-        throw new Error("Expected the expired placement fixture.");
-      }
-      await insertTryoutAttemptPlacement(ctx, {
-        placement: expiredPlacement,
-        tryoutAttemptId: activeAttemptId,
-      });
-      const expiredSectionId = await insertTryoutSectionAttempt(ctx, {
-        expiresAt: EXPIRED_AT,
-        tryoutAttemptId: activeAttemptId,
-      });
-
-      return {
-        activeAttemptId,
-        expiredAttemptId: expired.attemptId,
-        expiredAttemptSectionId: expired.sectionAttemptId,
-        expiredSectionId,
-      };
-    });
-
+    const fixture = await t.mutation((ctx) =>
+      seedExpirySweep(ctx, EXPIRED_AT, ACTIVE_EXPIRES_AT)
+    );
     await t.mutation(internal.tryouts.mutations.expiry.sweep, {});
     await t.mutation(internal.tryouts.mutations.expiry.sweep, {});
-
     const beforeDrain = await t.query(async (ctx) => {
       const scheduledJobs = await ctx.db.system
         .query("_scheduled_functions")
         .collect();
-
       return {
         activeAttempt: await ctx.db.get(fixture.activeAttemptId),
         expiredAttempt: await ctx.db.get(fixture.expiredAttemptId),
@@ -161,13 +98,17 @@ describe("tryouts/mutations/expiry", () => {
         scores: await ctx.db.query("tryoutScores").collect(),
       };
     });
-
     const expectedAttemptReconciliation = {
-      args: [{ before: NOW }],
+      args: [
+        {
+          before: NOW,
+        },
+      ],
       name: ATTEMPT_RECONCILIATION_NAME,
-      state: { kind: "pending" },
+      state: {
+        kind: "pending",
+      },
     };
-
     expect(
       beforeDrain.expiryJobs.map(({ args, name, state }) => ({
         args,
@@ -176,21 +117,26 @@ describe("tryouts/mutations/expiry", () => {
       }))
     ).toEqual([expectedAttemptReconciliation, expectedAttemptReconciliation]);
     expect(beforeDrain).toMatchObject({
-      activeAttempt: { status: "in-progress" },
-      expiredAttempt: { status: "in-progress" },
-      expiredAttemptSection: { status: "in-progress" },
-      expiredSection: { status: "in-progress" },
+      activeAttempt: {
+        status: "in-progress",
+      },
+      expiredAttempt: {
+        status: "in-progress",
+      },
+      expiredAttemptSection: {
+        status: "in-progress",
+      },
+      expiredSection: {
+        status: "in-progress",
+      },
       scores: [],
     });
-
     vi.runOnlyPendingTimers();
     await t.finishInProgressScheduledFunctions();
-
     const afterAttemptPhase = await t.query(async (ctx) => {
       const scheduledJobs = await ctx.db.system
         .query("_scheduled_functions")
         .collect();
-
       return {
         activeAttempt: await ctx.db.get(fixture.activeAttemptId),
         attemptExpiryJobs: scheduledJobs.filter(
@@ -209,10 +155,13 @@ describe("tryouts/mutations/expiry", () => {
         ),
       };
     });
-
     expect(afterAttemptPhase).toMatchObject({
-      activeAttempt: { status: "in-progress" },
-      expiredAttempt: { status: "in-progress" },
+      activeAttempt: {
+        status: "in-progress",
+      },
+      expiredAttempt: {
+        status: "in-progress",
+      },
       scores: [],
       sectionExpiryJobs: [],
     });
@@ -228,15 +177,22 @@ describe("tryouts/mutations/expiry", () => {
         state,
       }))
     ).toEqual(
-      Array.from({ length: 2 }, () => ({
-        args: [
-          {
-            attemptId: fixture.expiredAttemptId,
-            expiresAt: EXPIRED_AT,
+      Array.from(
+        {
+          length: 2,
+        },
+        () => ({
+          args: [
+            {
+              attemptId: fixture.expiredAttemptId,
+              expiresAt: EXPIRED_AT,
+            },
+          ],
+          state: {
+            kind: "pending",
           },
-        ],
-        state: { kind: "pending" },
-      }))
+        })
+      )
     );
     expect(
       afterAttemptPhase.sectionReconciliationJobs.map(({ args, state }) => ({
@@ -244,24 +200,28 @@ describe("tryouts/mutations/expiry", () => {
         state,
       }))
     ).toEqual(
-      Array.from({ length: 2 }, () => ({
-        args: [
-          {
-            before: NOW,
-            scheduledAttemptIds: [fixture.expiredAttemptId],
+      Array.from(
+        {
+          length: 2,
+        },
+        () => ({
+          args: [
+            {
+              before: NOW,
+              scheduledAttemptIds: [fixture.expiredAttemptId],
+            },
+          ],
+          state: {
+            kind: "pending",
           },
-        ],
-        state: { kind: "pending" },
-      }))
+        })
+      )
     );
-
     await t.finishAllScheduledFunctions(vi.runAllTimers);
-
     const afterDrain = await t.query(async (ctx) => {
       const scheduledJobs = await ctx.db.system
         .query("_scheduled_functions")
         .collect();
-
       return {
         activeAttempt: await ctx.db.get(fixture.activeAttemptId),
         activeAttemptScore: await ctx.db
@@ -287,7 +247,6 @@ describe("tryouts/mutations/expiry", () => {
         scores: await ctx.db.query("tryoutScores").collect(),
       };
     });
-
     expect(afterDrain).toMatchObject({
       activeAttempt: {
         endReason: "submitted",
@@ -318,7 +277,6 @@ describe("tryouts/mutations/expiry", () => {
     expect(
       afterDrain.expiryJobs.every(({ state }) => state.kind === "success")
     ).toBe(true);
-
     const attemptReconciliationJobs = afterDrain.expiryJobs.filter(
       ({ name }) => name === ATTEMPT_RECONCILIATION_NAME
     );
@@ -331,29 +289,37 @@ describe("tryouts/mutations/expiry", () => {
     const sectionExpiryJobs = afterDrain.expiryJobs.filter(
       ({ name }) => name === SECTION_EXPIRY_NAME
     );
-
     expect(attemptReconciliationJobs).toHaveLength(2);
     expect(sectionReconciliationJobs).toHaveLength(2);
     expect(attemptExpiryJobs).toHaveLength(2);
     expect(attemptExpiryJobs.map(({ args }) => args)).toEqual(
-      Array.from({ length: attemptExpiryJobs.length }, () => [
+      Array.from(
         {
-          attemptId: fixture.expiredAttemptId,
-          expiresAt: EXPIRED_AT,
+          length: attemptExpiryJobs.length,
         },
-      ])
+        () => [
+          {
+            attemptId: fixture.expiredAttemptId,
+            expiresAt: EXPIRED_AT,
+          },
+        ]
+      )
     );
     expect(sectionExpiryJobs).toHaveLength(2);
     expect(sectionExpiryJobs.map(({ args }) => args)).toEqual(
-      Array.from({ length: sectionExpiryJobs.length }, () => [
+      Array.from(
         {
-          expiresAt: EXPIRED_AT,
-          sectionAttemptId: fixture.expiredSectionId,
+          length: sectionExpiryJobs.length,
         },
-      ])
+        () => [
+          {
+            expiresAt: EXPIRED_AT,
+            sectionAttemptId: fixture.expiredSectionId,
+          },
+        ]
+      )
     );
   });
-
   it.each(["stale", "deleted"] as const)(
     "ignores %s attempt and section expiry jobs",
     async (stateKind) => {
@@ -378,7 +344,6 @@ describe("tryouts/mutations/expiry", () => {
         }
         return seeded;
       });
-
       await t.mutation(internal.tryouts.mutations.expiry.attempt, {
         attemptId: fixture.attemptId,
         expiresAt: STALE_EXPIRES_AT,
@@ -387,7 +352,6 @@ describe("tryouts/mutations/expiry", () => {
         expiresAt: STALE_EXPIRES_AT,
         sectionAttemptId: fixture.sectionAttemptId,
       });
-
       const state = await t.query(async (ctx) => ({
         attempt: await ctx.db.get(fixture.attemptId),
         scheduledJobs: await ctx.db.system
@@ -396,7 +360,6 @@ describe("tryouts/mutations/expiry", () => {
         scores: await ctx.db.query("tryoutScores").collect(),
         section: await ctx.db.get(fixture.sectionAttemptId),
       }));
-
       expect(state).toMatchObject({
         attempt:
           stateKind === "deleted"
@@ -417,7 +380,6 @@ describe("tryouts/mutations/expiry", () => {
       });
     }
   );
-
   it("rejects an expired section whose parent attempt is missing", async () => {
     const t = createConvexTestWithBetterAuth();
     const sectionAttemptId = await t.mutation(async (ctx) => {
@@ -432,7 +394,6 @@ describe("tryouts/mutations/expiry", () => {
       await ctx.db.delete(fixture.attemptId);
       return fixture.sectionAttemptId;
     });
-
     await expect(
       t.mutation(internal.tryouts.mutations.expiry.section, {
         expiresAt: EXPIRED_AT,
@@ -460,7 +421,9 @@ describe("tryouts/mutations/expiry", () => {
           scoringStrategy: "raw",
           scoreStatus: "official",
         });
-        await ctx.db.patch(seeded.sectionAttemptId, { expiresAt: EXPIRED_AT });
+        await ctx.db.patch(seeded.sectionAttemptId, {
+          expiresAt: EXPIRED_AT,
+        });
         return seeded;
       });
       await t.mutation(internal.tryouts.mutations.expiry.section, {

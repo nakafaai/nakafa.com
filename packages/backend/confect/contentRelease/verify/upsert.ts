@@ -1,11 +1,14 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import {
   canonicalizeContentProjection,
   familyForProjection,
   projectionArtifactLocale,
 } from "@nakafa/aksara-contracts/projection/spec";
 import type { ContentReleaseItem } from "@nakafa/aksara-contracts/release";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import {
   ensureDocumentSize,
@@ -20,23 +23,22 @@ import {
   decodeArtifactJson,
   decodeProjectionJson,
 } from "@repo/backend/confect/contentRelease/parse";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
 type UpsertChange = Extract<
   ContentReleaseItem["change"],
-  { operation: "upsert" }
+  {
+    operation: "upsert";
+  }
 >;
 
 /** Builds the complete immutable upsert version from staged evidence. */
 const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
-  ctx: MutationCtx,
-  row: Doc<"contentItems">,
+  row: Docs["contentItems"],
   change: UpsertChange
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   if (!(row.artifactReady && row.projectionReady && row.projectionJson)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -66,7 +68,6 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
     projection.kind === "question-body"
       ? null
       : yield* loadRouteBinding(
-          ctx,
           projection.appLocale,
           projection.publicPath,
           row.sequence
@@ -111,14 +112,14 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
     sequence: row.sequence,
     sourceHash: artifact.payload.sourceHash,
     sourcePath: change.sourcePath,
-  } satisfies WithoutSystemFields<Doc<"contentHeads">>;
+  } satisfies WithoutSystemFields<Docs["contentHeads"]>;
   return version;
 });
 
 /** Compares every persisted immutable head field without system metadata. */
 function sameVersion(
-  stored: Doc<"contentHeads">,
-  expected: Omit<Doc<"contentHeads">, "_creationTime" | "_id">
+  stored: Docs["contentHeads"],
+  expected: Omit<Docs["contentHeads"], "_creationTime" | "_id">
 ) {
   return (
     stored.artifactHash === expected.artifactHash &&
@@ -141,14 +142,12 @@ function sameVersion(
 
 /** Inserts one immutable upsert version or validates its idempotent retry. */
 export const writeUpsert = Effect.fn("contentRelease.writeUpsert")(function* (
-  ctx: MutationCtx,
-  row: Doc<"contentItems">,
+  row: Docs["contentItems"],
   change: UpsertChange
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const version = yield* upsertVersion(ctx, row, change);
+  const writer = yield* DatabaseWriter;
+  const version = yield* upsertVersion(row, change);
   const existing = yield* loadExactVersion(
-    ctx,
     row.contentKey,
     row.artifactLocale,
     row.sequence

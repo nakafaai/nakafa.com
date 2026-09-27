@@ -1,8 +1,10 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -19,22 +21,33 @@ const publications = api.contentRelease.material.publications;
 const decodeProjection = Schema.decodeUnknownSync(
   MaterialLessonProjectionSchema
 );
-
 describe("contentRelease/material", () => {
   it.effect(
     "returns the exact material identity and date through discovery and sitemap queries",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const source = makeMaterialProjection("en", 1);
         const dateModified = "2026-08-01";
         yield* Effect.promise(() =>
-          activateMaterialCatalog(t, [
-            {
-              ...source,
-              metadata: { ...source.metadata, dateModified },
-            },
-          ])
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateMaterialCatalog([
+                {
+                  ...source,
+                  metadata: {
+                    ...source.metadata,
+                    dateModified,
+                  },
+                },
+              ]).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
         );
         const material = api.contentRelease.material;
         const identity = yield* Effect.promise(() =>
@@ -50,13 +63,21 @@ describe("contentRelease/material", () => {
           publicPath: source.publicPath,
         });
         const latest = yield* Effect.promise(() =>
-          t.query(material.latest, { appLocale: "en", limit: 1 })
+          t.query(material.latest, {
+            appLocale: "en",
+            limit: 1,
+          })
         );
         expect(latest.materials).toMatchObject([
-          { dateModified, publicPath: source.publicPath },
+          {
+            dateModified,
+            publicPath: source.publicPath,
+          },
         ]);
         const buckets = yield* Effect.promise(() =>
-          t.query(material.sitemapBuckets, { appLocale: "en" })
+          t.query(material.sitemapBuckets, {
+            appLocale: "en",
+          })
         );
         const results = yield* Effect.promise(() =>
           Promise.all(
@@ -74,25 +95,49 @@ describe("contentRelease/material", () => {
         );
         expect(
           results.flatMap(({ bucket }) => bucket.materials ?? [])
-        ).toMatchObject([{ dateModified, publicPath: source.publicPath }]);
+        ).toMatchObject([
+          {
+            dateModified,
+            publicPath: source.publicPath,
+          },
+        ]);
         expect(results.flatMap(({ sitemap }) => sitemap?.routes ?? [])).toEqual(
-          [{ lastModified: dateModified, publicPath: source.publicPath }]
+          [
+            {
+              lastModified: dateModified,
+              publicPath: source.publicPath,
+            },
+          ]
         );
       })
   );
-
   it.effect(
     "preserves bounded split positions and empty material continuations",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateMaterialCatalog(t));
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateMaterialCatalog().pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         const first = yield* Effect.promise(() =>
           t.query(publications, {
             appLocale: "en",
             expectedManifestHash: null,
             expectedReleaseId: null,
-            paginationOpts: { cursor: null, numItems: 2, maximumRowsRead: 2 },
+            paginationOpts: {
+              cursor: null,
+              numItems: 2,
+              maximumRowsRead: 2,
+            },
           })
         );
         expect(first.result).toMatchObject({
@@ -142,13 +187,18 @@ describe("contentRelease/material", () => {
             appLocale: "en",
             expectedManifestHash: null,
             expectedReleaseId: null,
-            paginationOpts: { cursor: null, numItems: 2 },
+            paginationOpts: {
+              cursor: null,
+              numItems: 2,
+            },
           })
         );
-        expect(empty.result).toMatchObject({ page: [], isDone: true });
+        expect(empty.result).toMatchObject({
+          page: [],
+          isDone: true,
+        });
       })
   );
-
   it.effect(
     "restarts an obsolete material cursor before the first publication",
     () =>
@@ -159,7 +209,10 @@ describe("contentRelease/material", () => {
             appLocale: "en",
             expectedManifestHash: "old",
             expectedReleaseId: "old",
-            paginationOpts: { cursor: "old-page", numItems: 2 },
+            paginationOpts: {
+              cursor: "old-page",
+              numItems: 2,
+            },
           })
         );
         expect(result).toMatchObject({
@@ -171,20 +224,19 @@ describe("contentRelease/material", () => {
         });
       })
   );
-
   it("fails closed before current signed ownership is available", async () => {
     const t = convexTest(schema, convexModules);
-
     await expect(
       t.query(publication, {
         appLocale: "en",
         publicPath: "subjects/mathematics/functions/concept",
       })
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_MISSING" },
+      data: {
+        code: "CONTENT_RELEASE_MISSING",
+      },
     });
   });
-
   it("rejects a route reread after the active release changes", async () => {
     const t = convexTest(schema, convexModules);
     const material = makeMaterialProjection("en", 1);
@@ -195,9 +247,19 @@ describe("contentRelease/material", () => {
         publicPath: material.publicPath,
       })
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+      },
     });
-    await activateMaterialCatalog(t);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     for (const expectedActiveReleaseId of [null, "another-release"]) {
       await expect(
         t.query(publication, {
@@ -205,7 +267,11 @@ describe("contentRelease/material", () => {
           appLocale: material.appLocale,
           publicPath: material.publicPath,
         })
-      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+      ).rejects.toMatchObject({
+        data: {
+          code: "CONTENT_RELEASE_STATE",
+        },
+      });
     }
     await expect(
       t.query(publication, {
@@ -217,18 +283,27 @@ describe("contentRelease/material", () => {
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
     });
   });
-
   it.each(["en", "id", "de"] as const)(
     "returns the %s current page with stable release identity",
     async (appLocale) => {
       const t = convexTest(schema, convexModules);
-      await activateMaterialCatalog(t);
-
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          activateMaterialCatalog().pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
+      );
       const first = await t.query(publications, {
         expectedManifestHash: null,
         expectedReleaseId: null,
         appLocale,
-        paginationOpts: { cursor: null, numItems: 1 },
+        paginationOpts: {
+          cursor: null,
+          numItems: 1,
+        },
       });
       const second = await t.query(publications, {
         expectedManifestHash: first.activeManifestHash,
@@ -239,19 +314,22 @@ describe("contentRelease/material", () => {
           numItems: 1,
         },
       });
-
       expect(first).toMatchObject({
         activeManifestHash: MATERIAL_IDENTITY.manifestHash,
         activeReleaseId: MATERIAL_IDENTITY.releaseId,
         managed: true,
-        result: { isDone: false },
+        result: {
+          isDone: false,
+        },
         stale: false,
       });
       expect(second).toMatchObject({
         activeManifestHash: MATERIAL_IDENTITY.manifestHash,
         activeReleaseId: MATERIAL_IDENTITY.releaseId,
         managed: true,
-        result: { isDone: true },
+        result: {
+          isDone: true,
+        },
         stale: false,
       });
       for (const source of [...first.result.page, ...second.result.page]) {
@@ -265,19 +343,24 @@ describe("contentRelease/material", () => {
       }
     }
   );
-
   it.each(["en", "id", "de"] as const)(
     "returns the %s current route across alternates and siblings",
     async (appLocale) => {
       const t = convexTest(schema, convexModules);
       const requested = makeMaterialProjection(appLocale, 1);
-      await activateMaterialCatalog(t);
-
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          activateMaterialCatalog().pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
+      );
       const result = await t.query(publication, {
         appLocale,
         publicPath: requested.publicPath,
       });
-
       expect(result.projectionJson).toBe(
         canonicalizeMaterialProjection(requested)
       );

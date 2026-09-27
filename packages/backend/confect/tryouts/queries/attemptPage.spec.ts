@@ -1,20 +1,21 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
-import { TryoutAttemptStateErrorWire } from "@repo/backend/confect/tryouts/attempt";
+import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import Session from "@repo/backend/confect/middleware/session.spec";
+import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
   tryoutSectionAttemptPageRequestValidator,
   tryoutSectionAttemptPageResultValidator,
   tryoutSetAttemptPageRequestValidator,
   tryoutSetAttemptPageResultValidator,
 } from "@repo/backend/confect/tryouts/attemptPage/spec";
-import { TryoutAuthFailure } from "@repo/backend/confect/tryouts/auth";
 import {
-  TryoutResponseIntegrityErrorWire,
-  TryoutResponseSelectionErrorWire,
+  TryoutResponseIntegrityError,
+  TryoutResponseSelectionError,
 } from "@repo/backend/confect/tryouts/response/spec";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
 import { TryoutSelectorReadErrorWire } from "@repo/backend/confect/tryouts/runtime/ownership";
-import { TryoutScoreReadErrorWire } from "@repo/backend/confect/tryouts/score";
+import { TryoutScoreReadError } from "@repo/backend/confect/tryouts/score";
 import { Schema } from "effect";
 
 /** Fetches one current set overlay or exact frozen set page. */
@@ -28,17 +29,16 @@ export default GroupSpec.make()
       returns: () => tryoutSetAttemptPageResultValidator,
       error: () =>
         Schema.Union([
-          TryoutAttemptStateErrorWire,
-          TryoutAuthFailure,
-
+          TryoutAttemptStateError,
+          AuthFailure,
           TryoutRuntimeErrorWire,
-          TryoutScoreReadErrorWire,
-          TryoutResponseIntegrityErrorWire,
-          TryoutResponseSelectionErrorWire,
+          TryoutScoreReadError,
+          TryoutResponseIntegrityError,
+          TryoutResponseSelectionError,
           TryoutSelectorReadErrorWire,
-          ReleaseErrorWire,
+          ReleaseError,
         ]),
-    })
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicQuery({
@@ -49,15 +49,14 @@ export default GroupSpec.make()
       returns: () => tryoutSectionAttemptPageResultValidator,
       error: () =>
         Schema.Union([
-          TryoutAttemptStateErrorWire,
-          TryoutAuthFailure,
-
+          TryoutAttemptStateError,
+          AuthFailure,
           TryoutRuntimeErrorWire,
-          ReleaseErrorWire,
-          TryoutScoreReadErrorWire,
-          TryoutResponseIntegrityErrorWire,
-          TryoutResponseSelectionErrorWire,
+          ReleaseError,
+          TryoutScoreReadError,
+          TryoutResponseIntegrityError,
+          TryoutResponseSelectionError,
           TryoutSelectorReadErrorWire,
         ]),
-    })
+    }).middleware(Session)
   );

@@ -1,12 +1,13 @@
+import type { InvokeReturn } from "@confect/react";
 import { describe, expect, it } from "@effect/vitest";
 import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { FunctionReturnType } from "convex/server";
-import { Duration, Effect, Exit, Fiber } from "effect";
+
+import { Duration, Effect, Exit, Fiber, Result } from "effect";
 import { TestClock } from "effect/testing";
 import type { SetStateAction } from "react";
 import {
@@ -307,15 +308,17 @@ describe("explicit consent save actions", () => {
       const setAccountConsent = vi.fn(
         (
           ...args: unknown[]
-        ): Promise<FunctionReturnType<typeof api.consents.current.set>> => {
+        ): InvokeReturn<typeof refs.public.consents.current.set> => {
           seenArgs.push(args[0]);
-          return Promise.resolve({
-            category: "analytics",
-            decidedAt: 200,
-            granted: true,
-            mechanism: "privacy-controls",
-            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-          });
+          return Promise.resolve(
+            Result.succeed({
+              category: "analytics",
+              decidedAt: 200,
+              granted: true,
+              mechanism: "privacy-controls",
+              noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+            })
+          );
         }
       );
       const overrides: SetStateAction<OverridesMap>[] = [];

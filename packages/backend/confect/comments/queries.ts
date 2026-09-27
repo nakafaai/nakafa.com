@@ -1,20 +1,16 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 /** Load the current viewer's vote for each bounded comment page row. */
 export const getViewerVotes = Effect.fn("comments.queries.getViewerVotes")(
-  function* (
-    ctx: QueryCtx,
-    comments: Doc<"comments">[],
-    userId: Id<"users"> | null
-  ) {
+  function* (comments: Docs["comments"][], userId: Id<"users"> | null) {
+    const _reader = yield* DatabaseReader;
     if (!userId) {
       return new Map<Id<"comments">, -1 | 1>();
     }
     const votes = yield* Effect.forEach(comments, (comment) =>
-      DatabaseReader.make(databaseSchema, ctx.db)
+      _reader
         .table("commentVotes")
         .get("by_commentId_and_userId", comment._id, userId)
         .pipe(

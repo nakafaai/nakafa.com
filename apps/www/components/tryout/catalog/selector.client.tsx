@@ -11,6 +11,7 @@ import {
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { useConvexAuth } from "convex/react";
+
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/country-flag";

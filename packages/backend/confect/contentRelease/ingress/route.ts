@@ -1,6 +1,6 @@
-import { ActionRunner } from "@confect/server";
 import { MAX_PUBLICATION_REQUEST_BYTES } from "@nakafa/aksara-contracts/transport/limits";
 import refs from "@repo/backend/confect/_generated/refs";
+import { ActionRunner } from "@repo/backend/confect/_generated/services";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   type HttpBodyError,
@@ -12,11 +12,13 @@ import {
 } from "@repo/backend/confect/contentRelease/http/secret";
 import { predecodeFailure } from "@repo/backend/confect/contentRelease/ingress/failure";
 import { publicationFailure } from "@repo/backend/confect/contentRelease/ingress/response";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { type ActionCtx, env } from "@repo/backend/convex/_generated/server";
 import { getConvexSize } from "convex/values";
-import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Effect, Result } from "effect";
+import { Config, Effect, Result } from "effect";
+import {
+  HttpRouter,
+  HttpServerRequest,
+  HttpServerResponse,
+} from "effect/unstable/http";
 
 const NODE_ACTION_ARGUMENT_BYTES = 5 * 1024 * 1024;
 /** Converts an oversized Node argument envelope into a sanitized response. */
@@ -62,13 +64,11 @@ function publicationAuthFailure() {
 }
 /** Reads one bounded request and invokes the isolated Node verifier. */
 const publicationRoute = Effect.fn("contentRelease.publicationRoute")(
-  function* (ctx: ActionCtx, request: Request) {
-    const runAction = yield* ActionRunner.ActionRunner.pipe(
-      Effect.provide(ActionRunner.layer(ctx.runAction))
-    );
+  function* (request: Request) {
+    const runAction = yield* ActionRunner;
     const authenticated = yield* matchesHttpSecret(
       bearerToken(request.headers.get("authorization") ?? ""),
-      env.AKSARA_PUBLICATION_TOKEN
+      yield* Config.String("AKSARA_PUBLICATION_TOKEN").pipe(Effect.orDie)
     ).pipe(Effect.result);
     if (Result.isFailure(authenticated) || !authenticated.success) {
       return yield* publicationAuthFailure();
@@ -91,15 +91,15 @@ const publicationRoute = Effect.fn("contentRelease.publicationRoute")(
     ).pipe(Effect.orDie);
   }
 );
-/** Registers the single private content-publication ingress. */
-export function registerContentReleaseRoutes<
-  Variables extends Record<string, unknown>,
->(app: HonoWithConvex<ActionCtx, Variables>) {
-  app.post("/internal/content/releases", async (context) => {
-    const result = await runConvexProgram(
-      publicationRoute(context.env, context.req.raw)
+export const publicationRoutes = HttpRouter.add(
+  "POST",
+  "/internal/content/releases",
+  Effect.gen(function* () {
+    const request = yield* HttpServerRequest.toWeb(
+      yield* HttpServerRequest.HttpServerRequest
     );
-    return new Response(result.body, {
+    const result = yield* publicationRoute(request);
+    return HttpServerResponse.text(result.body, {
       headers: {
         "cache-control": "private, no-store",
         "content-type": "application/json; charset=utf-8",
@@ -107,5 +107,5 @@ export function registerContentReleaseRoutes<
       },
       status: result.status,
     });
-  });
-}
+  })
+);

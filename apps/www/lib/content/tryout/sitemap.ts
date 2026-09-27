@@ -1,9 +1,8 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
-
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 
@@ -11,25 +10,21 @@ import type { Locale } from "next-intl";
 export const readPublishedTryoutSitemapCount = Effect.fn(
   "www.tryouts.readSitemapCount"
 )(function* (locale: Locale) {
-  return yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.tryout.sitemapCount,
-    {
+  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.tryout.sitemapCount, {
       appLocale: AppLocaleSchema.make(locale),
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
 });
 
 /** Reads one exact bounded signed try-out sitemap page. */
 export const readPublishedTryoutSitemap = Effect.fn(
   "www.tryouts.readSitemapPage"
 )(function* (locale: Locale, page: number) {
-  return yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.tryout.sitemapPage,
-    {
+  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.tryout.sitemapPage, {
       appLocale: AppLocaleSchema.make(locale),
       page,
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
 });

@@ -1,11 +1,16 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
+import { Effect } from "effect";
 // @vitest-environment node
 
 import workflowTest from "@convex-dev/workflow/test";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { cleanupProofWorkflow } from "@repo/backend/confect/contentRelease/proof/coordinator";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -22,11 +27,9 @@ const releaseId = ReleaseIdSchema.make("release-proof-coordinator");
 const release = testSignedRelease(testEmptyManifest(releaseId));
 const abort = internal.contentRelease.manifest.abort;
 const poll = internal.contentRelease.proof.poll.poll;
-
 afterEach(() => {
   vi.useRealTimers();
 });
-
 describe("contentRelease/proof/coordinator", () => {
   it.each([false, true])(
     "retains running evidence and aborts with prior cancellation %s",
@@ -47,24 +50,37 @@ describe("contentRelease/proof/coordinator", () => {
         releaseId,
       });
       const stored = await t.query((ctx) =>
-        runConvexProgram(loadRelease(ctx, releaseId))
+        Effect.runPromise(
+          loadRelease(releaseId).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
       );
       const workflowId = stored?.proofWorkflowId;
       if (!workflowId) {
         throw new Error("Expected proof workflow.");
       }
-
       await expect(
         t.mutation((ctx) =>
-          runConvexProgram(cleanupProofWorkflow(ctx, workflowId))
+          Effect.runPromise(
+            cleanupProofWorkflow(workflowId).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
         )
       ).rejects.toMatchObject({
-        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        code: "CONTENT_RELEASE_INTEGRITY",
       });
       if (cancelFirst) {
         await t.mutation((ctx) => workflow.cancel(ctx, workflowId));
       }
-      await expect(t.mutation(abort, { releaseId })).resolves.toMatchObject({
+      await expect(
+        t.mutation(abort, {
+          releaseId,
+        })
+      ).resolves.toMatchObject({
         complete: true,
       });
     }

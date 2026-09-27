@@ -1,35 +1,36 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { TryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Option } from "effect";
 
 const IRT_MODEL = "2pl";
 const PROVISIONAL_DIFFICULTY = 0;
 const PROVISIONAL_DISCRIMINATION = 1;
-type IrtScale = Doc<"irtScaleVersions">;
-type IrtScaleItem = Doc<"irtScaleItems">;
+type IrtScale = Docs["irtScaleVersions"];
+type IrtScaleItem = Docs["irtScaleItems"];
 
 /** Selects or creates the exact signed IRT scale frozen into one new attempt. */
 export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
-  function* (ctx: MutationCtx, source: TryoutStartSource, publishedAt: number) {
+  function* (source: TryoutStartSource, publishedAt: number) {
     const scoringStrategy = source.snapshot.set.row.scoringStrategy;
     if (scoringStrategy !== "irt") {
       return null;
     }
-    const scale = yield* loadExactScale(ctx, source);
+    const scale = yield* loadExactScale(source);
     if (scale) {
-      yield* verifyScaleItems(ctx, scale, source);
+      yield* verifyScaleItems(scale, source);
       return scale;
     }
-    return yield* publishSignedScale(ctx, {
+    return yield* publishSignedScale({
       publishedAt,
       source,
     });
@@ -39,10 +40,9 @@ export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
 
 /** Loads at most one scale bound to the exact signed snapshot. */
 const loadExactScale = Effect.fn("tryouts.start.loadExactScale")(function* (
-  ctx: MutationCtx,
   source: TryoutStartSource
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const scales = yield* database
     .table("irtScaleVersions")
     .index(
@@ -72,23 +72,17 @@ const loadExactScale = Effect.fn("tryouts.start.loadExactScale")(function* (
 
 /** Creates a new immutable scale from authenticated signed placements. */
 const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
-  function* (
-    ctx: MutationCtx,
-    args: {
-      publishedAt: number;
-      source: TryoutStartSource;
-    }
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (args: { publishedAt: number; source: TryoutStartSource }) {
+    const writer = yield* DatabaseWriter;
     const placements = signedPlacements(args.source);
     if (placements.length !== args.source.snapshot.set.row.questionCount) {
       return yield* scaleError(
         "Signed IRT scale cannot cover an incomplete try-out snapshot."
       );
     }
-    const previous = yield* loadPreviousScale(ctx, args.source);
+    const previous = yield* loadPreviousScale(args.source);
     const previousItems = previous
-      ? yield* loadScaleItemMap(ctx, previous)
+      ? yield* loadScaleItemMap(previous)
       : new Map<string, IrtScaleItem>();
     const reusesEveryItem = placements.every(({ identity, rowHash }) => {
       const item = previousItems.get(identity);
@@ -153,7 +147,7 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
           .pipe(Effect.orDie);
       }
     }
-    const scale = yield* DatabaseReader.make(databaseSchema, ctx.db)
+    const scale = yield* (yield* DatabaseReader)
       .table("irtScaleVersions")
       .get(scaleVersionId)
       .pipe(Effect.orDie);
@@ -163,8 +157,8 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
 
 /** Loads the latest earlier signed scale for the same logical set. */
 const loadPreviousScale = Effect.fn("tryouts.start.loadPreviousScale")(
-  function* (ctx: MutationCtx, source: TryoutStartSource) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (source: TryoutStartSource) {
+    const database = yield* DatabaseReader;
     const scale = yield* database
       .table("irtScaleVersions")
       .index(
@@ -183,11 +177,10 @@ const loadPreviousScale = Effect.fn("tryouts.start.loadPreviousScale")(
 
 /** Verifies one stored scale covers every authenticated signed placement. */
 const verifyScaleItems = Effect.fn("tryouts.start.verifyScaleItems")(function* (
-  ctx: MutationCtx,
   scale: IrtScale,
   source: TryoutStartSource
 ) {
-  const items = yield* loadScaleItemMap(ctx, scale);
+  const items = yield* loadScaleItemMap(scale);
   const placements = signedPlacements(source);
   const matches = placements.every(
     ({ identity, rowHash }) => items.get(identity)?.placementRowHash === rowHash
@@ -201,10 +194,9 @@ const verifyScaleItems = Effect.fn("tryouts.start.verifyScaleItems")(function* (
 
 /** Loads one complete scale item map and rejects missing identities. */
 const loadScaleItemMap = Effect.fn("tryouts.start.loadScaleItemMap")(function* (
-  ctx: MutationCtx,
   scale: IrtScale
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const items = yield* database
     .table("irtScaleItems")
     .index("by_scaleVersionId_and_placementIdentity", (query) =>

@@ -1,4 +1,4 @@
-import { DatabaseReader } from "@confect/server";
+import { DatabaseReader, RegisteredConvexFunction } from "@confect/server";
 import { Resend } from "@convex-dev/resend";
 import resendTest from "@convex-dev/resend/test";
 import workflowTest from "@convex-dev/workflow/test";
@@ -14,7 +14,6 @@ import {
 } from "@repo/backend/confect/emails/welcome/impl";
 import { WELCOME_EMAIL_RETRY } from "@repo/backend/confect/emails/welcome/spec";
 import { runWelcomeEmailDelivery } from "@repo/backend/confect/emails/welcome/workflow";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -62,8 +61,20 @@ async function createActivatedIntent(
       name: "Synthetic Test Learner",
       plan: "free",
     });
-    const intentId = await runConvexProgram(declareWelcomeIntent(ctx, userId));
-    await runConvexProgram(activateWelcomeIntent(ctx, userId, "id"));
+    const intentId = await Effect.runPromise(
+      declareWelcomeIntent(userId).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+        )
+      )
+    );
+    await Effect.runPromise(
+      activateWelcomeIntent(userId, "id").pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+        )
+      )
+    );
     return {
       intentId,
       userId,
@@ -138,11 +149,14 @@ describe("emails/welcome/delivery", () => {
       intentId,
     });
     const firstDelivery = await test.query((ctx) =>
-      runConvexProgram(
+      Effect.runPromise(
         DatabaseReader.make(databaseSchema, ctx.db)
           .table("welcomeEmailIntents")
           .get(intentId)
-          .pipe(Effect.orDie)
+          .pipe(
+            Effect.orDie,
+            Effect.provide(DatabaseReader.layer(databaseSchema, ctx.db))
+          )
       )
     );
     if (firstDelivery?.phase !== "enqueued") {
@@ -257,7 +271,13 @@ describe("emails/welcome/delivery", () => {
     );
     const send = vi.spyOn(resend, "sendEmail");
     await test.mutation((ctx) =>
-      runConvexProgram(removeWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        removeWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+          )
+        )
+      )
     );
     await expect(
       test.query(internal.emails.welcome.internal.readIntentInput, {
@@ -292,7 +312,13 @@ describe("emails/welcome/delivery", () => {
       })
     );
     const intentId = await test.mutation((ctx) =>
-      runConvexProgram(declareWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        declareWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+          )
+        )
+      )
     );
     const send = vi.spyOn(resend, "sendEmail");
     await test.mutation(

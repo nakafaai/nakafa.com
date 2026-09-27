@@ -1,6 +1,6 @@
-import { DatabaseReader, FunctionImpl, GroupImpl } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import spec from "@repo/backend/confect/customers/checkout/admission.spec";
 import { admitCheckoutProgram } from "@repo/backend/confect/customers/checkout/impl";
@@ -13,10 +13,9 @@ const admitCheckoutSession = FunctionImpl.make(
   "admitCheckoutSession",
   Effect.fn("customers.checkout.admission.admitCheckoutSession")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
       return yield* admitCheckoutProgram({
         captureEvent: () =>
-          captureProductEvent(ctx, {
+          captureProductEvent({
             distinctId: args.userId,
             event: args.event,
             ...(args.timestamp === undefined
@@ -27,7 +26,7 @@ const admitCheckoutSession = FunctionImpl.make(
           }),
         loadUser: Effect.fn("customers.checkout.loadAdmissionUser")(
           function* () {
-            return yield* DatabaseReader.make(databaseSchema, ctx.db)
+            return yield* (yield* DatabaseReader)
               .table("users")
               .get(args.userId)
               .pipe(

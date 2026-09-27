@@ -1,0 +1,145 @@
+import { expect, it } from "@effect/vitest";
+import {
+  type CapabilityArtifact,
+  streamCapability,
+} from "@repo/backend/confect/nina/capability/progress";
+import {
+  Deferred,
+  Effect,
+  Exit,
+  Fiber,
+  Ref,
+  Result,
+  Schema,
+  Stream,
+} from "effect";
+
+const loading = {
+  type: "data-web-search",
+  id: "search-1",
+  data: {
+    provider: "firecrawl",
+    queries: ["limit"],
+    sources: [],
+    status: "loading",
+  },
+} satisfies CapabilityArtifact;
+
+it.effect(
+  "keeps stable cards in the final output while coalescing progressive snapshots",
+  () =>
+    Effect.gen(function* () {
+      const snapshots = yield* streamCapability((publish) =>
+        Effect.gen(function* () {
+          yield* publish(loading);
+          yield* publish({ ...loading, id: "search-2" });
+          yield* publish({
+            ...loading,
+            data: { ...loading.data, status: "done" },
+          });
+          return { text: "Verified evidence" };
+        })
+      ).pipe(Stream.runCollect);
+      expect(snapshots.at(-1)).toEqual({
+        text: "Verified evidence",
+        artifacts: [
+          { ...loading, data: { ...loading.data, status: "done" } },
+          { ...loading, id: "search-2" },
+        ],
+      });
+    })
+);
+
+it.effect("emits pending evidence before the provider finishes", () =>
+  Effect.gen(function* () {
+    const observed = yield* Deferred.make<void>();
+    const snapshots = yield* streamCapability((publish) =>
+      Effect.gen(function* () {
+        yield* publish(loading);
+        yield* Deferred.await(observed);
+        return { text: "Finished" };
+      })
+    ).pipe(
+      Stream.tap(() => Deferred.succeed(observed, undefined)),
+      Stream.runCollect
+    );
+    expect(snapshots).toEqual([
+      { text: "", artifacts: [loading] },
+      { text: "Finished", artifacts: [loading] },
+    ]);
+  })
+);
+
+class EvidenceUnavailable extends Schema.TaggedError<EvidenceUnavailable>()(
+  "EvidenceUnavailable",
+  {}
+) {}
+
+it.effect("preserves a typed capability failure after progress", () =>
+  Effect.gen(function* () {
+    const result = yield* streamCapability((publish) =>
+      Effect.gen(function* () {
+        yield* publish(loading);
+        return yield* new EvidenceUnavailable();
+      })
+    ).pipe(Stream.runCollect, Effect.result);
+    expect(Result.isFailure(result) && result.failure._tag).toBe(
+      "EvidenceUnavailable"
+    );
+  })
+);
+
+it.effect(
+  "interrupts provider work when the Agent stops consuming a tool",
+  () =>
+    Effect.gen(function* () {
+      const interrupted = yield* Ref.make(false);
+      yield* streamCapability((publish) =>
+        publish(loading).pipe(
+          Effect.andThen(Effect.never),
+          Effect.ensuring(Ref.set(interrupted, true))
+        )
+      ).pipe(Stream.take(1), Stream.runDrain);
+      expect(yield* Ref.get(interrupted)).toBe(true);
+    })
+);
+
+it.effect(
+  "interrupts in-flight provider work when Agent aborts the tool",
+  () => {
+    const controller = new AbortController();
+    return Effect.gen(function* () {
+      const started = yield* Deferred.make<void>();
+      const stopped = yield* Ref.make(false);
+      const fiber = yield* streamCapability(
+        () =>
+          Deferred.succeed(started, undefined).pipe(
+            Effect.andThen(Effect.never),
+            Effect.ensuring(Ref.set(stopped, true))
+          ),
+        controller.signal
+      ).pipe(Stream.runDrain, Effect.forkScoped);
+      yield* Deferred.await(started);
+      controller.abort();
+      expect(Exit.isFailure(yield* Fiber.await(fiber))).toBe(true);
+      expect(yield* Ref.get(stopped)).toBe(true);
+    });
+  }
+);
+
+it.effect(
+  "honors an already-aborted Agent call and completes live signals normally",
+  () =>
+    Effect.gen(function* () {
+      const aborted = yield* streamCapability(
+        () => Effect.never,
+        AbortSignal.abort()
+      ).pipe(Stream.runDrain, Effect.exit);
+      expect(Exit.isFailure(aborted)).toBe(true);
+      const result = yield* streamCapability(
+        () => Effect.succeed({ text: "Completed" }),
+        yield* Effect.abortSignal
+      ).pipe(Stream.runCollect);
+      expect(result.at(-1)).toEqual({ text: "Completed", artifacts: [] });
+    })
+);

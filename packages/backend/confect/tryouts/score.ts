@@ -1,5 +1,3 @@
-import type { ConvexTaggedError } from "@repo/backend/confect/failure";
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const tryoutScoreStatusValidator = Schema.Literals([
   "provisional",
@@ -36,15 +34,15 @@ export type TryoutScoreResult = Schema.Schema.Type<
   typeof tryoutScoreResultValidator
 >;
 /** Expected integrity failure while reading a stored try-out score. */
-export class TryoutScoreReadError
-  extends Schema.TaggedError<TryoutScoreReadError>()("TryoutScoreReadError", {
+export class TryoutScoreReadError extends Schema.TaggedError<TryoutScoreReadError>()(
+  "TryoutScoreReadError",
+  {
     code: Schema.Literals([
       "TRYOUT_SCORE_NOT_FOUND",
       "TRYOUT_SECTION_SCORE_NOT_FOUND",
     ]),
     message: Schema.String,
-  })
-  implements ConvexTaggedError {}
+  }
+) {}
 /** Loads the immutable attempt score exposed after terminal completion. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const TryoutScoreReadErrorWire = failureWire(TryoutScoreReadError);

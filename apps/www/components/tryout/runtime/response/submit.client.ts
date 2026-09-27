@@ -1,9 +1,9 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
-import { Clock, Effect, Predicate } from "effect";
+import type { Ref } from "@confect/core";
+import { useMutation } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
+import { Clock, Effect, Option, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -16,24 +16,23 @@ import { reportClientException } from "@/lib/analytics/client";
 /** Owns the mutation, optimistic cache, and error boundary for responses. */
 export function useTryoutResponseSubmit() {
   const saveResponse = useMutation(
-    api.tryouts.mutations.responses.save
+    refs.public.tryouts.mutations.responses.save
   ).withOptimisticUpdate((localStore, args) => {
     const selectedAt = Effect.runSync(Clock.currentTimeMillis);
     updateRuntimeQueries(
       localStore,
-      api.tryouts.queries.runtime.getSectionAttemptState,
+      refs.public.tryouts.queries.runtime.getSectionAttemptState,
       args,
       selectedAt
     );
     updateRuntimeQueries(
       localStore,
-      api.tryouts.queries.runtime.getSetAttemptState,
+      refs.public.tryouts.queries.runtime.getSetAttemptState,
       args,
       selectedAt
     );
   });
   const tExercises = useTranslations("Exercises");
-
   return (
     question: TryoutRuntimeQuestion,
     selection: TryoutResponseSelection | null
@@ -45,6 +44,13 @@ export function useTryoutResponseSubmit() {
           selection,
         })
       ).pipe(
+        Effect.flatMap((result) =>
+          Result.match(result, {
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              handleSubmitError(error, tExercises, error.code),
+          })
+        ),
         Effect.catchTag("UnknownError", ({ cause }) =>
           handleSubmitError(cause, tExercises)
         )
@@ -52,18 +58,17 @@ export function useTryoutResponseSubmit() {
     );
   };
 }
-
 type OptimisticStore = Parameters<
   Parameters<ReturnType<typeof useMutation>["withOptimisticUpdate"]>[0]
 >[0];
-type SaveResponseArgs = Parameters<
-  Parameters<ReturnType<typeof useMutation>["withOptimisticUpdate"]>[0]
->[1];
+type SaveResponseArgs = Ref.Args<
+  typeof refs.public.tryouts.mutations.responses.save
+>;
 
 function updateRuntimeQueries<
   Query extends
-    | typeof api.tryouts.queries.runtime.getSectionAttemptState
-    | typeof api.tryouts.queries.runtime.getSetAttemptState,
+    | typeof refs.public.tryouts.queries.runtime.getSectionAttemptState
+    | typeof refs.public.tryouts.queries.runtime.getSetAttemptState,
 >(
   localStore: OptimisticStore,
   query: Query,
@@ -72,7 +77,7 @@ function updateRuntimeQueries<
 ) {
   const queries = localStore.getAllQueries(query);
   for (const cached of queries) {
-    const state = cached.value;
+    const state = Option.getOrUndefined(cached.value);
     if (!state?.runtime) {
       continue;
     }
@@ -82,16 +87,24 @@ function updateRuntimeQueries<
       selectedAt
     );
     if (runtime) {
-      localStore.setQuery(query, cached.args, { ...state, runtime });
+      localStore.setQuery(
+        query,
+        cached.args,
+        Option.some({
+          ...state,
+          runtime,
+        })
+      );
     }
   }
 }
-
 function handleSubmitError(
   error: unknown,
-  tExercises: ReturnType<typeof useTranslations>
+  tExercises: ReturnType<typeof useTranslations>,
+  errorCode?: Ref.Error<
+    typeof refs.public.tryouts.mutations.responses.save
+  >["code"]
 ) {
-  const errorCode = readErrorCode(error);
   if (
     errorCode === "TRYOUT_EXPIRED" ||
     errorCode === "TRYOUT_ATTEMPT_NOT_ACTIVE" ||
@@ -104,7 +117,11 @@ function handleSubmitError(
     });
   }
   return reportClientException(error, {
-    ...(errorCode ? { convex_error_code: errorCode } : {}),
+    ...(errorCode
+      ? {
+          convex_error_code: errorCode,
+        }
+      : {}),
     source: "tryout-submit-answer",
   }).pipe(
     Effect.andThen(
@@ -115,15 +132,4 @@ function handleSubmitError(
       })
     )
   );
-}
-
-function readErrorCode(error: unknown) {
-  if (!(error instanceof ConvexError)) {
-    return;
-  }
-  const data: unknown = error.data;
-  if (!(Predicate.isObject(data) && Predicate.hasProperty(data, "code"))) {
-    return;
-  }
-  return Predicate.isString(data.code) ? data.code : undefined;
 }

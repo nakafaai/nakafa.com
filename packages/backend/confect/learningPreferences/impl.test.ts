@@ -1,11 +1,15 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   readCurrentTryoutCountry,
   readLearningPreferenceByUserId,
   setPreferredCurriculumProgram,
   upsertPreferredTryoutCountry,
 } from "@repo/backend/confect/learningPreferences/impl";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -17,97 +21,161 @@ describe("learningPreferences/impl", () => {
   it("clears absent curriculum preferences without creating a row", async () => {
     const test = createConvexTestWithBetterAuth();
     await test.mutation(async (ctx) => {
-      const { userId } = await seedAuthenticatedUser(ctx, { now: 1 });
+      const { userId } = await seedAuthenticatedUser(ctx, {
+        now: 1,
+      });
       expect(
-        await runConvexProgram(
+        await Effect.runPromise(
           setPreferredCurriculumProgram({
-            ctx,
             now: 1,
             programKey: null,
             userId,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       ).toBeNull();
       expect(
-        await runConvexProgram(readLearningPreferenceByUserId(ctx, userId))
+        await Effect.runPromise(
+          readLearningPreferenceByUserId(userId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       ).toBeNull();
     });
   });
-
   it("preserves independent preferences and timestamps across repeated updates", async () => {
     const test = createConvexTestWithBetterAuth();
     await test.mutation(async (ctx) => {
-      const { userId } = await seedAuthenticatedUser(ctx, { now: 1 });
-      const rowId = await runConvexProgram(
+      const { userId } = await seedAuthenticatedUser(ctx, {
+        now: 1,
+      });
+      const rowId = await Effect.runPromise(
         setPreferredCurriculumProgram({
-          ctx,
           now: 1,
           programKey: "first",
           userId,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       expect(
-        await runConvexProgram(
+        await Effect.runPromise(
           setPreferredCurriculumProgram({
-            ctx,
             now: 2,
             programKey: "first",
             userId,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       ).toBe(rowId);
       expect(
-        await runConvexProgram(readLearningPreferenceByUserId(ctx, userId))
-      ).toMatchObject({ updatedAt: 1 });
-      await runConvexProgram(
+        await Effect.runPromise(
+          readLearningPreferenceByUserId(userId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
+      ).toMatchObject({
+        updatedAt: 1,
+      });
+      await Effect.runPromise(
         upsertPreferredTryoutCountry({
           countryKey: "indonesia",
-          ctx,
           now: 3,
           userId,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       expect(
-        await runConvexProgram(
+        await Effect.runPromise(
           upsertPreferredTryoutCountry({
             countryKey: "indonesia",
-            ctx,
             now: 4,
             userId,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       ).toBe(rowId);
       expect(
-        await runConvexProgram(readLearningPreferenceByUserId(ctx, userId))
+        await Effect.runPromise(
+          readLearningPreferenceByUserId(userId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       ).toMatchObject({
         preferredCurriculumProgramKey: "first",
         preferredTryoutCountryKey: "indonesia",
         updatedAt: 3,
       });
-      await runConvexProgram(
+      await Effect.runPromise(
         upsertPreferredTryoutCountry({
           countryKey: "singapore",
-          ctx,
           now: 5,
           userId,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
-      await runConvexProgram(
+      await Effect.runPromise(
         setPreferredCurriculumProgram({
-          ctx,
           now: 6,
           programKey: "second",
           userId,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
-      await runConvexProgram(
-        setPreferredCurriculumProgram({ ctx, now: 7, programKey: null, userId })
+      await Effect.runPromise(
+        setPreferredCurriculumProgram({
+          now: 7,
+          programKey: null,
+          userId,
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
-      await runConvexProgram(
-        setPreferredCurriculumProgram({ ctx, now: 8, programKey: null, userId })
+      await Effect.runPromise(
+        setPreferredCurriculumProgram({
+          now: 8,
+          programKey: null,
+          userId,
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
-      const row = await runConvexProgram(
-        readLearningPreferenceByUserId(ctx, userId)
+      const row = await Effect.runPromise(
+        readLearningPreferenceByUserId(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       expect(row).toMatchObject({
         _id: rowId,
@@ -117,58 +185,109 @@ describe("learningPreferences/impl", () => {
       expect(row?.preferredCurriculumProgramKey).toBeUndefined();
     });
   });
-
   it("returns no current country for absent and retired saved preferences", async () => {
     const test = createConvexTestWithBetterAuth();
     const userId = await test.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, { now: 1 });
+      const user = await seedAuthenticatedUser(ctx, {
+        now: 1,
+      });
       await activateTryoutStartSource(ctx, "visible");
       return user.userId;
     });
     expect(
-      await test.query((ctx) =>
-        runConvexProgram(
-          readCurrentTryoutCountry(ctx, { locale: "id", userId })
+      await test.query((_ctx) =>
+        Effect.runPromise(
+          readCurrentTryoutCountry({
+            locale: "id",
+            userId,
+          }).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, _ctx.db))
+          )
         )
       )
     ).toBeNull();
-    await test.mutation((ctx) =>
-      runConvexProgram(
+    await test.mutation((_ctx) =>
+      Effect.runPromise(
         upsertPreferredTryoutCountry({
           countryKey: "retired-country",
-          ctx,
           now: 1,
           userId,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, _ctx)
+          )
+        )
       )
     );
     expect(
-      await test.query((ctx) =>
-        runConvexProgram(
-          readCurrentTryoutCountry(ctx, { locale: "id", userId })
+      await test.query((_ctx) =>
+        Effect.runPromise(
+          readCurrentTryoutCountry({
+            locale: "id",
+            userId,
+          }).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, _ctx.db))
+          )
         )
       )
     ).toBeNull();
   });
-
-  it("tags persistence failures without exposing the database error", async () => {
-    const test = createConvexTestWithBetterAuth();
-    await test.mutation(async (ctx) => {
-      const { userId } = await seedAuthenticatedUser(ctx, { now: 1 });
-      vi.spyOn(ctx.db, "insert").mockRejectedValue("private database detail");
-      const failure = await runConvexProgram(
-        upsertPreferredTryoutCountry({
-          countryKey: "indonesia",
-          ctx,
+  it.each(["create", "update-country", "update-curriculum"])(
+    "redacts a %s failure while preserving preferences",
+    async (operation) => {
+      const test = createConvexTestWithBetterAuth();
+      await test.mutation(async (ctx) => {
+        const { userId } = await seedAuthenticatedUser(ctx, {
           now: 1,
-          userId,
-        }).pipe(Effect.flip, Effect.orDie)
-      );
-      expect(failure).toMatchObject({
-        _tag: "LearningPreferencePersistenceError",
-        code: "LEARNING_PREFERENCE_PERSISTENCE_FAILED",
+        });
+        if (operation === "create") {
+          vi.spyOn(ctx.db, "insert").mockRejectedValue(
+            "private database detail"
+          );
+        } else {
+          await ctx.db.insert("learningPreferences", {
+            userId,
+            updatedAt: 1,
+            preferredTryoutCountryKey: "indonesia",
+          });
+          vi.spyOn(ctx.db, "replace").mockRejectedValue(
+            "private database detail"
+          );
+        }
+        const write =
+          operation === "update-curriculum"
+            ? setPreferredCurriculumProgram({
+                now: 2,
+                programKey: "new-program",
+                userId,
+              })
+            : upsertPreferredTryoutCountry({
+                countryKey: "singapore",
+                now: 2,
+                userId,
+              });
+        const failure = await Effect.runPromise(
+          write.pipe(
+            Effect.flip,
+            Effect.orDie,
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        );
+        expect(failure).toMatchObject({
+          _tag: "LearningPreferencePersistenceError",
+          code: "LEARNING_PREFERENCE_PERSISTENCE_FAILED",
+        });
+        expect(JSON.stringify(failure)).not.toContain(
+          "private database detail"
+        );
+        const stored = await ctx.db.query("learningPreferences").unique();
+        expect(stored?.preferredCurriculumProgramKey).toBeUndefined();
+        expect(stored?.preferredTryoutCountryKey).toBe(
+          operation === "create" ? undefined : "indonesia"
+        );
       });
-      expect(JSON.stringify(failure)).not.toContain("private database detail");
-    });
-  });
+    }
+  );
 });

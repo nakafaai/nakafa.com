@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import {
   getPublishedProgramRoute,
   readPublishedProgramRoute,
@@ -19,14 +19,9 @@ import {
   testProgramRowJson,
   testProgramSubject,
 } from "@/test/content-program";
-import {
-  createTestNativeQuery,
-  createTestRuntimeQuery,
-} from "@/test/runtime-query";
 
 const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const readQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 
 /** Builds one complete route-model response from real Merdeka rows. */
@@ -71,39 +66,52 @@ function routeResponse(overrides?: {
     sourceRevision: revision,
   };
 }
-
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
 }));
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: readQueryMock,
-}));
-
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 describe("published program route", () => {
   beforeEach(() => {
     cacheMock.mockReset();
     runtimeQueryMock.mockReset();
-    readQueryMock
-      .mockReset()
-      .mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
   });
-
   it.effect(
     "reads signed curriculum models and preserves managed absence",
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeProgramRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
-        readQueryMock.mockImplementation(createTestNativeQuery(context));
-
+        runtimeQueryMock.mockImplementation(context.query);
         const model = yield* readPublishedProgramRoute(
           "en",
           "curriculum/technical-program-1"
         );
         expect(model).toMatchObject({
           activeReleaseId: fixture.state.activeReleaseId,
-          program: { key: "technical-program-1" },
-          route: { title: "Technical Program 1" },
+          program: {
+            key: "technical-program-1",
+          },
+          route: {
+            title: "Technical Program 1",
+          },
         });
         expect(
           yield* readPublishedProgramRoute("en", "curriculum/missing-program")
@@ -114,69 +122,90 @@ describe("published program route", () => {
         });
       })
   );
-
   it("fails fast when a test route is not part of the signed fixture", () => {
     expect(() => readTestPublishedRoute("curriculum/missing")).toThrow(
       "Missing published route fixture: en/curriculum/missing"
     );
   });
-
   it.effect("decodes one complete real curriculum route model", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(routeResponse());
-
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(routeResponse()));
       const model = yield* Effect.tryPromise(() =>
         getPublishedProgramRoute("en", testProgramSubject.publicPath)
       );
-
       expect(model).toMatchObject({
         activeReleaseId: "program-release",
         alternates: [
-          { appLocale: "en" },
-          { appLocale: "id" },
-          { appLocale: "de" },
+          {
+            appLocale: "en",
+          },
+          {
+            appLocale: "id",
+          },
+          {
+            appLocale: "de",
+          },
         ],
-        ancestors: [{ level: "track" }, { level: "class" }],
+        ancestors: [
+          {
+            level: "track",
+          },
+          {
+            level: "class",
+          },
+        ],
         contexts: expect.any(Array),
         groups: expect.any(Array),
-        materials: [{ metadata: { title: "Function Concept" } }],
-        program: { key: "merdeka" },
-        route: { publicPath: testProgramSubject.publicPath },
+        materials: [
+          {
+            metadata: {
+              title: "Function Concept",
+            },
+          },
+        ],
+        program: {
+          key: "merdeka",
+        },
+        route: {
+          publicPath: testProgramSubject.publicPath,
+        },
         sourceRevision: revision,
       });
       expect(cacheMock).toHaveBeenCalledOnce();
     })
   );
-
   it.effect("rejects an unmanaged family", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(
-        routeResponse({
-          managed: false,
-          materialJson: [],
-          programJson: null,
-          routeJson: null,
-        })
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed(
+          routeResponse({
+            managed: false,
+            materialJson: [],
+            programJson: null,
+            routeJson: null,
+          })
+        )
       );
-
       const failure = yield* readPublishedProgramRoute(
         "en",
         testProgramSubject.publicPath
       ).pipe(Effect.flip);
-      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(failure).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
     })
   );
-
   it.effect("distinguishes a managed missing route", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(
-        routeResponse({
-          materialJson: [],
-          programJson: null,
-          routeJson: null,
-        })
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed(
+          routeResponse({
+            materialJson: [],
+            programJson: null,
+            routeJson: null,
+          })
+        )
       );
-
       const model = yield* readPublishedProgramRoute(
         "en",
         "curriculum/missing"
@@ -189,7 +218,6 @@ describe("published program route", () => {
       });
     })
   );
-
   it.effect.each([
     [
       "invalid active release",
@@ -225,17 +253,19 @@ describe("published program route", () => {
     ],
   ] as const)("rejects a %s", ([_name, response]) =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(response);
-
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(response));
       const failure = yield* readPublishedProgramRoute(
         "en",
         testProgramSubject.publicPath
       ).pipe(Effect.flip);
-      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(failure).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
     })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

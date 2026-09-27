@@ -1,7 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { UserCleanupErrorWire } from "@repo/backend/confect/auth/cleanup/spec";
 import {
-  AccountDeletionCancellationUnprovenErrorWire,
+  AccountDeletionCancellationUnprovenError,
   accountDeletionAttemptStatusValidator,
   accountDeletionCancellationOutcomeValidator,
   accountDeletionPreparationOutcomeValidator,
@@ -63,7 +63,7 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           UserCleanupErrorWire,
-          AccountDeletionCancellationUnprovenErrorWire,
+          AccountDeletionCancellationUnprovenError,
         ]),
     }).middleware(Atomic)
   )

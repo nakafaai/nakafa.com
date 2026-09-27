@@ -6,13 +6,15 @@ import {
   Globe02Icon,
   Link04Icon,
   LinkForwardIcon,
+  MessageMultiple02Icon,
   MoreHorizontalIcon,
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,15 +26,21 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { getAppUrl } from "@repo/next-config/app";
 import { cn } from "cn";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import {
   Activity,
-  type ComponentProps,
   type PropsWithChildren,
+  type ReactNode,
   useRef,
   useState,
   useTransition,
@@ -43,47 +51,33 @@ import {
   useUpdateChatTitleMutation,
   useUpdateChatVisibilityMutation,
 } from "@/components/ai/chat/mutation.client";
-import { useCurrentChat } from "@/components/ai/context/use-current-chat";
+import { useChat } from "@/components/ai/context/use-chat";
+import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
+import { reportClientException } from "@/lib/analytics/client";
 import { useViewer } from "@/lib/identity/client";
 
 /** Render the current chat header or its stable empty placeholder. */
 export function AiChatHeader() {
-  const chat = useCurrentChat((s) => s.chat);
-
+  const chat = useChat((s) => s.chat);
   if (!chat) {
-    return <AiChatHeaderPlaceholder />;
+    return <ChatHeader />;
   }
-
   return <AiChatHeaderContent chat={chat} />;
 }
 
-/** Preserve the chat-header layout while no current chat is available. */
-function AiChatHeaderPlaceholder() {
-  return <Header />;
-}
-
 /** Render title, visibility, sharing, and deletion controls for one chat. */
-function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
+function AiChatHeaderContent({ chat }: { chat: Docs["chats"] }) {
+  const tCommon = useTranslations("Common");
+  const actionErrorMessage = tCommon("action-error");
   const t = useTranslations("Ai");
-
-  const router = useRouter();
-
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [chatTitle, setChatTitle] = useState("");
-
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const clipboard = useClipboard({ timeout: 500 });
-
   const user = useViewer((s) => s.account);
   const isOwner = user?.appUser._id === chat.userId;
-
   const updateChatTitle = useUpdateChatTitleMutation();
-  const updateChatVisibility = useUpdateChatVisibilityMutation();
-  const deleteChat = useDeleteChatMutation();
-
   const [isPending, startTransition] = useTransition();
 
   /** Enter title editing with the current title selected for input. */
@@ -97,261 +91,375 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
 
   /** Persist a non-empty edited chat title. */
   const handleSave = () => {
-    startTransition(async () => {
-      const nextTitle = chatTitle.trim();
-
-      if (!nextTitle) {
-        return;
-      }
-
-      await updateChatTitle({
-        chatId: chat._id,
-        title: nextTitle,
-      });
-      setIsEditing(false);
-    });
-  };
-
-  /** Persist the selected chat visibility. */
-  const handleUpdateVisibility = (visibility: "public" | "private") => {
-    startTransition(async () => {
-      await updateChatVisibility({
-        chatId: chat._id,
-        visibility,
-      });
-    });
-  };
-
-  /** Leave the current route and delete the owned chat. */
-  const handleDelete = () => {
-    if (!user) {
+    const nextTitle = chatTitle.trim();
+    if (!nextTitle || isPending) {
       return;
     }
-
-    startTransition(async () => {
-      router.replace(`/user/${user.appUser._id}/chat`);
-      await deleteChat({ chatId: chat._id });
-    });
+    setIsEditing(false);
+    startTransition(async () =>
+      Effect.runPromise(
+        Effect.tryPromise(() =>
+          updateChatTitle({
+            chatId: chat._id,
+            title: nextTitle,
+          })
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/ai/chat-header",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    setIsEditing(true);
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      )
+    );
   };
 
   const isPrivate = chat.visibility === "private";
-  const link = `${getAppUrl()}/chat/${chat._id}`;
-
   return (
-    <Header>
-      <Activity mode={isEditing ? "visible" : "hidden"}>
-        <Input
-          className="h-8 border-none px-2 py-0 shadow-none focus-visible:ring-0"
-          disabled={isPending}
-          onChange={(e) => setChatTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleSave();
-            }
-
-            if (e.key === "Escape") {
-              setIsEditing(false);
-            }
-          }}
-          ref={inputRef}
-          value={chatTitle}
-        />
-      </Activity>
-      <Activity mode={isEditing ? "hidden" : "visible"}>
-        <h1 className="flex items-center gap-2 px-1.5">
-          <HugeIcons
-            className="size-4 shrink-0"
-            icon={isPrivate ? SquareLock01Icon : Globe02Icon}
-          />
-          <span className="line-clamp-1 text-sm">{chat.title}</span>
-        </h1>
-      </Activity>
-
-      <Activity mode={isEditing ? "visible" : "hidden"}>
-        <HeaderGroup>
-          <Button
-            aria-label="Cancel"
-            disabled={isPending}
-            onClick={() => setIsEditing(false)}
-            size="icon-sm"
-            variant="destructive"
-          >
-            <HugeIcons icon={Cancel01Icon} />
-            <span className="sr-only">Cancel</span>
-          </Button>
-          <Button
-            aria-label="Save"
-            disabled={isPending}
-            onClick={handleSave}
-            size="icon-sm"
-            variant="secondary"
-          >
-            <Spinner icon={Tick01Icon} isLoading={isPending} />
-            <span className="sr-only">Save</span>
-          </Button>
-        </HeaderGroup>
-      </Activity>
-
-      <Activity mode={isOwner ? "visible" : "hidden"}>
-        <HeaderGroup>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
+    <>
+      <ChatHeader
+        actions={
+          <>
+            {isEditing ? (
+              <>
                 <Button
-                  aria-label="More actions"
+                  aria-label={tCommon("cancel")}
                   disabled={isPending}
-                  size="icon-sm"
-                  variant="ghost"
+                  onClick={() => setIsEditing(false)}
+                  size="icon"
+                  variant="outline"
                 >
-                  <HugeIcons icon={MoreHorizontalIcon} />
-                  <span className="sr-only">More actions</span>
+                  <HugeIcons icon={Cancel01Icon} />
+                  <span className="sr-only">{tCommon("cancel")}</span>
                 </Button>
-              }
-            />
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={handleEdit}
+                <Button
+                  aria-label={t("confirm")}
+                  disabled={isPending}
+                  onClick={handleSave}
+                  size="icon"
+                  variant="outline"
                 >
-                  <HugeIcons icon={Edit01Icon} />
-                  {t("rename-chat")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setConfirmShare(true)}
-                >
-                  <HugeIcons icon={LinkForwardIcon} />
-                  {t("share-chat")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => setConfirmDelete(true)}
-                  variant="destructive"
-                >
-                  <HugeIcons icon={Delete02Icon} />
-                  {t("delete-chat")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </HeaderGroup>
-      </Activity>
+                  <HugeIcons icon={Tick01Icon} />
+                  <span className="sr-only">{t("confirm")}</span>
+                </Button>
+              </>
+            ) : null}
 
-      <ResponsiveDialog
-        description={t("share-chat-description")}
-        footer={
-          isPrivate ? (
-            <Button
-              disabled={isPending}
-              onClick={() => handleUpdateVisibility("public")}
-            >
-              <Spinner icon={Link04Icon} isLoading={isPending} />
-              {t("create-link")}
-            </Button>
-          ) : (
-            <Button
-              disabled={isPending}
-              onClick={() => {
-                clipboard.copy(link);
-                toast.success(t("link-copied"), {
-                  position: "bottom-center",
-                });
-              }}
-            >
-              <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
-              {t("copy-link")}
-            </Button>
-          )
-        }
-        open={confirmShare}
-        setOpen={setConfirmShare}
-        title={t("share-chat")}
-      >
-        <div className="flex flex-col divide-y overflow-hidden rounded-lg border">
-          {(["public", "private"] as const).map((visibility) => {
-            const isSelected = visibility === chat.visibility;
-            const isPublic = visibility === "public";
-
-            return (
-              <button
-                className="group flex cursor-pointer items-start gap-4 bg-card p-4 text-card-foreground transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-                disabled={isPending}
-                key={visibility}
-                onClick={() => handleUpdateVisibility(visibility)}
-                type="button"
-              >
-                <div className="flex flex-1 flex-col items-start justify-start gap-1">
-                  <div className="flex items-center gap-2">
-                    <HugeIcons
-                      className="size-4 shrink-0"
-                      icon={isPublic ? Globe02Icon : SquareLock01Icon}
-                    />
-                    <span className="text-sm">{t(visibility)}</span>
-                  </div>
-                  <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground">
-                    {t(`${visibility}-description`)}
-                  </p>
-                </div>
-
-                <HugeIcons
-                  className={cn(
-                    "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out group-hover:text-accent-foreground",
-                    !!isSelected && "opacity-100"
-                  )}
-                  icon={Tick01Icon}
+            {isOwner ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      aria-label={tCommon("more-actions")}
+                      disabled={isPending}
+                      size="icon"
+                      variant="outline"
+                    >
+                      <HugeIcons icon={MoreHorizontalIcon} />
+                      <span className="sr-only">{tCommon("more-actions")}</span>
+                    </Button>
+                  }
                 />
-              </button>
-            );
-          })}
-        </div>
-      </ResponsiveDialog>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={handleEdit}
+                    >
+                      <HugeIcons icon={Edit01Icon} />
+                      {t("rename-chat")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => setConfirmShare(true)}
+                    >
+                      <HugeIcons icon={LinkForwardIcon} />
+                      {t("share-chat")}
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => setConfirmDelete(true)}
+                      variant="destructive"
+                    >
+                      <HugeIcons icon={Delete02Icon} />
+                      {t("delete-chat")}
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </>
+        }
+      >
+        <Activity mode={isEditing ? "visible" : "hidden"}>
+          <Input
+            className="h-8 border-none px-2 py-0 shadow-none focus-visible:ring-0"
+            disabled={isPending}
+            onChange={(e) => setChatTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSave();
+              }
+              if (e.key === "Escape") {
+                setIsEditing(false);
+              }
+            }}
+            ref={inputRef}
+            value={chatTitle}
+          />
+        </Activity>
+        <Activity mode={isEditing ? "hidden" : "visible"}>
+          <h1 className="flex items-center gap-2 px-1.5">
+            <HugeIcons
+              className="size-4 shrink-0"
+              icon={isPrivate ? SquareLock01Icon : Globe02Icon}
+            />
+            <span className="line-clamp-1 text-sm">{chat.title}</span>
+          </h1>
+        </Activity>
+      </ChatHeader>
 
-      <ResponsiveDialog
-        description={t("delete-chat-description")}
-        footer={
+      <ChatSharing
+        chat={chat}
+        onOpenChange={setConfirmShare}
+        open={confirmShare}
+      />
+      <ChatDeletion
+        chat={chat}
+        onOpenChange={setConfirmDelete}
+        open={confirmDelete}
+      />
+    </>
+  );
+}
+
+/** Owns sharing state and visibility admission independently of title editing. */
+function ChatSharing({
+  chat,
+  open,
+  onOpenChange,
+}: {
+  chat: Docs["chats"];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations("Ai");
+  const actionErrorMessage = useTranslations("Common")("action-error");
+  const [isPending, startTransition] = useTransition();
+  const clipboard = useClipboard({ timeout: 500 });
+  const updateChatVisibility = useUpdateChatVisibilityMutation();
+  const isPrivate = chat.visibility === "private";
+  const link = `${getAppUrl()}/chat/${chat._id}`;
+  /** Persist the selected chat visibility. */
+  const handleUpdateVisibility = (visibility: "public" | "private") => {
+    startTransition(async () =>
+      Effect.runPromise(
+        Effect.asVoid(
+          Effect.tryPromise(() =>
+            updateChatVisibility({
+              chatId: chat._id,
+              visibility,
+            })
+          ).pipe(Effect.flatMap(Effect.fromResult))
+        ).pipe(
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/ai/chat-header",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      )
+    );
+  };
+
+  return (
+    <ResponsiveDialog
+      description={t("share-chat-description")}
+      footer={
+        isPrivate ? (
           <Button
             disabled={isPending}
-            onClick={handleDelete}
-            variant="destructive"
+            onClick={() => handleUpdateVisibility("public")}
           >
-            <Spinner icon={Delete02Icon} isLoading={isPending} />
-            {t("confirm")}
+            <HugeIcons icon={Link04Icon} />
+            {t("create-link")}
           </Button>
-        }
-        open={confirmDelete}
-        setOpen={setConfirmDelete}
-        title={t("delete-chat")}
-      />
-    </Header>
-  );
-}
+        ) : (
+          <Button
+            disabled={isPending}
+            onClick={() => {
+              clipboard.copy(link);
+              toast.success(t("link-copied"), {
+                position: "bottom-center",
+              });
+            }}
+          >
+            <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
+            {t("copy-link")}
+          </Button>
+        )
+      }
+      open={open}
+      setOpen={onOpenChange}
+      title={t("share-chat")}
+    >
+      <div className="flex flex-col divide-y overflow-hidden rounded-lg border">
+        {(["public", "private"] as const).map((visibility) => {
+          const isSelected = visibility === chat.visibility;
+          const isPublic = visibility === "public";
+          return (
+            <button
+              className="group flex cursor-pointer items-start gap-4 bg-card p-4 text-card-foreground transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+              disabled={isPending}
+              key={visibility}
+              onClick={() => handleUpdateVisibility(visibility)}
+              type="button"
+            >
+              <div className="flex flex-1 flex-col items-start justify-start gap-1">
+                <div className="flex items-center gap-2">
+                  <HugeIcons
+                    className="size-4 shrink-0"
+                    icon={isPublic ? Globe02Icon : SquareLock01Icon}
+                  />
+                  <span className="text-sm">{t(visibility)}</span>
+                </div>
+                <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground">
+                  {t(`${visibility}-description`)}
+                </p>
+              </div>
 
-/** Compose the fixed-height chat header surface. */
-function Header({
-  className,
-  children,
-}: PropsWithChildren<{ className?: string }>) {
-  return (
-    <header className="z-1 grid h-12 w-full shrink-0">
-      <div
-        className={cn(
-          "flex items-center justify-between gap-2 border-b bg-background px-4.5",
-          className
-        )}
-      >
-        {children}
+              <HugeIcons
+                className={cn(
+                  "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out group-hover:text-accent-foreground",
+                  !!isSelected && "opacity-100"
+                )}
+                icon={Tick01Icon}
+              />
+            </button>
+          );
+        })}
       </div>
-    </header>
+    </ResponsiveDialog>
   );
 }
 
-/** Group compact chat-header controls with consistent spacing. */
-function HeaderGroup({ className, ...props }: ComponentProps<"div">) {
+/** Owns destructive confirmation and routes away only after confirmed deletion. */
+function ChatDeletion({
+  chat,
+  open,
+  onOpenChange,
+}: {
+  chat: Docs["chats"];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations("Ai");
+  const actionErrorMessage = useTranslations("Common")("action-error");
+  const router = useRouter();
+  const user = useViewer((s) => s.account);
+  const [isPending, startTransition] = useTransition();
+  const deleteChat = useDeleteChatMutation();
+  /** Leave the current route and delete the owned chat. */
+  const handleDelete = () => {
+    if (!user || isPending) {
+      return;
+    }
+    onOpenChange(false);
+    startTransition(async () =>
+      Effect.runPromise(
+        Effect.tryPromise(() =>
+          deleteChat({
+            chatId: chat._id,
+          })
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap(() =>
+            Effect.sync(() => router.replace(`/user/${user.appUser._id}/chat`))
+          ),
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/ai/chat-header",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      )
+    );
+  };
   return (
-    <div className={cn("flex items-center gap-1.5", className)} {...props} />
+    <ResponsiveDialog
+      description={t("delete-chat-description")}
+      footer={
+        <Button
+          disabled={isPending}
+          onClick={handleDelete}
+          variant="destructive"
+        >
+          <HugeIcons icon={Delete02Icon} />
+          {t("confirm")}
+        </Button>
+      }
+      open={open}
+      setOpen={onOpenChange}
+      title={t("delete-chat")}
+    />
+  );
+}
+
+/** Reuses the lesson header and groups chat controls at its right edge. */
+export function ChatHeader({
+  actions,
+  children,
+}: PropsWithChildren<{ actions?: ReactNode }>) {
+  const t = useTranslations("Ai");
+  return (
+    <BreadcrumbHeaderFrame>
+      <div className="min-w-0 flex-1">{children}</div>
+      <ButtonGroup aria-label={t("chat-actions")} className="shrink-0">
+        {actions}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <SidebarTrigger
+                aria-label={t("chat-history")}
+                className="size-9"
+                icon={MessageMultiple02Icon}
+                size="icon"
+                variant="outline"
+              />
+            }
+          />
+          <TooltipContent side="bottom">{t("chat-history")}</TooltipContent>
+        </Tooltip>
+      </ButtonGroup>
+    </BreadcrumbHeaderFrame>
   );
 }

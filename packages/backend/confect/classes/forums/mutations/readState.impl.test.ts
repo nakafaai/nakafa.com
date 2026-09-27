@@ -62,6 +62,7 @@ it("rejects missing and foreign read boundaries without writes and keeps accepte
       .catch((error: unknown) => error);
     assert(Ref.isConvexError(failure));
     expect(failure.data).toEqual({
+      _tag: "ForumError",
       code: "POST_NOT_FOUND",
       message: "Read boundary post not found.",
     });

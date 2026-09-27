@@ -1,7 +1,11 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
@@ -12,18 +16,17 @@ import type {
   StartAttemptArgs,
 } from "@repo/backend/confect/tryouts/start/spec";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Duration, Effect, flow } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
 interface CreateTryoutAttemptInput {
   readonly access: AttemptAccessFields;
   readonly args: StartAttemptArgs;
   readonly attemptNumber: number;
   readonly now: number;
-  readonly scaleVersion: Doc<"irtScaleVersions"> | null;
+  readonly scaleVersion: Docs["irtScaleVersions"] | null;
   readonly source: TryoutStartSource;
   readonly userId: Id<"users">;
 }
@@ -31,24 +34,18 @@ interface CreateTryoutAttemptInput {
 /** Creates the attempt snapshot and all start-related rows atomically. */
 export const createTryoutAttempt = Effect.fn(
   "tryouts.start.createTryoutAttempt"
-)(function* (ctx: MutationCtx, input: CreateTryoutAttemptInput) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (input: CreateTryoutAttemptInput) {
+  const writer = yield* DatabaseWriter;
   const values = buildAttemptValues(input);
   const attemptId = yield* writer
     .table("tryoutAttempts")
     .insert(values)
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutStartError, Effect.fail))
-    );
-  const attempt = yield* DatabaseReader.make(databaseSchema, ctx.db)
+    .pipe(Effect.mapError(toTryoutStartError));
+  const attempt = yield* (yield* DatabaseReader)
     .table("tryoutAttempts")
     .get(attemptId)
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutStartError, Effect.fail))
-    );
-  yield* persistAttemptStart(ctx, {
+    .pipe(Effect.mapError(toTryoutStartError));
+  yield* persistAttemptStart({
     attempt,
     input,
   });
@@ -114,30 +111,25 @@ function buildAttemptValues(
 
 /** Persists all attempt-owned side effects after the snapshot row exists. */
 const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
-  function* (
-    ctx: MutationCtx,
-    args: {
-      attempt: TryoutAttempt;
-      input: CreateTryoutAttemptInput;
-    }
-  ) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
+  function* (args: {
+    attempt: TryoutAttempt;
+    input: CreateTryoutAttemptInput;
+  }) {
+    const scheduler = yield* Scheduler;
     const { attempt, input } = args;
-    yield* writeTryoutSetProgress(ctx, {
+    yield* writeTryoutSetProgress({
       attempt,
       publishedScore: null,
       status: "in-progress",
       updatedAt: input.now,
     });
-    yield* createAttemptPlacements(ctx, {
+    yield* createAttemptPlacements({
       attempt,
       source: input.source,
     });
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
-      yield* startSectionAttempt(ctx, {
+      yield* startSectionAttempt({
         attempt,
         now: input.now,
         sectionKey: entrySectionKey,
@@ -153,7 +145,7 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
         }
       )
       .pipe(Effect.catchDefect(flow(toTryoutStartError, Effect.fail)));
-    yield* captureProductEvent(ctx, {
+    yield* captureProductEvent({
       distinctId: input.userId,
       event: {
         name: "tryout attempt started",

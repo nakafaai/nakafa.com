@@ -13,7 +13,6 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { validateRecoveryRelation } from "@repo/backend/confect/contentRelease/recovery";
 import { encodeRendererJson } from "@repo/backend/confect/contentRelease/wire";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Confirms one activation request uses its frozen live renderer envelope. */
@@ -48,13 +47,8 @@ export const validateActivationRenderer = Effect.fn(
 
 /** Loads and proves one verified candidate plus its retained inverse. */
 export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
-  function* (
-    ctx: MutationCtx,
-    releaseId: string,
-    rendererJson: string,
-    manifestHash: string
-  ) {
-    const release = yield* loadRelease(ctx, releaseId);
+  function* (releaseId: string, rendererJson: string, manifestHash: string) {
+    const release = yield* loadRelease(releaseId);
     const signed = yield* validateActivationRenderer(
       releaseId,
       release.releaseJson,
@@ -62,7 +56,7 @@ export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
       rendererJson,
       manifestHash
     );
-    const state = yield* loadState(ctx);
+    const state = yield* loadState();
     if (
       !state ||
       release.role !== "candidate" ||
@@ -88,7 +82,7 @@ export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
         `Content release ${releaseId} no longer extends the active release.`
       );
     }
-    const recovery = yield* loadRelease(ctx, state.recoveryReleaseId);
+    const recovery = yield* loadRelease(state.recoveryReleaseId);
     const recoverySigned = yield* decodeReleaseJson(recovery.releaseJson);
     if (
       recovery.role !== "recovery" ||
@@ -123,13 +117,8 @@ export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
 /** Loads and proves the exact retained recovery against current production. */
 export const validateRecovery = Effect.fn(
   "contentRelease.validateRecoveryActivation"
-)(function* (
-  ctx: MutationCtx,
-  releaseId: string,
-  rendererJson: string,
-  manifestHash: string
-) {
-  const release = yield* loadRelease(ctx, releaseId);
+)(function* (releaseId: string, rendererJson: string, manifestHash: string) {
+  const release = yield* loadRelease(releaseId);
   const signed = yield* validateActivationRenderer(
     releaseId,
     release.releaseJson,
@@ -137,7 +126,7 @@ export const validateRecovery = Effect.fn(
     rendererJson,
     manifestHash
   );
-  const state = yield* loadState(ctx);
+  const state = yield* loadState();
   if (
     !state ||
     release.role !== "recovery" ||
@@ -155,7 +144,7 @@ export const validateRecovery = Effect.fn(
       `Recovery ${releaseId} is not the exact retained inverse.`
     );
   }
-  const active = yield* loadRelease(ctx, state.activeReleaseId);
+  const active = yield* loadRelease(state.activeReleaseId);
   yield* validateRecoveryRelation(active, release);
   return {
     release,

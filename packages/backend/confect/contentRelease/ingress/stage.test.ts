@@ -1,3 +1,5 @@
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { Buffer } from "node:buffer";
@@ -21,11 +23,7 @@ import type {
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { stagePublication } from "@repo/backend/confect/contentRelease/ingress/stage";
-import {
-  type ConvexTaggedError,
-  getUnknownErrorMessage,
-} from "@repo/backend/confect/failure";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type {
   ActionCtx,
@@ -173,16 +171,19 @@ const storeIngressRelease = Effect.fn(
 });
 
 /** Runs one staging program through the real Convex action boundary. */
-const runStage = Effect.fn("test.contentRelease.runStage")(function* <
-  A,
-  E extends ConvexTaggedError,
->(
+const runStage = Effect.fn("test.contentRelease.runStage")(function* <A, E>(
   target: TestConvex<typeof schema>,
   makeProgram: (
     ctx: ActionCtx
-  ) => Effect.Effect<A, E, ContentVerificationKeyResolver>,
+  ) => Effect.Effect<
+    A,
+    E,
+    | ContentVerificationKeyResolver
+    | RegisteredFunction.ActionServices<typeof confectSchema>
+  >,
   resolver = TEST_KEY_RESOLVER
 ) {
+  const runtimeServices = yield* Effect.context<never>();
   return yield* Effect.tryPromise({
     catch: (cause) =>
       new ObservedStageActionFailure({
@@ -190,9 +191,10 @@ const runStage = Effect.fn("test.contentRelease.runStage")(function* <
       }),
     try: () =>
       target.action((ctx) =>
-        runConvexProgram(
+        Effect.runPromiseWith(runtimeServices)(
           makeProgram(ctx).pipe(
-            Effect.provideService(ContentVerificationKeyResolver, resolver)
+            Effect.provideService(ContentVerificationKeyResolver, resolver),
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
           )
         )
       ),
@@ -202,9 +204,8 @@ describe("content release staging ingress", () => {
   it.effect("rejects a renderer not owned by the signed release", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
-      const failure = yield* runStage(t, (ctx) =>
+      const failure = yield* runStage(t, (_ctx) =>
         stagePublication(
-          ctx,
           {
             operation: "stageRelease",
             release: signedRelease(),
@@ -232,9 +233,8 @@ describe("content release staging ingress", () => {
           )
         )
       );
-      const failure = yield* runStage(t, (ctx) =>
+      const failure = yield* runStage(t, (_ctx) =>
         stagePublication(
-          ctx,
           {
             artifacts: [testSignedArtifact()],
             batchIndex: 0,
@@ -270,9 +270,8 @@ describe("content release staging ingress", () => {
           `${prefix}${artifact.signature.slice(1)}`
         ),
       };
-      const failure = yield* runStage(t, (ctx) =>
+      const failure = yield* runStage(t, (_ctx) =>
         stagePublication(
-          ctx,
           {
             artifacts: [tampered],
             batchIndex: 0,
@@ -291,17 +290,24 @@ describe("content release staging ingress", () => {
     "admits retained artifacts only for authenticated recovery rows",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         for (const role of ["candidate", "recovery"] as const) {
           const t = convexTest(schema, convexModules);
           yield* Effect.promise(() =>
             t.mutation((ctx) =>
-              runConvexProgram(storeIngressRelease(ctx, role))
+              Effect.runPromiseWith(runtimeServices)(
+                storeIngressRelease(ctx, role).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              )
             )
           );
           yield* runStage(
             t,
-            (ctx) =>
-              stagePublication(ctx, {
+            (_ctx) =>
+              stagePublication({
                 batchIndex: 0,
                 items: [ingressItem],
                 operation: "stageItemBatch",
@@ -311,9 +317,8 @@ describe("content release staging ingress", () => {
           );
           const stageArtifact = runStage(
             t,
-            (ctx) =>
+            (_ctx) =>
               stagePublication(
-                ctx,
                 {
                   artifacts: [ingressArtifact],
                   batchIndex: 0,
@@ -366,8 +371,8 @@ describe("content release staging ingress", () => {
             rowDigest: Sha256HashSchema.make(`sha256:${"9".repeat(64)}`),
           }),
         };
-        const failure = yield* runStage(t, (ctx) =>
-          stagePublication(ctx, {
+        const failure = yield* runStage(t, (_ctx) =>
+          stagePublication({
             operation: "stageSnapshot",
             releaseId: candidateId,
             snapshot: tampered,
@@ -382,8 +387,8 @@ describe("content release staging ingress", () => {
           )
         ).toBeNull();
         expect(
-          yield* runStage(t, (ctx) =>
-            stagePublication(ctx, {
+          yield* runStage(t, (_ctx) =>
+            stagePublication({
               operation: "stageSnapshot",
               releaseId: candidateId,
               snapshot: data.snapshot,
@@ -431,15 +436,15 @@ describe("content release staging ingress", () => {
             )
           )
         );
-        yield* runStage(t, (ctx) =>
-          stagePublication(ctx, {
+        yield* runStage(t, (_ctx) =>
+          stagePublication({
             operation: "stageSnapshot",
             releaseId: candidateId,
             snapshot: data.snapshot,
           })
         );
-        const failure = yield* runStage(t, (ctx) =>
-          stagePublication(ctx, {
+        const failure = yield* runStage(t, (_ctx) =>
+          stagePublication({
             batchIndex: 0,
             family: "program",
             operation: "stageSnapshotBatch",
@@ -464,8 +469,8 @@ describe("content release staging ingress", () => {
           programs: [],
         });
         expect(
-          yield* runStage(t, (ctx) =>
-            stagePublication(ctx, {
+          yield* runStage(t, (_ctx) =>
+            stagePublication({
               batchIndex: 0,
               family: "program",
               operation: "stageSnapshotBatch",

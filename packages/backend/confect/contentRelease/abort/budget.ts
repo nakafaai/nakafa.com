@@ -1,6 +1,6 @@
+/** Maximum small release rows considered by one abort transaction. */
 import { TRANSACTION_READ_HEADROOM } from "@repo/backend/confect/contentRelease/spec";
 import type { TransactionMetrics } from "convex/server";
-
 /** Maximum small release rows considered by one abort transaction. */
 export const ABORT_PAGE_LIMIT = 256;
 

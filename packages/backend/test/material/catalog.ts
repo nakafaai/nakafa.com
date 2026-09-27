@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
@@ -10,13 +11,15 @@ import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx,
+} from "@repo/backend/confect/_generated/services";
 import { writeMaterial } from "@repo/backend/confect/contentRelease/material/write";
 import { INITIAL_MODEL_SLOT } from "@repo/backend/confect/contentRelease/models/slot";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type schema from "@repo/backend/convex/schema";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   TEST_MANIFEST_HASH,
@@ -32,21 +35,17 @@ import {
   insertRuntimeBinding,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
-import type { TestConvex } from "convex-test";
 import { Effect } from "effect";
-
 export const MATERIAL_IDENTITY = {
   manifestHash: TEST_MANIFEST_HASH,
   releaseId: TEST_RELEASE_ID,
   sequence: 1,
 } satisfies TestIdentity;
-
 const NEXT_MATERIAL_IDENTITY = {
   manifestHash: Sha256HashSchema.make(`sha256:${"3".repeat(64)}`),
   releaseId: ReleaseIdSchema.make("release-next"),
   sequence: 2,
 } satisfies TestIdentity;
-
 const defaultMaterialProjections = ACTIVE_APP_LOCALE_CODES.flatMap(
   (appLocale) => [
     makeMaterialProjection(appLocale, 1),
@@ -55,89 +54,93 @@ const defaultMaterialProjections = ACTIVE_APP_LOCALE_CODES.flatMap(
 );
 
 /** Inserts one projection into the immutable head and active material model. */
-export async function insertMaterialProjection(
-  ctx: MutationCtx,
+export const insertMaterialProjection = Effect.fn(
+  "TestMaterial.insertProjection"
+)(function* (
   projection: MaterialLessonProjection,
   identity: TestIdentity = MATERIAL_IDENTITY
 ) {
+  const ctx = yield* MutationCtx;
   const projectionJson = canonicalizeMaterialProjection(projection);
   const sourcePath = `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`;
-  await insertRuntimeVersion(ctx, "public", projection.contentKey, {
-    artifactHash: testTextHash(
-      `${projection.contentKey}/${projection.artifactLocale}/${identity.sequence}`
-    ),
-    artifactLocale: projection.artifactLocale,
-    headReleaseId: identity.releaseId,
-    headSequence: identity.sequence,
-    projectionJson,
-    publicPath: projection.publicPath,
-    rendererDomain: "mathematics",
-    sourcePath,
-  });
-  await insertRuntimeBinding(ctx, projection.contentKey, {
-    appLocale: projection.appLocale,
-    bindingReleaseId: identity.releaseId,
-    bindingSequence: identity.sequence,
-    publicPath: projection.publicPath,
-  });
-  const resolved = await runConvexProgram(
-    resolvePublicProjection(
-      projection.contentKey,
-      projection.artifactLocale,
-      identity.sequence
-    ).pipe(Effect.provide(convexPublicationLayer(ctx)))
+  yield* Effect.promise(() =>
+    insertRuntimeVersion(ctx, "public", projection.contentKey, {
+      artifactHash: testTextHash(
+        `${projection.contentKey}/${projection.artifactLocale}/${identity.sequence}`
+      ),
+      artifactLocale: projection.artifactLocale,
+      headReleaseId: identity.releaseId,
+      headSequence: identity.sequence,
+      projectionJson,
+      publicPath: projection.publicPath,
+      rendererDomain: "mathematics",
+      sourcePath,
+    })
   );
-  if (resolved?.family !== "material") {
-    throw new Error("Expected one resolved public material projection.");
-  }
-  await runConvexProgram(
-    writeMaterial(ctx, INITIAL_MODEL_SLOT, resolved, projection)
+  yield* Effect.promise(() =>
+    insertRuntimeBinding(ctx, projection.contentKey, {
+      appLocale: projection.appLocale,
+      bindingReleaseId: identity.releaseId,
+      bindingSequence: identity.sequence,
+      publicPath: projection.publicPath,
+    })
   );
-}
+  const resolved = yield* resolvePublicProjection(
+    projection.contentKey,
+    projection.artifactLocale,
+    identity.sequence
+  ).pipe(Effect.provide(publicationLayer));
+  assert(resolved?.family === "material");
+  yield* writeMaterial(INITIAL_MODEL_SLOT, resolved, projection);
+});
 
 /** Activates a complete locale-parity material catalog for query tests. */
-export async function activateMaterialCatalog(
-  target: TestConvex<typeof schema>,
+export const activateMaterialCatalog = Effect.fn(
+  "TestMaterial.activateCatalog"
+)(function* (
   projections: readonly MaterialLessonProjection[] = defaultMaterialProjections,
   activeAppLocales: readonly ActiveAppLocaleCode[] = ACTIVE_APP_LOCALE_CODES
 ) {
-  await target.mutation(async (ctx) => {
-    await insertZeroRelease(ctx, {
+  const ctx = yield* MutationCtx;
+  yield* Effect.promise(() =>
+    insertZeroRelease(ctx, {
       ...MATERIAL_IDENTITY,
       activeAppLocales,
       ownership: { base: [], result: ["material"] },
       role: "candidate",
       status: "completed",
-    });
-    await insertTestState(ctx, {
+    })
+  );
+  yield* Effect.promise(() =>
+    insertTestState(ctx, {
       active: MATERIAL_IDENTITY,
       material: MATERIAL_IDENTITY,
       nextSequence: 2,
-    });
-    for (const projection of projections) {
-      await insertMaterialProjection(ctx, projection);
-    }
-  });
-}
+    })
+  );
+  for (const projection of projections) {
+    yield* insertMaterialProjection(projection);
+  }
+});
 
 /** Advances the active material pointer without reusing the prior generation. */
-export async function advanceMaterialCatalog(
-  target: TestConvex<typeof schema>
-) {
-  await target.mutation(async (ctx) => {
-    await insertZeroRelease(ctx, {
-      ...NEXT_MATERIAL_IDENTITY,
-      activeAppLocales: ACTIVE_APP_LOCALE_CODES,
-      base: MATERIAL_IDENTITY,
-      ownership: { base: ["material"], result: ["material"] },
-      role: "candidate",
-      status: "completed",
-    });
-    const state = await ctx.db.query("contentState").unique();
-    if (!state) {
-      throw new Error("Expected one active content state.");
-    }
-    await ctx.db.patch("contentState", state._id, {
+export const advanceMaterialCatalog = Effect.fn("TestMaterial.advanceCatalog")(
+  function* () {
+    const ctx = yield* MutationCtx;
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    yield* Effect.promise(() =>
+      insertZeroRelease(ctx, {
+        ...NEXT_MATERIAL_IDENTITY,
+        activeAppLocales: ACTIVE_APP_LOCALE_CODES,
+        base: MATERIAL_IDENTITY,
+        ownership: { base: ["material"], result: ["material"] },
+        role: "candidate",
+        status: "completed",
+      })
+    );
+    const state = yield* reader.table("contentState").get("by_key", "primary");
+    yield* writer.table("contentState").patch(state._id, {
       activeManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
       activeReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
       activeSequence: NEXT_MATERIAL_IDENTITY.sequence,
@@ -146,5 +149,5 @@ export async function advanceMaterialCatalog(
       materialSequence: NEXT_MATERIAL_IDENTITY.sequence,
       nextSequence: 3,
     });
-  });
-}
+  }
+);

@@ -1,10 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
-  ActionCtx as ActionCtxService,
-  MutationCtx as MutationCtxService,
-} from "@repo/backend/confect/_generated/services";
-import {
   compactProgram,
   runProgram,
 } from "@repo/backend/confect/contentRelease/compact";
@@ -16,8 +12,7 @@ const page = FunctionImpl.make(
   spec,
   "page",
   Effect.fn("contentRelease.compact.page")(function* () {
-    const ctx = yield* MutationCtxService;
-    return yield* compactProgram(ctx);
+    return yield* compactProgram();
   })
 );
 const run = FunctionImpl.make(
@@ -25,8 +20,7 @@ const run = FunctionImpl.make(
   spec,
   "run",
   Effect.fn("contentRelease.compact.run")(function* () {
-    const ctx = yield* ActionCtxService;
-    return yield* runProgram(ctx);
+    return yield* runProgram();
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

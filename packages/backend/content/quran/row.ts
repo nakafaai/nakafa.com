@@ -1,3 +1,4 @@
+/** Reads and authenticates one exact row from an active Quran snapshot. */
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { verifyQuranRow } from "@repo/backend/confect/contentRelease/quran/verify";
 import { QuranSource } from "@repo/backend/content/quran/source";

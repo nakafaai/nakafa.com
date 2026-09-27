@@ -1,5 +1,4 @@
 import { PublicationFailureCodeSchema } from "@nakafa/aksara-contracts/transport/failure";
-import { failureWire } from "@repo/backend/confect/failure";
 import { Effect, Schema } from "effect";
 
 /** Typed publication failure translated at the native Convex boundary. */
@@ -12,8 +11,7 @@ export class ReleaseError extends Schema.TaggedError<ReleaseError>()(
 ) {}
 
 /** Fails one domain program with a stable publication code. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const ReleaseErrorWire = failureWire(ReleaseError);
+
 export function releaseFail(code: ReleaseError["code"], message: string) {
   return Effect.fail(
     new ReleaseError({

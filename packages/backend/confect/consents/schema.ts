@@ -6,7 +6,6 @@ import {
   CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 /** Consent categories that can be decided through the account API. */
 export const consentCategoryValidator = Schema.Literals([
@@ -98,4 +97,3 @@ export class ConsentPersistenceError extends Schema.TaggedError<ConsentPersisten
 
 /** Maps a Convex database failure into the consent domain error channel. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const ConsentPersistenceErrorWire = failureWire(ConsentPersistenceError);

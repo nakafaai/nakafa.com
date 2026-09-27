@@ -3,8 +3,8 @@ import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { checkoutLocaleValidator } from "@repo/backend/confect/customers/checkout/localization";
 import {
   CheckoutSessionIoErrorWire,
-  CheckoutUnavailableWire,
-  InvalidCheckoutSuccessUrlWire,
+  CheckoutUnavailable,
+  InvalidCheckoutSuccessUrl,
 } from "@repo/backend/confect/customers/checkout/spec";
 import {
   PolarCheckoutErrorWire,
@@ -17,9 +17,10 @@ import {
 } from "@repo/backend/confect/customers/polar/spec";
 import {
   CustomerSyncIoErrorWire,
-  UserNotFoundWire,
+  UserNotFound,
 } from "@repo/backend/confect/customers/sync/spec";
-import { SiteConfigErrorWire } from "@repo/backend/confect/site/spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
+import { SiteConfigError } from "@repo/backend/confect/site/spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
   .addFunction(
@@ -37,11 +38,11 @@ export default GroupSpec.make()
         Schema.Union([
           AuthFailure,
           Schema.Union([
-            SiteConfigErrorWire,
-            InvalidCheckoutSuccessUrlWire,
+            SiteConfigError,
+            InvalidCheckoutSuccessUrl,
             CheckoutSessionIoErrorWire,
             CustomerSyncIoErrorWire,
-            UserNotFoundWire,
+            UserNotFound,
             PolarCustomerErrorWire,
             PolarCustomerEmailConflictWire,
             PolarCheckoutErrorWire,
@@ -49,10 +50,10 @@ export default GroupSpec.make()
             PolarPortalErrorWire,
             PolarDeleteErrorWire,
             PolarUpdateErrorWire,
-            CheckoutUnavailableWire,
+            CheckoutUnavailable,
           ]),
         ]),
-    })
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicAction({
@@ -67,7 +68,7 @@ export default GroupSpec.make()
           AuthFailure,
           Schema.Union([
             CustomerSyncIoErrorWire,
-            UserNotFoundWire,
+            UserNotFound,
             PolarCustomerErrorWire,
             PolarCustomerEmailConflictWire,
             PolarCheckoutErrorWire,
@@ -77,5 +78,5 @@ export default GroupSpec.make()
             PolarUpdateErrorWire,
           ]),
         ]),
-    })
+    }).middleware(Session)
   );

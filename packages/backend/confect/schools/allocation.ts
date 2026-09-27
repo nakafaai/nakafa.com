@@ -1,15 +1,12 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { isReservedSchoolSlug } from "@repo/backend/confect/schools/slug";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Option } from "effect";
 
 /** Reserve a route-safe slug within the school creation transaction. */
 export const generateUniqueSlug = Effect.fn("schools.allocateSlug")(function* (
-  ctx: MutationCtx,
   baseSlug: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   let counter = 0;
   while (true) {
     const slug = counter === 0 ? baseSlug : `${baseSlug}-${counter}`;

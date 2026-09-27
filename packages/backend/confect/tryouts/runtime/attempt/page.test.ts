@@ -1,5 +1,6 @@
-import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
+import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -32,7 +33,6 @@ const identity = {
 };
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
 const sectionPath = `${setPath}/${TRYOUT_START_SECTION}`;
-
 const startFixture = Effect.fn("frozenPage.test.startFixture")(function* () {
   vi.setSystemTime(new Date(TRYOUT_START_NOW));
   const t = createConvexTestWithBetterAuth();
@@ -56,26 +56,33 @@ const startFixture = Effect.fn("frozenPage.test.startFixture")(function* () {
   const original = yield* Effect.promise(() =>
     t.query((ctx) => ctx.db.get(started.attemptId))
   );
-  if (original === null) {
-    return yield* Effect.die("Expected one persisted frozen attempt.");
-  }
-  return { original, t };
+  assert(original, "Expected one persisted frozen attempt.");
+  return {
+    original,
+    t,
+  };
 });
-
 describe("frozen try-out page integrity", () => {
   it.effect(
     "projects exact set and section routes and rejects another route kind",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const { original, t } = yield* startFixture();
         const set = yield* Effect.promise(() =>
           t.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               readAttemptSetPage(
-                ctx,
-                { locale: "id", publicPath: setPath },
+                {
+                  locale: "id",
+                  publicPath: setPath,
+                },
                 original,
                 identity
+              ).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
               )
             )
           )
@@ -89,11 +96,17 @@ describe("frozen try-out page integrity", () => {
         ]);
         const section = yield* Effect.promise(() =>
           t.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               readAttemptSectionPage(
-                ctx,
-                { locale: "id", publicPath: sectionPath },
+                {
+                  locale: "id",
+                  publicPath: sectionPath,
+                },
                 original
+              ).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
               )
             )
           )
@@ -106,62 +119,102 @@ describe("frozen try-out page integrity", () => {
           yield* Effect.promise(() =>
             expect(
               t.query((ctx) =>
-                runConvexProgram(
+                Effect.runPromiseWith(runtimeServices)(
                   readAttemptSetPage(
-                    ctx,
-                    { locale: "id", publicPath },
+                    {
+                      locale: "id",
+                      publicPath,
+                    },
                     original,
                     identity
+                  ).pipe(
+                    Effect.provide(
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
                   )
                 )
               )
             ).rejects.toMatchObject({
-              data: { code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH" },
+              code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
             })
           );
         }
         yield* Effect.promise(() =>
           expect(
             t.query((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 readAttemptSectionPage(
-                  ctx,
-                  { locale: "id", publicPath: setPath },
+                  {
+                    locale: "id",
+                    publicPath: setPath,
+                  },
                   original
+                ).pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
                 )
               )
             )
           ).rejects.toMatchObject({
-            data: { code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH" },
+            code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
           })
         );
       })
   );
-
   it.effect(
     "rejects persisted set identity, count, scoring, and section snapshot drift",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const { original, t } = yield* startFixture();
         const patches: Partial<WithoutSystemFields<Doc<"tryoutAttempts">>>[] = [
-          { appLocale: "en" },
-          { setIdentity: "set:drift" },
-          { setPublicPath: `${setPath}-drift` },
-          { totalQuestions: original.totalQuestions + 1 },
-          { scoringStrategy: "irt" },
-          { sectionSnapshots: [] },
+          {
+            appLocale: "en",
+          },
+          {
+            setIdentity: "set:drift",
+          },
+          {
+            setPublicPath: `${setPath}-drift`,
+          },
+          {
+            totalQuestions: original.totalQuestions + 1,
+          },
+          {
+            scoringStrategy: "irt",
+          },
+          {
+            sectionSnapshots: [],
+          },
           ...[
-            { sectionIdentity: "section:missing" },
-            { sectionRowHash: "hash:drift" },
-            { sectionOrder: 2 },
-            { publicPath: `${sectionPath}-drift` },
-            { questionCount: 2 },
+            {
+              sectionIdentity: "section:missing",
+            },
+            {
+              sectionRowHash: "hash:drift",
+            },
+            {
+              sectionOrder: 2,
+            },
+            {
+              publicPath: `${sectionPath}-drift`,
+            },
+            {
+              questionCount: 2,
+            },
             {
               questionSourcePath: "packages/corpus/question-bank/tryout/drift",
             },
-            { sectionKey: "other" },
-            { sourceRevision: "other" },
-            { timeLimitSeconds: 1 },
+            {
+              sectionKey: "other",
+            },
+            {
+              sourceRevision: "other",
+            },
+            {
+              timeLimitSeconds: 1,
+            },
           ].map((patch) => ({
             sectionSnapshots: original.sectionSnapshots.map((snapshot) => ({
               ...snapshot,
@@ -185,17 +238,23 @@ describe("frozen try-out page integrity", () => {
                 if (attempt === null) {
                   return null;
                 }
-                return runConvexProgram(
+                return Effect.runPromiseWith(runtimeServices)(
                   readAttemptSetPage(
-                    ctx,
-                    { locale: "id", publicPath: setPath },
+                    {
+                      locale: "id",
+                      publicPath: setPath,
+                    },
                     attempt,
                     readAttemptSetIdentity(attempt)
+                  ).pipe(
+                    Effect.provide(
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
                   )
                 );
               })
             ).rejects.toMatchObject({
-              data: { code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH" },
+              code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
             })
           );
         }

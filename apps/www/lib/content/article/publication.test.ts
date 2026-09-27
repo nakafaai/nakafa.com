@@ -1,10 +1,12 @@
+const layerMock = vi.hoisted(() => vi.fn());
+
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import { api } from "@repo/backend/convex/_generated/api";
-import { Effect } from "effect";
+import refs from "@repo/backend/confect/_generated/refs";
+import { Effect, Layer } from "effect";
 import {
   getArticleModel,
   getArticlePublication,
@@ -44,13 +46,38 @@ const published = {
   projection,
   body: "rendered",
 };
-
-vi.mock("@/lib/content/published/body", () => ({ readRenderedBody: vi.fn() }));
-vi.mock("convex/nextjs", () => ({ fetchQuery: queryMock }));
-vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+vi.mock("@/lib/content/published/body", () => ({
+  readRenderedBody: vi.fn(),
 }));
-vi.mock("@/lib/content/cache", () => ({ applyContentCache: cacheMock }));
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) => {
+        layerMock(...args);
+        return Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: queryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args)));
+      },
+    },
+  };
+});
+vi.mock("@/env", () => ({
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
+}));
+vi.mock("@/lib/content/cache", () => ({
+  applyContentCache: cacheMock,
+}));
 vi.mock("@/lib/content/published/exchange", () => ({
   decodePublishedDelivery: deliveryMock,
 }));
@@ -58,42 +85,57 @@ vi.mock("@/lib/content/published/article", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/content/published/article")>()),
   renderArticleArtifact: renderMock,
 }));
-
 beforeEach(() => {
-  queryMock
-    .mockReset()
-    .mockResolvedValue({ model, runtimeJson: "signed-envelope" });
+  queryMock.mockReset().mockReturnValue(
+    Effect.succeed({
+      model,
+      runtimeJson: "signed-envelope",
+    })
+  );
   cacheMock.mockReset();
   deliveryMock.mockReset().mockReturnValue(Effect.succeed(data));
   renderMock.mockReset().mockReturnValue(Effect.succeed(published));
 });
-
 describe("coherent article publication", () => {
   it("reads the shell and body once and verifies them before rendering", async () => {
     await expect(
       getArticlePublication("en", projection.publicPath)
     ).resolves.toMatchObject({
-      model: { activeReleaseId, projection },
+      model: {
+        activeReleaseId,
+        projection,
+      },
       published,
     });
     expect(queryMock).toHaveBeenCalledExactlyOnceWith(
-      api.contentRelease.article.delivery,
-      { appLocale: "en", publicPath: projection.publicPath },
-      { url: "https://test.convex.cloud" }
+      refs.public.contentRelease.article.delivery,
+      {
+        appLocale: "en",
+        publicPath: projection.publicPath,
+      }
     );
+    expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud");
     expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
-      { appLocale: "en", publicPath: projection.publicPath },
+      {
+        appLocale: "en",
+        publicPath: projection.publicPath,
+      },
       "signed-envelope"
     );
     expect(cacheMock).toHaveBeenCalledExactlyOnceWith("article");
     expect(renderMock).toHaveBeenCalledOnce();
   });
-
   it("caches an authenticated withdrawal without rendering", async () => {
-    queryMock.mockResolvedValueOnce({
-      model: { ...model, alternateJson: [], projectionJson: null },
-      runtimeJson: null,
-    });
+    queryMock.mockReturnValueOnce(
+      Effect.succeed({
+        model: {
+          ...model,
+          alternateJson: [],
+          projectionJson: null,
+        },
+        runtimeJson: null,
+      })
+    );
     await expect(
       getArticlePublication("en", projection.publicPath)
     ).resolves.toBeNull();
@@ -101,17 +143,22 @@ describe("coherent article publication", () => {
     expect(deliveryMock).not.toHaveBeenCalled();
     expect(renderMock).not.toHaveBeenCalled();
   });
-
   it.each(["missing-body", "orphan-body"])(
     "rejects %s before rendering",
     async (kind) => {
-      queryMock.mockResolvedValueOnce({
-        model:
-          kind === "orphan-body"
-            ? { ...model, alternateJson: [], projectionJson: null }
-            : model,
-        runtimeJson: kind === "missing-body" ? null : "signed-envelope",
-      });
+      queryMock.mockReturnValueOnce(
+        Effect.succeed({
+          model:
+            kind === "orphan-body"
+              ? {
+                  ...model,
+                  alternateJson: [],
+                  projectionJson: null,
+                }
+              : model,
+          runtimeJson: kind === "missing-body" ? null : "signed-envelope",
+        })
+      );
       await expect(
         getArticlePublication("en", projection.publicPath)
       ).rejects.toMatchObject({
@@ -120,7 +167,6 @@ describe("coherent article publication", () => {
       expect(renderMock).not.toHaveBeenCalled();
     }
   );
-
   it("rejects mismatched publication generations before rendering", async () => {
     deliveryMock.mockReturnValueOnce(
       Effect.succeed({
@@ -135,11 +181,12 @@ describe("coherent article publication", () => {
     });
     expect(renderMock).not.toHaveBeenCalled();
   });
-
   it("preserves signed verification failures and never evaluates their body", async () => {
     deliveryMock.mockReturnValueOnce(
       Effect.fail(
-        new ContentRuntimeVerificationError({ cause: "invalid-signature" })
+        new ContentRuntimeVerificationError({
+          cause: "invalid-signature",
+        })
       )
     );
     await expect(
@@ -150,23 +197,30 @@ describe("coherent article publication", () => {
     expect(renderMock).not.toHaveBeenCalled();
   });
 });
-
 describe("verified article metadata", () => {
   it("resolves the verified model without rendering the body", async () => {
     await expect(
       getArticleModel("en", projection.publicPath)
     ).resolves.toMatchObject({
-      model: { activeReleaseId, projection },
+      model: {
+        activeReleaseId,
+        projection,
+      },
     });
     expect(renderMock).not.toHaveBeenCalled();
     expect(cacheMock).toHaveBeenCalledWith("article");
   });
-
   it("returns null for a withdrawn release without rendering", async () => {
-    queryMock.mockResolvedValueOnce({
-      model: { ...model, alternateJson: [], projectionJson: null },
-      runtimeJson: null,
-    });
+    queryMock.mockReturnValueOnce(
+      Effect.succeed({
+        model: {
+          ...model,
+          alternateJson: [],
+          projectionJson: null,
+        },
+        runtimeJson: null,
+      })
+    );
     await expect(
       getArticleModel("en", projection.publicPath)
     ).resolves.toBeNull();

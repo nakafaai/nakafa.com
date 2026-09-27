@@ -1,5 +1,12 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { loadAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
+import { loadAttemptResponses } from "@repo/backend/confect/tryouts/runtime/response";
+import {
+  finalizeAttemptScore,
+  loadAttemptScoreSource,
+} from "@repo/backend/confect/tryouts/runtime/score";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   insertTestState,
@@ -202,4 +209,32 @@ export const seedFrozenTryoutScoreState = Effect.fn(
   }
 
   return attempt;
+});
+
+type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
+
+/** Finalizes an attempt through the same single placement read as production. */
+export const finalizeLoadedAttempt = Effect.fn(
+  "tryouts.runtime.test.finalizeLoadedAttempt"
+)(function* (args: {
+  readonly attempt: TryoutAttempt;
+  readonly endReason: TryoutEndReason;
+  readonly now: number;
+}) {
+  const placements = yield* loadAttemptPlacements(args.attempt);
+  const responseIndex = yield* loadAttemptResponses(
+    args.attempt,
+    placements,
+    "complete"
+  );
+  const source = yield* loadAttemptScoreSource(
+    args.attempt,
+    responseIndex.placements
+  );
+  return yield* finalizeAttemptScore({
+    ...args,
+    responseIndex,
+    source,
+  });
 });

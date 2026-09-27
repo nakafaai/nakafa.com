@@ -1,6 +1,9 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadStaged } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
@@ -10,14 +13,13 @@ import {
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
 import { checkItem } from "@repo/backend/confect/contentRelease/verify/item";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect } from "effect";
 
 /** Freezes a complete staged release before any cross-transaction proof read. */
 export const beginVerification = Effect.fn("contentRelease.beginVerification")(
-  function* (ctx: MutationCtx, releaseId: string) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const { release } = yield* loadStaged(ctx, releaseId);
+  function* (releaseId: string) {
+    const writer = yield* DatabaseWriter;
+    const { release } = yield* loadStaged(releaseId);
     if (release.status === "verifying" || release.status === "verified") {
       return release.checkedIndex;
     }
@@ -52,13 +54,13 @@ export const beginVerification = Effect.fn("contentRelease.beginVerification")(
 
 /** Verifies one resumable contiguous page before proof can be committed. */
 export const verifyProgram = Effect.fn("contentRelease.verifyItems")(function* (
-  ctx: MutationCtx,
   releaseId: string,
   afterIndex: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const { release } = yield* loadStaged(ctx, releaseId);
+  const ctx = yield* MutationCtxService;
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const { release } = yield* loadStaged(releaseId);
   if (release.status === "verified") {
     return {
       done: true,
@@ -107,7 +109,7 @@ export const verifyProgram = Effect.fn("contentRelease.verifyItems")(function* (
         `Content release ${releaseId} expected item ${expectedIndex}, received ${row.index}.`
       );
     }
-    yield* checkItem(ctx, row);
+    yield* checkItem(row);
     processed += 1;
     nextIndex = row.index;
     const metrics = yield* Effect.promise(() =>

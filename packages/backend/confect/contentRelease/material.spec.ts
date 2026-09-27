@@ -1,7 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   materialApiPageValidator,
   materialModelValidator,
@@ -85,7 +85,7 @@ export default GroupSpec.make()
           model: materialModelValidator.mapFields(Struct.omit(["siblingJson"])),
           runtimeJson: Schema.Union([Schema.String, Schema.Null]),
         }),
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -97,7 +97,7 @@ export default GroupSpec.make()
         materialKey: Schema.String,
       }),
       returns: () => materialNavigationValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -110,7 +110,7 @@ export default GroupSpec.make()
         expectedSectionKey: Schema.String,
       }),
       returns: () => materialIdentityValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -123,7 +123,7 @@ export default GroupSpec.make()
         prefix: Schema.String,
       }),
       returns: () => materialApiPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -134,7 +134,7 @@ export default GroupSpec.make()
         bucket: Schema.String,
       }),
       returns: () => materialBucketValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -145,7 +145,7 @@ export default GroupSpec.make()
         limit: Schema.Finite,
       }),
       returns: () => materialDiscoveryValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -159,7 +159,7 @@ export default GroupSpec.make()
         publicPath: Schema.String,
       }),
       returns: () => materialModelValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -169,7 +169,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => materialBucketsValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -180,7 +180,7 @@ export default GroupSpec.make()
         bucket: Schema.mutable(Schema.Array(Schema.String)),
       }),
       returns: () => materialSitemapValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -193,6 +193,6 @@ export default GroupSpec.make()
         paginationOpts: PaginationOptionsSchema,
       }),
       returns: () => materialPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

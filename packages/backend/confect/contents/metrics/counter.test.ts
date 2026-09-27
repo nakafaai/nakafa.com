@@ -1,11 +1,12 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   buildMetricsBatch,
   type PopularityCounterDelta,
 } from "@repo/backend/confect/contents/metrics/batch";
 import { applyPopularityCounter } from "@repo/backend/confect/contents/metrics/counter";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -18,7 +19,10 @@ const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const ROUTE = "material/lesson/mathematics/vector/addition";
 const graph = (() => {
   const value = testMaterialGraph("vector", "addition", "en", "mathematics");
-  return { ...value, content_id: value.assetId };
+  return {
+    ...value,
+    content_id: value.assetId,
+  };
 })();
 
 /** Inserts one current counter for a deliberate uniqueness violation. */
@@ -69,21 +73,25 @@ function insertQueue(ctx: MutationCtx, contextKey: string, suffix: string) {
 
 /** Converts one counter Effect result into a Convex-serializable failure. */
 function captureCounter(ctx: MutationCtx, counter: PopularityCounterDelta) {
-  return runConvexProgram(
-    applyPopularityCounter(ctx, { ...counter, updatedAt: NOW }).pipe(
-      Effect.match({
-        onFailure: ({ _tag, code, message }) => ({ _tag, code, message }),
-        onSuccess: () => null,
-      })
-    )
+  return applyPopularityCounter({
+    ...counter,
+    updatedAt: NOW,
+  }).pipe(
+    Effect.match({
+      onFailure: ({ _tag, code, message }) => ({
+        _tag,
+        code,
+        message,
+      }),
+      onSuccess: () => null,
+    }),
+    Effect.provide(RegisteredConvexFunction.mutationLayer(confectSchema, ctx))
   );
 }
-
 describe("contents/metrics/counter", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
-
   it("clears absent newest metadata and keeps the ranking in the same transaction", async () => {
     const target = convexTest(schema, convexModules);
     registerLearningPopularityAggregate(target);
@@ -107,11 +115,15 @@ describe("contents/metrics/counter", () => {
       ].find(({ windowKey }) => windowKey === "lifetime");
       assert(counter);
       const read = vi.spyOn(ctx.db, "get");
-      await runConvexProgram(
-        applyPopularityCounter(ctx, {
+      await Effect.runPromise(
+        applyPopularityCounter({
           ...counter,
           updatedAt: NOW,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       expect(read).not.toHaveBeenCalled();
       return counterId;
@@ -133,13 +145,11 @@ describe("contents/metrics/counter", () => {
       [-2, graph.content_id],
     ]);
   });
-
   it("rolls back the counter when its transactional ranking write fails", async () => {
     const target = convexTest(schema, convexModules);
     vi.spyOn(learningPopularityRankings, "insert").mockRejectedValueOnce(
       new Error("Ranking unavailable")
     );
-
     await expect(
       target.mutation(async (ctx) => {
         const queueId = await insertQueue(ctx, "rollback", "rollback");
@@ -156,21 +166,27 @@ describe("contents/metrics/counter", () => {
         if (!counter) {
           throw new Error("Expected the ranking rollback counter delta.");
         }
-        await runConvexProgram(
-          applyPopularityCounter(ctx, { ...counter, updatedAt: NOW })
+        await Effect.runPromise(
+          applyPopularityCounter({
+            ...counter,
+            updatedAt: NOW,
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
       })
-    ).rejects.toThrow("CONTENT_ANALYTICS_IO_FAILED");
-
+    ).rejects.toMatchObject({
+      code: "CONTENT_ANALYTICS_IO_FAILED",
+    });
     const counters = await target.query((ctx) =>
       ctx.db.query("learningPopularityCounters").take(1)
     );
     expect(counters).toEqual([]);
   });
-
   it("maps a duplicate indexed counter read into the typed IO failure", async () => {
     const target = convexTest(schema, convexModules);
-
     const failure = await target.mutation(async (ctx) => {
       await insertCounter(ctx, "duplicate", "lifetime");
       await insertCounter(ctx, "duplicate", "lifetime");
@@ -188,9 +204,8 @@ describe("contents/metrics/counter", () => {
       if (!counter) {
         throw new Error("Expected the duplicate counter delta fixture.");
       }
-      return await captureCounter(ctx, counter);
+      return await Effect.runPromise(captureCounter(ctx, counter));
     });
-
     expect(failure).toMatchObject({
       _tag: "ContentAnalyticsIoError",
       code: "CONTENT_ANALYTICS_IO_FAILED",

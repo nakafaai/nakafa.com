@@ -1,3 +1,5 @@
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { assert, describe, expect, it } from "@effect/vitest";
@@ -11,7 +13,6 @@ import {
 import { verifyReleaseSnapshots } from "@repo/backend/confect/contentRelease/proof/snapshot";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
@@ -35,7 +36,9 @@ function programRelease(data: ProgramSnapshotData, releaseId: string) {
   return testSignedRelease(
     ContentReleaseManifestSchema.make({
       ...testEmptyManifest(ReleaseIdSchema.make(releaseId)),
-      scope: testPublicationScope({ snapshots: data.snapshots }),
+      scope: testPublicationScope({
+        snapshots: data.snapshots,
+      }),
       snapshots: data.snapshots,
     })
   );
@@ -75,12 +78,12 @@ function insertCompletedRelease(
     verifiedAt: 1,
   });
 }
-
 describe("contentRelease/proof/snapshot", () => {
   it.live(
     "rejects a Quran manifest whose provenance became blocked in storage",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const snapshot = yield* makeQuranSnapshot();
         yield* Effect.promise(async () => {
           const snapshots = {
@@ -97,7 +100,9 @@ describe("contentRelease/proof/snapshot", () => {
               ...testEmptyManifest(
                 ReleaseIdSchema.make("release-blocked-quran")
               ),
-              scope: testPublicationScope({ snapshots }),
+              scope: testPublicationScope({
+                snapshots,
+              }),
               snapshots,
             })
           );
@@ -115,47 +120,66 @@ describe("contentRelease/proof/snapshot", () => {
               snapshotId: snapshot.manifest.snapshotId,
               snapshotJson: encodeSnapshotJson({
                 ...snapshot,
-                manifest: { ...snapshot.manifest, provenanceStatus: "blocked" },
+                manifest: {
+                  ...snapshot.manifest,
+                  provenanceStatus: "blocked",
+                },
               }),
             });
           });
           await expect(
             t.action((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 verifyReleaseSnapshots(
-                  ctx,
                   release,
                   "candidate",
                   1,
                   snapshot.manifest.projectionCount
+                ).pipe(
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
                 )
               )
             )
           ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_UNSUPPORTED" },
+            code: "CONTENT_RELEASE_UNSUPPORTED",
           });
         });
       })
   );
   it.live("replays all staged rows through the shared snapshot verifier", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
       const release = programRelease(data, "release-test");
       const t = convexTest(schema, convexModules);
       const batchSize = 3;
       const batchCount = Math.ceil(data.rowJson.length / batchSize);
-      yield* Effect.promise(() => stageProgramSnapshot(t, data, batchSize));
-
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            stageProgramSnapshot(data, batchSize).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
       yield* Effect.promise(() =>
         expect(
           t.action((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               verifyReleaseSnapshots(
-                ctx,
                 release,
                 "candidate",
                 batchCount,
                 data.rowJson.length
+              ).pipe(
+                Effect.provide(
+                  RegisteredFunction.actionLayer(confectSchema, ctx)
+                )
               )
             )
           )
@@ -167,27 +191,42 @@ describe("contentRelease/proof/snapshot", () => {
       yield* Effect.promise(() =>
         expect(
           t.action((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               verifyReleaseSnapshots(
-                ctx,
                 release,
                 "candidate",
                 batchCount,
                 data.rowJson.length - 1
+              ).pipe(
+                Effect.provide(
+                  RegisteredFunction.actionLayer(confectSchema, ctx)
+                )
               )
             )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+        })
       );
     })
   );
-
   it.live("rejects tampered physical rows during canonical proof replay", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
       const release = programRelease(data, "release-test");
       const t = convexTest(schema, convexModules);
-      yield* Effect.promise(() => stageProgramSnapshot(t, data));
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            stageProgramSnapshot(data).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
       const secondRow = data.rowJson.at(1);
       if (!secondRow) {
         throw new Error("Expected a second program snapshot row.");
@@ -208,29 +247,33 @@ describe("contentRelease/proof/snapshot", () => {
           });
         })
       );
-
       yield* Effect.promise(() =>
         expect(
           t.action((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               verifyReleaseSnapshots(
-                ctx,
                 release,
                 "candidate",
                 1,
                 data.rowJson.length
+              ).pipe(
+                Effect.provide(
+                  RegisteredFunction.actionLayer(confectSchema, ctx)
+                )
               )
             )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+        })
       );
     })
   );
-
   it.live(
     "accepts only the exact zero-copy inverse for rollback candidates and recovery",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
         const base = programRelease(data, "release-base");
         const rollbackSnapshots = invertContentSnapshots(
@@ -243,8 +286,13 @@ describe("contentRelease/proof/snapshot", () => {
           baseReleaseId: base.manifest.releaseId,
           baseResultCount: base.manifest.resultCount,
           baseResultDigest: base.manifest.resultDigest,
-          origin: { kind: "rollback", releaseId: base.manifest.releaseId },
-          scope: testPublicationScope({ snapshots: rollbackSnapshots }),
+          origin: {
+            kind: "rollback",
+            releaseId: base.manifest.releaseId,
+          },
+          scope: testPublicationScope({
+            snapshots: rollbackSnapshots,
+          }),
           snapshots: rollbackSnapshots,
         });
         const rollback = testSignedRelease(rollbackManifest);
@@ -252,7 +300,9 @@ describe("contentRelease/proof/snapshot", () => {
         const drift = testSignedRelease(
           ContentReleaseManifestSchema.make({
             ...rollbackManifest,
-            scope: testPublicationScope({ snapshots: driftSnapshots }),
+            scope: testPublicationScope({
+              snapshots: driftSnapshots,
+            }),
             snapshots: driftSnapshots,
           })
         );
@@ -262,12 +312,15 @@ describe("contentRelease/proof/snapshot", () => {
             insertCompletedRelease(ctx, base, data.rowJson.length)
           )
         );
-
         yield* Effect.promise(() =>
           expect(
             t.action((ctx) =>
-              runConvexProgram(
-                verifyReleaseSnapshots(ctx, rollback, "candidate", 0, 0)
+              Effect.runPromiseWith(runtimeServices)(
+                verifyReleaseSnapshots(rollback, "candidate", 0, 0).pipe(
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
+                )
               )
             )
           ).resolves.toEqual({
@@ -278,19 +331,27 @@ describe("contentRelease/proof/snapshot", () => {
         yield* Effect.promise(() =>
           expect(
             t.action((ctx) =>
-              runConvexProgram(
-                verifyReleaseSnapshots(ctx, rollback, "candidate", 1, 0)
+              Effect.runPromiseWith(runtimeServices)(
+                verifyReleaseSnapshots(rollback, "candidate", 1, 0).pipe(
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
+                )
               )
             )
           ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+            code: "CONTENT_RELEASE_INTEGRITY",
           })
         );
         yield* Effect.promise(() =>
           expect(
             t.action((ctx) =>
-              runConvexProgram(
-                verifyReleaseSnapshots(ctx, rollback, "recovery", 0, 0)
+              Effect.runPromiseWith(runtimeServices)(
+                verifyReleaseSnapshots(rollback, "recovery", 0, 0).pipe(
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
+                )
               )
             )
           ).resolves.toEqual({
@@ -301,12 +362,16 @@ describe("contentRelease/proof/snapshot", () => {
         yield* Effect.promise(() =>
           expect(
             t.action((ctx) =>
-              runConvexProgram(
-                verifyReleaseSnapshots(ctx, drift, "recovery", 0, 0)
+              Effect.runPromiseWith(runtimeServices)(
+                verifyReleaseSnapshots(drift, "recovery", 0, 0).pipe(
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
+                )
               )
             )
           ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+            code: "CONTENT_RELEASE_INTEGRITY",
           })
         );
       })
@@ -315,6 +380,7 @@ describe("contentRelease/proof/snapshot", () => {
     "rejects a base whose stored signed manifest no longer matches the selected hash",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
         const base = programRelease(data, "release-base");
         const snapshots = inheritContentSnapshots(base.manifest.snapshots);
@@ -326,7 +392,9 @@ describe("contentRelease/proof/snapshot", () => {
             baseActiveAppLocales: base.manifest.activeAppLocales,
             baseResultCount: base.manifest.resultCount,
             baseResultDigest: base.manifest.resultDigest,
-            scope: testPublicationScope({ snapshots }),
+            scope: testPublicationScope({
+              snapshots,
+            }),
             snapshots,
           })
         );
@@ -349,12 +417,16 @@ describe("contentRelease/proof/snapshot", () => {
         yield* Effect.promise(() =>
           expect(
             t.action((ctx) =>
-              runConvexProgram(
-                verifyReleaseSnapshots(ctx, release, "candidate", 0, 0)
+              Effect.runPromiseWith(runtimeServices)(
+                verifyReleaseSnapshots(release, "candidate", 0, 0).pipe(
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
+                )
               )
             )
           ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_STALE_BASE" },
+            code: "CONTENT_RELEASE_STALE_BASE",
           })
         );
       })

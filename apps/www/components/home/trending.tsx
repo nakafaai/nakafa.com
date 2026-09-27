@@ -1,11 +1,11 @@
+import { HttpClient } from "@confect/js";
+import { Effect } from "effect";
 import "server-only";
-
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { fetchQuery } from "convex/nextjs";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -20,24 +20,26 @@ import { isActiveLocale } from "@/lib/i18n/active";
  * homepage visitor would amplify every popularity-counter update. Popularity
  * is live analytics rather than signed content, so it stays on the production
  * deployment while authored content builds from the isolated snapshot. The
- * cached Promise stays direct because starting an Effect runtime during static
- * prerender reads current time, which Cache Components reject.
+ * Native Confect reads disable trace timestamps until the network suspends,
+ * because Cache Components reject implicit clock access during prerendering.
  *
  * @see https://nextjs.org/docs/messages/next-prerender-current-time
- * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering#using-convex-to-render-server-components
+ * @see https://confect.dev/v10/clients/js/http
  */
 async function getHomeTrendingSubjects(locale: PublicAppLocale) {
   "use cache";
 
   cacheLife("minutes");
-
-  return await fetchQuery(
-    api.contents.queries.trending.getTrendingSubjects,
-    {
-      locale,
-      windowKey: "7d",
-    },
-    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.contents.queries.trending.getTrendingSubjects, {
+        locale,
+        windowKey: "7d",
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
   );
 }
 
@@ -46,16 +48,16 @@ export async function HomeTrending({ locale }: { locale: Locale }) {
   if (!isActiveLocale(locale)) {
     return null;
   }
-
   const [t, data] = await Promise.all([
-    getTranslations({ locale, namespace: "Home" }),
+    getTranslations({
+      locale,
+      namespace: "Home",
+    }),
     getHomeTrendingSubjects(locale),
   ]);
-
   if (data.length === 0) {
     return null;
   }
-
   return (
     <section className="flex flex-col gap-4">
       <h2 className="flex items-center gap-2 px-3 font-medium">

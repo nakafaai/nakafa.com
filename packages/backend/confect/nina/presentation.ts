@@ -1,0 +1,141 @@
+import { Agent, type UsageHandler } from "@convex-dev/agent";
+import { components } from "@repo/backend/confect/_generated/components";
+import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  ActionCtx,
+  MutationRunner,
+} from "@repo/backend/confect/_generated/services";
+import {
+  defaultModel,
+  getFastModelProviderOptions,
+} from "@repo/backend/confect/nina/config/model";
+import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
+import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
+import {
+  backgroundGenerationTimeout,
+  suggestionGenerationTimeout,
+} from "@repo/backend/confect/nina/config/timeouts";
+import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
+import { boundHistory } from "@repo/backend/confect/nina/history";
+import {
+  NinaSuggestions,
+  NinaTitle,
+} from "@repo/backend/confect/nina/presentation.spec";
+import { nakafaSuggestions } from "@repo/backend/confect/nina/prompt/suggestions";
+import { Output } from "ai";
+import { Effect, Schema } from "effect";
+
+class NinaPresentationError extends Schema.TaggedError<NinaPresentationError>()(
+  "NinaPresentationError",
+  { operation: Schema.Literals(["suggestions", "title"]) }
+) {}
+
+/** Small Agent generations use the existing thread as context without adding messages. */
+export const generatePresentation = Effect.fn("nina.presentation.generate")(
+  function* (
+    turn: Extract<NinaTurnsDoc, { phase: "active" }>,
+    usageHandler: UsageHandler
+  ) {
+    const ctx = yield* ActionCtx;
+    const mutate = yield* MutationRunner;
+    const model = yield* getGatewayModel(defaultModel);
+    const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
+    const suggestions = new Agent(components.nina, {
+      name: "suggestions",
+      languageModel: model,
+      usageHandler,
+      instructions: nakafaSuggestions({ locale: turn.page.locale }),
+      contextOptions: { recentMessages: 50, excludeToolMessages: true },
+      contextHandler: (_ctx, { allMessages }) =>
+        runPromise(boundHistory(allMessages)),
+    });
+    const providerOptions = {
+      gateway: gatewayProviderOptions,
+      google: getFastModelProviderOptions(defaultModel),
+    };
+    const options = { storageOptions: { saveMessages: "none" as const } };
+    yield* Effect.tryPromise({
+      try: (signal) =>
+        suggestions
+          .generateText(
+            ctx,
+            { threadId: turn.threadId, userId: turn.userId },
+            {
+              promptMessageId: turn.promptMessageId,
+              abortSignal: signal,
+              providerOptions,
+              output: Output.object({
+                schema: createEffectSchema(
+                  Schema.Struct({ suggestions: NinaSuggestions })
+                ),
+              }),
+              timeout: suggestionGenerationTimeout,
+            },
+            options
+          )
+          .then((result) => result.output),
+      catch: () => new NinaPresentationError({ operation: "suggestions" }),
+    }).pipe(
+      Effect.flatMap((output) =>
+        mutate(refs.internal.nina.presentation.save, {
+          turnId: turn._id,
+          suggestions: output.suggestions,
+        })
+      ),
+      Effect.catchTag("NinaPresentationError", (error) =>
+        Effect.logWarning("Nina follow-up unavailable", {
+          operation: error.operation,
+          turnId: turn._id,
+        })
+      )
+    );
+    if (turn.order !== 0) {
+      return;
+    }
+    const title = new Agent(components.nina, {
+      name: "title",
+      languageModel: model,
+      usageHandler,
+      instructions:
+        "Summarize the user's opening request as a descriptive title of 3 to 5 words, at most 80 characters. Use the user's language. Return only the title, without quotes or colons. Do not mention internal tools or services.",
+      contextOptions: { recentMessages: 50 },
+      contextHandler: (_ctx, { inputPrompt }) => Promise.resolve(inputPrompt),
+    });
+    yield* Effect.tryPromise({
+      try: (signal) =>
+        title.generateText(
+          ctx,
+          { threadId: turn.threadId, userId: turn.userId },
+          {
+            promptMessageId: turn.promptMessageId,
+            abortSignal: signal,
+            providerOptions,
+            timeout: backgroundGenerationTimeout,
+          },
+          options
+        ),
+      catch: () => new NinaPresentationError({ operation: "title" }),
+    }).pipe(
+      Effect.flatMap(({ text }) =>
+        Schema.decodeEffect(NinaTitle)(text).pipe(
+          Effect.mapError(
+            () => new NinaPresentationError({ operation: "title" })
+          )
+        )
+      ),
+      Effect.flatMap((value) =>
+        mutate(refs.internal.nina.presentation.save, {
+          turnId: turn._id,
+          title: value,
+        })
+      ),
+      Effect.catchTag("NinaPresentationError", (error) =>
+        Effect.logWarning("Nina title unavailable", {
+          operation: error.operation,
+          turnId: turn._id,
+        })
+      )
+    );
+  }
+);

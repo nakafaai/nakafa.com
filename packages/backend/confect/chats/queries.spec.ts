@@ -1,19 +1,16 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import chatsTable from "@repo/backend/confect/_generated/tables/chats";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ChatAccessFailure } from "@repo/backend/confect/chats/access/spec";
+import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import { ninaContextSnapshotValidator } from "@repo/backend/confect/chats/context";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
 } from "@repo/backend/confect/chats/schema";
-import { TranscriptFailure } from "@repo/backend/confect/chats/transcript/spec";
-import {
-  paginatedChatsValidator,
-  paginatedMessagesValidator,
-} from "@repo/backend/confect/chats/validators";
+import { TranscriptLimitExceeded } from "@repo/backend/confect/chats/transcript/spec";
+import { messageWithPartsDocValidator } from "@repo/backend/confect/chats/validators";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
   .addFunction(
@@ -23,34 +20,32 @@ export default GroupSpec.make()
         chatId: IdSchema("chats"),
       }),
       returns: () => chatsTable.Doc,
-      error: () => Schema.Union([AuthFailure, ChatAccessFailure]),
-    })
+      error: () => Schema.Union([AuthFailure, ChatAccessError]),
+    }).middleware(Session)
   )
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "getChats",
       args: () => ({
         userId: IdSchema("users"),
         q: Schema.optionalKey(Schema.String),
         visibility: Schema.optionalKey(chatVisibilityValidator),
         type: Schema.optionalKey(chatTypeValidator),
-        paginationOpts: PaginationOptionsSchema,
       }),
-      returns: () => paginatedChatsValidator,
+      item: () => chatsTable.Doc,
     })
   )
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "getOwnChats",
       args: () => ({
         q: Schema.optionalKey(Schema.String),
         visibility: Schema.optionalKey(chatVisibilityValidator),
         type: Schema.optionalKey(chatTypeValidator),
-        paginationOpts: PaginationOptionsSchema,
       }),
-      returns: () => paginatedChatsValidator,
+      item: () => chatsTable.Doc,
       error: () => AuthFailure,
-    })
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicQuery({
@@ -60,7 +55,7 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.NullOr(Schema.String),
       error: () => AuthFailure,
-    })
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicQuery({
@@ -70,18 +65,17 @@ export default GroupSpec.make()
         messageIdentifier: Schema.String,
       }),
       returns: () => Schema.NullOr(ninaContextSnapshotValidator),
-      error: () => Schema.Union([AuthFailure, ChatAccessFailure]),
-    })
+      error: () => Schema.Union([AuthFailure, ChatAccessError]),
+    }).middleware(Session)
   )
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "loadMessagesPage",
       args: () => ({
         chatId: IdSchema("chats"),
-        paginationOpts: PaginationOptionsSchema,
       }),
-      returns: () => paginatedMessagesValidator,
+      item: () => messageWithPartsDocValidator,
       error: () =>
-        Schema.Union([AuthFailure, ChatAccessFailure, TranscriptFailure]),
-    })
+        Schema.Union([AuthFailure, ChatAccessError, TranscriptLimitExceeded]),
+    }).middleware(Session)
   );

@@ -3,10 +3,7 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
 import { accountUnavailableCode } from "@repo/backend/confect/auth/spec";
 import type { PolarCheckoutLocale } from "@repo/backend/confect/customers/checkout/localization";
-import {
-  type ConvexTaggedError,
-  failureWire,
-} from "@repo/backend/confect/failure";
+import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const invalidCheckoutSuccessUrlCode = "INVALID_CHECKOUT_SUCCESS_URL";
 export const checkoutSessionIoErrorCode = "CHECKOUT_SESSION_IO_FAILED";
@@ -42,36 +39,30 @@ export type CheckoutAdmission = Schema.Schema.Type<
 >;
 
 /** Raised when account revalidation withholds a newly created checkout. */
-export class CheckoutUnavailable
-  extends Schema.TaggedError<CheckoutUnavailable>()("CheckoutUnavailable", {
+export class CheckoutUnavailable extends Schema.TaggedError<CheckoutUnavailable>()(
+  "CheckoutUnavailable",
+  {
     code: Schema.Literal(accountUnavailableCode),
     message: Schema.String,
-  })
-  implements ConvexTaggedError
-{
+  }
+) {
   declare readonly code: typeof accountUnavailableCode;
   declare readonly message: string;
 }
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const CheckoutUnavailableWire = failureWire(CheckoutUnavailable);
-export class CheckoutSessionIoError
-  extends Schema.TaggedError<CheckoutSessionIoError>()(
-    "CheckoutSessionIoError",
-    {
-      code: Schema.Literal(checkoutSessionIoErrorCode),
-      cause: Schema.optional(Schema.Unknown),
-      message: Schema.String,
-    }
-  )
-  implements ConvexTaggedError
-{
+export class CheckoutSessionIoError extends Schema.TaggedError<CheckoutSessionIoError>()(
+  "CheckoutSessionIoError",
+  {
+    code: Schema.Literal(checkoutSessionIoErrorCode),
+    cause: Schema.optional(Schema.Unknown),
+    message: Schema.String,
+  }
+) {
   declare readonly code: typeof checkoutSessionIoErrorCode;
   declare readonly message: string;
 }
 
 /** Normalizes one Convex checkout boundary failure. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const CheckoutSessionIoErrorWire = failureWire(CheckoutSessionIoError);
+export const CheckoutSessionIoErrorWire = publicFailure(CheckoutSessionIoError);
 export function checkoutSessionIoError(error: unknown) {
   return new CheckoutSessionIoError({
     code: checkoutSessionIoErrorCode,
@@ -79,20 +70,14 @@ export function checkoutSessionIoError(error: unknown) {
     message: "Failed to finish checkout session.",
   });
 }
-export class InvalidCheckoutSuccessUrl
-  extends Schema.TaggedError<InvalidCheckoutSuccessUrl>()(
-    "InvalidCheckoutSuccessUrl",
-    {
-      code: Schema.Literal(invalidCheckoutSuccessUrlCode),
-      message: Schema.String,
-    }
-  )
-  implements ConvexTaggedError
-{
+export class InvalidCheckoutSuccessUrl extends Schema.TaggedError<InvalidCheckoutSuccessUrl>()(
+  "InvalidCheckoutSuccessUrl",
+  {
+    code: Schema.Literal(invalidCheckoutSuccessUrlCode),
+    message: Schema.String,
+  }
+) {
   declare readonly code: typeof invalidCheckoutSuccessUrlCode;
   declare readonly message: string;
 }
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const InvalidCheckoutSuccessUrlWire = failureWire(
-  InvalidCheckoutSuccessUrl
-);

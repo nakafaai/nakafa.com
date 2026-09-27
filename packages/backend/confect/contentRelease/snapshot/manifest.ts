@@ -1,9 +1,12 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import {
   type ContentSnapshotManifest,
   contentSnapshotId,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadStaged } from "@repo/backend/confect/contentRelease/model";
@@ -16,7 +19,6 @@ import {
   type snapshotReceiptValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
@@ -27,11 +29,10 @@ export type ReadCtx = MutationCtx | QueryCtx;
 
 /** Loads one immutable family manifest through its exact content identity. */
 export const loadSnapshot = Effect.fn("contentRelease.loadSnapshot")(function* (
-  ctx: ReadCtx,
   family: ContentSnapshotManifest["family"],
   snapshotId: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   return yield* database
     .table("contentSnapshots")
     .get("by_family_and_snapshotId", family, snapshotId)
@@ -45,7 +46,7 @@ export const loadSnapshot = Effect.fn("contentRelease.loadSnapshot")(function* (
 export const requireReplacement = Effect.fn(
   "contentRelease.requireSnapshotReplacement"
 )(function* (
-  release: Doc<"contentReleases">,
+  release: Docs["contentReleases"],
   snapshot: ContentSnapshotManifest
 ) {
   const signed = yield* decodeReleaseJson(release.releaseJson);
@@ -71,12 +72,12 @@ export const requireReplacement = Effect.fn(
 
 /** Stores or idempotently resumes one exact structured-family manifest. */
 export const stageManifest = Effect.fn("contentRelease.stageSnapshot")(
-  function* (ctx: MutationCtx, releaseId: string, snapshotJson: string) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (releaseId: string, snapshotJson: string) {
+    const writer = yield* DatabaseWriter;
     const snapshot = yield* decodeSnapshotJson(snapshotJson);
     const canonicalJson = encodeSnapshotJson(snapshot);
     const snapshotId = contentSnapshotId(snapshot);
-    const { release } = yield* loadStaged(ctx, releaseId);
+    const { release } = yield* loadStaged(releaseId);
     if (release.status !== "staging" || release.abortingAt !== undefined) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
@@ -84,7 +85,7 @@ export const stageManifest = Effect.fn("contentRelease.stageSnapshot")(
       );
     }
     yield* requireReplacement(release, snapshot);
-    const stored = yield* loadSnapshot(ctx, snapshot.family, snapshotId);
+    const stored = yield* loadSnapshot(snapshot.family, snapshotId);
     if (stored) {
       if (stored.snapshotJson !== canonicalJson) {
         return yield* releaseFail(
@@ -107,7 +108,7 @@ export const stageManifest = Effect.fn("contentRelease.stageSnapshot")(
       retainUntil: now + ROLLBACK_RETENTION_MS,
       snapshotId,
       snapshotJson: canonicalJson,
-    } satisfies WithoutSystemFields<Doc<"contentSnapshots">>;
+    } satisfies WithoutSystemFields<Docs["contentSnapshots"]>;
     yield* ensureDocumentSize(
       `Content snapshot ${snapshot.family}/${snapshotId}`,
       row

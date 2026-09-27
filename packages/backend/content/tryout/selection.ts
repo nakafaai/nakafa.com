@@ -8,6 +8,7 @@ import {
   tryoutCatalogIdentity,
   tryoutCatalogNodeIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
@@ -17,13 +18,12 @@ import {
   readTryoutCatalogRowByPath,
 } from "@repo/backend/content/tryout/row";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, Schema } from "effect";
 
 /** One authenticated section row with its signed immutable digest. */
 export interface SelectedTryoutSection {
   readonly row: TryoutSection;
-  readonly rowHash: Doc<"tryoutCatalog">["rowHash"];
+  readonly rowHash: Docs["tryoutCatalog"]["rowHash"];
 }
 
 /** Complete verified set-local catalog needed by public and attempt reads. */

@@ -1,17 +1,17 @@
-import { NakafaDataSchema } from "@repo/ai/schema/data";
-import type { MyUIMessagePart } from "@repo/ai/types/message";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { MyUIMessagePart } from "@repo/backend/confect/chats/message";
 import {
   requirePartField,
   requireToolState,
 } from "@repo/backend/confect/chats/messageParts/shared";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { NakafaDataSchema } from "@repo/backend/confect/nina/contract/data";
 import { Schema, Struct } from "effect";
 
 /** Rebuild one UI message part from the flattened persisted part row. */
 export function mapDBPartToUIMessagePart({
   part,
 }: {
-  part: Doc<"messageParts">;
+  part: Docs["messageParts"];
 }): MyUIMessagePart {
   // biome-ignore lint/style/useDefaultSwitchClause: The persisted validator closes this union; TypeScript checks exhaustive returns.
   switch (part.type) {
@@ -165,7 +165,7 @@ export function mapDBPartToUIMessagePart({
       };
   }
 }
-type PersistedNakafaData = NonNullable<Doc<"messageParts">["dataNakafaData"]>;
+type PersistedNakafaData = NonNullable<Docs["messageParts"]["dataNakafaData"]>;
 
 /** Projects persisted predecessor Quran previews into the canonical UI shape. */
 function projectPersistedNakafaData(data: PersistedNakafaData): unknown {
@@ -190,7 +190,7 @@ function projectPersistedNakafaData(data: PersistedNakafaData): unknown {
 }
 
 /** Rebuilds the persisted tool-nakafa invocation at its recorded state. */
-function readNakafaTool(part: Doc<"messageParts">): Extract<
+function readNakafaTool(part: Docs["messageParts"]): Extract<
   MyUIMessagePart,
   {
     type: "tool-nakafa";
@@ -262,7 +262,7 @@ function readNakafaTool(part: Doc<"messageParts">): Extract<
 }
 
 /** Rebuilds the persisted tool-deepResearch invocation at its recorded state. */
-function readResearchTool(part: Doc<"messageParts">): Extract<
+function readResearchTool(part: Docs["messageParts"]): Extract<
   MyUIMessagePart,
   {
     type: "tool-deepResearch";
@@ -334,7 +334,7 @@ function readResearchTool(part: Doc<"messageParts">): Extract<
 }
 
 /** Rebuilds the persisted tool-math invocation at its recorded state. */
-function readMathTool(part: Doc<"messageParts">): Extract<
+function readMathTool(part: Docs["messageParts"]): Extract<
   MyUIMessagePart,
   {
     type: "tool-math";
@@ -406,7 +406,7 @@ function readMathTool(part: Doc<"messageParts">): Extract<
 }
 
 /** Reconstructs shared invocation identity and optional provider metadata. */
-function readToolFields(part: Doc<"messageParts">) {
+function readToolFields(part: Docs["messageParts"]) {
   return {
     toolCallId: requirePartField({
       value: part.toolToolCallId,

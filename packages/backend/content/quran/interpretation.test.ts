@@ -1,9 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { convexQuranLayer } from "@repo/backend/content/quran/convex";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { quranLayer } from "@repo/backend/content/quran/confect";
 import { readQuranInterpretation } from "@repo/backend/content/quran/interpretation";
-import schema from "@repo/backend/convex/schema";
 import {
   makeQuranAttribution,
   makeQuranChunk,
@@ -14,7 +13,6 @@ import {
   activateQuranSnapshot,
   restoreAbsentQuranSnapshot,
 } from "@repo/backend/test/quran/snapshot";
-import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 /** Creates only the signed rows required to read verse seven. */
@@ -31,127 +29,140 @@ function interpretationRows() {
     makeQuranSearch("id", 1),
   ];
 }
-
 const expectedSnapshotId = `sha256:${"0".repeat(64)}`;
-
 describe("contentRelease/quran/interpretation", () => {
-  it("rejects a stale click when Quran has no active snapshot", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readQuranInterpretation("id", expectedSnapshotId, 1, 7).pipe(
-            Effect.provide(convexQuranLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_CONFLICT" },
-    });
-  });
-
-  it("returns only the requested tafsir from its signed chunk", async () => {
-    const t = convexTest(schema, convexModules);
-    const snapshotId = await t.mutation((ctx) =>
-      activateQuranSnapshot(ctx, interpretationRows())
-    );
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readQuranInterpretation("id", snapshotId, 1, 7).pipe(
-            Effect.provide(convexQuranLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      appLocale: "id",
-      interpretation: "Tafsir teknis 7",
-      managed: true,
-      snapshotId,
-      surahNumber: 1,
-      verseNumber: 7,
-    });
-  });
-
-  it("rejects requests beyond the signed surah boundary", async () => {
-    const t = convexTest(schema, convexModules);
-    const snapshotId = await t.mutation((ctx) =>
-      activateQuranSnapshot(ctx, interpretationRows())
-    );
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readQuranInterpretation("id", snapshotId, 1, 8).pipe(
-            Effect.provide(convexQuranLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INVALID_REQUEST" },
-    });
-  });
-
-  it("rejects a click from a superseded signed snapshot", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => activateQuranSnapshot(ctx, interpretationRows()));
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readQuranInterpretation("id", expectedSnapshotId, 1, 7).pipe(
-            Effect.provide(convexQuranLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_CONFLICT" },
-    });
-  });
-
-  it("rejects a click after recovery restores the absent snapshot", async () => {
-    const t = convexTest(schema, convexModules);
-    const snapshotId = await t.mutation((ctx) =>
-      activateQuranSnapshot(ctx, interpretationRows())
-    );
-    await t.mutation((ctx) => restoreAbsentQuranSnapshot(ctx, snapshotId));
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readQuranInterpretation("id", snapshotId, 1, 7).pipe(
-            Effect.provide(convexQuranLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_CONFLICT" },
-    });
-  });
-
-  it("does not read the unrelated signed search projection", async () => {
-    const t = convexTest(schema, convexModules);
-    const snapshotId = await t.mutation((ctx) =>
-      activateQuranSnapshot(
-        ctx,
-        interpretationRows().filter((row) => row.kind !== "quran-search")
-      )
-    );
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readQuranInterpretation("id", snapshotId, 1, 7).pipe(
-            Effect.provide(convexQuranLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      interpretation: "Tafsir teknis 7",
-      snapshotId,
-      verseNumber: 7,
-    });
-  });
+  it.effect("rejects a stale click when Quran has no active snapshot", () =>
+    Effect.gen(function* () {
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          const _tCtx = yield* MutationCtx;
+          expect(
+            yield* readQuranInterpretation("id", expectedSnapshotId, 1, 7).pipe(
+              Effect.provide(quranLayer),
+              Effect.flip
+            )
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_CONFLICT",
+          });
+        })
+      );
+    })
+  );
+  it.effect("returns only the requested tafsir from its signed chunk", () =>
+    Effect.gen(function* () {
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          const tCtx = yield* MutationCtx;
+          const snapshotId = yield* Effect.promise(() =>
+            activateQuranSnapshot(tCtx, interpretationRows())
+          );
+          expect(
+            yield* readQuranInterpretation("id", snapshotId, 1, 7).pipe(
+              Effect.provide(quranLayer)
+            )
+          ).toMatchObject({
+            appLocale: "id",
+            interpretation: "Tafsir teknis 7",
+            managed: true,
+            snapshotId,
+            surahNumber: 1,
+            verseNumber: 7,
+          });
+        })
+      );
+    })
+  );
+  it.effect("rejects requests beyond the signed surah boundary", () =>
+    Effect.gen(function* () {
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          const tCtx = yield* MutationCtx;
+          const snapshotId = yield* Effect.promise(() =>
+            activateQuranSnapshot(tCtx, interpretationRows())
+          );
+          expect(
+            yield* readQuranInterpretation("id", snapshotId, 1, 8).pipe(
+              Effect.provide(quranLayer),
+              Effect.flip
+            )
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_INVALID_REQUEST",
+          });
+        })
+      );
+    })
+  );
+  it.effect("rejects a click from a superseded signed snapshot", () =>
+    Effect.gen(function* () {
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          const tCtx = yield* MutationCtx;
+          yield* Effect.promise(() =>
+            activateQuranSnapshot(tCtx, interpretationRows())
+          );
+          expect(
+            yield* readQuranInterpretation("id", expectedSnapshotId, 1, 7).pipe(
+              Effect.provide(quranLayer),
+              Effect.flip
+            )
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_CONFLICT",
+          });
+        })
+      );
+    })
+  );
+  it.effect("rejects a click after recovery restores the absent snapshot", () =>
+    Effect.gen(function* () {
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          const tCtx = yield* MutationCtx;
+          const snapshotId = yield* Effect.promise(() =>
+            activateQuranSnapshot(tCtx, interpretationRows())
+          );
+          yield* Effect.promise(() =>
+            restoreAbsentQuranSnapshot(tCtx, snapshotId)
+          );
+          expect(
+            yield* readQuranInterpretation("id", snapshotId, 1, 7).pipe(
+              Effect.provide(quranLayer),
+              Effect.flip
+            )
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_CONFLICT",
+          });
+        })
+      );
+    })
+  );
+  it.effect("does not read the unrelated signed search projection", () =>
+    Effect.gen(function* () {
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          const tCtx = yield* MutationCtx;
+          const snapshotId = yield* Effect.promise(() =>
+            activateQuranSnapshot(
+              tCtx,
+              interpretationRows().filter((row) => row.kind !== "quran-search")
+            )
+          );
+          expect(
+            yield* readQuranInterpretation("id", snapshotId, 1, 7).pipe(
+              Effect.provide(quranLayer)
+            )
+          ).toMatchObject({
+            interpretation: "Tafsir teknis 7",
+            snapshotId,
+            verseNumber: 7,
+          });
+        })
+      );
+    })
+  );
 });

@@ -1,15 +1,15 @@
 import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { decodeProjectionJson } from "@repo/backend/confect/contentRelease/parse";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
-type MaterialRow = WithoutSystemFields<Doc<"materialCatalog">>;
+type MaterialRow = WithoutSystemFields<Docs["materialCatalog"]>;
 
 /** Checks all catalog fields against one authenticated material projection. */
 const verifyMaterialMetadata = Effect.fn(

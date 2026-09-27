@@ -1,11 +1,10 @@
-import { DatabaseReader } from "@confect/server";
 import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import {
   MaterialKeySchema,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { loadRouteBinding } from "@repo/backend/confect/contentRelease/model";
 import { learningGraphIdentityValidator } from "@repo/backend/confect/contents/graph";
 import {
@@ -13,15 +12,14 @@ import {
   toContentViewIoError,
 } from "@repo/backend/confect/contents/views/spec";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
-import { convexArticleLayer } from "@repo/backend/content/article/convex";
+import { articleLayer } from "@repo/backend/content/article/confect";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { verifyArticle } from "@repo/backend/content/article/verify";
-import { convexMaterialLayer } from "@repo/backend/content/material/convex";
+import { materialLayer } from "@repo/backend/content/material/confect";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { resolveMaterialRoute } from "@repo/backend/content/material/route";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { Effect, flow, Schema } from "effect";
 
 const contentViewTargetFields = {
@@ -127,14 +125,11 @@ const toMaterialTarget = Effect.fn("contents.views.toMaterialTarget")(
 /** Validates one new material view against its exact signed public route. */
 const validateIncomingMaterialTarget = Effect.fn(
   "contents.views.validateIncomingMaterialTarget"
-)(function* (ctx: QueryCtx, input: IncomingContentViewTargetInput) {
+)(function* (input: IncomingContentViewTargetInput) {
   const resolved = yield* resolveMaterialRoute(
     input.locale,
     input.publicPath
-  ).pipe(
-    Effect.provide(convexMaterialLayer(ctx)),
-    Effect.mapError(toContentViewIoError)
-  );
+  ).pipe(Effect.provide(materialLayer), Effect.mapError(toContentViewIoError));
   if (!resolved.managed) {
     return yield* toContentViewIoError(
       `Signed material ownership is unavailable for ${input.locale}.`
@@ -156,10 +151,10 @@ const validateIncomingMaterialTarget = Effect.fn(
 const validateIncomingArticleTarget = Effect.fn(
   "contents.views.validateIncomingArticleTarget"
 )(
-  function* (ctx: QueryCtx, input: IncomingContentViewTargetInput) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (input: IncomingContentViewTargetInput) {
+    const database = yield* DatabaseReader;
     const owner = yield* loadArticleOwner(input.locale).pipe(
-      Effect.provide(convexArticleLayer(ctx)),
+      Effect.provide(articleLayer),
       Effect.mapError(toContentViewIoError)
     );
     if (!(owner.managed && owner.active && owner.slot)) {
@@ -168,7 +163,6 @@ const validateIncomingArticleTarget = Effect.fn(
       );
     }
     const binding = yield* loadRouteBinding(
-      ctx,
       input.locale,
       input.publicPath,
       owner.active.sequence
@@ -195,10 +189,7 @@ const validateIncomingArticleTarget = Effect.fn(
     const { projection, resolved } = yield* verifyArticle(
       row,
       owner.active.sequence
-    ).pipe(
-      Effect.provide(convexArticleLayer(ctx)),
-      Effect.mapError(toContentViewIoError)
-    );
+    ).pipe(Effect.provide(articleLayer), Effect.mapError(toContentViewIoError));
     if (
       projection.graph.assetId !== input.contentId ||
       projection.publicPath !== input.publicPath
@@ -213,13 +204,10 @@ const validateIncomingArticleTarget = Effect.fn(
 export const hydrateMaterialTarget = Effect.fn(
   "contents.views.hydrateMaterialTarget"
 )(
-  function* (
-    ctx: QueryCtx,
-    input: Omit<DurableContentViewTargetInput, "section">
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (input: Omit<DurableContentViewTargetInput, "section">) {
+    const database = yield* DatabaseReader;
     const owner = yield* loadMaterialOwner(input.locale).pipe(
-      Effect.provide(convexPublicationLayer(ctx)),
+      Effect.provide(publicationLayer),
       Effect.mapError(toContentViewIoError)
     );
     if (!(owner.managed && owner.active && owner.slot)) {
@@ -246,7 +234,7 @@ export const hydrateMaterialTarget = Effect.fn(
       row,
       owner.active.sequence
     ).pipe(
-      Effect.provide(convexPublicationLayer(ctx)),
+      Effect.provide(publicationLayer),
       Effect.mapError(toContentViewIoError)
     );
     return yield* toMaterialTarget(
@@ -259,10 +247,10 @@ export const hydrateMaterialTarget = Effect.fn(
 );
 /** Resolves one article by its durable signed asset identity. */
 const hydrateArticleTarget = Effect.fn("contents.views.hydrateArticleTarget")(
-  function* (ctx: QueryCtx, input: DurableContentViewTargetInput) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (input: DurableContentViewTargetInput) {
+    const database = yield* DatabaseReader;
     const owner = yield* loadArticleOwner(input.locale).pipe(
-      Effect.provide(convexArticleLayer(ctx)),
+      Effect.provide(articleLayer),
       Effect.mapError(toContentViewIoError)
     );
     if (!(owner.managed && owner.active && owner.slot)) {
@@ -288,10 +276,7 @@ const hydrateArticleTarget = Effect.fn("contents.views.hydrateArticleTarget")(
     const { projection, resolved } = yield* verifyArticle(
       row,
       owner.active.sequence
-    ).pipe(
-      Effect.provide(convexArticleLayer(ctx)),
-      Effect.mapError(toContentViewIoError)
-    );
+    ).pipe(Effect.provide(articleLayer), Effect.mapError(toContentViewIoError));
     return toArticleTarget(projection, input.locale, resolved.sourcePath);
   },
   Effect.catchDefect(flow(toContentViewIoError, Effect.fail))
@@ -299,18 +284,18 @@ const hydrateArticleTarget = Effect.fn("contents.views.hydrateArticleTarget")(
 /** Validates a new content view against both its ID and current public path. */
 export const validateIncomingContentTarget = Effect.fn(
   "contents.views.validateIncomingContentTarget"
-)(function* (ctx: QueryCtx, input: IncomingContentViewTargetInput) {
+)(function* (input: IncomingContentViewTargetInput) {
   if (input.section === "material") {
-    return yield* validateIncomingMaterialTarget(ctx, input);
+    return yield* validateIncomingMaterialTarget(input);
   }
-  return yield* validateIncomingArticleTarget(ctx, input);
+  return yield* validateIncomingArticleTarget(input);
 });
 /** Hydrates current route facts from one durable signed asset identity. */
 export const hydrateDurableContentTarget = Effect.fn(
   "contents.views.hydrateDurableContentTarget"
-)(function* (ctx: QueryCtx, input: DurableContentViewTargetInput) {
+)(function* (input: DurableContentViewTargetInput) {
   if (input.section === "material") {
-    return yield* hydrateMaterialTarget(ctx, input);
+    return yield* hydrateMaterialTarget(input);
   }
-  return yield* hydrateArticleTarget(ctx, input);
+  return yield* hydrateArticleTarget(input);
 });

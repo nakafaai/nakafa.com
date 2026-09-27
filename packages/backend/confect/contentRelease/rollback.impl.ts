@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import {
   rollbackProgram,
   routeProgram,
@@ -14,8 +13,7 @@ const prepareRollback = FunctionImpl.make(
   spec,
   "prepareRollback",
   Effect.fn("contentRelease.rollback.prepareRollback")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* rollbackProgram(ctx, args);
+    return yield* rollbackProgram(args);
   })
 );
 const prepareRoutes = FunctionImpl.make(
@@ -23,8 +21,7 @@ const prepareRoutes = FunctionImpl.make(
   spec,
   "prepareRoutes",
   Effect.fn("contentRelease.rollback.prepareRoutes")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* routeProgram(ctx, args);
+    return yield* routeProgram(args);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

@@ -1,10 +1,12 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import { StageRouteBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import {
   MAX_ROUTE_BATCH_BYTES,
   MAX_ROUTE_BATCH_COUNT,
 } from "@nakafa/aksara-contracts/transport/limits";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   hashBatch,
   validateStoredBatch,
@@ -23,7 +25,6 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { stageRouteVersion } from "@repo/backend/confect/contentRelease/route";
 import { encodeRouteJson } from "@repo/backend/confect/contentRelease/wire";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getConvexSize } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 
@@ -67,13 +68,12 @@ export const decodeBatch = Effect.fn("contentRelease.decodeRouteBatch")(
 /** Stages one canonical route batch with exact immutable retry identity. */
 export const stageProgram = Effect.fn("contentRelease.stageRouteBatch")(
   function* (
-    ctx: MutationCtx,
     releaseId: string,
     batchIndex: number,
     sources: readonly string[]
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const { routes } = yield* decodeBatch(releaseId, batchIndex, sources);
     const entries = routes.map((route) => ({
       route,
@@ -81,7 +81,7 @@ export const stageProgram = Effect.fn("contentRelease.stageRouteBatch")(
     }));
     const values = entries.map(({ routeJson }) => routeJson);
     const batchHash = yield* hashBatch("route", releaseId, batchIndex, values);
-    const { release, state } = yield* loadStaged(ctx, releaseId);
+    const { release, state } = yield* loadStaged(releaseId);
     const signed = yield* decodeReleaseJson(release.releaseJson);
     if (release.status !== "staging" || release.abortingAt !== undefined) {
       return yield* releaseFail(
@@ -121,7 +121,6 @@ export const stageProgram = Effect.fn("contentRelease.stageRouteBatch")(
     const priorSequence = stagedBaseSequence(release.role, state);
     for (const { route, routeJson } of entries) {
       yield* stageRouteVersion(
-        ctx,
         route,
         routeJson,
         batchIndex,

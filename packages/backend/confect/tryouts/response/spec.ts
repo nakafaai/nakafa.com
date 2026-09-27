@@ -1,6 +1,5 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import type { ConvexTaggedError } from "@repo/backend/confect/failure";
-import { failureWire } from "@repo/backend/confect/failure";
+import { publicFailure } from "@repo/backend/confect/failure";
 import { tryoutResponseSelectionValidator } from "@repo/backend/confect/tryouts/response/model";
 import { Schema } from "effect";
 export const saveTryoutResponseArgsValidator = Schema.Struct({
@@ -13,8 +12,9 @@ export type SaveTryoutResponseArgs = Schema.Schema.Type<
 export const saveTryoutResponseResultValidator = Schema.Null;
 
 /** Expected failure while saving one selected try-out response. */
-export class TryoutResponseError
-  extends Schema.TaggedError<TryoutResponseError>()("TryoutResponseError", {
+export class TryoutResponseError extends Schema.TaggedError<TryoutResponseError>()(
+  "TryoutResponseError",
+  {
     cause: Schema.optional(Schema.Unknown),
     code: Schema.Literals([
       "TRYOUT_RESPONSE_FAILED",
@@ -22,10 +22,9 @@ export class TryoutResponseError
       "TRYOUT_EXPIRED",
     ]),
     message: Schema.String,
-  })
-  implements ConvexTaggedError {}
-
-export const TryoutResponseErrorWire = failureWire(TryoutResponseError);
+  }
+) {}
+export const TryoutResponseErrorWire = publicFailure(TryoutResponseError);
 /** Redacts unexpected storage failures while retaining the internal cause. */
 export function toTryoutResponseError(error: unknown) {
   return new TryoutResponseError({
@@ -45,28 +44,19 @@ export class TryoutResponseSelectionError extends Schema.TaggedError<TryoutRespo
     message: Schema.String,
   }
 ) {}
-
-export const TryoutResponseSelectionErrorWire = failureWire(
-  TryoutResponseSelectionError
-);
 /** Stable corruption detected across response, placement, and attempt rows. */
-export class TryoutResponseIntegrityError
-  extends Schema.TaggedError<TryoutResponseIntegrityError>()(
-    "TryoutResponseIntegrityError",
-    {
-      code: Schema.Literals([
-        "TRYOUT_PLACEMENT_COUNT_MISMATCH",
-        "TRYOUT_PLACEMENT_DUPLICATE",
-        "TRYOUT_RESPONSE_SELECTION_MISMATCH",
-        "TRYOUT_RESPONSE_COUNT_EXCEEDED",
-        "TRYOUT_RESPONSE_LINK_MISMATCH",
-        "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
-        "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-      ]),
-      message: Schema.String,
-    }
-  )
-  implements ConvexTaggedError {}
-export const TryoutResponseIntegrityErrorWire = failureWire(
-  TryoutResponseIntegrityError
-);
+export class TryoutResponseIntegrityError extends Schema.TaggedError<TryoutResponseIntegrityError>()(
+  "TryoutResponseIntegrityError",
+  {
+    code: Schema.Literals([
+      "TRYOUT_PLACEMENT_COUNT_MISMATCH",
+      "TRYOUT_PLACEMENT_DUPLICATE",
+      "TRYOUT_RESPONSE_SELECTION_MISMATCH",
+      "TRYOUT_RESPONSE_COUNT_EXCEEDED",
+      "TRYOUT_RESPONSE_LINK_MISMATCH",
+      "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
+      "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
+    ]),
+    message: Schema.String,
+  }
+) {}

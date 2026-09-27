@@ -1,14 +1,15 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   ensureDocumentSize,
   SEARCH_DOCUMENT_LIMIT,
 } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
@@ -31,12 +32,11 @@ function searchableText(projection: SearchProjection, plainText: string) {
 
 /** Loads the sole active search row for one locale-specific content identity. */
 const loadSearchEntry = Effect.fn("contentRelease.loadSearchEntry")(function* (
-  ctx: MutationCtx,
   slot: ModelSlot,
   contentKey: string,
-  appLocale: Doc<"contentIndex">["appLocale"]
+  appLocale: Docs["contentIndex"]["appLocale"]
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   return yield* database
     .table("contentIndex")
     .get("by_slot_and_contentKey_and_appLocale", slot, contentKey, appLocale)
@@ -49,10 +49,9 @@ const loadSearchEntry = Effect.fn("contentRelease.loadSearchEntry")(function* (
 /** Replaces one active public search row after its release becomes active. */
 export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
   function* (
-    ctx: MutationCtx,
     slot: ModelSlot,
     head: Pick<
-      Doc<"contentHeads">,
+      Docs["contentHeads"],
       | "operation"
       | "delivery"
       | "projectionHash"
@@ -65,7 +64,7 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
     projection: ContentProjection,
     plainText: string
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const writer = yield* DatabaseWriter;
     if (
       head.operation !== "upsert" ||
       head.delivery !== "public" ||
@@ -86,7 +85,7 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
         `Search entry ${head.contentKey}/${head.artifactLocale} changed family.`
       );
     }
-    const entry: WithoutSystemFields<Doc<"contentIndex">> = {
+    const entry: WithoutSystemFields<Docs["contentIndex"]> = {
       contentKey: head.contentKey,
       family,
       appLocale: projection.appLocale,
@@ -103,7 +102,6 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
       SEARCH_DOCUMENT_LIMIT
     );
     const existing = yield* loadSearchEntry(
-      ctx,
       slot,
       head.contentKey,
       projection.appLocale
@@ -122,13 +120,12 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
 /** Removes one active search row after deletion or access-policy change. */
 export const deleteSearchEntry = Effect.fn("contentRelease.deleteSearchEntry")(
   function* (
-    ctx: MutationCtx,
     slot: ModelSlot,
     contentKey: string,
-    appLocale: Doc<"contentIndex">["appLocale"]
+    appLocale: Docs["contentIndex"]["appLocale"]
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const existing = yield* loadSearchEntry(ctx, slot, contentKey, appLocale);
+    const writer = yield* DatabaseWriter;
+    const existing = yield* loadSearchEntry(slot, contentKey, appLocale);
     if (existing) {
       yield* writer.table("contentIndex").delete(existing._id);
     }

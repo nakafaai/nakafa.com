@@ -1,18 +1,16 @@
-import { DatabaseReader } from "@confect/server";
 import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   loadRelease,
   loadState,
 } from "@repo/backend/confect/contentRelease/model";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Option } from "effect";
 
 /** Checks permanent try-out state that still requires one snapshot. */
 const hasTryoutRuntimeReference = Effect.fn(
   "contentRelease.hasTryoutRuntimeReference"
-)(function* (ctx: MutationCtx, snapshotId: string) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (snapshotId: string) {
+  const database = yield* DatabaseReader;
   const [attempt, scale] = yield* Effect.all([
     database
       .table("tryoutAttempts")
@@ -35,9 +33,9 @@ const hasTryoutRuntimeReference = Effect.fn(
 
 /** Collects every release ID whose stored history must stay reachable. */
 const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
-  function* (ctx: MutationCtx) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const state = yield* loadState(ctx);
+  function* () {
+    const database = yield* DatabaseReader;
+    const state = yield* loadState();
     const completed = yield* database
       .table("contentReleases")
       .index(
@@ -56,7 +54,7 @@ const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
       ].filter((releaseId) => releaseId !== undefined)
     );
     for (const releaseId of [...ids]) {
-      const release = yield* loadRelease(ctx, releaseId);
+      const release = yield* loadRelease(releaseId);
       const baseReleaseId = release.baseReleaseId;
       if (baseReleaseId !== null) {
         ids.add(baseReleaseId);
@@ -69,20 +67,13 @@ const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
 /** Checks whether any retained release still selects one immutable snapshot. */
 export const isSnapshotReferenced = Effect.fn(
   "contentRelease.isSnapshotReferenced"
-)(function* (
-  ctx: MutationCtx,
-  family: ContentSnapshotKind,
-  snapshotId: string
-) {
-  if (
-    family === "tryout" &&
-    (yield* hasTryoutRuntimeReference(ctx, snapshotId))
-  ) {
+)(function* (family: ContentSnapshotKind, snapshotId: string) {
+  if (family === "tryout" && (yield* hasTryoutRuntimeReference(snapshotId))) {
     return true;
   }
-  const ids = yield* protectedReleases(ctx);
+  const ids = yield* protectedReleases();
   for (const releaseId of ids) {
-    const release = yield* loadRelease(ctx, releaseId);
+    const release = yield* loadRelease(releaseId);
     const state = release.snapshotTransitions[family];
     if (
       state.baseSnapshotId === snapshotId ||
@@ -97,8 +88,8 @@ export const isSnapshotReferenced = Effect.fn(
 /** Checks whether any immutable try-out placement owns an artifact. */
 export const hasSnapshotArtifactReference = Effect.fn(
   "contentRelease.hasSnapshotArtifactReference"
-)(function* (ctx: MutationCtx, artifactHash: string) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (artifactHash: string) {
+  const database = yield* DatabaseReader;
   const [question, answer] = yield* Effect.all([
     database
       .table("tryoutPlacements")

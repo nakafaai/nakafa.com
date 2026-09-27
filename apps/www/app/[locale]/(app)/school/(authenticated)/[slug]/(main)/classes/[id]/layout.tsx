@@ -1,4 +1,3 @@
-import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
@@ -7,11 +6,10 @@ import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
 import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
 import { SchoolClassesTabs } from "@/components/school/classes/tabs";
 import { SchoolClassesWorkspaceShell } from "@/components/school/classes/workspace-shell";
-import { getToken } from "@/lib/auth/server";
 import { ClassContextProvider } from "@/lib/context/use-class";
-import { preloadClassRoute } from "@/lib/school/server";
+import { getClassRouteSnapshot } from "@/lib/school/server";
 
-/** Bind the preloaded class route to the class subtree. */
+/** Bind the authenticated class route to the class subtree. */
 export default function Layout({
   children,
   panel,
@@ -50,7 +48,7 @@ async function ResolvedClassRouteBoundary({
 }
 
 /**
- * Preload the class route so the client subtree hydrates without a data gap.
+ * Resolve class admission and server data before rendering the client subtree.
  */
 async function ClassRouteBoundary({
   children,
@@ -61,26 +59,23 @@ async function ClassRouteBoundary({
   classId: string;
   panel: ReactNode;
 }) {
-  const token = await getToken();
-  const route = await Effect.runPromise(preloadClassRoute({ classId, token }));
+  const route = await getClassRouteSnapshot(classId);
 
   if (!route) {
     notFound();
   }
 
-  const { preloaded, value } = route;
-
-  if (value.kind === "joinRequired") {
+  if (route.kind === "joinRequired") {
     return (
       <SchoolClassesJoinForm
-        classId={value.class._id}
-        visibility={value.class.visibility}
+        classId={route.class._id}
+        visibility={route.class.visibility}
       />
     );
   }
 
   return (
-    <ClassContextProvider preloaded={preloaded}>
+    <ClassContextProvider initialRoute={route}>
       <ForumSessionProvider classId={classId} key={classId}>
         <SchoolClassesWorkspaceShell panel={panel}>
           <SchoolClassesHeaderInfo />

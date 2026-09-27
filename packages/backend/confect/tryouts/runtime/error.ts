@@ -1,12 +1,12 @@
-import type { ConvexTaggedError } from "@repo/backend/confect/failure";
-import { failureWire } from "@repo/backend/confect/failure";
+import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 const runtimeFailureMessage = "Unable to complete try-out runtime operation.";
 
 /** Expected failure while executing one try-out runtime capability. */
-export class TryoutRuntimeError
-  extends Schema.TaggedError<TryoutRuntimeError>()("TryoutRuntimeError", {
+export class TryoutRuntimeError extends Schema.TaggedError<TryoutRuntimeError>()(
+  "TryoutRuntimeError",
+  {
     cause: Schema.optional(Schema.Unknown),
     code: Schema.Literals([
       "TRYOUT_RUNTIME_FAILED",
@@ -29,12 +29,11 @@ export class TryoutRuntimeError
       "TRYOUT_IRT_INFORMATION_TOO_LOW",
     ]),
     message: Schema.String,
-  })
-  implements ConvexTaggedError {}
+  }
+) {}
 
 /** Maps an unknown runtime failure into the stable typed error channel. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const TryoutRuntimeErrorWire = failureWire(TryoutRuntimeError);
+export const TryoutRuntimeErrorWire = publicFailure(TryoutRuntimeError);
 export function toTryoutRuntimeError(error: unknown) {
   return new TryoutRuntimeError({
     cause: error,

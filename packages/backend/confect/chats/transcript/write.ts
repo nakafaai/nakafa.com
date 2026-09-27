@@ -39,7 +39,9 @@ export const deleteMessageBatchFromPoint = Effect.fn(
       yield* writer.table("messageParts").delete(part._id);
     }
     if (parts.length > MAX_CHAT_MESSAGE_PARTS) {
-      return { hasMore: true };
+      return {
+        hasMore: true,
+      };
     }
     yield* writer.table("messages").delete(message._id);
   }
@@ -112,7 +114,10 @@ export const insertParts = Effect.fn("chats.transcript.insertParts")(function* (
     partIds.push(
       yield* writer
         .table("messageParts")
-        .insert({ ...part, messageId })
+        .insert({
+          ...part,
+          messageId,
+        })
         .pipe(Effect.orDie)
     );
   }

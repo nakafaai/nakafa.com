@@ -69,7 +69,9 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
 export async function getArticleNavigation(locale: Locale) {
   "use cache";
 
-  const navigation = await Effect.runPromise(readArticleNavigation(locale));
+  const navigation = await Effect.runPromise(
+    readArticleNavigation(locale).pipe(Effect.withTracerTiming(false))
+  );
   applyContentCache("article");
   return navigation;
 }

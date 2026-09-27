@@ -1,10 +1,10 @@
-import { QueryRunner } from "@confect/server";
 import {
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
   type PublicContentRuntimeRequest,
   type PublicContentRuntimeResponse,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   encodeRuntimeResult,
   failureResult,
@@ -17,7 +17,6 @@ import {
   publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Result, Schema } from "effect";
 
 class PublicRuntimeBatchRequestError extends Schema.TaggedError<PublicRuntimeBatchRequestError>()(
@@ -52,10 +51,8 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
 /** Reads and decodes one transactionally consistent public batch. */
 const resolvePublicRuntimeBatch = Effect.fn(
   "contentRelease.resolvePublicRuntimeBatch"
-)(function* (ctx: ActionCtx, requests: readonly PublicContentRuntimeRequest[]) {
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
+)(function* (requests: readonly PublicContentRuntimeRequest[]) {
+  const runQuery = yield* QueryRunner;
   const rows = yield* runQuery(
     refs.internal.contentRelease.runtime.publication.internal.readBatch,
     {
@@ -95,7 +92,7 @@ const resolvePublicRuntimeBatch = Effect.fn(
 /** Decodes, resolves, and safely encodes one public runtime batch. */
 export const dispatchBatchProgram = Effect.fn(
   "contentRelease.publicRuntimeBatchDispatch"
-)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+)(function* (source: string, byteLength: number) {
   const decoded = yield* decodeBatchRequest(source, byteLength).pipe(
     Effect.result
   );
@@ -103,7 +100,6 @@ export const dispatchBatchProgram = Effect.fn(
     return failureResult("CONTENT_RUNTIME_INVALID", 400);
   }
   const responses = yield* resolvePublicRuntimeBatch(
-    ctx,
     decoded.success.requests
   ).pipe(Effect.result);
   if (Result.isFailure(responses)) {

@@ -1,4 +1,4 @@
-import { failureWire } from "@repo/backend/confect/failure";
+import { publicFailure } from "@repo/backend/confect/failure";
 import { Effect, Schema } from "effect";
 export const USER_CLEANUP_FAILED_CODE = "USER_CLEANUP_FAILED";
 
@@ -13,8 +13,7 @@ export class UserCleanupError extends Schema.TaggedError<UserCleanupError>()(
 ) {}
 
 /** Converts a database or scheduler failure into the cleanup error contract. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const UserCleanupErrorWire = failureWire(UserCleanupError);
+export const UserCleanupErrorWire = publicFailure(UserCleanupError);
 export function toUserCleanupError(error: unknown) {
   return new UserCleanupError({
     cause: error,

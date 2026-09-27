@@ -1,8 +1,8 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs } from "convex/server";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 
-type UpdateArgs = FunctionArgs<
-  typeof api.classes.materials.mutations.updateMaterialGroup
+type UpdateArgs = Ref.Args<
+  typeof refs.public.classes.materials.mutations.updateMaterialGroup
 >;
 type UpdatePatch = Omit<UpdateArgs, "groupId">;
 interface MaterialGroupState {

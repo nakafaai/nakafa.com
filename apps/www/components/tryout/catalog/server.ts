@@ -1,23 +1,21 @@
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
-
 import {
   type AppLocale,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { api } from "@repo/backend/convex/_generated/api";
-import { fetchQuery } from "convex/nextjs";
-import type { FunctionArgs } from "convex/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { applyContentCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 
-type TryoutMetadataKind = FunctionArgs<
-  typeof api.tryouts.queries.catalog.getMetadata
+type TryoutMetadataKind = Ref.Args<
+  typeof refs.public.tryouts.queries.catalog.getMetadata
 >["kind"];
-
 interface TryoutMetadataArgs {
   readonly appLocale: AppLocale;
   readonly kind: TryoutMetadataKind;
@@ -27,24 +25,29 @@ interface TryoutMetadataArgs {
 /** Expected failure while reading one authenticated try-out page. */
 class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>()(
   "TryoutCatalogReadError",
-  { cause: Schema.Unknown }
+  {
+    cause: Schema.Unknown,
+  }
 ) {}
 
 /** Reads and renders the signed question selected for the marketing page. */
 export async function readFeaturedTryout(locale: Locale) {
   "use cache";
+
   applyContentCache("tryout");
-
-  const featured = await fetchQuery(
-    api.tryouts.queries.catalog.getFeaturedQuestion,
-    { appLocale: AppLocaleSchema.make(locale) },
-    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  const featured = await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.tryouts.queries.catalog.getFeaturedQuestion, {
+        appLocale: AppLocaleSchema.make(locale),
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
   );
-
   return await Effect.runPromise(
     Effect.gen(function* () {
       const question = yield* loadTryoutQuestion(featured.question);
-
       return {
         question: question.content,
         response: featured.response,
@@ -56,36 +59,48 @@ export async function readFeaturedTryout(locale: Locale) {
 /** Reads exact signed route metadata from the tagged content cache. */
 export async function readTryoutMetadata(args: TryoutMetadataArgs) {
   "use cache";
-  applyContentCache("tryout");
 
-  return await fetchQuery(api.tryouts.queries.catalog.getMetadata, args, {
-    url: env.NEXT_PUBLIC_CONVEX_URL,
-  });
+  applyContentCache("tryout");
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.tryouts.queries.catalog.getMetadata, args)
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
+  );
 }
 
 /** Reads the public country-first try-out catalog from the tagged content cache. */
 export async function readTryoutHubPage(locale: Locale) {
   "use cache";
-  applyContentCache("tryout");
 
+  applyContentCache("tryout");
   const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
-    Effect.tryPromise({
-      catch: (cause) => new TryoutCatalogReadError({ cause }),
-      try: () =>
-        fetchQuery(
-          api.tryouts.queries.catalog.getHubPage,
-          {
-            appLocale,
-          },
-          { url: env.NEXT_PUBLIC_CONVEX_URL }
-        ),
-    }).pipe(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.tryouts.queries.catalog.getHubPage, {
+        appLocale,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false),
+      Effect.mapError(
+        (cause) =>
+          new TryoutCatalogReadError({
+            cause,
+          })
+      ),
       Effect.flatMap((page) =>
         decodeSourceRevision(page.sourceRevision, {
           appLocale,
           publicPath: "try-out",
-        }).pipe(Effect.map((sourceRevision) => ({ ...page, sourceRevision })))
+        }).pipe(
+          Effect.map((sourceRevision) => ({
+            ...page,
+            sourceRevision,
+          }))
+        )
       )
     )
   );
@@ -97,22 +112,24 @@ export async function readTryoutCountryPage(
   publicPath: string
 ) {
   "use cache";
-  applyContentCache("tryout");
 
+  applyContentCache("tryout");
   const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
-    Effect.tryPromise({
-      catch: (cause) => new TryoutCatalogReadError({ cause }),
-      try: () =>
-        fetchQuery(
-          api.tryouts.queries.catalog.getCountryPage,
-          {
-            appLocale,
-            publicPath,
-          },
-          { url: env.NEXT_PUBLIC_CONVEX_URL }
-        ),
-    }).pipe(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.tryouts.queries.catalog.getCountryPage, {
+        appLocale,
+        publicPath,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false),
+      Effect.mapError(
+        (cause) =>
+          new TryoutCatalogReadError({
+            cause,
+          })
+      ),
       Effect.flatMap((page) => {
         if (!page) {
           return Effect.succeed(null);
@@ -120,7 +137,12 @@ export async function readTryoutCountryPage(
         return decodeSourceRevision(page.sourceRevision, {
           appLocale,
           publicPath,
-        }).pipe(Effect.map((sourceRevision) => ({ ...page, sourceRevision })));
+        }).pipe(
+          Effect.map((sourceRevision) => ({
+            ...page,
+            sourceRevision,
+          }))
+        );
       })
     )
   );
@@ -129,30 +151,36 @@ export async function readTryoutCountryPage(
 /** Reads one public exam page from the tagged content cache. */
 export async function readTryoutExamPage(locale: Locale, publicPath: string) {
   "use cache";
-  applyContentCache("tryout");
 
-  return await fetchQuery(
-    api.tryouts.queries.catalog.getExamPage,
-    {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    },
-    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  applyContentCache("tryout");
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.tryouts.queries.catalog.getExamPage, {
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
   );
 }
 
 /** Reads one public track shell from the tagged content cache. */
 export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
   "use cache";
-  applyContentCache("tryout");
 
-  return await fetchQuery(
-    api.tryouts.queries.catalog.getTrackPage,
-    {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    },
-    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  applyContentCache("tryout");
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.tryouts.queries.catalog.getTrackPage, {
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
   );
 }
 
@@ -160,31 +188,47 @@ export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
 export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
   function* (
     token: string | undefined,
-    args: FunctionArgs<typeof api.tryouts.queries.sets.list>
+    args: Ref.Args<typeof refs.public.tryouts.queries.sets.list>
   ) {
-    return yield* Effect.tryPromise({
-      catch: (cause) => new TryoutCatalogReadError({ cause }),
-      try: () =>
-        fetchQuery(api.tryouts.queries.sets.list, args, {
-          ...(token === undefined ? {} : { token }),
-          url: env.NEXT_PUBLIC_CONVEX_URL,
-        }),
-    });
+    return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.tryouts.queries.sets.list, args)
+    ).pipe(
+      Effect.provide(
+        HttpClient.layer(
+          env.NEXT_PUBLIC_CONVEX_URL,
+          token
+            ? {
+                auth: token,
+              }
+            : {}
+        )
+      ),
+      Effect.withTracerTiming(false),
+      Effect.mapError(
+        (cause) =>
+          new TryoutCatalogReadError({
+            cause,
+          })
+      )
+    );
   }
 );
 
 /** Reads one public set page from the tagged content cache. */
 export async function readTryoutSetPage(locale: Locale, publicPath: string) {
   "use cache";
-  applyContentCache("tryout");
 
-  return await fetchQuery(
-    api.tryouts.queries.catalog.getSetPage,
-    {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    },
-    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  applyContentCache("tryout");
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.tryouts.queries.catalog.getSetPage, {
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
   );
 }
 
@@ -193,19 +237,28 @@ export const readTryoutSetAttemptPage = Effect.fn(
   "www.tryout.catalog.readSetAttemptPage"
 )(function* (
   token: string,
-  request: FunctionArgs<
-    typeof api.tryouts.queries.attemptPage.getSet
+  request: Ref.Args<
+    typeof refs.public.tryouts.queries.attemptPage.getSet
   >["request"]
 ) {
-  return yield* Effect.tryPromise({
-    catch: (cause) => new TryoutCatalogReadError({ cause }),
-    try: () =>
-      fetchQuery(
-        api.tryouts.queries.attemptPage.getSet,
-        { request },
-        { token }
-      ),
-  });
+  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.tryouts.queries.attemptPage.getSet, {
+      request,
+    })
+  ).pipe(
+    Effect.provide(
+      HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, {
+        auth: token,
+      })
+    ),
+    Effect.withTracerTiming(false),
+    Effect.mapError(
+      (cause) =>
+        new TryoutCatalogReadError({
+          cause,
+        })
+    )
+  );
 });
 
 /** Reads one public section page from the tagged content cache. */
@@ -214,15 +267,18 @@ export async function readTryoutSectionPage(
   publicPath: string
 ) {
   "use cache";
-  applyContentCache("tryout");
 
-  return await fetchQuery(
-    api.tryouts.queries.catalog.getSectionPage,
-    {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    },
-    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  applyContentCache("tryout");
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.tryouts.queries.catalog.getSectionPage, {
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
   );
 }
 
@@ -231,17 +287,26 @@ export const readTryoutSectionAttemptPage = Effect.fn(
   "www.tryout.catalog.readSectionAttemptPage"
 )(function* (
   token: string,
-  request: FunctionArgs<
-    typeof api.tryouts.queries.attemptPage.getSection
+  request: Ref.Args<
+    typeof refs.public.tryouts.queries.attemptPage.getSection
   >["request"]
 ) {
-  return yield* Effect.tryPromise({
-    catch: (cause) => new TryoutCatalogReadError({ cause }),
-    try: () =>
-      fetchQuery(
-        api.tryouts.queries.attemptPage.getSection,
-        { request },
-        { token }
-      ),
-  });
+  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.tryouts.queries.attemptPage.getSection, {
+      request,
+    })
+  ).pipe(
+    Effect.provide(
+      HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, {
+        auth: token,
+      })
+    ),
+    Effect.withTracerTiming(false),
+    Effect.mapError(
+      (cause) =>
+        new TryoutCatalogReadError({
+          cause,
+        })
+    )
+  );
 });

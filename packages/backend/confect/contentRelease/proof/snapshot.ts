@@ -1,6 +1,5 @@
 "use node";
 
-import { QueryRunner } from "@confect/server";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import {
   type ContentSnapshotKind,
@@ -12,6 +11,7 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { verifyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/verify";
 import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   decodeReleaseJson,
@@ -19,7 +19,6 @@ import {
   parseStoredJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Option, Stream } from "effect";
 
 /** Returns fixed replacement families in canonical signed order. */
@@ -31,10 +30,8 @@ function replacementFamilies(release: SignedContentRelease) {
 
 /** Loads and rechecks one manifest before the shared proof consumes it. */
 const readManifest = Effect.fn("contentRelease.readProofSnapshotManifest")(
-  function* (ctx: ActionCtx, releaseId: string, family: ContentSnapshotKind) {
-    const runQuery = yield* QueryRunner.QueryRunner.pipe(
-      Effect.provide(QueryRunner.layer(ctx.runQuery))
-    );
+  function* (releaseId: string, family: ContentSnapshotKind) {
+    const runQuery = yield* QueryRunner;
     const source = yield* runQuery(
       refs.internal.contentRelease.snapshot.read.manifest,
       {
@@ -57,22 +54,18 @@ const readManifest = Effect.fn("contentRelease.readProofSnapshotManifest")(
 );
 
 /** Creates one replayable canonical replacement-manifest stream. */
-function manifestStream(ctx: ActionCtx, release: SignedContentRelease) {
+function manifestStream(release: SignedContentRelease) {
   return Stream.fromIterable(replacementFamilies(release)).pipe(
     Stream.mapEffect((family) =>
-      readManifest(ctx, release.manifest.releaseId, family)
+      readManifest(release.manifest.releaseId, family)
     )
   );
 }
 
 /** Creates one replayable family row stream from exact release batch ledgers. */
-function familyRows(
-  ctx: ActionCtx,
-  releaseId: string,
-  family: ContentSnapshotKind
-) {
+function familyRows(releaseId: string, family: ContentSnapshotKind) {
   return Stream.paginate(-1, (afterBatchIndex) =>
-    QueryRunner.QueryRunner.pipe(
+    QueryRunner.pipe(
       Effect.flatMap((runQuery) =>
         runQuery(refs.internal.contentRelease.snapshot.read.rows, {
           afterBatchIndex,
@@ -80,7 +73,6 @@ function familyRows(
           releaseId,
         })
       ),
-      Effect.provide(QueryRunner.layer(ctx.runQuery)),
       Effect.catchTag("SchemaError", Effect.die),
       Effect.map(
         (page): readonly [readonly string[], Option.Option<number>] => [
@@ -93,20 +85,16 @@ function familyRows(
 }
 
 /** Creates one replayable globally ordered structured-row stream. */
-function rowStream(ctx: ActionCtx, release: SignedContentRelease) {
+function rowStream(release: SignedContentRelease) {
   return Stream.fromIterable(replacementFamilies(release)).pipe(
-    Stream.flatMap((family) =>
-      familyRows(ctx, release.manifest.releaseId, family)
-    )
+    Stream.flatMap((family) => familyRows(release.manifest.releaseId, family))
   );
 }
 
 /** Loads the exact signed base snapshot set or the empty genesis identity. */
 const loadPrevious = Effect.fn("contentRelease.loadPreviousSnapshots")(
-  function* (ctx: ActionCtx, release: SignedContentRelease) {
-    const runQuery = yield* QueryRunner.QueryRunner.pipe(
-      Effect.provide(QueryRunner.layer(ctx.runQuery))
-    );
+  function* (release: SignedContentRelease) {
+    const runQuery = yield* QueryRunner;
     const baseId = release.manifest.baseReleaseId;
     if (baseId === null) {
       return null;
@@ -132,13 +120,12 @@ const loadPrevious = Effect.fn("contentRelease.loadPreviousSnapshots")(
 export const verifyReleaseSnapshots = Effect.fn(
   "contentRelease.verifyReleaseSnapshots"
 )(function* (
-  ctx: ActionCtx,
   release: SignedContentRelease,
   role: "candidate" | "recovery",
   stagedSnapshotBatches: number,
   stagedSnapshotRows: number
 ) {
-  const previous = yield* loadPrevious(ctx, release);
+  const previous = yield* loadPrevious(release);
   const restoresPrevious =
     role === "recovery" || release.manifest.origin.kind === "rollback";
   if (restoresPrevious) {
@@ -162,9 +149,9 @@ export const verifyReleaseSnapshots = Effect.fn(
     };
   }
   const verified = yield* verifyContentSnapshots({
-    manifests: manifestStream(ctx, release),
+    manifests: manifestStream(release),
     previousSnapshots: previous,
-    rows: rowStream(ctx, release),
+    rows: rowStream(release),
   }).pipe(Effect.mapError(contractFailure));
   if (
     stagedSnapshotRows !== verified.stagedRows ||

@@ -1,23 +1,22 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
 import { projectTryoutResponseSpec } from "@repo/backend/confect/tryouts/response/model";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
-import { readAttemptSetIdentity } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { loadSectionPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import { loadSectionResponseIndex } from "@repo/backend/confect/tryouts/runtime/response";
 import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
 import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
-type TryoutResponse = Doc<"tryoutResponses">;
+type TryoutPlacement = Docs["tryoutAttemptPlacements"];
+type TryoutResponse = Docs["tryoutResponses"];
 
 /** Projects the public state shared by attempt and runtime responses. */
 export const readCurrentSection = Effect.fn(
   "tryouts.runtime.readCurrentSection"
-)(function* (section: Doc<"tryoutSectionAttempts">) {
+)(function* (section: Docs["tryoutSectionAttempts"]) {
   return {
     answeredCount: section.answeredCount,
     completedAt: section.completedAt,
@@ -33,15 +32,10 @@ export const readCurrentSection = Effect.fn(
 
 /** Loads one bounded section graph for the exact-attempt runtime contract. */
 const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
-  ctx: QueryCtx,
-  attempt: Doc<"tryoutAttempts">,
-  section: Doc<"tryoutSectionAttempts">
+  attempt: Docs["tryoutAttempts"],
+  section: Docs["tryoutSectionAttempts"]
 ) {
-  const access = yield* readTryoutSectionContentAccess(
-    ctx,
-    attempt,
-    section.status
-  );
+  const access = yield* readTryoutSectionContentAccess(attempt, section.status);
   if (!access.questions) {
     return null;
   }
@@ -49,13 +43,8 @@ const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
     attempt,
     section
   );
-  const placements = yield* loadSectionPlacements(ctx, attempt, snapshot);
-  const loaded = yield* loadSectionResponseIndex(
-    ctx,
-    attempt,
-    section,
-    placements
-  );
+  const placements = yield* loadSectionPlacements(attempt, snapshot);
+  const loaded = yield* loadSectionResponseIndex(attempt, section, placements);
   const currentSection = yield* readCurrentSection(section);
   return {
     access,
@@ -67,23 +56,21 @@ const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
 /** Loads the compact runtime plus immutable content selectors once. */
 export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
   function* (
-    ctx: QueryCtx,
-    attempt: Doc<"tryoutAttempts">,
-    section: Doc<"tryoutSectionAttempts">
+    attempt: Docs["tryoutAttempts"],
+    section: Docs["tryoutSectionAttempts"],
+    appLocale: AppLocaleCode = attempt.appLocale
   ) {
-    const loaded = yield* loadSectionRows(ctx, attempt, section);
+    const loaded = yield* loadSectionRows(attempt, section);
     if (!loaded) {
       return {
         content: noTryoutSectionContentAccess,
         runtime: null,
       };
     }
-    const identity = readAttemptSetIdentity(attempt);
     const content = yield* projectTryoutSignedContent({
       answers: loaded.access.answers,
       attempt,
-      ctx,
-      appLocale: identity.locale,
+      appLocale,
       placements: loaded.placements,
       totalQuestions: section.totalQuestions,
     });

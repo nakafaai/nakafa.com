@@ -1,6 +1,7 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { ensureCompaction } from "@repo/backend/confect/contentRelease/compact/state";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
@@ -14,22 +15,43 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 describe("contentRelease/compact/state", () => {
   it("distinguishes a newly persisted cycle, a resumed cycle, and its exact completed floor", async () => {
     const t = convexTest(schema, convexModules);
     expect(
-      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
     ).toMatchObject({
       complete: false,
-      cycle: { floor: 1, phase: "heads", state: { nextSequence: 1 } },
+      cycle: {
+        floor: 1,
+        phase: "heads",
+        state: {
+          nextSequence: 1,
+        },
+      },
     });
     const resumed = await t.mutation((ctx) =>
-      runConvexProgram(ensureCompaction(ctx))
+      Effect.runPromise(
+        ensureCompaction().pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      )
     );
     expect(resumed).toMatchObject({
       complete: false,
-      cycle: { state: { compactPhase: "heads" } },
+      cycle: {
+        state: {
+          compactPhase: "heads",
+        },
+      },
     });
     await t.mutation(async (ctx) => {
       const state = await ctx.db.query("contentState").unique();
@@ -43,45 +65,87 @@ describe("contentRelease/compact/state", () => {
       });
     });
     expect(
-      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).toEqual({ complete: true, floor: 1 });
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).toEqual({
+      complete: true,
+      floor: 1,
+    });
   });
-
   it.each([
-    { nextSequence: 0 },
-    { compactedFloor: -1 },
-    { compactedFloor: 3 },
-    { activeReleaseId: "incomplete" },
-    { compactPhase: "heads" },
-    { compactCursor: "orphaned-production-cursor" },
+    {
+      nextSequence: 0,
+    },
+    {
+      compactedFloor: -1,
+    },
+    {
+      compactedFloor: 3,
+    },
+    {
+      activeReleaseId: "incomplete",
+    },
+    {
+      compactPhase: "heads",
+    },
+    {
+      compactCursor: "orphaned-production-cursor",
+    },
   ] satisfies Partial<Doc<"contentState">>[])(
     "rejects invalid lifecycle state %j",
     async (patch) => {
       const t = convexTest(schema, convexModules);
       await t.mutation(async (ctx) => {
-        await insertTestState(ctx, { nextSequence: 2 });
+        await insertTestState(ctx, {
+          nextSequence: 2,
+        });
         const state = await ctx.db.query("contentState").unique();
         assert.ok(state);
         await ctx.db.patch("contentState", state._id, patch);
       });
       await expect(
-        t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+        t.mutation((ctx) =>
+          Effect.runPromise(
+            ensureCompaction().pipe(
+              Effect.provide(mutationLayer(confectSchema, ctx))
+            )
+          )
+        )
+      ).rejects.toMatchObject({
+        code: "CONTENT_RELEASE_INTEGRITY",
+      });
     }
   );
-
   it("protects a first active release with no predecessor", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       const active = compactionIdentity(1);
       await insertCompletedRelease(ctx, active);
-      await insertTestState(ctx, { active, nextSequence: 2 });
+      await insertTestState(ctx, {
+        active,
+        nextSequence: 2,
+      });
     });
     expect(
-      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).toMatchObject({ complete: false, cycle: { floor: 1 } });
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).toMatchObject({
+      complete: false,
+      cycle: {
+        floor: 1,
+      },
+    });
   });
-
   it("rejects a slot identity whose manifest hash drifted from the stored release", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -89,7 +153,10 @@ describe("contentRelease/compact/state", () => {
       const active = compactionIdentity(2);
       await insertCompletedRelease(ctx, base);
       await insertCompletedRelease(ctx, active, base);
-      await insertTestState(ctx, { active, nextSequence: 3 });
+      await insertTestState(ctx, {
+        active,
+        nextSequence: 3,
+      });
       const state = await ctx.db.query("contentState").unique();
       assert.ok(state);
       await ctx.db.patch("contentState", state._id, {
@@ -97,10 +164,17 @@ describe("contentRelease/compact/state", () => {
       });
     });
     await expect(
-      t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+      t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("fails closed while a slot references a missing release and no history exists", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
@@ -114,10 +188,20 @@ describe("contentRelease/compact/state", () => {
       })
     );
     expect(
-      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).toMatchObject({ complete: false, cycle: { floor: 2 } });
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).toMatchObject({
+      complete: false,
+      cycle: {
+        floor: 2,
+      },
+    });
   });
-
   it("fails closed to the earliest stored release when a slot release is missing", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -133,10 +217,20 @@ describe("contentRelease/compact/state", () => {
       });
     });
     expect(
-      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).toMatchObject({ complete: false, cycle: { floor: 1 } });
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).toMatchObject({
+      complete: false,
+      cycle: {
+        floor: 1,
+      },
+    });
   });
-
   it.each([
     "active-sequence",
     "base-sequence",
@@ -149,7 +243,10 @@ describe("contentRelease/compact/state", () => {
       const active = compactionIdentity(2);
       await insertCompletedRelease(ctx, base);
       await insertCompletedRelease(ctx, active, base);
-      await insertTestState(ctx, { active, nextSequence: 3 });
+      await insertTestState(ctx, {
+        active,
+        nextSequence: 3,
+      });
       const row = await ctx.db
         .query("contentReleases")
         .withIndex("by_releaseId", (q) =>
@@ -161,7 +258,9 @@ describe("contentRelease/compact/state", () => {
         .unique();
       assert.ok(row);
       if (mutation === "active-sequence" || mutation === "base-sequence") {
-        await ctx.db.patch("contentReleases", row._id, { sequence: 0 });
+        await ctx.db.patch("contentReleases", row._id, {
+          sequence: 0,
+        });
       } else {
         await ctx.db.patch("contentReleases", row._id, {
           baseManifestHash:
@@ -170,10 +269,17 @@ describe("contentRelease/compact/state", () => {
       }
     });
     await expect(
-      t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+      t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("resolves a protected floor when the base stored a manifest the content contract rejects", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -181,7 +287,10 @@ describe("contentRelease/compact/state", () => {
       const active = compactionIdentity(2);
       await insertCompletedRelease(ctx, base);
       await insertCompletedRelease(ctx, active, base);
-      await insertTestState(ctx, { active, nextSequence: 3 });
+      await insertTestState(ctx, {
+        active,
+        nextSequence: 3,
+      });
       const row = await ctx.db
         .query("contentReleases")
         .withIndex("by_releaseId", (q) => q.eq("releaseId", base.releaseId))
@@ -199,21 +308,40 @@ describe("contentRelease/compact/state", () => {
       });
     });
     expect(
-      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).toMatchObject({ complete: false, cycle: { floor: 1 } });
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).toMatchObject({
+      complete: false,
+      cycle: {
+        floor: 1,
+      },
+    });
   });
-
   it("rejects invalid completed release sequences outside active slots", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertCompletedRelease(ctx, compactionIdentity(0));
-      await insertTestState(ctx, { nextSequence: 1 });
+      await insertTestState(ctx, {
+        nextSequence: 1,
+      });
     });
     await expect(
-      t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+      t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("rejects duplicate retained sequence numbers before deleting any history", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -221,18 +349,30 @@ describe("contentRelease/compact/state", () => {
         await insertZeroRelease(ctx, {
           ...compactionIdentity(1),
           releaseId,
-          ownership: { base: [], result: [] },
+          ownership: {
+            base: [],
+            result: [],
+          },
           role: "candidate",
           status: "aborted",
         });
       }
-      await insertTestState(ctx, { nextSequence: 3 });
+      await insertTestState(ctx, {
+        nextSequence: 3,
+      });
     });
     await expect(
-      t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+      t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("keeps the recent release boundary when a frozen runtime names an older release", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -258,23 +398,45 @@ describe("contentRelease/compact/state", () => {
       });
     });
     expect(
-      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).toMatchObject({ complete: false, cycle: { floor: 2 } });
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).toMatchObject({
+      complete: false,
+      cycle: {
+        floor: 2,
+      },
+    });
   });
-
   it("advances only through a bounded old-release window", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       for (let sequence = 1; sequence <= 36; sequence += 1) {
         await insertCompletedRelease(ctx, compactionIdentity(sequence));
       }
-      await insertTestState(ctx, { nextSequence: 37 });
+      await insertTestState(ctx, {
+        nextSequence: 37,
+      });
     });
     expect(
-      await t.mutation((ctx) => runConvexProgram(ensureCompaction(ctx)))
-    ).toMatchObject({ complete: false, cycle: { floor: 33 } });
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).toMatchObject({
+      complete: false,
+      cycle: {
+        floor: 33,
+      },
+    });
   });
-
   it("keeps history intact when the provider returns an empty unfinished page", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => seedCompactionHistory(ctx));
@@ -303,16 +465,30 @@ describe("contentRelease/compact/state", () => {
         });
         return rows;
       });
-      expect(await runConvexProgram(ensureCompaction(ctx))).toEqual({
+      expect(
+        await Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      ).toEqual({
         complete: true,
         floor: 0,
       });
       query.mockRestore();
       expect(await ctx.db.query("contentState").unique()).toEqual(before);
       expect(await ctx.db.query("contentReleases").collect()).toHaveLength(5);
-      expect(await runConvexProgram(ensureCompaction(ctx))).toMatchObject({
+      expect(
+        await Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      ).toMatchObject({
         complete: false,
-        cycle: { floor: 3 },
+        cycle: {
+          floor: 3,
+        },
       });
     });
   });

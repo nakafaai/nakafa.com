@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 /** A class must exist, be active for writes, and belong to the viewer's school. */
@@ -13,4 +12,3 @@ export class ClassAccessError extends Schema.TaggedError<ClassAccessError>()(
     message: Schema.String,
   }
 ) {}
-export const ClassAccessFailure = failureWire(ClassAccessError);

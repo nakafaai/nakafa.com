@@ -1,3 +1,7 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import {
   ContentKeySchema,
@@ -7,6 +11,7 @@ import {
   MaterialKeySchema,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   type DurableContentViewTargetInput,
   decodeMaterialDomain,
@@ -14,7 +19,6 @@ import {
   type IncomingContentViewTargetInput,
   validateIncomingContentTarget,
 } from "@repo/backend/confect/contents/views/target";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -37,7 +41,11 @@ function validateIncomingTarget(
   input: IncomingContentViewTargetInput
 ) {
   return target.query((ctx) =>
-    runConvexProgram(validateIncomingContentTarget(ctx, input))
+    Effect.runPromise(
+      validateIncomingContentTarget(input).pipe(
+        Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+      )
+    )
   );
 }
 
@@ -47,10 +55,13 @@ function hydrateDurableTarget(
   input: DurableContentViewTargetInput
 ) {
   return target.query((ctx) =>
-    runConvexProgram(hydrateDurableContentTarget(ctx, input))
+    Effect.runPromise(
+      hydrateDurableContentTarget(input).pipe(
+        Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+      )
+    )
   );
 }
-
 describe("contents/views/target", () => {
   it.live(
     "fails with the typed view error for an invalid material domain",
@@ -66,10 +77,8 @@ describe("contents/views/target", () => {
         });
       })
   );
-
   it("fails closed before current signed ownership is available", async () => {
     const target = convexTest(schema, convexModules);
-
     await expect(
       validateIncomingTarget(target, {
         contentId: "asset:en:article:politics:missing",
@@ -78,7 +87,7 @@ describe("contents/views/target", () => {
         section: "articles",
       })
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_VIEW_IO_FAILED" },
+      code: "CONTENT_VIEW_IO_FAILED",
     });
     await expect(
       validateIncomingTarget(target, {
@@ -88,20 +97,26 @@ describe("contents/views/target", () => {
         section: "material",
       })
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_VIEW_IO_FAILED" },
+      code: "CONTENT_VIEW_IO_FAILED",
     });
   });
-
   it("resolves active materials by signed path and stable asset identity", async () => {
     const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const result = await validateIncomingTarget(target, {
       contentId: FUNCTION_MATERIAL.graph.assetId,
       locale: "en",
       publicPath: FUNCTION_MATERIAL.publicPath,
       section: "material",
     });
-
     expect(result).toMatchObject({
       contentKey: FUNCTION_MATERIAL.contentKey,
       content_id: FUNCTION_MATERIAL.graph.assetId,
@@ -112,7 +127,6 @@ describe("contents/views/target", () => {
       sourcePath: expect.stringContaining(FUNCTION_MATERIAL.contentKey),
     });
   });
-
   it.each(["articles", "material"] as const)(
     "rejects durable %s reads without active signed ownership",
     async (section) => {
@@ -123,13 +137,22 @@ describe("contents/views/target", () => {
           locale: "en",
           section,
         })
-      ).rejects.toMatchObject({ data: { code: "CONTENT_VIEW_IO_FAILED" } });
+      ).rejects.toMatchObject({
+        code: "CONTENT_VIEW_IO_FAILED",
+      });
     }
   );
-
   it("returns null when durable content no longer has an active catalog row", async () => {
     const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await expect(
       hydrateDurableTarget(target, {
         contentId: "retired-material",
@@ -147,7 +170,6 @@ describe("contents/views/target", () => {
       })
     ).resolves.toBeNull();
   });
-
   it("returns null when an article binding outlives its catalog row", async () => {
     const target = convexTest(schema, convexModules);
     const article = testArticleProjection(0);
@@ -168,7 +190,6 @@ describe("contents/views/target", () => {
       })
     ).resolves.toBeNull();
   });
-
   it.each(["articles", "material"] as const)(
     "fails closed when a durable %s catalog asset disagrees with its signed projection",
     async (section) => {
@@ -185,7 +206,15 @@ describe("contents/views/target", () => {
           });
         });
       } else {
-        await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+        await target.mutation((ctx) =>
+          Effect.runPromise(
+            activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        );
         await target.mutation(async (ctx) => {
           const row = await ctx.db.query("materialCatalog").unique();
           if (!row) {
@@ -202,14 +231,22 @@ describe("contents/views/target", () => {
           locale: "en",
           section,
         })
-      ).rejects.toMatchObject({ data: { code: "CONTENT_VIEW_IO_FAILED" } });
+      ).rejects.toMatchObject({
+        code: "CONTENT_VIEW_IO_FAILED",
+      });
     }
   );
-
   it("returns null for missing or mismatched current material bindings", async () => {
     const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
-
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await expect(
       validateIncomingTarget(target, {
         contentId: `${FUNCTION_MATERIAL.graph.assetId}:stale`,
@@ -227,7 +264,6 @@ describe("contents/views/target", () => {
       })
     ).resolves.toBeNull();
   });
-
   it("hydrates a renamed material by asset ID while rejecting its stale incoming route", async () => {
     const target = convexTest(schema, convexModules);
     const current = MaterialLessonProjectionSchema.make({
@@ -239,8 +275,15 @@ describe("contents/views/target", () => {
         "subjects/mathematics/functions-and-relations/function-concept"
       ),
     });
-    await activateMaterialCatalog(target, [current]);
-
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([current]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await expect(
       hydrateDurableTarget(target, {
         contentId: FUNCTION_MATERIAL.graph.assetId,
@@ -261,14 +304,12 @@ describe("contents/views/target", () => {
       })
     ).resolves.toBeNull();
   });
-
   it("resolves active articles without legacy route rows", async () => {
     const target = convexTest(schema, convexModules);
     const projection = testArticleProjection(0);
     await target.mutation((ctx) =>
       insertRuntimeArticles(ctx, 1, () => projection)
     );
-
     await expect(
       validateIncomingTarget(target, {
         contentId: projection.graph.assetId,
@@ -297,14 +338,12 @@ describe("contents/views/target", () => {
       section: "articles",
     });
   });
-
   it("returns null for missing or mismatched current article bindings", async () => {
     const target = convexTest(schema, convexModules);
     const projection = testArticleProjection(0);
     await target.mutation((ctx) =>
       insertRuntimeArticles(ctx, 1, () => projection)
     );
-
     await expect(
       validateIncomingTarget(target, {
         contentId: `${projection.graph.assetId}:stale`,
@@ -321,7 +360,6 @@ describe("contents/views/target", () => {
         section: "articles",
       })
     ).resolves.toBeNull();
-
     const aliasPath = PublicPathSchema.make("articles/politics/legacy-alias");
     await target.mutation((ctx) =>
       insertRuntimeBinding(ctx, projection.contentKey, {
@@ -338,7 +376,6 @@ describe("contents/views/target", () => {
       })
     ).resolves.toBeNull();
   });
-
   it("accepts a signed Aksara domain outside the presentation registry", async () => {
     const target = convexTest(schema, convexModules);
     const registered = makeMaterialProjection("en", 1);
@@ -354,8 +391,15 @@ describe("contents/views/target", () => {
         "subjects/test/technical-topic/section-1"
       ),
     });
-    await activateMaterialCatalog(target, [projection]);
-
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([projection]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await expect(
       validateIncomingTarget(target, {
         contentId: projection.graph.assetId,
@@ -373,14 +417,16 @@ describe("contents/views/target", () => {
     });
   });
 });
-
 it("retains an article description in a signed view target", async () => {
   const target = convexTest(schema, convexModules);
   const projection = testArticleProjection(0);
   await target.mutation((ctx) =>
     insertRuntimeArticles(ctx, 1, () => ({
       ...projection,
-      metadata: { ...projection.metadata, description: "Signed description" },
+      metadata: {
+        ...projection.metadata,
+        description: "Signed description",
+      },
     }))
   );
   expect(
@@ -390,5 +436,7 @@ it("retains an article description in a signed view target", async () => {
       publicPath: projection.publicPath,
       section: "articles",
     })
-  ).toMatchObject({ description: "Signed description" });
+  ).toMatchObject({
+    description: "Signed description",
+  });
 });

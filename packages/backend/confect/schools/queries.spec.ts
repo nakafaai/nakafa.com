@@ -1,11 +1,11 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { SchoolReadFailure } from "@repo/backend/confect/schools/errors";
+import Session from "@repo/backend/confect/middleware/session.spec";
+import { SchoolReadError } from "@repo/backend/confect/schools/errors";
 import {
-  mySchoolsPageArgs,
-  mySchoolsPageResultValidator,
   schoolBySlugResultValidator,
   schoolLandingStateResultValidator,
+  schoolSummaryValidator,
 } from "@repo/backend/confect/schools/validators";
 import { Schema } from "effect";
 export default GroupSpec.make()
@@ -16,22 +16,21 @@ export default GroupSpec.make()
         slug: Schema.String,
       }),
       returns: () => schoolBySlugResultValidator,
-      error: () => Schema.Union([AuthFailure, SchoolReadFailure]),
-    })
+      error: () => Schema.Union([AuthFailure, SchoolReadError]),
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicQuery({
       name: "getMySchoolLandingState",
       args: () => ({}),
       returns: () => schoolLandingStateResultValidator,
-      error: () => Schema.Union([AuthFailure, SchoolReadFailure]),
-    })
+      error: () => Schema.Union([AuthFailure, SchoolReadError]),
+    }).middleware(Session)
   )
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "getMySchoolsPage",
-      args: () => mySchoolsPageArgs,
-      returns: () => mySchoolsPageResultValidator,
-      error: () => Schema.Union([AuthFailure, SchoolReadFailure]),
-    })
+      item: () => schoolSummaryValidator,
+      error: () => Schema.Union([AuthFailure, SchoolReadError]),
+    }).middleware(Session)
   );

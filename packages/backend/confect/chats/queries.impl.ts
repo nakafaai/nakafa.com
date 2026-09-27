@@ -1,9 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  QueryCtx as QueryCtxService,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import spec from "@repo/backend/confect/chats/queries.spec";
@@ -12,6 +9,7 @@ import {
   loadPinnedContextMessages,
 } from "@repo/backend/confect/chats/transcript/read";
 import { getMessageByIdentifier } from "@repo/backend/confect/chats/transcript/write";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
 
 const getChat = FunctionImpl.make(
@@ -19,8 +17,7 @@ const getChat = FunctionImpl.make(
   spec,
   "getChat",
   Effect.fn("chats.queries.getChat")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    const viewer = yield* getOptionalAppUserForRead(ctx);
+    const viewer = yield* getOptionalAppUserForRead();
     const viewerUserId = viewer?.appUser._id ?? null;
     const chat = yield* readChat(args.chatId, viewerUserId);
     return chat;
@@ -83,9 +80,8 @@ const getOwnChats = FunctionImpl.make(
   "getOwnChats",
   Effect.fn("chats.queries.getOwnChats")(function* (args) {
     const database = yield* DatabaseReader;
-    const ctx = yield* QueryCtxService;
     const { q: searchQuery, visibility, type, paginationOpts } = args;
-    const viewer = yield* getOptionalAppUserForRead(ctx);
+    const viewer = yield* getOptionalAppUserForRead();
     if (!viewer) {
       return {
         continueCursor: "",
@@ -160,7 +156,6 @@ const getChatTitle = FunctionImpl.make(
   "getChatTitle",
   Effect.fn("chats.queries.getChatTitle")(function* (args) {
     const database = yield* DatabaseReader;
-    const ctx = yield* QueryCtxService;
     const chat = yield* database
       .table("chats")
       .get(args.chatId)
@@ -174,7 +169,7 @@ const getChatTitle = FunctionImpl.make(
     if (chat.visibility === "public") {
       return chat.title ?? null;
     }
-    const viewer = yield* getOptionalAppUserForRead(ctx);
+    const viewer = yield* getOptionalAppUserForRead();
     const viewerUserId = viewer?.appUser._id ?? null;
     if (viewerUserId !== chat.userId) {
       return null;
@@ -187,8 +182,7 @@ const getPinnedNinaContextForTurn = FunctionImpl.make(
   spec,
   "getPinnedNinaContextForTurn",
   Effect.fn("chats.queries.getPinnedNinaContextForTurn")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    const viewer = yield* getOptionalAppUserForRead(ctx);
+    const viewer = yield* getOptionalAppUserForRead();
     const viewerUserId = viewer?.appUser._id ?? null;
     yield* readChat(args.chatId, viewerUserId);
     const existingMessage = yield* getMessageByIdentifier(
@@ -211,8 +205,7 @@ const loadMessagesPage = FunctionImpl.make(
   "loadMessagesPage",
   Effect.fn("chats.queries.loadMessagesPage")(function* (args) {
     const database = yield* DatabaseReader;
-    const ctx = yield* QueryCtxService;
-    const viewer = yield* getOptionalAppUserForRead(ctx);
+    const viewer = yield* getOptionalAppUserForRead();
     const viewerUserId = viewer?.appUser._id ?? null;
     yield* readChat(args.chatId, viewerUserId);
     const page = yield* database
@@ -233,5 +226,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getChatTitle),
   Layer.provide(getPinnedNinaContextForTurn),
   Layer.provide(loadMessagesPage),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

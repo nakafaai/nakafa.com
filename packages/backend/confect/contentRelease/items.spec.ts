@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { stageReceiptValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 
@@ -14,7 +14,7 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => stageReceiptValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -26,6 +26,6 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => stageReceiptValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

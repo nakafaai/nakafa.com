@@ -1,6 +1,5 @@
 "use node";
 
-import { QueryRunner } from "@confect/server";
 import {
   MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
   MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
@@ -12,6 +11,7 @@ import {
   ProtectedContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   encodeRuntimeResult,
   failureResult,
@@ -21,7 +21,6 @@ import {
   decodeProtectedRuntimeRow,
   ProtectedRuntimeReadError,
 } from "@repo/backend/content/tryout/exchange";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Result } from "effect";
 /** Strictly parses one bounded UTF-8 protected batch request. */
 export const decodeProtectedRequest = Effect.fn(
@@ -46,10 +45,8 @@ export const decodeProtectedRequest = Effect.fn(
 /** Reads and authenticates one permanent protected artifact batch. */
 export const resolveProtectedRuntime = Effect.fn(
   "contentRelease.resolveProtectedRuntime"
-)(function* (ctx: ActionCtx, request: ProtectedContentRuntimeRequest) {
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
+)(function* (request: ProtectedContentRuntimeRequest) {
+  const runQuery = yield* QueryRunner;
   const row = yield* runQuery(
     refs.internal.contentRelease.runtime.tryout.internal.read,
     {
@@ -66,14 +63,14 @@ export const resolveProtectedRuntime = Effect.fn(
 /** Decodes, resolves, and safely encodes one protected runtime request. */
 export const dispatchProgram = Effect.fn(
   "contentRelease.protectedRuntimeDispatch"
-)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+)(function* (source: string, byteLength: number) {
   const decoded = yield* decodeProtectedRequest(source, byteLength).pipe(
     Effect.result
   );
   if (Result.isFailure(decoded)) {
     return failureResult("CONTENT_RUNTIME_INVALID", 400);
   }
-  const resolved = yield* resolveProtectedRuntime(ctx, decoded.success).pipe(
+  const resolved = yield* resolveProtectedRuntime(decoded.success).pipe(
     Effect.result
   );
   if (Result.isFailure(resolved)) {

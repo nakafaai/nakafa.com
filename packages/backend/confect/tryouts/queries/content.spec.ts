@@ -1,11 +1,12 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
-import { TryoutAttemptStateErrorWire } from "@repo/backend/confect/tryouts/attempt";
-import { TryoutAuthFailure } from "@repo/backend/confect/tryouts/auth";
+import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import Session from "@repo/backend/confect/middleware/session.spec";
+import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { tryoutBodyBatchValidator } from "@repo/backend/confect/tryouts/runtime/body";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
 import {
-  TryoutHistoryErrorWire,
+  TryoutHistoryError,
   tryoutHistoryRequestValidator,
 } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { TryoutSelectorReadErrorWire } from "@repo/backend/confect/tryouts/runtime/ownership";
@@ -18,13 +19,12 @@ export default GroupSpec.make().addFunction(
     returns: () => Schema.Union([Schema.Null, tryoutBodyBatchValidator]),
     error: () =>
       Schema.Union([
-        TryoutAttemptStateErrorWire,
-        TryoutAuthFailure,
-
+        TryoutAttemptStateError,
+        AuthFailure,
         TryoutRuntimeErrorWire,
-        TryoutHistoryErrorWire,
+        TryoutHistoryError,
         TryoutSelectorReadErrorWire,
-        ReleaseErrorWire,
+        ReleaseError,
       ]),
-  })
+  }).middleware(Session)
 );

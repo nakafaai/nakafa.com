@@ -1,7 +1,8 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { MAX_CHAT_MESSAGE_PARTS } from "@repo/backend/confect/chats/constants";
 import { TranscriptLimitExceeded } from "@repo/backend/confect/chats/transcript/spec";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 const latestContextScanLimit = 20;
@@ -29,7 +30,7 @@ export const loadPinnedContextMessages = Effect.fn("chats.transcript.context")(
 
 /** Load complete ordered parts and reject oversized stored messages explicitly. */
 export const hydrateMessagePage = Effect.fn("chats.transcript.hydrate")(
-  function* (messages: readonly Doc<"messages">[]) {
+  function* (messages: readonly Docs["messages"][]) {
     const reader = yield* DatabaseReader;
     return yield* Effect.forEach(
       messages,
@@ -48,7 +49,10 @@ export const hydrateMessagePage = Effect.fn("chats.transcript.hydrate")(
               "Chat message part count exceeds the supported load limit.",
           });
         }
-        return { ...message, parts };
+        return {
+          ...message,
+          parts,
+        };
       })
     );
   }

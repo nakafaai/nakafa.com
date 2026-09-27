@@ -1,3 +1,5 @@
+import { RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
@@ -8,7 +10,6 @@ import {
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { dispatchProgram } from "@repo/backend/confect/contentRelease/runtime/publication/dispatch";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
@@ -45,7 +46,11 @@ type RuntimeAction = Pick<RuntimeTest, "action">;
 function runDispatch(t: RuntimeAction, source: string) {
   const byteLength = new TextEncoder().encode(source).byteLength;
   return t.action((ctx) =>
-    runConvexProgram(dispatchProgram(ctx, source, byteLength))
+    Effect.runPromise(
+      dispatchProgram(source, byteLength).pipe(
+        Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+      )
+    )
   );
 }
 /** Seeds one active route for the requested stored delivery class. */
@@ -59,7 +64,6 @@ function seedSigned(
   });
 }
 afterEach(() => vi.restoreAllMocks());
-
 describe("contentRelease/runtime/publication/dispatch", () => {
   it.live(
     "returns one fully authenticated public artifact and exact absence",
@@ -101,7 +105,9 @@ describe("contentRelease/runtime/publication/dispatch", () => {
           ),
           Effect.result
         );
-        expect(verified).toMatchObject({ _tag: "Success" });
+        expect(verified).toMatchObject({
+          _tag: "Success",
+        });
         const found = yield* Effect.promise(() =>
           runDispatch(t, publicRuntimeRequest())
         );
@@ -118,14 +124,21 @@ describe("contentRelease/runtime/publication/dispatch", () => {
         expect(found.status).toBe(200);
         expect(JSON.parse(found.body)).toMatchObject({
           artifact: {
-            payload: { contentKey: runtimeContentKey("public") },
+            payload: {
+              contentKey: runtimeContentKey("public"),
+            },
           },
           delivery: "public",
           kind: "found",
-          projection: { publicPath: TEST_RUNTIME_PATH },
+          projection: {
+            publicPath: TEST_RUNTIME_PATH,
+          },
           sourcePath: `packages/corpus/${runtimeContentKey("public")}/en.mdx`,
         });
-        expect(missing).toEqual({ body: '{"kind":"missing"}', status: 404 });
+        expect(missing).toEqual({
+          body: '{"kind":"missing"}',
+          status: 404,
+        });
       })
   );
   it("authenticates the real pair-grouped article source end to end", async () => {
@@ -216,7 +229,11 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     expect(found.status).toBe(200);
     const body = JSON.parse(found.body);
     expect(body).toMatchObject({
-      artifact: { payload: { contentKey: FUNCTION_MATERIAL_KEY } },
+      artifact: {
+        payload: {
+          contentKey: FUNCTION_MATERIAL_KEY,
+        },
+      },
       kind: "found",
       projection: {
         contentKey: FUNCTION_MATERIAL_KEY,
@@ -234,13 +251,21 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     const t = createConvexTestWithBetterAuth();
     const source = publicRuntimeRequest();
     const mismatch = await t.action((ctx) =>
-      runConvexProgram(dispatchProgram(ctx, source, 1))
+      Effect.runPromise(
+        dispatchProgram(source, 1).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+        )
+      )
     );
-    await expect(runDispatch(t, "{")).resolves.toMatchObject({ status: 400 });
+    await expect(runDispatch(t, "{")).resolves.toMatchObject({
+      status: 400,
+    });
     expect(mismatch.status).toBe(400);
     await expect(
       runDispatch(t, "x".repeat(MAX_PUBLIC_RUNTIME_REQUEST_BYTES + 1))
-    ).resolves.toMatchObject({ status: 400 });
+    ).resolves.toMatchObject({
+      status: 400,
+    });
   });
   it("fails closed when authenticated stored evidence is tampered", async () => {
     const t = createConvexTestWithBetterAuth();
@@ -263,20 +288,22 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     "sanitizes a %s query response at the action boundary",
     async (failure) => {
       const t = createConvexTestWithBetterAuth();
-
       const source = publicRuntimeRequest();
       const result = await t.action((ctx) => {
         const query = vi.spyOn(ctx, "runQuery");
         if (failure === "invalid") {
-          query.mockResolvedValueOnce({ private: "transport corruption" });
+          query.mockResolvedValueOnce({
+            private: "transport corruption",
+          });
         } else {
           query.mockRejectedValueOnce(new Error("private transport failure"));
         }
-        return runConvexProgram(
+        return Effect.runPromise(
           dispatchProgram(
-            ctx,
             source,
             new TextEncoder().encode(source).byteLength
+          ).pipe(
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
           )
         );
       });

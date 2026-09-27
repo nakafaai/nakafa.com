@@ -20,6 +20,7 @@ import spec, {
   ClassQueryError,
 } from "@repo/backend/confect/classes/queries.spec";
 import type { ClassRouteResult } from "@repo/backend/confect/classes/validators";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import {
   getSchoolMembership,
   isAdmin,
@@ -33,8 +34,7 @@ const getClasses = FunctionImpl.make(
   "getClasses",
   Effect.fn("classes.queries.getClasses")(function* (args) {
     const database = yield* DatabaseReader;
-    const ctx = yield* QueryCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const {
       schoolId,
       q: searchQuery,
@@ -43,7 +43,6 @@ const getClasses = FunctionImpl.make(
       paginationOpts,
     } = args;
     const schoolMembership = yield* getSchoolMembership(
-      ctx,
       schoolId,
       user.appUser._id
     );
@@ -123,7 +122,7 @@ const getClassRoute = FunctionImpl.make(
   "getClassRoute",
   Effect.fn("classes.queries.getClassRoute")(function* (args) {
     const ctx = yield* QueryCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const classId = ctx.db.normalizeId("schoolClasses", args.classId);
     if (!classId) {
       return yield* new ClassAccessError({
@@ -131,9 +130,8 @@ const getClassRoute = FunctionImpl.make(
         message: `Class not found for classId: ${args.classId}`,
       });
     }
-    const classData = yield* loadActiveClass(ctx, classId);
+    const classData = yield* loadActiveClass(classId);
     const { classMembership, schoolMembership } = yield* checkClassAccess(
-      ctx,
       classId,
       classData.schoolId,
       user.appUser._id
@@ -174,16 +172,10 @@ const getPeople = FunctionImpl.make(
   "getPeople",
   Effect.fn("classes.queries.getPeople")(function* (args) {
     const database = yield* DatabaseReader;
-    const ctx = yield* QueryCtxService;
     const { classId, q, paginationOpts } = args;
-    const user = yield* requireAuth(ctx);
-    const classData = yield* loadClass(ctx, classId);
-    yield* requireClassAccess(
-      ctx,
-      classId,
-      classData.schoolId,
-      user.appUser._id
-    );
+    const user = yield* requireAuth();
+    const classData = yield* loadClass(classId);
+    yield* requireClassAccess(classId, classData.schoolId, user.appUser._id);
     const normalizedQuery = q?.trim().toLowerCase();
     if (normalizedQuery) {
       const expectedMemberCount =
@@ -209,10 +201,7 @@ const getPeople = FunctionImpl.make(
           message: "Class member count exceeds the class member totals.",
         });
       }
-      const userMap = yield* getUserMap(
-        ctx,
-        members.map((member) => member.userId)
-      );
+      const userMap = yield* getUserMap(members.map((member) => member.userId));
       const people = members.flatMap((member) => {
         const userData = userMap.get(member.userId);
         if (!userData) {
@@ -258,10 +247,7 @@ const getPeople = FunctionImpl.make(
       .index("by_classId_and_userId", (idx) => idx.eq("classId", classId))
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    const userMap = yield* getUserMap(
-      ctx,
-      membersPage.page.map((m) => m.userId)
-    );
+    const userMap = yield* getUserMap(membersPage.page.map((m) => m.userId));
     const people = membersPage.page.flatMap((member) => {
       const userData = userMap.get(member.userId);
       if (!userData) {
@@ -290,11 +276,9 @@ const getInviteCodes = FunctionImpl.make(
   "getInviteCodes",
   Effect.fn("classes.queries.getInviteCodes")(function* (args) {
     const database = yield* DatabaseReader;
-    const ctx = yield* QueryCtxService;
-    const user = yield* requireAuth(ctx);
-    const classData = yield* loadClass(ctx, args.classId);
+    const user = yield* requireAuth();
+    const classData = yield* loadClass(args.classId);
     const { classMembership, schoolMembership } = yield* requireClassAccess(
-      ctx,
       args.classId,
       classData.schoolId,
       user.appUser._id
@@ -324,5 +308,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getClassRoute),
   Layer.provide(getPeople),
   Layer.provide(getInviteCodes),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

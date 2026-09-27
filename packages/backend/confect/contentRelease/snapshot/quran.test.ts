@@ -1,12 +1,13 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import {
   PublicPathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
 import { stageQuranRow } from "@repo/backend/confect/contentRelease/snapshot/quran";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { makeQuranSearch, makeQuranSurah } from "@repo/backend/test/quran/rows";
@@ -15,25 +16,36 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 const snapshotId = Sha256HashSchema.make(`sha256:${"7".repeat(64)}`);
-
 describe("contentRelease/snapshot/quran", () => {
   it.live("stores one snapshot-bound Quran row idempotently", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const source = yield* makeQuranSnapshotRow(snapshotId);
       const rowJson = canonicalizeContentSnapshotRow(source);
       const t = convexTest(schema, convexModules);
-
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         ).resolves.toBe(false)
       );
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         ).resolves.toBe(true)
       );
@@ -60,9 +72,9 @@ describe("contentRelease/snapshot/quran", () => {
       );
     })
   );
-
   it.live("rejects cross-snapshot rows and identity collisions", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const source = yield* makeQuranSnapshotRow(snapshotId);
       const rowJson = canonicalizeContentSnapshotRow(source);
       const otherId = Sha256HashSchema.make(`sha256:${"8".repeat(64)}`);
@@ -70,35 +82,62 @@ describe("contentRelease/snapshot/quran", () => {
       yield* Effect.promise(() =>
         expect(
           wrong.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, otherId, 0, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(otherId, 0, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+        })
       );
-
       const collision = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         collision.mutation((ctx) =>
-          runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+          Effect.runPromiseWith(runtimeServices)(
+            stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
         )
       );
       yield* Effect.promise(() =>
         expect(
           collision.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, snapshotId, 1, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(snapshotId, 1, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_CONFLICT",
+        })
       );
     })
   );
-
   it.live("rejects a search projection that collides with its signed row", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const source = yield* makeQuranSnapshotRow(snapshotId);
       const rowJson = canonicalizeContentSnapshotRow(source);
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+          Effect.runPromiseWith(runtimeServices)(
+            stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
         )
       );
       yield* Effect.promise(() =>
@@ -112,19 +151,26 @@ describe("contentRelease/snapshot/quran", () => {
           });
         })
       );
-
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_CONFLICT",
+        })
       );
     })
   );
-
   it.live("rejects an orphaned search projection", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const source = yield* makeQuranSnapshotRow(snapshotId);
       const rowJson = canonicalizeContentSnapshotRow(source);
       const t = convexTest(schema, convexModules);
@@ -142,31 +188,50 @@ describe("contentRelease/snapshot/quran", () => {
           })
         )
       );
-
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_CONFLICT",
+        })
       );
     })
   );
-
   it.live("keeps non-search rows free from orphaned search projections", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const source = yield* makeQuranSnapshotRow(snapshotId, makeQuranSurah(1));
       const rowJson = canonicalizeContentSnapshotRow(source);
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+          Effect.runPromiseWith(runtimeServices)(
+            stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
         )
       );
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         ).resolves.toBe(true)
       );
@@ -184,51 +249,72 @@ describe("contentRelease/snapshot/quran", () => {
           })
         )
       );
-
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_CONFLICT",
+        })
       );
     })
   );
-
   it.live("rejects a noncanonical signed Quran route", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const source = yield* makeQuranSnapshotRow(snapshotId, {
         ...makeQuranSearch("id", 1),
         route: PublicPathSchema.make("quran/noncanonical"),
       });
       const rowJson = canonicalizeContentSnapshotRow(source);
       const t = convexTest(schema, convexModules);
-
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+        })
       );
     })
   );
-
   it.live("rejects a search row above its aggregate transaction budget", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const source = yield* makeQuranSnapshotRow(
         snapshotId,
         makeQuranSearch("en", 1, "x".repeat(QURAN_SEARCH_DOCUMENT_LIMIT))
       );
       const rowJson = canonicalizeContentSnapshotRow(source);
       const t = convexTest(schema, convexModules);
-
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+            Effect.runPromiseWith(runtimeServices)(
+              stageQuranRow(snapshotId, 0, source, rowJson).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_SIZE",
+        })
       );
     })
   );

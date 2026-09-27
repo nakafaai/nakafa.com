@@ -1,10 +1,8 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { Effect, flow } from "effect";
+import { Effect } from "effect";
 
 /** Derives question and answer access from one coherent attempt lifecycle. */
 function getTryoutSectionContentAccess(
@@ -24,12 +22,8 @@ function getTryoutSectionContentAccess(
 /** Resolves lifecycle access and the current billing-owned Pro plan together. */
 export const readTryoutSectionContentAccess = Effect.fn(
   "tryouts.content.readAccess"
-)(function* (
-  ctx: QueryCtx,
-  attempt: Doc<"tryoutAttempts">,
-  sectionStatus: TryoutStatus
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (attempt: Docs["tryoutAttempts"], sectionStatus: TryoutStatus) {
+  const database = yield* DatabaseReader;
   const access = getTryoutSectionContentAccess(attempt.status, sectionStatus);
   if (!access.answers) {
     return access;
@@ -39,8 +33,7 @@ export const readTryoutSectionContentAccess = Effect.fn(
     .get(attempt.userId)
     .pipe(
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+      Effect.mapError(toTryoutRuntimeError)
     );
   if (!user) {
     return {

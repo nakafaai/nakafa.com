@@ -1,6 +1,8 @@
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { vWorkflowId, type WorkflowStatus } from "@convex-dev/workflow";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   ProofPollCoordinator,
   type ProofPollCoordinatorService,
@@ -11,7 +13,6 @@ import {
   verifyArtifactBatchProgram,
 } from "@repo/backend/confect/contentRelease/proof/verify";
 import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type schema from "@repo/backend/convex/schema";
@@ -148,7 +149,10 @@ function deleteFixture(family: ContentFamily) {
   const publicPath = "subjects/test/deleted";
   return {
     contentKey,
-    projectionJson: testProjectionJson({ contentKey, publicPath }),
+    projectionJson: testProjectionJson({
+      contentKey,
+      publicPath,
+    }),
     publicPath,
     rendererDomain: "mathematics" as const,
     sourcePath: undefined,
@@ -161,7 +165,11 @@ export async function stageUpsertFixture(
   role: Doc<"contentReleases">["role"] = "candidate"
 ) {
   const fixture = upsertFixture(family);
-  await t.mutation((ctx) => insertTestRelease(ctx, { role }));
+  await t.mutation((ctx) =>
+    insertTestRelease(ctx, {
+      role,
+    })
+  );
   await t.mutation(stageItems, {
     batchIndex: 0,
     itemJson: [fixture.itemJson],
@@ -229,7 +237,12 @@ export async function stageDeleteFixture(
   });
   await t.mutation(stageItems, {
     batchIndex: 0,
-    itemJson: [testDeleteJson({ contentKey: fixture.contentKey, family })],
+    itemJson: [
+      testDeleteJson({
+        contentKey: fixture.contentKey,
+        family,
+      }),
+    ],
     releaseId: TEST_RELEASE_ID,
   });
   if (fixture.publicPath === undefined) {
@@ -249,7 +262,13 @@ export async function stageDeleteFixture(
 /** Freezes one fully staged fixture before item verification. */
 export function beginFixture(t: TestConvex<typeof schema>) {
   return t.mutation((ctx) =>
-    runConvexProgram(beginVerification(ctx, TEST_RELEASE_ID))
+    Effect.runPromise(
+      beginVerification(TEST_RELEASE_ID).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
+    )
   );
 }
 /** Freezes one release with validator-derived test coordinator identity. */
@@ -258,7 +277,13 @@ export async function prepareContentProof(
   releaseId: string
 ) {
   await target.mutation(async (ctx) => {
-    await runConvexProgram(beginVerification(ctx, releaseId));
+    await Effect.runPromise(
+      beginVerification(releaseId).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
+    );
     const release = await ctx.db
       .query("contentReleases")
       .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
@@ -281,26 +306,28 @@ export async function recomputeContentProof(
   await prepareContentProof(target, releaseId);
   const plan = await target.query(
     internal.contentRelease.proof.read.artifactPlan,
-    { manifestHash, releaseId }
+    {
+      manifestHash,
+      releaseId,
+    }
   );
   let verifiedArtifacts = 0;
   for (let batchIndex = 0; batchIndex < plan.batchCount; batchIndex += 1) {
     const receipt = await target.action((ctx) =>
       Effect.runPromise(
-        verifyArtifactBatchProgram(
-          ctx,
-          manifestHash,
-          releaseId,
-          batchIndex
-        ).pipe(Effect.provideService(ContentVerificationKeyResolver, resolver))
+        verifyArtifactBatchProgram(manifestHash, releaseId, batchIndex).pipe(
+          Effect.provideService(ContentVerificationKeyResolver, resolver),
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+        )
       )
     );
     verifiedArtifacts += receipt.verifiedArtifacts;
   }
   return target.action((ctx) =>
     Effect.runPromise(
-      recomputeProgram(ctx, manifestHash, releaseId, verifiedArtifacts).pipe(
-        Effect.provideService(ContentVerificationKeyResolver, resolver)
+      recomputeProgram(manifestHash, releaseId, verifiedArtifacts).pipe(
+        Effect.provideService(ContentVerificationKeyResolver, resolver),
+        Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
       )
     )
   );
@@ -313,9 +340,12 @@ export async function completeContentProof(
 ) {
   const proof = await recomputeContentProof(target, manifestHash, releaseId);
   await target.mutation((ctx) =>
-    runConvexProgram(
-      pollProgram(ctx, manifestHash, releaseId).pipe(
-        Effect.provideService(ProofPollCoordinator, completedProofCoordinator)
+    Effect.runPromise(
+      pollProgram(manifestHash, releaseId).pipe(
+        Effect.provideService(ProofPollCoordinator, completedProofCoordinator),
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
       )
     )
   );

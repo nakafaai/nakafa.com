@@ -1,23 +1,19 @@
 import { describe, expect, it } from "@effect/vitest";
+import { AccountUnavailable } from "@repo/backend/confect/auth/spec";
+import { CheckoutUnavailable } from "@repo/backend/confect/customers/checkout/spec";
 import {
-  AccountUnavailable,
-  accountUnavailableCode,
-  accountUnavailableMessage,
-} from "@repo/backend/confect/auth/spec";
-import {
-  failureWire,
   getUnknownErrorMessage,
-  readConvexErrorData,
+  publicFailure,
 } from "@repo/backend/confect/failure";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import { ConvexError } from "convex/values";
 import { Option, Schema } from "effect";
 
-describe("Convex failure data", () => {
-  it("preserves error identity across the wire without exposing private causes", () => {
+describe("public domain errors", () => {
+  it("preserves error identity without exposing private causes", () => {
     const codec = Schema.Union([
-      failureWire(TryoutRuntimeError),
-      failureWire(AccountUnavailable),
+      publicFailure(TryoutRuntimeError),
+      AccountUnavailable,
+      CheckoutUnavailable,
     ]);
     const failure = new TryoutRuntimeError({
       code: "TRYOUT_RUNTIME_FAILED",
@@ -26,71 +22,32 @@ describe("Convex failure data", () => {
     });
     const encoded = Schema.encodeSync(codec)(failure);
     expect(encoded).toEqual({
+      _tag: "TryoutRuntimeError",
       code: failure.code,
       message: failure.message,
     });
     const decoded = Schema.decodeSync(codec)(encoded);
     expect(decoded).toBeInstanceOf(TryoutRuntimeError);
-    expect(decoded).toMatchObject({ _tag: "TryoutRuntimeError" });
     expect(decoded).not.toHaveProperty("cause");
-    expect(
-      Schema.decodeSync(codec)({
-        code: accountUnavailableCode,
-        message: accountUnavailableMessage,
-      })
-    ).toBeInstanceOf(AccountUnavailable);
+    for (const error of [
+      new AccountUnavailable({ code: "UNAUTHORIZED", message: "Unavailable" }),
+      new CheckoutUnavailable({ code: "UNAUTHORIZED", message: "Unavailable" }),
+    ]) {
+      expect(
+        Schema.decodeSync(codec)(Schema.encodeSync(codec)(error))
+      ).toBeInstanceOf(error.constructor);
+    }
     expect(
       Schema.decodeUnknownOption(codec)({
-        code: "FOREIGN_CODE",
-        message: "Secret",
+        _tag: "ForeignError",
+        code: "UNAUTHORIZED",
+        message: "Unavailable",
       })
     ).toEqual(Option.none());
   });
-  it("normalizes unknown thrown values into messages", () => {
+
+  it("normalizes unknown SDK failures into internal diagnostic messages", () => {
     expect(getUnknownErrorMessage(new Error("Exploded"))).toBe("Exploded");
     expect(getUnknownErrorMessage("plain failure")).toBe("plain failure");
-  });
-  it("reads only complete typed Convex error payloads", () => {
-    expect(
-      readConvexErrorData(
-        new AccountUnavailable({
-          code: accountUnavailableCode,
-          message: accountUnavailableMessage,
-        })
-      )
-    ).toEqual({
-      code: accountUnavailableCode,
-      message: accountUnavailableMessage,
-    });
-    expect(
-      readConvexErrorData({ code: "untrusted", message: "untagged" })
-    ).toBeNull();
-    expect(
-      readConvexErrorData(
-        new ConvexError({
-          code: "BOUNDARY_FAILURE",
-          message: "Failed",
-        })
-      )
-    ).toEqual({
-      code: "BOUNDARY_FAILURE",
-      message: "Failed",
-    });
-    expect(
-      readConvexErrorData(
-        new ConvexError({
-          code: "MISSING",
-        })
-      )
-    ).toBeNull();
-    expect(
-      readConvexErrorData(
-        new ConvexError({
-          message: "Missing code",
-        })
-      )
-    ).toBeNull();
-    expect(readConvexErrorData(new ConvexError("opaque"))).toBeNull();
-    expect(readConvexErrorData(new Error("not Convex"))).toBeNull();
   });
 });

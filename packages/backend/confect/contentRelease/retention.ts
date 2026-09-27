@@ -1,15 +1,16 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { hasSnapshotArtifactReference } from "@repo/backend/confect/contentRelease/snapshot/retention";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect, Option } from "effect";
 
 /** Checks whether any retained immutable version still owns an artifact. */
 export const isArtifactReferenced = Effect.fn(
   "contentRelease.isArtifactReferenced"
-)(function* (ctx: MutationCtx, artifactHash: string) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (artifactHash: string) {
+  const database = yield* DatabaseReader;
   const [head, item, snapshot] = yield* Effect.all([
     database
       .table("contentHeads")
@@ -25,7 +26,7 @@ export const isArtifactReferenced = Effect.fn(
       )
       .first()
       .pipe(Effect.map(Option.getOrNull), Effect.orDie),
-    hasSnapshotArtifactReference(ctx, artifactHash),
+    hasSnapshotArtifactReference(artifactHash),
   ]);
   return head !== null || item !== null || snapshot;
 });
@@ -33,13 +34,13 @@ export const isArtifactReferenced = Effect.fn(
 /** Starts retention when deleting rows removes an artifact's final reference. */
 export const retainOrphanedArtifacts = Effect.fn(
   "contentRelease.retainOrphanedArtifacts"
-)(function* (ctx: MutationCtx, artifactHashes: Iterable<string>, now?: number) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (artifactHashes: Iterable<string>, now?: number) {
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const timestamp = now ?? (yield* Clock.currentTimeMillis);
   const hashes = [...new Set(artifactHashes)];
   for (const artifactHash of hashes) {
-    if (yield* isArtifactReferenced(ctx, artifactHash)) {
+    if (yield* isArtifactReferenced(artifactHash)) {
       continue;
     }
     const artifact = yield* database

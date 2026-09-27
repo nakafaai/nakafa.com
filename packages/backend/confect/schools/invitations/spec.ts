@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export class InvitationError extends Schema.TaggedError<InvitationError>()(
   "InvitationError",
@@ -13,4 +12,3 @@ export class InvitationError extends Schema.TaggedError<InvitationError>()(
     message: Schema.String,
   }
 ) {}
-export const InvitationFailure = failureWire(InvitationError);

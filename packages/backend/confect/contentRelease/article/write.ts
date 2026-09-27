@@ -1,6 +1,6 @@
-import { DatabaseWriter } from "@confect/server";
 import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { adjustArticleBucket } from "@repo/backend/confect/contentRelease/article/bucket";
 import {
   loadArticle,
@@ -14,12 +14,10 @@ import {
 } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 type ContentHead = Pick<
-  Doc<"contentHeads">,
+  Docs["contentHeads"],
   | "artifactLocale"
   | "contentKey"
   | "delivery"
@@ -30,16 +28,15 @@ type ContentHead = Pick<
   | "rendererDomain"
   | "sequence"
 >;
-type AppLocale = Doc<"articleCatalog">["appLocale"];
+type AppLocale = Docs["articleCatalog"]["appLocale"];
 
 /** Replaces one active article row and reconciles its category ownership. */
 export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
-  ctx: MutationCtx,
   slot: ModelSlot,
   head: ContentHead,
   projection: ArticleProjection
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const writer = yield* DatabaseWriter;
   if (
     head.operation !== "upsert" ||
     head.delivery !== "public" ||
@@ -87,7 +84,6 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     READ_MODEL_DOCUMENT_LIMIT
   );
   const existing = yield* loadArticle(
-    ctx,
     slot,
     head.contentKey,
     projection.appLocale
@@ -95,7 +91,6 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
   if (existing) {
     if (existing.bucket !== entry.bucket) {
       yield* adjustArticleBucket(
-        ctx,
         slot,
         existing.appLocale,
         existing.bucket,
@@ -103,7 +98,6 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
         -1
       );
       yield* adjustArticleBucket(
-        ctx,
         slot,
         entry.appLocale,
         entry.bucket,
@@ -116,16 +110,10 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
       .replace(existing._id, entry)
       .pipe(Effect.orDie);
     if (existing.category !== entry.category) {
-      yield* reconcileCategory(
-        ctx,
-        slot,
-        projection.appLocale,
-        existing.category
-      );
+      yield* reconcileCategory(slot, projection.appLocale, existing.category);
     }
   } else {
     yield* adjustArticleBucket(
-      ctx,
       slot,
       entry.appLocale,
       entry.bucket,
@@ -134,24 +122,18 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     );
     yield* writer.table("articleCatalog").insert(entry).pipe(Effect.orDie);
   }
-  yield* stageCategory(ctx, entry, projection.categoryRouteSlug);
+  yield* stageCategory(entry, projection.categoryRouteSlug);
 });
 
 /** Deletes one active article row and reconciles its former category. */
 export const deleteArticle = Effect.fn("contentRelease.deleteArticle")(
-  function* (
-    ctx: MutationCtx,
-    slot: ModelSlot,
-    contentKey: string,
-    appLocale: AppLocale
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const existing = yield* loadArticle(ctx, slot, contentKey, appLocale);
+  function* (slot: ModelSlot, contentKey: string, appLocale: AppLocale) {
+    const writer = yield* DatabaseWriter;
+    const existing = yield* loadArticle(slot, contentKey, appLocale);
     if (!existing) {
       return;
     }
     yield* adjustArticleBucket(
-      ctx,
       slot,
       existing.appLocale,
       existing.bucket,
@@ -159,6 +141,6 @@ export const deleteArticle = Effect.fn("contentRelease.deleteArticle")(
       -1
     );
     yield* writer.table("articleCatalog").delete(existing._id);
-    yield* reconcileCategory(ctx, slot, appLocale, existing.category);
+    yield* reconcileCategory(slot, appLocale, existing.category);
   }
 );

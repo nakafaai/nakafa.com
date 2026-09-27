@@ -1,27 +1,37 @@
+import { HttpClient } from "@confect/js";
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import {
   readPublishedArticleBuckets,
   readPublishedArticleSitemap,
 } from "@/lib/content/article/sitemap";
 import { makeArticleRuntimeSource } from "@/test/content/article";
-import {
-  createTestNativeQuery,
-  createTestRuntimeQuery,
-} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const runtimeReadMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
-
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: runtimeReadMock,
-}));
-
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 describe("published article sitemap", () => {
   it.effect(
     "enumerates signed article and category routes through serving buckets",
@@ -29,8 +39,7 @@ describe("published article sitemap", () => {
       Effect.gen(function* () {
         const fixture = yield* makeArticleRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
-        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
-
+        runtimeQueryMock.mockImplementation(context.query);
         const inventory = yield* readPublishedArticleBuckets("de");
         const pages = yield* Effect.forEach(inventory.buckets, (bucket) =>
           readPublishedArticleSitemap("de", bucket)
@@ -55,32 +64,30 @@ describe("published article sitemap", () => {
         ]);
       })
   );
-
   beforeEach(() => {
     runtimeQueryMock.mockReset();
-    runtimeReadMock.mockImplementation(
-      createTestRuntimeQuery(runtimeQueryMock)
-    );
   });
-
   it.effect("reads bucket discovery and one exact route partition", () =>
     Effect.gen(function* () {
       runtimeQueryMock
-        .mockResolvedValueOnce({
-          activeReleaseId,
-          articleCount: 1,
-          buckets: ["abc"],
-          managed: true,
-        })
-        .mockResolvedValueOnce({
-          routes: [
-            {
-              lastModified: "2026-07-23",
-              publicPath: "articles/politics/article",
-            },
-          ],
-        });
-
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId,
+            articleCount: 1,
+            buckets: ["abc"],
+            managed: true,
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeed({
+            routes: [
+              {
+                lastModified: "2026-07-23",
+                publicPath: "articles/politics/article",
+              },
+            ],
+          })
+        );
       const buckets = yield* readPublishedArticleBuckets("en");
       expect(buckets).toEqual({
         activeReleaseId,
@@ -89,7 +96,11 @@ describe("published article sitemap", () => {
       });
       const sitemap = yield* readPublishedArticleSitemap("en", "abc");
       expect(sitemap).toMatchObject({
-        routes: [{ publicPath: "articles/politics/article" }],
+        routes: [
+          {
+            publicPath: "articles/politics/article",
+          },
+        ],
       });
       expect(runtimeQueryMock).toHaveBeenNthCalledWith(1, expect.anything(), {
         appLocale: "en",
@@ -100,57 +111,64 @@ describe("published article sitemap", () => {
       });
     })
   );
-
   it.effect("rejects an unmanaged article sitemap inventory", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce({
-        activeReleaseId: null,
-        articleCount: 0,
-        buckets: [],
-        managed: false,
-      });
-
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: null,
+          articleCount: 0,
+          buckets: [],
+          managed: false,
+        })
+      );
       const error = yield* readPublishedArticleBuckets("en").pipe(Effect.flip);
-      expect(error).toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(error).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
     })
   );
-
   it.effect(
     "preserves runtime query failures in the Effect error channel",
     () =>
       Effect.gen(function* () {
-        runtimeQueryMock.mockRejectedValueOnce(
-          new Error("sitemap unavailable")
+        runtimeQueryMock.mockReturnValueOnce(
+          Effect.fail(
+            new HttpClient.HttpClientError({
+              cause: new Error("sitemap unavailable"),
+            })
+          )
         );
-
         const error = yield* readPublishedArticleBuckets("id").pipe(
           Effect.flip
         );
         expect(error).toMatchObject({
-          _tag: "NakafaAgentDataReadError",
-          cause: "Error: sitemap unavailable",
+          _tag: "HttpClientError",
+          cause: expect.objectContaining({ message: "sitemap unavailable" }),
         });
       })
   );
-
   it.effect("rejects a sitemap inventory from another signed release", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce({
-        activeReleaseId: "release-next",
-        articleCount: 1,
-        buckets: ["abc"],
-        managed: true,
-      });
-
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-next",
+          articleCount: 1,
+          buckets: ["abc"],
+          managed: true,
+        })
+      );
       const error = yield* readPublishedArticleBuckets(
         "de",
         activeReleaseId
       ).pipe(Effect.flip);
-      expect(error).toMatchObject({ _tag: "PublishedReleaseMismatchError" });
+      expect(error).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+      });
     })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

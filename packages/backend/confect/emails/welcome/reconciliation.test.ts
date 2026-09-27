@@ -1,19 +1,21 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { type EmailStatus, Resend } from "@convex-dev/resend";
 import resendTest from "@convex-dev/resend/test";
 import workflowTest from "@convex-dev/workflow/test";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { resend } from "@repo/backend/confect/emails/client";
 import {
   activateWelcomeIntent,
   declareWelcomeIntent,
 } from "@repo/backend/confect/emails/welcome/impl";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexTest, type TestConvex } from "convex-test";
+import { Effect } from "effect";
 
 const testResend = new Resend(components.resend, {
   apiKey: "re_test_welcome_reconciliation",
@@ -79,10 +81,22 @@ async function insertScheduledIntent(
     })
   );
   const intentId = await test.mutation((ctx) =>
-    runConvexProgram(declareWelcomeIntent(ctx, userId))
+    Effect.runPromise(
+      declareWelcomeIntent(userId).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
+    )
   );
   await test.mutation((ctx) =>
-    runConvexProgram(activateWelcomeIntent(ctx, userId, "en"))
+    Effect.runPromise(
+      activateWelcomeIntent(userId, "en").pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
+    )
   );
   return intentId;
 }

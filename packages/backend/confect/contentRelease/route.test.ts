@@ -1,7 +1,8 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { decodeRouteJson } from "@repo/backend/confect/contentRelease/parse";
 import { stageRouteVersion } from "@repo/backend/confect/contentRelease/route";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { insertProofItem } from "@repo/backend/test/content/proof";
@@ -24,16 +25,17 @@ it.each(["missing", "deleted", "prior-missing", "prior-upsert"] as const)(
     }
     if (state === "prior-upsert") {
       await t.mutation((ctx) =>
-        insertRuntimeVersion(ctx, "public", "test:head-0", { headSequence: 1 })
+        insertRuntimeVersion(ctx, "public", "test:head-0", {
+          headSequence: 1,
+        })
       );
     }
     const routeJson = testRouteJson();
-    const result = t.mutation((ctx) =>
-      runConvexProgram(
+    const result = t.mutation((_ctx) =>
+      Effect.runPromise(
         Effect.gen(function* () {
           const route = yield* decodeRouteJson(routeJson);
           yield* stageRouteVersion(
-            ctx,
             route,
             routeJson,
             0,
@@ -41,27 +43,31 @@ it.each(["missing", "deleted", "prior-missing", "prior-upsert"] as const)(
             2,
             state.startsWith("prior") ? 1 : undefined
           );
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, _ctx)
+          )
+        )
       )
     );
     if (state === "prior-upsert") {
       await result;
       expect(
         await t.query((ctx) => ctx.db.query("contentBindings").unique())
-      ).toMatchObject({ contentKey: "test:head-0", operation: "bind" });
+      ).toMatchObject({
+        contentKey: "test:head-0",
+        operation: "bind",
+      });
     } else {
       await expect(result).rejects.toMatchObject({
-        data: {
-          code:
-            state === "deleted"
-              ? "CONTENT_RELEASE_ROUTE"
-              : "CONTENT_RELEASE_MISSING",
-        },
+        code:
+          state === "deleted"
+            ? "CONTENT_RELEASE_ROUTE"
+            : "CONTENT_RELEASE_MISSING",
       });
     }
   }
 );
-
 it.each([
   "index",
   "path",
@@ -86,7 +92,9 @@ it.each([
         sequence: 1,
       });
       if (scenario === "corrupt-delete") {
-        await ctx.db.patch("contentBindings", id, { contentKey: undefined });
+        await ctx.db.patch("contentBindings", id, {
+          contentKey: undefined,
+        });
       }
     }
     await insertProofItem(ctx, 0);
@@ -95,12 +103,16 @@ it.each([
     publicPath,
     operation: deleting ? "delete" : "bind",
   });
-  const result = t.mutation((ctx) =>
-    runConvexProgram(
+  const result = t.mutation((_ctx) =>
+    Effect.runPromise(
       Effect.gen(function* () {
         const route = yield* decodeRouteJson(routeJson);
-        yield* stageRouteVersion(ctx, route, routeJson, 0, TEST_DIGEST, 2, 1);
-      })
+        yield* stageRouteVersion(route, routeJson, 0, TEST_DIGEST, 2, 1);
+      }).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, _ctx)
+        )
+      )
     )
   );
   if (scenario === "delete") {
@@ -116,15 +128,13 @@ it.each([
     );
   } else {
     await expect(result).rejects.toMatchObject({
-      data: {
-        code: {
-          "missing-delete": "CONTENT_RELEASE_MISSING",
-          "corrupt-delete": "CONTENT_RELEASE_INTEGRITY",
-          index: "CONTENT_RELEASE_CONFLICT",
-          path: "CONTENT_RELEASE_CONFLICT",
-          unchanged: "CONTENT_RELEASE_CONFLICT",
-        }[scenario],
-      },
+      code: {
+        "missing-delete": "CONTENT_RELEASE_MISSING",
+        "corrupt-delete": "CONTENT_RELEASE_INTEGRITY",
+        index: "CONTENT_RELEASE_CONFLICT",
+        path: "CONTENT_RELEASE_CONFLICT",
+        unchanged: "CONTENT_RELEASE_CONFLICT",
+      }[scenario],
     });
   }
 });

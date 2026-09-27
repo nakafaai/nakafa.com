@@ -1,8 +1,8 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { hasMaterialReadModel } from "@repo/backend/confect/contentRelease/material/state";
 import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 type ActiveIdentity = Exclude<
@@ -14,7 +14,7 @@ export const requireMaterialState = Effect.fn(
   "contentRelease.requireMaterialState"
 )(function* (
   active: ActiveIdentity,
-  appLocale: Doc<"contentPaths">["appLocale"]
+  appLocale: Docs["contentPaths"]["appLocale"]
 ) {
   if (!hasMaterialReadModel(active)) {
     return yield* releaseFail(
@@ -55,7 +55,7 @@ export const loadMaterialCatalogOwner = Effect.fn(
 });
 /** Loads material ownership only after its active read model is complete. */
 export const loadMaterialOwner = Effect.fn("contentRelease.loadMaterialOwner")(
-  function* (appLocale: Doc<"contentPaths">["appLocale"]) {
+  function* (appLocale: Docs["contentPaths"]["appLocale"]) {
     const owner = yield* loadMaterialCatalogOwner();
     if (!(owner.active && owner.managed)) {
       return {

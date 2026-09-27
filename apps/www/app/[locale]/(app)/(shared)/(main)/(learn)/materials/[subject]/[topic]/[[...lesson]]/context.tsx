@@ -1,12 +1,12 @@
 "use client";
 
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
-import { api } from "@repo/backend/convex/_generated/api";
 import {
   MATERIAL_CONTEXT_QUERY_PARAM,
   readMaterialContextHint,
 } from "@repo/contents/route/material/context";
-import { useQuery } from "convex/react";
 import { Effect } from "effect";
 import { useSearchParams } from "next/navigation";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
@@ -41,7 +41,7 @@ function useMaterialNavigation({ page }: MaterialContextProps) {
   );
   const enabled = context !== undefined && page.kind === "published";
   const result = useQuery(
-    api.contentRelease.program.context,
+    refs.public.contentRelease.program.context,
     enabled
       ? {
           appLocale: page.route.appLocale,
@@ -54,20 +54,23 @@ function useMaterialNavigation({ page }: MaterialContextProps) {
         }
       : "skip"
   );
+  if (QueryResult.isFailure(result)) {
+    throw result.error;
+  }
   const published =
-    enabled && result !== undefined
+    enabled && QueryResult.isSuccess(result)
       ? Effect.runSync(
           decodePublishedMaterialContext(
             page.appLocale,
             page.route,
             context,
-            result
+            result.value
           )
         )
       : null;
   return {
     navigation: readMaterialNavigation(page, published),
-    pending: enabled && result === undefined,
+    pending: enabled && QueryResult.isLoading(result),
   };
 }
 

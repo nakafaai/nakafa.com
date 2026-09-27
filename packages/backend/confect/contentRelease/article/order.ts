@@ -1,36 +1,28 @@
-import { DatabaseReader, QueryStream } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { QueryStream } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import {
   articlePublicationCursor,
   decodePublicationPosition,
 } from "@repo/backend/content/article/cursor";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { encodeArticlePublicationCursor } from "@repo/contents/publication";
 import type { PaginationOptions } from "convex/server";
 import { Effect, Predicate } from "effect";
 
-type ReadCtx = MutationCtx | QueryCtx;
-type AppLocale = Doc<"articleCatalog">["appLocale"];
+type AppLocale = Docs["articleCatalog"]["appLocale"];
 
 /** Reads current articles in truthful newest-first order. */
 export const readOrderedArticles = Effect.fn(
   "contentRelease.readOrderedArticles"
 )(function* (
-  ctx: ReadCtx,
   slot: ModelSlot,
   appLocale: AppLocale,
   category: string | null,
   limit: number
 ) {
-  const catalog = DatabaseReader.make(databaseSchema, ctx.db).table(
-    "articleCatalog"
-  );
+  const catalog = (yield* DatabaseReader).table("articleCatalog");
   const query =
     category === null
       ? catalog.index(
@@ -58,7 +50,6 @@ export const readOrderedArticles = Effect.fn(
 /** Read one bounded native stream while keeping the deployed portable cursor. */
 export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
   function* (
-    ctx: ReadCtx,
     slot: ModelSlot,
     appLocale: AppLocale,
     category: string,
@@ -79,7 +70,7 @@ export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
         message: "Article publication cursor belongs to another query.",
       });
     }
-    const publication = DatabaseReader.make(databaseSchema, ctx.db)
+    const publication = (yield* DatabaseReader)
       .table("articleCatalog")
       .stream(
         "by_slot_appLocale_category_datePublished_contentKey",
@@ -95,7 +86,10 @@ export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
       position === null
         ? publication
         : QueryStream.narrow(publication, {
-            start: { keyValues: [position[3], position[4]], inclusive: false },
+            start: {
+              keyValues: [position[3], position[4]],
+              inclusive: false,
+            },
           });
     const scanned = yield* QueryStream.paginate(remaining, {
       cursor: null,
@@ -135,8 +129,14 @@ export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
       page,
       ...(scanned.pageStatus === undefined
         ? {}
-        : { pageStatus: scanned.pageStatus }),
-      ...(split ? { splitCursor: articlePublicationCursor(split) } : {}),
+        : {
+            pageStatus: scanned.pageStatus,
+          }),
+      ...(split
+        ? {
+            splitCursor: articlePublicationCursor(split),
+          }
+        : {}),
     };
   }
 );

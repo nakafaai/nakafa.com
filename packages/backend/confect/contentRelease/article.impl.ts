@@ -1,9 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/contentRelease/article.spec";
 import { readPartnerApiPage } from "@repo/backend/confect/contentRelease/partner/page";
-import { convexArticleLayer } from "@repo/backend/content/article/convex";
+import { articleLayer } from "@repo/backend/content/article/confect";
 import {
   readArticleBucket,
   readCategoryArticles,
@@ -31,9 +30,8 @@ const delivery = FunctionImpl.make(
     appLocale,
     publicPath,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readArticleDelivery(appLocale, publicPath).pipe(
-      Effect.provide(convexArticleLayer(ctx))
+      Effect.provide(articleLayer)
     );
   })
 );
@@ -42,8 +40,7 @@ const apiPage = FunctionImpl.make(
   spec,
   "apiPage",
   Effect.fn("contentRelease.article.apiPage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readPartnerApiPage(ctx, {
+    return yield* readPartnerApiPage({
       ...args,
       family: "article",
     });
@@ -58,12 +55,11 @@ const route = FunctionImpl.make(
     expectedActiveReleaseId,
     publicPath,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readArticleModel(
       appLocale,
       publicPath,
       expectedActiveReleaseId
-    ).pipe(Effect.provide(convexArticleLayer(ctx)));
+    ).pipe(Effect.provide(articleLayer));
   })
 );
 const publications = FunctionImpl.make(
@@ -71,14 +67,13 @@ const publications = FunctionImpl.make(
   spec,
   "publications",
   Effect.fn("contentRelease.article.publications")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readArticlePage(
       args.category,
       args.appLocale,
       args.expectedManifestHash,
       args.expectedReleaseId,
       args.paginationOpts
-    ).pipe(Effect.provide(convexArticleLayer(ctx)));
+    ).pipe(Effect.provide(articleLayer));
   })
 );
 const categories = FunctionImpl.make(
@@ -86,13 +81,12 @@ const categories = FunctionImpl.make(
   spec,
   "categories",
   Effect.fn("contentRelease.article.categories")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readCategoryPage(
       args.appLocale,
       args.expectedManifestHash,
       args.expectedReleaseId,
       args.paginationOpts
-    ).pipe(Effect.provide(convexArticleLayer(ctx)));
+    ).pipe(Effect.provide(articleLayer));
   })
 );
 const bucket = FunctionImpl.make(
@@ -100,9 +94,8 @@ const bucket = FunctionImpl.make(
   spec,
   "bucket",
   Effect.fn("contentRelease.article.bucket")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readArticleBucket(args.appLocale, args.bucket).pipe(
-      Effect.provide(convexArticleLayer(ctx))
+      Effect.provide(articleLayer)
     );
   })
 );
@@ -111,9 +104,8 @@ const latest = FunctionImpl.make(
   spec,
   "latest",
   Effect.fn("contentRelease.article.latest")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readLatestArticles(args.appLocale, args.limit).pipe(
-      Effect.provide(convexArticleLayer(ctx))
+      Effect.provide(articleLayer)
     );
   })
 );
@@ -122,12 +114,11 @@ const listing = FunctionImpl.make(
   spec,
   "listing",
   Effect.fn("contentRelease.article.listing")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readCategoryArticles(
       args.appLocale,
       args.category,
       args.limit
-    ).pipe(Effect.provide(convexArticleLayer(ctx)));
+    ).pipe(Effect.provide(articleLayer));
   })
 );
 const sitemapBuckets = FunctionImpl.make(
@@ -135,9 +126,8 @@ const sitemapBuckets = FunctionImpl.make(
   spec,
   "sitemapBuckets",
   Effect.fn("contentRelease.article.sitemapBuckets")(function* ({ appLocale }) {
-    const ctx = yield* QueryCtxService;
     return yield* readArticleBuckets(appLocale).pipe(
-      Effect.provide(convexArticleLayer(ctx))
+      Effect.provide(articleLayer)
     );
   })
 );
@@ -149,9 +139,8 @@ const sitemapPage = FunctionImpl.make(
     appLocale,
     bucket,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readArticleSitemap(appLocale, bucket).pipe(
-      Effect.provide(convexArticleLayer(ctx))
+      Effect.provide(articleLayer)
     );
   })
 );

@@ -1,13 +1,14 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
-import { WelcomeIntentErrorWire } from "@repo/backend/confect/emails/welcome/spec";
-import { failureWire } from "@repo/backend/confect/failure";
+import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import { WelcomeIntentError } from "@repo/backend/confect/emails/welcome/spec";
 import {
-  CurriculumPreferenceErrorWire,
-  LearningPreferencePersistenceErrorWire,
+  CurriculumPreferenceError,
+  LearningPreferencePersistenceError,
 } from "@repo/backend/confect/learningPreferences/schema";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import {
-  OnboardingProfileErrorWire,
+  OnboardingProfileError,
   onboardingAnswerValidator,
   onboardingCompletionValidator,
   onboardingProfileValidator,
@@ -15,35 +16,23 @@ import {
 } from "@repo/backend/confect/onboarding/schema";
 import { onboardingFinishResultValidator } from "@repo/backend/confect/onboarding/spec";
 import { Schema } from "effect";
-export const onboardingAuthFailedCode = "ONBOARDING_AUTH_FAILED";
-export const unauthenticatedCode = "UNAUTHENTICATED";
-export const unauthorizedCode = "UNAUTHORIZED";
-
-/** Expected authentication failure for an onboarding mutation. */
-export class OnboardingAuthError extends Schema.TaggedError<OnboardingAuthError>()(
-  "OnboardingAuthError",
+/** A managed account role cannot be replaced through learner onboarding. */
+export class OnboardingRoleError extends Schema.TaggedError<OnboardingRoleError>()(
+  "OnboardingRoleError",
   {
-    code: Schema.Literals([
-      onboardingAuthFailedCode,
-      unauthenticatedCode,
-      unauthorizedCode,
-    ]),
+    code: Schema.Literal("UNAUTHORIZED"),
     message: Schema.String,
   }
 ) {}
 
-/** Preserves shared auth failures and redacts unknown boundary details. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const OnboardingAuthErrorWire = failureWire(OnboardingAuthError);
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "admit",
       args: () => ({}),
       returns: () => onboardingStatusValidator,
-      error: () =>
-        Schema.Union([OnboardingAuthErrorWire, OnboardingProfileErrorWire]),
-    })
+      error: () => Schema.Union([AuthFailure, OnboardingProfileError]),
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -53,8 +42,12 @@ export default GroupSpec.make()
       }),
       returns: () => onboardingProfileValidator,
       error: () =>
-        Schema.Union([OnboardingAuthErrorWire, OnboardingProfileErrorWire]),
-    })
+        Schema.Union([
+          AuthFailure,
+          OnboardingRoleError,
+          OnboardingProfileError,
+        ]),
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -65,12 +58,13 @@ export default GroupSpec.make()
       returns: () => onboardingFinishResultValidator,
       error: () =>
         Schema.Union([
-          OnboardingAuthErrorWire,
-          OnboardingProfileErrorWire,
-          ReleaseErrorWire,
-          CurriculumPreferenceErrorWire,
-          LearningPreferencePersistenceErrorWire,
-          WelcomeIntentErrorWire,
+          AuthFailure,
+          OnboardingRoleError,
+          OnboardingProfileError,
+          ReleaseError,
+          CurriculumPreferenceError,
+          LearningPreferencePersistenceError,
+          WelcomeIntentError,
         ]),
-    })
+    }).middleware(Session)
   );

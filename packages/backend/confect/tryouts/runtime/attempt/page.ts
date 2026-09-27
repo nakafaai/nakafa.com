@@ -1,13 +1,15 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import {
   matchesAttemptIdentity,
   readAttemptSetIdentity,
 } from "@repo/backend/confect/tryouts/runtime/lookup";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import {
   readPublishedSectionPageFromIndex,
   readPublishedSetPageFromIndex,
@@ -17,11 +19,9 @@ import {
   type TryoutSetSelection,
 } from "@repo/backend/content/tryout/selection";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutAttempt = Docs["tryoutAttempts"];
 interface AttemptPath {
   readonly locale: AppLocaleCode;
   readonly publicPath: string;
@@ -30,20 +30,17 @@ interface AttemptPath {
 /** Reads and verifies one set page from the attempt-owned source snapshot. */
 export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
   function* (
-    ctx: QueryCtx,
     args: AttemptPath,
     attempt: TryoutAttempt,
     identity: TryoutSetIdentity
   ) {
-    const selection = yield* readAttemptSetSelection(
-      ctx,
-      args,
-      attempt,
-      identity
-    );
+    const selection = yield* readAttemptSetSelection(args, attempt, identity);
+    const publicPath = selection.sets.at(0)?.publicPath;
     const page = yield* readPublishedSetPageFromIndex(
       selection,
-      args.publicPath
+      args.publicPath === attempt.setPublicPath && publicPath
+        ? publicPath
+        : args.publicPath
     );
     if (!page) {
       return yield* attemptPageIntegrity(
@@ -57,17 +54,18 @@ export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
 /** Reads and verifies one section page from the attempt-owned source snapshot. */
 export const readAttemptSectionPage = Effect.fn(
   "tryouts.attempt.readSectionPage"
-)(function* (ctx: QueryCtx, args: AttemptPath, attempt: TryoutAttempt) {
+)(function* (args: AttemptPath, attempt: TryoutAttempt) {
   const identity = readAttemptSetIdentity(attempt);
-  const selection = yield* readAttemptSetSelection(
-    ctx,
-    args,
-    attempt,
-    identity
+  const selection = yield* readAttemptSetSelection(args, attempt, identity);
+  const original = attempt.sectionSnapshots.find(
+    (section) => section.publicPath === args.publicPath
+  );
+  const localized = selection.sections.find(
+    (section) => section.sectionKey === original?.sectionKey
   );
   const page = yield* readPublishedSectionPageFromIndex(
     selection,
-    args.publicPath
+    localized?.publicPath ?? args.publicPath
   );
   if (!page) {
     return yield* attemptPageIntegrity(
@@ -80,25 +78,40 @@ export const readAttemptSectionPage = Effect.fn(
 /** Reads and checks the complete immutable set-local catalog for one attempt. */
 const readAttemptSetSelection = Effect.fn("tryouts.attempt.readSetSelection")(
   function* (
-    ctx: QueryCtx,
     args: AttemptPath,
     attempt: TryoutAttempt,
     identity: TryoutSetIdentity
   ) {
     yield* loadVerifiedSnapshot("tryout", attempt.tryoutSnapshotId).pipe(
-      Effect.provide(convexPublicationLayer(ctx))
+      Effect.provide(publicationLayer)
     );
     const selection = yield* readTryoutSetSelection({
-      appLocale: args.locale,
-      publicPath: args.publicPath,
+      appLocale: attempt.appLocale,
+      publicPath: attempt.setPublicPath,
       snapshotId: attempt.tryoutSnapshotId,
-    }).pipe(Effect.provide(convexTryoutLayer(ctx)));
+    }).pipe(Effect.provide(tryoutLayer));
     if (!(selection && matchesAttemptSelection(attempt, identity, selection))) {
       return yield* attemptPageIntegrity(
         "Frozen try-out catalog no longer matches its attempt snapshot."
       );
     }
-    return selection;
+    if (args.locale === attempt.appLocale) {
+      return selection;
+    }
+    const publicPath = yield* readAttemptDestination(attempt, args.locale);
+    const localized = publicPath
+      ? yield* readTryoutSetSelection({
+          appLocale: args.locale,
+          publicPath,
+          snapshotId: attempt.tryoutSnapshotId,
+        }).pipe(Effect.provide(tryoutLayer))
+      : null;
+    if (!localized) {
+      return yield* attemptPageIntegrity(
+        "The retained exam has no page in this language."
+      );
+    }
+    return localized;
   }
 );
 

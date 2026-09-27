@@ -1,5 +1,6 @@
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription";
 import posthogTest from "@posthog/convex/test";
+import type { StoredPolarCustomer } from "@repo/backend/confect/customers/polar/spec";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -186,4 +187,63 @@ export function createWebhookTestConvex() {
   const t = convexTest(schema, convexModules);
   posthogTest.register(t);
   return t;
+}
+
+/** Inserts a user row for customer reconciliation tests. */
+export const insertReconciliationUser = Effect.fn(
+  "customers.mutations.test.insertUser"
+)(function* (ctx: MutationCtx, suffix: string) {
+  return yield* Effect.promise(() =>
+    ctx.db.insert("users", {
+      authId: `auth-${suffix}`,
+      credits: 10,
+      creditsResetAt: 1,
+      email: `${suffix}@example.com`,
+      name: suffix,
+      plan: "free",
+    })
+  );
+});
+
+/** Inserts a local customer row owned by one user. */
+export const insertOwnedCustomer = Effect.fn(
+  "customers.mutations.test.insertCustomer"
+)(function* (ctx: MutationCtx, polarId: string, userId: Id<"users">) {
+  return yield* Effect.promise(() =>
+    ctx.db.insert("customers", {
+      id: polarId,
+      externalId: null,
+      metadata: {},
+      userId,
+    })
+  );
+});
+
+/** Seeds one webhook account through the test transaction boundary. */
+export const seedWebhookUser = Effect.fn("test.polar.seedUser")(
+  (
+    t: ReturnType<typeof createWebhookTestConvex>,
+    suffix: string,
+    deletionPreparedAt?: number
+  ) =>
+    Effect.promise(() =>
+      t.mutation((ctx) =>
+        Effect.runPromise(insertUser(ctx, suffix, deletionPreparedAt))
+      )
+    )
+);
+
+/** Builds the normalized identity delivered by Polar to a billing webhook. */
+export function buildWebhookCustomer(
+  suffix: string,
+  overrides: Partial<StoredPolarCustomer> = {}
+): StoredPolarCustomer {
+  return {
+    email: `${suffix}@example.com`,
+    externalId: `auth-${suffix}`,
+    id: `polar-${suffix}`,
+    metadata: {},
+    name: `User ${suffix}`,
+    ...overrides,
+  };
 }

@@ -1,6 +1,8 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { StorageReader } from "@repo/backend/confect/_generated/services";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  StorageReader,
+} from "@repo/backend/confect/_generated/services";
 import { ForumAttachmentError } from "@repo/backend/confect/classes/forums/attachments/spec";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/confect/classes/forums/constants";
 import {
@@ -8,11 +10,10 @@ import {
   getPostReactionPreviews,
 } from "@repo/backend/confect/classes/forums/postReactions";
 import { getUserMap } from "@repo/backend/confect/users/directory";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 export type PostAttachment = Pick<
-  Doc<"schoolClassForumPostAttachments">,
+  Docs["schoolClassForumPostAttachments"],
   "_id" | "mimeType" | "name" | "size"
 > & {
   url: string | null;
@@ -24,10 +25,10 @@ export type PostAttachment = Pick<
 export const enrichForumPosts = Effect.fn(
   "classes.forums.posts.enrichForumPosts"
 )(function* (
-  ctx: QueryCtx,
-  posts: Doc<"schoolClassForumPosts">[],
+  posts: Docs["schoolClassForumPosts"][],
   currentUserId: Id<"users">
 ) {
+  const _reader = yield* DatabaseReader;
   if (posts.length === 0) {
     return [];
   }
@@ -36,10 +37,10 @@ export const enrichForumPosts = Effect.fn(
     post.replyToUserId ? [post.createdBy, post.replyToUserId] : [post.createdBy]
   );
   const [reactionPreviews, myReactions, allAttachments] = yield* Effect.all([
-    getPostReactionPreviews(ctx, posts),
-    getMyPostReactions(ctx, postIds, currentUserId),
+    getPostReactionPreviews(posts),
+    getMyPostReactions(postIds, currentUserId),
     Effect.forEach(postIds, (postId) =>
-      DatabaseReader.make(databaseSchema, ctx.db)
+      _reader
         .table("schoolClassForumPostAttachments")
         .index("by_postId", (q) => q.eq("postId", postId))
         .take(MAX_FORUM_POST_ATTACHMENTS + 1)
@@ -56,7 +57,7 @@ export const enrichForumPosts = Effect.fn(
     });
   }
   const [userMap, attachmentLists] = yield* Effect.all([
-    getUserMap(ctx, postUserIds),
+    getUserMap(postUserIds),
     Effect.forEach(allAttachments, (attachments) =>
       Effect.forEach(attachments, (attachment) =>
         Effect.gen(function* () {

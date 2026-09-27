@@ -1,3 +1,4 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { QuestionResponseSchema } from "@nakafa/aksara-contracts/question/response";
@@ -8,6 +9,7 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   stageTryoutCatalog,
   stageTryoutPlacement,
@@ -20,7 +22,6 @@ import {
   TRYOUT_CATALOG_DOCUMENT_LIMIT,
   TRYOUT_PLACEMENT_DOCUMENT_LIMIT,
 } from "@repo/backend/confect/contentRelease/tryout/limits";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -28,6 +29,7 @@ import {
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const snapshotId = Sha256HashSchema.make(`sha256:${"7".repeat(64)}`);
 describe("contentRelease/snapshot/tryout", () => {
@@ -37,8 +39,12 @@ describe("contentRelease/snapshot/tryout", () => {
     const t = convexTest(schema, convexModules);
     const stage = (index: number) =>
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutPlacement(ctx, snapshotId, index, placement, rowJson)
+        Effect.runPromise(
+          stageTryoutPlacement(snapshotId, index, placement, rowJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       );
     await expect(stage(1)).resolves.toBe(false);
@@ -50,42 +56,50 @@ describe("contentRelease/snapshot/tryout", () => {
       await t.query((ctx) => ctx.db.query("tryoutPlacements").collect())
     ).toEqual(original);
     await expect(stage(2)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_CONFLICT" },
+      code: "CONTENT_RELEASE_CONFLICT",
     });
     await t.mutation(async (ctx) => {
       const stored = await ctx.db.query("tryoutPlacements").unique();
       assert(stored);
-      await ctx.db.patch(stored._id, { rowJson: "{}" });
+      await ctx.db.patch(stored._id, {
+        rowJson: "{}",
+      });
     });
     const changed = await t.query((ctx) =>
       ctx.db.query("tryoutPlacements").collect()
     );
     await expect(stage(1)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_CONFLICT" },
+      code: "CONTENT_RELEASE_CONFLICT",
     });
     expect(
       await t.query((ctx) => ctx.db.query("tryoutPlacements").collect())
     ).toEqual(changed);
   });
-
   it("stores hierarchy and placement rows in domain-owned tables", async () => {
     const catalog = makeTryoutCatalogRow();
     const placement = makeTryoutPlacementRow();
     const catalogJson = canonicalizeContentSnapshotRow(catalog);
     const placementJson = canonicalizeContentSnapshotRow(placement);
     const t = convexTest(schema, convexModules);
-
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutCatalog(ctx, snapshotId, 0, catalog, catalogJson)
+        Effect.runPromise(
+          stageTryoutCatalog(snapshotId, 0, catalog, catalogJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
     ).resolves.toBe(false);
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutPlacement(ctx, snapshotId, 1, placement, placementJson)
+        Effect.runPromise(
+          stageTryoutPlacement(snapshotId, 1, placement, placementJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
     ).resolves.toBe(false);
@@ -109,18 +123,27 @@ describe("contentRelease/snapshot/tryout", () => {
       },
     });
   });
-
   it("replays exact rows and rejects index or identity collisions", async () => {
     const catalog = makeTryoutCatalogRow();
     const rowJson = canonicalizeContentSnapshotRow(catalog);
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
-      runConvexProgram(stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson))
+      Effect.runPromise(
+        stageTryoutCatalog(snapshotId, 0, catalog, rowJson).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson)
+        Effect.runPromise(
+          stageTryoutCatalog(snapshotId, 0, catalog, rowJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
     ).resolves.toBe(true);
@@ -135,20 +158,31 @@ describe("contentRelease/snapshot/tryout", () => {
     });
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson)
+        Effect.runPromise(
+          stageTryoutCatalog(snapshotId, 0, catalog, rowJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_CONFLICT",
+    });
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutCatalog(ctx, snapshotId, 1, catalog, rowJson)
+        Effect.runPromise(
+          stageTryoutCatalog(snapshotId, 1, catalog, rowJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_CONFLICT",
+    });
   });
-
   it("rejects new or replayed rows beyond aggregate read budgets", async () => {
     const catalogSource = makeTryoutCatalogRow();
     const catalog = {
@@ -187,22 +221,32 @@ describe("contentRelease/snapshot/tryout", () => {
     const t = convexTest(schema, convexModules);
     const catalogJson = canonicalizeContentSnapshotRow(catalog);
     const placementJson = canonicalizeContentSnapshotRow(placement);
-
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutCatalog(ctx, snapshotId, 0, catalog, catalogJson)
+        Effect.runPromise(
+          stageTryoutCatalog(snapshotId, 0, catalog, catalogJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_SIZE",
+    });
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutPlacement(ctx, snapshotId, 1, placement, placementJson)
+        Effect.runPromise(
+          stageTryoutPlacement(snapshotId, 1, placement, placementJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
-
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_SIZE",
+    });
     await t.mutation(async (ctx) => {
       await ctx.db.insert("tryoutCatalog", {
         ...tryoutCatalogFacts(catalog.record),
@@ -219,20 +263,31 @@ describe("contentRelease/snapshot/tryout", () => {
         snapshotId,
       });
     });
-
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutCatalog(ctx, snapshotId, 0, catalog, catalogJson)
+        Effect.runPromise(
+          stageTryoutCatalog(snapshotId, 0, catalog, catalogJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_SIZE",
+    });
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutPlacement(ctx, snapshotId, 1, placement, placementJson)
+        Effect.runPromise(
+          stageTryoutPlacement(snapshotId, 1, placement, placementJson).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_SIZE",
+    });
   });
 });

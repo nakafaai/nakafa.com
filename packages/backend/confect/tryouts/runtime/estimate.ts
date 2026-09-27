@@ -1,5 +1,5 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 const MAX_THETA = 4;
@@ -14,7 +14,7 @@ const IRT_SCORE_STANDARD_DEVIATION = 100;
 /** One calibrated item paired with the observed attempt answer. */
 export interface IrtItemAnswer {
   isCorrect: boolean;
-  item: Doc<"irtScaleItems">;
+  item: Docs["irtScaleItems"];
 }
 
 /** Estimates theta, standard error, and the public score for one IRT vector. */
@@ -101,7 +101,7 @@ function getInformation(itemAnswers: IrtItemAnswer[], theta: number) {
 }
 
 /** Returns the 2PL expected correctness probability for one item. */
-function getExpectedProbability(item: Doc<"irtScaleItems">, theta: number) {
+function getExpectedProbability(item: Docs["irtScaleItems"], theta: number) {
   const exponent = -item.discrimination * (theta - item.difficulty);
   return 1 / (1 + Math.exp(exponent));
 }

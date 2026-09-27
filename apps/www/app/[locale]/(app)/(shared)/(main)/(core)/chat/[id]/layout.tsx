@@ -1,0 +1,66 @@
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Effect } from "effect";
+import type { Metadata } from "next";
+import { cache } from "react";
+import { env } from "@/env";
+import { captureServerExceptionSafely } from "@/lib/analytics/server";
+import { getToken } from "@/lib/auth/server";
+
+/** Loads the current chat title once per request for metadata generation. */
+const getChatTitle = cache(async (id: Id<"chats">) => {
+  const token = await getToken();
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.chats.queries.getChatTitle, {
+        chatId: id,
+      })
+    ).pipe(
+      Effect.provide(
+        HttpClient.layer(
+          env.NEXT_PUBLIC_CONVEX_URL,
+          token ? { auth: token } : {}
+        )
+      ),
+      Effect.withTracerTiming(false)
+    )
+  );
+});
+
+/** Generates the metadata for one authenticated chat route. */
+export async function generateMetadata({
+  params,
+}: {
+  params: PageProps<"/[locale]/chat/[id]">["params"];
+}): Promise<Metadata> {
+  const { id } = await params;
+  const defaultMetadata = {};
+  const title = await Effect.runPromise(
+    Effect.tryPromise(() => getChatTitle(id as Id<"chats">)).pipe(
+      Effect.catchTag("UnknownError", ({ cause: error }) =>
+        Effect.gen(function* () {
+          yield* captureServerExceptionSafely(error, {
+            source: "chat-page-metadata",
+          });
+          return null;
+        })
+      )
+    )
+  );
+  if (!title) {
+    return defaultMetadata;
+  }
+  return {
+    title: {
+      absolute: title,
+    },
+  };
+}
+
+/** Keeps per-chat document metadata independent of client navigation. */
+export default function Layout({
+  children,
+}: LayoutProps<"/[locale]/chat/[id]">) {
+  return children;
+}

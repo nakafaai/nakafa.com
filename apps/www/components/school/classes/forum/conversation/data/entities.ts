@@ -1,13 +1,13 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 
 /** Forum metadata returned by the live Convex forum query. */
 export type Forum = NonNullable<
-  FunctionReturnType<typeof api.classes.forums.queries.forums.getForum>
+  Ref.Returns<typeof refs.public.classes.forums.queries.forums.getForum>
 >;
 
-type ServerForumPost = FunctionReturnType<
-  typeof api.classes.forums.queries.pages.getForumPosts
+type ServerForumPost = Ref.Returns<
+  typeof refs.public.classes.forums.queries.pages.getForumPosts
 >[number];
 
 /** Transcript post row, including client-only optimistic rows before Convex confirms them. */

@@ -1,6 +1,6 @@
+/** Insert one school row with the minimum fields required by the schema. */
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-
 /** Insert one school row with the minimum fields required by the schema. */
 export async function insertSchool(
   ctx: MutationCtx,

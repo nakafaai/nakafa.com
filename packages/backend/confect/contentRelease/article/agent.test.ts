@@ -1,107 +1,126 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { readAgentArticleTaxonomy } from "@repo/backend/confect/contentRelease/article/agent";
 import { ARTICLE_AGENT_TAXONOMY_LIMIT } from "@repo/backend/confect/contentRelease/article/limits";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import schema from "@repo/backend/convex/schema";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   insertRuntimeArticles,
   testArticleProjection,
   testLocalizedArticleProjection,
 } from "@repo/backend/test/content/runtime";
-import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 describe("contentRelease/article/agent", () => {
-  it("keeps agent taxonomy unmanaged before the article cutover", async () => {
-    const target = convexTest(schema, convexModules);
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(readAgentArticleTaxonomy(ctx, "en"))
-      )
-    ).resolves.toEqual({ categories: [], managed: false });
-  });
-
-  it.each(ACTIVE_APP_LOCALE_CODES)(
-    "authenticates the complete %s article taxonomy",
-    async (appLocale) => {
-      const target = convexTest(schema, convexModules);
-      const projection =
-        appLocale === "en"
-          ? testArticleProjection(0)
-          : testLocalizedArticleProjection(0, appLocale);
-      await target.mutation((ctx) =>
-        insertRuntimeArticles(ctx, 1, () => projection)
+  it.effect("keeps agent taxonomy unmanaged before the article cutover", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          expect(yield* readAgentArticleTaxonomy("en")).toEqual({
+            categories: [],
+            managed: false,
+          });
+        })
       );
-
-      await expect(
-        target.query((ctx) =>
-          runConvexProgram(readAgentArticleTaxonomy(ctx, appLocale))
-        )
-      ).resolves.toEqual({
-        categories: [projection.category],
-        managed: true,
-      });
-    }
+    })
   );
-
-  it("accepts the exact category ceiling and fails closed above it", async () => {
-    const target = convexTest(schema, convexModules);
-    await target.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, 1);
-      const source = await ctx.db.query("articleCategories").unique();
-      if (!source) {
-        expect.fail("Expected one active article category.");
-      }
-      for (let index = 1; index < ARTICLE_AGENT_TAXONOMY_LIMIT; index += 1) {
-        await ctx.db.insert("articleCategories", {
-          appLocale: source.appLocale,
-          bucket: source.bucket,
-          category: source.category,
-          contentKey: source.contentKey,
-          projectionHash: source.projectionHash,
-          releaseId: source.releaseId,
-          rendererDomain: source.rendererDomain,
-          route: source.route,
-          sequence: source.sequence,
-          slot: source.slot,
-          title: source.title,
-        });
-      }
-    });
-
-    const atLimit = await target.query((ctx) =>
-      runConvexProgram(readAgentArticleTaxonomy(ctx, "en"))
-    );
-    expect(atLimit.managed).toBe(true);
-    expect(atLimit.categories).toHaveLength(ARTICLE_AGENT_TAXONOMY_LIMIT);
-    await target.mutation(async (ctx) => {
-      const source = await ctx.db.query("articleCategories").first();
-      if (!source) {
-        expect.fail("Expected one active article category.");
-      }
-      await ctx.db.insert("articleCategories", {
-        appLocale: source.appLocale,
-        bucket: source.bucket,
-        category: source.category,
-        contentKey: source.contentKey,
-        projectionHash: source.projectionHash,
-        releaseId: source.releaseId,
-        rendererDomain: source.rendererDomain,
-        route: source.route,
-        sequence: source.sequence,
-        slot: source.slot,
-        title: source.title,
-      });
-    });
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(readAgentArticleTaxonomy(ctx, "en"))
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
-    });
-  });
+  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
+    "authenticates the complete %s article taxonomy",
+    (appLocale) =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const targetCtx = yield* MutationCtx;
+            const projection =
+              appLocale === "en"
+                ? testArticleProjection(0)
+                : testLocalizedArticleProjection(0, appLocale);
+            yield* Effect.promise(() =>
+              insertRuntimeArticles(targetCtx, 1, () => projection)
+            );
+            expect(yield* readAgentArticleTaxonomy(appLocale)).toEqual({
+              categories: [projection.category],
+              managed: true,
+            });
+          })
+        );
+      })
+  );
+  it.effect(
+    "accepts the exact category ceiling and fails closed above it",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const targetCtx = yield* MutationCtx;
+            yield* Effect.gen(function* () {
+              yield* Effect.promise(() => insertRuntimeArticles(targetCtx, 1));
+              const source = yield* Effect.promise(() =>
+                targetCtx.db.query("articleCategories").unique()
+              );
+              if (!source) {
+                expect.fail("Expected one active article category.");
+              }
+              for (
+                let index = 1;
+                index < ARTICLE_AGENT_TAXONOMY_LIMIT;
+                index += 1
+              ) {
+                yield* Effect.promise(() =>
+                  targetCtx.db.insert("articleCategories", {
+                    appLocale: source.appLocale,
+                    bucket: source.bucket,
+                    category: source.category,
+                    contentKey: source.contentKey,
+                    projectionHash: source.projectionHash,
+                    releaseId: source.releaseId,
+                    rendererDomain: source.rendererDomain,
+                    route: source.route,
+                    sequence: source.sequence,
+                    slot: source.slot,
+                    title: source.title,
+                  })
+                );
+              }
+            });
+            const atLimit = yield* readAgentArticleTaxonomy("en");
+            expect(atLimit.managed).toBe(true);
+            expect(atLimit.categories).toHaveLength(
+              ARTICLE_AGENT_TAXONOMY_LIMIT
+            );
+            yield* Effect.gen(function* () {
+              const source = yield* Effect.promise(() =>
+                targetCtx.db.query("articleCategories").first()
+              );
+              if (!source) {
+                expect.fail("Expected one active article category.");
+              }
+              yield* Effect.promise(() =>
+                targetCtx.db.insert("articleCategories", {
+                  appLocale: source.appLocale,
+                  bucket: source.bucket,
+                  category: source.category,
+                  contentKey: source.contentKey,
+                  projectionHash: source.projectionHash,
+                  releaseId: source.releaseId,
+                  rendererDomain: source.rendererDomain,
+                  route: source.route,
+                  sequence: source.sequence,
+                  slot: source.slot,
+                  title: source.title,
+                })
+              );
+            });
+            expect(
+              yield* readAgentArticleTaxonomy("en").pipe(Effect.flip)
+            ).toMatchObject({
+              code: "CONTENT_RELEASE_LIMIT",
+            });
+          })
+        );
+      })
+  );
 });

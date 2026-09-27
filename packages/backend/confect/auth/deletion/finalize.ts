@@ -1,92 +1,30 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
-  toUserCleanupError,
-  type UserCleanupError,
-} from "@repo/backend/confect/auth/cleanup/spec";
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
+import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { ACCOUNT_DELETION_RECONCILIATION_DELAY_MS } from "@repo/backend/confect/auth/deletion/constants";
 import { recordAccountDeletionReceipt } from "@repo/backend/confect/auth/deletion/receipt";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/confect/auth/deletion/spec";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
 import { finalizeSchoolTransfers } from "@repo/backend/confect/auth/deletion/transfers";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Duration, Effect, flow } from "effect";
-
-type ScheduleCleanup = (
-  ctx: MutationCtx,
-  identity: {
-    readonly authId: string;
-    readonly userId: Id<"users">;
-  }
-) => Effect.Effect<unknown, UserCleanupError>;
-type ScheduleContinuation = (
-  ctx: MutationCtx,
-  authId: string,
-  expectedPreparation?: AccountDeletionPreparationVersion
-) => Effect.Effect<unknown, UserCleanupError>;
-
 /**
  * Applies reserved school transfers only after Better Auth confirms that its
  * user row is gone, then journals durable personal-data cleanup.
  */
-export const finalizeAccountDeletion: (
-  ctx: MutationCtx,
-  authId: string,
-  expectedPreparation?: AccountDeletionPreparationVersion,
-  scheduleCleanup?: ScheduleCleanup,
-  scheduleContinuation?: ScheduleContinuation
-) => Effect.Effect<void, UserCleanupError> = Effect.fn(
+export const finalizeAccountDeletion = Effect.fn(
   "auth.deletion.finalizeAccountDeletion"
 )(
   function* (
-    ctx: MutationCtx,
     authId: string,
-    expectedPreparation?: AccountDeletionPreparationVersion,
-    scheduleCleanup: ScheduleCleanup = Effect.fn(
-      "auth.deletion.scheduleCleanup"
-    )(
-      function* (cleanupCtx, identity) {
-        const scheduler = yield* Scheduler.Scheduler.pipe(
-          Effect.provide(Scheduler.layer(cleanupCtx.scheduler))
-        );
-        yield* scheduler.runAfter(
-          Duration.zero,
-          refs.internal.customers.deletion.workflow.launchDeletedUserCleanup,
-          identity
-        );
-        yield* scheduler.runAfter(
-          Duration.millis(ACCOUNT_DELETION_RECONCILIATION_DELAY_MS),
-          refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
-          { authId: identity.authId }
-        );
-      },
-      Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-    ),
-    scheduleContinuation: ScheduleContinuation = Effect.fn(
-      "auth.deletion.scheduleFinalization"
-    )(
-      function* (continuationCtx, continuationAuthId, continuationPreparation) {
-        const scheduler = yield* Scheduler.Scheduler.pipe(
-          Effect.provide(Scheduler.layer(continuationCtx.scheduler))
-        );
-        yield* scheduler.runAfter(
-          Duration.zero,
-          refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
-          {
-            authId: continuationAuthId,
-            ...(continuationPreparation === undefined
-              ? {}
-              : { expectedPreparation: continuationPreparation }),
-          }
-        );
-      },
-      Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-    )
+    expectedPreparation?: AccountDeletionPreparationVersion
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const preparation = yield* database
       .table("accountDeletionPreparations")
       .get("by_authId", authId)
@@ -126,7 +64,6 @@ export const finalizeAccountDeletion: (
       preparation?.finalizedAt !== undefined
     ) {
       yield* recordAccountDeletionReceipt(
-        ctx,
         preparation.attemptId,
         preparation.finalizedAt
       );
@@ -138,13 +75,21 @@ export const finalizeAccountDeletion: (
     const finalizedAt = yield* Clock.currentTimeMillis;
     if (preparation && preparation.finalizedAt === undefined) {
       const needsContinuation = yield* finalizeSchoolTransfers(
-        ctx,
         user,
         preparation._id,
         finalizedAt
       );
       if (needsContinuation) {
-        yield* scheduleContinuation(ctx, authId, expectedPreparation);
+        yield* scheduler.runAfter(
+          Duration.zero,
+          refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
+          {
+            authId,
+            ...(expectedPreparation === undefined
+              ? {}
+              : { expectedPreparation }),
+          }
+        );
         return;
       }
       yield* writer
@@ -166,7 +111,6 @@ export const finalizeAccountDeletion: (
         .pipe(Effect.orDie);
     }
     yield* recordAccountDeletionReceipt(
-      ctx,
       preparation?.attemptId,
       preparation?.finalizedAt ?? finalizedAt
     );
@@ -177,7 +121,16 @@ export const finalizeAccountDeletion: (
         createDeletedUserTombstone(user._id, user.deletedAt ?? finalizedAt)
       )
       .pipe(Effect.orDie);
-    yield* scheduleCleanup(ctx, { authId, userId: user._id });
+    yield* scheduler.runAfter(
+      Duration.zero,
+      refs.internal.customers.deletion.workflow.launchDeletedUserCleanup,
+      { authId, userId: user._id }
+    );
+    yield* scheduler.runAfter(
+      Duration.millis(ACCOUNT_DELETION_RECONCILIATION_DELAY_MS),
+      refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
+      { authId }
+    );
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );

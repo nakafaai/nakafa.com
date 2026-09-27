@@ -1,5 +1,9 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+} from "@repo/backend/confect/_generated/services";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
 import {
   getPopularitySignalDay,
@@ -8,23 +12,20 @@ import {
   type LearningPopularityFiniteWindow,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Struct } from "effect";
 
-type PopularityCounter = Doc<"learningPopularityCounters">;
-type PopularitySignal = Doc<"learningPopularitySignals">;
+type PopularityCounter = Docs["learningPopularityCounters"];
+type PopularitySignal = Docs["learningPopularitySignals"];
 
 /** Finds the finite counter owned by one durable popularity identity. */
 const loadPopularityCounter = Effect.fn(
   "contents.metrics.loadPopularityCounter"
 )(
   function* (
-    ctx: MutationCtx,
     identity: PopularityCounter,
     windowKey: LearningPopularityFiniteWindow
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     return yield* database
       .table("learningPopularityCounters")
       .get(
@@ -71,12 +72,11 @@ const loadPopularitySignals = Effect.fn(
   "contents.metrics.loadPopularitySignals"
 )(
   function* (
-    ctx: MutationCtx,
     counter: PopularityCounter,
     windowKey: LearningPopularityFiniteWindow,
     timestamp: number
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const currentDay = getPopularitySignalDay(timestamp);
     const startDay = getPopularityWindowStartDay(windowKey, timestamp);
     const dayCount = getPopularityWindowDayCount(windowKey);
@@ -100,17 +100,11 @@ const loadPopularitySignals = Effect.fn(
 const recomputePopularityCounter = Effect.fn(
   "contents.metrics.recomputePopularityCounter"
 )(function* (
-  ctx: MutationCtx,
   counter: PopularityCounter,
   windowKey: LearningPopularityFiniteWindow,
   timestamp: number
 ) {
-  const signals = yield* loadPopularitySignals(
-    ctx,
-    counter,
-    windowKey,
-    timestamp
-  );
+  const signals = yield* loadPopularitySignals(counter, windowKey, timestamp);
   let latestSignal: PopularitySignal | null = null;
   let score = 0;
   for (const signal of signals) {
@@ -147,20 +141,19 @@ export const repairPopularityCounter = Effect.fn(
   "contents.metrics.repairPopularityCounter"
 )(
   function* (
-    ctx: MutationCtx,
     identity: PopularityCounter,
     windowKey: LearningPopularityFiniteWindow,
     day: number,
     updatedAt: number
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const ctx = yield* MutationCtxService;
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const counter =
       identity.windowKey === windowKey
         ? identity
-        : yield* loadPopularityCounter(ctx, identity, windowKey);
+        : yield* loadPopularityCounter(identity, windowKey);
     const { latestSignal, score } = yield* recomputePopularityCounter(
-      ctx,
       identity,
       windowKey,
       day

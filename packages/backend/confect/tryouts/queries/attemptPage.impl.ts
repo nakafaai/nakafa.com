@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import {
   readSectionAttemptPage,
   readSetAttemptPage,
@@ -13,8 +13,7 @@ const getSet = FunctionImpl.make(
   spec,
   "getSet",
   Effect.fn("tryouts.queries.attemptPage.getSet")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readSetAttemptPage(ctx, args.request);
+    return yield* readSetAttemptPage(args.request);
   })
 );
 const getSection = FunctionImpl.make(
@@ -22,12 +21,12 @@ const getSection = FunctionImpl.make(
   spec,
   "getSection",
   Effect.fn("tryouts.queries.attemptPage.getSection")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readSectionAttemptPage(ctx, args.request);
+    return yield* readSectionAttemptPage(args.request);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getSet),
   Layer.provide(getSection),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

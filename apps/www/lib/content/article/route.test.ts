@@ -6,7 +6,7 @@ import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { readPublishedArticleRoute } from "@/lib/content/article/route";
 import { makeArticleRuntimeSource } from "@/test/content/article";
 import {
@@ -15,18 +15,28 @@ import {
   testArticleIdProjection,
   testArticleProjection,
 } from "@/test/content-article";
-import {
-  createTestNativeQuery,
-  createTestRuntimeQuery,
-} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const runtimeReadMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
-
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: runtimeReadMock,
-}));
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 
 /** Builds one complete backend-verified article model response. */
 function foundModel(overrides?: {
@@ -54,12 +64,9 @@ function foundModel(overrides?: {
         : overrides.projectionJson,
   };
 }
-
 beforeEach(() => {
   runtimeQueryMock.mockReset();
-  runtimeReadMock.mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
 });
-
 describe("published article route", () => {
   it.effect(
     "resolves reciprocal locales and missing routes from authenticated serving rows",
@@ -67,9 +74,8 @@ describe("published article route", () => {
       Effect.gen(function* () {
         const fixture = yield* makeArticleRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
-        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
+        runtimeQueryMock.mockImplementation(context.query);
         const projection = testLocalizedArticleProjection(1, "de");
-
         const route = yield* readPublishedArticleRoute(
           "de",
           projection.publicPath
@@ -88,7 +94,6 @@ describe("published article route", () => {
         });
       })
   );
-
   it.effect.each([
     testArticleProjection,
     testArticleIdProjection,
@@ -97,12 +102,13 @@ describe("published article route", () => {
     "decodes one complete $appLocale route and reciprocal locale set",
     (projection) =>
       Effect.gen(function* () {
-        runtimeQueryMock.mockResolvedValueOnce(
-          foundModel({
-            projectionJson: canonicalizeArticleProjection(projection),
-          })
+        runtimeQueryMock.mockReturnValueOnce(
+          Effect.succeed(
+            foundModel({
+              projectionJson: canonicalizeArticleProjection(projection),
+            })
+          )
         );
-
         const route = yield* readPublishedArticleRoute(
           projection.appLocale,
           projection.publicPath
@@ -118,29 +124,29 @@ describe("published article route", () => {
         });
       })
   );
-
   it.effect("pins a route read to the expected active release", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(foundModel());
-
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(foundModel()));
       const route = yield* readPublishedArticleRoute(
         "en",
         testArticleProjection.publicPath,
         activeReleaseId
       );
-      expect(route).toMatchObject({ activeReleaseId });
+      expect(route).toMatchObject({
+        activeReleaseId,
+      });
       expect(runtimeQueryMock).toHaveBeenCalledWith(
         expect.anything(),
-        expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
+        expect.objectContaining({
+          expectedActiveReleaseId: activeReleaseId,
+        })
       );
     })
   );
-
   it.effect("preserves an active release mismatch for pinned callers", () =>
     Effect.gen(function* () {
       const expectedReleaseId = ReleaseIdSchema.make("release-previous");
-      runtimeQueryMock.mockResolvedValueOnce(foundModel());
-
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(foundModel()));
       const error = yield* readPublishedArticleRoute(
         "en",
         testArticleProjection.publicPath,
@@ -153,13 +159,16 @@ describe("published article route", () => {
       });
     })
   );
-
   it.effect("preserves a signed missing-route tombstone", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(
-        foundModel({ alternateJson: [], projectionJson: null })
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed(
+          foundModel({
+            alternateJson: [],
+            projectionJson: null,
+          })
+        )
       );
-
       const route = yield* readPublishedArticleRoute(
         "en",
         testArticleProjection.publicPath
@@ -171,10 +180,19 @@ describe("published article route", () => {
       });
     })
   );
-
   it.effect.each([
-    ["active locales", foundModel({ activeAppLocales: ["id", "en", "de"] })],
-    ["missing release", foundModel({ activeReleaseId: null })],
+    [
+      "active locales",
+      foundModel({
+        activeAppLocales: ["id", "en", "de"],
+      }),
+    ],
+    [
+      "missing release",
+      foundModel({
+        activeReleaseId: null,
+      }),
+    ],
     [
       "current route",
       foundModel({
@@ -207,21 +225,33 @@ describe("published article route", () => {
         ],
       }),
     ],
-    ["projection JSON", foundModel({ projectionJson: "{}" })],
-    ["alternate JSON", foundModel({ alternateJson: ["{}"] })],
+    [
+      "projection JSON",
+      foundModel({
+        projectionJson: "{}",
+      }),
+    ],
+    [
+      "alternate JSON",
+      foundModel({
+        alternateJson: ["{}"],
+      }),
+    ],
   ])("rejects an invalid %s", ([, result]) =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(result);
-
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(result));
       const error = yield* readPublishedArticleRoute(
         "en",
         testArticleProjection.publicPath
       ).pipe(Effect.flip);
-      expect(error).toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(error).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
     })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

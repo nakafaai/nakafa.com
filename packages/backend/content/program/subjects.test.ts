@@ -1,3 +1,4 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import {
   CorpusSourcePathSchema,
@@ -9,6 +10,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
 import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -27,6 +29,7 @@ describe("bounded public program subjects", () => {
     "reads four public subjects with native indexes and rejects damaged signed rows",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const appLocale = ActiveAppLocaleSchema.make("en");
         const program = LearningProgramSchema.make({
           ...makeTechnicalProgram(1),
@@ -35,25 +38,31 @@ describe("bounded public program subjects", () => {
             levels: ["track", "subject"],
           },
         });
-        const subjects = Array.from({ length: 9 }, (_, index) =>
-          CurriculumRouteSchema.make({
-            appLocale,
-            iconKey: "mathematics",
-            kind: "curriculum-context",
-            level: "subject",
-            nodeKey: `subject-${index}`,
-            order: index,
-            parentPath: PublicPathSchema.make("curriculum/technical-program-1"),
-            programKey: program.key,
-            publicPath: PublicPathSchema.make(
-              `curriculum/technical-program-1/subject-${index}`
-            ),
-            sitemap: index > 0,
-            sourcePath: CorpusSourcePathSchema.make(
-              "packages/corpus/curriculum/technical-program-1"
-            ),
-            title: `Technical subject ${index}`,
-          })
+        const subjects = Array.from(
+          {
+            length: 9,
+          },
+          (_, index) =>
+            CurriculumRouteSchema.make({
+              appLocale,
+              iconKey: "mathematics",
+              kind: "curriculum-context",
+              level: "subject",
+              nodeKey: `subject-${index}`,
+              order: index,
+              parentPath: PublicPathSchema.make(
+                "curriculum/technical-program-1"
+              ),
+              programKey: program.key,
+              publicPath: PublicPathSchema.make(
+                `curriculum/technical-program-1/subject-${index}`
+              ),
+              sitemap: index > 0,
+              sourcePath: CorpusSourcePathSchema.make(
+                "packages/corpus/curriculum/technical-program-1"
+              ),
+              title: `Technical subject ${index}`,
+            })
         );
         const data = yield* makeProgramSnapshotData(
           [program],
@@ -61,9 +70,21 @@ describe("bounded public program subjects", () => {
           subjects
         );
         const runtime = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateProgramSnapshot(runtime, data));
+        yield* Effect.promise(() =>
+          runtime.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         const result = yield* Effect.promise(() =>
-          runtime.query(api.contentRelease.program.subjects, { appLocale })
+          runtime.query(api.contentRelease.program.subjects, {
+            appLocale,
+          })
         );
         expect(result.managed).toBe(true);
         expect(result.routeJson).toHaveLength(PROGRAM_FEATURED_SUBJECT_LIMIT);
@@ -87,7 +108,10 @@ describe("bounded public program subjects", () => {
               appLocale: "id",
             })
           )
-        ).toEqual({ managed: true, routeJson: [] });
+        ).toEqual({
+          managed: true,
+          routeJson: [],
+        });
         const first = decoded[0];
         assert(
           first?.family === "program" && first.record.kind === "curriculum"
@@ -112,16 +136,22 @@ describe("bounded public program subjects", () => {
         );
         yield* Effect.promise(() =>
           expect(
-            runtime.query(api.contentRelease.program.subjects, { appLocale })
+            runtime.query(api.contentRelease.program.subjects, {
+              appLocale,
+            })
           ).rejects.toThrow("CONTENT_RELEASE_INTEGRITY")
         );
       })
   );
-
   it("returns explicit unavailability before an active program publication", async () => {
     const runtime = convexTest(schema, convexModules);
     await expect(
-      runtime.query(api.contentRelease.program.subjects, { appLocale: "en" })
-    ).resolves.toEqual({ managed: false, routeJson: [] });
+      runtime.query(api.contentRelease.program.subjects, {
+        appLocale: "en",
+      })
+    ).resolves.toEqual({
+      managed: false,
+      routeJson: [],
+    });
   });
 });

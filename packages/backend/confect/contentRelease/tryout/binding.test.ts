@@ -1,6 +1,7 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/binding";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { storeRuntimeFixture } from "@repo/backend/test/runtime/bundle";
@@ -18,21 +19,22 @@ function findRuntime(
   bundleHash?: string
 ) {
   return t.query((ctx) =>
-    runConvexProgram(findReleaseTryoutRuntime(ctx, signed, bundleHash))
+    Effect.runPromise(
+      findReleaseTryoutRuntime(signed, bundleHash).pipe(
+        Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+      )
+    )
   );
 }
-
 describe("contentRelease/tryout binding", () => {
   it.effect("resolves the exact permanent runtime pair", () =>
     Effect.gen(function* () {
       const fixture = yield* makeRuntimeIngressFixture();
       const t = convexTest(schema, convexModules);
       yield* storeRuntimeFixture(t, fixture);
-
       const runtime = yield* Effect.promise(() =>
         findRuntime(t, fixture.release, fixture.bundle.bundleHash)
       );
-
       expect(runtime.retainedBase).toBeNull();
       expect(runtime.result?.stored).toMatchObject({
         bundleHash: fixture.bundle.bundleHash,
@@ -41,25 +43,22 @@ describe("contentRelease/tryout binding", () => {
       });
     })
   );
-
   it.effect("fails closed for an absent or unbound permanent pair", () =>
     Effect.gen(function* () {
       const fixture = yield* makeRuntimeIngressFixture();
       const missing = convexTest(schema, convexModules);
-
       yield* Effect.promise(() =>
         expect(
           findRuntime(missing, fixture.release, fixture.bundle.bundleHash)
         ).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          code: "CONTENT_RELEASE_INTEGRITY",
         })
       );
-
       const unbound = convexTest(schema, convexModules);
       yield* storeRuntimeFixture(unbound, fixture);
       yield* Effect.promise(() =>
         expect(findRuntime(unbound, fixture.release)).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          code: "CONTENT_RELEASE_INTEGRITY",
         })
       );
     })

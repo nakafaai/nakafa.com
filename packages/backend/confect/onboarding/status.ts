@@ -1,3 +1,4 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type {
   OnboardingFocus,
   OnboardingRegion,
@@ -6,9 +7,8 @@ import {
   isSelfSelectableUserRole,
   type SelfSelectableUserRole,
 } from "@repo/backend/confect/users/roles";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 
-type OnboardingProfile = Doc<"onboardingProfiles">;
+type OnboardingProfile = Docs["onboardingProfiles"];
 
 /** Projects one private database row into the public draft shape. */
 export function toOnboardingProfile(profile: {
@@ -45,7 +45,7 @@ export function toOnboardingProfile(profile: {
 
 /** Derives the canonical public onboarding state for one active app user. */
 export function toOnboardingStatus(
-  user: Pick<Doc<"users">, "role">,
+  user: Pick<Docs["users"], "role">,
   profile: OnboardingProfile | null
 ) {
   const maySelfSelectRole =

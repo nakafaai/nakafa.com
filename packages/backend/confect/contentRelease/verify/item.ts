@@ -1,5 +1,6 @@
 import type { ContentReleaseItem } from "@nakafa/aksara-contracts/release";
 import { canonicalizeContentHead } from "@nakafa/aksara-contracts/release/head";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadVersion } from "@repo/backend/confect/contentRelease/model";
 import {
@@ -8,16 +9,13 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { writeDelete } from "@repo/backend/confect/contentRelease/verify/delete";
 import { writeUpsert } from "@repo/backend/confect/contentRelease/verify/upsert";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { contentHead } from "@repo/backend/content/publication/projection";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Confirms stored prior evidence matches the immutable base snapshot. */
 const checkRollback = Effect.fn("contentRelease.checkRollback")(function* (
-  ctx: MutationCtx,
-  row: Doc<"contentItems">,
+  row: Docs["contentItems"],
   item: ContentReleaseItem
 ) {
   const snapshot = yield* decodeRollbackJson(row.rollbackJson);
@@ -31,7 +29,6 @@ const checkRollback = Effect.fn("contentRelease.checkRollback")(function* (
     row.priorSequence === undefined
       ? null
       : yield* loadVersion(
-          ctx,
           row.contentKey,
           row.artifactLocale,
           row.priorSequence
@@ -54,7 +51,7 @@ const checkRollback = Effect.fn("contentRelease.checkRollback")(function* (
     Effect.orDie
   );
   const head = yield* contentHead(prior, sequence).pipe(
-    Effect.provide(convexPublicationLayer(ctx))
+    Effect.provide(publicationLayer)
   );
   if (
     snapshot.snapshot.state !== head.family ||
@@ -72,11 +69,10 @@ const checkRollback = Effect.fn("contentRelease.checkRollback")(function* (
 
 /** Verifies one staged item and writes its immutable sequence version. */
 export const checkItem = Effect.fn("contentRelease.checkItem")(function* (
-  ctx: MutationCtx,
-  row: Doc<"contentItems">
+  row: Docs["contentItems"]
 ) {
   const item = yield* decodeItemJson(row.itemJson);
-  const prior = yield* checkRollback(ctx, row, item);
+  const prior = yield* checkRollback(row, item);
   if (item.change.operation === "delete") {
     if (row.artifactReady || row.projectionReady || row.projectionJson) {
       return yield* releaseFail(
@@ -85,7 +81,7 @@ export const checkItem = Effect.fn("contentRelease.checkItem")(function* (
       );
     }
     const head = yield* Effect.fromNullishOr(prior).pipe(Effect.orDie);
-    return yield* writeDelete(ctx, row, item.change, head);
+    return yield* writeDelete(row, item.change, head);
   }
-  return yield* writeUpsert(ctx, row, item.change);
+  return yield* writeUpsert(row, item.change);
 });

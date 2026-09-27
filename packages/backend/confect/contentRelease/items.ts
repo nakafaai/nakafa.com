@@ -1,10 +1,12 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import { StageItemBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import {
   MAX_ITEM_BATCH_BYTES,
   MAX_ITEM_BATCH_COUNT,
 } from "@nakafa/aksara-contracts/transport/limits";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   hashBatch,
   validateStoredBatch,
@@ -23,7 +25,6 @@ import {
   decodeReleaseJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { encodeItemJson } from "@repo/backend/confect/contentRelease/wire";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getConvexSize } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 
@@ -67,13 +68,12 @@ export const decodeBatch = Effect.fn("contentRelease.decodeItemBatch")(
 /** Stages one canonical item batch with exact immutable retry identity. */
 export const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(
   function* (
-    ctx: MutationCtx,
     releaseId: string,
     batchIndex: number,
     sources: readonly string[]
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const { items } = yield* decodeBatch(releaseId, batchIndex, sources);
     const entries = items.map((item) => ({
       item,
@@ -85,7 +85,7 @@ export const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(
     ).length;
     const batchUpserts = items.length - batchDeletes;
     const batchHash = yield* hashBatch("item", releaseId, batchIndex, values);
-    const { release, state } = yield* loadStaged(ctx, releaseId);
+    const { release, state } = yield* loadStaged(releaseId);
     const signed = yield* decodeReleaseJson(release.releaseJson);
     if (release.status !== "staging" || release.abortingAt !== undefined) {
       return yield* releaseFail(
@@ -134,7 +134,7 @@ export const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(
     }
     const priorSequence = stagedBaseSequence(release.role, state);
     for (const { item, itemJson } of entries) {
-      yield* stageContentItem(ctx, {
+      yield* stageContentItem({
         batchHash,
         batchIndex,
         item,

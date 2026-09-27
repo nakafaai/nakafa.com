@@ -48,6 +48,8 @@ export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "mat
 export type MessagePartsDoc = Document.Document<typeof schemaDefinition, "messageParts">;
 export type MessagesDoc = Document.Document<typeof schemaDefinition, "messages">;
 export type NinaCapabilityTracesDoc = Document.Document<typeof schemaDefinition, "ninaCapabilityTraces">;
+export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
+export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
 export type OnboardingProfilesDoc = Document.Document<typeof schemaDefinition, "onboardingProfiles">;
 export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "programBuckets">;
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
@@ -131,6 +133,8 @@ export interface Docs {
   messageParts: MessagePartsDoc;
   messages: MessagesDoc;
   ninaCapabilityTraces: NinaCapabilityTracesDoc;
+  ninaTurns: NinaTurnsDoc;
+  ninaUploads: NinaUploadsDoc;
   onboardingProfiles: OnboardingProfilesDoc;
   programBuckets: ProgramBucketsDoc;
   programCatalog: ProgramCatalogDoc;

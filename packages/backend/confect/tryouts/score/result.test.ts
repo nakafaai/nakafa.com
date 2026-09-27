@@ -1,5 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -22,7 +23,9 @@ describe("tryouts/score/result", () => {
   it.each(["theta", "thetaSE"] as const)(
     "rejects a stored attempt estimate with only %s through the public state query",
     async (field) => {
-      vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
+      vi.useFakeTimers({
+        toFake: ["Date", "setTimeout", "clearTimeout"],
+      });
       vi.setSystemTime(TRYOUT_TEST_NOW);
       const t = createConvexTestWithBetterAuth();
       const fixture = await t.mutation(async (ctx) => {
@@ -55,16 +58,20 @@ describe("tryouts/score/result", () => {
       });
       await expect(
         owner.query(api.tryouts.queries.runtime.getSetAttemptState, {
+          locale: "id",
           attemptId: fixture.attemptId,
         })
       ).rejects.toMatchObject({
-        data: { code: "TRYOUT_SCORE_ESTIMATE_INCOMPLETE" },
+        data: {
+          code: "TRYOUT_SCORE_ESTIMATE_INCOMPLETE",
+        },
       });
     }
   );
-
   it("rejects a completed section with no score through the public section query", async () => {
-    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
+    vi.useFakeTimers({
+      toFake: ["Date", "setTimeout", "clearTimeout"],
+    });
     vi.setSystemTime(TRYOUT_TEST_NOW);
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation((ctx) =>
@@ -80,33 +87,33 @@ describe("tryouts/score/result", () => {
     });
     await expect(
       owner.query(api.tryouts.queries.runtime.getSectionAttemptState, {
+        locale: "id",
         attemptId: fixture.attemptId,
         sectionKey: TRYOUT_SECTION_KEY,
       })
     ).rejects.toMatchObject({
-      data: { code: "TRYOUT_SECTION_SCORE_NOT_FOUND" },
+      data: {
+        code: "TRYOUT_SECTION_SCORE_NOT_FOUND",
+      },
     });
   });
   it.effect(
     "returns a typed integrity failure for a terminal attempt without a score",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createConvexTestWithBetterAuth();
         const identity = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
-              Effect.promise(() =>
-                seedAuthenticatedUser(ctx, {
-                  now: NOW,
-                  suffix: "missing-tryout-score",
-                })
-              )
-            )
+            seedAuthenticatedUser(ctx, {
+              now: NOW,
+              suffix: "missing-tryout-score",
+            })
           )
         );
         const failure = yield* Effect.promise(() =>
           t.run((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const tryoutSnapshotId = `sha256:${"a".repeat(64)}`;
                 const runtime = yield* Effect.promise(() =>
@@ -152,7 +159,7 @@ describe("tryouts/score/result", () => {
                     "Expected the terminal attempt fixture."
                   );
                 }
-                return yield* loadAttemptScoreResult(ctx, attempt).pipe(
+                return yield* loadAttemptScoreResult(attempt).pipe(
                   Effect.match({
                     onFailure: (error) => ({
                       _tag: error._tag,
@@ -162,7 +169,11 @@ describe("tryouts/score/result", () => {
                     onSuccess: () => null,
                   })
                 );
-              })
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );

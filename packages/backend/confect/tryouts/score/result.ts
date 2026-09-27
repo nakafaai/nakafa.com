@@ -1,20 +1,18 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type {
   TryoutScoreResult,
   TryoutSectionScore,
 } from "@repo/backend/confect/tryouts/score";
 import { TryoutScoreReadError } from "@repo/backend/confect/tryouts/score";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 /** Expected integrity failure while reading a stored try-out score. */
 
 /** Loads the immutable attempt score exposed after terminal completion. */
 export const loadAttemptScoreResult = Effect.fn("tryouts.score.loadAttempt")(
-  function* (ctx: QueryCtx, attempt: Doc<"tryoutAttempts">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (attempt: Docs["tryoutAttempts"]) {
+    const database = yield* DatabaseReader;
     if (attempt.status === "in-progress") {
       return null;
     }
@@ -39,7 +37,7 @@ export const loadAttemptScoreResult = Effect.fn("tryouts.score.loadAttempt")(
 );
 /** Reads the immutable section score exposed after section completion. */
 export const getSectionScoreResult = Effect.fn("tryouts.score.readSection")(
-  function* (section: Doc<"tryoutSectionAttempts">) {
+  function* (section: Docs["tryoutSectionAttempts"]) {
     if (section.status === "in-progress") {
       return null;
     }

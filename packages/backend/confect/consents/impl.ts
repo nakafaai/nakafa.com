@@ -1,10 +1,13 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import {
   ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import type {
   ConsentCategory,
   ConsentDecision,
@@ -15,14 +18,9 @@ import {
   consentPersistenceFailedCode,
   consentPersistenceFailedMessage,
 } from "@repo/backend/confect/consents/schema";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Clock, Effect, flow } from "effect";
 
-type ConsentReadCtx = Pick<QueryCtx, "db"> | Pick<MutationCtx, "db">;
 type SaveConsentInput = ConsentWrite & {
   readonly userId: Id<"users">;
 };
@@ -39,24 +37,20 @@ function toConsentPersistenceError() {
 
 /** Loads the one decision owned by an account and consent category. */
 const loadConsentDocument = Effect.fn("consents.loadConsentDocument")(
-  function* (
-    ctx: ConsentReadCtx,
-    userId: Id<"users">,
-    category: ConsentCategory
-  ) {
-    return yield* DatabaseReader.make(databaseSchema, ctx.db)
+  function* (userId: Id<"users">, category: ConsentCategory) {
+    return yield* (yield* DatabaseReader)
       .table("accountConsents")
       .get("by_userId_and_category", userId, category)
       .pipe(
         Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie,
-        Effect.catchDefect(flow(toConsentPersistenceError, Effect.fail))
+        Effect.mapError(toConsentPersistenceError),
+        Effect.catchDefect(() => Effect.fail(toConsentPersistenceError()))
       );
   }
 );
 
 /** Projects storage identity out of the public consent contract. */
-function toConsentDecision(consent: Doc<"accountConsents">): ConsentDecision {
+function toConsentDecision(consent: Docs["accountConsents"]): ConsentDecision {
   if (consent.mechanism === ANALYTICS_BROWSER_SIGNAL_MECHANISM) {
     return {
       category: consent.category,
@@ -100,24 +94,16 @@ function createConsentDecision(
 
 /** Reads the current decision for one authenticated account category. */
 export const readCurrentConsent = Effect.fn("consents.readCurrentConsent")(
-  function* (
-    ctx: ConsentReadCtx,
-    userId: Id<"users">,
-    category: ConsentCategory
-  ) {
-    const consent = yield* loadConsentDocument(ctx, userId, category);
+  function* (userId: Id<"users">, category: ConsentCategory) {
+    const consent = yield* loadConsentDocument(userId, category);
     return consent ? toConsentDecision(consent) : null;
   }
 );
 
 /** Checks an exact current-version grant and fails closed for missing state. */
 export const hasCurrentConsent = Effect.fn("consents.hasCurrentConsent")(
-  function* (
-    ctx: ConsentReadCtx,
-    userId: Id<"users">,
-    category: ConsentCategory
-  ) {
-    const consent = yield* readCurrentConsent(ctx, userId, category);
+  function* (userId: Id<"users">, category: ConsentCategory) {
+    const consent = yield* readCurrentConsent(userId, category);
     return (
       consent?.granted === true &&
       consent.noticeVersion === ANALYTICS_CONSENT_NOTICE_VERSION
@@ -127,13 +113,9 @@ export const hasCurrentConsent = Effect.fn("consents.hasCurrentConsent")(
 
 /** Atomically appends provenance and refreshes the current consent gate. */
 export const saveCurrentConsent = Effect.fn("consents.saveCurrentConsent")(
-  function* (ctx: MutationCtx, input: SaveConsentInput) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const current = yield* loadConsentDocument(
-      ctx,
-      input.userId,
-      input.category
-    );
+  function* (input: SaveConsentInput) {
+    const writer = yield* DatabaseWriter;
+    const current = yield* loadConsentDocument(input.userId, input.category);
     if (
       current?.granted === input.granted &&
       current.mechanism === input.mechanism &&

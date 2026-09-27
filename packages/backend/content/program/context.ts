@@ -130,6 +130,7 @@ export const readProgramContext = Effect.fn(
   }
   return {
     context: {
+      group,
       groupJson: storedGroup.rowJson,
       mapping: {
         ...match.context,

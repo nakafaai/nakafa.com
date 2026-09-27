@@ -1,6 +1,9 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import { MAX_CLEANUP_PAGE_COUNT } from "@nakafa/aksara-contracts/release/lifecycle";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { validateAbortedRelease } from "@repo/backend/confect/contentRelease/abort";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -12,12 +15,10 @@ import {
   ARTIFACT_PAGE_BYTES,
   ARTIFACT_PAGE_COUNT,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect } from "effect";
 
 /** Validates server-owned cleanup counters before advancing a page. */
-export function cleanupCounters(release: Doc<"contentReleases">) {
+export function cleanupCounters(release: Docs["contentReleases"]) {
   const deletedArtifacts = release.cleanupDeletedArtifacts ?? 0;
   if (!Number.isSafeInteger(deletedArtifacts) || deletedArtifacts < 0) {
     return null;
@@ -51,8 +52,8 @@ export function cleanupReceipt(
 
 /** Proves only one detached aborted release may initiate artifact cleanup. */
 export const ensureEligible = Effect.fn("contentRelease.ensureCleanupEligible")(
-  function* (ctx: MutationCtx, release: Doc<"contentReleases">) {
-    const state = yield* loadState(ctx);
+  function* (release: Docs["contentReleases"]) {
+    const state = yield* loadState();
     if (
       release.status !== "aborted" ||
       state?.activeReleaseId === release.releaseId ||
@@ -64,18 +65,17 @@ export const ensureEligible = Effect.fn("contentRelease.ensureCleanupEligible")(
         `Release ${release.releaseId} is not unreachable cleanup state.`
       );
     }
-    yield* validateAbortedRelease(ctx, release.releaseId);
+    yield* validateAbortedRelease(release.releaseId);
   }
 );
 
 /** Deletes one bounded artifact page while retaining every MVCC anchor. */
 export const cleanupProgram = Effect.fn("contentRelease.cleanup")(function* (
-  ctx: MutationCtx,
   releaseId: string
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const release = yield* loadRelease(ctx, releaseId);
-  yield* ensureEligible(ctx, release);
+  const writer = yield* DatabaseWriter;
+  const release = yield* loadRelease(releaseId);
+  yield* ensureEligible(release);
   const counters = cleanupCounters(release);
   if (!counters) {
     return yield* releaseFail(
@@ -96,7 +96,7 @@ export const cleanupProgram = Effect.fn("contentRelease.cleanup")(function* (
     );
   }
   const cleanupHash = release.cleanupHash;
-  const page = yield* DatabaseReader.make(databaseSchema, ctx.db)
+  const page = yield* (yield* DatabaseReader)
     .table("contentArtifacts")
     .index("by_artifactHash", (query) =>
       cleanupHash ? query.gt("artifactHash", cleanupHash) : query
@@ -112,7 +112,7 @@ export const cleanupProgram = Effect.fn("contentRelease.cleanup")(function* (
   let deleted = 0;
   let futureAt = release.cleanupFutureAt;
   for (const artifact of rows) {
-    if (yield* isArtifactReferenced(ctx, artifact.artifactHash)) {
+    if (yield* isArtifactReferenced(artifact.artifactHash)) {
       continue;
     }
     if (artifact.retainUntil > now) {

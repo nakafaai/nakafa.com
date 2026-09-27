@@ -4,6 +4,7 @@ import {
   type RoutedContentProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import {
   ReleaseError,
@@ -14,7 +15,6 @@ import {
   type PublicationRow,
   PublicationSource,
 } from "@repo/backend/content/publication/source";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, Option, Schema } from "effect";
 
 /** Converts one complete immutable upsert version into a compact head. */
@@ -137,7 +137,7 @@ const selectPublicProjection = Effect.fn(
   "contentRelease.selectPublicProjection"
 )(function* (
   contentKey: string,
-  artifactLocale: Doc<"contentKeys">["artifactLocale"],
+  artifactLocale: Docs["contentKeys"]["artifactLocale"],
   sequence: number,
   binding: Option.Option<PublicationRow<"contentBindings">>
 ) {
@@ -209,7 +209,7 @@ export const resolvePublicProjection = Effect.fn(
 )(
   (
     contentKey: string,
-    artifactLocale: Doc<"contentKeys">["artifactLocale"],
+    artifactLocale: Docs["contentKeys"]["artifactLocale"],
     sequence: number
   ) =>
     selectPublicProjection(contentKey, artifactLocale, sequence, Option.none())
@@ -254,7 +254,7 @@ export const resolveContentHead = Effect.fn(
   "contentRelease.resolveContentHead"
 )(function* (
   contentKey: string,
-  artifactLocale: Doc<"contentKeys">["artifactLocale"],
+  artifactLocale: Docs["contentKeys"]["artifactLocale"],
   sequence: number
 ) {
   const head = Option.getOrNull(

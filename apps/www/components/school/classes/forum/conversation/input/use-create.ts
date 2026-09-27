@@ -1,13 +1,15 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import type { Ref } from "@confect/core";
+import { useMutation } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useMutation } from "convex/react";
-import type { FunctionArgs } from "convex/server";
+import { Option } from "effect";
+
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { createOptimisticForumPost } from "@/components/school/classes/forum/conversation/input/optimistic";
 import { useViewer } from "@/lib/identity/client";
 
-type CreateForumPostArgs = FunctionArgs<
-  typeof api.classes.forums.mutations.posts.createForumPost
+type CreateForumPostArgs = Ref.Args<
+  typeof refs.public.classes.forums.mutations.posts.createForumPost
 >;
 
 /** Creates the Convex post mutation with a transcript-shaped optimistic update. */
@@ -15,7 +17,7 @@ export function useCreateForumPost() {
   const currentUser = useViewer((state) => state.account);
   const forum = useData((state) => state.forum);
   const createForumPost = useMutation(
-    api.classes.forums.mutations.posts.createForumPost
+    refs.public.classes.forums.mutations.posts.createForumPost
   );
 
   return (args: CreateForumPostArgs) => {
@@ -27,23 +29,24 @@ export function useCreateForumPost() {
     const postId = crypto.randomUUID() as Id<"schoolClassForumPosts">;
     const optimisticMutation = createForumPost.withOptimisticUpdate(
       (localStore, optimisticArgs) => {
-        const posts = localStore.getQuery(
-          api.classes.forums.queries.pages.getForumPosts,
+        const cached = localStore.getQuery(
+          refs.public.classes.forums.queries.pages.getForumPosts,
           { forumId: optimisticArgs.forumId }
         );
 
-        if (!posts) {
+        if (Option.isNone(cached)) {
           return;
         }
+        const posts = cached.value;
 
         const parentPost = optimisticArgs.parentId
           ? posts.find((post) => post._id === optimisticArgs.parentId)
           : undefined;
 
         localStore.setQuery(
-          api.classes.forums.queries.pages.getForumPosts,
+          refs.public.classes.forums.queries.pages.getForumPosts,
           { forumId: optimisticArgs.forumId },
-          [
+          Option.some([
             ...posts,
             createOptimisticForumPost({
               args: optimisticArgs,
@@ -61,7 +64,7 @@ export function useCreateForumPost() {
               postId,
               posts,
             }),
-          ]
+          ])
         );
       }
     );

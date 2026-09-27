@@ -1,4 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import {
   completedAnchor,
@@ -8,12 +10,11 @@ import {
   stagedEvidence,
 } from "@repo/backend/confect/contentRelease/receipt";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { TEST_PROOF_WORKFLOW_ID } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { Effect, Struct } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
 /** Loads one typed release row and its decoded immutable manifest. */
 function fixture() {
@@ -27,12 +28,15 @@ function fixture() {
       return yield* Effect.die(new Error("Expected receipt release fixture."));
     }
     const signed = yield* decodeReleaseJson(release.releaseJson);
-    return { release, signed };
+    return {
+      release: yield* Schema.decodeEffect(contentReleases.Doc)(release),
+      signed,
+    };
   });
 }
 
 /** Creates a fully staged and verified one-item release row. */
-function verifiedRelease(release: Doc<"contentReleases">) {
+function verifiedRelease(release: Docs["contentReleases"]) {
   return {
     ...release,
     checkedIndex: 0,
@@ -46,7 +50,7 @@ function verifiedRelease(release: Doc<"contentReleases">) {
     stagedUpserts: 1,
     status: "verified",
     verifiedAt: 1,
-  } satisfies Doc<"contentReleases">;
+  } satisfies Docs["contentReleases"];
 }
 
 /** Asserts that one durable evidence program fails closed. */
@@ -73,7 +77,7 @@ describe("contentRelease/receipt", () => {
         stagedRoutes: 1,
       });
 
-      const corruptions: readonly Doc<"contentReleases">[] = [
+      const corruptions: readonly Docs["contentReleases"][] = [
         { ...verified, releaseId: "release-other" },
         { ...verified, stagedArtifacts: 0 },
         { ...verified, stagedDeletes: 1 },
@@ -93,7 +97,7 @@ describe("contentRelease/receipt", () => {
       const { release, signed } = yield* fixture();
       expect(yield* stagedEvidence(release, signed)).toBeUndefined();
 
-      const invalid: readonly Doc<"contentReleases">[] = [
+      const invalid: readonly Docs["contentReleases"][] = [
         { ...release, stagedArtifacts: -1 },
         { ...release, stagedDeletes: -1 },
         { ...release, stagedItems: -1 },
@@ -148,7 +152,7 @@ describe("contentRelease/receipt", () => {
       const verified = verifiedRelease(release);
       expect(yield* stagedEvidence(verified, signed)).toBeUndefined();
 
-      const corruptions: readonly Doc<"contentReleases">[] = [
+      const corruptions: readonly Docs["contentReleases"][] = [
         Struct.omit(verified, ["proofAt"]),
         { ...verified, proofFailure: "failed" },
         Struct.omit(verified, ["proofJson"]),
@@ -170,13 +174,13 @@ describe("contentRelease/receipt", () => {
         completedAt: 2,
         receiptJson: JSON.stringify(makePublicationReceipt(verified, signed)),
         status: "completed",
-      } satisfies Doc<"contentReleases">;
+      } satisfies Docs["contentReleases"];
 
       expect(yield* completedReceipt(completed, signed)).toMatchObject({
         releaseId: release.releaseId,
       });
 
-      const corruptions: readonly Doc<"contentReleases">[] = [
+      const corruptions: readonly Docs["contentReleases"][] = [
         { ...completed, status: "verified" },
         Struct.omit(completed, ["completedAt"]),
         Struct.omit(completed, ["proofAt"]),
@@ -210,11 +214,11 @@ describe("contentRelease/receipt", () => {
         completedAt: 2,
         receiptJson: JSON.stringify(makePublicationReceipt(verified, signed)),
         status: "completed",
-      } satisfies Doc<"contentReleases">;
+      } satisfies Docs["contentReleases"];
 
       expect(yield* completedAnchor(completed)).toBeUndefined();
 
-      const corruptions: readonly Doc<"contentReleases">[] = [
+      const corruptions: readonly Docs["contentReleases"][] = [
         { ...completed, status: "verified" },
         Struct.omit(completed, ["completedAt"]),
         Struct.omit(completed, ["proofAt"]),

@@ -1,14 +1,13 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import type {
-  Doc,
-  TableNames,
-} from "@repo/backend/convex/_generated/dataModel";
-import type { WithoutSystemFields } from "convex/server";
+import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
+import type { SystemFields } from "convex/server";
 import { Context, type Effect, type Option } from "effect";
 
 /** Immutable content values do not depend on a database-generated identity. */
-export type PublicationRow<Table extends TableNames> = WithoutSystemFields<
-  Doc<Table>
+export type PublicationRow<Table extends TableNames> = Omit<
+  Docs[Table],
+  keyof SystemFields | "_id"
 >;
 type OptionalRow<Table extends TableNames> = Effect.Effect<
   Option.Option<PublicationRow<Table>>,
@@ -25,11 +24,11 @@ export class PublicationSource extends Context.Service<
     ) => Effect.Effect<PublicationRow<"contentReleases">, ReleaseError>;
     readonly version: (
       contentKey: string,
-      artifactLocale: Doc<"contentHeads">["artifactLocale"],
+      artifactLocale: Docs["contentHeads"]["artifactLocale"],
       sequence: number
     ) => OptionalRow<"contentHeads">;
     readonly binding: (
-      appLocale: Doc<"contentBindings">["appLocale"],
+      appLocale: Docs["contentBindings"]["appLocale"],
       publicPath: string,
       sequence: number
     ) => OptionalRow<"contentBindings">;
@@ -37,11 +36,11 @@ export class PublicationSource extends Context.Service<
       artifactHash: string
     ) => OptionalRow<"contentArtifacts">;
     readonly snapshot: (
-      family: Doc<"contentSnapshots">["family"],
+      family: Docs["contentSnapshots"]["family"],
       snapshotId: string
     ) => OptionalRow<"contentSnapshots">;
     readonly pageKeys: (
-      appLocale: Doc<"contentKeys">["artifactLocale"],
+      appLocale: Docs["contentKeys"]["artifactLocale"],
       sequence: number,
       limit: number
     ) => Effect.Effect<readonly PublicationRow<"contentKeys">[], ReleaseError>;

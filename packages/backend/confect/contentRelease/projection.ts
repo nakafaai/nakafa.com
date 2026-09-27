@@ -1,4 +1,3 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import {
   type ContentProjection,
   familyForProjection,
@@ -9,7 +8,10 @@ import {
   MAX_PROJECTION_BATCH_BYTES,
   MAX_PROJECTION_BATCH_COUNT,
 } from "@nakafa/aksara-contracts/transport/limits";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   hashBatch,
   validateStoredBatch,
@@ -29,7 +31,6 @@ import {
   decodeReleaseJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { encodeProjectionJson } from "@repo/backend/confect/contentRelease/wire";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getConvexSize } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 
@@ -75,16 +76,14 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
 );
 /** Confirms one projection belongs to its exact staged upsert. */
 const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
-  ctx: MutationCtx,
   releaseId: string,
   batchIndex: number,
   batchHash: string,
   projection: ContentProjection,
   projectionJson: string
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const writer = yield* DatabaseWriter;
   const item = yield* loadIdentityItem(
-    ctx,
     releaseId,
     projection.contentKey,
     projectionArtifactLocale(projection)
@@ -131,14 +130,13 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
 export const stageProjectionProgram = Effect.fn(
   "contentRelease.stageProjectionBatch"
 )(function* (
-  ctx: MutationCtx,
   releaseId: string,
   batchIndex: number,
   sources: readonly string[]
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const { release } = yield* loadStaged(ctx, releaseId);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const { release } = yield* loadStaged(releaseId);
   const signed = yield* decodeReleaseJson(release.releaseJson);
   if (release.status !== "staging" || release.abortingAt !== undefined) {
     return yield* releaseFail(
@@ -205,7 +203,6 @@ export const stageProjectionProgram = Effect.fn(
   }
   for (const { projection, projectionJson } of entries) {
     yield* stageProjection(
-      ctx,
       releaseId,
       batchIndex,
       batchHash,

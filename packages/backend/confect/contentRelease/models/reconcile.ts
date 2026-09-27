@@ -4,6 +4,7 @@ import {
   type QueryStreamKeyLabels,
   QueryStreamReadBudget,
 } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   ReleaseError,
   releaseFail,
@@ -14,7 +15,6 @@ import {
   MODEL_BUILD_PAGE_ROWS,
   type ModelBuildPage,
 } from "@repo/backend/confect/contentRelease/models/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { compareValues } from "convex/values";
 import { Effect, Option, Schema, Stream } from "effect";
 
@@ -26,19 +26,18 @@ const CursorSchema = Schema.fromJsonString(
     version: Schema.Literal(1),
   })
 );
-type ModelRow = Doc<
+type ModelRow = Docs[
   | "articleCatalog"
   | "articleCategories"
   | "articleBuckets"
   | "materialCatalog"
   | "materialBuckets"
-  | "contentIndex"
->;
+  | "contentIndex"];
 interface ModelReconciliation<
   Row extends ModelRow,
   Labels extends QueryStreamKeyLabels.QueryStreamKeyLabels,
 > {
-  readonly build: Pick<Doc<"contentModelBuilds">, "cursor" | "phase">;
+  readonly build: Pick<Docs["contentModelBuilds"], "cursor" | "phase">;
   readonly insert: (source: Row) => Effect.Effect<void>;
   readonly position: (row: Row) => typeof PositionSchema.Type;
   readonly remove: (target: Row) => Effect.Effect<void>;
@@ -65,7 +64,7 @@ function modelValues(row: ModelRow) {
   return fields;
 }
 const decodeCursor = Effect.fn("contentRelease.decodeModelCursor")(function* (
-  build: Pick<Doc<"contentModelBuilds">, "cursor" | "phase">
+  build: Pick<Docs["contentModelBuilds"], "cursor" | "phase">
 ) {
   if (build.cursor === undefined) {
     return;
@@ -152,7 +151,10 @@ export const reconcileModel = Effect.fn("contentRelease.reconcileModel")(
     const merged = QueryStream.merge([input.source, input.target]);
     const rows = cursor
       ? QueryStream.narrow(merged, {
-          start: { keyValues: cursor.position, inclusive: false },
+          start: {
+            keyValues: cursor.position,
+            inclusive: false,
+          },
         })
       : merged;
     // Consume complete identities before stopping. The two merge inputs can
@@ -210,7 +212,11 @@ export const reconcileModel = Effect.fn("contentRelease.reconcileModel")(
     );
     if (stopped) {
       return {
-        cursor: JSON.stringify({ phase: build.phase, position, version: 1 }),
+        cursor: JSON.stringify({
+          phase: build.phase,
+          position,
+          version: 1,
+        }),
         done: false,
         processed,
       } satisfies ModelBuildPage;

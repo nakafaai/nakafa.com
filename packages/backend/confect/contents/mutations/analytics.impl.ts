@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import { processClaimedContentAnalyticsPartition } from "@repo/backend/confect/contents/analytics/drain";
 import {
   claimContentAnalyticsPartition,
@@ -15,8 +14,7 @@ const scheduleContentAnalyticsPartitions = FunctionImpl.make(
   "scheduleContentAnalyticsPartitions",
   Effect.fn("contents.mutations.analytics.scheduleContentAnalyticsPartitions")(
     function* () {
-      const ctx = yield* MutationCtxService;
-      return yield* scheduleAllContentAnalyticsPartitions(ctx);
+      return yield* scheduleAllContentAnalyticsPartitions();
     }
   )
 );
@@ -26,8 +24,7 @@ const scheduleContentAnalyticsPartition = FunctionImpl.make(
   "scheduleContentAnalyticsPartition",
   Effect.fn("contents.mutations.analytics.scheduleContentAnalyticsPartition")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
-      return yield* claimContentAnalyticsPartition(ctx, args);
+      return yield* claimContentAnalyticsPartition(args);
     }
   )
 );
@@ -37,8 +34,7 @@ const processContentAnalyticsPartition = FunctionImpl.make(
   "processContentAnalyticsPartition",
   Effect.fn("contents.mutations.analytics.processContentAnalyticsPartition")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
-      return yield* processClaimedContentAnalyticsPartition(ctx, args);
+      return yield* processClaimedContentAnalyticsPartition(args);
     }
   )
 );

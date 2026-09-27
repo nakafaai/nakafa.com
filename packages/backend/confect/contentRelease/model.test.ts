@@ -1,4 +1,9 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   ensureState,
   loadExactVersion,
@@ -12,7 +17,6 @@ import {
   ownsRole,
   stagedBaseSequence,
 } from "@repo/backend/confect/contentRelease/model";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
@@ -27,6 +31,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 23, 12);
 
@@ -70,7 +75,9 @@ async function insertBinding(
     operation: "bind",
     publicPath: "test/head-0",
     releaseId,
-    routeJson: testRouteJson({ releaseId }),
+    routeJson: testRouteJson({
+      releaseId,
+    }),
     sequence,
   });
 }
@@ -98,14 +105,31 @@ async function insertItem(ctx: MutationCtx) {
     stagedAt: NOW,
   });
 }
-
 describe("contentRelease/model", () => {
   it("creates and reuses the singleton state while releases fail visibly", async () => {
     const t = convexTest(schema, convexModules);
     const identities = await t.mutation(async (ctx) => {
-      const created = await runConvexProgram(ensureState(ctx));
-      const reused = await runConvexProgram(ensureState(ctx));
-      const loaded = await runConvexProgram(loadState(ctx));
+      const created = await Effect.runPromise(
+        ensureState().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      );
+      const reused = await Effect.runPromise(
+        ensureState().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      );
+      const loaded = await Effect.runPromise(
+        loadState().pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      );
       return {
         created: created._id,
         loaded: loaded?._id,
@@ -119,22 +143,32 @@ describe("contentRelease/model", () => {
       nextSequence: 1,
     });
     await expect(
-      t.query((ctx) => runConvexProgram(loadRelease(ctx, TEST_RELEASE_ID)))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+      t.query((ctx) =>
+        Effect.runPromise(
+          loadRelease(TEST_RELEASE_ID).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_MISSING",
+    });
   });
-
   it("requires exact immutable ownership for staged release slots", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => insertTestRelease(ctx));
     const staged = await t.query((ctx) =>
-      runConvexProgram(loadStaged(ctx, TEST_RELEASE_ID))
+      Effect.runPromise(
+        loadStaged(TEST_RELEASE_ID).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
+      )
     );
     expect(staged.release.releaseId).toBe(TEST_RELEASE_ID);
     expect(ownsRole(staged.state, "candidate", staged.release)).toBe(true);
     expect(ownsRole(staged.state, "recovery", staged.release)).toBe(false);
     expect(stagedBaseSequence("candidate", staged.state)).toBeUndefined();
     expect(stagedBaseSequence("recovery", staged.state)).toBe(1);
-
     await t.mutation(async (ctx) => {
       const state = await ctx.db.query("contentState").unique();
       if (!state) {
@@ -145,10 +179,17 @@ describe("contentRelease/model", () => {
       });
     });
     await expect(
-      t.query((ctx) => runConvexProgram(loadStaged(ctx, TEST_RELEASE_ID)))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+      t.query((ctx) =>
+        Effect.runPromise(
+          loadStaged(TEST_RELEASE_ID).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_STATE",
+    });
   });
-
   it("resolves latest and exact versions while duplicate sequence rows fail", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -157,28 +198,50 @@ describe("contentRelease/model", () => {
     });
     await expect(
       t.query((ctx) =>
-        runConvexProgram(loadVersion(ctx, "test:head-0", "en", 2))
+        Effect.runPromise(
+          loadVersion("test:head-0", "en", 2).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
       )
-    ).resolves.toMatchObject({ releaseId: "release-one", sequence: 1 });
+    ).resolves.toMatchObject({
+      releaseId: "release-one",
+      sequence: 1,
+    });
     await expect(
       t.query((ctx) =>
-        runConvexProgram(loadExactVersion(ctx, "test:head-0", "en", 3))
+        Effect.runPromise(
+          loadExactVersion("test:head-0", "en", 3).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
       )
-    ).resolves.toMatchObject({ releaseId: "release-three", sequence: 3 });
+    ).resolves.toMatchObject({
+      releaseId: "release-three",
+      sequence: 3,
+    });
     await expect(
       t.query((ctx) =>
-        runConvexProgram(loadVersion(ctx, "test:missing", "en", 3))
+        Effect.runPromise(
+          loadVersion("test:missing", "en", 3).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
       )
     ).resolves.toBeNull();
-
     await t.mutation((ctx) => insertVersion(ctx, 3, "release-duplicate"));
     await expect(
       t.query((ctx) =>
-        runConvexProgram(loadVersion(ctx, "test:head-0", "en", 3))
+        Effect.runPromise(
+          loadVersion("test:head-0", "en", 3).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("resolves route and item indexes without unbounded reads", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -188,25 +251,49 @@ describe("contentRelease/model", () => {
     });
     await expect(
       t.query((ctx) =>
-        runConvexProgram(loadRouteBinding(ctx, "en", "test/head-0", 2))
-      )
-    ).resolves.toMatchObject({ releaseId: "release-one", sequence: 1 });
-    await expect(
-      t.query((ctx) => runConvexProgram(loadItem(ctx, TEST_RELEASE_ID, 0)))
-    ).resolves.toMatchObject({ contentKey: "test:head-0" });
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          loadIdentityItem(ctx, TEST_RELEASE_ID, "test:head-0", "en")
+        Effect.runPromise(
+          loadRouteBinding("en", "test/head-0", 2).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
         )
       )
-    ).resolves.toMatchObject({ index: 0 });
-
+    ).resolves.toMatchObject({
+      releaseId: "release-one",
+      sequence: 1,
+    });
+    await expect(
+      t.query((ctx) =>
+        Effect.runPromise(
+          loadItem(TEST_RELEASE_ID, 0).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
+      )
+    ).resolves.toMatchObject({
+      contentKey: "test:head-0",
+    });
+    await expect(
+      t.query((ctx) =>
+        Effect.runPromise(
+          loadIdentityItem(TEST_RELEASE_ID, "test:head-0", "en").pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
+      )
+    ).resolves.toMatchObject({
+      index: 0,
+    });
     await t.mutation((ctx) => insertBinding(ctx, 3, "release-duplicate"));
     await expect(
       t.query((ctx) =>
-        runConvexProgram(loadRouteBinding(ctx, "en", "test/head-0", 3))
+        Effect.runPromise(
+          loadRouteBinding("en", "test/head-0", 3).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
 });

@@ -1,7 +1,7 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { ModelBuildPhase } from "@repo/backend/confect/contentRelease/models/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 
-type ModelBuild = Pick<Doc<"contentModelBuilds">, "slots">;
+type ModelBuild = Pick<Docs["contentModelBuilds"], "slots">;
 function changesArticle(build: ModelBuild) {
   return build.slots.articleBaseSlot !== build.slots.articleTargetSlot;
 }

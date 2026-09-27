@@ -1,7 +1,8 @@
-import { DatabaseReader, FunctionImpl, GroupImpl } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/subscriptions/queries.spec";
 import { Effect, Layer, Option } from "effect";
 
@@ -10,9 +11,8 @@ const hasActiveSubscription = FunctionImpl.make(
   spec,
   "hasActiveSubscription",
   Effect.fn("subscriptions.queries.hasActiveSubscription")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const { appUser } = yield* requireAuth(ctx);
+    const database = yield* DatabaseReader;
+    const { appUser } = yield* requireAuth();
     const customer = yield* database
       .table("customers")
       .get("by_userId", appUser._id)
@@ -38,5 +38,6 @@ const hasActiveSubscription = FunctionImpl.make(
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(hasActiveSubscription),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

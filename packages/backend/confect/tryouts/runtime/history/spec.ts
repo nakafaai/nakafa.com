@@ -1,5 +1,4 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { failureWire } from "@repo/backend/confect/failure";
 import {
   tryoutAnswerSelectorValidator,
   tryoutQuestionSelectorValidator,
@@ -35,4 +34,3 @@ export class TryoutHistoryError extends Schema.TaggedError<TryoutHistoryError>()
   }
 ) {}
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const TryoutHistoryErrorWire = failureWire(TryoutHistoryError);

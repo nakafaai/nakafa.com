@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 /** Expected forum validation, access, and transcript failures. */
@@ -19,7 +18,6 @@ export class ForumError extends Schema.TaggedError<ForumError>()("ForumError", {
   ]),
   message: Schema.String,
 }) {}
-export const ForumFailure = failureWire(ForumError);
 export const FORUM_CLEANUP_FAILED_CODE = "FORUM_CLEANUP_FAILED";
 
 /** A bounded cleanup transaction could not safely complete. */
@@ -31,4 +29,3 @@ export class ForumCleanupError extends Schema.TaggedError<ForumCleanupError>()(
   }
 ) {}
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const ForumCleanupErrorWire = failureWire(ForumCleanupError);

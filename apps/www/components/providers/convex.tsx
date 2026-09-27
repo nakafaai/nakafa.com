@@ -1,6 +1,7 @@
 "use client";
 
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
+
 import { Data, Effect } from "effect";
 import { type ReactNode, useRef } from "react";
 import { AuthSessionProvider, useAuthSession } from "@/components/auth/session";

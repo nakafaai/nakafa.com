@@ -1,8 +1,8 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ConvexError } from "convex/values";
 import { Predicate } from "effect";
 export type DBPart = Omit<
-  Doc<"messageParts">,
+  Docs["messageParts"],
   "_id" | "_creationTime" | "messageId"
 >;
 
@@ -13,8 +13,8 @@ export function requirePartField<T>({
   partType,
 }: {
   value: T;
-  fieldName: keyof Doc<"messageParts">;
-  partType: Doc<"messageParts">["type"];
+  fieldName: keyof Docs["messageParts"];
+  partType: Docs["messageParts"]["type"];
 }): Exclude<T, undefined> {
   if (Predicate.isNotUndefined(value)) {
     return value;
@@ -26,7 +26,7 @@ export function requirePartField<T>({
 }
 
 /** Require the persisted tool state before rebuilding one tool UI part. */
-export function requireToolState(part: Doc<"messageParts">) {
+export function requireToolState(part: Docs["messageParts"]) {
   return requirePartField({
     value: part.toolState,
     fieldName: "toolState",

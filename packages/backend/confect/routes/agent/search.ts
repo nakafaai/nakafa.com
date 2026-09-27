@@ -4,24 +4,39 @@ import {
   agentJsonResponse,
   agentOptionsResponse,
 } from "@repo/backend/confect/routes/agent/response";
-import {
-  type AgentApp,
-  runMeteredRequest,
-} from "@repo/backend/confect/routes/agent/runtime";
+import { runMeteredRequest } from "@repo/backend/confect/routes/agent/runtime";
+import { RequestIdentity } from "@repo/backend/confect/routes/middleware/identity";
 import { Effect } from "effect";
-
-/** Registers the canonical search read and its matching preflight. */
-export function registerAgentSearchRoute(api: AgentApp) {
-  api.get("/search", (context) =>
-    runMeteredRequest(
-      context.env,
-      context.req.raw,
-      context.get("requestId"),
-      readSearchInput(new URL(context.req.url)).pipe(
-        Effect.flatMap((input) => searchNakafaContent(context.env, input)),
-        Effect.map(agentJsonResponse)
-      )
-    )
-  );
-  api.options("/search", () => agentOptionsResponse());
-}
+import {
+  HttpRouter,
+  HttpServerRequest,
+  HttpServerResponse,
+} from "effect/unstable/http";
+/** Serves the bounded public search contract through native Confect services. */
+export const searchRoutes = [
+  HttpRouter.route(
+    "GET",
+    "/search",
+    Effect.gen(function* () {
+      const request = yield* HttpServerRequest.toWeb(
+        yield* HttpServerRequest.HttpServerRequest
+      );
+      const requestId = yield* RequestIdentity;
+      return HttpServerResponse.fromWeb(
+        yield* runMeteredRequest(
+          request,
+          requestId,
+          readSearchInput(new URL(request.url)).pipe(
+            Effect.flatMap((input) => searchNakafaContent(input)),
+            Effect.map(agentJsonResponse)
+          )
+        )
+      );
+    })
+  ),
+  HttpRouter.route(
+    "OPTIONS",
+    "/search",
+    HttpServerResponse.fromWeb(agentOptionsResponse())
+  ),
+];

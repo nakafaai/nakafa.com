@@ -1,7 +1,11 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { continueAccountDeletionCommitProgram } from "@repo/backend/confect/auth/deletion/commit";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -14,11 +18,10 @@ import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 10, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
-
 function seedStartedDeletion(t: ReturnType<typeof convexTest>, authId: string) {
   return Effect.promise(() =>
     t.mutation((ctx) =>
-      runConvexProgram(
+      Effect.runPromise(
         Effect.gen(function* () {
           const userId = yield* Effect.promise(() =>
             ctx.db.insert("users", {
@@ -42,7 +45,6 @@ function seedStartedDeletion(t: ReturnType<typeof convexTest>, authId: string) {
               userId,
             })
           );
-
           return {
             expectedPreparation: {
               attemptId: ATTEMPT_ID,
@@ -52,17 +54,21 @@ function seedStartedDeletion(t: ReturnType<typeof convexTest>, authId: string) {
             preparationId,
             userId,
           };
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       )
     )
   );
 }
-
 describe("auth/deletion/commit", () => {
   afterEach(() => vi.useRealTimers());
-
   it("deletes real Better Auth sessions before committing identity removal and its app receipt", async () => {
-    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
+    vi.useFakeTimers({
+      toFake: ["Date", "setTimeout", "clearTimeout"],
+    });
     vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
@@ -70,7 +76,9 @@ describe("auth/deletion/commit", () => {
         now: NOW,
         suffix: "native-deletion",
       });
-      await ctx.db.patch("users", user.userId, { deletionPreparedAt: NOW });
+      await ctx.db.patch("users", user.userId, {
+        deletionPreparedAt: NOW,
+      });
       const preparationId = await ctx.db.insert("accountDeletionPreparations", {
         attemptId: ATTEMPT_ID,
         authId: user.authUserId,
@@ -97,11 +105,21 @@ describe("auth/deletion/commit", () => {
       t.query(async (ctx) => ({
         auth: await ctx.runQuery(components.betterAuth.adapter.findOne, {
           model: "user",
-          where: [{ field: "_id", value: seeded.authUserId }],
+          where: [
+            {
+              field: "_id",
+              value: seeded.authUserId,
+            },
+          ],
         }),
         session: await ctx.runQuery(components.betterAuth.adapter.findOne, {
           model: "session",
-          where: [{ field: "_id", value: seeded.sessionId }],
+          where: [
+            {
+              field: "_id",
+              value: seeded.sessionId,
+            },
+          ],
         }),
         preparation: await ctx.db.get(
           "accountDeletionPreparations",
@@ -126,7 +144,9 @@ describe("auth/deletion/commit", () => {
       {
         args: [args],
         name: "auth/deletion:continueAccountDeletionCommit",
-        state: { kind: "pending" },
+        state: {
+          kind: "pending",
+        },
       },
     ]);
     expect(
@@ -138,7 +158,9 @@ describe("auth/deletion/commit", () => {
     const complete = await read();
     expect(complete.auth).toBeNull();
     expect(complete.preparation?.finalizedAt).toBe(NOW);
-    expect(complete.receipt).toMatchObject({ attemptId: ATTEMPT_ID });
+    expect(complete.receipt).toMatchObject({
+      attemptId: ATTEMPT_ID,
+    });
     expect(complete.user).toMatchObject({
       authId: `deleted:${seeded.userId}`,
       deletedAt: NOW,
@@ -149,26 +171,33 @@ describe("auth/deletion/commit", () => {
     ).resolves.toBe(true);
     expect(await read()).toEqual(complete);
   });
-
   it.effect.each([-1, 0.5])(
     "rejects an invalid Better Auth deletion count %s before removing the identity",
     (count) =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const seeded = yield* seedStartedDeletion(t, "invalid-count");
         yield* Effect.promise(async () => {
           await expect(
             t.mutation((ctx) => {
-              vi.spyOn(ctx, "runMutation").mockResolvedValueOnce({ count });
-              return runConvexProgram(
+              vi.spyOn(ctx, "runMutation").mockResolvedValueOnce({
+                count,
+              });
+              return Effect.runPromiseWith(runtimeServices)(
                 continueAccountDeletionCommitProgram(
-                  ctx,
                   "invalid-count",
                   seeded.expectedPreparation
+                ).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
                 )
               );
             })
-          ).rejects.toMatchObject({ data: { code: "USER_CLEANUP_FAILED" } });
+          ).rejects.toMatchObject({
+            code: "USER_CLEANUP_FAILED",
+          });
           expect(
             await t.query((ctx) => ctx.db.get("users", seeded.userId))
           ).not.toHaveProperty("deletedAt");
@@ -180,7 +209,6 @@ describe("auth/deletion/commit", () => {
         });
       })
   );
-
   it.effect.each([
     {
       accountCount: 0,
@@ -196,18 +224,17 @@ describe("auth/deletion/commit", () => {
     },
   ])("continues after deleting one bounded $stage page", (testCase) =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const seeded = yield* seedStartedDeletion(t, `${testCase.stage}-owner`);
       const deleteAccounts = vi.fn(() => Effect.succeed(testCase.accountCount));
       const deleteAuthUser = vi.fn(() => Effect.void);
       const deleteSessions = vi.fn(() => Effect.succeed(testCase.sessionCount));
       const scheduleContinuation = vi.fn(() => Effect.void);
-
       const handled = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             continueAccountDeletionCommitProgram(
-              ctx,
               `${testCase.stage}-owner`,
               seeded.expectedPreparation,
               {
@@ -216,13 +243,17 @@ describe("auth/deletion/commit", () => {
                 deleteSessions: Effect.suspend(deleteSessions),
                 scheduleContinuation: Effect.suspend(scheduleContinuation),
               }
+            ).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
             )
           )
         )
       );
       const state = yield* Effect.promise(() =>
         t.query((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.gen(function* () {
               const preparation = yield* Effect.promise(() =>
                 ctx.db.get("accountDeletionPreparations", seeded.preparationId)
@@ -230,13 +261,16 @@ describe("auth/deletion/commit", () => {
               const user = yield* Effect.promise(() =>
                 ctx.db.get("users", seeded.userId)
               );
-
-              return { preparation, user };
-            })
+              return {
+                preparation,
+                user,
+              };
+            }).pipe(
+              Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+            )
           )
         )
       );
-
       expect(handled).toBe(true);
       expect(deleteSessions).toHaveBeenCalledOnce();
       expect(deleteAccounts).toHaveBeenCalledTimes(
@@ -248,20 +282,18 @@ describe("auth/deletion/commit", () => {
       expect(state.user).not.toHaveProperty("deletedAt");
     })
   );
-
   it.effect(
     "deletes the auth user and finalizes the app record atomically",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const seeded = yield* seedStartedDeletion(t, "final-commit-owner");
         const deleteAuthUser = vi.fn(() => Effect.void);
-
         const handled = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               continueAccountDeletionCommitProgram(
-                ctx,
                 "final-commit-owner",
                 seeded.expectedPreparation,
                 {
@@ -270,13 +302,17 @@ describe("auth/deletion/commit", () => {
                   deleteSessions: Effect.succeed(0),
                   scheduleContinuation: Effect.void,
                 }
+              ).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
               )
             )
           )
         );
         const state = yield* Effect.promise(() =>
           t.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const preparation = yield* Effect.promise(() =>
                   ctx.db.get(
@@ -290,13 +326,19 @@ describe("auth/deletion/commit", () => {
                 const user = yield* Effect.promise(() =>
                   ctx.db.get("users", seeded.userId)
                 );
-
-                return { preparation, receipt, user };
-              })
+                return {
+                  preparation,
+                  receipt,
+                  user,
+                };
+              }).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
             )
           )
         );
-
         expect(handled).toBe(true);
         expect(deleteAuthUser).toHaveBeenCalledOnce();
         expect(state.preparation?.finalizedAt).toEqual(expect.any(Number));
@@ -309,41 +351,39 @@ describe("auth/deletion/commit", () => {
         });
       })
   );
-
   it.effect.each([
     {
-      patch: { deletionStartedAt: undefined },
+      patch: {
+        deletionStartedAt: undefined,
+      },
       state: "before the irreversible claim",
     },
     {
-      patch: { cancellationStartedAt: NOW + 1 },
+      patch: {
+        cancellationStartedAt: NOW + 1,
+      },
       state: "after cancellation starts",
     },
   ])("does not touch auth $state", ({ patch }) =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const seeded = yield* seedStartedDeletion(t, "unclaimed-owner");
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
-            Effect.promise(() =>
-              ctx.db.patch(
-                "accountDeletionPreparations",
-                seeded.preparationId,
-                patch
-              )
-            )
+          ctx.db.patch(
+            "accountDeletionPreparations",
+            seeded.preparationId,
+            patch
           )
         )
       );
       const deleteAuthUser = vi.fn(() => Effect.void);
       const deleteSessions = vi.fn(() => Effect.succeed(0));
-
       const handled = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             continueAccountDeletionCommitProgram(
-              ctx,
               "unclaimed-owner",
               seeded.expectedPreparation,
               {
@@ -352,11 +392,14 @@ describe("auth/deletion/commit", () => {
                 deleteSessions: Effect.suspend(deleteSessions),
                 scheduleContinuation: Effect.void,
               }
+            ).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
             )
           )
         )
       );
-
       expect(handled).toBe(false);
       expect(deleteSessions).not.toHaveBeenCalled();
       expect(deleteAuthUser).not.toHaveBeenCalled();

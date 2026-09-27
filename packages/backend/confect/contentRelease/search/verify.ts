@@ -1,9 +1,8 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 export type SearchModelOwner = NonNullable<
   Effect.Success<ReturnType<typeof loadSearchOwner>>
@@ -11,7 +10,7 @@ export type SearchModelOwner = NonNullable<
 /** Resolves one indexed hit through the active release's structural sharing. */
 export const resolveSearchProjection = Effect.fn(
   "contentRelease.resolveSearchProjection"
-)(function* (ctx: QueryCtx, row: Doc<"contentIndex">, owner: SearchModelOwner) {
+)(function* (row: Docs["contentIndex"], owner: SearchModelOwner) {
   if (row.slot !== owner.slot || !owner.families.includes(row.family)) {
     return yield* staleSearchRow(row);
   }
@@ -19,7 +18,7 @@ export const resolveSearchProjection = Effect.fn(
     row.contentKey,
     row.appLocale,
     owner.sequence
-  ).pipe(Effect.provide(convexPublicationLayer(ctx)));
+  ).pipe(Effect.provide(publicationLayer));
   if (!resolved) {
     return yield* staleSearchRow(row);
   }
@@ -43,7 +42,7 @@ export const resolveSearchProjection = Effect.fn(
 });
 /** Creates one typed integrity failure for a stale release-owned search row. */
 function staleSearchRow(
-  row: Pick<Doc<"contentIndex">, "appLocale" | "contentKey">
+  row: Pick<Docs["contentIndex"], "appLocale" | "contentKey">
 ) {
   return releaseFail(
     "CONTENT_RELEASE_INTEGRITY",

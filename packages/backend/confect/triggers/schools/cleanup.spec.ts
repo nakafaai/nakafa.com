@@ -1,6 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { ForumCleanupErrorWire } from "@repo/backend/confect/classes/forums/spec";
+import { ForumCleanupError } from "@repo/backend/confect/classes/forums/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
@@ -20,6 +20,6 @@ export default GroupSpec.make()
         forumId: IdSchema("schoolClassForums"),
       }),
       returns: () => Schema.Null,
-      error: () => ForumCleanupErrorWire,
+      error: () => ForumCleanupError,
     }).middleware(Atomic)
   );

@@ -1,12 +1,12 @@
 "use node";
 
-import { QueryRunner } from "@confect/server";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { RecoveryLookupSchema } from "@nakafa/aksara-contracts/release/current/evidence";
 import { ContentReleaseCurrentSchema } from "@nakafa/aksara-contracts/release/current/state";
 import { verifyContentReleaseBundle } from "@nakafa/aksara-contracts/release/verify";
 import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
 import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   ReleaseError,
   releaseFail,
@@ -16,10 +16,8 @@ import {
   parseStoredJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Schema } from "effect";
 
-type ReadContext = Pick<ActionCtx, "runQuery">;
 /** Authenticates one exact release and renderer bundle recovered from storage. */
 export const decodeStoredBundle = Effect.fn(
   "contentRelease.decodeStoredBundle"
@@ -37,10 +35,8 @@ export const decodeStoredBundle = Effect.fn(
 /** Loads and authenticates one stored release through its durable identity. */
 export const loadVerifiedRelease = Effect.fn(
   "contentRelease.loadVerifiedRelease"
-)(function* (ctx: ReadContext, releaseId: string) {
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
+)(function* (releaseId: string) {
+  const runQuery = yield* QueryRunner;
   const envelope = yield* runQuery(
     refs.internal.contentRelease.envelope.byRelease,
     {
@@ -101,10 +97,8 @@ const decodeCurrentRuntimeBundle = Effect.fn(
 /** Reads and authenticates active, candidate, and recovery release bundles. */
 export const readCurrentPublication = Effect.fn(
   "contentRelease.readCurrentPublication"
-)(function* (ctx: ReadContext) {
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
+)(function* () {
+  const runQuery = yield* QueryRunner;
   const stored = yield* runQuery(
     refs.internal.contentRelease.status.current,
     {}
@@ -161,52 +155,49 @@ export const readCurrentPublication = Effect.fn(
   );
 });
 /** Authenticates one exact completed recovery or returns explicit absence. */
-export const readRecovery = Effect.fn("contentRelease.readRecovery")(function* (
-  ctx: ReadContext,
-  request: {
+export const readRecovery = Effect.fn("contentRelease.readRecovery")(
+  function* (request: {
     readonly recoveryId: string;
     readonly releaseId: string;
-  }
-) {
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
-  const stored = yield* runQuery(
-    refs.internal.contentRelease.recovery.lookup,
-    request
-  ).pipe(Effect.catchTag("SchemaError", Effect.die));
-  if (stored.kind === "missing") {
-    return stored;
-  }
-  const bundle = yield* decodeStoredBundle(
-    stored.value.releaseJson,
-    stored.value.rendererJson
-  );
-  const { manifest } = bundle.release;
-  if (
-    manifest.releaseId !== request.recoveryId ||
-    manifest.origin.kind !== "rollback" ||
-    manifest.origin.releaseId !== request.releaseId ||
-    manifest.baseReleaseId !== request.releaseId
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Recovery ${request.recoveryId} does not bind candidate ${request.releaseId}.`
+  }) {
+    const runQuery = yield* QueryRunner;
+    const stored = yield* runQuery(
+      refs.internal.contentRelease.recovery.lookup,
+      request
+    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    if (stored.kind === "missing") {
+      return stored;
+    }
+    const bundle = yield* decodeStoredBundle(
+      stored.value.releaseJson,
+      stored.value.rendererJson
+    );
+    const { manifest } = bundle.release;
+    if (
+      manifest.releaseId !== request.recoveryId ||
+      manifest.origin.kind !== "rollback" ||
+      manifest.origin.releaseId !== request.releaseId ||
+      manifest.baseReleaseId !== request.releaseId
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Recovery ${request.recoveryId} does not bind candidate ${request.releaseId}.`
+      );
+    }
+    return yield* Schema.decodeUnknownEffect(RecoveryLookupSchema)({
+      kind: "completed",
+      value: {
+        ...bundle,
+        receipt: stored.value.receipt,
+      },
+    }).pipe(
+      Effect.mapError(
+        () =>
+          new ReleaseError({
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: `Recovery ${request.recoveryId} lost terminal evidence.`,
+          })
+      )
     );
   }
-  return yield* Schema.decodeUnknownEffect(RecoveryLookupSchema)({
-    kind: "completed",
-    value: {
-      ...bundle,
-      receipt: stored.value.receipt,
-    },
-  }).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Recovery ${request.recoveryId} lost terminal evidence.`,
-        })
-    )
-  );
-});
+);

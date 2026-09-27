@@ -1,16 +1,14 @@
-import { DatabaseReader } from "@confect/server";
 import {
   hasSameContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { completedReceipt } from "@repo/backend/confect/contentRelease/receipt";
 import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/binding";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Exact stored recovery result returned to the authenticated Node verifier. */
@@ -19,8 +17,8 @@ import { Effect } from "effect";
 export const validateRecoveryRelation = Effect.fn(
   "contentRelease.validateRecoveryRelation"
 )(function* (
-  candidate: Doc<"contentReleases">,
-  recovery: Doc<"contentReleases">
+  candidate: Docs["contentReleases"],
+  recovery: Docs["contentReleases"]
 ) {
   const candidateSigned = yield* decodeReleaseJson(candidate.releaseJson);
   const recoverySigned = yield* decodeReleaseJson(recovery.releaseJson);
@@ -59,8 +57,8 @@ export const validateRecoveryRelation = Effect.fn(
 
 /** Looks up exact historical recovery completion for crash-safe replay. */
 export const lookupProgram = Effect.fn("contentRelease.recoveryLookup")(
-  function* (ctx: QueryCtx, releaseId: string, recoveryId: string) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (releaseId: string, recoveryId: string) {
+    const database = yield* DatabaseReader;
     const recovery = yield* database
       .table("contentReleases")
       .get("by_releaseId", recoveryId)
@@ -75,10 +73,9 @@ export const lookupProgram = Effect.fn("contentRelease.recoveryLookup")(
         readonly kind: "missing";
       };
     }
-    const candidate = yield* loadRelease(ctx, releaseId);
+    const candidate = yield* loadRelease(releaseId);
     const signed = yield* validateRecoveryRelation(candidate, recovery);
     yield* findReleaseTryoutRuntime(
-      ctx,
       signed.recovery,
       recovery.tryoutRuntimeBundleHash
     );

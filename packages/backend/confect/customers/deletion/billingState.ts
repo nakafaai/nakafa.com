@@ -1,20 +1,15 @@
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
   MutationRunner,
-} from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+} from "@repo/backend/confect/_generated/services";
 import {
   CustomerSyncIoError,
   customerSyncIoError,
   customerSyncIoErrorCode,
 } from "@repo/backend/confect/customers/sync/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  ActionCtx,
-  MutationCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
 
 const CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE = 50;
@@ -26,13 +21,9 @@ function toCustomerDeletionError(error: unknown) {
 export const recordCustomerDeletionCheckpointProgram = Effect.fn(
   "customers.deletion.recordCustomerDeletionCheckpoint"
 )(
-  function* (
-    ctx: MutationCtx,
-    polarCustomerId: string,
-    cleanupUserId?: Id<"users">
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (polarCustomerId: string, cleanupUserId?: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const [customerCheckpoint, polarTombstone] = yield* Effect.all(
       [
         cleanupUserId
@@ -101,10 +92,10 @@ export const recordCustomerDeletionCheckpointProgram = Effect.fn(
 export const deleteCustomerByIdProgram = Effect.fn(
   "customers.deletion.deleteCustomerById"
 )(
-  function* (ctx: MutationCtx, polarCustomerId: string) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    yield* recordCustomerDeletionCheckpointProgram(ctx, polarCustomerId);
+  function* (polarCustomerId: string) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    yield* recordCustomerDeletionCheckpointProgram(polarCustomerId);
     const subscriptions = yield* database
       .table("subscriptions")
       .index("by_customerId_and_status", (query) =>
@@ -137,9 +128,9 @@ export const deleteCustomerByIdProgram = Effect.fn(
 export const completeCustomerDeletionCheckpointProgram = Effect.fn(
   "customers.deletion.completeCustomerDeletionCheckpoint"
 )(
-  function* (ctx: MutationCtx, userId: Id<"users">, polarCustomerId: string) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">, polarCustomerId: string) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const tombstone = yield* database
       .table("customerDeletionTombstones")
       .get("by_cleanupUserId", userId)
@@ -168,15 +159,10 @@ export const completeCustomerDeletionCheckpointProgram = Effect.fn(
 );
 
 /** Drains every bounded local billing row for one Polar customer ID. */
-export const deleteLocalCustomer: (
-  ctx: ActionCtx,
-  polarCustomerId: string
-) => Effect.Effect<null, CustomerSyncIoError> = Effect.fn(
+export const deleteLocalCustomer = Effect.fn(
   "customers.deletion.deleteLocalCustomer"
-)(function* (ctx: ActionCtx, polarCustomerId: string) {
-  const runMutation = yield* MutationRunner.MutationRunner.pipe(
-    Effect.provide(MutationRunner.layer(ctx.runMutation))
-  );
+)(function* (polarCustomerId: string) {
+  const runMutation = yield* MutationRunner;
   let hasMore = true;
   while (hasMore) {
     hasMore = yield* runMutation(

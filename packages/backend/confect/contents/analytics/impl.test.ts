@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { processClaimedContentAnalyticsPartition } from "@repo/backend/confect/contents/analytics/drain";
 import { scheduleAllContentAnalyticsPartitions } from "@repo/backend/confect/contents/analytics/impl";
 import { invalidContentAnalyticsPartitionCode } from "@repo/backend/confect/contents/analytics/spec";
@@ -7,7 +9,6 @@ import {
   CONTENT_ANALYTICS_LEASE_DURATION_MS,
   CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/confect/contents/constants";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -15,6 +16,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest, type TestConvex } from "convex-test";
+import { Effect } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
@@ -79,8 +81,12 @@ function scheduleAll(target: TestConvex<typeof schema>) {
 /** Captures the idle recovery scan cost from the production implementation. */
 function measureScheduleAll(target: TestConvex<typeof schema>) {
   return target.mutation(async (ctx) => {
-    const result = await runConvexProgram(
-      scheduleAllContentAnalyticsPartitions(ctx)
+    const result = await Effect.runPromise(
+      scheduleAllContentAnalyticsPartitions().pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
     );
     return {
       metrics: await ctx.meta.getTransactionMetrics(),
@@ -108,11 +114,15 @@ function process(
   } = {}
 ) {
   return target.mutation((ctx) =>
-    runConvexProgram(
-      processClaimedContentAnalyticsPartition(ctx, {
+    Effect.runPromise(
+      processClaimedContentAnalyticsPartition({
         leaseVersion: options.leaseVersion ?? 1,
         partition: options.partition ?? 0,
-      })
+      }).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
     )
   );
 }
@@ -326,6 +336,7 @@ describe("contents/analytics/impl", () => {
     const partition = CONTENT_ANALYTICS_PARTITIONS.length;
     await expect(claim(target, partition)).rejects.toMatchObject({
       data: {
+        _tag: "InvalidContentAnalyticsPartitionError",
         code: invalidContentAnalyticsPartitionCode,
         message: "Content analytics partition is out of range.",
       },
@@ -335,10 +346,8 @@ describe("contents/analytics/impl", () => {
         partition,
       })
     ).rejects.toMatchObject({
-      data: {
-        code: invalidContentAnalyticsPartitionCode,
-        message: "Content analytics partition is out of range.",
-      },
+      code: invalidContentAnalyticsPartitionCode,
+      message: "Content analytics partition is out of range.",
     });
   });
 });

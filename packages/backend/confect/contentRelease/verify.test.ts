@@ -194,7 +194,8 @@ describe("contentRelease/verify", () => {
     const incomplete = convexTest(schema, convexModules);
     await incomplete.mutation((ctx) => insertTestRelease(ctx));
     await expect(beginFixture(incomplete)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
+      _tag: "ReleaseError",
+      code: "CONTENT_RELEASE_STATE",
     });
 
     const invalid = convexTest(schema, convexModules);

@@ -1,6 +1,9 @@
-import { DatabaseReader } from "@confect/server";
 import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  QueryCtx as QueryCtxService,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   loadRelease,
@@ -17,10 +20,8 @@ import {
   type contentHeadValidator,
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolveContentHead } from "@repo/backend/content/publication/projection";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, type Schema } from "effect";
 export type CatalogCursor = Schema.Schema.Type<typeof catalogCursorValidator>;
 export interface CatalogPage {
@@ -31,11 +32,7 @@ export interface CatalogPage {
 
 /** Proves one staged release still extends its exact durable base slot. */
 export const validateBase = Effect.fn("contentRelease.validateCatalogBase")(
-  function* (
-    ctx: QueryCtx,
-    release: Doc<"contentReleases">,
-    state: Doc<"contentState">
-  ) {
+  function* (release: Docs["contentReleases"], state: Docs["contentState"]) {
     const signed = yield* decodeReleaseJson(release.releaseJson);
     const baseId = signed.manifest.baseReleaseId;
     const baseHash = signed.manifest.baseManifestHash;
@@ -72,7 +69,7 @@ export const validateBase = Effect.fn("contentRelease.validateCatalogBase")(
         `Content release ${release.releaseId} has an incomplete base identity.`
       );
     }
-    const base = yield* loadRelease(ctx, baseId);
+    const base = yield* loadRelease(baseId);
     const baseSigned = yield* decodeReleaseJson(base.releaseJson);
     if (
       base.sequence !== stateSequence ||
@@ -96,8 +93,8 @@ export const validateBase = Effect.fn("contentRelease.validateCatalogBase")(
 
 /** Loads one staged release after validating its frozen base identity. */
 export const catalogRelease = Effect.fn("contentRelease.catalogRelease")(
-  function* (ctx: QueryCtx, releaseId: string) {
-    const { release, state } = yield* loadStaged(ctx, releaseId);
+  function* (releaseId: string) {
+    const { release, state } = yield* loadStaged(releaseId);
     if (release.status !== "verifying" && release.status !== "verified") {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
@@ -106,15 +103,15 @@ export const catalogRelease = Effect.fn("contentRelease.catalogRelease")(
     }
     const signed = yield* decodeReleaseJson(release.releaseJson);
     yield* stagedEvidence(release, signed);
-    yield* validateBase(ctx, release, state);
+    yield* validateBase(release, state);
     return release;
   }
 );
 
 /** Loads the next bounded permanent identities after one logical cursor. */
 export const loadCatalogKeys = Effect.fn("contentRelease.loadCatalogKeys")(
-  function* (ctx: QueryCtx, cursor: CatalogCursor | null) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (cursor: CatalogCursor | null) {
+    const database = yield* DatabaseReader;
     const limit = PROOF_PAGE_LIMIT + 1;
     const sameKey =
       cursor === null
@@ -144,9 +141,10 @@ export const loadCatalogKeys = Effect.fn("contentRelease.loadCatalogKeys")(
 
 /** Reads one canonical result-catalog page from a frozen release sequence. */
 export const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(
-  function* (ctx: QueryCtx, releaseId: string, cursor: CatalogCursor | null) {
-    const release = yield* catalogRelease(ctx, releaseId);
-    const stored = yield* loadCatalogKeys(ctx, cursor);
+  function* (releaseId: string, cursor: CatalogCursor | null) {
+    const ctx = yield* QueryCtxService;
+    const release = yield* catalogRelease(releaseId);
+    const stored = yield* loadCatalogKeys(cursor);
     const keys = stored.slice(0, PROOF_PAGE_LIMIT);
     const heads: (ContentHead &
       Schema.Schema.Type<typeof contentHeadValidator>)[] = [];
@@ -157,7 +155,7 @@ export const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(
         key.contentKey,
         key.artifactLocale,
         release.sequence
-      ).pipe(Effect.provide(convexPublicationLayer(ctx)));
+      ).pipe(Effect.provide(publicationLayer));
       if (head) {
         // 128 schema-bounded heads fit below 652 KiB, within the proof ceiling.
         const { publicPath, ...fields } = head;

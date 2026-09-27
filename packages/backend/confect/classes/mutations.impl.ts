@@ -3,7 +3,6 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { loadActiveClass } from "@repo/backend/confect/classes/access";
@@ -16,6 +15,7 @@ import {
   isValidClassImage,
 } from "@repo/backend/confect/lib/images";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import {
   validateInviteCodeState,
   validateNotExistingMembership,
@@ -33,8 +33,7 @@ const createClass = FunctionImpl.make(
   "createClass",
   Effect.fn("classes.mutations.createClass")(function* (args) {
     const writer = yield* DatabaseWriter;
-    const ctx = yield* MutationCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const userId = user.appUser._id;
     yield* requirePermission(PERMISSIONS.CLASS_CREATE, {
       schoolId: args.schoolId,
@@ -96,8 +95,7 @@ const joinClass = FunctionImpl.make(
   Effect.fn("classes.mutations.joinClass")(function* (args) {
     const writer = yield* DatabaseWriter;
     const database = yield* DatabaseReader;
-    const ctx = yield* MutationCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const userId = user.appUser._id;
     const inviteCode = yield* database
       .table("schoolClassInviteCodes")
@@ -113,7 +111,7 @@ const joinClass = FunctionImpl.make(
       });
     }
     yield* validateInviteCodeState(inviteCode);
-    const classData = yield* loadActiveClass(ctx, inviteCode.classId);
+    const classData = yield* loadActiveClass(inviteCode.classId);
     const now = yield* Clock.currentTimeMillis;
     const existingMember = yield* database
       .table("schoolClassMembers")
@@ -123,11 +121,7 @@ const joinClass = FunctionImpl.make(
         Effect.orDie
       );
     yield* validateNotExistingMembership(existingMember, "class");
-    const schoolMember = yield* getSchoolMembership(
-      ctx,
-      classData.schoolId,
-      userId
-    );
+    const schoolMember = yield* getSchoolMembership(classData.schoolId, userId);
     if (!schoolMember) {
       return yield* new ClassMutationError({
         code: "NOT_SCHOOL_MEMBER",
@@ -172,10 +166,9 @@ const updateClassVisibility = FunctionImpl.make(
   "updateClassVisibility",
   Effect.fn("classes.mutations.updateClassVisibility")(function* (args) {
     const writer = yield* DatabaseWriter;
-    const ctx = yield* MutationCtxService;
-    const { appUser } = yield* requireAuth(ctx);
+    const { appUser } = yield* requireAuth();
     const userId = appUser._id;
-    const classData = yield* loadActiveClass(ctx, args.classId);
+    const classData = yield* loadActiveClass(args.classId);
     yield* requirePermission(PERMISSIONS.CLASS_WRITE, {
       userId,
       classId: args.classId,
@@ -199,10 +192,9 @@ const joinPublicClass = FunctionImpl.make(
   Effect.fn("classes.mutations.joinPublicClass")(function* (args) {
     const writer = yield* DatabaseWriter;
     const database = yield* DatabaseReader;
-    const ctx = yield* MutationCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const userId = user.appUser._id;
-    const classData = yield* loadActiveClass(ctx, args.classId);
+    const classData = yield* loadActiveClass(args.classId);
     if (classData.visibility !== "public") {
       return yield* new ClassMutationError({
         code: "CLASS_NOT_PUBLIC",
@@ -218,11 +210,7 @@ const joinPublicClass = FunctionImpl.make(
         Effect.orDie
       );
     yield* validateNotExistingMembership(existingMember, "class");
-    const schoolMember = yield* getSchoolMembership(
-      ctx,
-      classData.schoolId,
-      userId
-    );
+    const schoolMember = yield* getSchoolMembership(classData.schoolId, userId);
     if (!schoolMember) {
       return yield* new ClassMutationError({
         code: "NOT_SCHOOL_MEMBER",
@@ -251,10 +239,9 @@ const updateClassImage = FunctionImpl.make(
   "updateClassImage",
   Effect.fn("classes.mutations.updateClassImage")(function* (args) {
     const writer = yield* DatabaseWriter;
-    const ctx = yield* MutationCtxService;
-    const { appUser } = yield* requireAuth(ctx);
+    const { appUser } = yield* requireAuth();
     const userId = appUser._id;
-    const classData = yield* loadActiveClass(ctx, args.classId);
+    const classData = yield* loadActiveClass(args.classId);
     yield* requirePermission(PERMISSIONS.CLASS_WRITE, {
       userId,
       classId: args.classId,
@@ -284,5 +271,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(joinPublicClass),
   Layer.provide(updateClassImage),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

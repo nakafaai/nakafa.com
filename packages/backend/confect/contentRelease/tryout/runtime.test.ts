@@ -1,11 +1,12 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   inheritContentSnapshot,
   inheritContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { reconcileTryoutRuntimeAfterAttempt } from "@repo/backend/confect/contentRelease/tryout/runtime";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -45,11 +46,9 @@ async function activateCandidate(t: ReturnType<typeof convexTest>) {
   await t.finishAllScheduledFunctions(vi.runAllTimers);
   return t.mutation(activate, args);
 }
-
 describe("contentRelease/tryout runtime activation", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
-
   it.effect("keeps a candidate invisible without its result pair", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -63,10 +62,11 @@ describe("contentRelease/tryout runtime activation", () => {
           })
         )
       );
-
       yield* Effect.promise(() =>
         expect(activateCandidate(t)).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
         })
       );
       const unchanged = yield* Effect.promise(() =>
@@ -87,7 +87,6 @@ describe("contentRelease/tryout runtime activation", () => {
       expect(unchanged.state?.activeReleaseId).toBeUndefined();
     })
   );
-
   it.effect("requires a pair for a newly inherited runtime", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -105,10 +104,11 @@ describe("contentRelease/tryout runtime activation", () => {
           })
         )
       );
-
       yield* Effect.promise(() =>
         expect(activateCandidate(t)).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
         })
       );
       const state = yield* Effect.promise(() =>
@@ -120,11 +120,12 @@ describe("contentRelease/tryout runtime activation", () => {
       });
     })
   );
-
   it.effect("requires the distinct retained base before the state flip", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
-      const result = yield* makeActivationRuntime({ hasBaseSnapshot: true });
+      const result = yield* makeActivationRuntime({
+        hasBaseSnapshot: true,
+      });
       const retainedBase = yield* makeActivationRuntime({
         bundleSnapshot: "base",
         hasBaseSnapshot: true,
@@ -140,10 +141,11 @@ describe("contentRelease/tryout runtime activation", () => {
         )
       );
       yield* storeRuntimeFixture(t, result);
-
       yield* Effect.promise(() =>
         expect(activateCandidate(t)).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
         })
       );
       const before = yield* Effect.promise(() =>
@@ -153,15 +155,15 @@ describe("contentRelease/tryout runtime activation", () => {
         activeReleaseId: BASE.releaseId,
         candidateReleaseId: CANDIDATE.releaseId,
       });
-
       yield* storeRuntimeFixture(t, retainedBase);
       const activation = yield* Effect.promise(() => activateCandidate(t));
       const publication = yield* Effect.promise(() => t.query(current, {}));
       expect(activation.kind).toBe("activated");
       expect(
         JSON.parse(publication.tryoutRuntimeBundleJson ?? "{}")
-      ).toMatchObject({ bundleHash: result.bundle.bundleHash });
-
+      ).toMatchObject({
+        bundleHash: result.bundle.bundleHash,
+      });
       yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const stored = await ctx.db
@@ -178,12 +180,16 @@ describe("contentRelease/tryout runtime activation", () => {
       );
       yield* Effect.promise(() =>
         expect(t.query(current, {})).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
         })
       );
       yield* Effect.promise(() =>
         expect(activateCandidate(t)).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
         })
       );
       const retained = yield* Effect.promise(() =>
@@ -195,7 +201,6 @@ describe("contentRelease/tryout runtime activation", () => {
       });
     })
   );
-
   it.effect(
     "returns completed proof without duplicating permanent storage",
     () =>
@@ -213,7 +218,6 @@ describe("contentRelease/tryout runtime activation", () => {
         );
         yield* storeRuntimeFixture(t, fixture);
         yield* Effect.promise(() => activateCandidate(t));
-
         const retry = yield* Effect.promise(() => activateCandidate(t));
         const runtime = yield* Effect.promise(() =>
           t.run((ctx) => ctx.db.query("tryoutRuntimeBundles").collect())
@@ -222,7 +226,6 @@ describe("contentRelease/tryout runtime activation", () => {
         expect(runtime).toHaveLength(1);
       })
   );
-
   it.effect("fails closed on completed retry and current state drift", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -252,15 +255,18 @@ describe("contentRelease/tryout runtime activation", () => {
           }
         })
       );
-
       yield* Effect.promise(() =>
         expect(activateCandidate(t)).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
         })
       );
       yield* Effect.promise(() =>
         expect(t.query(current, {})).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
         })
       );
       const state = yield* Effect.promise(() =>
@@ -270,13 +276,15 @@ describe("contentRelease/tryout runtime activation", () => {
     })
   );
 });
-
 describe("contentRelease/tryout runtime retention", () => {
   it.each([
     {
       expected: RETENTION_RELEASE_ID,
       name: "result snapshot match",
-      seed: { originKind: "git", snapshotId: RETENTION_RESULT_SNAPSHOT },
+      seed: {
+        originKind: "git",
+        snapshotId: RETENTION_RESULT_SNAPSHOT,
+      },
     },
     {
       expected: RETENTION_RELEASE_ID,
@@ -330,9 +338,9 @@ describe("contentRelease/tryout runtime retention", () => {
     const retention = await readRuntimeRetention(t, rowId);
     expect(retention.retainingReleaseId).toBe(expected);
   });
-
   it.effect("rejects reconciliation of a missing permanent pair", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const rowId = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
@@ -348,15 +356,20 @@ describe("contentRelease/tryout runtime retention", () => {
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(reconcileTryoutRuntimeAfterAttempt(ctx, rowId))
+            Effect.runPromiseWith(runtimeServices)(
+              reconcileTryoutRuntimeAfterAttempt(rowId).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         ).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          code: "CONTENT_RELEASE_INTEGRITY",
         })
       );
     })
   );
-
   it.each([
     {
       cleanupReleaseId: RETENTION_RELEASE_ID,
@@ -400,7 +413,11 @@ describe("contentRelease/tryout runtime retention", () => {
       const t = convexTest(schema, convexModules);
       const rowId = await t.mutation(async (ctx) => {
         const stored = await seedRuntimeRetentionRow(ctx, {
-          ...(cleanupReleaseId === undefined ? {} : { cleanupReleaseId }),
+          ...(cleanupReleaseId === undefined
+            ? {}
+            : {
+                cleanupReleaseId,
+              }),
           originKind: "git",
           snapshotId: RETENTION_RESULT_SNAPSHOT,
           withState,
@@ -411,7 +428,13 @@ describe("contentRelease/tryout runtime retention", () => {
         return stored;
       });
       await t.mutation((ctx) =>
-        runConvexProgram(reconcileTryoutRuntimeAfterAttempt(ctx, rowId))
+        Effect.runPromise(
+          reconcileTryoutRuntimeAfterAttempt(rowId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       );
       const stored = await t.run((ctx) =>
         ctx.db.get("tryoutRuntimeBundles", rowId)

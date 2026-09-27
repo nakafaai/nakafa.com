@@ -1,22 +1,17 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   loadModelBuild,
   loadModelBuildRelease,
 } from "@repo/backend/confect/contentRelease/models/build";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Requires the fully verified inactive buffers for one exact release. */
 export const requireReadyModelBuild = Effect.fn(
   "contentRelease.requireReadyModelBuild"
-)(function* (
-  ctx: MutationCtx,
-  release: Doc<"contentReleases">,
-  signed: SignedContentRelease
-) {
-  const build = yield* loadModelBuild(ctx);
+)(function* (release: Docs["contentReleases"], signed: SignedContentRelease) {
+  const build = yield* loadModelBuild();
   if (
     !build ||
     build.releaseId !== release.releaseId ||
@@ -30,14 +25,14 @@ export const requireReadyModelBuild = Effect.fn(
       `Content release ${release.releaseId} lacks a ready model build.`
     );
   }
-  yield* loadModelBuildRelease(ctx, build);
+  yield* loadModelBuildRelease(build);
   return build;
 });
 
 /** Projects one exact release and its verified buffers into active state. */
 export function modelActivationFields(
-  build: Doc<"contentModelBuilds">,
-  release: Doc<"contentReleases">,
+  build: Docs["contentModelBuilds"],
+  release: Docs["contentReleases"],
   signed: SignedContentRelease
 ) {
   return {

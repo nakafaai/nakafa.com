@@ -1,5 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
   requireActiveSectionAttempt,
@@ -11,23 +12,29 @@ import { TRYOUT_TEST_NOW as NOW } from "@repo/backend/test/tryouts";
 import { Effect } from "effect";
 
 const unavailableSections: Parameters<typeof requireInternalEntrySection>[0] = [
-  { sectionKey: "entry", visibility: "visible" },
-  { sectionKey: "another", visibility: "internal-entry" },
+  {
+    sectionKey: "entry",
+    visibility: "visible",
+  },
+  {
+    sectionKey: "another",
+    visibility: "internal-entry",
+  },
 ];
-
 describe("tryouts/runtime/sectionAttempt", () => {
   it.live("accepts the requested internal entry section", () =>
     Effect.gen(function* () {
       const sections: Parameters<typeof requireInternalEntrySection>[0] = [
-        { sectionKey: "entry", visibility: "internal-entry" },
+        {
+          sectionKey: "entry",
+          visibility: "internal-entry",
+        },
       ];
-
       expect(
         yield* requireInternalEntrySection(sections, "entry")
       ).toBeUndefined();
     })
   );
-
   it.live.each(unavailableSections)(
     "rejects unavailable entry section $sectionKey",
     (section) =>
@@ -35,7 +42,6 @@ describe("tryouts/runtime/sectionAttempt", () => {
         const error = yield* Effect.flip(
           requireInternalEntrySection([section], "entry")
         );
-
         expect(error).toMatchObject({
           _tag: "TryoutRuntimeError",
           code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",
@@ -43,12 +49,30 @@ describe("tryouts/runtime/sectionAttempt", () => {
       })
   );
   it.each([
-    { kind: "terminal attempt", code: "TRYOUT_ATTEMPT_NOT_ACTIVE" },
-    { kind: "expired attempt", code: "TRYOUT_ATTEMPT_NOT_ACTIVE" },
-    { kind: "expired section", code: "TRYOUT_SECTION_NOT_ACTIVE" },
-    { kind: "terminal section", code: "TRYOUT_SECTION_ALREADY_FINISHED" },
-    { kind: "parallel timer", code: "TRYOUT_SECTION_IN_PROGRESS" },
-    { kind: "last section expires", code: "TRYOUT_ATTEMPT_NOT_ACTIVE" },
+    {
+      kind: "terminal attempt",
+      code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+    },
+    {
+      kind: "expired attempt",
+      code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+    },
+    {
+      kind: "expired section",
+      code: "TRYOUT_SECTION_NOT_ACTIVE",
+    },
+    {
+      kind: "terminal section",
+      code: "TRYOUT_SECTION_ALREADY_FINISHED",
+    },
+    {
+      kind: "parallel timer",
+      code: "TRYOUT_SECTION_IN_PROGRESS",
+    },
+    {
+      kind: "last section expires",
+      code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+    },
   ])(
     "rejects $kind without publishing a second timer",
     async ({ kind, code }) => {
@@ -64,10 +88,16 @@ describe("tryouts/runtime/sectionAttempt", () => {
         await ctx.db.patch(seeded.attemptId, {
           scoringStrategy: "raw",
           scoreStatus: "official",
-          ...(kind === "expired attempt" ? { expiresAt: NOW } : {}),
+          ...(kind === "expired attempt"
+            ? {
+                expiresAt: NOW,
+              }
+            : {}),
         });
         if (kind === "expired section" || kind === "last section expires") {
-          await ctx.db.patch(seeded.sectionAttemptId, { expiresAt: NOW });
+          await ctx.db.patch(seeded.sectionAttemptId, {
+            expiresAt: NOW,
+          });
         }
         return seeded;
       });
@@ -82,11 +112,21 @@ describe("tryouts/runtime/sectionAttempt", () => {
             kind === "parallel timer" || kind === "last section expires"
               ? "another-section"
               : section.sectionKey;
-          return runConvexProgram(
-            startSectionAttempt(ctx, { attempt, now: NOW, sectionKey })
+          return Effect.runPromise(
+            startSectionAttempt({
+              attempt,
+              now: NOW,
+              sectionKey,
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
         })
-      ).rejects.toMatchObject({ data: { code } });
+      ).rejects.toMatchObject({
+        code,
+      });
       const stored = await t.query(async (ctx) => ({
         sections: await ctx.db.query("tryoutSectionAttempts").collect(),
         scores: await ctx.db.query("tryoutScores").collect(),
@@ -97,62 +137,71 @@ describe("tryouts/runtime/sectionAttempt", () => {
       expect(stored.jobs).toEqual([]);
     }
   );
-
-  it("rejects a store outage before creating the next section timer", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation(async (ctx) => {
-      const seeded = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "completed",
-        suffix: "timer-store-failure",
-      });
-      const attempt = await ctx.db.get(seeded.attemptId);
-      const snapshot = attempt?.sectionSnapshots[0];
-      if (!(attempt && snapshot)) {
-        throw new Error("Expected a frozen section.");
-      }
-      await ctx.db.patch(seeded.attemptId, {
-        completedSectionKeys: [snapshot.sectionKey],
-        sectionSnapshots: [
-          snapshot,
-          {
-            ...snapshot,
-            sectionIdentity: "next-section",
-            sectionKey: "next",
-            sectionOrder: 2,
-          },
-        ],
-        totalQuestions: 2,
-      });
-      return seeded;
-    });
-    const read = () =>
-      t.query(async (ctx) => ({
-        attempt: await ctx.db.get(fixture.attemptId),
-        sections: await ctx.db.query("tryoutSectionAttempts").collect(),
-        jobs: await ctx.db.system.query("_scheduled_functions").collect(),
-      }));
-    const before = await read();
-    await expect(
-      t.mutation(async (ctx) => {
-        const attempt = await ctx.db.get(fixture.attemptId);
-        if (!attempt) {
-          throw new Error("Expected a frozen attempt.");
+  it.each(["get", "query", "insert", "replace"] as const)(
+    "rolls back a %s outage while starting the next section timer",
+    async (operation) => {
+      const t = createConvexTestWithBetterAuth();
+      const fixture = await t.mutation(async (ctx) => {
+        const seeded = await seedTryoutContentAccessState(ctx, {
+          attemptStatus: "in-progress",
+          sectionStatus: "completed",
+          suffix: "timer-store-failure",
+        });
+        const attempt = await ctx.db.get(seeded.attemptId);
+        const snapshot = attempt?.sectionSnapshots[0];
+        if (!(attempt && snapshot)) {
+          throw new Error("Expected a frozen section.");
         }
-        vi.spyOn(ctx.db, "get").mockRejectedValueOnce(
-          new Error("private store outage")
-        );
-        return runConvexProgram(
-          startSectionAttempt(ctx, { attempt, now: NOW, sectionKey: "next" })
-        );
-      })
-    ).rejects.toHaveProperty("data", {
-      code: "TRYOUT_RUNTIME_FAILED",
-      message: "Unable to complete try-out runtime operation.",
-    });
-    expect(await read()).toEqual(before);
-  });
-
+        await ctx.db.patch(seeded.attemptId, {
+          completedSectionKeys: [snapshot.sectionKey],
+          sectionSnapshots: [
+            snapshot,
+            {
+              ...snapshot,
+              sectionIdentity: "next-section",
+              sectionKey: "next",
+              sectionOrder: 2,
+            },
+          ],
+          totalQuestions: 2,
+        });
+        return seeded;
+      });
+      const read = () =>
+        t.query(async (ctx) => ({
+          attempt: await ctx.db.get(fixture.attemptId),
+          sections: await ctx.db.query("tryoutSectionAttempts").collect(),
+          jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+        }));
+      const before = await read();
+      await expect(
+        t.mutation(async (ctx) => {
+          const attempt = await ctx.db.get(fixture.attemptId);
+          if (!attempt) {
+            throw new Error("Expected a frozen attempt.");
+          }
+          vi.spyOn(ctx.db, operation).mockImplementationOnce(() => {
+            throw new Error("private store outage");
+          });
+          return Effect.runPromise(
+            startSectionAttempt({
+              attempt,
+              now: NOW,
+              sectionKey: "next",
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          );
+        })
+      ).rejects.toMatchObject({
+        code: "TRYOUT_RUNTIME_FAILED",
+        message: "Unable to complete try-out runtime operation.",
+      });
+      expect(await read()).toEqual(before);
+    }
+  );
   it("requires an active timer and preserves a resumed timer", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {
@@ -167,31 +216,49 @@ describe("tryouts/runtime/sectionAttempt", () => {
         throw new Error("Expected a timed attempt.");
       }
       expect(
-        await runConvexProgram(
-          requireActiveSectionAttempt(ctx, {
+        await Effect.runPromise(
+          requireActiveSectionAttempt({
             attempt,
             sectionKey: section.sectionKey,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       ).toEqual(section);
       expect(
-        await runConvexProgram(
-          startSectionAttempt(ctx, {
+        await Effect.runPromise(
+          startSectionAttempt({
             attempt,
             now: NOW + 1000,
             sectionKey: section.sectionKey,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
-      ).toEqual({ kind: "started" });
+      ).toEqual({
+        kind: "started",
+      });
       expect(await ctx.db.get(section._id)).toEqual(section);
       await expect(
-        runConvexProgram(
-          requireActiveSectionAttempt(ctx, { attempt, sectionKey: "missing" })
+        Effect.runPromise(
+          requireActiveSectionAttempt({
+            attempt,
+            sectionKey: "missing",
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
-      ).rejects.toMatchObject({ data: { code: "TRYOUT_SECTION_NOT_ACTIVE" } });
+      ).rejects.toMatchObject({
+        code: "TRYOUT_SECTION_NOT_ACTIVE",
+      });
     });
   });
-
   it.each(["completed", "in-progress"] as const)(
     "starts the next section after the previous timer is %s",
     async (status) => {
@@ -221,13 +288,23 @@ describe("tryouts/runtime/sectionAttempt", () => {
             status === "completed" ? [snapshot.sectionKey] : [],
           totalQuestions: 2,
         });
-        await ctx.db.patch(fixture.sectionAttemptId, { expiresAt: NOW });
+        await ctx.db.patch(fixture.sectionAttemptId, {
+          expiresAt: NOW,
+        });
         const attempt = await ctx.db.get(fixture.attemptId);
         if (!attempt) {
           throw new Error("Expected a frozen attempt.");
         }
-        await runConvexProgram(
-          startSectionAttempt(ctx, { attempt, now: NOW, sectionKey: "next" })
+        await Effect.runPromise(
+          startSectionAttempt({
+            attempt,
+            now: NOW,
+            sectionKey: "next",
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
         return {
           attempt: await ctx.db.get(fixture.attemptId),

@@ -1,8 +1,9 @@
+import { RegisteredFunction } from "@confect/server";
 import workflowTest from "@convex-dev/workflow/test";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { requestAnalyticsErasure } from "@repo/backend/confect/analytics/erasure/request";
 import { cleanupSource } from "@repo/backend/confect/privacy/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -14,83 +15,79 @@ import { Data, Effect } from "effect";
 class WorkflowUnavailable extends Data.TaggedError("WorkflowUnavailable")<{
   readonly message: string;
 }> {}
-
 class AnalyticsErasureActionRejected extends Data.TaggedError(
   "AnalyticsErasureActionRejected"
 )<{
   readonly cause: unknown;
 }> {}
-
 describe("analytics erasure request", () => {
   afterEach(() => vi.restoreAllMocks());
   it.effect("admits erasure from the action boundary", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
-            Effect.promise(() =>
-              ctx.db.insert("users", {
-                authId: "erasure-request-user",
-                credits: 0,
-                creditsResetAt: 0,
-                email: "erasure-request@example.com",
-                name: "Erasure Request",
-                plan: "free",
-              })
+          ctx.db.insert("users", {
+            authId: "erasure-request-user",
+            credits: 0,
+            creditsResetAt: 0,
+            email: "erasure-request@example.com",
+            name: "Erasure Request",
+            plan: "free",
+          })
+        )
+      );
+      const startErasure = vi.fn(() => Effect.void);
+      yield* Effect.promise(() =>
+        t.action((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            requestAnalyticsErasure(userId, startErasure).pipe(
+              Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
             )
           )
         )
       );
-      const startErasure = vi.fn(() => Effect.void);
-
-      yield* Effect.promise(() =>
-        t.action((ctx) =>
-          runConvexProgram(requestAnalyticsErasure(ctx, userId, startErasure))
-        )
-      );
-
-      expect(startErasure).toHaveBeenCalledWith(expect.any(Object), userId);
+      expect(startErasure).toHaveBeenCalledWith(userId);
     })
   );
-
   it.effect("starts the durable erasure workflow", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       yield* Effect.sync(() => workflowTest.register(t));
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
-            Effect.promise(() =>
-              ctx.db.insert("users", {
-                authId: "durable-erasure-request-user",
-                credits: 0,
-                creditsResetAt: 0,
-                email: "durable-erasure-request@example.com",
-                name: "Durable Erasure Request",
-                plan: "free",
-              })
+          ctx.db.insert("users", {
+            authId: "durable-erasure-request-user",
+            credits: 0,
+            creditsResetAt: 0,
+            email: "durable-erasure-request@example.com",
+            name: "Durable Erasure Request",
+            plan: "free",
+          })
+        )
+      );
+      yield* Effect.promise(() =>
+        t.action((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            requestAnalyticsErasure(userId).pipe(
+              Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
             )
           )
         )
       );
-
-      yield* Effect.promise(() =>
-        t.action((ctx) =>
-          runConvexProgram(requestAnalyticsErasure(ctx, userId))
-        )
-      );
-
       const admittedWorkflows = yield* Effect.promise(() =>
-        t.action((ctx) =>
-          runConvexProgram(Effect.promise(() => workflow.list(ctx)))
-        )
+        t.action((ctx) => workflow.list(ctx))
       );
-
       expect(admittedWorkflows.page).toEqual([
         expect.objectContaining({
-          args: { userId },
-          context: { source: cleanupSource.consentOverlap },
+          args: {
+            userId,
+          },
+          context: {
+            source: cleanupSource.consentOverlap,
+          },
           name: getFunctionName(
             internal.analytics.erasure.workflow.eraseConsentOverlap
           ),
@@ -98,46 +95,50 @@ describe("analytics erasure request", () => {
       ]);
     })
   );
-
   it.effect("surfaces a typed failure when workflow admission fails", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
-            Effect.promise(() =>
-              ctx.db.insert("users", {
-                authId: "failed-erasure-request-user",
-                credits: 0,
-                creditsResetAt: 0,
-                email: "failed-erasure-request@example.com",
-                name: "Failed Erasure Request",
-                plan: "free",
-              })
-            )
-          )
+          ctx.db.insert("users", {
+            authId: "failed-erasure-request-user",
+            credits: 0,
+            creditsResetAt: 0,
+            email: "failed-erasure-request@example.com",
+            name: "Failed Erasure Request",
+            plan: "free",
+          })
         )
       );
       vi.spyOn(workflow, "start").mockRejectedValue(
-        new WorkflowUnavailable({ message: "workflow unavailable" })
+        new WorkflowUnavailable({
+          message: "workflow unavailable",
+        })
       );
-
       const failure = yield* Effect.flip(
         Effect.tryPromise({
-          catch: (cause) => new AnalyticsErasureActionRejected({ cause }),
+          catch: (cause) =>
+            new AnalyticsErasureActionRejected({
+              cause,
+            }),
           try: () =>
             t.action((ctx) =>
-              runConvexProgram(requestAnalyticsErasure(ctx, userId))
+              Effect.runPromiseWith(runtimeServices)(
+                requestAnalyticsErasure(userId).pipe(
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
+                )
+              )
             ),
         })
       );
       expect(failure).toMatchObject({
         _tag: "AnalyticsErasureActionRejected",
         cause: {
-          data: {
-            code: "ANALYTICS_ERASURE_REQUEST_FAILED",
-            message: expect.stringContaining("workflow unavailable"),
-          },
+          code: "ANALYTICS_ERASURE_REQUEST_FAILED",
+          message: expect.stringContaining("workflow unavailable"),
         },
       });
     })

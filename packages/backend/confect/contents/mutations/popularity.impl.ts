@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import {
   expireLearningPopularityWindowPage as expireLearningPopularityWindowPageProgram,
   scheduleLearningPopularityExpiries as scheduleLearningPopularityExpiriesProgram,
@@ -19,8 +18,7 @@ const pruneLearningPopularity = FunctionImpl.make(
   "pruneLearningPopularity",
   Effect.fn("contents.mutations.popularity.pruneLearningPopularity")(
     function* () {
-      const ctx = yield* MutationCtxService;
-      return yield* pruneLearningPopularityProgram(ctx);
+      return yield* pruneLearningPopularityProgram();
     }
   )
 );
@@ -30,8 +28,7 @@ const scheduleLearningPopularityExpiries = FunctionImpl.make(
   "scheduleLearningPopularityExpiries",
   Effect.fn("contents.mutations.popularity.scheduleLearningPopularityExpiries")(
     function* () {
-      const ctx = yield* MutationCtxService;
-      return yield* scheduleLearningPopularityExpiriesProgram(ctx);
+      return yield* scheduleLearningPopularityExpiriesProgram();
     }
   )
 );
@@ -42,8 +39,7 @@ const scheduleLearningPopularityRefreshes = FunctionImpl.make(
   Effect.fn(
     "contents.mutations.popularity.scheduleLearningPopularityRefreshes"
   )(function* () {
-    const ctx = yield* MutationCtxService;
-    return yield* scheduleLearningPopularityRefreshesProgram(ctx);
+    return yield* scheduleLearningPopularityRefreshesProgram();
   })
 );
 const refreshLearningPopularityWindowPage = FunctionImpl.make(
@@ -53,8 +49,7 @@ const refreshLearningPopularityWindowPage = FunctionImpl.make(
   Effect.fn(
     "contents.mutations.popularity.refreshLearningPopularityWindowPage"
   )(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* refreshLearningPopularityWindowPageProgram(ctx, args);
+    return yield* refreshLearningPopularityWindowPageProgram(args);
   })
 );
 const expireLearningPopularityWindowPage = FunctionImpl.make(
@@ -63,8 +58,7 @@ const expireLearningPopularityWindowPage = FunctionImpl.make(
   "expireLearningPopularityWindowPage",
   Effect.fn("contents.mutations.popularity.expireLearningPopularityWindowPage")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
-      return yield* expireLearningPopularityWindowPageProgram(ctx, args);
+      return yield* expireLearningPopularityWindowPageProgram(args);
     }
   )
 );

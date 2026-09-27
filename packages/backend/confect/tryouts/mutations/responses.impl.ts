@@ -1,7 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/tryouts/mutations/responses.spec";
 import { saveTryoutResponse } from "@repo/backend/confect/tryouts/response/write";
 import { Clock, Effect, Layer } from "effect";
@@ -12,11 +12,10 @@ const save = FunctionImpl.make(
   spec,
   "save",
   Effect.fn("tryouts.mutations.responses.save")(function* (args) {
-    const ctx = yield* MutationCtxService;
     return yield* Effect.gen(function* () {
-      const { appUser } = yield* requireAuth(ctx);
+      const { appUser } = yield* requireAuth();
       const now = yield* Clock.currentTimeMillis;
-      return yield* saveTryoutResponse(ctx, {
+      return yield* saveTryoutResponse({
         args,
         now,
         userId: appUser._id,
@@ -26,5 +25,6 @@ const save = FunctionImpl.make(
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(save),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

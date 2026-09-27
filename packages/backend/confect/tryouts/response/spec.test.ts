@@ -1,10 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { toTryoutResponseError } from "@repo/backend/confect/tryouts/response/spec";
-import { Effect } from "effect";
+import {
+  TryoutResponseErrorWire,
+  toTryoutResponseError,
+} from "@repo/backend/confect/tryouts/response/spec";
+import { Schema } from "effect";
 
 describe("tryouts/response/spec", () => {
-  it("hides unexpected storage details while retaining the internal cause", async () => {
+  it("hides unexpected storage details while retaining the internal cause", () => {
     const cause = new Error(
       "unique() exposed tryoutSectionAttempts [section-1, section-2]"
     );
@@ -18,11 +20,10 @@ describe("tryouts/response/spec", () => {
     expect(error.cause).toBe(cause);
     expect(error.message).not.toContain("tryoutSectionAttempts");
     expect(error.message).not.toContain("section-1");
-    await expect(runConvexProgram(Effect.fail(error))).rejects.toMatchObject({
-      data: {
-        code: "TRYOUT_RESPONSE_FAILED",
-        message: "Unable to save try-out response.",
-      },
+    expect(Schema.encodeSync(TryoutResponseErrorWire)(error)).toEqual({
+      _tag: "TryoutResponseError",
+      code: "TRYOUT_RESPONSE_FAILED",
+      message: "Unable to save try-out response.",
     });
   });
 });

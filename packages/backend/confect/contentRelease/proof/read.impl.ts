@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import {
   artifactBatchProgram,
   artifactPlanProgram,
@@ -16,8 +15,7 @@ const state = FunctionImpl.make(
   spec,
   "state",
   Effect.fn("contentRelease.proof.read.state")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* stateProgram(ctx, args.manifestHash, args.releaseId);
+    return yield* stateProgram(args.manifestHash, args.releaseId);
   })
 );
 const artifactPlan = FunctionImpl.make(
@@ -25,8 +23,7 @@ const artifactPlan = FunctionImpl.make(
   spec,
   "artifactPlan",
   Effect.fn("contentRelease.proof.read.artifactPlan")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* artifactPlanProgram(ctx, args.manifestHash, args.releaseId);
+    return yield* artifactPlanProgram(args.manifestHash, args.releaseId);
   })
 );
 const artifactBatch = FunctionImpl.make(
@@ -34,8 +31,7 @@ const artifactBatch = FunctionImpl.make(
   spec,
   "artifactBatch",
   Effect.fn("contentRelease.proof.read.artifactBatch")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* artifactBatchProgram(ctx, args.releaseId, args.batchIndex);
+    return yield* artifactBatchProgram(args.releaseId, args.batchIndex);
   })
 );
 const page = FunctionImpl.make(
@@ -43,8 +39,7 @@ const page = FunctionImpl.make(
   spec,
   "page",
   Effect.fn("contentRelease.proof.read.page")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* pageProgram(ctx, args.afterIndex, args.releaseId);
+    return yield* pageProgram(args.afterIndex, args.releaseId);
   })
 );
 const routePage = FunctionImpl.make(
@@ -52,8 +47,7 @@ const routePage = FunctionImpl.make(
   spec,
   "routePage",
   Effect.fn("contentRelease.proof.read.routePage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* routePageProgram(ctx, args.afterIndex, args.releaseId);
+    return yield* routePageProgram(args.afterIndex, args.releaseId);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

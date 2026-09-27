@@ -1,10 +1,11 @@
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   completeCustomerDeletionCheckpointProgram,
   deleteLocalCustomer,
   recordCustomerDeletionCheckpointProgram,
 } from "@repo/backend/confect/customers/deletion/billingState";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
@@ -23,58 +24,94 @@ it("binds an existing tombstone and refuses checkpoint identity changes", async 
       deletedAt: 1,
     })
   );
-  await t.mutation((ctx) =>
-    runConvexProgram(
-      completeCustomerDeletionCheckpointProgram(ctx, userId, "polar")
+  await t.mutation((_ctx) =>
+    Effect.runPromise(
+      completeCustomerDeletionCheckpointProgram(userId, "polar").pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, _ctx)
+        )
+      )
     )
   );
-  await t.mutation((ctx) =>
-    runConvexProgram(recordCustomerDeletionCheckpointProgram(ctx, "polar"))
+  await t.mutation((_ctx) =>
+    Effect.runPromise(
+      recordCustomerDeletionCheckpointProgram("polar").pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, _ctx)
+        )
+      )
+    )
   );
-  await t.mutation((ctx) =>
-    runConvexProgram(
-      recordCustomerDeletionCheckpointProgram(ctx, "polar", userId)
+  await t.mutation((_ctx) =>
+    Effect.runPromise(
+      recordCustomerDeletionCheckpointProgram("polar", userId).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, _ctx)
+        )
+      )
     )
   );
   expect(
     await t.query((ctx) => ctx.db.query("customerDeletionTombstones").unique())
-  ).toMatchObject({ polarCustomerId: "polar", cleanupUserId: userId });
+  ).toMatchObject({
+    polarCustomerId: "polar",
+    cleanupUserId: userId,
+  });
   await expect(
-    t.mutation((ctx) =>
-      runConvexProgram(
-        recordCustomerDeletionCheckpointProgram(ctx, "different", userId)
+    t.mutation((_ctx) =>
+      Effect.runPromise(
+        recordCustomerDeletionCheckpointProgram("different", userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, _ctx)
+          )
+        )
       )
     )
-  ).rejects.toMatchObject({ data: { code: "CUSTOMER_SYNC_IO_ERROR" } });
+  ).rejects.toMatchObject({
+    code: "CUSTOMER_SYNC_IO_ERROR",
+  });
   await expect(
-    t.mutation((ctx) =>
-      runConvexProgram(
-        completeCustomerDeletionCheckpointProgram(ctx, userId, "different")
+    t.mutation((_ctx) =>
+      Effect.runPromise(
+        completeCustomerDeletionCheckpointProgram(userId, "different").pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, _ctx)
+          )
+        )
       )
     )
-  ).rejects.toMatchObject({ data: { code: "CUSTOMER_SYNC_IO_ERROR" } });
-  await t.mutation((ctx) =>
-    runConvexProgram(
-      completeCustomerDeletionCheckpointProgram(ctx, userId, "polar")
+  ).rejects.toMatchObject({
+    code: "CUSTOMER_SYNC_IO_ERROR",
+  });
+  await t.mutation((_ctx) =>
+    Effect.runPromise(
+      completeCustomerDeletionCheckpointProgram(userId, "polar").pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, _ctx)
+        )
+      )
     )
   );
   expect(
     await t.query((ctx) => ctx.db.query("customerDeletionTombstones").unique())
   ).not.toHaveProperty("cleanupUserId");
 });
-
 it("returns a typed failure when a local billing drain cannot commit", async () => {
   const t = convexTest(schema, convexModules);
   const result = await t.action((ctx) => {
     vi.spyOn(ctx, "runMutation").mockRejectedValueOnce(
       new Error("database unavailable")
     );
-    return runConvexProgram(
-      deleteLocalCustomer(ctx, "polar").pipe(
+    return Effect.runPromise(
+      deleteLocalCustomer("polar").pipe(
         Effect.match({
-          onFailure: (error) => ({ ...error, message: error.message }),
+          onFailure: (error) => ({
+            ...error,
+            message: error.message,
+          }),
           onSuccess: () => null,
-        })
+        }),
+        Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
       )
     );
   });
@@ -84,19 +121,24 @@ it("returns a typed failure when a local billing drain cannot commit", async () 
     message: "Failed to delete local customer row",
   });
 });
-
 it("preserves a typed checkpoint failure without deleting billing data", async () => {
   const t = convexTest(schema, convexModules);
   const failure = await t.mutation((ctx) => {
     vi.spyOn(ctx.db, "insert").mockRejectedValueOnce(
       new Error("database unavailable")
     );
-    return runConvexProgram(
-      recordCustomerDeletionCheckpointProgram(ctx, "polar").pipe(
+    return Effect.runPromise(
+      recordCustomerDeletionCheckpointProgram("polar").pipe(
         Effect.match({
-          onFailure: (error) => ({ ...error, message: error.message }),
+          onFailure: (error) => ({
+            ...error,
+            message: error.message,
+          }),
           onSuccess: () => null,
-        })
+        }),
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
       )
     );
   });
@@ -109,7 +151,6 @@ it("preserves a typed checkpoint failure without deleting billing data", async (
     await t.query((ctx) => ctx.db.query("customerDeletionTombstones").collect())
   ).toEqual([]);
 });
-
 it("preserves billing rows when the native deletion mutation rejects stored metadata", async () => {
   const t = convexTest(schema, convexModules);
   const customerId = await t.mutation(async (ctx) => {
@@ -125,15 +166,21 @@ it("preserves billing rows when the native deletion mutation rejects stored meta
       id: "polar-invalid",
       externalId: "invalid-billing",
       userId,
-      metadata: { value: Number.NaN },
+      metadata: {
+        value: Number.NaN,
+      },
     });
   });
   const before = await t.query((ctx) => ctx.db.get(customerId));
   await expect(
-    t.action((ctx) =>
-      runConvexProgram(deleteLocalCustomer(ctx, "polar-invalid"))
+    t.action((_ctx) =>
+      Effect.runPromise(
+        deleteLocalCustomer("polar-invalid").pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, _ctx))
+        )
+      )
     )
-  ).rejects.toHaveProperty("data", {
+  ).rejects.toMatchObject({
     code: "CUSTOMER_SYNC_IO_ERROR",
     message: "Failed to delete local customer row",
   });

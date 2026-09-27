@@ -1,7 +1,9 @@
 "use client";
+
+import { useMutation } from "@confect/react";
 import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { SchoolClassVisibility } from "@repo/backend/confect/classes/schema";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -19,7 +21,6 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
@@ -45,28 +46,39 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const router = useRouter();
   const schoolSlug = useSchool((state) => state.school.slug);
   const [isPending, startTransition] = useTransition();
-  const joinClass = useMutation(api.classes.mutations.joinClass);
-  const joinPublicClass = useMutation(api.classes.mutations.joinPublicClass);
+  const joinClass = useMutation(refs.public.classes.mutations.joinClass);
+  const joinPublicClass = useMutation(
+    refs.public.classes.mutations.joinPublicClass
+  );
   const isPublic = visibility === "public";
   function handlePublicJoin() {
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise(async () => {
-          await joinPublicClass({ classId });
-          router.replace(pathname);
-          router.refresh();
-        }).pipe(
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            reportClientException(error, {
-              source: "school-class-join-public",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  toast.error(t("join-class-failed"));
-                })
-              )
-            )
-          )
+        Effect.tryPromise(() =>
+          joinPublicClass({
+            classId,
+          })
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap(() =>
+            Effect.sync(() => {
+              router.replace(pathname);
+              router.refresh();
+            })
+          ),
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "school-class-join-public",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(t("join-class-failed"));
+                  })
+                )
+              ),
+            onSuccess: () => Effect.void,
+          })
         )
       );
     });
@@ -78,22 +90,27 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(async () => {
-          await joinClass(value);
-          router.replace(pathname);
-          router.refresh();
-        }).pipe(
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            reportClientException(error, {
-              source: "school-class-join-private",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  toast.error(t("join-class-failed"));
-                })
-              )
-            )
-          )
+        Effect.tryPromise(() => joinClass(value)).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap(() =>
+            Effect.sync(() => {
+              router.replace(pathname);
+              router.refresh();
+            })
+          ),
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "school-class-join-private",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(t("join-class-failed"));
+                  })
+                )
+              ),
+            onSuccess: () => Effect.void,
+          })
         )
       );
     },

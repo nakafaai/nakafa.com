@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import {
   onboardingFocuses,
   onboardingRegions,
@@ -79,4 +78,3 @@ export class OnboardingProfileError extends Schema.TaggedError<OnboardingProfile
 
 /** Maps unknown database failures into the stable onboarding contract. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const OnboardingProfileErrorWire = failureWire(OnboardingProfileError);

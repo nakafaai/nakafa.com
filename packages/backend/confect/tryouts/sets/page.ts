@@ -1,19 +1,19 @@
 import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import type { ListArgs } from "@repo/backend/confect/tryouts/sets/spec";
 import { PublishedSetPaginationError } from "@repo/backend/confect/tryouts/sets/spec";
 import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
 import { toPublicPublishedSet } from "@repo/backend/content/tryout/published";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 const SIGNED_CURSOR_PREFIX = "signed:";
 /** One authored set joined with the current user's optional progress. */
 export interface PublishedSetRow {
   readonly durationSeconds: number;
-  readonly progress: Doc<"tryoutSetProgress"> | null;
+  readonly progress: Docs["tryoutSetProgress"] | null;
   readonly set: TryoutSet;
 }
 /** Stable client failure for invalid signed-catalog pagination. */

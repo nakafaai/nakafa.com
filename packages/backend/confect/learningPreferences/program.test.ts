@@ -1,14 +1,18 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { makeProgramSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { setPreferredCurriculumProgram } from "@repo/backend/confect/learningPreferences/impl";
 import {
   listCurriculumPrograms,
   readCurrentCurriculumProgram,
   saveCurriculumProgram,
 } from "@repo/backend/confect/learningPreferences/program";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -26,43 +30,80 @@ import { Effect, Schema } from "effect";
 describe("learningPreferences/program", () => {
   it.effect("returns no curriculum for a retired saved key", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const test = createConvexTestWithBetterAuth();
       const data = yield* makeProgramSnapshotData();
-      yield* Effect.promise(() => activateProgramSnapshot(test, data));
+      yield* Effect.promise(() =>
+        test.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateProgramSnapshot(data).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
       const userId = yield* Effect.promise(() =>
         test.mutation(async (ctx) => {
-          const user = await seedAuthenticatedUser(ctx, { now: 1 });
-          await runConvexProgram(
+          const user = await seedAuthenticatedUser(ctx, {
+            now: 1,
+          });
+          await Effect.runPromiseWith(runtimeServices)(
             setPreferredCurriculumProgram({
-              ctx,
               now: 1,
               programKey: "retired-program",
               userId: user.userId,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
           return user.userId;
         })
       );
       expect(
         yield* Effect.promise(() =>
-          test.query((ctx) =>
-            runConvexProgram(readCurrentCurriculumProgram(ctx, "en", userId))
+          test.query((_ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readCurrentCurriculumProgram("en", userId).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+                )
+              )
+            )
           )
         )
       ).toBeNull();
     })
   );
-
   it.effect(
     "maps preference read and write failures to the curriculum error contract",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const test = createConvexTestWithBetterAuth();
         const data = yield* makeProgramSnapshotData();
-        yield* Effect.promise(() => activateProgramSnapshot(test, data));
+        yield* Effect.promise(() =>
+          test.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         const userId = yield* Effect.promise(() =>
           test.mutation(
-            async (ctx) => (await seedAuthenticatedUser(ctx, { now: 1 })).userId
+            async (ctx) =>
+              (
+                await seedAuthenticatedUser(ctx, {
+                  now: 1,
+                })
+              ).userId
           )
         );
         yield* Effect.promise(() =>
@@ -70,10 +111,13 @@ describe("learningPreferences/program", () => {
             vi.spyOn(ctx.db, "query").mockImplementation(() => {
               throw new TypeError("private query detail");
             });
-            const failure = await runConvexProgram(
-              readCurrentCurriculumProgram(ctx, "en", userId).pipe(
+            const failure = await Effect.runPromiseWith(runtimeServices)(
+              readCurrentCurriculumProgram("en", userId).pipe(
                 Effect.flip,
-                Effect.orDie
+                Effect.orDie,
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
               )
             );
             expect(failure).toMatchObject({
@@ -90,13 +134,14 @@ describe("learningPreferences/program", () => {
             vi.spyOn(ctx.db, "insert").mockRejectedValue(
               "private write detail"
             );
-            const failure = await runConvexProgram(
-              saveCurriculumProgram(
-                ctx,
-                "en",
-                "technical-program-1",
-                userId
-              ).pipe(Effect.flip, Effect.orDie)
+            const failure = await Effect.runPromiseWith(runtimeServices)(
+              saveCurriculumProgram("en", "technical-program-1", userId).pipe(
+                Effect.flip,
+                Effect.orDie,
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             );
             expect(failure).toMatchObject({
               _tag: "CurriculumPreferenceError",
@@ -109,14 +154,24 @@ describe("learningPreferences/program", () => {
         );
       })
   );
-
   it.effect(
     "rejects a signed program row that loses its requested translation",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const test = convexTest(schema, convexModules);
         const data = yield* makeProgramSnapshotData([makeTechnicalProgram(1)]);
-        yield* Effect.promise(() => activateProgramSnapshot(test, data));
+        yield* Effect.promise(() =>
+          test.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         const original = makeTechnicalProgram(1);
         const program = yield* Schema.decodeUnknownEffect(
           LearningProgramSchema
@@ -144,36 +199,51 @@ describe("learningPreferences/program", () => {
         );
         yield* Effect.promise(() =>
           expect(
-            test.query((ctx) =>
-              runConvexProgram(listCurriculumPrograms(ctx, "en"))
+            test.query((_ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                listCurriculumPrograms("en").pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+                  )
+                )
+              )
             )
           ).rejects.toMatchObject({
-            data: {
-              code: "CURRICULUM_PREFERENCE_IO_FAILED",
-              message:
-                "Curriculum program technical-program-1 has no en translation.",
-            },
+            code: "CURRICULUM_PREFERENCE_IO_FAILED",
+            message:
+              "Curriculum program technical-program-1 has no en translation.",
           })
         );
       })
   );
-
   it.effect("fails closed when no signed program snapshot is active", () => {
     const t = convexTest(schema, convexModules);
-
     return Effect.promise(() =>
       expect(
-        t.query((ctx) => runConvexProgram(listCurriculumPrograms(ctx, "en")))
-      ).rejects.toThrow("CONTENT_RELEASE_MISSING")
+        t.query((_ctx) =>
+          Effect.runPromise(
+            listCurriculumPrograms("en").pipe(
+              Effect.provide(
+                ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+              )
+            )
+          )
+        )
+      ).rejects.toMatchObject({
+        code: "CONTENT_RELEASE_MISSING",
+      })
     );
   });
-
   it.effect(
     "filters program kinds before enforcing the curriculum preference limit",
     () =>
       Effect.gen(function* () {
-        const unrelated = Array.from({ length: 51 }, (_, index) =>
-          makeTechnicalProgram(index + 1, "admission-exam")
+        const runtimeServices = yield* Effect.context<never>();
+        const unrelated = Array.from(
+          {
+            length: 51,
+          },
+          (_, index) => makeTechnicalProgram(index + 1, "admission-exam")
         );
         const curricula = [makeTechnicalProgram(52), makeTechnicalProgram(53)];
         const data = yield* makeProgramSnapshotData([
@@ -181,36 +251,73 @@ describe("learningPreferences/program", () => {
           ...curricula,
         ]);
         const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateProgramSnapshot(t, data, 16));
-
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data, 16).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         yield* Effect.promise(() =>
           expect(
-            t.query((ctx) =>
-              runConvexProgram(listCurriculumPrograms(ctx, "en"))
+            t.query((_ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                listCurriculumPrograms("en").pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+                  )
+                )
+              )
             )
           ).resolves.toMatchObject([
-            { key: "technical-program-52" },
-            { key: "technical-program-53" },
+            {
+              key: "technical-program-52",
+            },
+            {
+              key: "technical-program-53",
+            },
           ])
         );
       })
   );
-
   it.effect(
     "rejects a published preference list beyond its bounded UI contract",
     () =>
       Effect.gen(function* () {
-        const programs = Array.from({ length: 51 }, (_, index) =>
-          makeTechnicalProgram(index + 1)
+        const runtimeServices = yield* Effect.context<never>();
+        const programs = Array.from(
+          {
+            length: 51,
+          },
+          (_, index) => makeTechnicalProgram(index + 1)
         );
         const data = yield* makeProgramSnapshotData(programs);
         const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateProgramSnapshot(t, data, 16));
-
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data, 16).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         yield* Effect.promise(() =>
           expect(
-            t.query((ctx) =>
-              runConvexProgram(listCurriculumPrograms(ctx, "en"))
+            t.query((_ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                listCurriculumPrograms("en").pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+                  )
+                )
+              )
             )
           ).rejects.toThrow("Curriculum program catalog exceeds 50 rows.")
         );

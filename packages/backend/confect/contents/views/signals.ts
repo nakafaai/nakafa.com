@@ -1,9 +1,10 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
-import type {
-  ScheduleContentAnalyticsPartitionArgs,
-  ScheduleContentAnalyticsPartitionResult,
-} from "@repo/backend/confect/contents/analytics/spec";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import {
   createCanonicalLearningContext,
   type LearningContextStorage,
@@ -19,18 +20,7 @@ import {
   toContentViewIoError,
 } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type { FunctionReference } from "convex/server";
-import { Effect, flow, Struct } from "effect";
-
-/** Generated internal mutation reference accepted by Convex's scheduler. */
-export type ScheduleContentAnalyticsPartitionReference = FunctionReference<
-  "mutation",
-  "internal",
-  ScheduleContentAnalyticsPartitionArgs,
-  ScheduleContentAnalyticsPartitionResult
->;
+import { Duration, Effect, flow, Struct } from "effect";
 
 /** Creates one popularity signal scope from verified learning-context storage. */
 function createSignalScope(
@@ -57,7 +47,6 @@ function createSignalScopes(context: LearningContextStorage) {
 /** Loads an existing viewer signal for one content/context/day identity. */
 const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
   function* (
-    db: MutationCtx["db"],
     scope: ReturnType<typeof createSignalScopes>[number],
     input: {
       readonly contentId: ContentViewTarget["content_id"];
@@ -65,7 +54,7 @@ const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
       readonly viewerKey: string;
     }
   ) {
-    const database = DatabaseReader.make(databaseSchema, db);
+    const database = yield* DatabaseReader;
     return yield* database
       .table("learningPopularityViewerSignals")
       .get(
@@ -87,16 +76,15 @@ const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
 /** Inserts one daily popularity signal if the viewer has not contributed yet. */
 const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
   function* (
-    db: MutationCtx["db"],
     route: ContentViewTarget,
     args: RecordContentViewArgs,
     scope: ReturnType<typeof createSignalScopes>[number],
     input: {
       readonly now: number;
-      readonly userId?: Doc<"users">["_id"];
+      readonly userId?: Docs["users"]["_id"];
     }
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, db);
+    const writer = yield* DatabaseWriter;
     const signalDay = getPopularitySignalDay(input.now);
     const deviceViewerKey = createPopularityViewerKey({
       deviceId: args.deviceId,
@@ -105,7 +93,7 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
       deviceId: args.deviceId,
       ...Struct.pick(input, ["userId"]),
     });
-    const existingSignal = yield* loadViewerSignal(db, scope, {
+    const existingSignal = yield* loadViewerSignal(scope, {
       contentId: route.content_id,
       signalDay,
       viewerKey,
@@ -114,7 +102,7 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
       return null;
     }
     if (input.userId) {
-      const existingDeviceSignal = yield* loadViewerSignal(db, scope, {
+      const existingDeviceSignal = yield* loadViewerSignal(scope, {
         contentId: route.content_id,
         signalDay,
         viewerKey: deviceViewerKey,
@@ -158,7 +146,9 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
         lensId: route.lensId,
         locale: args.locale,
         ...(route.kind === "curriculum-lesson"
-          ? { materialDomain: route.materialDomain }
+          ? {
+              materialDomain: route.materialDomain,
+            }
           : {}),
         partition,
         route: route.route,
@@ -179,18 +169,17 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
 export const enqueuePopularitySignals = Effect.fn(
   "contents.views.enqueuePopularitySignals"
 )(function* (
-  db: MutationCtx["db"],
   route: ContentViewTarget,
   args: RecordContentViewArgs,
   context: LearningContextStorage,
   input: {
     readonly now: number;
-    readonly userId?: Doc<"users">["_id"];
+    readonly userId?: Docs["users"]["_id"];
   }
 ) {
   const partitions = new Set<number>();
   for (const scope of createSignalScopes(context)) {
-    const partition = yield* enqueueSignalScope(db, route, args, scope, input);
+    const partition = yield* enqueueSignalScope(route, args, scope, input);
     if (partition !== null) {
       partitions.add(partition);
     }
@@ -201,18 +190,16 @@ export const enqueuePopularitySignals = Effect.fn(
 /** Schedules bounded popularity processing for every newly enqueued partition. */
 export const schedulePopularityPartitions = Effect.fn(
   "contents.views.schedulePopularityPartitions"
-)(function* (
-  scheduler: MutationCtx["scheduler"],
-  partitions: readonly number[],
-  scheduleAnalyticsPartition: ScheduleContentAnalyticsPartitionReference
-) {
+)(function* (partitions: readonly number[]) {
+  const scheduler = yield* Scheduler;
   for (const partition of partitions) {
-    yield* Effect.tryPromise({
-      try: () =>
-        scheduler.runAfter(0, scheduleAnalyticsPartition, {
-          partition,
-        }),
-      catch: toContentViewIoError,
-    });
+    yield* scheduler.runAfter(
+      Duration.zero,
+      refs.internal.contents.mutations.analytics
+        .scheduleContentAnalyticsPartition,
+      {
+        partition,
+      }
+    );
   }
 });

@@ -1,4 +1,3 @@
-import { DatabaseReader } from "@confect/server";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   type PageKey,
@@ -6,7 +5,7 @@ import {
   type PublicPageProjection,
 } from "@nakafa/aksara-contracts/projection/page";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { decodeProjectionJson } from "@repo/backend/confect/contentRelease/parse";
 import {
@@ -15,10 +14,9 @@ import {
 } from "@repo/backend/confect/emails/welcome/impl";
 import type { welcomeIntentInputValidator } from "@repo/backend/confect/emails/welcome/schema";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { readPageCatalog } from "@repo/backend/content/publication/page";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, type Schema } from "effect";
 
 const PRIVACY_POLICY_PAGE_KEY = PageKeySchema.make("privacy-policy");
@@ -96,8 +94,8 @@ export type WelcomeIntentInput = Schema.Schema.Type<
 export const readWelcomeIntentInput = Effect.fn(
   "emails.welcome.readIntentInput"
 )(
-  function* (ctx: QueryCtx, intentId: Id<"welcomeEmailIntents">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (intentId: Id<"welcomeEmailIntents">) {
+    const database = yield* DatabaseReader;
     const intent = yield* database
       .table("welcomeEmailIntents")
       .get(intentId)
@@ -122,7 +120,7 @@ export const readWelcomeIntentInput = Effect.fn(
       return yield* deferWelcomeIntent();
     }
     const catalog = yield* readPageCatalog().pipe(
-      Effect.provide(convexPublicationLayer(ctx))
+      Effect.provide(publicationLayer)
     );
     const links = yield* resolveWelcomeEmailLinks(
       catalog,

@@ -2,7 +2,7 @@
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import type { DataPart } from "@repo/ai/schema/data";
+import type { DataPart } from "@repo/backend/confect/nina/contract/data";
 import {
   Collapsible,
   CollapsibleContent,

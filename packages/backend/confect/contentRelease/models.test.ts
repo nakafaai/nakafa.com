@@ -1,4 +1,8 @@
 import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
+import {
   afterEach,
   assert,
   beforeEach,
@@ -8,13 +12,13 @@ import {
 } from "@effect/vitest";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { abortProgram } from "@repo/backend/confect/contentRelease/abort";
 import {
   readModelStatus,
   restartModelBuild,
 } from "@repo/backend/confect/contentRelease/models";
 import { MODEL_BUILD_PAGE_ROWS } from "@repo/backend/confect/contentRelease/models/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -30,10 +34,10 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
 const prepare = internal.contentRelease.activate.prepare;
-
 const activationArgs = {
   manifestHash: CANDIDATE.manifestHash,
   releaseId: CANDIDATE.releaseId,
@@ -45,10 +49,16 @@ async function seedScopedPair(
   ctx: MutationCtx,
   families: readonly ContentFamily[]
 ) {
-  const scope = PublicationScopeSchema.make({ families, snapshots: [] });
+  const scope = PublicationScopeSchema.make({
+    families,
+    snapshots: [],
+  });
   await insertZeroRelease(ctx, {
     ...CANDIDATE,
-    ownership: { base: [], result: families },
+    ownership: {
+      base: [],
+      result: families,
+    },
     role: "candidate",
     scope,
     status: "verified",
@@ -57,7 +67,10 @@ async function seedScopedPair(
     ...RECOVERY,
     base: CANDIDATE,
     originReleaseId: CANDIDATE.releaseId,
-    ownership: { base: families, result: [] },
+    ownership: {
+      base: families,
+      result: [],
+    },
     role: "recovery",
     scope,
     status: "verified",
@@ -68,11 +81,9 @@ async function seedScopedPair(
     recovery: RECOVERY,
   });
 }
-
 describe("contentRelease/models", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
-
   it.each(["slot", "base"] as const)(
     "rejects a corrupted model %s before writing the inactive article buffer",
     async (corruption) => {
@@ -84,12 +95,17 @@ describe("contentRelease/models", () => {
         assert(build);
         if (corruption === "slot") {
           await ctx.db.patch(build._id, {
-            slots: { ...build.slots, articleTargetSlot: "blue" },
+            slots: {
+              ...build.slots,
+              articleTargetSlot: "blue",
+            },
           });
         } else {
           const state = await ctx.db.query("contentState").unique();
           assert(state);
-          await ctx.db.patch(state._id, { activeSequence: 1 });
+          await ctx.db.patch(state._id, {
+            activeSequence: 1,
+          });
         }
         return build.generation;
       });
@@ -98,7 +114,11 @@ describe("contentRelease/models", () => {
           generation,
           releaseId: CANDIDATE.releaseId,
         })
-      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STALE_BASE" } });
+      ).rejects.toMatchObject({
+        data: {
+          code: "CONTENT_RELEASE_STALE_BASE",
+        },
+      });
       const state = await t.query(async (ctx) => ({
         content: await ctx.db.query("contentState").unique(),
         articles: await ctx.db.query("articleCatalog").collect(),
@@ -111,7 +131,6 @@ describe("contentRelease/models", () => {
       expect(state.content).not.toHaveProperty("activeReleaseId");
     }
   );
-
   it("rejects an unfinished model build that lost its scheduled continuation", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => seedScopedPair(ctx, ["article"]));
@@ -122,18 +141,23 @@ describe("contentRelease/models", () => {
     await t.mutation(async (ctx) => {
       const build = await ctx.db.query("contentModelBuilds").unique();
       assert(build);
-      await ctx.db.patch(build._id, { syncJobId: undefined });
+      await ctx.db.patch(build._id, {
+        syncJobId: undefined,
+      });
     });
     await expect(
       t.query(internal.contentRelease.models.status, {
         releaseId: CANDIDATE.releaseId,
       })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+      },
+    });
     expect(
       await t.query((ctx) => ctx.db.query("contentState").unique())
     ).toEqual(before);
   });
-
   it("restarts a fenced build after Convex retires its terminal scheduler record", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => seedScopedPair(ctx, ["article"]));
@@ -149,39 +173,53 @@ describe("contentRelease/models", () => {
     // keeps them forever, so represent pruning at the real system-reader seam.
     const failed = await t.query((ctx) => {
       vi.spyOn(ctx.db.system, "get").mockResolvedValueOnce(null);
-      return runConvexProgram(readModelStatus(ctx, CANDIDATE.releaseId));
+      return Effect.runPromise(
+        readModelStatus(CANDIDATE.releaseId).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
+      );
     });
     assert(failed.phase === "failed");
     const restarted = await t.mutation((ctx) => {
       vi.spyOn(ctx.db.system, "get").mockResolvedValueOnce(null);
-      return runConvexProgram(
-        restartModelBuild(ctx, {
+      return Effect.runPromise(
+        restartModelBuild({
           expectedGeneration: failed.syncGeneration,
           expectedJobId: failed.syncJobId,
           releaseId: CANDIDATE.releaseId,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
     });
-    expect(restarted).toMatchObject({ status: "restarted", syncGeneration: 2 });
+    expect(restarted).toMatchObject({
+      status: "restarted",
+      syncGeneration: 2,
+    });
     await expect(
       t.query(internal.contentRelease.models.status, {
         releaseId: CANDIDATE.releaseId,
       })
-    ).resolves.toMatchObject({ phase: "building", syncGeneration: 2 });
+    ).resolves.toMatchObject({
+      phase: "building",
+      syncGeneration: 2,
+    });
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     await expect(
       t.query(internal.contentRelease.models.status, {
         releaseId: CANDIDATE.releaseId,
       })
-    ).resolves.toMatchObject({ phase: "ready" });
+    ).resolves.toMatchObject({
+      phase: "ready",
+    });
   });
-
   it.each(["page", "question"] as const)(
     "claims unchanged model buffers immediately for %s releases",
     async (family) => {
       const t = convexTest(schema, convexModules);
       await t.mutation((ctx) => seedScopedPair(ctx, [family]));
-
       await expect(t.mutation(prepare, activationArgs)).resolves.toEqual({
         kind: "prepared",
       });
@@ -203,7 +241,6 @@ describe("contentRelease/models", () => {
         },
       });
       expect(prepared.state?.activeReleaseId).toBeUndefined();
-
       await expect(t.mutation(activate, activationArgs)).resolves.toEqual({
         kind: "activated",
         receipt: expectedReceipt(CANDIDATE),
@@ -230,7 +267,6 @@ describe("contentRelease/models", () => {
       });
     }
   );
-
   it("clears multiple pages of abandoned search rows before switching article-owned buffers", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -250,7 +286,6 @@ describe("contentRelease/models", () => {
       }
     });
     await t.mutation(prepare, activationArgs);
-
     const building = await t.run(async (ctx) => ({
       build: await ctx.db.query("contentModelBuilds").unique(),
       state: await ctx.db.query("contentState").unique(),
@@ -282,7 +317,9 @@ describe("contentRelease/models", () => {
         expectedGeneration: building.build.generation,
         expectedJobId: building.build.syncJobId,
       })
-    ).resolves.toEqual({ status: "stale" });
+    ).resolves.toEqual({
+      status: "stale",
+    });
     expect(
       await t.query((ctx) => ctx.db.query("contentModelBuilds").unique())
     ).toEqual(building.build);
@@ -295,7 +332,6 @@ describe("contentRelease/models", () => {
     expect(
       await t.query((ctx) => ctx.db.query("contentModelBuilds").unique())
     ).toEqual(building.build);
-
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     await expect(
       t.query((ctx) => ctx.db.query("contentIndex").collect())
@@ -315,7 +351,6 @@ describe("contentRelease/models", () => {
       materialSlot: "blue",
       searchSlot: "blue",
     });
-
     await t.mutation(activate, activationArgs);
     expect(
       await t.run((ctx) => ctx.db.query("contentState").unique())
@@ -326,23 +361,36 @@ describe("contentRelease/models", () => {
       searchSlot: "green",
     });
   });
-
   it("deletes an abandoned build without selecting its target buffers", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => seedScopedPair(ctx, ["article"]));
     await t.mutation(prepare, activationArgs);
-
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(abortProgram(ctx, RECOVERY.releaseId))
+        Effect.runPromise(
+          abortProgram(RECOVERY.releaseId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
-    ).resolves.toMatchObject({ complete: true });
+    ).resolves.toMatchObject({
+      complete: true,
+    });
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(abortProgram(ctx, CANDIDATE.releaseId))
+        Effect.runPromise(
+          abortProgram(CANDIDATE.releaseId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
-    ).resolves.toMatchObject({ complete: true });
-
+    ).resolves.toMatchObject({
+      complete: true,
+    });
     const abandoned = await t.run(async (ctx) => ({
       build: await ctx.db.query("contentModelBuilds").unique(),
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
@@ -358,7 +406,6 @@ describe("contentRelease/models", () => {
     expect(abandoned.state?.activeReleaseId).toBeUndefined();
     expect(abandoned.state?.candidateReleaseId).toBeUndefined();
     expect(abandoned.state?.recoveryReleaseId).toBeUndefined();
-
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     expect(
       await t.run((ctx) => ctx.db.query("contentState").unique())
@@ -380,12 +427,17 @@ describe("contentRelease/models", () => {
         if (drift === "base") {
           const state = await ctx.db.query("contentState").unique();
           assert(state);
-          await ctx.db.patch(state._id, { activeSequence: 1 });
+          await ctx.db.patch(state._id, {
+            activeSequence: 1,
+          });
         } else {
           const build = await ctx.db.query("contentModelBuilds").unique();
           assert(build);
           await ctx.db.patch(build._id, {
-            slots: { ...build.slots, articleTargetSlot: "blue" },
+            slots: {
+              ...build.slots,
+              articleTargetSlot: "blue",
+            },
           });
         }
       });
@@ -402,7 +454,6 @@ describe("contentRelease/models", () => {
       ).resolves.toEqual([]);
     }
   );
-
   it("refuses foreign status reads and resumes after candidate verification is lost", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => seedScopedPair(ctx, ["article"]));
@@ -411,7 +462,11 @@ describe("contentRelease/models", () => {
       t.query(internal.contentRelease.models.status, {
         releaseId: RECOVERY.releaseId,
       })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+      },
+    });
     const generation = await t.mutation(async (ctx) => {
       const build = await ctx.db.query("contentModelBuilds").unique();
       const candidate = await ctx.db
@@ -421,7 +476,9 @@ describe("contentRelease/models", () => {
         )
         .unique();
       assert(build && candidate);
-      await ctx.db.patch(candidate._id, { status: "verifying" });
+      await ctx.db.patch(candidate._id, {
+        status: "verifying",
+      });
       return build.generation;
     });
     await expect(
@@ -429,7 +486,11 @@ describe("contentRelease/models", () => {
         releaseId: CANDIDATE.releaseId,
         generation,
       })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+      },
+    });
     await expect(
       t.query((ctx) => ctx.db.query("articleCatalog").collect())
     ).resolves.toEqual([]);

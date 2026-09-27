@@ -1,9 +1,11 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
+import type { Ref } from "@confect/core";
+
+import type refs from "@repo/backend/confect/_generated/refs";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { useConvexAuth } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
+
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -22,14 +24,14 @@ import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation.client";
 interface TryoutHubClientProps {
   locale: Locale;
   page: {
-    readonly countries: FunctionReturnType<
-      typeof api.tryouts.queries.catalog.getHubPage
+    readonly countries: Ref.Returns<
+      typeof refs.public.tryouts.queries.catalog.getHubPage
     >["countries"];
   };
 }
 
-type HubCountry = FunctionReturnType<
-  typeof api.tryouts.queries.catalog.getHubPage
+type HubCountry = Ref.Returns<
+  typeof refs.public.tryouts.queries.catalog.getHubPage
 >["countries"][number];
 
 /** Renders the realtime country-first try-out hub from Convex. */

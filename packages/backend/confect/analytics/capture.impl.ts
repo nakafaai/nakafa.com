@@ -1,15 +1,11 @@
-import {
-  DatabaseReader,
-  FunctionImpl,
-  GroupImpl,
-  QueryRunner,
-} from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx as ActionCtxService,
-  QueryCtx as QueryCtxService,
+  DatabaseReader,
+  QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import {
   deliverProductAnalyticsProgram,
@@ -27,9 +23,8 @@ const isProductAnalyticsUserEligible = FunctionImpl.make(
   "isProductAnalyticsUserEligible",
   Effect.fn("analytics.capture.isProductAnalyticsUserEligible")(
     function* (args) {
-      const ctx = yield* QueryCtxService;
       return yield* Effect.gen(function* () {
-        const database = DatabaseReader.make(databaseSchema, ctx.db);
+        const database = yield* DatabaseReader;
         const user = yield* database
           .table("users")
           .get(args.userId)
@@ -40,7 +35,7 @@ const isProductAnalyticsUserEligible = FunctionImpl.make(
         if (!user || isAccountDeletionPending(user)) {
           return false;
         }
-        return yield* hasProductAnalyticsConsent(ctx, args.userId);
+        return yield* hasProductAnalyticsConsent(args.userId);
       }).pipe(
         Effect.catchDefect(flow(toProductAnalyticsCaptureError, Effect.fail))
       );
@@ -53,7 +48,7 @@ const deliverProductEvent = FunctionImpl.make(
   "deliverProductEvent",
   Effect.fn("analytics.capture.deliverProductEvent")(function* (args) {
     const ctx = yield* ActionCtxService;
-    const runQuery = yield* QueryRunner.QueryRunner;
+    const runQuery = yield* QueryRunner;
     yield* deliverProductAnalyticsProgram({
       capture: Effect.tryPromise({
         try: () =>
@@ -75,7 +70,7 @@ const deliverProductEvent = FunctionImpl.make(
         Effect.mapError(toProductAnalyticsCaptureError),
         Effect.catchDefect(flow(toProductAnalyticsCaptureError, Effect.fail))
       ),
-      requestErasure: requestAnalyticsErasure(ctx, args.distinctId).pipe(
+      requestErasure: requestAnalyticsErasure(args.distinctId).pipe(
         Effect.mapError(toProductAnalyticsCaptureError)
       ),
     });

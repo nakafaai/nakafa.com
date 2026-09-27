@@ -1,7 +1,8 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -34,18 +35,23 @@ describe("tryouts/start/source", () => {
     "starts from signed rows after filesystem ownership is removed",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         vi.setSystemTime(new Date(NOW));
-
         const t = createConvexTestWithBetterAuth();
         yield* Effect.promise(() =>
           t.mutation((ctx) => activateTryoutStartSource(ctx, "visible", "raw"))
         );
         const source = yield* Effect.promise(() =>
           t.query((ctx) =>
-            runConvexProgram(loadTryoutStartSource(ctx, startArgs))
+            Effect.runPromiseWith(runtimeServices)(
+              loadTryoutStartSource(startArgs).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
+            )
           )
         );
-
         expect(source).toMatchObject({
           snapshot: {
             setIdentity: expect.any(String),
@@ -54,11 +60,10 @@ describe("tryouts/start/source", () => {
         });
       })
   );
-
   it.effect("pins the later release that selects a reused runtime", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       vi.setSystemTime(new Date(NOW));
-
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
@@ -89,19 +94,27 @@ describe("tryouts/start/source", () => {
             activeManifestHash: reused.manifestHash,
             activeReleaseId: REUSED_RELEASE_ID,
           });
-          return { sourceReleaseId: source.manifest.releaseId, user };
+          return {
+            sourceReleaseId: source.manifest.releaseId,
+            user,
+          };
         })
       );
       const source = yield* Effect.promise(() =>
         t.query((ctx) =>
-          runConvexProgram(loadTryoutStartSource(ctx, startArgs))
+          Effect.runPromiseWith(runtimeServices)(
+            loadTryoutStartSource(startArgs).pipe(
+              Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+            )
+          )
         )
       );
       expect(source).toMatchObject({
-        bundle: { sourceReleaseId: seeded.sourceReleaseId },
+        bundle: {
+          sourceReleaseId: seeded.sourceReleaseId,
+        },
         releaseId: REUSED_RELEASE_ID,
       });
-
       const authed = t.withIdentity({
         sessionId: seeded.user.sessionId,
         subject: seeded.user.authUserId,
@@ -117,11 +130,9 @@ describe("tryouts/start/source", () => {
       });
     })
   );
-
   it.effect("resumes one logical set after its public path changes", () =>
     Effect.gen(function* () {
       vi.setSystemTime(new Date(NOW));
-
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
@@ -140,16 +151,17 @@ describe("tryouts/start/source", () => {
       const started = yield* Effect.promise(() =>
         authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
       );
-
       yield* Effect.promise(() => t.mutation(activateRenamedTryoutStartSource));
-
       yield* Effect.promise(() =>
         expect(
           authed.query(api.tryouts.queries.runtime.getSetAttemptState, {
+            locale: "id",
             attemptId: started.attemptId,
           })
         ).resolves.toMatchObject({
-          attempt: { attemptId: started.attemptId },
+          attempt: {
+            attemptId: started.attemptId,
+          },
         })
       );
     })

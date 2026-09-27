@@ -1,12 +1,19 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import type { InvokeReturn } from "@confect/react";
+import type refs from "@repo/backend/confect/_generated/refs";
+
 import { Effect, Schema } from "effect";
 
-type SaveAnswerArgs = FunctionArgs<typeof api.onboarding.mutations.saveAnswer>;
-type FinishArgs = FunctionArgs<typeof api.onboarding.mutations.finish>;
-type FinishResult = FunctionReturnType<typeof api.onboarding.mutations.finish>;
-type SaveAnswerMutation = (args: SaveAnswerArgs) => Promise<unknown>;
-type FinishMutation = (args: FinishArgs) => Promise<FinishResult>;
+type SaveAnswerArgs = Ref.Args<
+  typeof refs.public.onboarding.mutations.saveAnswer
+>;
+type FinishArgs = Ref.Args<typeof refs.public.onboarding.mutations.finish>;
+type SaveAnswerMutation = (
+  args: SaveAnswerArgs
+) => InvokeReturn<typeof refs.public.onboarding.mutations.saveAnswer>;
+type FinishMutation = (
+  args: FinishArgs
+) => InvokeReturn<typeof refs.public.onboarding.mutations.finish>;
 
 /** Expected browser mutation failure while saving onboarding state. */
 export class OnboardingMutationError extends Schema.TaggedError<OnboardingMutationError>()(
@@ -20,7 +27,13 @@ export const saveOnboardingDraft = Effect.fn("www.onboarding.saveDraft")(
     yield* Effect.tryPromise({
       catch: (cause) => new OnboardingMutationError({ cause }),
       try: () => saveAnswer(args),
-    });
+    }).pipe(
+      Effect.flatMap((result) =>
+        Effect.fromResult(result).pipe(
+          Effect.mapError((cause) => new OnboardingMutationError({ cause }))
+        )
+      )
+    );
   }
 );
 
@@ -32,5 +45,11 @@ export const finishOnboarding = Effect.fn("www.onboarding.finish")(function* (
   return yield* Effect.tryPromise({
     catch: (cause) => new OnboardingMutationError({ cause }),
     try: () => finish(args),
-  });
+  }).pipe(
+    Effect.flatMap((result) =>
+      Effect.fromResult(result).pipe(
+        Effect.mapError((cause) => new OnboardingMutationError({ cause }))
+      )
+    )
+  );
 });

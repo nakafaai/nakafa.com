@@ -1,6 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { agentArticleTaxonomyValidator } from "@repo/backend/confect/contentRelease/article/spec";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalQuery({
@@ -9,6 +9,6 @@ export default GroupSpec.make().addFunction(
       appLocale: appLocaleValidator,
     }),
     returns: () => agentArticleTaxonomyValidator,
-    error: () => ReleaseErrorWire,
+    error: () => ReleaseError,
   })
 );

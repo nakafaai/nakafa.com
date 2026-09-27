@@ -1,13 +1,15 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { cleanupUserLearningData } from "@repo/backend/confect/auth/cleanup/learning";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
 import { createCanonicalLearningContext } from "@repo/backend/confect/contents/context";
 import { createPopularityViewerKey } from "@repo/backend/confect/contents/popularity";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { Effect } from "effect";
 
 const learningTables = [
   "onboardingProfiles",
@@ -19,7 +21,6 @@ const learningTables = [
   "learningEngagementQueue",
   "learningPopularityViewerSignals",
 ] as const;
-
 it("drains deleted-user holds before their ledger, keeps each batch bounded, and preserves another learner", async () => {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation(async (ctx) => {
@@ -39,8 +40,14 @@ it("drains deleted-user holds before their ledger, keeps each batch bounded, and
     for (const user of [removed, retained]) {
       const userId = user.userId;
       const now = Date.now();
-      await ctx.db.insert("onboardingProfiles", { userId, updatedAt: now });
-      await ctx.db.insert("learningPreferences", { userId, updatedAt: now });
+      await ctx.db.insert("onboardingProfiles", {
+        userId,
+        updatedAt: now,
+      });
+      await ctx.db.insert("learningPreferences", {
+        userId,
+        updatedAt: now,
+      });
       for (
         let index = 0;
         index < (userId === removed.userId ? 26 : 1);
@@ -110,12 +117,21 @@ it("drains deleted-user holds before their ledger, keeps each batch bounded, and
         scopeMode: "global",
       });
     }
-    return { removed, retained };
+    return {
+      removed,
+      retained,
+    };
   });
   for (let batch = 0; batch < 3; batch += 1) {
     expect(
       await t.mutation((ctx) =>
-        runConvexProgram(cleanupUserLearningData(ctx, identity.removed.userId))
+        Effect.runPromise(
+          cleanupUserLearningData(identity.removed.userId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
     ).toBe(true);
   }
@@ -135,7 +151,13 @@ it("drains deleted-user holds before their ledger, keeps each batch bounded, and
   for (let batch = 0; batch < 10; batch += 1) {
     if (
       !(await t.mutation((ctx) =>
-        runConvexProgram(cleanupUserLearningData(ctx, identity.removed.userId))
+        Effect.runPromise(
+          cleanupUserLearningData(identity.removed.userId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       ))
     ) {
       finished = true;
@@ -156,7 +178,9 @@ it("drains deleted-user holds before their ledger, keeps each batch bounded, and
                 deviceId: "device",
               }),
             }
-          : { userId: identity.retained.userId }
+          : {
+              userId: identity.retained.userId,
+            }
       )
     );
   }

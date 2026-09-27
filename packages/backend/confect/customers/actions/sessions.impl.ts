@@ -1,14 +1,18 @@
-import { FunctionImpl, GroupImpl, MutationRunner } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { ActionCtx as ActionCtxService } from "@repo/backend/confect/_generated/services";
-import { requireAuthForAction } from "@repo/backend/confect/auth/session";
+import {
+  ActionCtx as ActionCtxService,
+  MutationRunner,
+} from "@repo/backend/confect/_generated/services";
+import { requireAuth } from "@repo/backend/confect/auth/session";
 import spec from "@repo/backend/confect/customers/actions/sessions.spec";
 import { validateCheckoutRequest } from "@repo/backend/confect/customers/checkout/impl";
 import { createAdmittedCheckoutSession } from "@repo/backend/confect/customers/checkout/session";
 import { checkoutSessionIoError } from "@repo/backend/confect/customers/checkout/spec";
 import { polarGateway } from "@repo/backend/confect/customers/polar/live";
 import { requireCustomer } from "@repo/backend/confect/customers/sync/impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Clock, Effect, flow, Layer } from "effect";
 
 const generateCheckoutLink = FunctionImpl.make(
@@ -18,18 +22,16 @@ const generateCheckoutLink = FunctionImpl.make(
   Effect.fn("customers.actions.sessions.generateCheckoutLink")(
     function* (args) {
       const ctx = yield* ActionCtxService;
-      const { appUser } = yield* requireAuthForAction(ctx);
+      const { appUser } = yield* requireAuth();
       const appUserId = appUser._id;
       return yield* Effect.gen(function* () {
-        const runMutation = yield* MutationRunner.MutationRunner.pipe(
-          Effect.provide(MutationRunner.layer(ctx.runMutation))
-        );
+        const runMutation = yield* MutationRunner;
         const request = yield* validateCheckoutRequest(args);
         const requestMetadata = yield* Effect.tryPromise({
           try: () => ctx.meta.getRequestMetadata(),
           catch: checkoutSessionIoError,
         });
-        const customer = yield* requireCustomer(ctx, appUserId);
+        const customer = yield* requireCustomer(appUserId);
         const checkout = yield* createAdmittedCheckoutSession({
           createCheckout: polarGateway.createCheckoutSession({
             customerId: customer.id,
@@ -75,10 +77,9 @@ const generateCustomerPortalUrl = FunctionImpl.make(
   "generateCustomerPortalUrl",
   Effect.fn("customers.actions.sessions.generateCustomerPortalUrl")(
     function* () {
-      const ctx = yield* ActionCtxService;
-      const { appUser } = yield* requireAuthForAction(ctx);
+      const { appUser } = yield* requireAuth();
       return yield* Effect.gen(function* () {
-        const customer = yield* requireCustomer(ctx, appUser._id);
+        const customer = yield* requireCustomer(appUser._id);
         return yield* polarGateway.createCustomerPortalSession(customer.id);
       });
     }
@@ -87,5 +88,6 @@ const generateCustomerPortalUrl = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(generateCheckoutLink),
   Layer.provide(generateCustomerPortalUrl),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

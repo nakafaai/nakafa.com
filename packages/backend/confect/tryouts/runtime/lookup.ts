@@ -1,69 +1,57 @@
-import { DatabaseReader } from "@confect/server";
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
 import { getTryoutStatusRank } from "@repo/backend/confect/tryouts/status";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PaginationOptions } from "convex/server";
-import { Effect, flow } from "effect";
+import { Effect, Option } from "effect";
 
-type UserId = Doc<"users">["_id"];
-type TryoutAttempt = Doc<"tryoutAttempts">;
+type UserId = Docs["users"]["_id"];
+type TryoutAttempt = Docs["tryoutAttempts"];
 
-/** Signed set identity used to select one user's attempt history. */
-export interface AttemptOwnerIdentity {
-  readonly setIdentity: string;
-  readonly userId: UserId;
-}
-
-/** Reads one bounded attempt set through its immutable signed identity. */
-export const readOwnedAttempts = Effect.fn("tryouts.runtime.readOwnedAttempts")(
-  function* (ctx: QueryCtx, owner: AttemptOwnerIdentity, limit: number) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    return yield* database
-      .table("tryoutAttempts")
-      .index(
-        "by_userId_and_setIdentity_and_startedAt",
-        (index) =>
-          index.eq("userId", owner.userId).eq("setIdentity", owner.setIdentity),
-        "desc"
-      )
-      .take(limit)
-      .pipe(
-        Effect.orDie,
-        Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-      );
-  }
-);
-
-/** Reads the newest attempt for one user and signed set. */
-export const readLatestOwnedAttempt = Effect.fn(
-  "tryouts.runtime.readLatestOwnedAttempt"
-)(function* (ctx: QueryCtx, owner: AttemptOwnerIdentity) {
-  const attempts = yield* readOwnedAttempts(ctx, owner, 1);
-  return attempts.at(0) ?? null;
-});
-
-/** Reads the newest attempt through its stable signed catalog identity. */
-export const readLatestAttempt = Effect.fn("tryouts.runtime.readLatestAttempt")(
-  function* (ctx: QueryCtx, identity: TryoutSetIdentity, userId: UserId) {
-    return yield* readLatestOwnedAttempt(ctx, {
-      setIdentity: tryoutCatalogNodeIdentity({
-        appLocale: AppLocaleSchema.make(identity.locale),
-        countryKey: identity.countryKey,
-        examKey: identity.examKey,
-        kind: "set",
-        setKey: identity.setKey,
-        trackKey: identity.trackKey,
-      }),
-      userId,
-    });
+/** Finds the active attempt and global numbering across all app languages. */
+export const readAttemptStart = Effect.fn("tryouts.runtime.readAttemptStart")(
+  function* (identity: TryoutSetIdentity, userId: UserId) {
+    const database = yield* DatabaseReader;
+    const [activeAttempt, numbered] = yield* Effect.all([
+      database
+        .table("tryoutAttempts")
+        .index(
+          "by_userId_and_set_and_status",
+          (index) =>
+            index
+              .eq("userId", userId)
+              .eq("countryKey", identity.countryKey)
+              .eq("examKey", identity.examKey)
+              .eq("trackKey", identity.trackKey)
+              .eq("setKey", identity.setKey)
+              .eq("status", "in-progress"),
+          "desc"
+        )
+        .first(),
+      database
+        .table("tryoutAttempts")
+        .index(
+          "by_userId_and_set_and_attemptNumber",
+          (index) =>
+            index
+              .eq("userId", userId)
+              .eq("countryKey", identity.countryKey)
+              .eq("examKey", identity.examKey)
+              .eq("trackKey", identity.trackKey)
+              .eq("setKey", identity.setKey),
+          "desc"
+        )
+        .first(),
+    ]).pipe(Effect.mapError(toTryoutRuntimeError));
+    return {
+      activeAttempt: Option.getOrNull(activeAttempt),
+      nextAttemptNumber: (Option.getOrNull(numbered)?.attemptNumber ?? 0) + 1,
+    };
   }
 );
 
@@ -73,23 +61,21 @@ export const readLatestAttempt = Effect.fn("tryouts.runtime.readLatestAttempt")(
  */
 export const readLatestProgressAttempt = Effect.fn(
   "tryouts.runtime.readLatestProgressAttempt"
-)(function* (ctx: QueryCtx, identity: TryoutSetIdentity, userId: UserId) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const setIdentity = tryoutCatalogNodeIdentity({
-    appLocale: AppLocaleSchema.make(identity.locale),
-    countryKey: identity.countryKey,
-    examKey: identity.examKey,
-    kind: "set",
-    setKey: identity.setKey,
-    trackKey: identity.trackKey,
-  });
+)(function* (identity: TryoutSetIdentity, userId: UserId) {
+  const database = yield* DatabaseReader;
   const progress = yield* database
     .table("tryoutSetProgress")
-    .get("by_userId_and_setIdentity", userId, setIdentity)
+    .get(
+      "by_userId_and_set",
+      userId,
+      identity.countryKey,
+      identity.examKey,
+      identity.trackKey,
+      identity.setKey
+    )
     .pipe(
       Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+      Effect.mapError(toTryoutRuntimeError)
     );
   if (!progress) {
     return null;
@@ -99,8 +85,7 @@ export const readLatestProgressAttempt = Effect.fn(
     .get(progress.latestAttemptId)
     .pipe(
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+      Effect.mapError(toTryoutRuntimeError)
     );
   if (!attempt) {
     return yield* new TryoutRuntimeError({
@@ -121,15 +106,14 @@ export const readLatestProgressAttempt = Effect.fn(
 /** Reads one exact attempt only when it belongs to the current app user. */
 export const readOwnedAttemptById = Effect.fn(
   "tryouts.runtime.readOwnedAttemptById"
-)(function* (ctx: QueryCtx, attemptId: Id<"tryoutAttempts">, userId: UserId) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (attemptId: Id<"tryoutAttempts">, userId: UserId) {
+  const database = yield* DatabaseReader;
   const attempt = yield* database
     .table("tryoutAttempts")
     .get(attemptId)
     .pipe(
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+      Effect.mapError(toTryoutRuntimeError)
     );
   if (attempt?.userId !== userId) {
     return null;
@@ -156,7 +140,6 @@ export function matchesAttemptIdentity(
   return (
     attemptIdentity.countryKey === routeIdentity.countryKey &&
     attemptIdentity.examKey === routeIdentity.examKey &&
-    attemptIdentity.locale === routeIdentity.locale &&
     attemptIdentity.setKey === routeIdentity.setKey &&
     attemptIdentity.trackKey === routeIdentity.trackKey
   );
@@ -165,25 +148,17 @@ export function matchesAttemptIdentity(
 /** Checks that compact progress and its latest attempt describe one state. */
 function matchesProgressAttempt(
   attempt: TryoutAttempt,
-  progress: Doc<"tryoutSetProgress">,
+  progress: Docs["tryoutSetProgress"],
   identity: TryoutSetIdentity,
   userId: UserId
 ) {
-  if (
-    progress.appLocale !== identity.locale ||
-    progress.countryKey !== identity.countryKey ||
-    progress.examKey !== identity.examKey ||
-    progress.setKey !== identity.setKey ||
-    progress.trackKey !== identity.trackKey
-  ) {
-    return false;
-  }
   const attemptIdentity = readAttemptSetIdentity(attempt);
   if (!matchesAttemptIdentity(attemptIdentity, identity)) {
     return false;
   }
   if (
     attempt.userId !== userId ||
+    attempt.appLocale !== progress.appLocale ||
     attempt.setIdentity !== progress.setIdentity
   ) {
     return false;
@@ -201,30 +176,24 @@ function matchesProgressAttempt(
 export const readAttemptHistoryPageBySet = Effect.fn(
   "tryouts.runtime.readAttemptHistoryPageBySet"
 )(function* (
-  ctx: QueryCtx,
   identity: TryoutSetIdentity,
   userId: UserId,
   pagination: PaginationOptions
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const setIdentity = tryoutCatalogNodeIdentity({
-    appLocale: AppLocaleSchema.make(identity.locale),
-    countryKey: identity.countryKey,
-    examKey: identity.examKey,
-    kind: "set",
-    setKey: identity.setKey,
-    trackKey: identity.trackKey,
-  });
+  const database = yield* DatabaseReader;
   return yield* database
     .table("tryoutAttempts")
     .index(
-      "by_userId_and_setIdentity_and_startedAt",
-      (index) => index.eq("userId", userId).eq("setIdentity", setIdentity),
+      "by_userId_and_set_and_startedAt",
+      (index) =>
+        index
+          .eq("userId", userId)
+          .eq("countryKey", identity.countryKey)
+          .eq("examKey", identity.examKey)
+          .eq("trackKey", identity.trackKey)
+          .eq("setKey", identity.setKey),
       "desc"
     )
     .paginate(pagination)
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-    );
+    .pipe(Effect.mapError(toTryoutRuntimeError));
 });

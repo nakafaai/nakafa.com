@@ -1,3 +1,5 @@
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
@@ -7,7 +9,6 @@ import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signatu
 import { StageGroupRequestSchema } from "@nakafa/aksara-contracts/transport/group";
 import { stagePublicationGroup } from "@repo/backend/confect/contentRelease/ingress/group";
 import { stagePublication } from "@repo/backend/confect/contentRelease/ingress/stage";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -36,18 +37,17 @@ import { convexTest } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-stage-group");
-
 class UnexpectedGroupTestState extends Data.TaggedError(
   "UnexpectedGroupTestState"
 )<{
   readonly operation: "select-program-row";
 }> {}
-
 describe("content release staging groups", () => {
   it.effect(
     "stages authenticated Question projections through a recovery group",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const request = yield* Schema.decodeEffect(StageGroupRequestSchema)({
           operation: "stageGroup",
           releaseId,
@@ -79,18 +79,23 @@ describe("content release staging groups", () => {
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            insertTestRelease(ctx, { releaseId, role: "recovery" })
+            insertTestRelease(ctx, {
+              releaseId,
+              role: "recovery",
+            })
           )
         );
-
         expect(
           yield* Effect.promise(() =>
             t.action((ctx) =>
-              runConvexProgram(
-                stagePublicationGroup(ctx, request).pipe(
+              Effect.runPromiseWith(runtimeServices)(
+                stagePublicationGroup(request).pipe(
                   Effect.provideService(
                     ContentVerificationKeyResolver,
                     TEST_KEY_RESOLVER
+                  ),
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
                   )
                 )
               )
@@ -99,7 +104,10 @@ describe("content release staging groups", () => {
         ).toEqual({
           ok: true,
           operation: "stageGroup",
-          value: { releaseId, requestCount: 2 },
+          value: {
+            releaseId,
+            requestCount: 2,
+          },
         });
         expect(
           yield* Effect.promise(() =>
@@ -111,20 +119,24 @@ describe("content release staging groups", () => {
         });
       })
   );
-
   it.effect("resumes a committed prefix and retries the complete group", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
       const firstRow = data.rows[0];
       if (!firstRow) {
         return yield* Effect.die(
-          new UnexpectedGroupTestState({ operation: "select-program-row" })
+          new UnexpectedGroupTestState({
+            operation: "select-program-row",
+          })
         );
       }
       const release = testSignedRelease(
         ContentReleaseManifestSchema.make({
           ...testEmptyManifest(releaseId),
-          scope: testPublicationScope({ snapshots: data.snapshots }),
+          scope: testPublicationScope({
+            snapshots: data.snapshots,
+          }),
           snapshots: data.snapshots,
         })
       );
@@ -158,16 +170,16 @@ describe("content release staging groups", () => {
           )
         )
       );
-
       const firstRequest = request.requests[0];
       yield* Effect.promise(() =>
         t.action((ctx) =>
-          runConvexProgram(
-            stagePublication(ctx, firstRequest, TEST_KEY_ID).pipe(
+          Effect.runPromiseWith(runtimeServices)(
+            stagePublication(firstRequest, TEST_KEY_ID).pipe(
               Effect.provideService(
                 ContentVerificationKeyResolver,
                 TEST_KEY_RESOLVER
-              )
+              ),
+              Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
             )
           )
         )
@@ -176,13 +188,17 @@ describe("content release staging groups", () => {
       /** Executes the same authenticated group against the durable test store. */
       const runGroup = Effect.fn("contentRelease.ingress.test.runGroup")(
         function* () {
+          const runtimeServices = yield* Effect.context<never>();
           return yield* Effect.promise(() =>
             t.action((ctx) =>
-              runConvexProgram(
-                stagePublicationGroup(ctx, request, TEST_KEY_ID).pipe(
+              Effect.runPromiseWith(runtimeServices)(
+                stagePublicationGroup(request, TEST_KEY_ID).pipe(
                   Effect.provideService(
                     ContentVerificationKeyResolver,
                     TEST_KEY_RESOLVER
+                  ),
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
                   )
                 )
               )
@@ -193,13 +209,17 @@ describe("content release staging groups", () => {
       expect(yield* runGroup()).toEqual({
         ok: true,
         operation: "stageGroup",
-        value: { releaseId, requestCount: 2 },
+        value: {
+          releaseId,
+          requestCount: 2,
+        },
       });
-      expect(yield* runGroup()).toMatchObject({ ok: true });
-
+      expect(yield* runGroup()).toMatchObject({
+        ok: true,
+      });
       const stored = yield* Effect.promise(() =>
         t.run((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.all({
               batches: Effect.promise(() =>
                 ctx.db.query("snapshotBatches").collect()
@@ -207,13 +227,25 @@ describe("content release staging groups", () => {
               snapshots: Effect.promise(() =>
                 ctx.db.query("contentSnapshots").collect()
               ),
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           )
         )
       );
       expect(stored).toMatchObject({
-        batches: [expect.objectContaining({ batchIndex: 0 })],
-        snapshots: [expect.objectContaining({ family: "program" })],
+        batches: [
+          expect.objectContaining({
+            batchIndex: 0,
+          }),
+        ],
+        snapshots: [
+          expect.objectContaining({
+            family: "program",
+          }),
+        ],
       });
     })
   );

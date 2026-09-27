@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export class MaterialGroupError extends Schema.TaggedError<MaterialGroupError>()(
   "MaterialGroupError",
@@ -7,4 +6,3 @@ export class MaterialGroupError extends Schema.TaggedError<MaterialGroupError>()
     message: Schema.String,
   }
 ) {}
-export const MaterialGroupFailure = failureWire(MaterialGroupError);

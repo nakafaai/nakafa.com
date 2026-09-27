@@ -1,19 +1,21 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
+import { actionLayer } from "@confect/server/RegisteredFunction";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
+import {
+  driftDurableCounters,
+  driftStoredRenderer,
+  tamperStoredArtifact,
+} from "@repo/backend/test/content/drift";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
-import {
-  Ed25519SignatureSchema,
-  ReleaseIdSchema,
-} from "@nakafa/aksara-contracts/ids";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   recomputeProgram,
   verifyArtifactBatchProgram,
 } from "@repo/backend/confect/contentRelease/proof/verify";
-import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -23,7 +25,6 @@ import {
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
   testEmptyManifest,
-  testProofRenderer,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import { stagePagedRelease } from "@repo/backend/test/content/recompute";
@@ -99,124 +100,71 @@ const insertRelease = Effect.fn(
   )
 );
 
-/** Changes only the stored signature while preserving its claimed identity. */
-const tamperArtifactSignature = Effect.fn(
-  "contentRelease.proof.verify.test.tamperArtifactSignature"
-)(function* (artifactJson: string) {
-  const artifact = yield* Schema.decodeEffect(
-    Schema.fromJsonString(SignedContentArtifactSchema)
-  )(artifactJson);
-  const firstCharacter = artifact.signature.startsWith("A") ? "B" : "A";
-  const signature = Ed25519SignatureSchema.make(
-    `${firstCharacter}${artifact.signature.slice(1)}`
-  );
-  return encodeArtifactJson({
-    ...artifact,
-    signature,
-  });
-});
-
-/** Loads one staged proof release or defects on an invalid fixture. */
-const loadProofRelease = Effect.fn(
-  "contentRelease.proof.verify.test.loadProofRelease"
-)(function* (ctx: MutationCtx) {
-  const release = yield* Effect.promise(() =>
-    ctx.db.query("contentReleases").unique()
-  );
-  if (!release) {
-    return yield* Effect.die(
-      new UnexpectedProofTestState({
-        operation: "load-proof-release",
-      })
-    );
-  }
-  return release;
-});
-
-/** Corrupts the frozen renderer while preserving the release identity. */
-const driftStoredRenderer = Effect.fn(
-  "contentRelease.proof.verify.test.driftStoredRenderer"
-)(function* (ctx: MutationCtx) {
-  const release = yield* loadProofRelease(ctx);
-  yield* Effect.promise(() =>
-    ctx.db.patch("contentReleases", release._id, {
-      rendererJson: JSON.stringify(testProofRenderer("h1")),
-    })
-  );
-});
-
-/** Corrupts durable counters after the release entered verification. */
-const driftDurableCounters = Effect.fn(
-  "contentRelease.proof.verify.test.driftDurableCounters"
-)(function* (ctx: MutationCtx) {
-  const release = yield* loadProofRelease(ctx);
-  yield* Effect.promise(() =>
-    ctx.db.patch("contentReleases", release._id, {
-      stagedItems: 1,
-      status: "verifying",
-    })
-  );
-});
-
-/** Corrupts one staged artifact signature inside the real test transaction. */
-const tamperStoredArtifact = Effect.fn(
-  "contentRelease.proof.verify.test.tamperStoredArtifact"
-)(function* (ctx: MutationCtx) {
-  const artifact = yield* Effect.promise(() =>
-    ctx.db.query("contentArtifacts").unique()
-  );
-  if (!artifact) {
-    return yield* Effect.die(
-      new UnexpectedProofTestState({
-        operation: "load-staged-artifact",
-      })
-    );
-  }
-  const artifactJson = yield* tamperArtifactSignature(
-    artifact.artifactJson
-  ).pipe(Effect.orDie);
-  yield* Effect.promise(() =>
-    ctx.db.patch("contentArtifacts", artifact._id, {
-      artifactJson,
-    })
-  );
-});
 describe("contentRelease/proof/verify", () => {
   it("checks the renderer binding inside each independent artifact worker", async () => {
     const t = createProofTest();
-    await t.mutation((ctx) => runConvexProgram(insertRelease(ctx)));
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        insertRelease(ctx).pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      )
+    );
     await prepareContentProof(t, releaseId);
-    await t.mutation((ctx) => runConvexProgram(driftStoredRenderer(ctx)));
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        driftStoredRenderer(ctx).pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      )
+    );
     await expect(
       t.action((ctx) =>
-        runConvexProgram(
-          verifyArtifactBatchProgram(ctx, manifestHash, releaseId, 0).pipe(
+        Effect.runPromise(
+          verifyArtifactBatchProgram(manifestHash, releaseId, 0).pipe(
             Effect.provideService(
               ContentVerificationKeyResolver,
               TEST_KEY_RESOLVER
-            )
+            ),
+            Effect.provide(actionLayer(confectSchema, ctx))
           )
         )
       )
     ).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_UNSUPPORTED",
-      },
+      code: "CONTENT_RELEASE_UNSUPPORTED",
     });
   });
   it.each([
-    { source: "routes", cursor: null },
-    { source: "routes", cursor: "stalled-cursor" },
-    { source: "catalog", cursor: null },
+    {
+      source: "routes",
+      cursor: null,
+    },
+    {
+      source: "routes",
+      cursor: "stalled-cursor",
+    },
     {
       source: "catalog",
-      cursor: { artifactLocale: "en", contentKey: "stalled" },
+      cursor: null,
+    },
+    {
+      source: "catalog",
+      cursor: {
+        artifactLocale: "en",
+        contentKey: "stalled",
+      },
     },
   ])(
     "rejects non-advancing $source evidence at $cursor",
     async ({ source, cursor }) => {
       const t = createProofTest();
-      await t.mutation((ctx) => runConvexProgram(insertRelease(ctx)));
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          insertRelease(ctx).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      );
       await prepareContentProof(t, releaseId);
       await expect(
         t.action((ctx) => {
@@ -228,50 +176,60 @@ describe("contentRelease/proof/verify", () => {
               `contentRelease/proof/${source}:${source === "routes" ? "routes" : "page"}`
             ) {
               return Promise.resolve({
-                ...(source === "routes" ? { checked: 1 } : { heads: [] }),
+                ...(source === "routes"
+                  ? {
+                      checked: 1,
+                    }
+                  : {
+                      heads: [],
+                    }),
                 done: false,
                 nextCursor: cursor,
               });
             }
             return runQuery(reference, args);
           });
-          return runConvexProgram(
-            recomputeProgram(ctx, manifestHash, releaseId, 0).pipe(
+          return Effect.runPromise(
+            recomputeProgram(manifestHash, releaseId, 0).pipe(
               Effect.provideService(
                 ContentVerificationKeyResolver,
                 TEST_KEY_RESOLVER
-              )
+              ),
+              Effect.provide(actionLayer(confectSchema, ctx))
             )
           );
         })
       ).rejects.toMatchObject({
-        data: {
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: expect.stringContaining("stopped advancing"),
-        },
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: expect.stringContaining("stopped advancing"),
       });
     }
   );
   it("rejects artifact-worker totals that disagree with the authenticated streams", async () => {
     const t = createProofTest();
-    await t.mutation((ctx) => runConvexProgram(insertRelease(ctx)));
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        insertRelease(ctx).pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      )
+    );
     await prepareContentProof(t, releaseId);
     await expect(
       t.action((ctx) =>
-        runConvexProgram(
-          recomputeProgram(ctx, manifestHash, releaseId, 1).pipe(
+        Effect.runPromise(
+          recomputeProgram(manifestHash, releaseId, 1).pipe(
             Effect.provideService(
               ContentVerificationKeyResolver,
               TEST_KEY_RESOLVER
-            )
+            ),
+            Effect.provide(actionLayer(confectSchema, ctx))
           )
         )
       )
     ).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: expect.stringContaining("counters do not match"),
-      },
+      code: "CONTENT_RELEASE_INTEGRITY",
+      message: expect.stringContaining("counters do not match"),
     });
   });
   it("authenticates registered worker actions at their actual production boundary", async () => {
@@ -303,9 +261,16 @@ describe("contentRelease/proof/verify", () => {
     "recomputes an authenticated empty proof and commits it exactly once",
     Effect.fn("contentRelease.proof.verify.test.recomputesEmptyProof")(
       function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createProofTest();
         yield* Effect.promise(() =>
-          t.mutation((ctx) => runConvexProgram(insertRelease(ctx)))
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              insertRelease(ctx).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
+          )
         );
         const proof = yield* runProof(t);
         const release = yield* Effect.promise(() =>
@@ -329,9 +294,16 @@ describe("contentRelease/proof/verify", () => {
     "fails closed when no production key has been reviewed",
     Effect.fn("contentRelease.proof.verify.test.rejectsMissingKey")(
       function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createProofTest();
         yield* Effect.promise(() =>
-          t.mutation((ctx) => runConvexProgram(insertRelease(ctx)))
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              insertRelease(ctx).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
+          )
         );
         const failure = yield* runProof(t, {
           resolver: contentKeyResolver,
@@ -346,11 +318,12 @@ describe("contentRelease/proof/verify", () => {
     "recovers stable internal failures into the typed channel",
     Effect.fn("contentRelease.proof.verify.test.recoversTypedFailure")(
       function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createProofTest();
         const result = yield* Effect.promise(() =>
           t.action((ctx) =>
-            runConvexProgram(
-              recomputeProgram(ctx, manifestHash, releaseId, 0).pipe(
+            Effect.runPromiseWith(runtimeServices)(
+              recomputeProgram(manifestHash, releaseId, 0).pipe(
                 Effect.match({
                   onFailure: (error) => ({
                     code: error.code,
@@ -364,7 +337,8 @@ describe("contentRelease/proof/verify", () => {
                 Effect.provideService(
                   ContentVerificationKeyResolver,
                   TEST_KEY_RESOLVER
-                )
+                ),
+                Effect.provide(actionLayer(confectSchema, ctx))
               )
             )
           )
@@ -380,11 +354,15 @@ describe("contentRelease/proof/verify", () => {
     "replays multi-page item and proof streams before committing",
     Effect.fn("contentRelease.proof.verify.test.replaysPagedProof")(
       function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createProofTest();
         const hash = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
-              stagePagedRelease(ctx, 129, releaseId).pipe(Effect.orDie)
+            Effect.runPromiseWith(runtimeServices)(
+              stagePagedRelease(129, releaseId).pipe(
+                Effect.orDie,
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
             )
           )
         );
@@ -404,13 +382,24 @@ describe("contentRelease/proof/verify", () => {
     "rejects renderer and durable counter drift",
     Effect.fn("contentRelease.proof.verify.test.rejectsDurableDrift")(
       function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const rendererDrift = createProofTest();
         yield* Effect.promise(() =>
-          rendererDrift.mutation((ctx) => runConvexProgram(insertRelease(ctx)))
+          rendererDrift.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              insertRelease(ctx).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
+          )
         );
         yield* Effect.promise(() =>
           rendererDrift.mutation((ctx) =>
-            runConvexProgram(driftStoredRenderer(ctx))
+            Effect.runPromiseWith(runtimeServices)(
+              driftStoredRenderer(ctx).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
           )
         );
         const rendererFailure = yield* runProof(rendererDrift).pipe(
@@ -421,11 +410,21 @@ describe("contentRelease/proof/verify", () => {
         );
         const counters = createProofTest();
         yield* Effect.promise(() =>
-          counters.mutation((ctx) => runConvexProgram(insertRelease(ctx)))
+          counters.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              insertRelease(ctx).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
+          )
         );
         yield* Effect.promise(() =>
           counters.mutation((ctx) =>
-            runConvexProgram(driftDurableCounters(ctx))
+            Effect.runPromiseWith(runtimeServices)(
+              driftDurableCounters(ctx).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
           )
         );
         const counterFailure = yield* runProof(counters).pipe(Effect.flip);
@@ -439,6 +438,7 @@ describe("contentRelease/proof/verify", () => {
     "reauthenticates stored artifacts before committing proof",
     Effect.fn("contentRelease.proof.verify.test.reauthenticatesArtifacts")(
       function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createProofTest();
         yield* Effect.promise(() => stageUpsertFixture(t));
         const state = yield* Effect.promise(() =>
@@ -452,7 +452,13 @@ describe("contentRelease/proof/verify", () => {
           );
         }
         yield* Effect.promise(() =>
-          t.mutation((ctx) => runConvexProgram(tamperStoredArtifact(ctx)))
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              tamperStoredArtifact(ctx).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
+          )
         );
         const failure = yield* runProof(t, {
           hash: state.candidateManifestHash,

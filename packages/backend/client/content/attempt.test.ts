@@ -1,3 +1,4 @@
+import { Ref } from "@confect/core";
 import { assert, beforeEach, describe, it } from "@effect/vitest";
 import { MAX_PROTECTED_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
@@ -6,13 +7,12 @@ import {
   ContentRuntimeMissingError,
   ContentRuntimeVerificationError,
 } from "@repo/backend/client/content/errors";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   decodeArtifactJson,
   decodeTryoutRuntimeBundleJson,
 } from "@repo/backend/confect/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { readTryoutHistory } from "@repo/backend/confect/tryouts/runtime/history/read";
 import {
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
@@ -22,7 +22,6 @@ import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { Effect } from "effect";
 
 vi.mock("server-only", () => ({}));
-
 async function setup(historical = false) {
   const t = createConvexTestWithBetterAuth();
   const seed = await t.mutation((ctx) => insertHistoryAttempt(ctx, historical));
@@ -30,8 +29,10 @@ async function setup(historical = false) {
     subject: seed.identity.authUserId,
     sessionId: seed.identity.sessionId,
   });
-  const row = await owned.query((ctx) =>
-    runConvexProgram(readTryoutHistory(ctx, seed.request))
+  const ref = refs.public.tryouts.queries.content.getBatch;
+  const row = Ref.decodeReturnsSync(
+    ref,
+    await owned.query(Ref.getFunctionReference(ref), seed.request)
   );
   assert.isNotNull(row);
   const request = {
@@ -45,11 +46,13 @@ async function setup(historical = false) {
     ),
     snapshotId: seed.runtime.snapshotId,
   };
-  return { request, row, seed };
+  return {
+    request,
+    row,
+    seed,
+  };
 }
-
 beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
-
 describe("attempt content verification", () => {
   it.effect("recomputes both artifact and bundle payload hashes", () =>
     Effect.gen(function* () {
@@ -62,20 +65,32 @@ describe("attempt content verification", () => {
         ...first,
         artifactJson: JSON.stringify({
           ...artifact,
-          payload: { ...artifact.payload, plainText: "Changed technical body" },
+          payload: {
+            ...artifact.payload,
+            plainText: "Changed technical body",
+          },
         }),
       };
       const changedBundle = JSON.stringify({
         ...bundle,
-        payload: { ...bundle.payload, sourceGitSha: "b".repeat(40) },
+        payload: {
+          ...bundle.payload,
+          sourceGitSha: "b".repeat(40),
+        },
       });
       for (const { bytes, expectedTag } of [
         {
-          bytes: { ...row, items: [changedArtifact, ...row.items.slice(1)] },
+          bytes: {
+            ...row,
+            items: [changedArtifact, ...row.items.slice(1)],
+          },
           expectedTag: "ArtifactHashMismatchError",
         },
         {
-          bytes: { ...row, bundleJson: changedBundle },
+          bytes: {
+            ...row,
+            bundleJson: changedBundle,
+          },
           expectedTag: "TryoutRuntimeBundleHashMismatchError",
         },
       ]) {
@@ -95,7 +110,6 @@ describe("attempt content verification", () => {
       }
     })
   );
-
   for (const historical of [false, true]) {
     it.effect(
       `authenticates ${historical ? "retained choices-era" : "current"} bundle and artifact bytes`,
@@ -122,7 +136,6 @@ describe("attempt content verification", () => {
         })
     );
   }
-
   it.effect(
     "rejects invalid requests, absence and oversized original bytes",
     () =>
@@ -169,13 +182,15 @@ describe("attempt content verification", () => {
         assert.instanceOf(large, ContentRuntimeVerificationError);
       })
   );
-
   it.effect("rejects malformed stored JSON before rendering", () =>
     Effect.gen(function* () {
       const { request, row } = yield* Effect.promise(() => setup());
       const error = yield* verifyAttemptContent(
         request,
-        { ...row, rendererJson: "{" },
+        {
+          ...row,
+          rendererJson: "{",
+        },
         TEST_PROOF_RENDERER
       ).pipe(
         Effect.provideService(
@@ -187,7 +202,6 @@ describe("attempt content verification", () => {
       assert.instanceOf(error, ContentRuntimeVerificationError);
     })
   );
-
   it.effect(
     "verifies original artifact signatures rather than only advertised hashes",
     () =>
@@ -204,7 +218,10 @@ describe("attempt content verification", () => {
             items: [
               {
                 ...first,
-                artifactJson: JSON.stringify({ ...artifact, signature }),
+                artifactJson: JSON.stringify({
+                  ...artifact,
+                  signature,
+                }),
               },
               ...row.items.slice(1),
             ],
@@ -221,7 +238,6 @@ describe("attempt content verification", () => {
         assert.propertyVal(error.cause, "_tag", "SignatureInvalidError");
       })
   );
-
   it.effect(
     "verifies original bundle signatures and ordered artifact membership",
     () =>
@@ -233,7 +249,10 @@ describe("attempt content verification", () => {
           request,
           {
             ...row,
-            bundleJson: JSON.stringify({ ...bundle, signature }),
+            bundleJson: JSON.stringify({
+              ...bundle,
+              signature,
+            }),
           },
           TEST_PROOF_RENDERER
         ).pipe(
@@ -247,7 +266,10 @@ describe("attempt content verification", () => {
         assert.propertyVal(error.cause, "_tag", "SignatureInvalidError");
         const reordered = yield* verifyAttemptContent(
           request,
-          { ...row, items: [...row.items].reverse() },
+          {
+            ...row,
+            items: [...row.items].reverse(),
+          },
           TEST_PROOF_RENDERER
         ).pipe(
           Effect.provideService(

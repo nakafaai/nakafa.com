@@ -1,15 +1,17 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { CONTENT_ANALYTICS_LEASE_DURATION_MS } from "@repo/backend/confect/contents/constants";
 import { getPopularityCyclePage } from "@repo/backend/confect/contents/metrics/cycle";
 import { POPULARITY_DAY_MS } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const DAY = Date.parse("2026-01-08T00:00:00.000Z");
 
@@ -59,24 +61,23 @@ async function applyView(
   });
   await target.mutation(
     internal.contents.mutations.analytics.processContentAnalyticsPartition,
-    { leaseVersion, partition: 0 }
+    {
+      leaseVersion,
+      partition: 0,
+    }
   );
 }
-
 describe("contents/metrics/cycle", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(DAY));
   });
-
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
-
   it("resumes active schedules and skips only completed work", async () => {
     const target = createTarget();
-
     const rollout = await target.mutation(
       internal.contents.mutations.popularity.scheduleLearningPopularityExpiries,
       {}
@@ -85,7 +86,6 @@ describe("contents/metrics/cycle", () => {
       internal.contents.mutations.popularity.scheduleLearningPopularityExpiries,
       {}
     );
-
     expect(rollout).toEqual({
       expiryWindows: 0,
       repairWindows: 14,
@@ -96,10 +96,8 @@ describe("contents/metrics/cycle", () => {
       repairWindows: 14,
       skippedWindows: 0,
     });
-
     await target.finishAllScheduledFunctions(vi.runAllTimers);
     vi.setSystemTime(new Date(DAY + POPULARITY_DAY_MS));
-
     const daily = await target.mutation(
       internal.contents.mutations.popularity.scheduleLearningPopularityExpiries,
       {}
@@ -118,10 +116,8 @@ describe("contents/metrics/cycle", () => {
       repairWindows: 0,
       skippedWindows: 0,
     });
-
     await target.finishAllScheduledFunctions(vi.runAllTimers);
     vi.setSystemTime(new Date(DAY + 2 * POPULARITY_DAY_MS));
-
     const weekly = await target.mutation(
       internal.contents.mutations.popularity
         .scheduleLearningPopularityRefreshes,
@@ -132,9 +128,12 @@ describe("contents/metrics/cycle", () => {
         .scheduleLearningPopularityRefreshes,
       {}
     );
-    expect(weekly).toEqual({ scheduledWindows: 14 });
-    expect(duplicateWeekly).toEqual({ scheduledWindows: 14 });
-
+    expect(weekly).toEqual({
+      scheduledWindows: 14,
+    });
+    expect(duplicateWeekly).toEqual({
+      scheduledWindows: 14,
+    });
     await target.finishAllScheduledFunctions(vi.runAllTimers);
     await expect(
       target.mutation(
@@ -142,7 +141,9 @@ describe("contents/metrics/cycle", () => {
           .scheduleLearningPopularityRefreshes,
         {}
       )
-    ).resolves.toEqual({ scheduledWindows: 0 });
+    ).resolves.toEqual({
+      scheduledWindows: 0,
+    });
     await expect(
       target.mutation(
         internal.contents.mutations.popularity
@@ -155,7 +156,6 @@ describe("contents/metrics/cycle", () => {
       skippedWindows: 14,
     });
   });
-
   it("rejects pages superseded by a newer cycle", async () => {
     const target = createTarget();
     const completion = await target.mutation(async (ctx) => {
@@ -170,34 +170,47 @@ describe("contents/metrics/cycle", () => {
       if (!cycle) {
         throw new Error("Expected the popularity cycle fixture.");
       }
-      return await runConvexProgram(
-        getPopularityCyclePage(ctx, {
+      return await Effect.runPromise(
+        getPopularityCyclePage({
           day: DAY,
           mode: "expiry",
           scopeMode: "global",
           windowKey: "7d",
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
     });
-
     const superseded = await target.mutation(
       internal.contents.mutations.popularity.expireLearningPopularityWindowPage,
-      { day: DAY, scopeMode: "global", windowKey: "7d" }
+      {
+        day: DAY,
+        scopeMode: "global",
+        windowKey: "7d",
+      }
     );
     const supersededRepair = await target.mutation(
       internal.contents.mutations.popularity
         .refreshLearningPopularityWindowPage,
-      { day: DAY, scopeMode: "global", windowKey: "7d" }
+      {
+        day: DAY,
+        scopeMode: "global",
+        windowKey: "7d",
+      }
     );
-
-    expect(completion).toMatchObject({ current: false });
-    expect(superseded).toMatchObject({ skipped: true });
+    expect(completion).toMatchObject({
+      current: false,
+    });
+    expect(superseded).toMatchObject({
+      skipped: true,
+    });
     expect(supersededRepair).toMatchObject({
       continueCursor: "",
       skipped: true,
     });
   });
-
   it("preserves new-day views when a repair page crosses UTC midnight", async () => {
     const target = createTarget();
     await applyView(target, DAY, 1);
@@ -206,18 +219,23 @@ describe("contents/metrics/cycle", () => {
         .scheduleLearningPopularityRefreshes,
       {}
     );
-
     const nextDay = DAY + POPULARITY_DAY_MS;
     vi.setSystemTime(new Date(nextDay));
     await applyView(target, nextDay, 2);
-
     const delayed = await target.mutation(async (ctx) => {
       const result = await ctx.runMutation(
         internal.contents.mutations.popularity
           .refreshLearningPopularityWindowPage,
-        { day: DAY, scopeMode: "global", windowKey: "1d" }
+        {
+          day: DAY,
+          scopeMode: "global",
+          windowKey: "1d",
+        }
       );
-      return { result, metrics: await ctx.meta.getTransactionMetrics() };
+      return {
+        result,
+        metrics: await ctx.meta.getTransactionMetrics(),
+      };
     });
     const pending = await target.query(async (ctx) => ({
       counter: await ctx.db
@@ -234,11 +252,12 @@ describe("contents/metrics/cycle", () => {
         )
         .unique(),
     }));
-    expect(delayed.result).toMatchObject({ skipped: true });
+    expect(delayed.result).toMatchObject({
+      skipped: true,
+    });
     expect(delayed.metrics.documentsWritten.used).toBe(0);
     expect(pending.counter?.score).toBe(2);
     expect(pending.cycle?.completedDay).toBeUndefined();
-
     const recovery = await target.mutation(
       internal.contents.mutations.popularity.scheduleLearningPopularityExpiries,
       {}
@@ -249,7 +268,6 @@ describe("contents/metrics/cycle", () => {
       skippedWindows: 0,
     });
     await target.finishAllScheduledFunctions(vi.runAllTimers);
-
     const completed = await target.query(async (ctx) => ({
       counters: await ctx.db.query("learningPopularityCounters").collect(),
       ranking: await learningPopularityRankings.paginate(ctx, {
@@ -271,7 +289,14 @@ describe("contents/metrics/cycle", () => {
       completed.counters
         .filter(({ windowKey }) => windowKey !== "1d")
         .map(({ score }) => score)
-    ).toEqual(Array.from({ length: 7 }, () => 2));
+    ).toEqual(
+      Array.from(
+        {
+          length: 7,
+        },
+        () => 2
+      )
+    );
     expect(completed.ranking.page.map(({ key }) => key[0])).toEqual([-1]);
     expect(completed.cycle).toMatchObject({
       completedDay: nextDay,

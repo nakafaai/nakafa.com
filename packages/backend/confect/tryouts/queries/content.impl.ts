@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/tryouts/queries/content.spec";
 import { readTryoutHistory } from "@repo/backend/confect/tryouts/runtime/history/read";
 import { Effect, Layer } from "effect";
@@ -10,11 +10,11 @@ const getBatch = FunctionImpl.make(
   spec,
   "getBatch",
   Effect.fn("tryouts.queries.content.getBatch")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readTryoutHistory(ctx, args);
+    return yield* readTryoutHistory(args);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getBatch),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

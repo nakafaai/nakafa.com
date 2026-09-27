@@ -1,16 +1,16 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { estimateIrtScore } from "@repo/backend/confect/tryouts/runtime/estimate";
 import type { TryoutIrtSource } from "@repo/backend/confect/tryouts/runtime/irt/items";
 import {
   type AttemptScore,
   getRawPercentage,
 } from "@repo/backend/confect/tryouts/runtime/result";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 /** Scores a section or complete attempt from its validated calibration links. */
 export const scoreIrt = Effect.fn("tryouts.runtime.scoreIrt")(function* (args: {
-  placements: readonly Doc<"tryoutAttemptPlacements">[];
-  responses: readonly Doc<"tryoutResponses">[];
+  placements: readonly Docs["tryoutAttemptPlacements"][];
+  responses: readonly Docs["tryoutResponses"][];
   source: TryoutIrtSource;
   totalQuestions: number;
 }) {

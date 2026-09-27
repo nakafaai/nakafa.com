@@ -1,59 +1,20 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { saveTryoutResponse } from "@repo/backend/confect/tryouts/response/write";
-import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
 import { api } from "@repo/backend/convex/_generated/api";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
+import {
+  authenticate,
+  type ConvexTest,
+  seedResponseFixture,
+} from "@repo/backend/test/tryout/response";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { Effect } from "effect";
 
-type ConvexTest = ReturnType<typeof createConvexTestWithBetterAuth>;
-const seedResponseFixture = Effect.fn("test.tryout.response.seedFixture")(
-  function* (
-    t: ConvexTest,
-    suffix: string,
-    status: {
-      readonly attempt?: TryoutStatus;
-      readonly section?: TryoutStatus;
-    } = {}
-  ) {
-    const seeded = yield* Effect.promise(() =>
-      t.mutation(async (ctx) => {
-        const state = await seedTryoutContentAccessState(ctx, {
-          attemptStatus: status.attempt ?? "in-progress",
-          sectionStatus: status.section ?? "in-progress",
-          suffix,
-        });
-        const placement = await ctx.db.get(state.placementId);
-        const selectedChoice =
-          placement?.responseSpec.kind === "single-choice"
-            ? placement.responseSpec.options.at(0)
-            : undefined;
-        if (!selectedChoice) {
-          throw new Error("Expected one frozen choice.");
-        }
-        return {
-          ...state,
-          selectedChoice,
-        };
-      })
-    );
-    return { ...seeded, client: authenticate(t, seeded.identity) };
-  }
-);
-function authenticate(
-  t: ConvexTest,
-  identity: { readonly authUserId: string; readonly sessionId: string }
-) {
-  return t.withIdentity({
-    sessionId: identity.sessionId,
-    subject: identity.authUserId,
-  });
-}
 type ResponseFixture = Effect.Success<ReturnType<typeof seedResponseFixture>>;
 interface ExpectedConvexFailure {
   readonly code: string;
@@ -63,7 +24,6 @@ const setResponseClock = Effect.fn("test.tryout.response.setClock")(
   (offset: number) =>
     Effect.sync(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW + offset)))
 );
-
 const saveSelection = Effect.fn("test.tryout.response.saveSelection")(
   (
     fixture: ResponseFixture,
@@ -73,18 +33,19 @@ const saveSelection = Effect.fn("test.tryout.response.saveSelection")(
     Effect.promise(() =>
       client.mutation(api.tryouts.mutations.responses.save, {
         placementId: fixture.placementId,
-        selection: { kind: "single-choice", optionKey },
+        selection: {
+          kind: "single-choice",
+          optionKey,
+        },
       })
     )
 );
-
 const collectResponses = Effect.fn("test.tryout.response.collect")(
   (t: ConvexTest) =>
     Effect.promise(() =>
       t.query((ctx) => ctx.db.query("tryoutResponses").collect())
     )
 );
-
 const readResponseState = Effect.fn("test.tryout.response.readState")(
   (t: ConvexTest, fixture: ResponseFixture) =>
     Effect.promise(() =>
@@ -95,7 +56,6 @@ const readResponseState = Effect.fn("test.tryout.response.readState")(
       }))
     )
 );
-
 const expectConvexFailure = Effect.fn("test.tryout.response.expectFailure")(
   function* (
     operation: () => Promise<unknown>,
@@ -107,7 +67,6 @@ const expectConvexFailure = Effect.fn("test.tryout.response.expectFailure")(
     });
   }
 );
-
 const expectSaveFailure = Effect.fn("test.tryout.response.expectSaveFailure")(
   function* (
     fixture: ResponseFixture,
@@ -119,13 +78,15 @@ const expectSaveFailure = Effect.fn("test.tryout.response.expectSaveFailure")(
       () =>
         client.mutation(api.tryouts.mutations.responses.save, {
           placementId: fixture.placementId,
-          selection: { kind: "single-choice", optionKey },
+          selection: {
+            kind: "single-choice",
+            optionKey,
+          },
         }),
       expected
     );
   }
 );
-
 describe("tryouts/response/write", () => {
   it.effect(
     "stores only the canonical response and preserves first-answer time",
@@ -158,7 +119,6 @@ describe("tryouts/response/write", () => {
         expect(stored.attempt?.lastActivityAt).toBe(TRYOUT_TEST_NOW + 9000);
       })
   );
-
   it.effect(
     "rejects choices outside the frozen placement without mutating state",
     () =>
@@ -166,11 +126,12 @@ describe("tryouts/response/write", () => {
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* seedResponseFixture(t, "response-choice");
         yield* setResponseClock(5000);
-
         for (const optionKey of ["", "option-999"]) {
           yield* expectSaveFailure(
             seeded,
-            { code: "TRYOUT_RESPONSE_SELECTION_INVALID" },
+            {
+              code: "TRYOUT_RESPONSE_SELECTION_INVALID",
+            },
             optionKey
           );
         }
@@ -183,7 +144,6 @@ describe("tryouts/response/write", () => {
         });
       })
   );
-
   it.effect(
     "accepts the pre-expiry boundary and rejects expiry without overwrite",
     () =>
@@ -193,8 +153,9 @@ describe("tryouts/response/write", () => {
         yield* setResponseClock(1_799_999);
         yield* saveSelection(seeded);
         yield* setResponseClock(1_800_000);
-        yield* expectSaveFailure(seeded, { code: "TRYOUT_EXPIRED" });
-
+        yield* expectSaveFailure(seeded, {
+          code: "TRYOUT_EXPIRED",
+        });
         const responses = yield* collectResponses(t);
         expect(responses).toHaveLength(1);
         expect(responses[0]).toMatchObject({
@@ -208,7 +169,6 @@ describe("tryouts/response/write", () => {
         });
       })
   );
-
   it.effect("rejects a different user before writing a response", () =>
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
@@ -223,7 +183,9 @@ describe("tryouts/response/write", () => {
       );
       yield* expectSaveFailure(
         seeded,
-        { code: "TRYOUT_ATTEMPT_NOT_FOUND" },
+        {
+          code: "TRYOUT_ATTEMPT_NOT_FOUND",
+        },
         undefined,
         authenticate(t, outsider)
       );
@@ -231,13 +193,13 @@ describe("tryouts/response/write", () => {
       expect(responses).toEqual([]);
     })
   );
-
   it.effect("masks an unexpected attempt lookup failure", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* seedResponseFixture(t, "response-storage-failure");
-      yield* expectConvexFailure(
-        () =>
+      yield* Effect.promise(() =>
+        expect(
           t.mutation(async (ctx) => {
             const placement = await ctx.db.get(seeded.placementId);
             if (!placement) {
@@ -248,9 +210,8 @@ describe("tryouts/response/write", () => {
             get.mockRejectedValueOnce(
               new Error("internal tryoutAttempts storage details")
             );
-
-            return await runConvexProgram(
-              saveTryoutResponse(ctx, {
+            return await Effect.runPromiseWith(runtimeServices)(
+              saveTryoutResponse({
                 args: {
                   placementId: seeded.placementId,
                   selection: {
@@ -260,26 +221,29 @@ describe("tryouts/response/write", () => {
                 },
                 now: TRYOUT_TEST_NOW + 5000,
                 userId: seeded.identity.userId,
-              })
+              }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
             );
-          }),
-        {
+          })
+        ).rejects.toMatchObject({
           code: "TRYOUT_RESPONSE_FAILED",
           message: "Unable to save try-out response.",
-        }
+        })
       );
     })
   );
-
   it.effect.each([
     {
       expectedCode: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-      status: { attempt: "completed" as const },
+      status: {
+        attempt: "completed" as const,
+      },
       suffix: "inactive-attempt",
     },
     {
       expectedCode: "TRYOUT_SECTION_NOT_ACTIVE",
-      status: { section: "completed" as const },
+      status: {
+        section: "completed" as const,
+      },
       suffix: "inactive-section",
     },
   ])(
@@ -288,12 +252,13 @@ describe("tryouts/response/write", () => {
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* seedResponseFixture(t, suffix, status);
-        yield* expectSaveFailure(seeded, { code: expectedCode });
+        yield* expectSaveFailure(seeded, {
+          code: expectedCode,
+        });
         const responses = yield* collectResponses(t);
         expect(responses).toEqual([]);
       })
   );
-
   it.effect.each([
     {
       expectedCode: "TRYOUT_RESPONSE_LINK_MISMATCH",
@@ -318,11 +283,14 @@ describe("tryouts/response/write", () => {
                 sectionIdentity: "corrupt-section-identity",
               });
             }
-
-            return ctx.db.patch(seeded.sectionAttemptId, { sectionOrder: 999 });
+            return ctx.db.patch(seeded.sectionAttemptId, {
+              sectionOrder: 999,
+            });
           })
         );
-        yield* expectSaveFailure(seeded, { code: expectedCode });
+        yield* expectSaveFailure(seeded, {
+          code: expectedCode,
+        });
         const stored = yield* readResponseState(t, seeded);
         expect(stored.responses).toEqual([]);
         expect(stored.section).toMatchObject({
@@ -333,7 +301,6 @@ describe("tryouts/response/write", () => {
         expect(stored.attempt?.lastActivityAt).toBe(TRYOUT_TEST_NOW);
       })
   );
-
   it.effect(
     "rejects a cross-linked existing response without counter changes",
     () =>
@@ -359,7 +326,10 @@ describe("tryouts/response/write", () => {
             } = section;
             const foreignSectionId = await ctx.db.insert(
               "tryoutSectionAttempts",
-              { ...sectionValues, tryoutAttemptId: foreignAttemptId }
+              {
+                ...sectionValues,
+                tryoutAttemptId: foreignAttemptId,
+              }
             );
             await ctx.db.insert("tryoutResponses", {
               answeredAt: TRYOUT_TEST_NOW,
@@ -391,7 +361,6 @@ describe("tryouts/response/write", () => {
         expect(stored.attempt?.lastActivityAt).toBe(TRYOUT_TEST_NOW);
       })
   );
-
   it.effect("rejects duplicate placement responses before any overwrite", () =>
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
@@ -429,7 +398,6 @@ describe("tryouts/response/write", () => {
       expect(stored.attempt?.lastActivityAt).toBe(TRYOUT_TEST_NOW);
     })
   );
-
   it.effect("rejects stale stored correctness before any overwrite", () =>
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();

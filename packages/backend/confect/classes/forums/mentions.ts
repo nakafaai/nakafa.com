@@ -1,23 +1,20 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { checkClassAccess } from "@repo/backend/confect/classes/access";
 import { MAX_FORUM_POST_MENTIONS } from "@repo/backend/confect/classes/forums/constants";
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 /** Only mention viewers who can currently read this forum's class. */
 export const validateForumMentions = Effect.fn(
   "classes.forums.mentions.validate"
-)(function* (
-  ctx: MutationCtx,
-  {
-    forum,
-    mentionedUserIds,
-  }: {
-    forum: Doc<"schoolClassForums">;
-    mentionedUserIds: readonly Id<"users">[];
-  }
-) {
+)(function* ({
+  forum,
+  mentionedUserIds,
+}: {
+  forum: Docs["schoolClassForums"];
+  mentionedUserIds: readonly Id<"users">[];
+}) {
   const uniqueMentionedUserIds = [...new Set(mentionedUserIds)];
   if (uniqueMentionedUserIds.length > MAX_FORUM_POST_MENTIONS) {
     return yield* new ForumError({
@@ -27,7 +24,6 @@ export const validateForumMentions = Effect.fn(
   }
   for (const userId of uniqueMentionedUserIds) {
     const access = yield* checkClassAccess(
-      ctx,
       forum.classId,
       forum.schoolId,
       userId

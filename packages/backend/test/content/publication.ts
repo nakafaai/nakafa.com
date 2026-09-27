@@ -2,11 +2,12 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import schema from "@repo/backend/confect/_generated/schema";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
-import { convexModules } from "@repo/backend/confect/test.setup";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
-import schema from "@repo/backend/convex/schema";
 import { makeTestPageProjection } from "@repo/backend/test/content/page";
 import {
   TEST_PROOF_RENDERER,
@@ -18,9 +19,7 @@ import {
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { validate } from "convex-helpers/validators";
-import { convexTest } from "convex-test";
-import { Data, Effect, Predicate } from "effect";
+import { Data, Effect, Predicate, Schema } from "effect";
 
 export const TEST_PUBLICATION_RELEASE = testSignedRelease(
   testEmptyManifest(ReleaseIdSchema.make("publication-active"))
@@ -144,40 +143,41 @@ export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
   return { ...fixture, artifact, binding, head, projection };
 }
 
-/** Inserts schema-validated fixture rows and executes the real Convex query modules. */
+/** Decodes fixture rows through their native table contracts into a fresh Confect database. */
 export const createTestPublication = Effect.fn("TestContent.createPublication")(
   function* (source: ReadonlyMap<TableNames, readonly unknown[]>) {
-    const runtime = yield* Effect.sync(() => convexTest(schema, convexModules));
-    yield* Effect.tryPromise({
-      try: () =>
-        runtime.mutation(async (ctx) => {
-          for (const [table, rows] of source) {
-            for (const input of rows) {
-              if (!Predicate.isObject(input)) {
-                throw new TestPublicationError({
-                  table,
-                  cause: "Fixture row is not an object.",
-                });
-              }
-              const row = Object.fromEntries(
-                Object.entries(input).filter(
-                  ([field]) => field !== "_id" && field !== "_creationTime"
-                )
-              );
-              if (!validate(schema.tables[table].validator, row)) {
-                throw new TestPublicationError({
-                  table,
-                  cause: "Fixture row violates its database contract.",
-                });
-              }
-              await ctx.db.insert(table, row);
+    const runtime = yield* Confect;
+    yield* runtime.run(
+      Effect.gen(function* () {
+        const writer = yield* DatabaseWriter;
+        for (const [table, rows] of source) {
+          for (const input of rows) {
+            if (!Predicate.isObject(input)) {
+              return yield* new TestPublicationError({
+                table,
+                cause: "Fixture row is not an object.",
+              });
             }
+            const fields = Object.fromEntries(
+              Object.entries(input).filter(
+                ([field]) => field !== "_id" && field !== "_creationTime"
+              )
+            );
+            const row = yield* Schema.decodeUnknownEffect(
+              DatabaseSchema.tables(schema)[table].Fields
+            )(fields).pipe(
+              Effect.mapError(
+                (cause) => new TestPublicationError({ table, cause })
+              )
+            );
+            yield* writer.table(table).insert(row);
           }
-        }),
-      catch: (cause) => new TestPublicationError({ cause }),
-    });
+        }
+      })
+    );
     return runtime;
-  }
+  },
+  Effect.provide(confectLayer)
 );
 
 /** Test boundary failure preserves the table and original validation cause. */
@@ -185,3 +185,5 @@ class TestPublicationError extends Data.TaggedError("TestPublicationError")<{
   readonly table?: TableNames;
   readonly cause: unknown;
 }> {}
+
+import { DatabaseSchema } from "@confect/server";

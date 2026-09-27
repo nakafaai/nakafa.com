@@ -1,18 +1,20 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { Resend } from "@convex-dev/resend";
 import resendTest from "@convex-dev/resend/test";
 import workflowTest from "@convex-dev/workflow/test";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   activateWelcomeIntent,
   declareWelcomeIntent,
   removeWelcomeIntent,
 } from "@repo/backend/confect/emails/welcome/impl";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import schema from "@repo/backend/convex/schema";
 import { convexTest, type TestConvex } from "convex-test";
+import { Effect } from "effect";
 
 const testResend = new Resend(components.resend, {
   apiKey: "re_test_welcome_intent",
@@ -41,10 +43,22 @@ describe("emails/welcome/impl", () => {
     const test = convexTest(schema, convexModules);
     const userId = await insertUser(test, "declared");
     const firstId = await test.mutation((ctx) =>
-      runConvexProgram(declareWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        declareWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const repeatedId = await test.mutation((ctx) =>
-      runConvexProgram(declareWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        declareWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const intents = await test.query((ctx) =>
       ctx.db.query("welcomeEmailIntents").collect()
@@ -61,7 +75,13 @@ describe("emails/welcome/impl", () => {
     const test = convexTest(schema, convexModules);
     const userId = await insertUser(test, "historical");
     const activated = await test.mutation((ctx) =>
-      runConvexProgram(activateWelcomeIntent(ctx, userId, "en"))
+      Effect.runPromise(
+        activateWelcomeIntent(userId, "en").pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     expect(activated).toBe(false);
     expect(
@@ -73,13 +93,31 @@ describe("emails/welcome/impl", () => {
     workflowTest.register(test);
     const userId = await insertUser(test, "activated");
     await test.mutation((ctx) =>
-      runConvexProgram(declareWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        declareWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const first = await test.mutation((ctx) =>
-      runConvexProgram(activateWelcomeIntent(ctx, userId, "id"))
+      Effect.runPromise(
+        activateWelcomeIntent(userId, "id").pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const repeated = await test.mutation((ctx) =>
-      runConvexProgram(activateWelcomeIntent(ctx, userId, "de"))
+      Effect.runPromise(
+        activateWelcomeIntent(userId, "de").pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const intent = await test.query((ctx) =>
       ctx.db.query("welcomeEmailIntents").unique()
@@ -97,13 +135,31 @@ describe("emails/welcome/impl", () => {
     const test = convexTest(schema, convexModules);
     const userId = await insertUser(test, "awaiting-delete");
     await test.mutation((ctx) =>
-      runConvexProgram(declareWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        declareWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     await test.mutation((ctx) =>
-      runConvexProgram(removeWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        removeWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     await test.mutation((ctx) =>
-      runConvexProgram(removeWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        removeWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     expect(
       await test.query((ctx) => ctx.db.query("welcomeEmailIntents").unique())
@@ -114,10 +170,22 @@ describe("emails/welcome/impl", () => {
     workflowTest.register(test);
     const userId = await insertUser(test, "missing-workflow");
     await test.mutation((ctx) =>
-      runConvexProgram(declareWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        declareWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     await test.mutation((ctx) =>
-      runConvexProgram(activateWelcomeIntent(ctx, userId, "en"))
+      Effect.runPromise(
+        activateWelcomeIntent(userId, "en").pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const intent = await test.query((ctx) =>
       ctx.db.query("welcomeEmailIntents").unique()
@@ -132,7 +200,15 @@ describe("emails/welcome/impl", () => {
       })
     );
     await expect(
-      test.mutation((ctx) => runConvexProgram(removeWelcomeIntent(ctx, userId)))
+      test.mutation((ctx) =>
+        Effect.runPromise(
+          removeWelcomeIntent(userId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
+      )
     ).rejects.toThrow();
     expect(
       await test.query((ctx) => ctx.db.query("welcomeEmailIntents").unique())
@@ -146,10 +222,22 @@ describe("emails/welcome/impl", () => {
     workflowTest.register(test);
     const userId = await insertUser(test, "live-workflow-delete");
     await test.mutation((ctx) =>
-      runConvexProgram(declareWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        declareWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     await test.mutation((ctx) =>
-      runConvexProgram(activateWelcomeIntent(ctx, userId, "en"))
+      Effect.runPromise(
+        activateWelcomeIntent(userId, "en").pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const intent = await test.query((ctx) =>
       ctx.db.query("welcomeEmailIntents").unique()
@@ -158,7 +246,13 @@ describe("emails/welcome/impl", () => {
       throw new Error("Expected one scheduled synthetic intent.");
     }
     await test.mutation((ctx) =>
-      runConvexProgram(removeWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        removeWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     expect(
       await test.query((ctx) => ctx.db.query("welcomeEmailIntents").unique())
@@ -176,10 +270,22 @@ describe("emails/welcome/impl", () => {
     workflowTest.register(test);
     const userId = await insertUser(test, "uncleanable-workflow");
     await test.mutation((ctx) =>
-      runConvexProgram(declareWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        declareWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     await test.mutation((ctx) =>
-      runConvexProgram(activateWelcomeIntent(ctx, userId, "en"))
+      Effect.runPromise(
+        activateWelcomeIntent(userId, "en").pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     const intent = await test.query((ctx) =>
       ctx.db.query("welcomeEmailIntents").unique()
@@ -193,7 +299,15 @@ describe("emails/welcome/impl", () => {
     });
     vi.spyOn(workflow, "cleanup").mockResolvedValueOnce(false);
     await expect(
-      test.mutation((ctx) => runConvexProgram(removeWelcomeIntent(ctx, userId)))
+      test.mutation((ctx) =>
+        Effect.runPromise(
+          removeWelcomeIntent(userId).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
+      )
     ).rejects.toThrow("Unable to clean the welcome email workflow.");
     expect(
       await test.query((ctx) => ctx.db.get("welcomeEmailIntents", intent._id))
@@ -222,7 +336,13 @@ describe("emails/welcome/impl", () => {
       })
     );
     await test.mutation((ctx) =>
-      runConvexProgram(removeWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        removeWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     expect(
       await test.query((ctx) => testResend.status(ctx, componentEmailId))
@@ -258,7 +378,13 @@ describe("emails/welcome/impl", () => {
       })
     );
     await test.mutation((ctx) =>
-      runConvexProgram(removeWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        removeWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     expect(
       await test.query((ctx) => ctx.db.query("welcomeEmailIntents").unique())
@@ -287,7 +413,13 @@ describe("emails/welcome/impl", () => {
       })
     );
     await test.mutation((ctx) =>
-      runConvexProgram(removeWelcomeIntent(ctx, userId))
+      Effect.runPromise(
+        removeWelcomeIntent(userId).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
     expect(
       await test.query((ctx) => testResend.status(ctx, componentEmailId))

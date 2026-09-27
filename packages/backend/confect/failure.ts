@@ -1,5 +1,4 @@
-import { ConvexError } from "convex/values";
-import { Option, Predicate, Schema, SchemaTransformation } from "effect";
+import { Predicate, Schema, SchemaTransformation } from "effect";
 
 const FailureData = Schema.Struct({
   code: Schema.String,
@@ -11,15 +10,8 @@ const TaggedFailure = Schema.Struct({
 });
 
 /** Shared transport fields carried by domain-owned tagged errors. */
-export type ConvexTaggedError = typeof TaggedFailure.Type;
+type PublicFailure = typeof TaggedFailure.Type;
 
-/** Reads the stable code and message from one typed Convex error payload. */
-export function readConvexErrorData(error: unknown) {
-  const tagged = Schema.decodeUnknownOption(TaggedFailure)(error);
-  const data =
-    error instanceof ConvexError ? error.data : Option.getOrUndefined(tagged);
-  return Option.getOrNull(Schema.decodeUnknownOption(FailureData)(data));
-}
 /** Converts an unknown thrown value into a stable message for tagged errors. */
 export function getUnknownErrorMessage(error: unknown) {
   if (Predicate.isError(error)) {
@@ -29,13 +21,17 @@ export function getUnknownErrorMessage(error: unknown) {
 }
 
 /** Encodes only public fields and restores the domain error class on decode. */
-export function failureWire<
-  E extends ConvexTaggedError,
+export function publicFailure<
+  E extends PublicFailure,
   C extends Schema.Codec<E["code"], string>,
   M extends Schema.Codec<E["message"], string>,
 >(
   schema: Schema.Codec<E, unknown> & {
-    readonly fields: { readonly code: C; readonly message: M };
+    readonly fields: {
+      readonly _tag: Schema.tag<E["_tag"]>;
+      readonly code: C;
+      readonly message: M;
+    };
     readonly make: (fields: {
       readonly code: C["Type"];
       readonly message: M["Type"];
@@ -43,6 +39,7 @@ export function failureWire<
   }
 ) {
   return Schema.Struct({
+    _tag: schema.fields._tag.schema,
     code: schema.fields.code,
     message: schema.fields.message,
   }).pipe(
@@ -50,7 +47,11 @@ export function failureWire<
       Schema.toType(schema),
       SchemaTransformation.transform({
         decode: (fields) => schema.make(fields),
-        encode: ({ code, message }) => ({ code, message }),
+        encode: ({ _tag, code, message }) => ({
+          _tag,
+          code,
+          message,
+        }),
       })
     )
   );

@@ -1,10 +1,8 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { convexProgramLayer } from "@repo/backend/content/program/convex";
-import { readProgramPage } from "@repo/backend/content/program/page";
-import schema from "@repo/backend/convex/schema";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -13,100 +11,84 @@ import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
-import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+const page = refs.public.contentRelease.program.page;
+const initial = {
+  appLocale: "en",
+  expectedManifestHash: null,
+  expectedReleaseId: null,
+  paginationOpts: { cursor: null, numItems: 1 },
+} as const;
+const current = {
+  ...initial,
+  expectedManifestHash: TEST_MANIFEST_HASH,
+  expectedReleaseId: TEST_RELEASE_ID,
+};
 
 describe("contentRelease/program/page", () => {
-  it.live(
+  it.effect(
     "rejects malformed, foreign-snapshot, and cross-locale curriculum cursors",
     () =>
       Effect.gen(function* () {
-        const data = yield* makeProgramSnapshotData();
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateProgramSnapshot(t, data));
-        const first = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              readProgramPage("en", null, null, {
-                cursor: null,
-                numItems: 1,
-              }).pipe(Effect.provide(convexProgramLayer(ctx)))
-            )
-          )
+        const confect = yield* Confect;
+        yield* confect.run(
+          activateProgramSnapshot(yield* makeProgramSnapshotData())
         );
+        const first = yield* confect.query(page, initial);
         for (const cursor of [
           "program-route|{",
           'program-route|["foreign-snapshot","en","/en/programs/technical-program-0"]',
         ]) {
-          yield* Effect.promise(() =>
-            expect(
-              t.query((ctx) =>
-                runConvexProgram(
-                  readProgramPage("en", TEST_MANIFEST_HASH, TEST_RELEASE_ID, {
-                    cursor,
-                    numItems: 1,
-                  }).pipe(Effect.provide(convexProgramLayer(ctx)))
-                )
-              )
-            ).rejects.toMatchObject({
-              data: { code: "CONTENT_RELEASE_INTEGRITY" },
-            })
-          );
-        }
-        yield* Effect.promise(() =>
           expect(
-            t.query((ctx) =>
-              runConvexProgram(
-                readProgramPage("de", TEST_MANIFEST_HASH, TEST_RELEASE_ID, {
-                  cursor: first.result.continueCursor,
-                  numItems: 1,
-                }).pipe(Effect.provide(convexProgramLayer(ctx)))
-              )
-            )
-          ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
-          })
-        );
-      })
+            yield* confect
+              .query(page, {
+                ...current,
+                paginationOpts: { cursor, numItems: 1 },
+              })
+              .pipe(Effect.flip)
+          ).toMatchObject({
+            _tag: "ReleaseError",
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
+        }
+        expect(
+          yield* confect
+            .query(page, {
+              ...current,
+              appLocale: "de",
+              paginationOpts: {
+                cursor: first.result.continueCursor,
+                numItems: 1,
+              },
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ReleaseError",
+          code: "CONTENT_RELEASE_INTEGRITY",
+        });
+      }).pipe(Effect.provide(confectLayer))
   );
-
-  it("returns an empty unmanaged page before program publication", async () => {
-    const t = convexTest(schema, convexModules);
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readProgramPage("en", null, null, {
-            cursor: null,
-            numItems: 2,
-          }).pipe(Effect.provide(convexProgramLayer(ctx)))
-        )
-      )
-    ).resolves.toMatchObject({
-      managed: false,
-      result: { isDone: true, page: [] },
-    });
-  });
-
-  it.live(
+  it.effect("returns an empty unmanaged page before program publication", () =>
+    Effect.gen(function* () {
+      const confect = yield* Confect;
+      expect(yield* confect.query(page, initial)).toMatchObject({
+        managed: false,
+        result: { isDone: true, page: [] },
+      });
+    }).pipe(Effect.provide(confectLayer))
+  );
+  it.effect(
     "paginates verified localized routes under one release identity",
     () =>
       Effect.gen(function* () {
+        const confect = yield* Confect;
         const data = yield* makeProgramSnapshotData();
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateProgramSnapshot(t, data));
-        const first = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              readProgramPage("en", null, null, {
-                cursor: null,
-                numItems: 1,
-              }).pipe(Effect.provide(convexProgramLayer(ctx)))
-            )
-          )
-        );
-        const firstRow = yield* decodeSnapshotRowJson(
-          first.result.page[0] ?? ""
-        );
+        yield* confect.run(activateProgramSnapshot(data));
+        const first = yield* confect.query(page, initial);
+        const firstJson = first.result.page[0];
+        assert(firstJson);
+        const firstRow = yield* decodeSnapshotRowJson(firstJson);
         expect(first).toMatchObject({
           activeManifestHash: TEST_MANIFEST_HASH,
           activeReleaseId: TEST_RELEASE_ID,
@@ -120,98 +102,78 @@ describe("contentRelease/program/page", () => {
           family: "program",
           record: { kind: "curriculum", row: { appLocale: "en" } },
         });
-
-        yield* Effect.promise(() =>
-          expect(
-            t.query((ctx) =>
-              runConvexProgram(
-                readProgramPage("en", TEST_MANIFEST_HASH, TEST_RELEASE_ID, {
-                  cursor: first.result.continueCursor,
-                  numItems: 1,
-                }).pipe(Effect.provide(convexProgramLayer(ctx)))
-              )
-            )
-          ).resolves.toMatchObject({
-            managed: true,
-            result: { isDone: true, page: [expect.any(String)] },
-            stale: false,
-          })
-        );
-      })
+        const second = yield* confect.query(page, {
+          ...current,
+          paginationOpts: { cursor: first.result.continueCursor, numItems: 1 },
+        });
+        expect(second).toMatchObject({
+          managed: true,
+          result: { isDone: true, page: [expect.any(String)] },
+          stale: false,
+        });
+        expect(second.result.page[0]).not.toBe(firstJson);
+      }).pipe(Effect.provide(confectLayer))
   );
-
-  it.live(
+  it.effect(
     "returns a stable stale page for a superseded continuation identity",
     () =>
       Effect.gen(function* () {
-        const data = yield* makeProgramSnapshotData();
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateProgramSnapshot(t, data));
-        const first = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              readProgramPage("en", null, null, {
-                cursor: null,
-                numItems: 1,
-              }).pipe(Effect.provide(convexProgramLayer(ctx)))
-            )
-          )
+        const confect = yield* Confect;
+        yield* confect.run(
+          activateProgramSnapshot(yield* makeProgramSnapshotData())
         );
-
-        yield* Effect.promise(() =>
-          expect(
-            t.query((ctx) =>
-              runConvexProgram(
-                readProgramPage("en", "stale-manifest", "stale-release", {
-                  cursor: first.result.continueCursor,
-                  numItems: 1,
-                }).pipe(Effect.provide(convexProgramLayer(ctx)))
-              )
-            )
-          ).resolves.toMatchObject({
-            activeReleaseId: TEST_RELEASE_ID,
-            managed: true,
-            result: { isDone: true, page: [] },
-            stale: true,
+        const first = yield* confect.query(page, initial);
+        expect(
+          yield* confect.query(page, {
+            ...initial,
+            expectedManifestHash: "stale-manifest",
+            expectedReleaseId: "stale-release",
+            paginationOpts: {
+              cursor: first.result.continueCursor,
+              numItems: 1,
+            },
           })
-        );
-      })
+        ).toMatchObject({
+          activeReleaseId: TEST_RELEASE_ID,
+          managed: true,
+          result: { isDone: true, page: [] },
+          stale: true,
+        });
+      }).pipe(Effect.provide(confectLayer))
   );
-
-  it.live(
-    "resumes an issued native Convex cursor without repeating the preceding route",
+  it.effect(
+    "resumes an issued native cursor without repeating the preceding route",
     () =>
       Effect.gen(function* () {
+        const confect = yield* Confect;
         const data = yield* makeProgramSnapshotData();
-        const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateProgramSnapshot(t, data));
-        const issued = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            ctx.db
-              .query("curriculumRoutes")
-              .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
+        yield* confect.run(activateProgramSnapshot(data));
+        const issued = yield* confect.run(
+          Effect.gen(function* () {
+            const reader = yield* DatabaseReader;
+            const result = yield* reader
+              .table("curriculumRoutes")
+              .index("by_snapshotId_and_appLocale_and_path", (index) =>
                 index.eq("snapshotId", data.snapshotId).eq("appLocale", "en")
               )
-              .paginate({ cursor: null, numItems: 1 })
-          )
+              .paginate({ cursor: null, numItems: 1 });
+            expect(result.isDone).toBe(false);
+            const row = result.page[0];
+            assert(row);
+            return { cursor: result.continueCursor, rowJson: row.rowJson };
+          }),
+          Schema.Struct({ cursor: Schema.String, rowJson: Schema.String })
         );
-        expect(issued.isDone).toBe(false);
-        const next = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              readProgramPage("en", TEST_MANIFEST_HASH, TEST_RELEASE_ID, {
-                cursor: issued.continueCursor,
-                numItems: 1,
-              }).pipe(Effect.provide(convexProgramLayer(ctx)))
-            )
-          )
-        );
+        const next = yield* confect.query(page, {
+          ...current,
+          paginationOpts: { cursor: issued.cursor, numItems: 1 },
+        });
         expect(next).toMatchObject({
           managed: true,
           stale: false,
           result: { isDone: true, page: [expect.any(String)] },
         });
-        expect(next.result.page[0]).not.toBe(issued.page[0]?.rowJson);
-      })
+        expect(next.result.page[0]).not.toBe(issued.rowJson);
+      }).pipe(Effect.provide(confectLayer))
   );
 });

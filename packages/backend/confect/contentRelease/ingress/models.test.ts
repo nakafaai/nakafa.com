@@ -1,3 +1,5 @@
+import { RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
@@ -6,7 +8,7 @@ import {
   ModelBuildCoordinator,
   type ModelBuildCoordinatorService,
   type ModelBuildWaitPolicy,
-  makeModelBuildCoordinatorLive,
+  modelBuildCoordinatorLayer,
   waitForModelBuild,
 } from "@repo/backend/confect/contentRelease/ingress/models";
 import type {
@@ -14,7 +16,6 @@ import type {
   ModelBuildRestartResult,
   ModelBuildStatus,
 } from "@repo/backend/confect/contentRelease/models/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -24,12 +25,11 @@ import {
 } from "@repo/backend/test/activation/fixture";
 import { testRendererJson } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
-import { Data, Duration, Effect, Fiber } from "effect";
+import { Data, Duration, Effect, Fiber, Layer } from "effect";
 import { TestClock } from "effect/testing";
 
 const releaseId = ReleaseIdSchema.make("release-model-waiter");
 afterEach(() => vi.useRealTimers());
-
 class UnexpectedModelState extends Data.TaggedError("UnexpectedModelState")<{
   readonly operation: "restart" | "status";
 }> {}
@@ -74,17 +74,28 @@ function makeCoordinator(
       restartIndex += 1;
       return result
         ? Effect.succeed(result)
-        : Effect.die(new UnexpectedModelState({ operation: "restart" }));
+        : Effect.die(
+            new UnexpectedModelState({
+              operation: "restart",
+            })
+          );
     },
     status: () => {
       const status = statuses[statusIndex];
       statusIndex += 1;
       return status
         ? Effect.succeed(status)
-        : Effect.die(new UnexpectedModelState({ operation: "status" }));
+        : Effect.die(
+            new UnexpectedModelState({
+              operation: "status",
+            })
+          );
     },
   };
-  return { restarts, service };
+  return {
+    restarts,
+    service,
+  };
 }
 
 /** Runs one waiter policy at the explicit Effect test boundary. */
@@ -96,7 +107,6 @@ function runWait(
     Effect.provideService(ModelBuildCoordinator, service)
   );
 }
-
 describe("contentRelease/ingress/models", () => {
   it("restarts a canceled native build and observes its completed buffers", async () => {
     vi.useFakeTimers();
@@ -113,7 +123,7 @@ describe("contentRelease/ingress/models", () => {
       await ctx.scheduler.cancel(build.syncJobId);
     });
     const restarted = await t.action((ctx) =>
-      runConvexProgram(
+      Effect.runPromise(
         Effect.gen(function* () {
           const coordinator = yield* ModelBuildCoordinator;
           const failed = yield* coordinator.status(CANDIDATE.releaseId);
@@ -124,20 +134,41 @@ describe("contentRelease/ingress/models", () => {
             releaseId: CANDIDATE.releaseId,
           });
           const running = yield* coordinator.status(CANDIDATE.releaseId);
-          return { result, running };
-        }).pipe(Effect.provide(makeModelBuildCoordinatorLive(ctx)))
+          return {
+            result,
+            running,
+          };
+        }).pipe(
+          Effect.provide(
+            Layer.provideMerge(
+              modelBuildCoordinatorLayer,
+              RegisteredFunction.actionLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
     );
     expect(restarted).toMatchObject({
-      result: { status: "restarted", syncGeneration: 2 },
-      running: { phase: "building", syncGeneration: 2 },
+      result: {
+        status: "restarted",
+        syncGeneration: 2,
+      },
+      running: {
+        phase: "building",
+        syncGeneration: 2,
+      },
     });
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     await expect(
       t.action((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           waitForModelBuild(CANDIDATE.releaseId, "observe").pipe(
-            Effect.provide(makeModelBuildCoordinatorLive(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                modelBuildCoordinatorLayer,
+                RegisteredFunction.actionLayer(confectSchema, ctx)
+              )
+            )
           )
         )
       )
@@ -154,7 +185,6 @@ describe("contentRelease/ingress/models", () => {
           syncJobId: failedJobId,
         },
       ]);
-
       expect(
         yield* runWait("observe", service).pipe(Effect.flip)
       ).toMatchObject({
@@ -164,7 +194,6 @@ describe("contentRelease/ingress/models", () => {
       expect(restarts).toEqual([]);
     })
   );
-
   it.effect("restarts one failed build and follows its winning lineage", () =>
     Effect.gen(function* () {
       const [failedJobId, successorJobId] = yield* createScheduledJobIds();
@@ -176,7 +205,10 @@ describe("contentRelease/ingress/models", () => {
             syncGeneration: 1,
             syncJobId: failedJobId,
           },
-          { phase: "completed", releaseId },
+          {
+            phase: "completed",
+            releaseId,
+          },
         ],
         [
           {
@@ -186,7 +218,6 @@ describe("contentRelease/ingress/models", () => {
           },
         ]
       );
-
       expect(yield* runWait("restart-failed-once", service)).toBeUndefined();
       expect(restarts).toEqual([
         {
@@ -197,7 +228,6 @@ describe("contentRelease/ingress/models", () => {
       ]);
     })
   );
-
   it.effect("follows a concurrent winner after a stale restart", () =>
     Effect.gen(function* () {
       const [failedJobId] = yield* createScheduledJobIds();
@@ -209,16 +239,21 @@ describe("contentRelease/ingress/models", () => {
             syncGeneration: 1,
             syncJobId: failedJobId,
           },
-          { phase: "ready", releaseId },
+          {
+            phase: "ready",
+            releaseId,
+          },
         ],
-        [{ status: "stale" }]
+        [
+          {
+            status: "stale",
+          },
+        ]
       );
-
       expect(yield* runWait("restart-failed-once", service)).toBeUndefined();
       expect(restarts).toHaveLength(1);
     })
   );
-
   it.effect("fails after the sole restarted lineage also fails", () =>
     Effect.gen(function* () {
       const [failedJobId, successorJobId] = yield* createScheduledJobIds();
@@ -245,14 +280,14 @@ describe("contentRelease/ingress/models", () => {
           },
         ]
       );
-
       expect(
         yield* runWait("restart-failed-once", service).pipe(Effect.flip)
-      ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+      ).toMatchObject({
+        code: "CONTENT_RELEASE_INTEGRITY",
+      });
       expect(restarts).toHaveLength(1);
     })
   );
-
   it.effect("polls actual running state until the build is ready", () =>
     Effect.gen(function* () {
       const [runningJobId] = yield* createScheduledJobIds();
@@ -263,12 +298,13 @@ describe("contentRelease/ingress/models", () => {
           syncGeneration: 1,
           syncJobId: runningJobId,
         },
-        { phase: "ready", releaseId },
+        {
+          phase: "ready",
+          releaseId,
+        },
       ]);
-
       const waiting = yield* runWait("observe", service).pipe(Effect.forkChild);
       yield* TestClock.adjust(Duration.millis(100));
-
       expect(yield* Fiber.join(waiting)).toBeUndefined();
       expect(restarts).toEqual([]);
     })

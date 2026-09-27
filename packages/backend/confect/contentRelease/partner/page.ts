@@ -1,5 +1,5 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -8,19 +8,17 @@ import {
   type PartnerCursor,
   type PartnerFamily,
 } from "@repo/backend/confect/contentRelease/partner/cursor";
-import { convexArticleLayer } from "@repo/backend/content/article/convex";
+import { articleLayer } from "@repo/backend/content/article/confect";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { verifyArticle } from "@repo/backend/content/article/verify";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { Effect } from "effect";
 
 const PARTNER_PAGE_LIMIT = 100;
 interface PartnerPageInput {
-  readonly appLocale: Doc<"contentPaths">["appLocale"];
+  readonly appLocale: Docs["contentPaths"]["appLocale"];
   readonly cursor: string | null;
   readonly family: PartnerFamily;
   readonly limit: number;
@@ -30,7 +28,7 @@ interface ValidatedPartnerPageInput extends Omit<PartnerPageInput, "cursor"> {
   readonly cursor: PartnerCursor | null;
 }
 interface PartnerCatalogRow {
-  readonly appLocale: Doc<"contentPaths">["appLocale"];
+  readonly appLocale: Docs["contentPaths"]["appLocale"];
   readonly contentKey: string;
   readonly publicPath: string;
 }
@@ -39,13 +37,13 @@ interface PartnerRange {
   readonly lower: string;
   readonly upper: string;
 }
-interface PartnerCatalogSource<Row extends PartnerCatalogRow> {
+interface PartnerCatalogSource<Row extends PartnerCatalogRow, R> {
   readonly readDescendants: (
     range: PartnerRange,
     limit: number
   ) => Effect.Effect<readonly Row[]>;
   readonly readExact: () => Effect.Effect<null | Row>;
-  readonly verify: (row: Row) => Effect.Effect<unknown, ReleaseError>;
+  readonly verify: (row: Row) => Effect.Effect<unknown, ReleaseError, R>;
 }
 
 /** Checks exact-or-descendant content-key membership without sibling bleed. */
@@ -118,7 +116,8 @@ const validatePartnerPageInput = Effect.fn(
 /** Reads and verifies one bounded exact-or-descendant catalog page. */
 const readPartnerRows = Effect.fn("contentRelease.readPartnerRows")(function* <
   Row extends PartnerCatalogRow,
->(input: ValidatedPartnerPageInput, source: PartnerCatalogSource<Row>) {
+  R,
+>(input: ValidatedPartnerPageInput, source: PartnerCatalogSource<Row, R>) {
   const exact =
     input.cursor === null && input.prefix !== ""
       ? yield* source.readExact()
@@ -136,16 +135,16 @@ const readPartnerRows = Effect.fn("contentRelease.readPartnerRows")(function* <
 /** Reads one current-only partner page from its authenticated signed catalog. */
 export const readPartnerApiPage = Effect.fn(
   "contentRelease.readPartnerApiPage"
-)(function* (ctx: QueryCtx, rawInput: PartnerPageInput) {
+)(function* (rawInput: PartnerPageInput) {
   const input = yield* validatePartnerPageInput(rawInput);
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const owner =
     input.family === "article"
       ? yield* loadArticleOwner(input.appLocale).pipe(
-          Effect.provide(convexArticleLayer(ctx))
+          Effect.provide(articleLayer)
         )
       : yield* loadMaterialOwner(input.appLocale).pipe(
-          Effect.provide(convexPublicationLayer(ctx))
+          Effect.provide(publicationLayer)
         );
   const slot = owner.slot;
   if (!(owner.active && owner.managed && slot)) {
@@ -167,7 +166,7 @@ export const readPartnerApiPage = Effect.fn(
   }
   let rows: readonly PartnerCatalogRow[];
   if (input.family === "article") {
-    rows = yield* readPartnerRows<Doc<"articleCatalog">>(input, {
+    rows = yield* readPartnerRows(input, {
       readDescendants: (range, limit) =>
         database
           .table("articleCatalog")
@@ -196,12 +195,10 @@ export const readPartnerApiPage = Effect.fn(
             Effect.orDie
           ),
       verify: (row) =>
-        verifyArticle(row, active.sequence).pipe(
-          Effect.provide(convexArticleLayer(ctx))
-        ),
+        verifyArticle(row, active.sequence).pipe(Effect.provide(articleLayer)),
     });
   } else {
-    rows = yield* readPartnerRows<Doc<"materialCatalog">>(input, {
+    rows = yield* readPartnerRows(input, {
       readDescendants: (range, limit) =>
         database
           .table("materialCatalog")

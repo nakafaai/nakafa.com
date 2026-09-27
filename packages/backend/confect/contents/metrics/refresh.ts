@@ -1,6 +1,8 @@
-import { DatabaseReader, Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import type { RefreshLearningPopularityWindowPageArgs } from "@repo/backend/confect/contents/analytics/spec";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
 import { LEARNING_POPULARITY_REFRESH_BATCH_SIZE } from "@repo/backend/confect/contents/constants";
@@ -16,7 +18,6 @@ import {
   getPopularitySignalDay,
   learningPopularityScopeValues,
 } from "@repo/backend/confect/contents/popularity";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Duration, Effect, flow, Struct } from "effect";
 
 /** Generated internal mutation reference accepted by Convex refresh scheduling. */
@@ -24,16 +25,14 @@ import { Clock, Duration, Effect, flow, Struct } from "effect";
 /** Schedules bounded repair work for every finite popularity namespace. */
 export const scheduleLearningPopularityRefreshes = Effect.fn(
   "contents.metrics.scheduleLearningPopularityRefreshes"
-)(function* (ctx: MutationCtx) {
-  const scheduler = yield* Scheduler.Scheduler.pipe(
-    Effect.provide(Scheduler.layer(ctx.scheduler))
-  );
+)(function* () {
+  const scheduler = yield* Scheduler;
   const timestamp = yield* Clock.currentTimeMillis;
   const day = getPopularitySignalDay(timestamp);
   let scheduledWindows = 0;
   for (const scopeMode of learningPopularityScopeValues) {
     for (const windowKey of getFinitePopularityWindows()) {
-      const cycle = yield* beginPopularityCycle(ctx, {
+      const cycle = yield* beginPopularityCycle({
         day,
         forceRepair: true,
         scopeMode,
@@ -71,13 +70,11 @@ export const scheduleLearningPopularityRefreshes = Effect.fn(
 export const refreshLearningPopularityWindowPage = Effect.fn(
   "contents.metrics.refreshLearningPopularityWindowPage"
 )(
-  function* (ctx: MutationCtx, args: RefreshLearningPopularityWindowPageArgs) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (args: RefreshLearningPopularityWindowPageArgs) {
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
     const timestamp = yield* Clock.currentTimeMillis;
-    const cycle = yield* getPopularityCyclePage(ctx, {
+    const cycle = yield* getPopularityCyclePage({
       ...Struct.pick(args, ["cursor"]),
       day: args.day,
       mode: "repair",
@@ -107,7 +104,6 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
     let removedCounters = 0;
     for (const counter of page.page) {
       const result = yield* repairPopularityCounter(
-        ctx,
         counter,
         args.windowKey,
         args.day,
@@ -121,7 +117,7 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
       }
     }
     if (!page.isDone) {
-      yield* advancePopularityCycle(ctx, cycle.cycle, page.continueCursor);
+      yield* advancePopularityCycle(cycle.cycle, page.continueCursor);
       yield* scheduler
         .runAfter(
           Duration.millis(0),
@@ -137,7 +133,7 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
         .pipe(Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail)));
     }
     if (page.isDone) {
-      yield* completePopularityCycle(ctx, cycle.cycle, args.day);
+      yield* completePopularityCycle(cycle.cycle, args.day);
     }
     return {
       continueCursor: page.continueCursor,

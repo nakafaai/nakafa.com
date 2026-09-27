@@ -1,16 +1,19 @@
-import { defaultModel, ModelIdSchema } from "@repo/ai/config/model";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { MyUIMessage } from "@repo/backend/confect/chats/message";
+import { mapDBPartToUIMessagePart } from "@repo/backend/confect/chats/messageParts/dbToUi";
+import {
+  defaultModel,
+  ModelIdSchema,
+} from "@repo/backend/confect/nina/config/model";
 import {
   NinaContextSnapshotSchema,
   NinaContextTransitionSchema,
-} from "@repo/ai/nina/memory/pack";
-import type { MyUIMessage } from "@repo/ai/types/message";
-import { mapDBPartToUIMessagePart } from "@repo/backend/confect/chats/messageParts/dbToUi";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+} from "@repo/backend/confect/nina/memory/pack";
 import { Option, Predicate, Schema } from "effect";
 
 /** Decodes stored Nina snapshots from Convex JSON into branded AI metadata. */
 function readStoredNinaSnapshot(
-  snapshot: Doc<"messages">["ninaContextSnapshot"]
+  snapshot: Docs["messages"]["ninaContextSnapshot"]
 ) {
   const decoded = Schema.decodeUnknownOption(NinaContextSnapshotSchema)(
     snapshot
@@ -23,7 +26,7 @@ function readStoredNinaSnapshot(
 
 /** Decodes stored Nina transition markers into schema-owned AI metadata. */
 function readStoredNinaTransition(
-  transition: Doc<"messages">["ninaContextTransition"]
+  transition: Docs["messages"]["ninaContextTransition"]
 ) {
   const decoded = Schema.decodeUnknownOption(NinaContextTransitionSchema)(
     transition
@@ -39,9 +42,9 @@ function readStoredNinaTransition(
  * Use this after receiving one or more pages from `loadMessagesPage`.
  */
 export function mapDBMessagesToUIMessages(
-  messages: Array<
-    Doc<"messages"> & {
-      parts: Doc<"messageParts">[];
+  messages: ReadonlyArray<
+    Docs["messages"] & {
+      parts: readonly Docs["messageParts"][];
     }
   >
 ): MyUIMessage[] {

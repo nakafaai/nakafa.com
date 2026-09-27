@@ -1,6 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import {
-  ContentAnalyticsIoErrorWire,
+  ContentAnalyticsIoError,
   expireLearningPopularityWindowPageArgs,
   expireLearningPopularityWindowPageResultValidator,
   pruneLearningPopularityResultValidator,
@@ -15,7 +15,7 @@ export default GroupSpec.make()
       name: "pruneLearningPopularity",
       args: () => ({}),
       returns: () => pruneLearningPopularityResultValidator,
-      error: () => ContentAnalyticsIoErrorWire,
+      error: () => ContentAnalyticsIoError,
     })
   )
   .addFunction(
@@ -23,7 +23,7 @@ export default GroupSpec.make()
       name: "scheduleLearningPopularityExpiries",
       args: () => ({}),
       returns: () => scheduleLearningPopularityExpiriesResultValidator,
-      error: () => ContentAnalyticsIoErrorWire,
+      error: () => ContentAnalyticsIoError,
     })
   )
   .addFunction(
@@ -31,7 +31,7 @@ export default GroupSpec.make()
       name: "scheduleLearningPopularityRefreshes",
       args: () => ({}),
       returns: () => scheduleLearningPopularityRefreshesResultValidator,
-      error: () => ContentAnalyticsIoErrorWire,
+      error: () => ContentAnalyticsIoError,
     })
   )
   .addFunction(
@@ -39,7 +39,7 @@ export default GroupSpec.make()
       name: "refreshLearningPopularityWindowPage",
       args: () => refreshLearningPopularityWindowPageArgs,
       returns: () => refreshLearningPopularityWindowPageResultValidator,
-      error: () => ContentAnalyticsIoErrorWire,
+      error: () => ContentAnalyticsIoError,
     })
   )
   .addFunction(
@@ -47,6 +47,6 @@ export default GroupSpec.make()
       name: "expireLearningPopularityWindowPage",
       args: () => expireLearningPopularityWindowPageArgs,
       returns: () => expireLearningPopularityWindowPageResultValidator,
-      error: () => ContentAnalyticsIoErrorWire,
+      error: () => ContentAnalyticsIoError,
     })
   );

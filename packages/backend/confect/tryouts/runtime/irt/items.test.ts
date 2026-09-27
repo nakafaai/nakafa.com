@@ -1,5 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { loadSectionIrtSource } from "@repo/backend/confect/tryouts/runtime/irt/items";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 type SourceCorruption = "duplicate" | "none" | "stale";
@@ -28,94 +30,134 @@ const corruptSourceCases: ReadonlyArray<{
   expectedCode: string;
   kind: SourceCorruption;
 }> = [
-  { expectedCode: "TRYOUT_IRT_ITEM_DUPLICATE", kind: "duplicate" },
-  { expectedCode: "TRYOUT_IRT_ITEM_STALE", kind: "stale" },
+  {
+    expectedCode: "TRYOUT_IRT_ITEM_DUPLICATE",
+    kind: "duplicate",
+  },
+  {
+    expectedCode: "TRYOUT_IRT_ITEM_STALE",
+    kind: "stale",
+  },
 ];
 
 /** Seeds one exact scale, attempt, and immutable placement inventory. */
-async function seedSectionIrtSource(
-  ctx: MutationCtx,
-  corruption: SourceCorruption
-) {
-  const userId = await insertTryoutUser(ctx, {
-    authId: `auth-irt-items-${corruption}`,
-    email: `irt-items-${corruption}@example.com`,
-    name: `IRT Items ${corruption}`,
-  });
-  const set = makeTryoutSet({ questionCount: 2 });
-  const signedSection = makeSignedTryoutSection(
-    makeTryoutSection({ questionCount: 2 })
-  );
-  const source = makeSignedTryoutSource(set, [signedSection]);
-  const firstPlacement = signedSection.signed.placements[0];
-  const secondPlacement = signedSection.signed.placements[1];
-  if (!(firstPlacement && secondPlacement)) {
-    throw new Error("Expected two signed IRT placement fixtures.");
-  }
-  const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
-    model: "2pl",
-    publishedAt: NOW,
-    questionCount: 2,
-    setIdentity: source.snapshot.setIdentity,
-    status: "provisional",
-    tryoutSnapshotId: source.snapshot.snapshotId,
-  });
-  const firstItemId = await insertIrtScaleItem(ctx, {
-    placement: firstPlacement,
-    scaleVersionId,
-  });
-  await insertIrtScaleItem(ctx, {
-    placement: corruption === "duplicate" ? firstPlacement : secondPlacement,
-    scaleVersionId,
-  });
-  if (corruption === "stale") {
-    await ctx.db.patch(firstItemId, {
-      placementRowHash: `${firstPlacement.rowHash}-stale`,
+function seedSectionIrtSource(ctx: MutationCtx, corruption: SourceCorruption) {
+  return Effect.gen(function* () {
+    const userId = yield* Effect.promise(() =>
+      insertTryoutUser(ctx, {
+        authId: `auth-irt-items-${corruption}`,
+        email: `irt-items-${corruption}@example.com`,
+        name: `IRT Items ${corruption}`,
+      })
+    );
+    const set = makeTryoutSet({
+      questionCount: 2,
     });
-  }
-
-  const snapshot = tryoutSectionSnapshot({ signed: signedSection.signed });
-  const attemptId = await insertTryoutAttempt(ctx, {
-    scaleVersionId,
-    sectionSnapshots: [snapshot],
-    set,
-    snapshotId: source.snapshot.snapshotId,
-    snapshotReleaseId: TEST_RELEASE_ID,
-    userId,
+    const signedSection = makeSignedTryoutSection(
+      makeTryoutSection({
+        questionCount: 2,
+      })
+    );
+    const source = makeSignedTryoutSource(set, [signedSection]);
+    const firstPlacement = signedSection.signed.placements[0];
+    const secondPlacement = signedSection.signed.placements[1];
+    if (!(firstPlacement && secondPlacement)) {
+      return yield* Effect.die(
+        new Error("Expected two signed IRT placement fixtures.")
+      );
+    }
+    const scaleVersionId = yield* Effect.promise(() =>
+      ctx.db.insert("irtScaleVersions", {
+        model: "2pl",
+        publishedAt: NOW,
+        questionCount: 2,
+        setIdentity: source.snapshot.setIdentity,
+        status: "provisional",
+        tryoutSnapshotId: source.snapshot.snapshotId,
+      })
+    );
+    const firstItemId = yield* Effect.promise(() =>
+      insertIrtScaleItem(ctx, {
+        placement: firstPlacement,
+        scaleVersionId,
+      })
+    );
+    yield* Effect.promise(() =>
+      insertIrtScaleItem(ctx, {
+        placement:
+          corruption === "duplicate" ? firstPlacement : secondPlacement,
+        scaleVersionId,
+      })
+    );
+    if (corruption === "stale") {
+      yield* Effect.promise(() =>
+        ctx.db.patch(firstItemId, {
+          placementRowHash: `${firstPlacement.rowHash}-stale`,
+        })
+      );
+    }
+    const snapshot = tryoutSectionSnapshot({
+      signed: signedSection.signed,
+    });
+    const attemptId = yield* Effect.promise(() =>
+      insertTryoutAttempt(ctx, {
+        scaleVersionId,
+        sectionSnapshots: [snapshot],
+        set,
+        snapshotId: source.snapshot.snapshotId,
+        snapshotReleaseId: TEST_RELEASE_ID,
+        userId,
+      })
+    );
+    const attempt = yield* Effect.promise(() => ctx.db.get(attemptId));
+    if (!attempt) {
+      return yield* Effect.die(
+        new Error("Expected one active IRT attempt fixture.")
+      );
+    }
+    yield* createAttemptPlacements({
+      attempt,
+      source,
+    }).pipe(
+      Effect.provide(RegisteredConvexFunction.mutationLayer(confectSchema, ctx))
+    );
+    return {
+      attemptId,
+      firstItemId,
+      scaleVersionId,
+      sectionIdentity: snapshot.sectionIdentity,
+    };
   });
-  const attempt = await ctx.db.get(attemptId);
-  if (!attempt) {
-    throw new Error("Expected one active IRT attempt fixture.");
-  }
-  await runConvexProgram(createAttemptPlacements(ctx, { attempt, source }));
-
-  return {
-    attemptId,
-    firstItemId,
-    scaleVersionId,
-    sectionIdentity: snapshot.sectionIdentity,
-  };
 }
-
 describe("tryouts/runtime/irt/items", () => {
   it("loads one section with two fixed indexed queries", async () => {
     const t = convexTest(schema, convexModules);
     const result = await t.mutation(async (ctx) => {
-      const fixture = await seedSectionIrtSource(ctx, "none");
+      const fixture = await Effect.runPromise(
+        seedSectionIrtSource(ctx, "none")
+      );
       const attempt = await ctx.db.get(fixture.attemptId);
       if (!attempt) {
         throw new Error("Expected one active IRT attempt fixture.");
       }
-      const placements = await runConvexProgram(
-        loadAttemptPlacements(ctx, attempt)
+      const placements = await Effect.runPromise(
+        loadAttemptPlacements(attempt).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       const query = vi.spyOn(ctx.db, "query");
-      const source = await runConvexProgram(
-        loadSectionIrtSource(ctx, {
+      const source = await Effect.runPromise(
+        loadSectionIrtSource({
           attempt,
           placements,
           sectionIdentity: fixture.sectionIdentity,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       const calibrationRunQueries = query.mock.calls.filter(
         ([tableName]) => tableName === "irtCalibrationRuns"
@@ -124,67 +166,93 @@ describe("tryouts/runtime/irt/items", () => {
         ([tableName]) => tableName === "irtScaleItems"
       ).length;
       query.mockRestore();
-
       return {
         calibrationRunQueries,
         itemCount: source.items.length,
         scaleItemQueries,
       };
     });
-
     expect(result).toEqual({
       calibrationRunQueries: 1,
       itemCount: 2,
       scaleItemQueries: 1,
     });
   });
-
   it.each(corruptSourceCases)(
     "rejects a $kind item source",
     async ({ expectedCode, kind }) => {
       const t = convexTest(schema, convexModules);
       const fixture = await t.mutation((ctx) =>
-        seedSectionIrtSource(ctx, kind)
+        Effect.runPromise(seedSectionIrtSource(ctx, kind))
       );
-
       await expect(
         t.mutation(async (ctx) => {
           const attempt = await ctx.db.get(fixture.attemptId);
           if (!attempt) {
             throw new Error("Expected one active IRT attempt fixture.");
           }
-          const placements = await runConvexProgram(
-            loadAttemptPlacements(ctx, attempt)
+          const placements = await Effect.runPromise(
+            loadAttemptPlacements(attempt).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
-          return await runConvexProgram(
-            loadSectionIrtSource(ctx, {
+          return await Effect.runPromise(
+            loadSectionIrtSource({
               attempt,
               placements,
               sectionIdentity: fixture.sectionIdentity,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
         })
-      ).rejects.toMatchObject({ data: { code: expectedCode } });
+      ).rejects.toMatchObject({
+        code: expectedCode,
+      });
     }
   );
   it.each([
-    { kind: "missing reference", code: "TRYOUT_IRT_SCALE_REQUIRED" },
-    { kind: "deleted scale", code: "TRYOUT_IRT_SCALE_REQUIRED" },
-    { kind: "foreign scale", code: "TRYOUT_IRT_SCALE_REQUIRED" },
-    { kind: "wrong count", code: "TRYOUT_IRT_SCALE_COUNT_MISMATCH" },
+    {
+      kind: "missing reference",
+      code: "TRYOUT_IRT_SCALE_REQUIRED",
+    },
+    {
+      kind: "deleted scale",
+      code: "TRYOUT_IRT_SCALE_REQUIRED",
+    },
+    {
+      kind: "foreign scale",
+      code: "TRYOUT_IRT_SCALE_REQUIRED",
+    },
+    {
+      kind: "wrong count",
+      code: "TRYOUT_IRT_SCALE_COUNT_MISMATCH",
+    },
     {
       kind: "unfinished calibration",
       code: "TRYOUT_IRT_CALIBRATION_RUN_MISMATCH",
     },
-    { kind: "missing item", code: "TRYOUT_IRT_ITEM_COUNT_MISMATCH" },
-    { kind: "duplicate placement", code: "TRYOUT_PLACEMENT_DUPLICATE" },
+    {
+      kind: "missing item",
+      code: "TRYOUT_IRT_ITEM_COUNT_MISMATCH",
+    },
+    {
+      kind: "duplicate placement",
+      code: "TRYOUT_PLACEMENT_DUPLICATE",
+    },
   ])(
     "rejects $kind before returning a scoring source",
     async ({ kind, code }) => {
       const t = convexTest(schema, convexModules);
       await expect(
         t.mutation(async (ctx) => {
-          const fixture = await seedSectionIrtSource(ctx, "none");
+          const fixture = await Effect.runPromise(
+            seedSectionIrtSource(ctx, "none")
+          );
           if (kind === "missing reference") {
             await ctx.db.patch(fixture.attemptId, {
               scaleVersionId: undefined,
@@ -199,7 +267,9 @@ describe("tryouts/runtime/irt/items", () => {
             });
           }
           if (kind === "wrong count") {
-            await ctx.db.patch(fixture.scaleVersionId, { questionCount: 3 });
+            await ctx.db.patch(fixture.scaleVersionId, {
+              questionCount: 3,
+            });
           }
           if (kind === "missing item") {
             await ctx.db.delete(fixture.firstItemId);
@@ -209,29 +279,41 @@ describe("tryouts/runtime/irt/items", () => {
             if (!item) {
               throw new Error("Expected an IRT item.");
             }
-            await ctx.db.patch(item.calibrationRunId, { status: "running" });
+            await ctx.db.patch(item.calibrationRunId, {
+              status: "running",
+            });
           }
           const attempt = await ctx.db.get(fixture.attemptId);
           if (!attempt) {
             throw new Error("Expected an IRT attempt.");
           }
-          const placements = await runConvexProgram(
-            loadAttemptPlacements(ctx, attempt)
+          const placements = await Effect.runPromise(
+            loadAttemptPlacements(attempt).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
           const first = placements[0];
           if (!first) {
             throw new Error("Expected a frozen placement.");
           }
-          return runConvexProgram(
-            loadSectionIrtSource(ctx, {
+          return Effect.runPromise(
+            loadSectionIrtSource({
               attempt,
               placements:
                 kind === "duplicate placement" ? [first, first] : placements,
               sectionIdentity: fixture.sectionIdentity,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
         })
-      ).rejects.toMatchObject({ data: { code } });
+      ).rejects.toMatchObject({
+        code,
+      });
     }
   );
 });

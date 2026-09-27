@@ -1,11 +1,13 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { commentVotesHandler } from "@repo/backend/confect/triggers/comments/commentVotes";
 import { api } from "@repo/backend/convex/_generated/api";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 18, 0, 0);
 describe("triggers/comments/commentVotes", () => {
@@ -30,8 +32,8 @@ describe("triggers/comments/commentVotes", () => {
       });
       const vote = await ctx.db.get("commentVotes", id);
       assert(vote);
-      await runConvexProgram(
-        commentVotesHandler(ctx, {
+      await Effect.runPromise(
+        commentVotesHandler({
           id,
           operation: "update",
           oldDoc: vote,
@@ -39,28 +41,40 @@ describe("triggers/comments/commentVotes", () => {
             ...vote,
             vote: -1,
           },
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
-      await runConvexProgram(
-        commentVotesHandler(ctx, {
+      await Effect.runPromise(
+        commentVotesHandler({
           id,
           operation: "delete",
           oldDoc: vote,
           newDoc: null,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
       expect(await ctx.db.get("comments", commentId)).toMatchObject({
         upvoteCount: 0,
         downvoteCount: 0,
       });
       await ctx.db.delete("comments", commentId);
-      await runConvexProgram(
-        commentVotesHandler(ctx, {
+      await Effect.runPromise(
+        commentVotesHandler({
           id,
           operation: "insert",
           oldDoc: null,
           newDoc: vote,
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       );
     });
   });

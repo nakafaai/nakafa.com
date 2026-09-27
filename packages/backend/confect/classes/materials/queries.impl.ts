@@ -1,9 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  QueryCtx as QueryCtxService,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import {
   loadClass,
@@ -11,8 +9,8 @@ import {
 } from "@repo/backend/confect/classes/access";
 import { enrichMaterialGroups } from "@repo/backend/confect/classes/materials/groups";
 import spec from "@repo/backend/confect/classes/materials/queries.spec";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { isAdmin } from "@repo/backend/confect/schools/membership";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { PaginationResult } from "convex/server";
 import { Effect, Layer } from "effect";
 
@@ -27,13 +25,11 @@ const getMaterialGroups = FunctionImpl.make(
   "getMaterialGroups",
   Effect.fn("classes.materials.queries.getMaterialGroups")(function* (args) {
     const database = yield* DatabaseReader;
-    const ctx = yield* QueryCtxService;
     const { classId, parentId, q: searchQuery, paginationOpts } = args;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const currentUserId = user.appUser._id;
-    const classData = yield* loadClass(ctx, classId);
+    const classData = yield* loadClass(classId);
     const { classMembership, schoolMembership } = yield* requireClassAccess(
-      ctx,
       classId,
       classData.schoolId,
       currentUserId
@@ -41,7 +37,7 @@ const getMaterialGroups = FunctionImpl.make(
     const isAdminSchool = isAdmin(schoolMembership);
     const isTeacher = classMembership?.role === "teacher";
     const canSeeAllStatuses = isTeacher || isAdminSchool;
-    let groupsPage: PaginationResult<Doc<"schoolClassMaterialGroups">>;
+    let groupsPage: PaginationResult<Docs["schoolClassMaterialGroups"]>;
     if (searchQuery && searchQuery.trim().length > 0) {
       const searchResults = canSeeAllStatuses
         ? yield* database
@@ -91,7 +87,7 @@ const getMaterialGroups = FunctionImpl.make(
         .paginate(paginationOpts)
         .pipe(Effect.orDie);
     }
-    const enrichedGroups = yield* enrichMaterialGroups(ctx, groupsPage.page);
+    const enrichedGroups = yield* enrichMaterialGroups(groupsPage.page);
     return {
       ...groupsPage,
       page: enrichedGroups,
@@ -100,5 +96,6 @@ const getMaterialGroups = FunctionImpl.make(
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getMaterialGroups),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

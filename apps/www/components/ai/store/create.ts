@@ -12,17 +12,45 @@ export function createAiStore() {
     persist(
       immer((set, get) => ({
         ...initialState,
+        addChatDraft: (key) =>
+          set((state) => {
+            state.chatDrafts.unshift(key);
+          }),
         getModel: () => get().model,
+        removeChatDraft: (key) =>
+          set((state) => {
+            state.chatDrafts = state.chatDrafts.filter(
+              (draft) => draft !== key
+            );
+          }),
+        resolveChatDraft: (key, receipt) =>
+          set((state) => {
+            if (!state.chatDrafts.includes(key)) {
+              return;
+            }
+            // Convex resolves mutations after subscribed queries include the write.
+            state.chatDrafts = state.chatDrafts.filter(
+              (draft) => draft !== key
+            );
+            state.openingChat = {
+              receipt,
+              prompt: receipt.prompt,
+              submittedAt: Date.now(),
+            };
+          }),
         setActiveChatId: (activeChatId) => set({ activeChatId }),
-        setChatSession: (chatSession) => set({ chatSession }),
         setContextTitle: (contextTitle) => set({ contextTitle }),
         setModel: (model) => set({ model }),
+        setOpeningChat: (openingChat) => set({ openingChat }),
         setOpen: (open) =>
           set((state) => ({
             open,
             sheetActivated: state.sheetActivated || open,
           })),
-        setText: (text) => set({ text }),
+        setText: (text) =>
+          set((state) => ({
+            text: typeof text === "function" ? text(state.text) : text,
+          })),
       })),
       {
         name: "nakafa-ai",

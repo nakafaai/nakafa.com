@@ -1,8 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/contentRelease/ownership.spec";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { readRouteOwnership } from "@repo/backend/content/publication/route";
 import { Effect, Layer } from "effect";
 
@@ -12,12 +11,11 @@ const resolve = FunctionImpl.make(
   spec,
   "resolve",
   Effect.fn("contentRelease.ownership.resolve")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readRouteOwnership(
       args.family,
       args.appLocale,
       args.publicPath
-    ).pipe(Effect.provide(convexPublicationLayer(ctx)));
+    ).pipe(Effect.provide(publicationLayer));
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

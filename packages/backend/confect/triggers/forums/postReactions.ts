@@ -1,7 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Effect } from "effect";
 
@@ -17,12 +18,9 @@ import { Effect } from "effect";
  */
 export const postReactionsHandler = Effect.fn(
   "triggers.forums.postReactions.postReactionsHandler"
-)(function* (
-  ctx: GenericMutationCtx<DataModel>,
-  change: Change<DataModel, "schoolClassForumPostReactions">
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (change: Change<DataModel, "schoolClassForumPostReactions">) {
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   switch (change.operation) {
     case "insert": {
       const reaction = change.newDoc;

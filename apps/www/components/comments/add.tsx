@@ -5,8 +5,6 @@ import {
   Cancel01Icon,
   Login01Icon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   Avatar,
   AvatarFallback,
@@ -14,16 +12,12 @@ import {
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { useMutation } from "convex/react";
-import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { type SubmitEventHandler, useState, useTransition } from "react";
-import { reportClientException } from "@/lib/analytics/client";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
 import { getInitialName } from "@/lib/utils/helper";
@@ -32,25 +26,17 @@ interface Props {
   closeButton?: {
     onClick: () => void;
   };
-  /* If comment is provided, the comment will be replied to */
-  comment?: Doc<"comments">;
-  slug: string;
+  onSubmit: (text: string) => Promise<boolean>;
 }
 
-class CommentCreateError extends Schema.TaggedError<CommentCreateError>()(
-  "CommentCreateError",
-  { cause: Schema.Unknown }
-) {}
-
 /** Render the authenticated comment or reply composer for one content route. */
-export function CommentsAdd({ slug, comment, closeButton }: Props) {
+export function CommentsAdd({ onSubmit, closeButton }: Props) {
   const t = useTranslations("Comments");
   const tCommon = useTranslations("Common");
 
   const [commentText, setCommentText] = useState("");
 
   const user = useViewer((s) => s.account);
-  const addComment = useMutation(api.comments.mutations.addComment);
 
   const [isPending, startTransition] = useTransition();
 
@@ -58,48 +44,19 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
 
-    const text = event.currentTarget?.text?.value?.trim();
-
-    if (!text) {
+    const text = commentText.trim();
+    if (!(text && user) || isPending) {
       return;
     }
-
-    if (!user) {
-      return;
-    }
-
     setCommentText("");
-    startTransition(() =>
-      Effect.runPromise(
-        Effect.tryPromise({
-          try: () =>
-            addComment({
-              slug,
-              text,
-              ...(comment?._id === undefined ? {} : { parentId: comment?._id }),
-            }),
-          catch: (cause) => new CommentCreateError({ cause }),
-        }).pipe(
-          Effect.tap(() =>
-            Effect.sync(() => {
-              closeButton?.onClick();
-            })
-          ),
-          Effect.asVoid,
-          Effect.catch((error) =>
-            reportClientException(error, {
-              source: "comment-create",
-            }).pipe(
-              Effect.tap(() =>
-                Effect.sync(() => {
-                  setCommentText(text);
-                })
-              )
-            )
-          )
-        )
-      )
-    );
+    startTransition(async () => {
+      const saved = await onSubmit(text);
+      if (saved) {
+        closeButton?.onClick();
+      } else {
+        setCommentText((previous) => previous || text);
+      }
+    });
   };
 
   return (
@@ -145,7 +102,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
             size="icon"
             type="submit"
           >
-            <Spinner icon={ArrowUp02Icon} isLoading={isPending} />
+            <HugeIcons icon={ArrowUp02Icon} />
             <span className="sr-only">{t("comment")}</span>
           </Button>
         </div>

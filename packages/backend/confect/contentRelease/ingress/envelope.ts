@@ -1,18 +1,17 @@
 "use node";
 
-import { QueryRunner } from "@confect/server";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   decodeReleaseJson,
   decodeRendererJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 /** Validates that one signed release owns the supplied renderer snapshot. */
 export const validateReleaseRenderer = Effect.fn(
@@ -41,10 +40,8 @@ export const validateReleaseRenderer = Effect.fn(
 
 /** Loads and verifies the release envelope owning one staged batch. */
 export const loadStageEnvelope = Effect.fn("contentRelease.loadStageEnvelope")(
-  function* (ctx: ActionCtx, releaseId: string) {
-    const runQuery = yield* QueryRunner.QueryRunner.pipe(
-      Effect.provide(QueryRunner.layer(ctx.runQuery))
-    );
+  function* (releaseId: string) {
+    const runQuery = yield* QueryRunner;
     const stored = yield* runQuery(
       refs.internal.contentRelease.envelope.byRelease,
       {

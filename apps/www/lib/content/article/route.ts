@@ -1,14 +1,13 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
-
 import {
   ActiveAppLocaleListSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
@@ -44,17 +43,17 @@ export const readPublishedArticleRoute = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.article.route,
-    {
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.article.route, {
       ...(expectedActiveReleaseId === undefined
         ? {}
-        : { expectedActiveReleaseId }),
+        : {
+            expectedActiveReleaseId,
+          }),
       appLocale,
       publicPath,
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   return yield* decodePublishedArticleRoute(
     result,
     locale,
@@ -67,7 +66,7 @@ export const readPublishedArticleRoute = Effect.fn(
 export const decodePublishedArticleRoute = Effect.fn(
   "NakafaArticle.decodePublishedRoute"
 )(function* (
-  result: FunctionReturnType<typeof api.contentRelease.article.route>,
+  result: Ref.Returns<typeof refs.public.contentRelease.article.route>,
   locale: Locale,
   publicPath: string,
   expectedActiveReleaseId?: ContentReleasePin
@@ -78,7 +77,10 @@ export const decodePublishedArticleRoute = Effect.fn(
       result.activeAppLocales
     ).pipe(
       Effect.mapError(() =>
-        makeArticleProjectionError({ appLocale, publicPath })
+        makeArticleProjectionError({
+          appLocale,
+          publicPath,
+        })
       )
     ),
     decodeContentReleasePin(result.activeReleaseId, expectedActiveReleaseId, {
@@ -87,7 +89,10 @@ export const decodePublishedArticleRoute = Effect.fn(
     }),
   ]);
   if (activeReleaseId === null) {
-    return yield* makeArticleProjectionError({ appLocale, publicPath });
+    return yield* makeArticleProjectionError({
+      appLocale,
+      publicPath,
+    });
   }
   if (result.projectionJson === null) {
     return {
@@ -101,7 +106,10 @@ export const decodePublishedArticleRoute = Effect.fn(
     publicPath,
   });
   const alternates = yield* Effect.forEach(result.alternateJson, (source) =>
-    decodeArticleJson(source, { appLocale, publicPath })
+    decodeArticleJson(source, {
+      appLocale,
+      publicPath,
+    })
   );
   const alternateLocales = new Set(
     alternates.map((alternate) => alternate.appLocale)
@@ -125,7 +133,10 @@ export const decodePublishedArticleRoute = Effect.fn(
     ) ||
     !completeLocaleSet
   ) {
-    return yield* makeArticleProjectionError({ appLocale, publicPath });
+    return yield* makeArticleProjectionError({
+      appLocale,
+      publicPath,
+    });
   }
   return {
     activeReleaseId,

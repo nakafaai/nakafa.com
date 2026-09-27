@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Schema } from "effect";
 export const proofRowValidator = Schema.Struct({
   index: Schema.Finite,
@@ -61,7 +61,7 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => proofStateValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -72,7 +72,7 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => artifactProofPlanValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -83,7 +83,7 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => artifactProofPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -94,7 +94,7 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => proofPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -105,6 +105,6 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => routePageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

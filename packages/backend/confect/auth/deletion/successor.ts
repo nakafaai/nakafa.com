@@ -1,11 +1,9 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE } from "@repo/backend/confect/auth/deletion/constants";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { Effect, flow } from "effect";
+import { Effect } from "effect";
 
 /**
  * Scans one bounded page for an active successor. Callers persist the opaque
@@ -13,48 +11,43 @@ import { Effect, flow } from "effect";
  */
 export const findSchoolOwnershipSuccessorPage = Effect.fn(
   "auth.deletion.findSchoolOwnershipSuccessorPage"
-)(
-  function* (
-    ctx: Pick<QueryCtx, "db">,
-    schoolId: Id<"schools">,
-    ownerId: Id<"users">,
-    cursor: string | null
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const candidatePage = yield* database
-      .table("schoolMembers")
-      .index("by_schoolId_and_status", (query) =>
-        query.eq("schoolId", schoolId).eq("status", "active")
-      )
-      .paginate(
-        {
-          cursor,
-          numItems: ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE,
-        },
-        (query) => query.neq(query.field("userId"), ownerId)
-      );
-    for (const candidate of candidatePage.page) {
-      const user = yield* database
-        .table("users")
-        .get(candidate.userId)
-        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
-      if (user && !isAccountDeletionPending(user)) {
-        return {
-          kind: "found" as const,
-          successorMembership: candidate,
-        };
-      }
-    }
-    if (candidatePage.isDone) {
+)(function* (
+  schoolId: Id<"schools">,
+  ownerId: Id<"users">,
+  cursor: string | null
+) {
+  const database = yield* DatabaseReader;
+  const candidatePage = yield* database
+    .table("schoolMembers")
+    .index("by_schoolId_and_status", (query) =>
+      query.eq("schoolId", schoolId).eq("status", "active")
+    )
+    .paginate(
+      {
+        cursor,
+        numItems: ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE,
+      },
+      (query) => query.neq(query.field("userId"), ownerId)
+    );
+  for (const candidate of candidatePage.page) {
+    const user = yield* database
+      .table("users")
+      .get(candidate.userId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+    if (user && !isAccountDeletionPending(user)) {
       return {
-        kind: "not-found" as const,
+        kind: "found" as const,
+        successorMembership: candidate,
       };
     }
+  }
+  if (candidatePage.isDone) {
     return {
-      cursor: candidatePage.continueCursor,
-      kind: "continue" as const,
+      kind: "not-found" as const,
     };
-  },
-  Effect.orDie,
-  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-);
+  }
+  return {
+    cursor: candidatePage.continueCursor,
+    kind: "continue" as const,
+  };
+}, Effect.mapError(toUserCleanupError));

@@ -1,7 +1,7 @@
 "use client";
 
 import { FileSearchIcon, Sad02Icon } from "@hugeicons/core-free-icons";
-import type { DataPart } from "@repo/ai/schema/data";
+import type { DataPart } from "@repo/backend/confect/nina/contract/data";
 import {
   Source,
   SourceContent,

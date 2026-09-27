@@ -1,13 +1,17 @@
+import { Ref } from "@confect/core";
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
+import { actionLayer } from "@confect/server/RegisteredFunction";
+
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   compactProgram,
   runProgram,
 } from "@repo/backend/confect/contentRelease/compact";
 import { ARTIFACT_PAGE_COUNT } from "@repo/backend/confect/contentRelease/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import { readTryoutHistory } from "@repo/backend/confect/tryouts/runtime/history/read";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -15,6 +19,7 @@ import {
   compactionIdentity,
   insertCompletedRelease,
   seedCompactionHistory,
+  seedExpiredSnapshotBacklog,
 } from "@repo/backend/test/content/compact";
 import {
   insertTestState,
@@ -23,33 +28,12 @@ import {
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentState", {
-        articleSlot: "blue",
-        materialSlot: "blue",
-        searchSlot: "blue",
-        key: "primary",
-        nextSequence: 2,
-        updatedAt: 0,
-        compactFloor: 1,
-        compactFrom: 0,
-        compactPhase: "snapshots",
-        compactStartedAt: 1,
-      });
-      for (let index = 0; index < 70; index += 1) {
-        await ctx.db.insert("contentSnapshots", {
-          createdAt: 0,
-          family: "program",
-          retainUntil: 0,
-          snapshotId: `expired-${index}`,
-          snapshotJson: "{}",
-        });
-      }
-    });
+    await t.mutation(seedExpiredSnapshotBacklog);
     const paused = await t.action(internal.contentRelease.compact.run, {});
     expect(paused).toMatchObject({
       complete: false,
@@ -74,9 +58,10 @@ describe("contentRelease/compact", () => {
     ).toEqual([]);
     expect(
       await t.query((ctx) => ctx.db.query("contentState").unique())
-    ).toMatchObject({ compactedFloor: 1 });
+    ).toMatchObject({
+      compactedFloor: 1,
+    });
   });
-
   it("resumes pages and preserves floor anchors before collecting history", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -93,18 +78,24 @@ describe("contentRelease/compact", () => {
         text: "active search entry",
       });
     });
-
     const first = await t.mutation((ctx) =>
-      runConvexProgram(compactProgram(ctx))
+      Effect.runPromise(
+        compactProgram().pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
+      )
     );
     const paused = await t.run((ctx) => ctx.db.query("contentState").unique());
-    expect(first).toMatchObject({ complete: false, floor: 3, phase: "heads" });
+    expect(first).toMatchObject({
+      complete: false,
+      floor: 3,
+      phase: "heads",
+    });
     expect(paused?.compactCursor).toBeUndefined();
     expect(paused?.compactPhase).toBe("heads");
     expect(paused?.compactedFloor).toBeUndefined();
-
     const completed = await t.action((ctx) =>
-      runConvexProgram(runProgram(ctx))
+      Effect.runPromise(
+        runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+      )
     );
     const stored = await t.run(async (ctx) => ({
       artifacts: await ctx.db.query("contentArtifacts").collect(),
@@ -115,17 +106,25 @@ describe("contentRelease/compact", () => {
       releases: await ctx.db.query("contentReleases").collect(),
       state: await ctx.db.query("contentState").unique(),
     }));
-    expect(completed).toMatchObject({ complete: true, floor: 3 });
+    expect(completed).toMatchObject({
+      complete: true,
+      floor: 3,
+    });
     expect(stored.heads).toHaveLength(82);
     expect(
       stored.heads.find((row) => row.contentKey === "test:anchor")
-    ).toMatchObject({ sequence: 3 });
+    ).toMatchObject({
+      sequence: 3,
+    });
     expect(stored.bindings.map((row) => row.sequence).sort()).toEqual([
       1, 3, 4,
     ]);
     expect(stored.items).toHaveLength(0);
     expect(stored.search).toMatchObject([
-      { contentKey: "test:compact-0", sequence: 4 },
+      {
+        contentKey: "test:compact-0",
+        sequence: 4,
+      },
     ]);
     expect(stored.releases.map((row) => row.sequence).sort()).toEqual([
       3, 4, 5,
@@ -140,11 +139,16 @@ describe("contentRelease/compact", () => {
         ({ artifactHash }) => artifactHash === `sha256:${"c".repeat(64)}`
       )?.retainUntil
     ).toBeGreaterThan(Date.now());
-    expect(stored.state).toMatchObject({ compactedFloor: 3 });
+    expect(stored.state).toMatchObject({
+      compactedFloor: 3,
+    });
     expect(stored.state?.compactPhase).toBeUndefined();
-
     await expect(
-      t.action((ctx) => runConvexProgram(runProgram(ctx)))
+      t.action((ctx) =>
+        Effect.runPromise(
+          runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+        )
+      )
     ).resolves.toEqual({
       complete: true,
       deleted: 0,
@@ -152,12 +156,14 @@ describe("contentRelease/compact", () => {
       phase: "releases",
     });
   });
-
   it("stops before a recent unreachable release", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
-      const releases = Array.from({ length: 5 }, (_, index) =>
-        compactionIdentity(index + 1)
+      const releases = Array.from(
+        {
+          length: 5,
+        },
+        (_, index) => compactionIdentity(index + 1)
       );
       for (const [index, release] of releases.entries()) {
         await insertCompletedRelease(
@@ -171,19 +177,27 @@ describe("contentRelease/compact", () => {
       if (!fifth) {
         throw new Error("Expected recent compaction releases.");
       }
-      await insertTestState(ctx, { active: fifth, nextSequence: 6 });
+      await insertTestState(ctx, {
+        active: fifth,
+        nextSequence: 6,
+      });
     });
-
-    const receipt = await t.action((ctx) => runConvexProgram(runProgram(ctx)));
+    const receipt = await t.action((ctx) =>
+      Effect.runPromise(
+        runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+      )
+    );
     const sequences = await t.run(async (ctx) =>
       (await ctx.db.query("contentReleases").collect()).map(
         (release) => release.sequence
       )
     );
-    expect(receipt).toMatchObject({ complete: true, floor: 2 });
+    expect(receipt).toMatchObject({
+      complete: true,
+      floor: 2,
+    });
     expect(sequences.sort()).toEqual([2, 3, 4, 5]);
   });
-
   it("freezes artifact expiry at the durable cycle start", async () => {
     const t = convexTest(schema, convexModules);
     const expiredHash = `sha256:${"1".repeat(64)}`;
@@ -202,8 +216,14 @@ describe("contentRelease/compact", () => {
         updatedAt: 0,
       });
       for (const artifact of [
-        { artifactHash: expiredHash, retainUntil: 0 },
-        { artifactHash: futureHash, retainUntil: 1 },
+        {
+          artifactHash: expiredHash,
+          retainUntil: 0,
+        },
+        {
+          artifactHash: futureHash,
+          retainUntil: 1,
+        },
       ]) {
         await ctx.db.insert("contentArtifacts", {
           artifactHash: artifact.artifactHash,
@@ -213,24 +233,44 @@ describe("contentRelease/compact", () => {
         });
       }
     });
-
     await expect(
-      t.mutation((ctx) => runConvexProgram(compactProgram(ctx)))
+      t.mutation((ctx) =>
+        Effect.runPromise(
+          compactProgram().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
     ).resolves.toMatchObject({
       complete: false,
       deleted: 1,
       phase: "snapshots",
     });
     await expect(
-      t.mutation((ctx) => runConvexProgram(compactProgram(ctx)))
+      t.mutation((ctx) =>
+        Effect.runPromise(
+          compactProgram().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
     ).resolves.toMatchObject({
       complete: false,
       floor: 1,
       phase: "releases",
     });
     await expect(
-      t.mutation((ctx) => runConvexProgram(compactProgram(ctx)))
-    ).resolves.toMatchObject({ complete: true, floor: 1 });
+      t.mutation((ctx) =>
+        Effect.runPromise(
+          compactProgram().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).resolves.toMatchObject({
+      complete: true,
+      floor: 1,
+    });
     const hashes = await t.run(async (ctx) =>
       (await ctx.db.query("contentArtifacts").collect()).map(
         ({ artifactHash }) => artifactHash
@@ -238,7 +278,6 @@ describe("contentRelease/compact", () => {
     );
     expect(hashes).toEqual([futureHash]);
   });
-
   it("yields artifact compaction at the bounded maintenance page", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -263,23 +302,33 @@ describe("contentRelease/compact", () => {
         });
       }
     });
-
     await expect(
-      t.mutation((ctx) => runConvexProgram(compactProgram(ctx)))
+      t.mutation((ctx) =>
+        Effect.runPromise(
+          compactProgram().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
     ).resolves.toMatchObject({
       complete: false,
       deleted: ARTIFACT_PAGE_COUNT,
       phase: "artifacts",
     });
     await expect(
-      t.mutation((ctx) => runConvexProgram(compactProgram(ctx)))
+      t.mutation((ctx) =>
+        Effect.runPromise(
+          compactProgram().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
     ).resolves.toMatchObject({
       complete: false,
       deleted: 1,
       phase: "snapshots",
     });
   });
-
   it("protects exact active bases and retained recovery slots", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -321,18 +370,23 @@ describe("contentRelease/compact", () => {
         recovery,
       });
     });
-
-    const receipt = await t.action((ctx) => runConvexProgram(runProgram(ctx)));
+    const receipt = await t.action((ctx) =>
+      Effect.runPromise(
+        runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+      )
+    );
     const sequences = await t.run(async (ctx) =>
       (await ctx.db.query("contentReleases").collect()).map(
         (release) => release.sequence
       )
     );
-    expect(receipt).toMatchObject({ complete: true, floor: 2 });
+    expect(receipt).toMatchObject({
+      complete: true,
+      floor: 2,
+    });
     expect(sequences.sort()).toEqual([2, 4, 5, 6, 7]);
   });
 });
-
 describe("contentRelease/compact permanent history", () => {
   beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
   it("preserves frozen attempt history after its source release expires", async () => {
@@ -341,7 +395,9 @@ describe("contentRelease/compact permanent history", () => {
       const seed = await insertHistoryAttempt(ctx);
       const source = await ctx.db.query("contentReleases").unique();
       assert.ok(source);
-      await ctx.db.patch(source._id, { createdAt: 0 });
+      await ctx.db.patch(source._id, {
+        createdAt: 0,
+      });
       let active = {
         manifestHash: seed.runtime.sourceManifestHash,
         releaseId: seed.runtime.sourceReleaseId,
@@ -363,9 +419,13 @@ describe("contentRelease/compact permanent history", () => {
       });
       const snapshot = await ctx.db.query("contentSnapshots").unique();
       assert.ok(snapshot);
-      await ctx.db.patch(snapshot._id, { retainUntil: 0 });
+      await ctx.db.patch(snapshot._id, {
+        retainUntil: 0,
+      });
       for (const artifact of await ctx.db.query("contentArtifacts").collect()) {
-        await ctx.db.patch(artifact._id, { retainUntil: 0 });
+        await ctx.db.patch(artifact._id, {
+          retainUntil: 0,
+        });
       }
       return seed;
     });
@@ -374,15 +434,32 @@ describe("contentRelease/compact permanent history", () => {
       sessionId: seed.identity.sessionId,
     });
     const read = () =>
-      owned.query((ctx) =>
-        runConvexProgram(readTryoutHistory(ctx, seed.request))
-      );
+      owned
+        .query(
+          Ref.getFunctionReference(
+            refs.public.tryouts.queries.content.getBatch
+          ),
+          seed.request
+        )
+        .then((value) =>
+          Ref.decodeReturnsSync(
+            refs.public.tryouts.queries.content.getBatch,
+            value
+          )
+        );
     const before = await read();
     assert.ok(before);
     const attempt = await t.query((ctx) => ctx.db.get(seed.request.attemptId));
     await expect(
-      t.action((ctx) => runConvexProgram(runProgram(ctx)))
-    ).resolves.toMatchObject({ complete: true, floor: 3 });
+      t.action((ctx) =>
+        Effect.runPromise(
+          runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+        )
+      )
+    ).resolves.toMatchObject({
+      complete: true,
+      floor: 3,
+    });
     expect(await read()).toEqual(before);
     expect(await t.query((ctx) => ctx.db.get(seed.request.attemptId))).toEqual(
       attempt

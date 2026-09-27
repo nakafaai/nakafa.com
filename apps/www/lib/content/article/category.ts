@@ -179,7 +179,9 @@ export async function getPublishedArticleCategory(
   "use cache";
 
   const category = await Effect.runPromise(
-    readPublishedArticleCategory(route, locale)
+    readPublishedArticleCategory(route, locale).pipe(
+      Effect.withTracerTiming(false)
+    )
   );
   applyContentCache("article");
   return Option.getOrNull(category);
@@ -192,7 +194,9 @@ export async function getPublishedCategoryAlternates(
   "use cache";
 
   const alternates = await Effect.runPromise(
-    readPublishedCategoryAlternates(current)
+    readPublishedCategoryAlternates(current).pipe(
+      Effect.withTracerTiming(false)
+    )
   );
   applyContentCache("article");
   return alternates;
@@ -206,7 +210,9 @@ export async function getPublishedCategoryPage(
   "use cache";
 
   const page = await Effect.runPromise(
-    readPublishedCategoryPage(current, cursor)
+    readPublishedCategoryPage(current, cursor).pipe(
+      Effect.withTracerTiming(false)
+    )
   );
   applyContentCache("article");
   return page;

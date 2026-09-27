@@ -133,10 +133,13 @@ describe("tryouts/mutations/attempts", () => {
         .collect();
       const progress = await ctx.db
         .query("tryoutSetProgress")
-        .withIndex("by_userId_and_setIdentity", (q) =>
+        .withIndex("by_userId_and_set", (q) =>
           q
             .eq("userId", seeded.identity.userId)
-            .eq("setIdentity", seeded.fixture.setIdentity)
+            .eq("countryKey", COUNTRY)
+            .eq("examKey", EXAM)
+            .eq("trackKey", TRACK)
+            .eq("setKey", SET)
         )
         .unique();
       return { attempt, placements, progress, sectionAttempts };
@@ -185,7 +188,7 @@ describe("tryouts/mutations/attempts", () => {
     });
     const state = await authed.query(
       api.tryouts.queries.runtime.getSetAttemptState,
-      { attemptId: result.attemptId }
+      { locale: "id", attemptId: result.attemptId }
     );
     expect(state).toMatchObject({
       attempt: {

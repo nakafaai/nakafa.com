@@ -1,6 +1,6 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { createActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import { useUnreadCue } from "@/components/school/classes/forum/conversation/hooks/unread/use-cue";
@@ -12,16 +12,17 @@ export function useTranscriptData({
   forumId: Id<"schoolClassForums">;
 }) {
   const forum = useData((state) => state.forum);
-  const {
-    data: posts,
-    error,
-    isError,
-    isPending,
-  } = useQueryWithStatus(api.classes.forums.queries.pages.getForumPosts, {
-    forumId,
-  });
+  const query = useQuery(
+    refs.public.classes.forums.queries.pages.getForumPosts,
+    {
+      forumId,
+    }
+  );
 
-  const transcriptPosts = posts ?? [];
+  const transcriptPosts = QueryResult.isSuccess(query) ? query.value : [];
+  const isPending = QueryResult.isLoading(query);
+  const isError = QueryResult.isFailure(query);
+  const error = isError ? query.error : undefined;
   const { acknowledgeUnreadCue, unreadCue } = useUnreadCue({
     forumId,
     isPending,

@@ -1,6 +1,6 @@
+/** Keeps only provider metadata values that the chat transcript must replay. */
 import type { PersistedProviderMetadata } from "@repo/backend/confect/chats/schema";
 import type { ProviderMetadata } from "ai";
-
 /** Keeps only provider metadata values that the chat transcript must replay. */
 export function toPersistedProviderMetadata(
   metadata: ProviderMetadata | undefined

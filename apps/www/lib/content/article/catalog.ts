@@ -1,4 +1,5 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
 import {
@@ -16,9 +17,8 @@ import {
   type ArticleRouteSlug,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
+import refs from "@repo/backend/confect/_generated/refs";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
@@ -26,18 +26,18 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 /** Stable source root for immutable Aksara article links. */
 export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
-type ArticlePageArgs = FunctionArgs<
-  typeof api.contentRelease.article.publications
+type ArticlePageArgs = Ref.Args<
+  typeof refs.public.contentRelease.article.publications
 >;
-type ArticlePageResult = FunctionReturnType<
-  typeof api.contentRelease.article.publications
+type ArticlePageResult = Ref.Returns<
+  typeof refs.public.contentRelease.article.publications
 >;
 type ArticlePageItem = ArticlePageResult["result"]["page"][number];
-type CategoryPageArgs = FunctionArgs<
-  typeof api.contentRelease.article.categories
+type CategoryPageArgs = Ref.Args<
+  typeof refs.public.contentRelease.article.categories
 >;
-type CategoryPageResult = FunctionReturnType<
-  typeof api.contentRelease.article.categories
+type CategoryPageResult = Ref.Returns<
+  typeof refs.public.contentRelease.article.categories
 >;
 type CategoryPageItem = CategoryPageResult["result"]["page"][number];
 /** Active release identity required to continue one stable catalog read. */
@@ -107,12 +107,14 @@ const decodeCatalogIdentity = Effect.fn("www.articles.decodeIdentity")(
     if (!managed || activeManifestHash === null || activeReleaseId === null) {
       return yield* projectionError(locale);
     }
-
     const [manifestHash, releaseId] = yield* Effect.all([
       Schema.decodeEffect(Sha256HashSchema)(activeManifestHash),
       Schema.decodeEffect(ReleaseIdSchema)(activeReleaseId),
     ]).pipe(Effect.mapError(() => projectionError(locale)));
-    return { manifestHash, releaseId };
+    return {
+      manifestHash,
+      releaseId,
+    };
   }
 );
 /** Strictly decodes one backend-verified article catalog row. */
@@ -126,7 +128,9 @@ const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
   });
   const projection = yield* Schema.decodeUnknownEffect(ArticleProjectionSchema)(
     input,
-    { onExcessProperty: "error" }
+    {
+      onExcessProperty: "error",
+    }
   ).pipe(Effect.mapError(() => projectionError(locale, item.publicPath)));
   if (
     item.family !== "article" ||
@@ -144,11 +148,15 @@ const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
     categoryTitle: projection.categoryTitle,
     ...(metadata.dateModified === undefined
       ? {}
-      : { dateModified: metadata.dateModified }),
+      : {
+          dateModified: metadata.dateModified,
+        }),
     datePublished: metadata.datePublished,
     ...(metadata.description === undefined
       ? {}
-      : { description: metadata.description }),
+      : {
+          description: metadata.description,
+        }),
     official: projection.official,
     publicPath: projection.publicPath,
     route: {
@@ -195,11 +203,9 @@ export const readPublishedArticlePage = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies ArticlePageArgs;
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.article.publications,
-    args
-  );
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.article.publications, args)
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   const {
     activeManifestHash: rawManifestHash,
     activeReleaseId: rawReleaseId,
@@ -252,11 +258,9 @@ export const readPublishedCategories = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies CategoryPageArgs;
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.article.categories,
-    args
-  );
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.article.categories, args)
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   const {
     activeManifestHash: rawManifestHash,
     activeReleaseId: rawReleaseId,
@@ -299,7 +303,10 @@ export async function getPublishedArticlePage(
   }
 ) {
   "use cache";
-  const page = await Effect.runPromise(readPublishedArticlePage(input));
+
+  const page = await Effect.runPromise(
+    readPublishedArticlePage(input).pipe(Effect.withTracerTiming(false))
+  );
   applyContentCache("article");
   return page;
 }
@@ -310,7 +317,10 @@ export async function getPublishedCategories(
   }
 ) {
   "use cache";
-  const page = await Effect.runPromise(readPublishedCategories(input));
+
+  const page = await Effect.runPromise(
+    readPublishedCategories(input).pipe(Effect.withTracerTiming(false))
+  );
   applyContentCache("article");
   return page;
 }

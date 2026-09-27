@@ -1,12 +1,15 @@
 "use node";
 
-import { MutationRunner, QueryRunner } from "@confect/server";
 import type { ReleaseVerificationEvidence } from "@nakafa/aksara-contracts/release";
 import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result/digest";
 import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/route/verify";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   decodeReleaseJson,
@@ -26,16 +29,13 @@ import type {
   progressValidator,
   statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, type Schema } from "effect";
 export type Progress = Schema.Schema.Type<typeof progressValidator>;
 export type Status = Schema.Schema.Type<typeof statusValidator>;
 /** Authenticates the frozen release and renderer identity shared by proof steps. */
 export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
-  function* (ctx: ActionCtx, manifestHash: string, releaseId: string) {
-    const runQuery = yield* QueryRunner.QueryRunner.pipe(
-      Effect.provide(QueryRunner.layer(ctx.runQuery))
-    );
+  function* (manifestHash: string, releaseId: string) {
+    const runQuery = yield* QueryRunner;
     const state = yield* runQuery(
       refs.internal.contentRelease.proof.read.state,
       {
@@ -67,10 +67,8 @@ export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
 
 /** Advances exact item verification from the durable server cursor. */
 export const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
-  function* (ctx: ActionCtx, releaseId: string, afterIndex: number) {
-    const runMutation = yield* MutationRunner.MutationRunner.pipe(
-      Effect.provide(MutationRunner.layer(ctx.runMutation))
-    );
+  function* (releaseId: string, afterIndex: number) {
+    const runMutation = yield* MutationRunner;
     let cursor = afterIndex;
     while (true) {
       const page = yield* runMutation(
@@ -91,10 +89,8 @@ export const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
 /** Traverses the permanent route directory and validates every active owner. */
 export const verifyRouteCatalog = Effect.fn(
   "contentRelease.verifyRouteCatalog"
-)(function* (ctx: ActionCtx, releaseId: string) {
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
+)(function* (releaseId: string) {
+  const runQuery = yield* QueryRunner;
   let cursor: null | string = null;
   while (true) {
     const page: RouteCatalogPage = yield* runQuery(
@@ -120,16 +116,9 @@ export const verifyRouteCatalog = Effect.fn(
 /** Reauthenticates one bounded artifact batch on an isolated Node worker. */
 export const verifyArtifactBatchProgram = Effect.fn(
   "contentRelease.verifyArtifactProofBatch"
-)(function* (
-  ctx: ActionCtx,
-  manifestHash: string,
-  releaseId: string,
-  batchIndex: number
-) {
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
-  const { renderer } = yield* loadProofIdentity(ctx, manifestHash, releaseId);
+)(function* (manifestHash: string, releaseId: string, batchIndex: number) {
+  const runQuery = yield* QueryRunner;
+  const { renderer } = yield* loadProofIdentity(manifestHash, releaseId);
   const page = yield* runQuery(
     refs.internal.contentRelease.proof.read.artifactBatch,
     {
@@ -151,36 +140,31 @@ export const verifyArtifactBatchProgram = Effect.fn(
 /** Recomputes the complete authenticated proof before activation. */
 export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
   function* (
-    ctx: ActionCtx,
     manifestHash: string,
     releaseId: string,
     verifiedArtifacts: number
   ) {
-    const runMutation = yield* MutationRunner.MutationRunner.pipe(
-      Effect.provide(MutationRunner.layer(ctx.runMutation))
-    );
+    const runMutation = yield* MutationRunner;
     const { release, state } = yield* loadProofIdentity(
-      ctx,
       manifestHash,
       releaseId
     );
-    yield* verifyStoredItems(ctx, releaseId, state.checkedIndex);
+    yield* verifyStoredItems(releaseId, state.checkedIndex);
     const evidence = yield* Effect.all(
       {
-        routeCatalog: verifyRouteCatalog(ctx, releaseId),
-        content: verifyContentStreams(release, readProofStream(ctx, releaseId)),
+        routeCatalog: verifyRouteCatalog(releaseId),
+        content: verifyContentStreams(release, readProofStream(releaseId)),
         result: verifyResultCatalog({
           expectedCount: release.manifest.resultCount,
           expectedDigest: release.manifest.resultDigest,
-          heads: readResultStream(ctx, releaseId),
+          heads: readResultStream(releaseId),
           releaseId: release.manifest.releaseId,
         }).pipe(Effect.mapError(contractFailure)),
         routes: verifyContentRoutes({
           manifest: release.manifest,
-          routes: readRouteStream(ctx, releaseId),
+          routes: readRouteStream(releaseId),
         }).pipe(Effect.mapError(contractFailure)),
         snapshots: verifyReleaseSnapshots(
-          ctx,
           release,
           state.role,
           state.stagedSnapshotBatches,

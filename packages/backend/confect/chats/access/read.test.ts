@@ -43,6 +43,7 @@ describe("transcript read authorization", () => {
         .catch((error: unknown) => error);
       assert(Ref.isConvexError(failure));
       expect(failure.data).toEqual({
+        _tag: "ChatAccessError",
         code: "FORBIDDEN",
         message: "You do not have permission to access this private chat.",
       });

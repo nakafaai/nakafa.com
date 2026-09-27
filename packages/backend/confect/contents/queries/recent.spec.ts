@@ -1,9 +1,10 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { ContentViewIoErrorWire } from "@repo/backend/confect/contents/views/spec";
-import { failureWire } from "@repo/backend/confect/failure";
+import { publicFailure } from "@repo/backend/confect/failure";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/confect/lib/validators/trending";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 /** Convex validator for bounded Continue Learning query inputs. */
 export const getRecentlyViewedArgs = {
@@ -25,8 +26,7 @@ export class RecentLearningIoError extends Schema.TaggedError<RecentLearningIoEr
 ) {}
 
 /** Maps thrown Convex IO failures into the Continue Learning error channel. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const RecentLearningIoErrorWire = failureWire(RecentLearningIoError);
+export const RecentLearningIoErrorWire = publicFailure(RecentLearningIoError);
 export default GroupSpec.make().addFunction(
   FunctionSpec.publicQuery({
     name: "getRecentlyViewed",
@@ -35,8 +35,8 @@ export default GroupSpec.make().addFunction(
     error: () =>
       Schema.Union([
         RecentLearningIoErrorWire,
-        ReleaseErrorWire,
+        ReleaseError,
         ContentViewIoErrorWire,
       ]),
-  })
+  }).middleware(Session)
 );

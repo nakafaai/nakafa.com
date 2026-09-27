@@ -1,7 +1,11 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   loadRelease,
@@ -16,20 +20,14 @@ import {
 } from "@repo/backend/confect/contentRelease/models/selection";
 import { alternateModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Clock, Duration, Effect } from "effect";
 
-type ReadCtx = MutationCtx | QueryCtx;
-type Release = Doc<"contentReleases">;
-type State = Doc<"contentState">;
+type Release = Docs["contentReleases"];
+type State = Docs["contentState"];
 /** Loads the sole candidate model build when one exists. */
 export const loadModelBuild = Effect.fn("contentRelease.loadModelBuild")(
-  function* (ctx: ReadCtx) {
-    return yield* DatabaseReader.make(databaseSchema, ctx.db)
+  function* () {
+    return yield* (yield* DatabaseReader)
       .table("contentModelBuilds")
       .get("by_key", "primary")
       .pipe(
@@ -71,7 +69,7 @@ function getModelBase(state: State, signed: SignedContentRelease) {
 
 /** Proves a repeated prepare call names the same candidate and base buffers. */
 function hasExactBuild(
-  build: Doc<"contentModelBuilds">,
+  build: Docs["contentModelBuilds"],
   release: Release,
   signed: SignedContentRelease,
   base: ReturnType<typeof getModelBase>,
@@ -112,10 +110,10 @@ function hasExactBuild(
 /** Loads and validates the exact invisible candidate owned by one model build. */
 export const loadModelBuildRelease = Effect.fn(
   "contentRelease.loadModelBuildRelease"
-)(function* (ctx: ReadCtx, build: Doc<"contentModelBuilds">) {
+)(function* (build: Docs["contentModelBuilds"]) {
   const [release, state] = yield* Effect.all([
-    loadRelease(ctx, build.releaseId),
-    loadState(ctx),
+    loadRelease(build.releaseId),
+    loadState(),
   ]);
   if (
     !state ||
@@ -149,17 +147,10 @@ export const loadModelBuildRelease = Effect.fn(
 
 /** Starts or resumes the sole inactive-buffer build for one candidate. */
 export const ensureModelBuild = Effect.fn("contentRelease.ensureModelBuild")(
-  function* (
-    ctx: MutationCtx,
-    release: Release,
-    signed: SignedContentRelease,
-    state: State
-  ) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (release: Release, signed: SignedContentRelease, state: State) {
+    const scheduler = yield* Scheduler;
+    const writer = yield* DatabaseWriter;
+    const database = yield* DatabaseReader;
     const base = getModelBase(state, signed);
     if (!base) {
       return yield* releaseFail(
@@ -168,7 +159,7 @@ export const ensureModelBuild = Effect.fn("contentRelease.ensureModelBuild")(
       );
     }
     const slots = selectModelSlots(state);
-    const existing = yield* loadModelBuild(ctx);
+    const existing = yield* loadModelBuild();
     if (existing) {
       if (hasExactBuild(existing, release, signed, base, slots)) {
         return existing;
@@ -238,9 +229,9 @@ export const ensureModelBuild = Effect.fn("contentRelease.ensureModelBuild")(
 
 /** Removes only the model build owned by one exact candidate. */
 export const deleteModelBuild = Effect.fn("contentRelease.deleteModelBuild")(
-  function* (ctx: MutationCtx, releaseId: string) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const build = yield* loadModelBuild(ctx);
+  function* (releaseId: string) {
+    const writer = yield* DatabaseWriter;
+    const build = yield* loadModelBuild();
     if (build?.releaseId === releaseId) {
       yield* writer.table("contentModelBuilds").delete(build._id);
     }

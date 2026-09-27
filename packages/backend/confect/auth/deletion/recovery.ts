@@ -1,6 +1,9 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import {
   toUserCleanupError,
   type UserCleanupError,
@@ -10,8 +13,6 @@ import {
   ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import type { sweepAccountDeletionRecoveryArgsValidator } from "@repo/backend/confect/auth/deletion/recovery.spec";
-import type { AccountDeletionPreparationVersion } from "@repo/backend/confect/auth/deletion/spec";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Duration, Effect, flow, type Schema } from "effect";
 export type SweepAccountDeletionRecoveryArgs = Schema.Schema.Type<
   typeof sweepAccountDeletionRecoveryArgsValidator
@@ -39,26 +40,6 @@ export const recoverAccountDeletionProgram: (
   }
   yield* operations.finalize;
 });
-export type ScheduleRecovery = (
-  ctx: MutationCtx,
-  authId: string,
-  expectedPreparation: AccountDeletionPreparationVersion
-) => Effect.Effect<unknown, UserCleanupError>;
-const defaultScheduleRecovery: ScheduleRecovery = Effect.fn(
-  "auth.deletion.scheduleRecovery"
-)(
-  function* (ctx, authId, expectedPreparation) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    yield* scheduler.runAfter(
-      Duration.zero,
-      refs.internal.auth.deletion.recovery.recoverAccountDeletion,
-      { authId, expectedPreparation }
-    );
-  },
-  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-);
 /**
  * Claims due recovery leases before scheduling at-most-once auth reads.
  *
@@ -66,18 +47,13 @@ const defaultScheduleRecovery: ScheduleRecovery = Effect.fn(
  * transaction. A missed or failed action therefore becomes due again without
  * depending on that action to reschedule itself.
  */
-export const sweepAccountDeletionRecoveryProgram: (
-  ctx: MutationCtx,
-  scheduleRecovery?: ScheduleRecovery
-) => Effect.Effect<boolean, UserCleanupError> = Effect.fn(
+export const sweepAccountDeletionRecoveryProgram = Effect.fn(
   "auth.deletion.sweepAccountDeletionRecovery"
 )(
-  function* (
-    ctx: MutationCtx,
-    scheduleRecovery: ScheduleRecovery = defaultScheduleRecovery
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* () {
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const now = yield* Clock.currentTimeMillis;
     const preparations = yield* database
       .table("accountDeletionPreparations")
@@ -121,7 +97,11 @@ export const sweepAccountDeletionRecoveryProgram: (
           recoveryGeneration,
         })
         .pipe(Effect.orDie);
-      yield* scheduleRecovery(ctx, preparation.authId, expectedPreparation);
+      yield* scheduler.runAfter(
+        Duration.zero,
+        refs.internal.auth.deletion.recovery.recoverAccountDeletion,
+        { authId: preparation.authId, expectedPreparation }
+      );
     }
     return preparations.length === ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE;
   },

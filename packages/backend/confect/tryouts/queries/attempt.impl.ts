@@ -2,6 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/tryouts/queries/attempt.spec";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { Effect, Layer } from "effect";
@@ -18,20 +19,17 @@ const isLockedByAttemptId = FunctionImpl.make(
       if (!attemptId) {
         return false;
       }
-      const auth = yield* getOptionalAppUserForRead(ctx);
+      const auth = yield* getOptionalAppUserForRead();
       if (!auth) {
         return false;
       }
-      const attempt = yield* readOwnedAttemptById(
-        ctx,
-        attemptId,
-        auth.appUser._id
-      );
+      const attempt = yield* readOwnedAttemptById(attemptId, auth.appUser._id);
       return attempt?.status === "in-progress";
     });
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(isLockedByAttemptId),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

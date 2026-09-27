@@ -1,27 +1,24 @@
-import { DatabaseReader } from "@confect/server";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   QURAN_SEARCH_DOCUMENT_READ_LIMIT,
   QURAN_SEARCH_RESULT_LIMIT,
 } from "@repo/backend/confect/contentRelease/quran/limits";
 import { interleaveSearchGroups } from "@repo/backend/confect/contents/helpers/search/groups";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 interface TextQueryState {
   exhausted: boolean;
   readonly query: string;
   requested: number;
-  readonly rows: Doc<"quranSearch">[];
+  readonly rows: Docs["quranSearch"][];
 }
 
 /** Reads fair per-query prefixes while reserving repeated and signed reads. */
 export const readTextCandidates = Effect.fn(
   "contents.search.quran.readTextCandidates"
 )(function* (
-  ctx: QueryCtx,
   snapshotId: string,
   appLocale: AppLocaleCode,
   queries: readonly string[],
@@ -43,13 +40,7 @@ export const readTextCandidates = Effect.fn(
     states,
     (state) => {
       const requested = state.requested;
-      return searchText(
-        ctx,
-        snapshotId,
-        appLocale,
-        state.query,
-        requested
-      ).pipe(
+      return searchText(snapshotId, appLocale, state.query, requested).pipe(
         Effect.map((rows) => ({
           requested,
           rows,
@@ -89,7 +80,6 @@ export const readTextCandidates = Effect.fn(
       break;
     }
     const rows = yield* searchText(
-      ctx,
       snapshotId,
       appLocale,
       expansion.state.query,
@@ -162,13 +152,12 @@ function getMaximumRequestedRows(
 
 /** Searches one full variant without changing its final-term prefix behavior. */
 const searchText = Effect.fn("contents.search.searchText")(function* (
-  ctx: QueryCtx,
   snapshotId: string,
   appLocale: AppLocaleCode,
   query: string,
   requested: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   return yield* database
     .table("quranSearch")
     .search("search_text", (search) =>
@@ -184,7 +173,7 @@ const searchText = Effect.fn("contents.search.searchText")(function* (
 function replaceRows(
   state: TextQueryState,
   requested: number,
-  rows: readonly Doc<"quranSearch">[],
+  rows: readonly Docs["quranSearch"][],
   exactIdentities: ReadonlySet<string>
 ) {
   state.exhausted = rows.length < requested;

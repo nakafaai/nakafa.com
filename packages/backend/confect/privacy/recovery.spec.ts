@@ -4,7 +4,7 @@ import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import type { handleCleanupComplete } from "@repo/backend/confect/privacy/completion";
 import {
   cleanupSourceValidator,
-  PrivacyCleanupErrorWire,
+  PrivacyCleanupError,
 } from "@repo/backend/confect/privacy/spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
@@ -16,7 +16,7 @@ export default GroupSpec.make()
         workflowId: Schema.Opaque<WorkflowId>()(Schema.String),
       }),
       returns: () => Schema.Null,
-      error: () => PrivacyCleanupErrorWire,
+      error: () => PrivacyCleanupError,
     }).middleware(Atomic)
   )
   .addFunction(
@@ -32,6 +32,6 @@ export default GroupSpec.make()
         workflowId: Schema.Opaque<WorkflowId>()(Schema.String),
       }),
       returns: () => Schema.Null,
-      error: () => PrivacyCleanupErrorWire,
+      error: () => PrivacyCleanupError,
     }).middleware(Atomic)
   );

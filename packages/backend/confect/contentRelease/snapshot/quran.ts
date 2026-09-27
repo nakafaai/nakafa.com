@@ -1,6 +1,9 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -11,8 +14,6 @@ import {
   QURAN_SEARCH_DOCUMENT_LIMIT,
   quranRowDocumentLimit,
 } from "@repo/backend/confect/contentRelease/quran/limits";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
@@ -27,9 +28,9 @@ type QuranRow = Extract<
 const verifySearchReplay = Effect.fn("contentRelease.verifyQuranSearchReplay")(
   function* (
     snapshotId: string,
-    searchStored: WithoutSystemFields<Doc<"quranSearch">> | null,
-    searchByIndex: Doc<"quranSearch"> | null,
-    searchByIdentity: Doc<"quranSearch"> | null
+    searchStored: WithoutSystemFields<Docs["quranSearch"]> | null,
+    searchByIndex: Docs["quranSearch"] | null,
+    searchByIdentity: Docs["quranSearch"] | null
   ) {
     if (searchStored === null) {
       if (searchByIndex !== null) {
@@ -61,14 +62,13 @@ const verifySearchReplay = Effect.fn("contentRelease.verifyQuranSearchReplay")(
 /** Stores one immutable Quran row at its exact signed snapshot index. */
 export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
   function* (
-    ctx: MutationCtx,
     snapshotId: string,
     index: number,
     source: QuranRow,
     rowJson: string
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     if (source.record.snapshotId !== snapshotId) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

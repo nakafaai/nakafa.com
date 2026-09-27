@@ -44,14 +44,11 @@ export function ForumHeader() {
   const t = useTranslations("Common");
   const locale = useLocale();
   const forum = useData((state) => state.forum);
-
   if (!forum) {
     return null;
   }
-
   const userName = forum.user?.name ?? t("anonymous");
   const userImage = forum.user?.image ?? "";
-
   return (
     <div className="min-w-0 pb-3">
       <div className="group flex items-start gap-3 border-primary border-l-2 bg-[color-mix(in_oklch,var(--accent)_3%,var(--background))] p-4">
@@ -92,14 +89,11 @@ export function ForumHeader() {
 function ForumReactions() {
   const t = useTranslations("Common");
   const forum = useData((state) => state.forum);
-
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useForumReactionMutation();
-
   if (!(forum && forum.reactionUsers.length > 0)) {
     return null;
   }
-
   const myReactions = new Set(forum.myReactions);
 
   /** Toggles the current user's forum reaction without blocking transcript input. */
@@ -107,27 +101,31 @@ function ForumReactions() {
     startTransition(() =>
       Effect.runPromise(
         Effect.tryPromise(() =>
-          toggleReaction({ forumId: forum._id, emoji })
+          toggleReaction({
+            forumId: forum._id,
+            emoji,
+          })
         ).pipe(
+          Effect.flatMap(Effect.fromResult),
           Effect.asVoid,
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            Effect.sync(() => {
-              captureException(error, {
-                source: "forum-reaction-toggle",
-              });
-            })
-          )
+          Effect.matchEffect({
+            onFailure: (error) =>
+              Effect.sync(() => {
+                captureException(error, {
+                  source: "forum-reaction-toggle",
+                });
+              }),
+            onSuccess: () => Effect.void,
+          })
         )
       )
     );
   };
-
   return (
     <div className="flex flex-wrap items-center gap-1">
       {forum.reactionUsers.map(({ emoji, count, reactors }) => {
         const isMyReaction = myReactions.has(emoji);
         const moreCount = count - reactors.length;
-
         return (
           <HoverCard key={emoji}>
             <HoverCardTrigger
@@ -158,7 +156,9 @@ function ForumReactions() {
                         names: reactors.join(", "),
                         count: moreCount,
                       })
-                    : t("reacted-by", { names: reactors.join(", ") })}
+                    : t("reacted-by", {
+                        names: reactors.join(", "),
+                      })}
                 </p>
               </div>
             </HoverCardContent>
@@ -173,11 +173,9 @@ function ForumReactions() {
 function ForumActions() {
   const t = useTranslations("Common");
   const forum = useData((state) => state.forum);
-
   const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useForumReactionMutation();
-
   if (!forum) {
     return null;
   }
@@ -187,21 +185,26 @@ function ForumActions() {
     startTransition(() =>
       Effect.runPromise(
         Effect.tryPromise(() =>
-          toggleReaction({ forumId: forum._id, emoji })
+          toggleReaction({
+            forumId: forum._id,
+            emoji,
+          })
         ).pipe(
+          Effect.flatMap(Effect.fromResult),
           Effect.asVoid,
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            Effect.sync(() => {
-              captureException(error, {
-                source: "forum-reaction-picker",
-              });
-            })
-          )
+          Effect.matchEffect({
+            onFailure: (error) =>
+              Effect.sync(() => {
+                captureException(error, {
+                  source: "forum-reaction-picker",
+                });
+              }),
+            onSuccess: () => Effect.void,
+          })
         )
       )
     );
   };
-
   return (
     <Popover
       onOpenChange={(open) => {
@@ -209,7 +212,6 @@ function ForumActions() {
           reactionPicker.open();
           return;
         }
-
         reactionPicker.close();
       }}
       open={isReactionPickerOpen}

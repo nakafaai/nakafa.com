@@ -1,41 +1,50 @@
 import { assert, describe, expect, it } from "@effect/vitest";
+import {
+  DatabaseReader,
+  MutationCtx,
+} from "@repo/backend/confect/_generated/services";
 import { advanceModelPage } from "@repo/backend/confect/contentRelease/models/page";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import schema from "@repo/backend/convex/schema";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   CANDIDATE,
   seedVerifiedPair,
 } from "@repo/backend/test/activation/fixture";
 import { insertModelBuild } from "@repo/backend/test/content/model";
-import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("model page advancement", () => {
-  it("rejects a completed coordinator before any model writes", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(seedVerifiedPair);
-    const build = await t.mutation((ctx) => insertModelBuild(ctx, "ready"));
-    await expect(
-      t.mutation(async (ctx) => {
-        const release = await ctx.db
-          .query("contentReleases")
-          .withIndex("by_releaseId", (index) =>
-            index.eq("releaseId", CANDIDATE.releaseId)
-          )
-          .unique();
-        assert(release);
-        return runConvexProgram(
-          Effect.gen(function* () {
-            const signed = yield* decodeReleaseJson(release.releaseJson);
-            return yield* advanceModelPage(ctx, build, release, signed);
-          })
-        );
-      })
-    ).rejects.toThrow("cannot advance phase ready");
-    expect(
-      await t.query((ctx) => ctx.db.query("contentModelBuilds").unique())
-    ).toEqual(build);
-  });
+  it.effect("rejects a completed coordinator before any model writes", () =>
+    Effect.gen(function* () {
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          const tCtx = yield* MutationCtx;
+          yield* Effect.promise(() => seedVerifiedPair(tCtx));
+          const build = yield* Effect.promise(() =>
+            insertModelBuild(tCtx, "ready")
+          );
+          expect(
+            yield* Effect.gen(function* () {
+              const release = yield* (yield* DatabaseReader)
+                .table("contentReleases")
+                .get("by_releaseId", CANDIDATE.releaseId);
+              assert(release);
+              return yield* Effect.gen(function* () {
+                const signed = yield* decodeReleaseJson(release.releaseJson);
+                return yield* advanceModelPage(build, release, signed);
+              });
+            }).pipe(Effect.flip)
+          ).toMatchObject({
+            message: expect.stringContaining("cannot advance phase ready"),
+          });
+          expect(
+            yield* Effect.promise(() =>
+              tCtx.db.query("contentModelBuilds").unique()
+            )
+          ).toEqual(build);
+        })
+      );
+    })
+  );
 });

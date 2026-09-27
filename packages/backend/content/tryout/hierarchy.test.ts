@@ -1,12 +1,13 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import {
   indexPublishedCatalog,
   readPublishedSetParents,
@@ -29,7 +30,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 
 const trackIdentity = {
   countryKey: TRYOUT_START_COUNTRY,
@@ -38,10 +39,10 @@ const trackIdentity = {
   trackKey: TRYOUT_START_TRACK,
 };
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
-
 const loadCatalog = Effect.fn("tryout.hierarchy.test.loadCatalog")(function* (
   catalog: readonly TryoutCatalogRow[]
 ) {
+  const runtimeServices = yield* Effect.context<never>();
   const t = convexTest(schema, convexModules);
   yield* Effect.promise(() =>
     t.mutation((ctx) =>
@@ -53,13 +54,19 @@ const loadCatalog = Effect.fn("tryout.hierarchy.test.loadCatalog")(function* (
   );
   return yield* Effect.promise(() =>
     t.query((ctx) =>
-      runConvexProgram(
-        loadTryoutCatalog("id").pipe(Effect.provide(convexTryoutLayer(ctx)))
+      Effect.runPromiseWith(runtimeServices)(
+        loadTryoutCatalog("id").pipe(
+          Effect.provide(
+            Layer.provideMerge(
+              tryoutLayer,
+              ConfectDatabaseReader.layer(confectSchema, ctx.db)
+            )
+          )
+        )
       )
     )
   );
 });
-
 describe("signed try-out hierarchy relationships", () => {
   it.effect(
     "rejects duplicate public routes despite individually valid signed rows",
@@ -85,7 +92,6 @@ describe("signed try-out hierarchy relationships", () => {
         });
       })
   );
-
   it.effect(
     "rejects missing country, exam, or track parents in an authenticated catalog",
     () =>
@@ -103,11 +109,12 @@ describe("signed try-out hierarchy relationships", () => {
           }
           expect(
             yield* readPublishedSetParents(index, set).pipe(Effect.flip)
-          ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
         }
       })
   );
-
   it.effect(
     "checks authored set and section counts before projecting a hierarchy",
     () =>
@@ -124,7 +131,12 @@ describe("signed try-out hierarchy relationships", () => {
         const changedTrack = yield* loadCatalog(
           makeTryoutStartHierarchy("id", "visible").map((row) =>
             Schema.decodeSync(TryoutCatalogRowSchema)(
-              row.kind === "track" ? { ...row, setCount: 2 } : row
+              row.kind === "track"
+                ? {
+                    ...row,
+                    setCount: 2,
+                  }
+                : row
             )
           )
         );
@@ -137,13 +149,23 @@ describe("signed try-out hierarchy relationships", () => {
           message: expect.stringContaining("sets"),
         });
         for (const patch of [
-          { questionCount: 2 },
-          { sectionCount: 2, visibleSectionCount: 2 },
+          {
+            questionCount: 2,
+          },
+          {
+            sectionCount: 2,
+            visibleSectionCount: 2,
+          },
         ]) {
           const changed = yield* loadCatalog(
             makeTryoutStartHierarchy("id", "visible").map((row) =>
               Schema.decodeSync(TryoutCatalogRowSchema)(
-                row.kind === "set" ? { ...row, ...patch } : row
+                row.kind === "set"
+                  ? {
+                      ...row,
+                      ...patch,
+                    }
+                  : row
               )
             )
           );
@@ -154,11 +176,12 @@ describe("signed try-out hierarchy relationships", () => {
           }
           expect(
             yield* readPublishedSetSections(index, set).pipe(Effect.flip)
-          ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
         }
       })
   );
-
   it.effect(
     "resolves no page for absent routes and rejects an orphan section or lost private entry",
     () =>
@@ -186,7 +209,10 @@ describe("signed try-out hierarchy relationships", () => {
           makeTryoutStartHierarchy("id", "internal-entry").map((row) =>
             Schema.decodeSync(TryoutCatalogRowSchema)(
               row.kind === "set"
-                ? { ...row, internalEntrySectionKey: "missing" }
+                ? {
+                    ...row,
+                    internalEntrySectionKey: "missing",
+                  }
                 : row
             )
           )

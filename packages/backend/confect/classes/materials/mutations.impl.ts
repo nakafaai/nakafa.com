@@ -15,6 +15,7 @@ import {
 } from "@repo/backend/confect/classes/materials/groups";
 import spec from "@repo/backend/confect/classes/materials/mutations.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { requirePermission } from "@repo/backend/confect/schools/permission/access";
 import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { Clock, Duration, Effect, Layer, Option } from "effect";
@@ -28,11 +29,10 @@ const createMaterialGroup = FunctionImpl.make(
     function* (args) {
       const writer = yield* DatabaseWriter;
       const database = yield* DatabaseReader;
-      const ctx = yield* MutationCtxService;
-      const { appUser } = yield* requireAuth(ctx);
+      const { appUser } = yield* requireAuth();
       const userId = appUser._id;
       yield* validateScheduledStatus(args.status, args.scheduledAt);
-      const classData = yield* loadActiveClass(ctx, args.classId);
+      const classData = yield* loadActiveClass(args.classId);
       yield* requirePermission(PERMISSIONS.CONTENT_CREATE, {
         userId,
         classId: args.classId,
@@ -115,13 +115,13 @@ const updateMaterialGroup = FunctionImpl.make(
     function* (args) {
       const writer = yield* DatabaseWriter;
       const ctx = yield* MutationCtxService;
-      const { appUser } = yield* requireAuth(ctx);
+      const { appUser } = yield* requireAuth();
       const userId = appUser._id;
-      const group = yield* loadMaterialGroup(ctx, args.groupId);
+      const group = yield* loadMaterialGroup(args.groupId);
       const newStatus = args.status ?? group.status;
       const newScheduledAt = args.scheduledAt ?? group.scheduledAt;
       yield* validateScheduledStatus(newStatus, newScheduledAt);
-      const classData = yield* loadActiveClass(ctx, group.classId);
+      const classData = yield* loadActiveClass(group.classId);
       yield* requirePermission(PERMISSIONS.CONTENT_EDIT, {
         userId,
         classId: group.classId,
@@ -220,10 +220,10 @@ const deleteMaterialGroup = FunctionImpl.make(
     function* (args) {
       const writer = yield* DatabaseWriter;
       const ctx = yield* MutationCtxService;
-      const { appUser } = yield* requireAuth(ctx);
+      const { appUser } = yield* requireAuth();
       const userId = appUser._id;
-      const group = yield* loadMaterialGroup(ctx, args.groupId);
-      const classData = yield* loadActiveClass(ctx, group.classId);
+      const group = yield* loadMaterialGroup(args.groupId);
+      const classData = yield* loadActiveClass(group.classId);
       yield* requirePermission(PERMISSIONS.CONTENT_DELETE, {
         userId,
         classId: group.classId,
@@ -247,11 +247,10 @@ const reorderMaterialGroup = FunctionImpl.make(
   Effect.fn("classes.materials.mutations.reorderMaterialGroup")(
     function* (args) {
       const database = yield* DatabaseReader;
-      const ctx = yield* MutationCtxService;
-      const { appUser } = yield* requireAuth(ctx);
+      const { appUser } = yield* requireAuth();
       const userId = appUser._id;
-      const group = yield* loadMaterialGroup(ctx, args.groupId);
-      const classData = yield* loadActiveClass(ctx, group.classId);
+      const group = yield* loadMaterialGroup(args.groupId);
+      const classData = yield* loadActiveClass(group.classId);
       yield* requirePermission(PERMISSIONS.CONTENT_EDIT, {
         userId,
         classId: group.classId,
@@ -321,5 +320,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(deleteMaterialGroup),
   Layer.provide(reorderMaterialGroup),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

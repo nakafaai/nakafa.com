@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { CreditStateFailure } from "@repo/backend/confect/credits/spec";
+import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import { userPlanValidator } from "@repo/backend/confect/users/schema";
 import { Schema } from "effect";
@@ -12,7 +12,7 @@ export default GroupSpec.make()
         plan: userPlanValidator,
       }),
       returns: () => Schema.Null,
-      error: () => CreditStateFailure,
+      error: () => CreditStateError,
     }).middleware(Atomic)
   )
   .addFunction(
@@ -20,6 +20,6 @@ export default GroupSpec.make()
       name: "syncAllCreditResetPeriods",
       args: () => ({}),
       returns: () => Schema.Null,
-      error: () => CreditStateFailure,
+      error: () => CreditStateError,
     }).middleware(Atomic)
   );

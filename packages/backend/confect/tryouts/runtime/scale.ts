@@ -1,21 +1,22 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Option } from "effect";
 
 const SCALE_CHILD_PAGE_SIZE = 32;
-type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutAttempt = Docs["tryoutAttempts"];
 
 /** Deletes one bounded page from an unreferenced attempt-only scale. */
 export const cleanupAttemptScale = Effect.fn("tryouts.runtime.cleanupScale")(
-  function* (ctx: MutationCtx, attempt: TryoutAttempt) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (attempt: TryoutAttempt) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const scaleVersionId = attempt.scaleVersionId;
     if (scaleVersionId === undefined) {
       return false;

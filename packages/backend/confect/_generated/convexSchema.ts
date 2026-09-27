@@ -48,6 +48,8 @@ import materialCatalog from "./tables/materialCatalog";
 import messageParts from "./tables/messageParts";
 import messages from "./tables/messages";
 import ninaCapabilityTraces from "./tables/ninaCapabilityTraces";
+import ninaTurns from "./tables/ninaTurns";
+import ninaUploads from "./tables/ninaUploads";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
@@ -131,6 +133,8 @@ export default $defineSchema({
   messageParts: $Table.tableDefinition(messageParts),
   messages: $Table.tableDefinition(messages),
   ninaCapabilityTraces: $Table.tableDefinition(ninaCapabilityTraces),
+  ninaTurns: $Table.tableDefinition(ninaTurns),
+  ninaUploads: $Table.tableDefinition(ninaUploads),
   onboardingProfiles: $Table.tableDefinition(onboardingProfiles),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),

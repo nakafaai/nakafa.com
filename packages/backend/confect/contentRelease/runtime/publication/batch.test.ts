@@ -1,9 +1,11 @@
+import { RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { Effect } from "effect";
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import { dispatchBatchProgram } from "@repo/backend/confect/contentRelease/runtime/publication/batch";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/batch";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -18,14 +20,12 @@ import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
-
 const foundRequest = JSON.parse(publicRuntimeRequest());
 const missingRequest = {
   appLocale: "en",
   delivery: "public",
   publicPath: "test/missing",
 };
-
 afterEach(() => vi.restoreAllMocks());
 
 /** Executes the bounded public batch transport program. */
@@ -33,7 +33,11 @@ function runDispatch(t: RuntimeAction, input: unknown) {
   const source = typeof input === "string" ? input : JSON.stringify(input);
   const byteLength = new TextEncoder().encode(source).byteLength;
   return t.action((ctx) =>
-    runConvexProgram(dispatchBatchProgram(ctx, source, byteLength))
+    Effect.runPromise(
+      dispatchBatchProgram(source, byteLength).pipe(
+        Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+      )
+    )
   );
 }
 
@@ -44,7 +48,6 @@ function seedPublicRuntime(t: RuntimeTest) {
     await insertRuntimeHead(ctx, "public", runtimeContentKey("public"));
   });
 }
-
 describe("contentRelease/runtime/publication/batch", () => {
   it("returns eight ordered exact responses from one batch read", async () => {
     const t = createConvexTestWithBetterAuth();
@@ -52,11 +55,16 @@ describe("contentRelease/runtime/publication/batch", () => {
     const requests = [
       foundRequest,
       missingRequest,
-      ...Array.from({ length: 6 }, () => foundRequest),
+      ...Array.from(
+        {
+          length: 6,
+        },
+        () => foundRequest
+      ),
     ];
-
-    const result = await runDispatch(t, { requests });
-
+    const result = await runDispatch(t, {
+      requests,
+    });
     expect(result.status).toBe(200);
     const responses = JSON.parse(result.body).responses;
     expect(responses).toHaveLength(8);
@@ -71,33 +79,57 @@ describe("contentRelease/runtime/publication/batch", () => {
       "found",
     ]);
     expect(responses[0]).toMatchObject({
-      artifact: { payload: { contentKey: runtimeContentKey("public") } },
-      projection: { publicPath: TEST_RUNTIME_PATH },
+      artifact: {
+        payload: {
+          contentKey: runtimeContentKey("public"),
+        },
+      },
+      projection: {
+        publicPath: TEST_RUNTIME_PATH,
+      },
     });
   });
-
   it("rejects empty, nine-item, malformed, and mismatched request bytes", async () => {
     const t = createConvexTestWithBetterAuth();
-    const source = JSON.stringify({ requests: [foundRequest] });
+    const source = JSON.stringify({
+      requests: [foundRequest],
+    });
     const mismatch = await t.action((ctx) =>
-      runConvexProgram(dispatchBatchProgram(ctx, source, 1))
+      Effect.runPromise(
+        dispatchBatchProgram(source, 1).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+        )
+      )
     );
-
-    await expect(runDispatch(t, { requests: [] })).resolves.toMatchObject({
+    await expect(
+      runDispatch(t, {
+        requests: [],
+      })
+    ).resolves.toMatchObject({
       status: 400,
     });
     await expect(
       runDispatch(t, {
-        requests: Array.from({ length: 9 }, () => foundRequest),
+        requests: Array.from(
+          {
+            length: 9,
+          },
+          () => foundRequest
+        ),
       })
-    ).resolves.toMatchObject({ status: 400 });
-    await expect(runDispatch(t, "{")).resolves.toMatchObject({ status: 400 });
+    ).resolves.toMatchObject({
+      status: 400,
+    });
+    await expect(runDispatch(t, "{")).resolves.toMatchObject({
+      status: 400,
+    });
     await expect(
       runDispatch(t, "x".repeat(MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES + 1))
-    ).resolves.toMatchObject({ status: 400 });
+    ).resolves.toMatchObject({
+      status: 400,
+    });
     expect(mismatch.status).toBe(400);
   });
-
   it("returns the exact too-large failure when one item exceeds 1 MiB", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {
@@ -111,15 +143,15 @@ describe("contentRelease/runtime/publication/batch", () => {
         }),
       });
     });
-
-    await expect(runDispatch(t, { requests: [foundRequest] })).resolves.toEqual(
-      {
-        body: '{"code":"CONTENT_RUNTIME_RESPONSE_TOO_LARGE","kind":"failure"}',
-        status: 500,
-      }
-    );
+    await expect(
+      runDispatch(t, {
+        requests: [foundRequest],
+      })
+    ).resolves.toEqual({
+      body: '{"code":"CONTENT_RUNTIME_RESPONSE_TOO_LARGE","kind":"failure"}',
+      status: 500,
+    });
   });
-
   it("fails the complete batch when one stored row is corrupt", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedPublicRuntime(t);
@@ -132,15 +164,15 @@ describe("contentRelease/runtime/publication/batch", () => {
         projectionHash: `sha256:${"f".repeat(64)}`,
       });
     });
-
     await expect(
-      runDispatch(t, { requests: [foundRequest, missingRequest] })
+      runDispatch(t, {
+        requests: [foundRequest, missingRequest],
+      })
     ).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
       status: 500,
     });
   });
-
   it("rejects corrupt artifact JSON after the stored route has been authenticated", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedPublicRuntime(t);
@@ -149,26 +181,32 @@ describe("contentRelease/runtime/publication/batch", () => {
       if (!artifact) {
         return expect.fail("Expected one runtime artifact.");
       }
-      await ctx.db.patch(artifact._id, { artifactJson: "{}" });
+      await ctx.db.patch(artifact._id, {
+        artifactJson: "{}",
+      });
     });
-    await expect(runDispatch(t, { requests: [foundRequest] })).resolves.toEqual(
-      {
-        body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
-        status: 500,
-      }
-    );
+    await expect(
+      runDispatch(t, {
+        requests: [foundRequest],
+      })
+    ).resolves.toEqual({
+      body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+      status: 500,
+    });
   });
-
   it("rejects a transport response whose cardinality differs from its request", async () => {
     const t = createConvexTestWithBetterAuth();
-    const source = JSON.stringify({ requests: [foundRequest] });
+    const source = JSON.stringify({
+      requests: [foundRequest],
+    });
     const result = await t.action((ctx) => {
       vi.spyOn(ctx, "runQuery").mockResolvedValueOnce([]);
-      return runConvexProgram(
+      return Effect.runPromise(
         dispatchBatchProgram(
-          ctx,
           source,
           new TextEncoder().encode(source).byteLength
+        ).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
         )
       );
     });
@@ -177,25 +215,34 @@ describe("contentRelease/runtime/publication/batch", () => {
       status: 500,
     });
   });
-
   it("returns an internal failure when Node cannot hash an authenticated query result", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedPublicRuntime(t);
-    const source = JSON.stringify({ requests: [foundRequest] });
+    const source = JSON.stringify({
+      requests: [foundRequest],
+    });
     const result = await t.action(async (ctx) => {
       const rows = await ctx.runQuery(
         internal.contentRelease.runtime.publication.internal.readBatch,
-        { requests: [{ appLocale: "en", publicPath: TEST_RUNTIME_PATH }] }
+        {
+          requests: [
+            {
+              appLocale: "en",
+              publicPath: TEST_RUNTIME_PATH,
+            },
+          ],
+        }
       );
       vi.spyOn(ctx, "runQuery").mockResolvedValueOnce(rows);
       vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(
         new Error("Hash service unavailable.")
       );
-      return runConvexProgram(
+      return Effect.runPromise(
         dispatchBatchProgram(
-          ctx,
           source,
           new TextEncoder().encode(source).byteLength
+        ).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
         )
       );
     });
@@ -208,20 +255,24 @@ describe("contentRelease/runtime/publication/batch", () => {
     "sanitizes a %s query response at the action boundary",
     async (failure) => {
       const t = createConvexTestWithBetterAuth();
-
-      const source = JSON.stringify({ requests: [foundRequest] });
+      const source = JSON.stringify({
+        requests: [foundRequest],
+      });
       const result = await t.action((ctx) => {
         const query = vi.spyOn(ctx, "runQuery");
         if (failure === "invalid") {
-          query.mockResolvedValueOnce({ private: "transport corruption" });
+          query.mockResolvedValueOnce({
+            private: "transport corruption",
+          });
         } else {
           query.mockRejectedValueOnce(new Error("private transport failure"));
         }
-        return runConvexProgram(
+        return Effect.runPromise(
           dispatchBatchProgram(
-            ctx,
             source,
             new TextEncoder().encode(source).byteLength
+          ).pipe(
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
           )
         );
       });

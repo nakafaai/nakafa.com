@@ -1,24 +1,25 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/confect/auth/deletion/constants";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { findSchoolOwnershipSuccessorPage } from "@repo/backend/confect/auth/deletion/successor";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow } from "effect";
 
 /** Applies or advances one reserved school transfer. */
 const finalizeSchoolTransfer = Effect.fn(
   "auth.deletion.finalizeSchoolTransfer"
 )(function* (
-  ctx: MutationCtx,
-  user: Doc<"users">,
-  transfer: Doc<"accountDeletionSchoolTransfers">,
+  user: Docs["users"],
+  transfer: Docs["accountDeletionSchoolTransfers"],
   finalizedAt: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const school = yield* database
     .table("schools")
     .get(transfer.schoolId)
@@ -58,7 +59,6 @@ const finalizeSchoolTransfer = Effect.fn(
     : undefined;
   if (!successorMembership) {
     const successor = yield* findSchoolOwnershipSuccessorPage(
-      ctx,
       school._id,
       user._id,
       transfer.successorCursor ?? null
@@ -117,12 +117,11 @@ export const finalizeSchoolTransfers = Effect.fn(
   "auth.deletion.finalizeSchoolTransfers"
 )(
   function* (
-    ctx: MutationCtx,
-    user: Doc<"users">,
+    user: Docs["users"],
     preparationId: Id<"accountDeletionPreparations">,
     finalizedAt: number
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const transfers = yield* database
       .table("accountDeletionSchoolTransfers")
       .index("by_preparationId", (query) =>
@@ -137,7 +136,6 @@ export const finalizeSchoolTransfers = Effect.fn(
       ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE
     )) {
       const finalization = yield* finalizeSchoolTransfer(
-        ctx,
         user,
         transfer,
         finalizedAt

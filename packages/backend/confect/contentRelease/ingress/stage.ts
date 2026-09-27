@@ -1,11 +1,14 @@
 "use node";
 
-import { MutationRunner, QueryRunner } from "@confect/server";
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
 import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
 import type { StageOperation } from "@nakafa/aksara-contracts/transport/group";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import {
   loadStageEnvelope,
   validateReleaseRenderer,
@@ -25,7 +28,6 @@ import {
   encodeRendererJson,
   encodeRouteJson,
 } from "@repo/backend/confect/contentRelease/wire";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 type StageRequest =
@@ -45,7 +47,6 @@ type ReleaseRequest = Extract<
 /** Authenticates candidate and recovery artifacts against their keys. */
 const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
   function* (
-    ctx: ActionCtx,
     request: Extract<
       StageRequest,
       {
@@ -54,7 +55,7 @@ const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
     >,
     activeKeyId: string
   ) {
-    const verified = yield* loadStageEnvelope(ctx, request.releaseId);
+    const verified = yield* loadStageEnvelope(request.releaseId);
     yield* Effect.forEach(
       request.artifacts,
       (artifact) => {
@@ -85,16 +86,11 @@ const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
 
 /** Stages one authenticated candidate or its pre-staged recovery release. */
 const stageRelease = Effect.fn("contentRelease.stageSignedRelease")(function* (
-  ctx: ActionCtx,
   request: ReleaseRequest,
   activeKeyId: string
 ) {
-  const runMutation = yield* MutationRunner.MutationRunner.pipe(
-    Effect.provide(MutationRunner.layer(ctx.runMutation))
-  );
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
+  const runMutation = yield* MutationRunner;
+  const runQuery = yield* QueryRunner;
   const { renderer, signed } = yield* validateReleaseRenderer(
     request.release,
     request.rendererManifest
@@ -127,19 +123,13 @@ const stageRelease = Effect.fn("contentRelease.stageSignedRelease")(function* (
 
 /** Executes one authenticated bounded idempotent staging operation. */
 export const stagePublication = Effect.fn("contentRelease.stagePublication")(
-  function* (
-    ctx: ActionCtx,
-    request: StageRequest,
-    activeKeyId = ACTIVE_SIGNING_KEY_ID
-  ) {
-    const runMutation = yield* MutationRunner.MutationRunner.pipe(
-      Effect.provide(MutationRunner.layer(ctx.runMutation))
-    );
+  function* (request: StageRequest, activeKeyId = ACTIVE_SIGNING_KEY_ID) {
+    const runMutation = yield* MutationRunner;
     if (
       request.operation === "stageRelease" ||
       request.operation === "stageRecovery"
     ) {
-      const value = yield* stageRelease(ctx, request, activeKeyId);
+      const value = yield* stageRelease(request, activeKeyId);
       return {
         ok: true,
         operation: request.operation,
@@ -147,7 +137,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
       };
     }
     if (request.operation === "stageSnapshot") {
-      const value = yield* stageSnapshot(ctx, request);
+      const value = yield* stageSnapshot(request);
       return {
         ok: true,
         operation: request.operation,
@@ -155,7 +145,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
       };
     }
     if (request.operation === "stageSnapshotBatch") {
-      const value = yield* stageSnapshotBatch(ctx, request);
+      const value = yield* stageSnapshotBatch(request);
       return {
         ok: true,
         operation: request.operation,
@@ -163,7 +153,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
       };
     }
     if (request.operation === "stageTryoutRuntimeBundle") {
-      const value = yield* stageTryoutRuntimeBundle(ctx, request, activeKeyId);
+      const value = yield* stageTryoutRuntimeBundle(request, activeKeyId);
       return {
         ok: true,
         operation: request.operation,
@@ -215,7 +205,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
         value,
       };
     }
-    yield* verifyArtifactBatch(ctx, request, activeKeyId);
+    yield* verifyArtifactBatch(request, activeKeyId);
     const value = yield* runMutation(
       refs.internal.contentRelease.artifacts.stageArtifactBatch,
       {

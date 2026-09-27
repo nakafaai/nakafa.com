@@ -1,7 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import {
-  ContentAnalyticsIoErrorWire,
-  InvalidContentAnalyticsPartitionErrorWire,
+  ContentAnalyticsIoError,
+  InvalidContentAnalyticsPartitionError,
   processContentAnalyticsPartitionArgs,
   processContentAnalyticsPartitionResultValidator,
   scheduleContentAnalyticsPartitionArgs,
@@ -15,7 +15,7 @@ export default GroupSpec.make()
       name: "scheduleContentAnalyticsPartitions",
       args: () => ({}),
       returns: () => scheduleContentAnalyticsPartitionsResultValidator,
-      error: () => ContentAnalyticsIoErrorWire,
+      error: () => ContentAnalyticsIoError,
     })
   )
   .addFunction(
@@ -25,8 +25,8 @@ export default GroupSpec.make()
       returns: () => scheduleContentAnalyticsPartitionResultValidator,
       error: () =>
         Schema.Union([
-          InvalidContentAnalyticsPartitionErrorWire,
-          ContentAnalyticsIoErrorWire,
+          InvalidContentAnalyticsPartitionError,
+          ContentAnalyticsIoError,
         ]),
     })
   )
@@ -37,8 +37,8 @@ export default GroupSpec.make()
       returns: () => processContentAnalyticsPartitionResultValidator,
       error: () =>
         Schema.Union([
-          InvalidContentAnalyticsPartitionErrorWire,
-          ContentAnalyticsIoErrorWire,
+          InvalidContentAnalyticsPartitionError,
+          ContentAnalyticsIoError,
         ]),
     })
   );

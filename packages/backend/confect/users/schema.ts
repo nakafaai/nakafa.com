@@ -1,5 +1,5 @@
-import { userRoles } from "@repo/ai/types/roles";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { userRoles } from "@repo/backend/confect/users/role";
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import { Schema } from "effect";
 /**

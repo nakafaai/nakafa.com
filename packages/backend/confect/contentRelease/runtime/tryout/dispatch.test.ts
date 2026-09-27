@@ -1,3 +1,5 @@
+import { RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
@@ -7,7 +9,6 @@ import {
 } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { dispatchProgram } from "@repo/backend/confect/contentRelease/runtime/tryout/dispatch";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
@@ -20,49 +21,56 @@ type RuntimeAction = Pick<RuntimeTest, "action">;
 function runDispatch(t: RuntimeAction, source: string) {
   const byteLength = new TextEncoder().encode(source).byteLength;
   return t.action((ctx) =>
-    runConvexProgram(
-      dispatchProgram(ctx, source, byteLength).pipe(
-        Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
+    Effect.runPromise(
+      dispatchProgram(source, byteLength).pipe(
+        Effect.provideService(
+          ContentVerificationKeyResolver,
+          TEST_KEY_RESOLVER
+        ),
+        Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
       )
     )
   );
 }
-
 afterEach(() => vi.restoreAllMocks());
-
 describe("contentRelease/runtime/tryout/dispatch", () => {
   it("authenticates an ordered question and answer batch", async () => {
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation(insertProtectedRuntime);
-
     const result = await runDispatch(t, JSON.stringify(fixture.request));
-
     expect(result.status).toBe(200);
     expect(JSON.parse(result.body)).toMatchObject({
       items: [
         {
           artifact: {
             artifactHash: fixture.question.artifactHash,
-            payload: { contentKey: fixture.question.contentKey },
+            payload: {
+              contentKey: fixture.question.contentKey,
+            },
           },
           delivery: "authenticated",
         },
         {
           artifact: {
             artifactHash: fixture.answer.artifactHash,
-            payload: { contentKey: fixture.answer.contentKey },
+            payload: {
+              contentKey: fixture.answer.contentKey,
+            },
           },
           delivery: "entitled",
         },
       ],
       bundle: {
         bundleHash: fixture.request.bundleHash,
-        payload: { snapshot: { snapshotId: fixture.snapshotId } },
+        payload: {
+          snapshot: {
+            snapshotId: fixture.snapshotId,
+          },
+        },
       },
       kind: "found",
     });
   });
-
   it("returns exact absence and rejects malformed request bytes", async () => {
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation(insertProtectedRuntime);
@@ -77,27 +85,30 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
     };
     const source = JSON.stringify(fixture.request);
     const mismatch = await t.action((ctx) =>
-      runConvexProgram(
-        dispatchProgram(ctx, source, 1).pipe(
+      Effect.runPromise(
+        dispatchProgram(source, 1).pipe(
           Effect.provideService(
             ContentVerificationKeyResolver,
             TEST_KEY_RESOLVER
-          )
+          ),
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
         )
       )
     );
-
     await expect(runDispatch(t, JSON.stringify(missing))).resolves.toEqual({
       body: '{"kind":"missing"}',
       status: 404,
     });
-    await expect(runDispatch(t, "{")).resolves.toMatchObject({ status: 400 });
+    await expect(runDispatch(t, "{")).resolves.toMatchObject({
+      status: 400,
+    });
     expect(mismatch.status).toBe(400);
     await expect(
       runDispatch(t, "x".repeat(MAX_PROTECTED_RUNTIME_REQUEST_BYTES + 1))
-    ).resolves.toMatchObject({ status: 400 });
+    ).resolves.toMatchObject({
+      status: 400,
+    });
   });
-
   it("fails closed when one retained artifact disappears", async () => {
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation(insertProtectedRuntime);
@@ -113,7 +124,6 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
       }
       await ctx.db.delete("contentArtifacts", artifact._id);
     });
-
     await expect(
       runDispatch(t, JSON.stringify(fixture.request))
     ).resolves.toEqual({
@@ -121,7 +131,6 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
       status: 500,
     });
   });
-
   it("bounds the complete signed batch even when every stored artifact fits", async () => {
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation((ctx) =>
@@ -149,20 +158,22 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
       const result = await t.action((ctx) => {
         const query = vi.spyOn(ctx, "runQuery");
         if (failure === "invalid") {
-          query.mockResolvedValueOnce({ private: "transport corruption" });
+          query.mockResolvedValueOnce({
+            private: "transport corruption",
+          });
         } else {
           query.mockRejectedValueOnce(new Error("private transport failure"));
         }
-        return runConvexProgram(
+        return Effect.runPromise(
           dispatchProgram(
-            ctx,
             source,
             new TextEncoder().encode(source).byteLength
           ).pipe(
             Effect.provideService(
               ContentVerificationKeyResolver,
               TEST_KEY_RESOLVER
-            )
+            ),
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
           )
         );
       });

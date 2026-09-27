@@ -8,126 +8,118 @@ import {
   mcpTransportErrorResponse,
   withMcpResponseHeaders,
 } from "@repo/backend/confect/routes/agent/mcp/response";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { RequestIdentity } from "@repo/backend/confect/routes/middleware/identity";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/agent/errors";
-import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Effect, Result } from "effect";
-import { Hono } from "hono";
+import { Effect, Layer, Result } from "effect";
+import {
+  HttpRouter,
+  HttpServerRequest,
+  HttpServerResponse,
+} from "effect/unstable/http";
 
-type AgentApp = HonoWithConvex<
-  ActionCtx,
-  {
-    requestId: string;
+/** Serves the protected Streamable HTTP MCP transport in native Effect. */
+const handleMcp = Effect.gen(function* () {
+  const runtimeServices = yield* Effect.context<never>();
+  const request = yield* HttpServerRequest.toWeb(
+    yield* HttpServerRequest.HttpServerRequest
+  );
+  const requestId = yield* RequestIdentity;
+  if (request.method === "OPTIONS") {
+    return mcpOptionsResponse(request);
   }
->;
-
-/** Registers the protected modern Streamable HTTP MCP transport. */
-export function registerAgentMcpRoutes(app: AgentApp) {
-  const mcp: AgentApp = new Hono();
-  mcp.use("*", guardMcpOrigin);
-  mcp.all("/", async (context) => {
-    const request = context.req.raw;
-    const requestId = context.get("requestId");
-    if (request.method === "OPTIONS") {
-      return mcpOptionsResponse(request);
-    }
-    const limited = await Effect.runPromise(
-      enforceAgentReadLimit(context.env, request).pipe(
-        Effect.match({
-          onFailure: (error) =>
-            error._tag === "AgentRateLimitError"
-              ? {
-                  kind: "limited" as const,
-                  retryAfterMs: error.retryAfterMs,
-                }
-              : {
-                  kind: "unavailable" as const,
-                },
-          onSuccess: () => ({
-            kind: "allowed" as const,
-          }),
-        })
-      )
-    );
-    if (limited.kind === "unavailable") {
-      return withMcpResponseHeaders(mcpTransportErrorResponse(503), request);
-    }
-    if (limited.kind === "limited") {
-      return withMcpResponseHeaders(
-        mcpTransportErrorResponse(429, limited.retryAfterMs),
-        request
-      );
-    }
-    const bounded = await Effect.runPromise(
-      readMcpRequest(request).pipe(Effect.result)
-    );
-    if (Result.isFailure(bounded)) {
-      const oversized = bounded.failure.reason === "size";
-      return withMcpResponseHeaders(
-        mcpTransportErrorResponse(oversized ? 413 : 400),
-        request
-      );
-    }
-    const { parsedBody, request: boundedRequest } = bounded.success;
-    const runtime = await Effect.runPromise(
-      loadMcpRuntime().pipe(Effect.result)
-    );
-    if (Result.isFailure(runtime)) {
-      return withMcpResponseHeaders(
-        mcpParsedErrorResponse(
-          parsedBody,
-          503,
-          -32_603,
-          "The MCP protocol runtime is unavailable.",
-          requestId
-        ),
-        request
-      );
-    }
-    if (
-      parsedBody !== undefined &&
-      !request.headers.has("mcp-protocol-version")
-    ) {
-      return withMcpResponseHeaders(
-        mcpParsedErrorResponse(
-          parsedBody,
-          400,
-          -32_020,
-          "The MCP-Protocol-Version header is required for modern requests.",
-          requestId
-        ),
-        request
-      );
-    }
-    const handler = runtime.success.sdk.createMcpHandler(
-      () =>
-        runtime.success.server.createNakafaMcpServer(context.env, requestId),
-      {
-        legacy: "reject",
-        onerror: (error) => {
-          Effect.runSync(
-            Effect.logWarning("Nakafa MCP protocol request failed.").pipe(
-              Effect.annotateLogs({
-                errorName: error.name,
-                requestId,
-              })
-            )
-          );
-        },
-      }
-    );
-    return withMcpResponseHeaders(
-      await handler.fetch(boundedRequest, {
-        parsedBody,
+  const limited = yield* enforceAgentReadLimit(request).pipe(
+    Effect.match({
+      onFailure: (error) =>
+        error._tag === "AgentRateLimitError"
+          ? {
+              kind: "limited" as const,
+              retryAfterMs: error.retryAfterMs,
+            }
+          : {
+              kind: "unavailable" as const,
+            },
+      onSuccess: () => ({
+        kind: "allowed" as const,
       }),
+    })
+  );
+  if (limited.kind === "unavailable") {
+    return withMcpResponseHeaders(mcpTransportErrorResponse(503), request);
+  }
+  if (limited.kind === "limited") {
+    return withMcpResponseHeaders(
+      mcpTransportErrorResponse(429, limited.retryAfterMs),
       request
     );
+  }
+  const bounded = yield* readMcpRequest(request).pipe(Effect.result);
+  if (Result.isFailure(bounded)) {
+    const oversized = bounded.failure.reason === "size";
+    return withMcpResponseHeaders(
+      mcpTransportErrorResponse(oversized ? 413 : 400),
+      request
+    );
+  }
+  const { parsedBody, request: boundedRequest } = bounded.success;
+  const runtime = yield* loadMcpRuntime().pipe(Effect.result);
+  if (Result.isFailure(runtime)) {
+    return withMcpResponseHeaders(
+      mcpParsedErrorResponse(
+        parsedBody,
+        503,
+        -32_603,
+        "The MCP protocol runtime is unavailable.",
+        requestId
+      ),
+      request
+    );
+  }
+  if (
+    parsedBody !== undefined &&
+    !request.headers.has("mcp-protocol-version")
+  ) {
+    return withMcpResponseHeaders(
+      mcpParsedErrorResponse(
+        parsedBody,
+        400,
+        -32_020,
+        "The MCP-Protocol-Version header is required for modern requests.",
+        requestId
+      ),
+      request
+    );
+  }
+  const server = yield* runtime.success.server.createNakafaMcpServer(requestId);
+  const handler = runtime.success.sdk.createMcpHandler(() => server, {
+    legacy: "reject",
+    onerror: (error) => {
+      Effect.runSyncWith(runtimeServices)(
+        Effect.logWarning("Nakafa MCP protocol request failed.").pipe(
+          Effect.annotateLogs({
+            errorName: error.name,
+            requestId,
+          })
+        )
+      );
+    },
   });
-  app.route(NAKAFA_MCP_EDGE_CONTRACT.originPath, mcp);
-}
+  return withMcpResponseHeaders(
+    yield* Effect.promise(() =>
+      handler.fetch(boundedRequest, {
+        parsedBody,
+      })
+    ),
+    request
+  );
+}).pipe(Effect.map(HttpServerResponse.fromWeb));
+export const agentMcpRoutes = HttpRouter.add(
+  "*",
+  NAKAFA_MCP_EDGE_CONTRACT.originPath,
+  handleMcp
+).pipe(Layer.provide(guardMcpOrigin.layer));
 const loadMcpRuntime = Effect.fn("agent.mcp.loadRuntime")(() =>
   Effect.tryPromise({
     catch: (cause) =>

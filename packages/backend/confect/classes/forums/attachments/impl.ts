@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter, StorageWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  StorageWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   ForumAttachmentError,
   type ForumAttachmentErrorCode,
@@ -27,7 +30,6 @@ import {
   MAX_FORUM_ATTACHMENT_BYTES,
 } from "@repo/backend/confect/classes/forums/constants";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Option } from "effect";
 
 function hasAllowedForumAttachmentMimeType(mimeType: string) {
@@ -119,11 +121,8 @@ const ensureDistinctUploadIds = Effect.fn(
  */
 export const validateStoredForumAttachmentMetadata = Effect.fn(
   "classes.forums.attachments.validateStoredForumAttachmentMetadata"
-)(function* (
-  ctx: MutationCtx,
-  { size, storageId }: ForumAttachmentMetadataInput
-) {
-  const metadata = yield* DatabaseReader.make(databaseSchema, ctx.db)
+)(function* ({ size, storageId }: ForumAttachmentMetadataInput) {
+  const metadata = yield* (yield* DatabaseReader)
     .table("_storage")
     .get(storageId)
     .pipe(
@@ -153,11 +152,8 @@ export const validateStoredForumAttachmentMetadata = Effect.fn(
 export const validateForumAttachmentStorageClaim = Effect.fn(
   "classes.forums.attachments.validateForumAttachmentStorageClaim"
 )(
-  function* (
-    ctx: MutationCtx,
-    { storageId, uploadId }: ForumAttachmentStorageClaimInput
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* ({ storageId, uploadId }: ForumAttachmentStorageClaimInput) {
+    const database = yield* DatabaseReader;
     const matchingPendingUploads = yield* database
       .table("schoolClassForumPendingUploads")
       .index("by_storageId", (q) => q.eq("storageId", storageId))
@@ -205,8 +201,8 @@ function isForumAttachmentUpload(
 const getPendingUpload = Effect.fn(
   "classes.forums.attachments.getPendingUpload"
 )(
-  function* (ctx: MutationCtx, uploadId: Id<"schoolClassForumPendingUploads">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (uploadId: Id<"schoolClassForumPendingUploads">) {
+    const database = yield* DatabaseReader;
     return yield* database
       .table("schoolClassForumPendingUploads")
       .get(uploadId)
@@ -223,21 +219,18 @@ const getPendingUpload = Effect.fn(
  */
 export const resolveForumAttachmentUploads = Effect.fn(
   "classes.forums.attachments.resolveForumAttachmentUploads"
-)(function* (
-  ctx: MutationCtx,
-  {
-    forumId,
-    uploadIds,
-    userId,
-  }: {
-    forumId: Id<"schoolClassForums">;
-    uploadIds: Id<"schoolClassForumPendingUploads">[];
-    userId: Id<"users">;
-  }
-) {
+)(function* ({
+  forumId,
+  uploadIds,
+  userId,
+}: {
+  forumId: Id<"schoolClassForums">;
+  uploadIds: Id<"schoolClassForumPendingUploads">[];
+  userId: Id<"users">;
+}) {
   yield* ensureDistinctUploadIds(uploadIds);
   const uploads = yield* Effect.forEach(uploadIds, (uploadId) =>
-    getPendingUpload(ctx, uploadId)
+    getPendingUpload(uploadId)
   );
   const finalizedUploads: ForumAttachmentUpload[] = [];
   for (const upload of uploads) {
@@ -255,7 +248,7 @@ export const resolveForumAttachmentUploads = Effect.fn(
     }
     const finalizedUpload: ForumAttachmentUpload = upload;
     yield* validateForumAttachmentPolicy(finalizedUpload);
-    yield* validateStoredForumAttachmentMetadata(ctx, finalizedUpload);
+    yield* validateStoredForumAttachmentMetadata(finalizedUpload);
     finalizedUploads.push(finalizedUpload);
   }
   return finalizedUploads;
@@ -268,12 +261,10 @@ export const resolveForumAttachmentUploads = Effect.fn(
 export const deleteForumPendingUpload = Effect.fn(
   "classes.forums.attachments.deleteForumPendingUpload"
 )(
-  function* (ctx: MutationCtx, upload: ForumPendingUploadDoc) {
-    const storageWriter = yield* StorageWriter.StorageWriter.pipe(
-      Effect.provide(StorageWriter.StorageWriter.layer(ctx.storage))
-    );
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (upload: ForumPendingUploadDoc) {
+    const storageWriter = yield* StorageWriter;
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const storageId = upload.storageId;
     if (storageId) {
       const existingAttachment = yield* database
@@ -281,7 +272,7 @@ export const deleteForumPendingUpload = Effect.fn(
         .index("by_fileId", (q) => q.eq("fileId", storageId))
         .first()
         .pipe(Effect.map(Option.getOrNull), Effect.orDie);
-      const metadata = yield* DatabaseReader.make(databaseSchema, ctx.db)
+      const metadata = yield* (yield* DatabaseReader)
         .table("_storage")
         .get(storageId)
         .pipe(

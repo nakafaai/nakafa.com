@@ -1,6 +1,5 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
-import { readAgentQuery } from "@repo/backend/agent/query";
 import { getAgentContentReferenceInput } from "@repo/backend/agent/ref";
 import {
   decodePublishedQuranMarkdown,
@@ -8,14 +7,11 @@ import {
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
-import type {
-  agentContentSourceValidator,
-  ContentReferenceInput,
-} from "@repo/backend/confect/contentRelease/reference/spec";
+import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
+import type { agentContentSourceValidator } from "@repo/backend/confect/contentRelease/reference/spec";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
-import type { PublicRuntimeRow } from "@repo/backend/content/publication/spec";
 import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
@@ -30,7 +26,6 @@ import type {
   NakafaAgentReadableContentRef,
 } from "@repo/contents/agent/schema/ref";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
-import { makeFunctionReference } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 
 type PublishedRef = NakafaAgentReadableContentRef & {
@@ -45,38 +40,30 @@ type QuranContentSource = Extract<
     readonly kind: "quran";
   }
 >;
-const contentSourceReference = makeFunctionReference<
-  "query",
-  {
-    readonly input: ContentReferenceInput;
-  },
-  AgentContentSource
->("contentRelease/reference/internal:readAgentContent");
-const publicRuntimeReference = makeFunctionReference<
-  "query",
-  {
-    readonly appLocale: Schema.Schema.Type<typeof AppLocaleSchema>;
-    readonly publicPath: string;
-  },
-  PublicRuntimeRow
->("contentRelease/runtime/publication/internal:read");
+const contentSourceReference =
+  refs.internal.contentRelease.reference.internal.readAgentContent;
+const publicRuntimeReference =
+  refs.internal.contentRelease.runtime.publication.internal.read;
 
 /** Resolves and reads one public reference entirely inside Convex. */
 export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
-  ctx: ActionCtx,
   input: string
 ) {
+  const runQuery = yield* QueryRunner;
   const lookup = getAgentContentReferenceInput(input);
   if (Option.isNone(lookup)) {
     return Option.none<NakafaAgentMarkdown>();
   }
-  const source = yield* readAgentQuery(
-    ctx,
-    contentSourceReference,
-    {
-      input: lookup.value,
-    },
-    "Unable to resolve the Nakafa content reference."
+  const source = yield* runQuery(contentSourceReference, {
+    input: lookup.value,
+  }).pipe(
+    Effect.mapError(
+      (cause) =>
+        new NakafaAgentDataReadError({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to resolve the Nakafa content reference.",
+        })
+    )
   );
   if (!source) {
     return Option.none<NakafaAgentMarkdown>();
@@ -91,25 +78,29 @@ export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
     return yield* renderQuranMarkdown(ref.value, source);
   }
   if (isPublishedRef(ref.value)) {
-    return yield* readPublishedMarkdown(ctx, ref.value);
+    return yield* readPublishedMarkdown(ref.value);
   }
   return Option.none<NakafaAgentMarkdown>();
 });
 
 /** Reads one current article or lesson from its verified runtime row. */
 const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
-  function* (ctx: ActionCtx, ref: PublishedRef) {
+  function* (ref: PublishedRef) {
+    const runQuery = yield* QueryRunner;
     const appLocale = yield* Schema.decodeEffect(AppLocaleSchema)(
       ref.locale
     ).pipe(Effect.mapError(contentReadError));
-    const row = yield* readAgentQuery(
-      ctx,
-      publicRuntimeReference,
-      {
-        appLocale,
-        publicPath: ref.route,
-      },
-      "Unable to read signed Nakafa public content."
+    const row = yield* runQuery(publicRuntimeReference, {
+      appLocale,
+      publicPath: ref.route,
+    }).pipe(
+      Effect.mapError(
+        (cause) =>
+          new NakafaAgentDataReadError({
+            cause: getUnknownErrorMessage(cause),
+            message: "Unable to read signed Nakafa public content.",
+          })
+      )
     );
     const found = yield* decodePublicRuntimeRow(row).pipe(
       Effect.mapError(contentReadError)

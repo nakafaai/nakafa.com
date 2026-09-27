@@ -11,6 +11,7 @@ import {
   resolveEffectiveCreditState,
 } from "@repo/backend/confect/credits/state";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/users/mutations.spec";
 import { Clock, Effect, Layer } from "effect";
 
@@ -19,9 +20,8 @@ const updateUserRole = FunctionImpl.make(
   spec,
   "updateUserRole",
   Effect.fn("users.mutations.updateUserRole")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     yield* writer
       .table("users")
       .patch(user.appUser._id, {
@@ -38,7 +38,7 @@ const updateUserName = FunctionImpl.make(
   Effect.fn("users.mutations.updateUserName")(function* (args) {
     const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
 
     // Update Better Auth user table
     yield* Effect.promise(async () =>
@@ -63,11 +63,9 @@ const syncUserInfoForChat = FunctionImpl.make(
   spec,
   "syncUserInfoForChat",
   Effect.fn("users.mutations.syncUserInfoForChat")(function* () {
-    const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const effectiveCredits = yield* resolveEffectiveCreditState(
-      ctx.db,
       user.appUser,
       yield* Clock.currentTimeMillis
     );
@@ -108,5 +106,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(updateUserName),
   Layer.provide(syncUserInfoForChat),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

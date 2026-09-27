@@ -1,6 +1,7 @@
 // @vitest-environment node
 
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { ConvexConfigProvider } from "@confect/server";
+import { afterEach, expect, it } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { hasValidEdgeSecret } from "@repo/backend/confect/routes/agent/security";
 import { Effect, Result } from "effect";
@@ -23,7 +24,7 @@ function requestWithSecret(secret?: string) {
   );
 }
 
-describe("agent edge security", () => {
+it.layer(ConvexConfigProvider.layer)("agent edge security", (it) => {
   it.effect("accepts the current and previous rotation keys", () =>
     Effect.gen(function* () {
       vi.stubEnv(SECRET_NAME, "current-secret,previous-secret");
@@ -81,6 +82,7 @@ describe("agent edge security", () => {
 
   it.effect("fails closed for missing or malformed deployment keys", () =>
     Effect.gen(function* () {
+      vi.stubEnv(SECRET_NAME, undefined);
       const missing = yield* hasValidEdgeSecret(
         requestWithSecret("supplied"),
         NAKAFA_API_EDGE_CONTRACT

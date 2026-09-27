@@ -86,8 +86,9 @@ describe("onboarding/queries", () => {
           authenticated.query(api.onboarding.queries.getStatus, {})
         ).rejects.toMatchObject({
           data: {
-            code: "ONBOARDING_READ_FAILED",
-            message: "Unable to read onboarding progress.",
+            _tag: "AuthReadError",
+            code: "AUTH_READ_FAILED",
+            message: "Unable to read authentication state.",
           },
         })
       );

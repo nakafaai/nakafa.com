@@ -1,9 +1,12 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import {
@@ -15,8 +18,6 @@ import { adjustMaterialBucket } from "@repo/backend/confect/contentRelease/mater
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import type { resolvePublicProjection } from "@repo/backend/content/publication/projection";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 type PublicProjection = Pick<
@@ -33,15 +34,14 @@ type PublicProjection = Pick<
   | "sequence"
   | "sourcePath"
 >;
-type AppLocale = Doc<"materialCatalog">["appLocale"];
+type AppLocale = Docs["materialCatalog"]["appLocale"];
 /** Loads the sole active material row for one localized content identity. */
 const loadMaterial = Effect.fn("contentRelease.loadMaterial")(function* (
-  ctx: MutationCtx,
   slot: ModelSlot,
   contentKey: string,
   appLocale: AppLocale
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   return yield* database
     .table("materialCatalog")
     .get("by_slot_and_contentKey_and_appLocale", slot, contentKey, appLocale)
@@ -53,12 +53,11 @@ const loadMaterial = Effect.fn("contentRelease.loadMaterial")(function* (
 /** Replaces one active material lesson with its indexed curriculum facts. */
 export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
   function* (
-    ctx: MutationCtx,
     slot: ModelSlot,
     head: PublicProjection,
     projection: MaterialLessonProjection
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const writer = yield* DatabaseWriter;
     if (
       head.family !== "material" ||
       !head.projectionJson ||
@@ -119,22 +118,16 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
       row,
       READ_MODEL_DOCUMENT_LIMIT
     );
-    const existing = yield* loadMaterial(
-      ctx,
-      slot,
-      head.contentKey,
-      head.appLocale
-    );
+    const existing = yield* loadMaterial(slot, head.contentKey, head.appLocale);
     if (existing) {
       if (existing.bucket !== row.bucket) {
         yield* adjustMaterialBucket(
-          ctx,
           slot,
           existing.appLocale,
           existing.bucket,
           -1
         );
-        yield* adjustMaterialBucket(ctx, slot, row.appLocale, row.bucket, 1);
+        yield* adjustMaterialBucket(slot, row.appLocale, row.bucket, 1);
       }
       yield* writer
         .table("materialCatalog")
@@ -142,30 +135,19 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
         .pipe(Effect.orDie);
       return;
     }
-    yield* adjustMaterialBucket(ctx, slot, row.appLocale, row.bucket, 1);
+    yield* adjustMaterialBucket(slot, row.appLocale, row.bucket, 1);
     yield* writer.table("materialCatalog").insert(row).pipe(Effect.orDie);
   }
 );
 /** Deletes one active localized material row when its head disappears. */
 export const deleteMaterial = Effect.fn("contentRelease.deleteMaterial")(
-  function* (
-    ctx: MutationCtx,
-    slot: ModelSlot,
-    contentKey: string,
-    appLocale: AppLocale
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const existing = yield* loadMaterial(ctx, slot, contentKey, appLocale);
+  function* (slot: ModelSlot, contentKey: string, appLocale: AppLocale) {
+    const writer = yield* DatabaseWriter;
+    const existing = yield* loadMaterial(slot, contentKey, appLocale);
     if (!existing) {
       return;
     }
-    yield* adjustMaterialBucket(
-      ctx,
-      slot,
-      existing.appLocale,
-      existing.bucket,
-      -1
-    );
+    yield* adjustMaterialBucket(slot, existing.appLocale, existing.bucket, -1);
     yield* writer.table("materialCatalog").delete(existing._id);
   }
 );

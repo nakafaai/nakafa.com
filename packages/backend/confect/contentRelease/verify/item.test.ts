@@ -1,6 +1,7 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { checkItem } from "@repo/backend/confect/contentRelease/verify/item";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -28,16 +29,22 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 /** Runs item verification against the only staged release item. */
-async function verifyOnly(ctx: MutationCtx) {
-  const row = await ctx.db.query("contentItems").unique();
-  if (!row) {
-    throw new Error("Expected verification item.");
-  }
-  return await runConvexProgram(checkItem(ctx, row));
+function verifyOnly(ctx: MutationCtx) {
+  return Effect.gen(function* () {
+    const row = yield* Effect.promise(() =>
+      ctx.db.query("contentItems").unique()
+    );
+    if (!row) {
+      return yield* Effect.die(new Error("Expected verification item."));
+    }
+    return yield* checkItem(row).pipe(
+      Effect.provide(RegisteredConvexFunction.mutationLayer(confectSchema, ctx))
+    );
+  });
 }
-
 describe("contentRelease/verify/item", () => {
   it.each(["identity", "version"] as const)(
     "rejects a staged delete with conflicting %s without advancing verification",
@@ -50,7 +57,9 @@ describe("contentRelease/verify/item", () => {
         assert(item);
         if (conflict === "identity") {
           await ctx.db.patch(item._id, {
-            itemJson: testDeleteJson({ contentKey: "test:other" }),
+            itemJson: testDeleteJson({
+              contentKey: "test:other",
+            }),
           });
         } else {
           await ctx.db.insert("contentHeads", {
@@ -85,10 +94,12 @@ describe("contentRelease/verify/item", () => {
       ).toEqual(before);
       expect(
         await t.query((ctx) => ctx.db.query("contentReleases").unique())
-      ).toMatchObject({ checkedItems: 0, checkedIndex: -1 });
+      ).toMatchObject({
+        checkedItems: 0,
+        checkedIndex: -1,
+      });
     }
   );
-
   it("rejects deletion while its content still owns a visible route", async () => {
     const t = convexTest(schema, convexModules);
     await stageDeleteFixture(t);
@@ -102,21 +113,25 @@ describe("contentRelease/verify/item", () => {
         contentKey: item.contentKey,
       });
     });
-    await expect(t.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_ROUTE" },
+    await expect(
+      t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_ROUTE",
     });
     const heads = await t.query((ctx) =>
       ctx.db.query("contentHeads").collect()
     );
     expect(heads.every((head) => head.sequence !== 2)).toBe(true);
   });
-
   it("writes and idempotently replays one valid immutable upsert", async () => {
     const t = convexTest(schema, convexModules);
     await stageUpsertFixture(t);
-
-    await expect(t.mutation(verifyOnly)).resolves.toBeNull();
-    await expect(t.mutation(verifyOnly)).resolves.toBeNull();
+    await expect(
+      t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).resolves.toBeNull();
+    await expect(
+      t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).resolves.toBeNull();
     const stored = await t.run(async (ctx) => ({
       head: await ctx.db.query("contentHeads").unique(),
     }));
@@ -130,13 +145,13 @@ describe("contentRelease/verify/item", () => {
       t.run((ctx) => ctx.db.query("contentIndex").take(1))
     ).resolves.toEqual([]);
   });
-
   it("verifies an article upsert and preserves its family through deletion", async () => {
     const upsert = convexTest(schema, convexModules);
     await stageUpsertFixture(upsert, "article");
     await beginFixture(upsert);
-
-    await expect(upsert.mutation(verifyOnly)).resolves.toBeNull();
+    await expect(
+      upsert.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).resolves.toBeNull();
     const storedArticle = await upsert.run((ctx) =>
       ctx.db.query("contentHeads").unique()
     );
@@ -147,7 +162,6 @@ describe("contentRelease/verify/item", () => {
       rendererDomain: "politics",
       sourcePath: TEST_ARTICLE_SOURCE,
     });
-
     const deletion = convexTest(schema, convexModules);
     await stageDeleteFixture(deletion, "article");
     const staged = await deletion.run((ctx) =>
@@ -164,7 +178,9 @@ describe("contentRelease/verify/item", () => {
       },
     });
     await beginFixture(deletion);
-    await expect(deletion.mutation(verifyOnly)).resolves.toBeNull();
+    await expect(
+      deletion.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).resolves.toBeNull();
     const heads = await deletion.run((ctx) =>
       ctx.db.query("contentHeads").take(3)
     );
@@ -174,13 +190,13 @@ describe("contentRelease/verify/item", () => {
       operation: "delete",
     });
   });
-
   it("verifies a page upsert and preserves its family through deletion", async () => {
     const upsert = convexTest(schema, convexModules);
     await stageUpsertFixture(upsert, "page");
     await beginFixture(upsert);
-
-    await expect(upsert.mutation(verifyOnly)).resolves.toBeNull();
+    await expect(
+      upsert.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).resolves.toBeNull();
     const storedPage = await upsert.run((ctx) =>
       ctx.db.query("contentHeads").unique()
     );
@@ -191,7 +207,6 @@ describe("contentRelease/verify/item", () => {
       rendererDomain: "site",
       sourcePath: TEST_PAGE_SOURCE,
     });
-
     const deletion = convexTest(schema, convexModules);
     await stageDeleteFixture(deletion, "page");
     const staged = await deletion.run((ctx) =>
@@ -209,7 +224,9 @@ describe("contentRelease/verify/item", () => {
       },
     });
     await beginFixture(deletion);
-    await expect(deletion.mutation(verifyOnly)).resolves.toBeNull();
+    await expect(
+      deletion.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).resolves.toBeNull();
     const heads = await deletion.run((ctx) =>
       ctx.db.query("contentHeads").take(3)
     );
@@ -219,15 +236,17 @@ describe("contentRelease/verify/item", () => {
       operation: "delete",
     });
   });
-
   it.each(["material", "question"] as const)(
     "writes and idempotently replays one body-free %s delete",
     async (family) => {
       const t = convexTest(schema, convexModules);
       await stageDeleteFixture(t, family);
-
-      await expect(t.mutation(verifyOnly)).resolves.toBeNull();
-      await expect(t.mutation(verifyOnly)).resolves.toBeNull();
+      await expect(
+        t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+      ).resolves.toBeNull();
+      await expect(
+        t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+      ).resolves.toBeNull();
       const heads = await t.run((ctx) => ctx.db.query("contentHeads").take(3));
       expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
         contentKey:
@@ -238,7 +257,6 @@ describe("contentRelease/verify/item", () => {
       });
     }
   );
-
   it("rejects missing artifact and projection bodies", async () => {
     const artifact = convexTest(schema, convexModules);
     await stageUpsertFixture(artifact);
@@ -249,10 +267,11 @@ describe("contentRelease/verify/item", () => {
       }
       await ctx.db.delete("contentArtifacts", stored._id);
     });
-    await expect(artifact.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_MISSING" },
+    await expect(
+      artifact.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_MISSING",
     });
-
     const projection = convexTest(schema, convexModules);
     await stageUpsertFixture(projection);
     await projection.mutation(async (ctx) => {
@@ -265,11 +284,12 @@ describe("contentRelease/verify/item", () => {
         projectionReady: false,
       });
     });
-    await expect(projection.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    await expect(
+      projection.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
-
   it("rejects mismatched artifacts, projections, and route ownership", async () => {
     const artifact = convexTest(schema, convexModules);
     await stageUpsertFixture(artifact);
@@ -279,13 +299,16 @@ describe("contentRelease/verify/item", () => {
         throw new Error("Expected staged artifact.");
       }
       await ctx.db.patch("contentArtifacts", stored._id, {
-        artifactJson: testArtifactJson({ contentKey: "test:other" }),
+        artifactJson: testArtifactJson({
+          contentKey: "test:other",
+        }),
       });
     });
-    await expect(artifact.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    await expect(
+      artifact.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
-
     const projection = convexTest(schema, convexModules);
     await stageUpsertFixture(projection);
     await projection.mutation(async (ctx) => {
@@ -294,13 +317,16 @@ describe("contentRelease/verify/item", () => {
         throw new Error("Expected staged item.");
       }
       await ctx.db.patch("contentItems", item._id, {
-        projectionJson: testProjectionJson({ contentKey: "test:other" }),
+        projectionJson: testProjectionJson({
+          contentKey: "test:other",
+        }),
       });
     });
-    await expect(projection.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    await expect(
+      projection.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
-
     const route = convexTest(schema, convexModules);
     await stageUpsertFixture(route);
     await route.mutation(async (ctx) => {
@@ -312,11 +338,12 @@ describe("contentRelease/verify/item", () => {
         contentKey: "test:other",
       });
     });
-    await expect(route.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    await expect(
+      route.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
-
   it("rejects rollback drift and delete rows with bodies", async () => {
     const rollback = convexTest(schema, convexModules);
     await stageUpsertFixture(rollback);
@@ -326,11 +353,15 @@ describe("contentRelease/verify/item", () => {
         throw new Error("Expected staged item.");
       }
       await ctx.db.patch("contentItems", row._id, {
-        rollbackJson: testRollbackJson({ contentKey: "test:other" }),
+        rollbackJson: testRollbackJson({
+          contentKey: "test:other",
+        }),
       });
     });
-    await expect(rollback.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    await expect(
+      rollback.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
     await rollback.mutation(async (ctx) => {
       const row = await ctx.db.query("contentItems").unique();
@@ -338,16 +369,17 @@ describe("contentRelease/verify/item", () => {
         return expect.fail("Expected one staged item.");
       }
       await ctx.db.patch(row._id, {
-        rollbackJson: testRollbackJson({ index: 1 }),
+        rollbackJson: testRollbackJson({
+          index: 1,
+        }),
       });
     });
-    await expect(rollback.mutation(verifyOnly)).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: `Rollback evidence ${TEST_RELEASE_ID}/0 lost its identity.`,
-      },
+    await expect(
+      rollback.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+      message: `Rollback evidence ${TEST_RELEASE_ID}/0 lost its identity.`,
     });
-
     const deleted = convexTest(schema, convexModules);
     await stageDeleteFixture(deleted);
     await deleted.mutation(async (ctx) => {
@@ -356,16 +388,17 @@ describe("contentRelease/verify/item", () => {
         return expect.fail("Expected one staged delete.");
       }
       await ctx.db.patch(row._id, {
-        rollbackJson: testRollbackJson({ contentKey: row.contentKey }),
+        rollbackJson: testRollbackJson({
+          contentKey: row.contentKey,
+        }),
       });
     });
-    await expect(deleted.mutation(verifyOnly)).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: `Rollback evidence ${TEST_RELEASE_ID}/0 differs from its base.`,
-      },
+    await expect(
+      deleted.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+      message: `Rollback evidence ${TEST_RELEASE_ID}/0 differs from its base.`,
     });
-
     const withBody = convexTest(schema, convexModules);
     await stageDeleteFixture(withBody);
     await withBody.mutation(async (ctx) => {
@@ -373,13 +406,16 @@ describe("contentRelease/verify/item", () => {
       if (!row) {
         throw new Error("Expected delete item.");
       }
-      await ctx.db.patch("contentItems", row._id, { artifactReady: true });
+      await ctx.db.patch("contentItems", row._id, {
+        artifactReady: true,
+      });
     });
-    await expect(withBody.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    await expect(
+      withBody.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
-
   it("rejects conflicting immutable versions and oversized compact heads", async () => {
     const conflict = convexTest(schema, convexModules);
     await stageUpsertFixture(conflict);
@@ -394,10 +430,11 @@ describe("contentRelease/verify/item", () => {
         sequence: 1,
       });
     });
-    await expect(conflict.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_CONFLICT" },
+    await expect(
+      conflict.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_CONFLICT",
     });
-
     const oversized = convexTest(schema, convexModules);
     await stageUpsertFixture(oversized);
     await oversized.mutation(async (ctx) => {
@@ -406,11 +443,15 @@ describe("contentRelease/verify/item", () => {
         throw new Error("Expected staged item.");
       }
       await ctx.db.patch("contentItems", item._id, {
-        projectionJson: testProjectionJson({ title: "x".repeat(20_000) }),
+        projectionJson: testProjectionJson({
+          title: "x".repeat(20_000),
+        }),
       });
     });
-    await expect(oversized.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_SIZE" },
+    await expect(
+      oversized.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_SIZE",
     });
   });
 });

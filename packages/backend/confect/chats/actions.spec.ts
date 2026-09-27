@@ -7,6 +7,7 @@ import {
   messageGenerationErrorCodeValidator,
   modelIdValueValidator,
 } from "@repo/backend/confect/chats/schema";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
   .addFunction(
@@ -26,7 +27,7 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Null,
       error: () => AuthFailure,
-    })
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicAction({
@@ -42,5 +43,5 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Null,
       error: () => AuthFailure,
-    })
+    }).middleware(Session)
   );

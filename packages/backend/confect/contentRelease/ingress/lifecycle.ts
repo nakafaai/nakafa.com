@@ -1,13 +1,16 @@
 "use node";
 
-import { MutationRunner, QueryRunner } from "@confect/server";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
-  makeModelBuildCoordinatorLive,
+  modelBuildCoordinatorLayer,
   waitForModelBuild,
 } from "@repo/backend/confect/contentRelease/ingress/models";
 import {
@@ -15,7 +18,6 @@ import {
   decodeRendererJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 type LifecycleRequest = Extract<
@@ -44,12 +46,9 @@ function verifyRequest(request: SignedRequest) {
 
 /** Loads the renderer envelope bound to one exact authenticated release. */
 const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
-  ctx: ActionCtx,
   release: SignedRequest["release"]
 ) {
-  const runQuery = yield* QueryRunner.QueryRunner.pipe(
-    Effect.provide(QueryRunner.layer(ctx.runQuery))
-  );
+  const runQuery = yield* QueryRunner;
   const envelope = yield* runQuery(refs.internal.contentRelease.envelope.get, {
     manifestHash: release.manifestHash,
     releaseId: release.manifest.releaseId,
@@ -70,10 +69,8 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
 /** Executes authenticated verification, activation, or recovery activation. */
 export const advancePublication = Effect.fn(
   "contentRelease.advancePublication"
-)(function* (ctx: ActionCtx, request: LifecycleRequest) {
-  const runMutation = yield* MutationRunner.MutationRunner.pipe(
-    Effect.provide(MutationRunner.layer(ctx.runMutation))
-  );
+)(function* (request: LifecycleRequest) {
+  const runMutation = yield* MutationRunner;
   if (request.operation === "accept") {
     const value = yield* runMutation(
       refs.internal.contentRelease.accept.accept,
@@ -138,8 +135,8 @@ export const advancePublication = Effect.fn(
       },
     };
   }
-  const rendererJson = yield* loadRenderer(ctx, release);
-  const coordinator = makeModelBuildCoordinatorLive(ctx);
+  const rendererJson = yield* loadRenderer(release);
+  const coordinator = modelBuildCoordinatorLayer;
   if (request.operation === "activate") {
     const prepared = yield* runMutation(
       refs.internal.contentRelease.activate.prepare,

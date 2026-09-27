@@ -5,20 +5,8 @@ import { Effect } from "effect";
 
 const instrumentationMocks = vi.hoisted(() => ({
   captureServerException: vi.fn(),
-  isAiSdkDevToolsTelemetryEnabled: vi.fn(),
   isServerExceptionReportingEnabled: vi.fn(),
   postHogModuleLoads: 0,
-  registerAiSdkDevToolsTelemetry: vi.fn(),
-}));
-
-vi.mock("@repo/ai/config/devtools-runtime", () => ({
-  isAiSdkDevToolsTelemetryEnabled:
-    instrumentationMocks.isAiSdkDevToolsTelemetryEnabled,
-}));
-
-vi.mock("@repo/ai/config/devtools", () => ({
-  registerAiSdkDevToolsTelemetry:
-    instrumentationMocks.registerAiSdkDevToolsTelemetry,
 }));
 
 vi.mock("@repo/analytics/server-reporting", () => ({
@@ -59,59 +47,10 @@ describe("Next.js instrumentation", () => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();
     instrumentationMocks.captureServerException.mockReturnValue(Effect.void);
-    instrumentationMocks.isAiSdkDevToolsTelemetryEnabled.mockReturnValue(false);
     instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
       false
     );
   });
-
-  it.effect("registers AI SDK telemetry only in the Node.js runtime", () =>
-    Effect.gen(function* () {
-      const { register } = yield* loadInstrumentation();
-
-      vi.stubEnv("NEXT_RUNTIME", "edge");
-      yield* Effect.promise(() => register());
-      expect(
-        instrumentationMocks.registerAiSdkDevToolsTelemetry
-      ).not.toHaveBeenCalled();
-
-      vi.stubEnv("NEXT_RUNTIME", "nodejs");
-      yield* Effect.promise(() => register());
-      expect(
-        instrumentationMocks.registerAiSdkDevToolsTelemetry
-      ).not.toHaveBeenCalled();
-
-      instrumentationMocks.isAiSdkDevToolsTelemetryEnabled.mockReturnValue(
-        true
-      );
-      yield* Effect.promise(() => register());
-      expect(
-        instrumentationMocks.registerAiSdkDevToolsTelemetry
-      ).toHaveBeenCalledOnce();
-    })
-  );
-
-  it.effect("propagates startup telemetry registration defects", () =>
-    Effect.gen(function* () {
-      const { register } = yield* loadInstrumentation();
-      vi.stubEnv("NEXT_RUNTIME", "nodejs");
-      instrumentationMocks.isAiSdkDevToolsTelemetryEnabled.mockReturnValue(
-        true
-      );
-      instrumentationMocks.registerAiSdkDevToolsTelemetry.mockImplementationOnce(
-        () => {
-          throw new Error("telemetry registration failed");
-        }
-      );
-
-      const failure = yield* Effect.tryPromise(() => register()).pipe(
-        Effect.flip
-      );
-
-      expect(failure.cause).toBeInstanceOf(Error);
-      expect(String(failure.cause)).toContain("telemetry registration failed");
-    })
-  );
 
   it.effect("does not load provider code outside production Node.js", () =>
     Effect.gen(function* () {

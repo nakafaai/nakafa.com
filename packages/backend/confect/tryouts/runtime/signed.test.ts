@@ -1,7 +1,8 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { encodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/wire";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import {
   stageTryoutRuntimeBundleProgram,
@@ -25,37 +26,42 @@ const failureCause = Effect.fn("test.runtime.failureCause")(function* (
   if (Exit.isSuccess(exit)) {
     return yield* Effect.die("Expected runtime storage to fail.");
   }
-  return Cause.pretty(exit.cause);
+  return Cause.squash(exit.cause);
 });
-
 describe("tryouts/runtime signed storage", () => {
   it.effect("rejects a renderer that does not match the bundle payload", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const fixture = yield* makeRuntimeIngressFixture();
-
       const message = yield* failureCause(
         Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               storeAuthenticatedTryoutRuntimeBundle(
-                ctx,
                 fixture.bundle,
                 makeRuntimeIngressRenderer()
+              ).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
               )
             )
           )
         )
       );
-
-      expect(message).toContain("has incoherent renderer or snapshot bytes");
+      expect(message).toMatchObject({
+        message: expect.stringContaining(
+          "has incoherent renderer or snapshot bytes"
+        ),
+      });
     })
   );
-
   it.effect(
     "rejects a staged bundle whose renderer is not its signed source",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const fixture = yield* makeRuntimeIngressFixture();
         yield* Effect.promise(() =>
@@ -68,25 +74,29 @@ describe("tryouts/runtime signed storage", () => {
             )
           )
         );
-
         const message = yield* failureCause(
           Effect.promise(() =>
             t.mutation((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 stageTryoutRuntimeBundleProgram(
-                  ctx,
                   encodeTryoutRuntimeBundleJson(fixture.bundle),
                   JSON.stringify(makeRuntimeIngressRenderer())
+                ).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
                 )
               )
             )
           )
         );
-
-        expect(message).toContain("does not match its staged source release");
+        expect(message).toMatchObject({
+          message: expect.stringContaining(
+            "does not match its staged source release"
+          ),
+        });
       })
   );
-
   it.effect("reuses one immutable pair across signed source releases", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -94,14 +104,15 @@ describe("tryouts/runtime signed storage", () => {
       const second = yield* makeRuntimeIngressFixture(
         ReleaseIdSchema.make("release-runtime-bundle-next")
       );
-
       const created = yield* storeRuntimeFixture(t, first);
       const reused = yield* storeRuntimeFixture(t, second);
       const stored = yield* Effect.promise(() =>
         t.run((ctx) => ctx.db.query("tryoutRuntimeBundles").collect())
       );
-
-      expect(created).toMatchObject({ created: 1, unchanged: 0 });
+      expect(created).toMatchObject({
+        created: 1,
+        unchanged: 0,
+      });
       expect(reused).toMatchObject({
         bundleHash: first.bundle.bundleHash,
         created: 0,
@@ -116,18 +127,28 @@ describe("tryouts/runtime signed storage", () => {
       ]);
     })
   );
-
   it.effect("rejects every corrupted duplicate fact on hash replay", () =>
     Effect.gen(function* () {
       const corruptions = [
-        { bundleHash: `sha256:${"2".repeat(64)}` },
-        { rendererManifestHash: `sha256:${"3".repeat(64)}` },
-        { snapshotId: `sha256:${"4".repeat(64)}` },
-        { sourceGitSha: "b".repeat(40) },
-        { sourceManifestHash: `sha256:${"5".repeat(64)}` },
-        { sourceReleaseId: "release-corrupted" },
+        {
+          bundleHash: `sha256:${"2".repeat(64)}`,
+        },
+        {
+          rendererManifestHash: `sha256:${"3".repeat(64)}`,
+        },
+        {
+          snapshotId: `sha256:${"4".repeat(64)}`,
+        },
+        {
+          sourceGitSha: "b".repeat(40),
+        },
+        {
+          sourceManifestHash: `sha256:${"5".repeat(64)}`,
+        },
+        {
+          sourceReleaseId: "release-corrupted",
+        },
       ] as const;
-
       for (const corruption of corruptions) {
         const t = convexTest(schema, convexModules);
         const fixture = yield* makeRuntimeIngressFixture();
@@ -145,13 +166,14 @@ describe("tryouts/runtime signed storage", () => {
             }
           })
         );
-
         const message = yield* failureCause(storeRuntimeFixture(t, fixture));
-        expect(message).toContain("CONTENT_RELEASE_INTEGRITY");
+        expect(message).toMatchObject({
+          _tag: "ReleaseError",
+          code: "CONTENT_RELEASE_INTEGRITY",
+        });
       }
     })
   );
-
   it.effect("rejects changed hash bytes and pair bytes", () =>
     Effect.gen(function* () {
       const hashStore = convexTest(schema, convexModules);
@@ -171,8 +193,10 @@ describe("tryouts/runtime signed storage", () => {
       const hashMessage = yield* failureCause(
         storeRuntimeFixture(hashStore, first)
       );
-      expect(hashMessage).toContain("CONTENT_RELEASE_CONFLICT");
-
+      expect(hashMessage).toMatchObject({
+        _tag: "ReleaseError",
+        code: "CONTENT_RELEASE_CONFLICT",
+      });
       const pairStore = convexTest(schema, convexModules);
       const second = yield* makeRuntimeIngressFixture(
         ReleaseIdSchema.make("release-runtime-bundle-next")
@@ -196,7 +220,10 @@ describe("tryouts/runtime signed storage", () => {
       const pairMessage = yield* failureCause(
         storeRuntimeFixture(pairStore, second)
       );
-      expect(pairMessage).toContain("CONTENT_RELEASE_CONFLICT");
+      expect(pairMessage).toMatchObject({
+        _tag: "ReleaseError",
+        code: "CONTENT_RELEASE_CONFLICT",
+      });
     })
   );
 });

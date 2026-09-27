@@ -22,7 +22,7 @@ const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 export default CronJobs.make()
   .add(
     CronJob.make(
-      "reclaim interrupted uploads",
+      "reclaim unused Nina files",
       Duration.hours(24),
       internal.storage.sweep,
       {}

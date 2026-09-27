@@ -1,20 +1,19 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { reconcileModel } from "@repo/backend/confect/contentRelease/models/reconcile";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Reconciles search slots through their native content and locale ordering. */
 export const reconcileSearchModel = Effect.fn(
   "contentRelease.reconcileSearchModel"
-)(function* (ctx: MutationCtx, build: Doc<"contentModelBuilds">) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (build: Docs["contentModelBuilds"]) {
+  const writer = yield* DatabaseWriter;
   const sourceSlot = build.slots.searchBaseSlot;
   const targetSlot = build.slots.searchTargetSlot;
-  const query = DatabaseReader.make(databaseSchema, ctx.db).table(
-    "contentIndex"
-  );
+  const query = (yield* DatabaseReader).table("contentIndex");
   return yield* reconcileModel({
     build,
     source: query.stream("by_slot_and_contentKey_and_appLocale", (index) =>

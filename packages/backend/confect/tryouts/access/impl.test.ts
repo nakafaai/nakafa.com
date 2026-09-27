@@ -1,5 +1,9 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import {
   getIncludedAttemptAccess,
@@ -82,15 +86,15 @@ function resolveAccess(
     trackKey?: string;
   } = {}
 ) {
-  return runConvexProgram(
-    getIncludedAttemptAccess(ctx, {
-      countryKey: "indonesia",
-      examKey: "snbt",
-      now: NOW,
-      setKey: args.setKey ?? "set-1",
-      trackKey: args.trackKey ?? "2027",
-      userId,
-    })
+  return getIncludedAttemptAccess({
+    countryKey: "indonesia",
+    examKey: "snbt",
+    now: NOW,
+    setKey: args.setKey ?? "set-1",
+    trackKey: args.trackKey ?? "2027",
+    userId,
+  }).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(confectSchema, ctx))
   );
 }
 describe("tryouts/access/impl", () => {
@@ -109,17 +113,23 @@ describe("tryouts/access/impl", () => {
           status: "active",
           subscriptionId: "active-pro",
         });
-        const access = await resolveAccess(ctx, userId);
-        expect(await resolveAccess(ctx, userId)).toEqual(access);
-        const advisory = await runConvexProgram(
-          getTryoutStartAccess(ctx, {
+        const access = await Effect.runPromise(resolveAccess(ctx, userId));
+        expect(await Effect.runPromise(resolveAccess(ctx, userId))).toEqual(
+          access
+        );
+        const advisory = await Effect.runPromise(
+          getTryoutStartAccess({
             countryKey: "indonesia",
             examKey: "snbt",
             now: NOW,
             setKey: "set-1",
             trackKey: "2027",
             userId,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
         return {
           access,
@@ -154,7 +164,7 @@ describe("tryouts/access/impl", () => {
         status: "active",
         subscriptionId: "live",
       });
-      return resolveAccess(ctx, userId);
+      return Effect.runPromise(resolveAccess(ctx, userId));
     });
     expect(result).toMatchObject({
       accessEndsAt: PERIOD_END,
@@ -186,43 +196,57 @@ describe("tryouts/access/impl", () => {
         ...subscription,
         subscriptionId: "stale-pro",
       });
-      return resolveAccess(ctx, userId);
+      return Effect.runPromise(resolveAccess(ctx, userId));
     });
     expect(result).toBeNull();
   });
   it("keeps free participation available without a Polar customer", async () => {
     const t = convexTest(schema, convexModules);
     const result = await t.mutation(async (ctx) =>
-      resolveAccess(ctx, await insertUser(ctx))
+      Effect.runPromise(resolveAccess(ctx, await insertUser(ctx)))
     );
     expect(result).toBeNull();
   });
-  it("preserves a typed database failure instead of granting access", async () => {
-    const t = convexTest(schema, convexModules);
-    const userId = await t.mutation(insertUser);
-    const failure = await t.query((ctx) => {
-      vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
-        throw new Error("Subscription store unavailable");
+  it.each([1, 2, 3])(
+    "preserves a typed failure from subscription read %i instead of granting access",
+    async (failedRead) => {
+      const t = convexTest(schema, convexModules);
+      const userId = await t.mutation(async (ctx) => {
+        const id = await insertUser(ctx);
+        await insertCustomer(ctx, id);
+        return id;
       });
-      return runConvexProgram(
-        getIncludedAttemptAccess(ctx, {
-          countryKey: "indonesia",
-          examKey: "snbt",
-          now: NOW,
-          setKey: "set-1",
-          trackKey: "2027",
-          userId,
-        }).pipe(
-          Effect.match({
-            onFailure: (error) => {
-              expect(error).toBeInstanceOf(TryoutStartError);
-              return error.code;
-            },
-            onSuccess: () => null,
-          })
-        )
-      );
-    });
-    expect(failure).toBe("TRYOUT_START_FAILED");
-  });
+      const failure = await t.query((ctx) => {
+        const query = ctx.db.query.bind(ctx.db);
+        let reads = 0;
+        vi.spyOn(ctx.db, "query").mockImplementation((table) => {
+          reads += 1;
+          if (reads === failedRead) {
+            throw new Error("Subscription store unavailable");
+          }
+          return query(table);
+        });
+        return Effect.runPromise(
+          getIncludedAttemptAccess({
+            countryKey: "indonesia",
+            examKey: "snbt",
+            now: NOW,
+            setKey: "set-1",
+            trackKey: "2027",
+            userId,
+          }).pipe(
+            Effect.match({
+              onFailure: (error) => {
+                expect(error).toBeInstanceOf(TryoutStartError);
+                return error.code;
+              },
+              onSuccess: () => null,
+            }),
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        );
+      });
+      expect(failure).toBe("TRYOUT_START_FAILED");
+    }
+  );
 });

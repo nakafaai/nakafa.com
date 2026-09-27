@@ -1,6 +1,9 @@
-import { DatabaseReader } from "@confect/server";
 import { MAX_ARTIFACT_BATCH_COUNT } from "@nakafa/aksara-contracts/transport/limits";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  QueryCtx as QueryCtxService,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import {
@@ -19,8 +22,6 @@ import {
   PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { getConvexSize } from "convex/values";
 import { Effect, Option, type Schema, Struct } from "effect";
 export type ProofPage = Schema.Schema.Type<typeof proofPageValidator>;
@@ -32,11 +33,10 @@ export type RouteProofPage = Schema.Schema.Type<typeof routePageValidator>;
 
 /** Reads immutable staged counters after release ingestion has stopped. */
 export const stateProgram = Effect.fn("contentRelease.proofState")(function* (
-  ctx: QueryCtx,
   manifestHash: string,
   releaseId: string
 ) {
-  const release = yield* loadRelease(ctx, releaseId);
+  const release = yield* loadRelease(releaseId);
   const signed = yield* decodeReleaseJson(release.releaseJson);
   if (signed.manifestHash !== manifestHash) {
     return yield* releaseFail(
@@ -72,15 +72,15 @@ export const stateProgram = Effect.fn("contentRelease.proofState")(function* (
 
 /** Reads one bounded canonical route page for complete-stream verification. */
 export const routePageProgram = Effect.fn("contentRelease.routeProofPage")(
-  function* (ctx: QueryCtx, afterIndex: number, releaseId: string) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (afterIndex: number, releaseId: string) {
+    const database = yield* DatabaseReader;
     if (!Number.isSafeInteger(afterIndex) || afterIndex < -1) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Content release ${releaseId} received invalid route cursor.`
       );
     }
-    const release = yield* loadRelease(ctx, releaseId);
+    const release = yield* loadRelease(releaseId);
     if (release.status !== "verifying" && release.status !== "verified") {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
@@ -113,8 +113,8 @@ export const routePageProgram = Effect.fn("contentRelease.routeProofPage")(
 
 /** Loads the signed artifact referenced by one exact staged upsert. */
 export const loadArtifactJson = Effect.fn("contentRelease.loadProofArtifact")(
-  function* (ctx: QueryCtx, row: Doc<"contentItems">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (row: Docs["contentItems"]) {
+    const database = yield* DatabaseReader;
     const item = yield* decodeItemJson(row.itemJson);
     if (
       item.change.operation !== "upsert" ||
@@ -147,9 +147,9 @@ export const loadArtifactJson = Effect.fn("contentRelease.loadProofArtifact")(
 /** Plans immutable artifact batches without replaying their signed bodies. */
 export const artifactPlanProgram = Effect.fn(
   "contentRelease.artifactProofPlan"
-)(function* (ctx: QueryCtx, manifestHash: string, releaseId: string) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const state = yield* stateProgram(ctx, manifestHash, releaseId);
+)(function* (manifestHash: string, releaseId: string) {
+  const database = yield* DatabaseReader;
+  const state = yield* stateProgram(manifestHash, releaseId);
   const last = yield* database
     .table("contentItems")
     .index(
@@ -192,15 +192,15 @@ export const artifactPlanProgram = Effect.fn(
 /** Reads one immutable publisher-owned artifact batch for isolated checking. */
 export const artifactBatchProgram = Effect.fn(
   "contentRelease.artifactProofBatch"
-)(function* (ctx: QueryCtx, releaseId: string, batchIndex: number) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (releaseId: string, batchIndex: number) {
+  const database = yield* DatabaseReader;
   if (!Number.isSafeInteger(batchIndex) || batchIndex < 0) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Content release ${releaseId} received invalid artifact batch ${batchIndex}.`
     );
   }
-  const release = yield* loadRelease(ctx, releaseId);
+  const release = yield* loadRelease(releaseId);
   if (
     release.abortingAt !== undefined ||
     (release.status !== "verifying" && release.status !== "verified")
@@ -224,7 +224,7 @@ export const artifactBatchProgram = Effect.fn(
     );
   }
   const rows = yield* Effect.forEach(stored, (row) =>
-    loadArtifactJson(ctx, row).pipe(
+    loadArtifactJson(row).pipe(
       Effect.map((artifactJson) => ({
         artifactJson,
         index: row.index,
@@ -248,18 +248,18 @@ export const artifactBatchProgram = Effect.fn(
 
 /** Reads one bounded page for complete-stream Node verification. */
 export const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
-  ctx: QueryCtx,
   afterIndex: number,
   releaseId: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const ctx = yield* QueryCtxService;
+  const database = yield* DatabaseReader;
   if (!Number.isSafeInteger(afterIndex) || afterIndex < -1) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Content release ${releaseId} received invalid proof cursor ${afterIndex}.`
     );
   }
-  const release = yield* loadRelease(ctx, releaseId);
+  const release = yield* loadRelease(releaseId);
   if (
     release.abortingAt !== undefined ||
     (release.status !== "verifying" && release.status !== "verified")

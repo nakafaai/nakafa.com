@@ -1,43 +1,38 @@
-import { DatabaseReader, Scheduler } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import {
   expireAttempt,
   finalizeSectionAttempt,
 } from "@repo/backend/confect/tryouts/runtime/finish";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Clock, Duration, Effect, flow } from "effect";
 export const EXPIRY_SWEEP_LIMIT = 50;
 export const EXPIRY_SWEEP_ATTEMPT_BYTES = 6 * 1024 * 1024;
 export const EXPIRY_SWEEP_SECTION_BYTES = 2 * 1024 * 1024;
-export type TryoutAttempt = Doc<"tryoutAttempts">;
-export type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
+export type TryoutAttempt = Docs["tryoutAttempts"];
+export type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 /** Expires one still-matching attempt through the typed runtime program. */
 export const expireScheduledAttempt = Effect.fn("tryouts.expiry.attempt")(
-  function* (
-    ctx: MutationCtx,
-    args: {
-      attemptId: Id<"tryoutAttempts">;
-      expiresAt: number;
-    }
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (args: { attemptId: Id<"tryoutAttempts">; expiresAt: number }) {
+    const database = yield* DatabaseReader;
     const attemptRow = yield* database
       .table("tryoutAttempts")
       .get(args.attemptId)
       .pipe(
         Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie,
-        Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+        Effect.mapError(toTryoutRuntimeError)
       );
     const now = yield* Clock.currentTimeMillis;
     if (!shouldExpire(attemptRow, args.expiresAt, now)) {
       return null;
     }
-    yield* expireAttempt(ctx, {
+    yield* expireAttempt({
       attempt: attemptRow,
       now,
     });
@@ -47,21 +42,17 @@ export const expireScheduledAttempt = Effect.fn("tryouts.expiry.attempt")(
 
 /** Expires one still-matching section through the typed runtime program. */
 export const expireScheduledSection = Effect.fn("tryouts.expiry.section")(
-  function* (
-    ctx: MutationCtx,
-    args: {
-      expiresAt: number;
-      sectionAttemptId: Id<"tryoutSectionAttempts">;
-    }
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (args: {
+    expiresAt: number;
+    sectionAttemptId: Id<"tryoutSectionAttempts">;
+  }) {
+    const database = yield* DatabaseReader;
     const sectionRow = yield* database
       .table("tryoutSectionAttempts")
       .get(args.sectionAttemptId)
       .pipe(
         Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie,
-        Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+        Effect.mapError(toTryoutRuntimeError)
       );
     const now = yield* Clock.currentTimeMillis;
     if (!shouldExpire(sectionRow, args.expiresAt, now)) {
@@ -72,8 +63,7 @@ export const expireScheduledSection = Effect.fn("tryouts.expiry.section")(
       .get(sectionRow.tryoutAttemptId)
       .pipe(
         Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie,
-        Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+        Effect.mapError(toTryoutRuntimeError)
       );
     if (!attemptRow) {
       return yield* new TryoutAttemptStateError({
@@ -85,13 +75,13 @@ export const expireScheduledSection = Effect.fn("tryouts.expiry.section")(
       return null;
     }
     if (now >= attemptRow.expiresAt) {
-      yield* expireAttempt(ctx, {
+      yield* expireAttempt({
         attempt: attemptRow,
         now,
       });
       return null;
     }
-    yield* finalizeSectionAttempt(ctx, {
+    yield* finalizeSectionAttempt({
       attempt: attemptRow,
       endReason: "time-expired",
       now,
@@ -104,10 +94,8 @@ export const expireScheduledSection = Effect.fn("tryouts.expiry.section")(
 /** Starts one sequential, byte-bounded missed-expiry reconciliation. */
 export const startExpiryReconciliation = Effect.fn(
   "tryouts.expiry.startReconciliation"
-)(function* (ctx: MutationCtx, before: number) {
-  const scheduler = yield* Scheduler.Scheduler.pipe(
-    Effect.provide(Scheduler.layer(ctx.scheduler))
-  );
+)(function* (before: number) {
+  const scheduler = yield* Scheduler;
   yield* scheduler
     .runAfter(
       Duration.millis(0),
@@ -120,10 +108,8 @@ export const startExpiryReconciliation = Effect.fn(
 });
 
 /** Starts one current-time expiry sweep through the typed runtime program. */
-export const startExpirySweep = Effect.fn("tryouts.expiry.sweep")(function* (
-  ctx: MutationCtx
-) {
-  yield* startExpiryReconciliation(ctx, yield* Clock.currentTimeMillis);
+export const startExpirySweep = Effect.fn("tryouts.expiry.sweep")(function* () {
+  yield* startExpiryReconciliation(yield* Clock.currentTimeMillis);
   return null;
 });
 
@@ -131,11 +117,9 @@ export const startExpirySweep = Effect.fn("tryouts.expiry.sweep")(function* (
 export const reconcileMissedAttemptExpiries = Effect.fn(
   "tryouts.expiry.reconcileMissedAttemptExpiries"
 )(
-  function* (ctx: MutationCtx, before: number) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (before: number) {
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
     const attemptPage = yield* database
       .table("tryoutAttempts")
       .index("by_status_and_expiresAt", (q) =>
@@ -184,17 +168,12 @@ export const reconcileMissedAttemptExpiries = Effect.fn(
 export const reconcileMissedSectionExpiries = Effect.fn(
   "tryouts.expiry.reconcileMissedSectionExpiries"
 )(
-  function* (
-    ctx: MutationCtx,
-    args: {
-      before: number;
-      scheduledAttemptIds: Id<"tryoutAttempts">[];
-    }
-  ) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (args: {
+    before: number;
+    scheduledAttemptIds: Id<"tryoutAttempts">[];
+  }) {
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
     const sectionPage = yield* database
       .table("tryoutSectionAttempts")
       .index("by_status_and_expiresAt", (q) =>

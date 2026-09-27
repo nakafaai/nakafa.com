@@ -1,13 +1,12 @@
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { ContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/spec";
-import { convexArticleLayer } from "@repo/backend/content/article/convex";
-import { convexMaterialLayer } from "@repo/backend/content/material/convex";
-import { convexQuranLayer } from "@repo/backend/content/quran/convex";
+import { articleLayer } from "@repo/backend/content/article/confect";
+import { materialLayer } from "@repo/backend/content/material/confect";
+import { quranLayer } from "@repo/backend/content/quran/confect";
 import { readQuranMarkdown } from "@repo/backend/content/quran/markdown";
 import { readContentReference } from "@repo/backend/content/reference/read";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { Effect, Layer, Option, Schema } from "effect";
 
 /** One transactionally consistent source for an agent focused read. */
@@ -15,15 +14,10 @@ import { Effect, Layer, Option, Schema } from "effect";
 /** Reads one reference and any Quran body from the same database snapshot. */
 export const readAgentContentSource = Effect.fn(
   "contentRelease.readAgentContentSource"
-)(function* (ctx: QueryCtx, input: ContentReferenceInput) {
+)(function* (input: ContentReferenceInput) {
   const reference = yield* readContentReference(input).pipe(
     Effect.provide(
-      Layer.mergeAll(
-        convexArticleLayer(ctx),
-        convexMaterialLayer(ctx),
-        convexQuranLayer(ctx),
-        convexTryoutLayer(ctx)
-      )
+      Layer.mergeAll(articleLayer, materialLayer, quranLayer, tryoutLayer)
     )
   );
   if (reference === null) {
@@ -37,7 +31,7 @@ export const readAgentContentSource = Effect.fn(
   }
   const surahNumber = yield* parseQuranRoute(reference.route);
   const markdown = yield* readQuranMarkdown(reference.locale, surahNumber).pipe(
-    Effect.provide(convexQuranLayer(ctx))
+    Effect.provide(quranLayer)
   );
   return {
     kind: "quran" as const,

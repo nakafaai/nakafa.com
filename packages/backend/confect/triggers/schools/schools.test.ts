@@ -1,8 +1,7 @@
-import { DatabaseWriter } from "@confect/server";
+import { DatabaseWriter, RegisteredConvexFunction } from "@confect/server";
 import { assert, expect, it } from "@effect/vitest";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { triggers } from "@repo/backend/confect/functions";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { schoolActivitySchema } from "@repo/backend/confect/schools/schema";
 import { schoolsHandler } from "@repo/backend/confect/triggers/schools/schools";
 import { createClassFixture } from "@repo/backend/test/classes";
@@ -11,19 +10,24 @@ import { Effect, Schema, Struct } from "effect";
 it("records only the fields changed by each native school write", async () => {
   const { t, schoolId } = await createClassFixture();
   await t.mutation((ctx) =>
-    runConvexProgram(
+    Effect.runPromise(
       Effect.gen(function* () {
         const writer = DatabaseWriter.make(
           databaseSchema,
           triggers.wrapDB(ctx).db
         );
-        yield* writer
-          .table("schools")
-          .patch(schoolId, { name: "Renamed School" });
-        yield* writer
-          .table("schools")
-          .patch(schoolId, { email: "updated@example.com" });
-      }).pipe(Effect.orDie)
+        yield* writer.table("schools").patch(schoolId, {
+          name: "Renamed School",
+        });
+        yield* writer.table("schools").patch(schoolId, {
+          email: "updated@example.com",
+        });
+      }).pipe(
+        Effect.orDie,
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+        )
+      )
     )
   );
   const events = await t.query((ctx) =>
@@ -49,11 +53,11 @@ it("records only the fields changed by each native school write", async () => {
     },
   ]);
 });
-
 it.effect.each([true, false])(
   "preserves school changes and deletion actors (explicit actor: %s)",
   (explicitActor) =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const { t, users, schoolId } = yield* Effect.promise(createClassFixture);
       yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
@@ -74,29 +78,41 @@ it.effect.each([true, false])(
                 }
               : {}),
           };
-          await runConvexProgram(
-            schoolsHandler(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            schoolsHandler({
               id: schoolId,
               operation: "update",
               oldDoc: original,
               newDoc: changed,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+              )
+            )
           );
-          await runConvexProgram(
-            schoolsHandler(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            schoolsHandler({
               id: schoolId,
               operation: "update",
               oldDoc: changed,
               newDoc: changed,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+              )
+            )
           );
-          await runConvexProgram(
-            schoolsHandler(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            schoolsHandler({
               id: schoolId,
               operation: "delete",
               oldDoc: changed,
               newDoc: null,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+              )
+            )
           );
         })
       );

@@ -1,10 +1,9 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/contentRelease/quran.spec";
 import { readQuranAttribution } from "@repo/backend/content/quran/attribution";
 import { readQuranSurahs } from "@repo/backend/content/quran/catalog";
-import { convexQuranLayer } from "@repo/backend/content/quran/convex";
+import { quranLayer } from "@repo/backend/content/quran/confect";
 import { readQuranDocument } from "@repo/backend/content/quran/document";
 import { readQuranInterpretation } from "@repo/backend/content/quran/interpretation";
 import { readQuranMarkdown } from "@repo/backend/content/quran/markdown";
@@ -17,10 +16,7 @@ const attribution = FunctionImpl.make(
   spec,
   "attribution",
   Effect.fn("contentRelease.quran.attribution")(function* () {
-    const ctx = yield* QueryCtxService;
-    return yield* readQuranAttribution().pipe(
-      Effect.provide(convexQuranLayer(ctx))
-    );
+    return yield* readQuranAttribution().pipe(Effect.provide(quranLayer));
   })
 );
 const surahs = FunctionImpl.make(
@@ -28,8 +24,7 @@ const surahs = FunctionImpl.make(
   spec,
   "surahs",
   Effect.fn("contentRelease.quran.surahs")(function* () {
-    const ctx = yield* QueryCtxService;
-    return yield* readQuranSurahs().pipe(Effect.provide(convexQuranLayer(ctx)));
+    return yield* readQuranSurahs().pipe(Effect.provide(quranLayer));
   })
 );
 const surah = FunctionImpl.make(
@@ -40,9 +35,8 @@ const surah = FunctionImpl.make(
     appLocale,
     surahNumber,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readQuranDocument(appLocale, surahNumber).pipe(
-      Effect.provide(convexQuranLayer(ctx))
+      Effect.provide(quranLayer)
     );
   })
 );
@@ -55,9 +49,8 @@ const prose = FunctionImpl.make(
     surahNumber,
     verseLimit,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readQuranMarkdown(appLocale, surahNumber, verseLimit).pipe(
-      Effect.provide(convexQuranLayer(ctx))
+      Effect.provide(quranLayer)
     );
   })
 );
@@ -69,9 +62,8 @@ const page = FunctionImpl.make(
     appLocale,
     surahNumber,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readQuranView(appLocale, surahNumber).pipe(
-      Effect.provide(convexQuranLayer(ctx))
+      Effect.provide(quranLayer)
     );
   })
 );
@@ -85,13 +77,12 @@ const tafsir = FunctionImpl.make(
     surahNumber,
     verseNumber,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readQuranInterpretation(
       appLocale,
       expectedSnapshotId,
       surahNumber,
       verseNumber
-    ).pipe(Effect.provide(convexQuranLayer(ctx)));
+    ).pipe(Effect.provide(quranLayer));
   })
 );
 const passage = FunctionImpl.make(
@@ -99,10 +90,7 @@ const passage = FunctionImpl.make(
   spec,
   "passage",
   Effect.fn("contentRelease.quran.passage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readQuranPassage(args).pipe(
-      Effect.provide(convexQuranLayer(ctx))
-    );
+    return yield* readQuranPassage(args).pipe(Effect.provide(quranLayer));
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

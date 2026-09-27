@@ -1,8 +1,8 @@
 "use node";
 
-import { QueryRunner } from "@confect/server";
 import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
 import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { parseStoredJson } from "@repo/backend/confect/contentRelease/parse";
 import type {
@@ -14,19 +14,17 @@ import type {
   ProofPage,
   RouteProofPage,
 } from "@repo/backend/confect/contentRelease/proof/read";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Option, Schema, Stream } from "effect";
 /** Replays one complete bounded proof stream across indexed query pages. */
-export function readProofStream(ctx: ActionCtx, releaseId: string) {
+export function readProofStream(releaseId: string) {
   return Stream.paginate(-1, (afterIndex) =>
-    QueryRunner.QueryRunner.pipe(
+    QueryRunner.pipe(
       Effect.flatMap((runQuery) =>
         runQuery(refs.internal.contentRelease.proof.read.page, {
           afterIndex,
           releaseId,
         })
       ),
-      Effect.provide(QueryRunner.layer(ctx.runQuery)),
       Effect.catchTag("SchemaError", Effect.die),
       Effect.map(
         (page): readonly [ProofPage["rows"], Option.Option<number>] => [
@@ -39,16 +37,15 @@ export function readProofStream(ctx: ActionCtx, releaseId: string) {
 }
 
 /** Replays the complete effective catalog in canonical indexed order. */
-export function readResultStream(ctx: ActionCtx, releaseId: string) {
+export function readResultStream(releaseId: string) {
   return Stream.paginate(null, (cursor: CatalogCursor | null) =>
-    QueryRunner.QueryRunner.pipe(
+    QueryRunner.pipe(
       Effect.flatMap((runQuery) =>
         runQuery(refs.internal.contentRelease.proof.catalog.page, {
           cursor,
           releaseId,
         })
       ),
-      Effect.provide(QueryRunner.layer(ctx.runQuery)),
       Effect.catchTag("SchemaError", Effect.die),
       Effect.flatMap((page) =>
         Effect.gen(function* () {
@@ -80,16 +77,15 @@ export function readResultStream(ctx: ActionCtx, releaseId: string) {
 }
 
 /** Replays one complete canonical signed route stream. */
-export function readRouteStream(ctx: ActionCtx, releaseId: string) {
+export function readRouteStream(releaseId: string) {
   return Stream.paginate(-1, (afterIndex) =>
-    QueryRunner.QueryRunner.pipe(
+    QueryRunner.pipe(
       Effect.flatMap((runQuery) =>
         runQuery(refs.internal.contentRelease.proof.read.routePage, {
           afterIndex,
           releaseId,
         })
       ),
-      Effect.provide(QueryRunner.layer(ctx.runQuery)),
       Effect.catchTag("SchemaError", Effect.die),
       Effect.map(
         (page): readonly [RouteProofPage["rows"], Option.Option<number>] => [

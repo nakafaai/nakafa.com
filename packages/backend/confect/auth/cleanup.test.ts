@@ -1,10 +1,13 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { drainDeletedUserDataProgram } from "@repo/backend/confect/auth/cleanup";
 import { cleanupDeletedUserProgram } from "@repo/backend/confect/auth/cleanup/impl";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -15,7 +18,6 @@ import { Effect, Layer } from "effect";
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
 const deletedAuthIdPattern = /^deleted:/;
 const deletedEmailPattern = /^deleted-.+@account\.nakafa\.invalid$/;
-
 describe("auth/cleanup", () => {
   it.effect(
     "drains every committed local cleanup batch outside the workflow journal",
@@ -26,13 +28,10 @@ describe("auth/cleanup", () => {
           .mockReturnValueOnce(Effect.succeed(true))
           .mockReturnValueOnce(Effect.succeed(true))
           .mockReturnValueOnce(Effect.succeed(false));
-
         yield* drainDeletedUserDataProgram(Effect.suspend(cleanupBatch));
-
         expect(cleanupBatch).toHaveBeenCalledTimes(3);
       })
   );
-
   it.effect("stops after the first cleanup batch that makes progress", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -68,11 +67,13 @@ describe("auth/cleanup", () => {
             slug: "material/algebra",
             userId,
           });
-
-          return { bookmarkId, collectionId, userId };
+          return {
+            bookmarkId,
+            collectionId,
+            userId,
+          };
         })
       );
-
       const hasMore = yield* Effect.promise(() =>
         t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
           userId: state.userId,
@@ -88,7 +89,6 @@ describe("auth/cleanup", () => {
           user: await ctx.db.get("users", state.userId),
         }))
       );
-
       expect(hasMore).toBe(true);
       expect(remaining.bookmark).toBeNull();
       expect(remaining.collection).not.toBeNull();
@@ -98,13 +98,12 @@ describe("auth/cleanup", () => {
       });
     })
   );
-
   it.effect(
     "deletes personal data and anonymizes the shared-record identity",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
-
         const result = yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const userId = await ctx.db.insert("users", {
@@ -324,22 +323,25 @@ describe("auth/cleanup", () => {
                 role: "student",
               },
             });
-
             let hasMore = true;
-
             while (hasMore) {
-              hasMore = await runConvexProgram(
-                cleanupDeletedUserProgram(ctx, userId).pipe(
+              hasMore = await Effect.runPromiseWith(runtimeServices)(
+                cleanupDeletedUserProgram(userId).pipe(
                   Effect.provide(
-                    Layer.mergeAll(
-                      DatabaseReader.layer(databaseSchema, ctx.db),
-                      DatabaseWriter.layer(databaseSchema, ctx.db)
+                    Layer.provideMerge(
+                      Layer.mergeAll(
+                        DatabaseReader.layer(databaseSchema, ctx.db),
+                        DatabaseWriter.layer(databaseSchema, ctx.db)
+                      ),
+                      RegisteredConvexFunction.mutationLayer(
+                        databaseSchema,
+                        ctx
+                      )
                     )
                   )
                 )
               );
             }
-
             return {
               consentDecisions: await ctx.db
                 .query("accountConsentDecisions")
@@ -423,7 +425,6 @@ describe("auth/cleanup", () => {
             };
           })
         );
-
         expect(result).toEqual({
           bookmarks: [],
           chats: [],

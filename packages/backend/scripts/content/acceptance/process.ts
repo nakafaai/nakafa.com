@@ -135,10 +135,9 @@ export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
     const logPath = `${runtime.directory}/convex.log`;
     yield* fileSystem.writeFileString(logPath, "", { mode: 0o600 });
     const child = yield* ChildProcess.make(
-      "pnpm",
+      process.execPath,
       [
-        "exec",
-        "convex",
+        "node_modules/convex/bin/main.js",
         "dev",
         "--codegen",
         "enable",

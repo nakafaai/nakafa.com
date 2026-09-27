@@ -1,6 +1,10 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { readContentSearchDocuments } from "@repo/backend/confect/contents/helpers/search/read";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
@@ -15,6 +19,7 @@ import {
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
+import { Effect } from "effect";
 
 describe("readContentSearchDocuments", () => {
   it("reads searchable articles only from the active signed projection", async () => {
@@ -35,11 +40,9 @@ describe("readContentSearchDocuments", () => {
         searchSequence: TEST_RUNTIME_RELEASE.sequence,
       });
     });
-
     const documents = await t.query((ctx) =>
-      runConvexProgram(
+      Effect.runPromise(
         readContentSearchDocuments(
-          ctx,
           {
             limit: 10,
             locale: "en",
@@ -49,10 +52,11 @@ describe("readContentSearchDocuments", () => {
           },
           ["release owned searchable article"],
           10
+        ).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
         )
       )
     );
-
     expect(documents).toMatchObject([
       {
         content_id: projection.graph.assetId,
@@ -62,17 +66,24 @@ describe("readContentSearchDocuments", () => {
       },
     ]);
   });
-
   it("fills an unscoped search window from current signed materials", async () => {
     const t = createConvexTestWithBetterAuth();
-    const projections = Array.from({ length: 25 }, (_, index) =>
-      makeMaterialProjection("en", index + 1)
+    const projections = Array.from(
+      {
+        length: 25,
+      },
+      (_, index) => makeMaterialProjection("en", index + 1)
     );
-
     await t.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, 0);
       for (const projection of projections) {
-        await insertMaterialProjection(ctx, projection, TEST_RUNTIME_RELEASE);
+        await Effect.runPromise(
+          insertMaterialProjection(projection, TEST_RUNTIME_RELEASE).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        );
         await insertRuntimeIndex(ctx, projection.contentKey, {
           artifactLocale: projection.artifactLocale,
           headSequence: TEST_RUNTIME_RELEASE.sequence,
@@ -92,11 +103,9 @@ describe("readContentSearchDocuments", () => {
         searchSequence: TEST_RUNTIME_RELEASE.sequence,
       });
     });
-
     const documents = await t.query((ctx) =>
-      runConvexProgram(
+      Effect.runPromise(
         readContentSearchDocuments(
-          ctx,
           {
             limit: NAKAFA_AGENT_SEARCH_WINDOW,
             locale: "en",
@@ -105,20 +114,28 @@ describe("readContentSearchDocuments", () => {
           },
           ["saturated published material"],
           NAKAFA_AGENT_SEARCH_WINDOW
+        ).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
         )
       )
     );
-
     expect(documents).toHaveLength(NAKAFA_AGENT_SEARCH_WINDOW);
     expect(documents.every((document) => document.section === "material")).toBe(
       true
     );
   });
-
   it("resolves exact route queries through current catalog identities", async () => {
     const t = createConvexTestWithBetterAuth();
     const projection = makeMaterialProjection("en", 1);
-    await activateMaterialCatalog(t, [projection]);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([projection]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await t.mutation(async (ctx) => {
       await insertRuntimeIndex(ctx, projection.contentKey, {
         artifactLocale: projection.artifactLocale,
@@ -135,11 +152,9 @@ describe("readContentSearchDocuments", () => {
         searchSequence: MATERIAL_IDENTITY.sequence,
       });
     });
-
     const documents = await t.query((ctx) =>
-      runConvexProgram(
+      Effect.runPromise(
         readContentSearchDocuments(
-          ctx,
           {
             limit: 1,
             locale: "en",
@@ -149,10 +164,11 @@ describe("readContentSearchDocuments", () => {
           },
           [projection.publicPath],
           1
+        ).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
         )
       )
     );
-
     expect(documents).toMatchObject([
       {
         content_id: projection.graph.assetId,
@@ -161,15 +177,12 @@ describe("readContentSearchDocuments", () => {
       },
     ]);
   });
-
   it("returns no published documents without an active search owner", async () => {
     const t = createConvexTestWithBetterAuth();
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readContentSearchDocuments(
-            ctx,
             {
               limit: 1,
               locale: "en",
@@ -179,6 +192,8 @@ describe("readContentSearchDocuments", () => {
             },
             ["missing"],
             1
+          ).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
           )
         )
       )

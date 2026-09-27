@@ -1,3 +1,5 @@
+import { RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
@@ -51,10 +53,12 @@ function fetchProtocol(input: Request) {
   const test = createConvexTestWithBetterAuth();
   return Effect.promise(() =>
     test.action(async (ctx) => {
-      const handler = createMcpHandler(
-        () => createNakafaMcpServer(ctx, "protocol-test"),
-        { legacy: "reject" }
+      const server = await Effect.runPromise(
+        createNakafaMcpServer("protocol-test").pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+        )
       );
+      const handler = createMcpHandler(() => server, { legacy: "reject" });
       const response = await handler.fetch(input);
       expect(response.status).toBe(200);
       return response.json();
@@ -81,7 +85,7 @@ describe("Nakafa MCP resource and prompt protocol", () => {
             contents: [{ mimeType: "text/markdown", text: content.text, uri }],
           },
         });
-        expect(getNakafaContent).toHaveBeenCalledWith(expect.anything(), uri);
+        expect(getNakafaContent).toHaveBeenCalledWith(uri);
       })
   );
 

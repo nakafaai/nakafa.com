@@ -1,5 +1,3 @@
-import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
-import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import schoolMembersTable from "@repo/backend/confect/_generated/tables/schoolMembers";
 import schoolsTable from "@repo/backend/confect/_generated/tables/schools";
@@ -19,14 +17,6 @@ export const schoolSummaryValidator = Schema.Struct({
 });
 
 /** Paginated args for the current user's school list. */
-export const mySchoolsPageArgs = {
-  paginationOpts: PaginationOptionsSchema,
-};
-
-/** Paginated result for school summaries. */
-export const mySchoolsPageResultValidator = PaginationResultSchema(
-  schoolSummaryValidator
-);
 
 /** Landing state for the public `/school` entry route. */
 export const schoolLandingStateResultValidator = Schema.Union([

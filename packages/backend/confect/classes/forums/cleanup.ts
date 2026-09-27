@@ -1,12 +1,14 @@
-import { DatabaseReader, DatabaseWriter, StorageWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  StorageWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   FORUM_CLEANUP_FAILED_CODE,
   ForumCleanupError,
 } from "@repo/backend/confect/classes/forums/spec";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Option } from "effect";
 
 const FORUM_REACTION_BATCH_SIZE = 25;
@@ -28,12 +30,10 @@ function toForumCleanupError(error: unknown) {
 export const cleanupForumPostData = Effect.fn(
   "classes.forums.cleanup.cleanupForumPostData"
 )(
-  function* (ctx: MutationCtx, postId: Id<"schoolClassForumPosts">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const storage = yield* StorageWriter.StorageWriter.pipe(
-      Effect.provide(StorageWriter.StorageWriter.layer(ctx.storage))
-    );
+  function* (postId: Id<"schoolClassForumPosts">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const storage = yield* StorageWriter;
     const attachments = yield* database
       .table("schoolClassForumPostAttachments")
       .index("by_postId", (query) => query.eq("postId", postId))
@@ -96,12 +96,10 @@ export const cleanupForumPostData = Effect.fn(
 export const cleanupForumData = Effect.fn(
   "classes.forums.cleanup.cleanupForumData"
 )(
-  function* (ctx: MutationCtx, forumId: Id<"schoolClassForums">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const storage = yield* StorageWriter.StorageWriter.pipe(
-      Effect.provide(StorageWriter.StorageWriter.layer(ctx.storage))
-    );
+  function* (forumId: Id<"schoolClassForums">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const storage = yield* StorageWriter;
     const reactions = yield* database
       .table("schoolClassForumReactions")
       .index("by_forumId_and_emoji_and_userId", (query) =>
@@ -153,7 +151,7 @@ export const cleanupForumData = Effect.fn(
     if (!post) {
       return false;
     }
-    return yield* cleanupForumPostData(ctx, post._id);
+    return yield* cleanupForumPostData(post._id);
   },
   Effect.catchDefect(flow(toForumCleanupError, Effect.fail))
 );

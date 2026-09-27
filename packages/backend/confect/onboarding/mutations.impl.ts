@@ -1,12 +1,12 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
+import { getOptionalActiveAppUser } from "@repo/backend/confect/auth/session";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import {
   admitOnboarding,
   finishOnboarding,
 } from "@repo/backend/confect/onboarding/impl";
 import {
-  readOptionalActiveOnboardingUser,
   requireSelfSelectableOnboardingUser,
   saveAnswerProgram,
 } from "@repo/backend/confect/onboarding/mutations";
@@ -18,9 +18,8 @@ const admit = FunctionImpl.make(
   spec,
   "admit",
   Effect.fn("onboarding.mutations.admit")(function* () {
-    const ctx = yield* MutationCtxService;
     return yield* Effect.gen(function* () {
-      const user = yield* readOptionalActiveOnboardingUser(ctx);
+      const user = yield* getOptionalActiveAppUser();
       if (!user) {
         return {
           isAuthenticated: false as const,
@@ -28,7 +27,7 @@ const admit = FunctionImpl.make(
           profile: null,
         };
       }
-      return yield* admitOnboarding(ctx, user.appUser);
+      return yield* admitOnboarding(user.appUser);
     });
   })
 );
@@ -37,8 +36,7 @@ const saveAnswer = FunctionImpl.make(
   spec,
   "saveAnswer",
   Effect.fn("onboarding.mutations.saveAnswer")(function* ({ answer }) {
-    const ctx = yield* MutationCtxService;
-    return yield* saveAnswerProgram(ctx, answer);
+    return yield* saveAnswerProgram(answer);
   })
 );
 const finish = FunctionImpl.make(
@@ -46,10 +44,9 @@ const finish = FunctionImpl.make(
   spec,
   "finish",
   Effect.fn("onboarding.mutations.finish")(function* ({ answers }) {
-    const ctx = yield* MutationCtxService;
     return yield* Effect.gen(function* () {
-      const user = yield* requireSelfSelectableOnboardingUser(ctx);
-      return yield* finishOnboarding(ctx, user.appUser._id, answers);
+      const user = yield* requireSelfSelectableOnboardingUser();
+      return yield* finishOnboarding(user.appUser._id, answers);
     });
   })
 );
@@ -57,5 +54,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(admit),
   Layer.provide(saveAnswer),
   Layer.provide(finish),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

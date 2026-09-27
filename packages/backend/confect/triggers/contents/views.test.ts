@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAnalyticsConsent,
@@ -11,18 +13,18 @@ import {
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
-
 describe("triggers/contents/views", () => {
   beforeEach(() => {
-    vi.useFakeTimers({ now: NOW });
+    vi.useFakeTimers({
+      now: NOW,
+    });
   });
-
   afterEach(() => {
     vi.useRealTimers();
   });
-
   it.each(["articles", "material"] as const)(
     "captures signed-in %s views after the engaged write",
     async (section) => {
@@ -31,10 +33,20 @@ describe("triggers/contents/views", () => {
       const material = makeMaterialProjection("en", 1);
       const projection = section === "articles" ? article : material;
       if (section === "material") {
-        await activateMaterialCatalog(t, [material]);
+        await t.mutation((ctx) =>
+          Effect.runPromise(
+            activateMaterialCatalog([material]).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        );
       }
       const identity = await t.mutation(async (ctx) => {
-        const identity = await seedAuthenticatedUser(ctx, { now: NOW });
+        const identity = await seedAuthenticatedUser(ctx, {
+          now: NOW,
+        });
         await seedAnalyticsConsent(ctx, {
           decidedAt: NOW,
           userId: identity.userId,
@@ -44,7 +56,6 @@ describe("triggers/contents/views", () => {
         }
         return identity;
       });
-
       await t
         .withIdentity({
           subject: identity.authUserId,
@@ -57,12 +68,10 @@ describe("triggers/contents/views", () => {
           publicPath: projection.publicPath,
           section,
         });
-
       const scheduledJobs = await t.query(
         async (ctx) =>
           await ctx.db.system.query("_scheduled_functions").collect()
       );
-
       expect(scheduledJobs).toEqual(
         expect.arrayContaining([
           expect.objectContaining({

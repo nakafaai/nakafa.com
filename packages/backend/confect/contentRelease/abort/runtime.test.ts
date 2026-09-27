@@ -1,9 +1,10 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { abortProgram } from "@repo/backend/confect/contentRelease/abort";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { reconcileTryoutRuntimeAfterAttempt } from "@repo/backend/confect/contentRelease/tryout/runtime";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -19,14 +20,16 @@ import { Effect } from "effect";
 
 /** Runs one release abort through the native Convex test boundary. */
 function abort(ctx: MutationCtx, releaseId: string) {
-  return runConvexProgram(abortProgram(ctx, releaseId));
+  return abortProgram(releaseId).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(confectSchema, ctx))
+  );
 }
-
 describe("content release abort runtime", () => {
   it.effect(
     "retains an aborted runtime until its last learner attempt is removed",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const fixture = yield* makeRuntimeIngressFixture();
         const releaseId = fixture.release.manifest.releaseId;
@@ -43,9 +46,13 @@ describe("content release abort runtime", () => {
         for (let retry = 0; retry < 2; retry += 1) {
           expect(
             yield* Effect.promise(() =>
-              t.mutation((ctx) => abort(ctx, releaseId))
+              t.mutation((ctx) =>
+                Effect.runPromiseWith(runtimeServices)(abort(ctx, releaseId))
+              )
             )
-          ).toMatchObject({ complete: true });
+          ).toMatchObject({
+            complete: true,
+          });
         }
         const retained = yield* Effect.promise(() =>
           t.query(async (ctx) => ({
@@ -55,7 +62,9 @@ describe("content release abort runtime", () => {
           }))
         );
         expect(retained.release?.status).toBe("aborted");
-        expect(retained.runtime).toMatchObject({ cleanupReleaseId: releaseId });
+        expect(retained.runtime).toMatchObject({
+          cleanupReleaseId: releaseId,
+        });
         expect(retained.attempts).toHaveLength(1);
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
@@ -66,14 +75,24 @@ describe("content release abort runtime", () => {
         );
         yield* Effect.promise(() =>
           expect(
-            t.mutation(internal.contentRelease.manifest.abort, { releaseId })
+            t.mutation(internal.contentRelease.manifest.abort, {
+              releaseId,
+            })
           ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+            data: {
+              code: "CONTENT_RELEASE_INTEGRITY",
+            },
           })
         );
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(reconcileTryoutRuntimeAfterAttempt(ctx, runtimeId))
+            Effect.runPromiseWith(runtimeServices)(
+              reconcileTryoutRuntimeAfterAttempt(runtimeId).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         );
         expect(
@@ -81,17 +100,18 @@ describe("content release abort runtime", () => {
         ).toBeNull();
       })
   );
-
   it.effect("removes source-owned rows staged before a snapshot root", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const fixture = yield* makeRuntimeIngressFixture();
       const releaseId = fixture.release.manifest.releaseId;
       yield* insertRuntimeIngressSource(t, fixture);
       yield* storeRuntimeFixture(t, fixture);
-
       const receipt = yield* Effect.promise(() =>
-        t.mutation((ctx) => abort(ctx, releaseId))
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(abort(ctx, releaseId))
+        )
       );
       const stored = yield* Effect.promise(() =>
         t.run(async (ctx) => ({
@@ -99,15 +119,17 @@ describe("content release abort runtime", () => {
           runtime: await ctx.db.query("tryoutRuntimeBundles").collect(),
         }))
       );
-
-      expect(receipt).toMatchObject({ complete: true, processedItems: 0 });
+      expect(receipt).toMatchObject({
+        complete: true,
+        processedItems: 0,
+      });
       expect(stored.release?.status).toBe("aborted");
       expect(stored.runtime).toEqual([]);
     })
   );
-
   it.effect("preserves a pair reused from another source release", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const original = yield* makeRuntimeIngressFixture(
         ReleaseIdSchema.make("release-runtime-original")
@@ -118,15 +140,20 @@ describe("content release abort runtime", () => {
       yield* storeRuntimeFixture(t, original);
       yield* insertRuntimeIngressSource(t, current);
       const reused = yield* storeRuntimeFixture(t, current);
-
       yield* Effect.promise(() =>
-        t.mutation((ctx) => abort(ctx, current.release.manifest.releaseId))
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            abort(ctx, current.release.manifest.releaseId)
+          )
+        )
       );
       const stored = yield* Effect.promise(() =>
         t.run((ctx) => ctx.db.query("tryoutRuntimeBundles").collect())
       );
-
-      expect(reused).toMatchObject({ created: 0, unchanged: 1 });
+      expect(reused).toMatchObject({
+        created: 0,
+        unchanged: 1,
+      });
       expect(stored).toEqual([
         expect.objectContaining({
           cleanupReleaseId: original.release.manifest.releaseId,
@@ -135,9 +162,9 @@ describe("content release abort runtime", () => {
       ]);
     })
   );
-
   it.effect("preserves a source-owned pair reused by the active release", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const recovery = yield* makeRuntimeIngressFixture(
         ReleaseIdSchema.make("release-runtime-recovery")
@@ -162,7 +189,9 @@ describe("content release abort runtime", () => {
             throw new Error("Expected recovery runtime fixtures.");
           }
           const { _creationTime, _id, ...releaseFields } = recoveryRelease;
-          await ctx.db.patch("contentReleases", _id, { role: "recovery" });
+          await ctx.db.patch("contentReleases", _id, {
+            role: "recovery",
+          });
           await ctx.db.insert("contentReleases", {
             ...releaseFields,
             ...releaseReachability(active.release),
@@ -188,9 +217,12 @@ describe("content release abort runtime", () => {
           });
         })
       );
-
       const receipt = yield* Effect.promise(() =>
-        t.mutation((ctx) => abort(ctx, recovery.release.manifest.releaseId))
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            abort(ctx, recovery.release.manifest.releaseId)
+          )
+        )
       );
       const stored = yield* Effect.promise(() =>
         t.run(async (ctx) => ({
@@ -204,9 +236,14 @@ describe("content release abort runtime", () => {
           state: await ctx.db.query("contentState").unique(),
         }))
       );
-
-      expect(reused).toMatchObject({ created: 0, unchanged: 1 });
-      expect(receipt).toMatchObject({ complete: true, processedItems: 0 });
+      expect(reused).toMatchObject({
+        created: 0,
+        unchanged: 1,
+      });
+      expect(receipt).toMatchObject({
+        complete: true,
+        processedItems: 0,
+      });
       expect(stored.active?.status).toBe("completed");
       expect(stored.state?.activeReleaseId).toBe(
         active.release.manifest.releaseId
@@ -219,9 +256,9 @@ describe("content release abort runtime", () => {
       ]);
     })
   );
-
   it.effect("removes a reused pair after both invisible slots abort", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const recovery = yield* makeRuntimeIngressFixture(
         ReleaseIdSchema.make("release-runtime-recovery")
@@ -246,7 +283,9 @@ describe("content release abort runtime", () => {
             throw new Error("Expected invisible-slot runtime fixtures.");
           }
           const { _creationTime, _id, ...releaseFields } = recoveryRelease;
-          await ctx.db.patch("contentReleases", _id, { role: "recovery" });
+          await ctx.db.patch("contentReleases", _id, {
+            role: "recovery",
+          });
           await ctx.db.insert("contentReleases", {
             ...releaseFields,
             ...releaseReachability(candidate.release),
@@ -266,18 +305,29 @@ describe("content release abort runtime", () => {
           });
         })
       );
-
       const recoveryReceipt = yield* Effect.promise(() =>
-        t.mutation((ctx) => abort(ctx, recovery.release.manifest.releaseId))
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            abort(ctx, recovery.release.manifest.releaseId)
+          )
+        )
       );
       const transferred = yield* Effect.promise(() =>
         t.run((ctx) => ctx.db.query("tryoutRuntimeBundles").unique())
       );
       const candidateReceipt = yield* Effect.promise(() =>
-        t.mutation((ctx) => abort(ctx, candidate.release.manifest.releaseId))
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            abort(ctx, candidate.release.manifest.releaseId)
+          )
+        )
       );
       const repeatedRecovery = yield* Effect.promise(() =>
-        t.mutation((ctx) => abort(ctx, recovery.release.manifest.releaseId))
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            abort(ctx, recovery.release.manifest.releaseId)
+          )
+        )
       );
       const stored = yield* Effect.promise(() =>
         t.run(async (ctx) => ({
@@ -286,15 +336,23 @@ describe("content release abort runtime", () => {
           state: await ctx.db.query("contentState").unique(),
         }))
       );
-
-      expect(reused).toMatchObject({ created: 0, unchanged: 1 });
-      expect(recoveryReceipt).toMatchObject({ complete: true });
+      expect(reused).toMatchObject({
+        created: 0,
+        unchanged: 1,
+      });
+      expect(recoveryReceipt).toMatchObject({
+        complete: true,
+      });
       expect(transferred).toMatchObject({
         cleanupReleaseId: candidate.release.manifest.releaseId,
         sourceReleaseId: recovery.release.manifest.releaseId,
       });
-      expect(candidateReceipt).toMatchObject({ complete: true });
-      expect(repeatedRecovery).toMatchObject({ complete: true });
+      expect(candidateReceipt).toMatchObject({
+        complete: true,
+      });
+      expect(repeatedRecovery).toMatchObject({
+        complete: true,
+      });
       expect(stored.releases.map(({ status }) => status)).toEqual([
         "aborted",
         "aborted",
@@ -304,9 +362,9 @@ describe("content release abort runtime", () => {
       expect(stored.state).not.toHaveProperty("recoveryReleaseId");
     })
   );
-
   it.effect("fails closed above the signed transition pair bound", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const fixture = yield* makeRuntimeIngressFixture();
       const releaseId = fixture.release.manifest.releaseId;
@@ -329,12 +387,13 @@ describe("content release abort runtime", () => {
           }
         })
       );
-
       yield* Effect.promise(() =>
         expect(
-          t.mutation((ctx) => abort(ctx, releaseId))
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(abort(ctx, releaseId))
+          )
         ).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          code: "CONTENT_RELEASE_INTEGRITY",
         })
       );
       const stored = yield* Effect.promise(() =>

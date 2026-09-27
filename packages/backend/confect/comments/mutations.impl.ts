@@ -3,13 +3,13 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import spec, {
   CommentWriteError,
 } from "@repo/backend/confect/comments/mutations.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { truncateText } from "@repo/backend/confect/utils/text";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Layer, Struct } from "effect";
@@ -24,8 +24,7 @@ const addComment = FunctionImpl.make(
   Effect.fn("comments.mutations.addComment")(function* (args) {
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const ctx = yield* MutationCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const cleanedSlug = cleanSlug(args.slug);
     const parentId = args.parentId;
     const parentComment = parentId
@@ -86,8 +85,7 @@ const voteOnComment = FunctionImpl.make(
   Effect.fn("comments.mutations.voteOnComment")(function* (args) {
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const ctx = yield* MutationCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const comment = yield* database
       .table("comments")
       .get(args.commentId)
@@ -136,8 +134,7 @@ const deleteComment = FunctionImpl.make(
   Effect.fn("comments.mutations.deleteComment")(function* (args) {
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const ctx = yield* MutationCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const comment = yield* database
       .table("comments")
       .get(args.commentId)
@@ -166,5 +163,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(voteOnComment),
   Layer.provide(deleteComment),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

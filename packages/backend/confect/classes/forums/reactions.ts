@@ -1,5 +1,5 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   FORUM_REACTION_PREVIEW_BATCH_LIMIT,
   FORUM_REACTION_PREVIEW_LIMIT,
@@ -7,8 +7,7 @@ import {
 } from "@repo/backend/confect/classes/forums/constants";
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import { getUserMap } from "@repo/backend/confect/users/directory";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 const FORUM_REACTION_VALUE_PATTERN =
@@ -36,13 +35,10 @@ export const validateForumReactionValue = Effect.fn(
  */
 export const getMyForumReactions = Effect.fn(
   "classes.forums.reactions.getMyForumReactions"
-)(function* (
-  ctx: QueryCtx,
-  forumIds: Id<"schoolClassForums">[],
-  userId: Id<"users">
-) {
+)(function* (forumIds: Id<"schoolClassForums">[], userId: Id<"users">) {
+  const _reader = yield* DatabaseReader;
   const reactions = yield* Effect.forEach(forumIds, (forumId) =>
-    DatabaseReader.make(databaseSchema, ctx.db)
+    _reader
       .table("schoolClassForumReactions")
       .index("by_forumId_and_userId_and_emoji", (q) =>
         q.eq("forumId", forumId).eq("userId", userId)
@@ -58,11 +54,12 @@ export const getMyForumReactions = Effect.fn(
  */
 export const getForumReactionPreviews = Effect.fn(
   "classes.forums.reactions.getForumReactionPreviews"
-)(function* (ctx: QueryCtx, forum: Doc<"schoolClassForums">) {
+)(function* (forum: Docs["schoolClassForums"]) {
+  const _reader2 = yield* DatabaseReader;
   const reactionsByEmoji = yield* Effect.forEach(
     forum.reactionCounts,
     ({ count, emoji }) =>
-      DatabaseReader.make(databaseSchema, ctx.db)
+      _reader2
         .table("schoolClassForumReactions")
         .index("by_forumId_and_emoji_and_userId", (q) =>
           q.eq("forumId", forum._id).eq("emoji", emoji)
@@ -71,7 +68,6 @@ export const getForumReactionPreviews = Effect.fn(
         .pipe(Effect.orDie)
   );
   const userMap = yield* getUserMap(
-    ctx,
     reactionsByEmoji.flat().map((reaction) => reaction.userId)
   );
   return forum.reactionCounts.map(({ emoji, count }, index) => ({

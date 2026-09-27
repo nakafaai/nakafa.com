@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { userRoles } from "@repo/ai/types/roles";
+import { userRoles } from "@repo/backend/confect/users/role";
 import {
   isSelfSelectableUserRole,
   selfSelectableUserRoles,

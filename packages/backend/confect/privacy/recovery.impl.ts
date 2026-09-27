@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import { handleCleanupComplete as completedWorkflow } from "@repo/backend/confect/privacy/completion";
 import {
@@ -15,8 +14,7 @@ const retryCleanupWorkflow = FunctionImpl.make(
   spec,
   "retryCleanupWorkflow",
   Effect.fn("privacy.recovery.retryCleanupWorkflow")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    yield* retryCleanupWorkflowProgram(ctx, args.workflowId, args.source);
+    yield* retryCleanupWorkflowProgram(args.workflowId, args.source);
     return null;
   })
 );
@@ -31,8 +29,7 @@ const cleanupWorkflowStorage = FunctionImpl.make(
   spec,
   "cleanupWorkflowStorage",
   Effect.fn("privacy.recovery.cleanupWorkflowStorage")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    yield* cleanupWorkflowStorageProgram(ctx, args.workflowId, args.source);
+    yield* cleanupWorkflowStorageProgram(args.workflowId, args.source);
     return null;
   })
 );

@@ -1,3 +1,4 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   getPopularitySignalDay,
   isFinitePopularityWindow,
@@ -5,10 +6,9 @@ import {
   type LearningPopularityWindow,
   learningPopularityWindowValues,
 } from "@repo/backend/confect/contents/popularity";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Struct } from "effect";
 
-type QueuedLearningEngagement = Doc<"learningEngagementQueue">;
+type QueuedLearningEngagement = Docs["learningEngagementQueue"];
 type AnalyticsGraphRef = Pick<
   QueuedLearningEngagement,
   | "alignmentId"

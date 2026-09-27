@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { releaseRoleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 export const envelopeValidator = Schema.Struct({
@@ -23,7 +23,7 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => envelopeValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -33,6 +33,6 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => stageEnvelopeValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

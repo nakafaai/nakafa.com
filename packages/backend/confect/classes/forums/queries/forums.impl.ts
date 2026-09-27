@@ -1,9 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  QueryCtx as QueryCtxService,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import {
   loadClass,
@@ -16,6 +13,7 @@ import {
   getMyForumReactions,
 } from "@repo/backend/confect/classes/forums/reactions";
 import { getForumUnreadCounts } from "@repo/backend/confect/classes/forums/unread";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import { Effect, Layer } from "effect";
 
@@ -28,11 +26,9 @@ const getForums = FunctionImpl.make(
   "getForums",
   Effect.fn("classes.forums.queries.forums.getForums")(function* (args) {
     const database = yield* DatabaseReader;
-    const ctx = yield* QueryCtxService;
-    const user = yield* requireAuth(ctx);
-    const classData = yield* loadClass(ctx, args.classId);
+    const user = yield* requireAuth();
+    const classData = yield* loadClass(args.classId);
     yield* requireClassAccess(
-      ctx,
       args.classId,
       classData.schoolId,
       user.appUser._id
@@ -58,12 +54,9 @@ const getForums = FunctionImpl.make(
             .pipe(Effect.orDie);
     const forumIds = forumsPage.page.map((forum) => forum._id);
     const [userMap, myReactions, unreadCounts] = yield* Effect.all([
-      getUserMap(
-        ctx,
-        forumsPage.page.map((forum) => forum.createdBy)
-      ),
-      getMyForumReactions(ctx, forumIds, user.appUser._id),
-      getForumUnreadCounts(ctx, {
+      getUserMap(forumsPage.page.map((forum) => forum.createdBy)),
+      getMyForumReactions(forumIds, user.appUser._id),
+      getForumUnreadCounts({
         forums: forumsPage.page,
         userId: user.appUser._id,
       }),
@@ -84,20 +77,14 @@ const getForum = FunctionImpl.make(
   spec,
   "getForum",
   Effect.fn("classes.forums.queries.forums.getForum")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const currentUserId = user.appUser._id;
-    const forum = yield* loadForum(ctx, args.forumId);
-    yield* requireClassAccess(
-      ctx,
-      forum.classId,
-      forum.schoolId,
-      currentUserId
-    );
+    const forum = yield* loadForum(args.forumId);
+    yield* requireClassAccess(forum.classId, forum.schoolId, currentUserId);
     const [forumUserMap, reactionPreviews, myReactions] = yield* Effect.all([
-      getUserMap(ctx, [forum.createdBy]),
-      getForumReactionPreviews(ctx, forum),
-      getMyForumReactions(ctx, [forum._id], currentUserId),
+      getUserMap([forum.createdBy]),
+      getForumReactionPreviews(forum),
+      getMyForumReactions([forum._id], currentUserId),
     ]);
     return {
       ...forum,
@@ -110,5 +97,6 @@ const getForum = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getForums),
   Layer.provide(getForum),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

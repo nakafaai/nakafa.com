@@ -1,9 +1,10 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { createPopularityViewerKey } from "@repo/backend/confect/contents/popularity";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
 
 const SMALL_BATCH_SIZE = 25;
@@ -11,9 +12,9 @@ const HISTORY_BATCH_SIZE = 50;
 
 /** Deletes one bounded batch of account preferences and credit history. */
 const cleanupAccountHistory = Effect.fn("auth.cleanup.cleanupAccountHistory")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const onboardingProfiles = yield* database
       .table("onboardingProfiles")
       .index("by_userId", (query) => query.eq("userId", userId))
@@ -62,9 +63,9 @@ const cleanupAccountHistory = Effect.fn("auth.cleanup.cleanupAccountHistory")(
 
 /** Deletes one bounded batch of learning views and recent-item rows. */
 const cleanupLearningHistory = Effect.fn("auth.cleanup.cleanupLearningHistory")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const views = yield* database
       .table("learningViews")
       .index("by_userId_and_content_id_and_contextKey", (query) =>
@@ -95,9 +96,9 @@ const cleanupLearningHistory = Effect.fn("auth.cleanup.cleanupLearningHistory")(
 const cleanupPopularityIdentity = Effect.fn(
   "auth.cleanup.cleanupPopularityIdentity"
 )(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const viewerKey = createPopularityViewerKey({
       deviceId: "",
       userId,
@@ -131,12 +132,12 @@ const cleanupPopularityIdentity = Effect.fn(
 /** Deletes one bounded batch of personal learning and credit data. */
 export const cleanupUserLearningData = Effect.fn(
   "auth.cleanup.cleanupUserLearningData"
-)(function* (ctx: MutationCtx, userId: Id<"users">) {
-  if (yield* cleanupAccountHistory(ctx, userId)) {
+)(function* (userId: Id<"users">) {
+  if (yield* cleanupAccountHistory(userId)) {
     return true;
   }
-  if (yield* cleanupLearningHistory(ctx, userId)) {
+  if (yield* cleanupLearningHistory(userId)) {
     return true;
   }
-  return yield* cleanupPopularityIdentity(ctx, userId);
+  return yield* cleanupPopularityIdentity(userId);
 });

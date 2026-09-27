@@ -1,9 +1,12 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import {
   type ArticleRouteSlug,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { adjustArticleBucket } from "@repo/backend/confect/contentRelease/article/bucket";
 import { readOrderedArticles } from "@repo/backend/confect/contentRelease/article/order";
 import {
@@ -15,13 +18,11 @@ import {
   releaseFail,
 } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect, Schema } from "effect";
 
-type AppLocale = Doc<"articleCatalog">["appLocale"];
-type ArticleEntry = WithoutSystemFields<Doc<"articleCatalog">>;
+type AppLocale = Docs["articleCatalog"]["appLocale"];
+type ArticleEntry = WithoutSystemFields<Docs["articleCatalog"]>;
 export interface ArticleCategoryClaim {
   readonly appLocale: AppLocale;
   readonly category: ArticleEntry["category"];
@@ -32,12 +33,11 @@ export interface ArticleCategoryClaim {
 
 /** Loads the sole active article row for one locale-specific content identity. */
 export const loadArticle = Effect.fn("contentRelease.loadArticle")(function* (
-  ctx: MutationCtx,
   slot: ModelSlot,
   contentKey: string,
   appLocale: AppLocale
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const matches = yield* database
     .table("articleCatalog")
     .index("by_slot_and_contentKey_and_appLocale", (index) =>
@@ -59,12 +59,11 @@ export const loadArticle = Effect.fn("contentRelease.loadArticle")(function* (
 
 /** Loads the sole active localized row for one article category. */
 const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
-  ctx: MutationCtx,
   slot: ModelSlot,
   appLocale: AppLocale,
   category: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const categories = yield* database
     .table("articleCategories")
     .index("by_slot_and_appLocale_and_category", (index) =>
@@ -84,13 +83,8 @@ const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
 /** Loads at most two explicit category owners for one localized route. */
 const loadCategoryRoutes = Effect.fn(
   "contentRelease.loadArticleCategoryRoutes"
-)(function* (
-  ctx: MutationCtx,
-  slot: ModelSlot,
-  appLocale: AppLocale,
-  route: ArticleRouteSlug
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (slot: ModelSlot, appLocale: AppLocale, route: ArticleRouteSlug) {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("articleCategories")
     .index("by_slot_and_appLocale_and_route", (index) =>
@@ -141,10 +135,9 @@ function categoryRow(article: ArticleEntry, route: ArticleRouteSlug) {
 
 /** Stages one category identity before final release route validation. */
 export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
-  function* (ctx: MutationCtx, article: ArticleEntry, route: ArticleRouteSlug) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (article: ArticleEntry, route: ArticleRouteSlug) {
+    const writer = yield* DatabaseWriter;
     const existing = yield* loadCategory(
-      ctx,
       article.slot,
       article.appLocale,
       article.category
@@ -169,7 +162,6 @@ export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
     if (existing) {
       if (existing.bucket !== row.bucket) {
         yield* adjustArticleBucket(
-          ctx,
           article.slot,
           existing.appLocale,
           existing.bucket,
@@ -177,7 +169,6 @@ export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
           -1
         );
         yield* adjustArticleBucket(
-          ctx,
           article.slot,
           row.appLocale,
           row.bucket,
@@ -192,7 +183,6 @@ export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
       return;
     }
     yield* adjustArticleBucket(
-      ctx,
       article.slot,
       row.appLocale,
       row.bucket,
@@ -231,9 +221,8 @@ export const validateCategoryMember = Effect.fn(
 /** Resolves and validates one category claim from the effective final model. */
 export const validateCategoryClaim = Effect.fn(
   "contentRelease.validateArticleCategoryClaim"
-)(function* (ctx: MutationCtx, article: ArticleEntry) {
+)(function* (article: ArticleEntry) {
   const categoryOwner = yield* loadCategory(
-    ctx,
     article.slot,
     article.appLocale,
     article.category
@@ -264,7 +253,6 @@ export const validateCategoryClaim = Effect.fn(
   } satisfies ArticleCategoryClaim;
   yield* validateCategoryMember(article, claim);
   const routeOwners = yield* loadCategoryRoutes(
-    ctx,
     article.slot,
     claim.appLocale,
     claim.route
@@ -284,15 +272,9 @@ export const validateCategoryClaim = Effect.fn(
 /** Rebuilds one category after its selected article moves or disappears. */
 export const reconcileCategory = Effect.fn(
   "contentRelease.reconcileArticleCategory"
-)(function* (
-  ctx: MutationCtx,
-  slot: ModelSlot,
-  appLocale: AppLocale,
-  category: string
-) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (slot: ModelSlot, appLocale: AppLocale, category: string) {
+  const writer = yield* DatabaseWriter;
   const [representative] = yield* readOrderedArticles(
-    ctx,
     slot,
     appLocale,
     category,
@@ -300,13 +282,12 @@ export const reconcileCategory = Effect.fn(
   );
   if (representative) {
     const route = yield* decodeCategoryRoute(representative.publicPath);
-    yield* stageCategory(ctx, representative, route);
+    yield* stageCategory(representative, route);
     return;
   }
-  const existing = yield* loadCategory(ctx, slot, appLocale, category);
+  const existing = yield* loadCategory(slot, appLocale, category);
   if (existing) {
     yield* adjustArticleBucket(
-      ctx,
       slot,
       existing.appLocale,
       existing.bucket,

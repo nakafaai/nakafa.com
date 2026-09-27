@@ -1,7 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /**
@@ -9,34 +10,29 @@ import { Effect } from "effect";
  */
 export const updateForumReadState = Effect.fn(
   "classes.forums.readState.updateForumReadState"
-)(function* (
-  ctx: Pick<MutationCtx, "db">,
-  args: {
-    forumId: Id<"schoolClassForums">;
-    classId: Id<"schoolClasses">;
-    userId: Id<"users">;
-    lastReadSequence: number;
-  }
-) {
-  const existing = yield* DatabaseReader.make(databaseSchema, ctx.db)
+)(function* (args: {
+  forumId: Id<"schoolClassForums">;
+  classId: Id<"schoolClasses">;
+  userId: Id<"users">;
+  lastReadSequence: number;
+}) {
+  const existing = yield* (yield* DatabaseReader)
     .table("schoolClassForumReadStates")
     .get("by_forumId_and_userId", args.forumId, args.userId)
     .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
   if (!existing) {
-    yield* DatabaseWriter.make(databaseSchema, ctx.db)
-      .table("schoolClassForumReadStates")
-      .insert({
-        classId: args.classId,
-        forumId: args.forumId,
-        lastReadSequence: args.lastReadSequence,
-        userId: args.userId,
-      });
+    yield* (yield* DatabaseWriter).table("schoolClassForumReadStates").insert({
+      classId: args.classId,
+      forumId: args.forumId,
+      lastReadSequence: args.lastReadSequence,
+      userId: args.userId,
+    });
     return;
   }
   if (args.lastReadSequence <= existing.lastReadSequence) {
     return;
   }
-  yield* DatabaseWriter.make(databaseSchema, ctx.db)
+  yield* (yield* DatabaseWriter)
     .table("schoolClassForumReadStates")
     .patch(existing._id, {
       lastReadSequence: args.lastReadSequence,

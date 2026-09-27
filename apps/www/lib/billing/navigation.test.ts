@@ -11,8 +11,7 @@ describe("billing navigation", () => {
       yield* billingNavigationProgram({
         navigate,
         onFailure,
-        request: () =>
-          Promise.resolve({ url: "https://checkout.polar.sh/test" }),
+        request: Effect.succeed({ url: "https://checkout.polar.sh/test" }),
       });
 
       expect(navigate).toHaveBeenCalledWith("https://checkout.polar.sh/test");
@@ -31,7 +30,7 @@ describe("billing navigation", () => {
         yield* billingNavigationProgram({
           navigate,
           onFailure,
-          request: () => Promise.reject(failure),
+          request: Effect.fail(failure),
         });
 
         expect(onFailure).toHaveBeenCalledWith(failure);

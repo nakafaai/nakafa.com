@@ -3,7 +3,6 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { loadOpenForumWithAccess } from "@repo/backend/confect/classes/forums/access";
@@ -14,6 +13,7 @@ import { validateForumMentions } from "@repo/backend/confect/classes/forums/ment
 import spec from "@repo/backend/confect/classes/forums/mutations/posts.spec";
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { truncateText } from "@repo/backend/confect/utils/text";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Clock, Effect, Layer, Struct } from "effect";
@@ -28,8 +28,7 @@ const createForumPost = FunctionImpl.make(
   Effect.fn("classes.forums.mutations.posts.createForumPost")(function* (args) {
     const writer = yield* DatabaseWriter;
     const database = yield* DatabaseReader;
-    const ctx = yield* MutationCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const userId = user.appUser._id;
     const attachmentUploadIds = args.attachmentUploadIds ?? [];
     if (attachmentUploadIds.length > MAX_FORUM_POST_ATTACHMENTS) {
@@ -44,13 +43,13 @@ const createForumPost = FunctionImpl.make(
         message: "Post must have either a message or attachments.",
       });
     }
-    const { forum } = yield* loadOpenForumWithAccess(ctx, args.forumId, userId);
-    const attachments = yield* resolveForumAttachmentUploads(ctx, {
+    const { forum } = yield* loadOpenForumWithAccess(args.forumId, userId);
+    const attachments = yield* resolveForumAttachmentUploads({
       forumId: args.forumId,
       uploadIds: attachmentUploadIds,
       userId,
     });
-    const mentions = yield* validateForumMentions(ctx, {
+    const mentions = yield* validateForumMentions({
       forum,
       mentionedUserIds: args.mentions ?? [],
     });
@@ -133,5 +132,6 @@ const createForumPost = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(createForumPost),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

@@ -13,8 +13,7 @@ import {
   getRouteSearchText,
 } from "@repo/backend/confect/contents/helpers/search/terms";
 import { findTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { Effect, Option, type Schema } from "effect";
 
@@ -29,7 +28,6 @@ type TryoutCatalogEntry = TryoutCatalog["entries"][number];
 export const readSignedTryoutSearchDocuments = Effect.fn(
   "contents.search.readSignedTryoutDocuments"
 )(function* (
-  ctx: QueryCtx,
   args: ContentSearchInput,
   queryTexts: readonly string[],
   requestedLimit: number
@@ -42,7 +40,7 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
     return [];
   }
   const catalog = yield* findTryoutCatalog(args.locale).pipe(
-    Effect.provide(convexTryoutLayer(ctx))
+    Effect.provide(tryoutLayer)
   );
   if (Option.isNone(catalog)) {
     return [];

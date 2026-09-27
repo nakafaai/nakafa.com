@@ -1,31 +1,39 @@
 "use client";
 
-import type { Chat } from "@ai-sdk/react";
-import type { ModelId } from "@repo/ai/config/model";
-import type { MyUIMessage } from "@repo/ai/types/message";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
+import type { ModelId } from "@repo/backend/confect/nina/config/model";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 export interface AiState {
   activeChatId: Id<"chats"> | null;
-  chatSession: {
-    chatId: Id<"chats">;
-    runtime: Chat<MyUIMessage>;
-  } | null;
+  chatDrafts: string[];
   contextTitle: string | null;
   model: ModelId;
   open: boolean;
+  openingChat: {
+    receipt: Ref.Returns<typeof refs.public.nina.turns.start>;
+    prompt: Ref.Returns<typeof refs.public.nina.turns.start>["prompt"];
+    submittedAt: number;
+  } | null;
   sheetActivated: boolean;
   text: string;
 }
 
 export interface AiActions {
+  addChatDraft: (key: string) => void;
   getModel: () => AiState["model"];
+  removeChatDraft: (key: string) => void;
+  resolveChatDraft: (
+    key: string,
+    receipt: Ref.Returns<typeof refs.public.nina.turns.start>
+  ) => void;
   setActiveChatId: (activeChatId: AiState["activeChatId"]) => void;
-  setChatSession: (chatSession: AiState["chatSession"]) => void;
   setContextTitle: (contextTitle: AiState["contextTitle"]) => void;
   setModel: (model: AiState["model"]) => void;
   setOpen: (open: AiState["open"]) => void;
-  setText: (text: AiState["text"]) => void;
+  setOpeningChat: (openingChat: AiState["openingChat"]) => void;
+  setText: (text: AiState["text"] | ((previous: string) => string)) => void;
 }
 
 export type AiStore = AiState & AiActions;

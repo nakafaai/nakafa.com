@@ -1,5 +1,7 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -26,27 +28,65 @@ import { Effect, Struct } from "effect";
 
 const readManifest = internal.contentRelease.snapshot.read.manifest;
 const readRows = internal.contentRelease.snapshot.read.rows;
-
 describe("contentRelease/snapshot/read", () => {
   it.live.each([
-    { scenario: "empty", afterBatchIndex: -1 },
-    { scenario: "missing-tail", afterBatchIndex: 0 },
-    { scenario: "missing-cursor", afterBatchIndex: 0 },
-    { scenario: "duplicate", afterBatchIndex: -1 },
-    { scenario: "duplicate-cursor", afterBatchIndex: 0 },
-    { scenario: "shifted", afterBatchIndex: 0 },
-    { scenario: "oversized", afterBatchIndex: 0 },
-    { scenario: "foreign-cursor", afterBatchIndex: 0 },
-    { scenario: "unknown-cursor", afterBatchIndex: 99 },
-    { scenario: "false-terminal", afterBatchIndex: 0 },
+    {
+      scenario: "empty",
+      afterBatchIndex: -1,
+    },
+    {
+      scenario: "missing-tail",
+      afterBatchIndex: 0,
+    },
+    {
+      scenario: "missing-cursor",
+      afterBatchIndex: 0,
+    },
+    {
+      scenario: "duplicate",
+      afterBatchIndex: -1,
+    },
+    {
+      scenario: "duplicate-cursor",
+      afterBatchIndex: 0,
+    },
+    {
+      scenario: "shifted",
+      afterBatchIndex: 0,
+    },
+    {
+      scenario: "oversized",
+      afterBatchIndex: 0,
+    },
+    {
+      scenario: "foreign-cursor",
+      afterBatchIndex: 0,
+    },
+    {
+      scenario: "unknown-cursor",
+      afterBatchIndex: 99,
+    },
+    {
+      scenario: "false-terminal",
+      afterBatchIndex: 0,
+    },
   ])(
     "rejects the $scenario snapshot ledger before returning a successful page",
     ({ scenario, afterBatchIndex }) =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
         yield* Effect.promise(async () => {
           const t = convexTest(schema, convexModules);
-          await stageProgramSnapshot(t, data, 3);
+          await t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              stageProgramSnapshot(data, 3).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          );
           await t.mutation(async (ctx) => {
             const rows = await ctx.db
               .query("snapshotBatches")
@@ -105,7 +145,9 @@ describe("contentRelease/snapshot/read", () => {
               releaseId: TEST_RELEASE_ID,
             })
           ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+            data: {
+              code: "CONTENT_RELEASE_INTEGRITY",
+            },
           });
         });
       })
@@ -184,23 +226,42 @@ describe("contentRelease/snapshot/read", () => {
         );
         yield* Effect.promise(() =>
           expect(t.query(readRows, args)).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+            data: {
+              code: "CONTENT_RELEASE_INTEGRITY",
+            },
           })
         );
         yield* Effect.promise(() =>
           expect(
-            t.query(readManifest, { family, releaseId: TEST_RELEASE_ID })
-          ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } })
+            t.query(readManifest, {
+              family,
+              releaseId: TEST_RELEASE_ID,
+            })
+          ).rejects.toMatchObject({
+            data: {
+              code: "CONTENT_RELEASE_MISSING",
+            },
+          })
         );
       })
   );
   it.live("replays one manifest and contiguous bounded row pages", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
       const t = convexTest(schema, convexModules);
       const batchSize = 3;
-      yield* Effect.promise(() => stageProgramSnapshot(t, data, batchSize));
-
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            stageProgramSnapshot(data, batchSize).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
       yield* Effect.promise(() =>
         expect(
           t.query(readManifest, {
@@ -275,19 +336,33 @@ describe("contentRelease/snapshot/read", () => {
       );
     })
   );
-
   it.live("rejects inherited-family reads and missing physical rows", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
       const inherited = convexTest(schema, convexModules);
-      yield* Effect.promise(() => stageProgramSnapshot(inherited, data));
+      yield* Effect.promise(() =>
+        inherited.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            stageProgramSnapshot(data).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
       yield* Effect.promise(() =>
         expect(
           inherited.query(readManifest, {
             family: "quran",
             releaseId: TEST_RELEASE_ID,
           })
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } })
+        ).rejects.toMatchObject({
+          data: {
+            code: "CONTENT_RELEASE_STATE",
+          },
+        })
       );
       yield* Effect.promise(() =>
         expect(
@@ -296,11 +371,24 @@ describe("contentRelease/snapshot/read", () => {
             releaseId: TEST_RELEASE_ID,
             afterBatchIndex: -1,
           })
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } })
+        ).rejects.toMatchObject({
+          data: {
+            code: "CONTENT_RELEASE_STATE",
+          },
+        })
       );
-
       const missing = convexTest(schema, convexModules);
-      yield* Effect.promise(() => stageProgramSnapshot(missing, data));
+      yield* Effect.promise(() =>
+        missing.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            stageProgramSnapshot(data).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
       yield* Effect.promise(() =>
         missing.mutation(async (ctx) => {
           const row = await ctx.db
@@ -320,16 +408,30 @@ describe("contentRelease/snapshot/read", () => {
             family: "program",
             releaseId: TEST_RELEASE_ID,
           })
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+        ).rejects.toMatchObject({
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
+        })
       );
     })
   );
-
   it.live("rejects a non-contiguous immutable batch ledger", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
       const t = convexTest(schema, convexModules);
-      yield* Effect.promise(() => stageProgramSnapshot(t, data, 3));
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            stageProgramSnapshot(data, 3).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
       yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const second = await ctx.db
@@ -342,10 +444,11 @@ describe("contentRelease/snapshot/read", () => {
             )
             .unique();
           assert(second, "Expected second snapshot batch.");
-          await ctx.db.patch("snapshotBatches", second._id, { batchIndex: 2 });
+          await ctx.db.patch("snapshotBatches", second._id, {
+            batchIndex: 2,
+          });
         })
       );
-
       yield* Effect.promise(() =>
         expect(
           t.query(readRows, {
@@ -353,7 +456,11 @@ describe("contentRelease/snapshot/read", () => {
             family: "program",
             releaseId: TEST_RELEASE_ID,
           })
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+        ).rejects.toMatchObject({
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
+        })
       );
     })
   );

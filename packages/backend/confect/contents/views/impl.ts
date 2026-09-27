@@ -1,12 +1,14 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { getOptionalActiveAppUser } from "@repo/backend/confect/auth/session";
 import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
 import { resolveLearningContext } from "@repo/backend/confect/contents/views/context";
 import { upsertUserRecent } from "@repo/backend/confect/contents/views/recent";
 import {
   enqueuePopularitySignals,
-  type ScheduleContentAnalyticsPartitionReference,
   schedulePopularityPartitions,
 } from "@repo/backend/confect/contents/views/signals";
 import {
@@ -17,19 +19,16 @@ import {
   type ContentViewTarget,
   validateIncomingContentTarget,
 } from "@repo/backend/confect/contents/views/target";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect, flow, Option } from "effect";
 
 /** Loads the latest view row recorded for a device/content/context tuple. */
 const loadLatestDeviceView = Effect.fn("contents.views.loadLatestDeviceView")(
   function* (
-    db: MutationCtx["db"],
     contentId: ContentViewTarget["content_id"],
     contextKey: string,
     deviceId: string
   ) {
-    const database = DatabaseReader.make(databaseSchema, db);
+    const database = yield* DatabaseReader;
     return yield* database
       .table("learningViews")
       .index(
@@ -52,15 +51,14 @@ const loadSignedInDeviceView = Effect.fn(
   "contents.views.loadSignedInDeviceView"
 )(
   function* (
-    db: MutationCtx["db"],
     contentId: ContentViewTarget["content_id"],
     contextKey: string,
     input: {
       readonly deviceId: string;
-      readonly userId: Doc<"users">["_id"];
+      readonly userId: Docs["users"]["_id"];
     }
   ) {
-    const database = DatabaseReader.make(databaseSchema, db);
+    const database = yield* DatabaseReader;
     return yield* database
       .table("learningViews")
       .index("by_userId_and_deviceId_and_content_id_and_contextKey", (q) =>
@@ -85,16 +83,14 @@ const loadSignedInDeviceView = Effect.fn(
  */
 const loadExistingView = Effect.fn("contents.views.loadExistingView")(
   function* (
-    db: MutationCtx["db"],
     contentId: ContentViewTarget["content_id"],
     contextKey: string,
     input: {
       readonly deviceId: string;
-      readonly userId?: Doc<"users">["_id"];
+      readonly userId?: Docs["users"]["_id"];
     }
   ) {
     const existingByDevice = yield* loadLatestDeviceView(
-      db,
       contentId,
       contextKey,
       input.deviceId
@@ -103,7 +99,6 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
       return existingByDevice;
     }
     const existingBySignedInDevice = yield* loadSignedInDeviceView(
-      db,
       contentId,
       contextKey,
       {
@@ -124,16 +119,15 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
 /** Writes the first durable view row for a viewer/content/context tuple. */
 const insertNewView = Effect.fn("contents.views.insertNewView")(
   function* (
-    db: MutationCtx["db"],
     route: ContentViewTarget,
     args: RecordContentViewArgs,
     context: LearningContextStorage,
     input: {
       readonly now: number;
-      readonly userId?: Doc<"users">["_id"];
+      readonly userId?: Docs["users"]["_id"];
     }
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, db);
+    const writer = yield* DatabaseWriter;
     yield* writer
       .table("learningViews")
       .insert({
@@ -164,14 +158,13 @@ const insertNewView = Effect.fn("contents.views.insertNewView")(
 /** Touches the existing view row and links it to the signed-in user when known. */
 const updateExistingView = Effect.fn("contents.views.updateExistingView")(
   function* (
-    db: MutationCtx["db"],
-    view: Doc<"learningViews">,
+    view: Docs["learningViews"],
     input: {
       readonly now: number;
-      readonly userId?: Doc<"users">["_id"];
+      readonly userId?: Docs["users"]["_id"];
     }
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, db);
+    const writer = yield* DatabaseWriter;
     if (input.userId && !view.userId) {
       yield* writer.table("learningViews").patch(view._id, {
         lastViewedAt: input.now,
@@ -183,8 +176,7 @@ const updateExistingView = Effect.fn("contents.views.updateExistingView")(
       lastViewedAt: input.now,
     });
   },
-  Effect.orDie,
-  Effect.catchDefect(flow(toContentViewIoError, Effect.fail))
+  Effect.mapError(toContentViewIoError)
 );
 
 /**
@@ -196,15 +188,11 @@ const updateExistingView = Effect.fn("contents.views.updateExistingView")(
  */
 export const recordUniqueContentView = Effect.fn(
   "contents.views.recordUniqueContentView"
-)(function* (
-  ctx: MutationCtx,
-  args: RecordContentViewArgs,
-  scheduleAnalyticsPartition: ScheduleContentAnalyticsPartitionReference
-) {
-  const authContext = yield* getOptionalActiveAppUser(ctx).pipe(
+)(function* (args: RecordContentViewArgs) {
+  const authContext = yield* getOptionalActiveAppUser().pipe(
     Effect.mapError(toContentViewIoError)
   );
-  const target = yield* validateIncomingContentTarget(ctx, args);
+  const target = yield* validateIncomingContentTarget(args);
   if (!target) {
     return {
       alreadyViewed: false,
@@ -214,13 +202,8 @@ export const recordUniqueContentView = Effect.fn(
   }
   const now = yield* Clock.currentTimeMillis;
   const userId = authContext?.appUser._id;
-  const learningContext = yield* resolveLearningContext(
-    ctx,
-    target,
-    args.context
-  );
+  const learningContext = yield* resolveLearningContext(target, args.context);
   const existingView = yield* loadExistingView(
-    ctx.db,
     target.content_id,
     learningContext.contextKey,
     {
@@ -243,7 +226,7 @@ export const recordUniqueContentView = Effect.fn(
       };
     }
     const popularityUserId = userId ?? existingView.userId;
-    yield* updateExistingView(ctx.db, existingView, {
+    yield* updateExistingView(existingView, {
       now,
       ...(userId === undefined
         ? {}
@@ -252,13 +235,12 @@ export const recordUniqueContentView = Effect.fn(
           }),
     });
     if (userId) {
-      yield* upsertUserRecent(ctx.db, target, learningContext, {
+      yield* upsertUserRecent(target, learningContext, {
         lastViewedAt: now,
         userId,
       });
     }
     const partitions = yield* enqueuePopularitySignals(
-      ctx.db,
       target,
       args,
       learningContext,
@@ -271,18 +253,14 @@ export const recordUniqueContentView = Effect.fn(
             }),
       }
     );
-    yield* schedulePopularityPartitions(
-      ctx.scheduler,
-      partitions,
-      scheduleAnalyticsPartition
-    );
+    yield* schedulePopularityPartitions(partitions);
     return {
       alreadyViewed: true,
       isNewView: false,
       success: true,
     };
   }
-  yield* insertNewView(ctx.db, target, args, learningContext, {
+  yield* insertNewView(target, args, learningContext, {
     now,
     ...(userId === undefined
       ? {}
@@ -291,13 +269,12 @@ export const recordUniqueContentView = Effect.fn(
         }),
   });
   if (userId) {
-    yield* upsertUserRecent(ctx.db, target, learningContext, {
+    yield* upsertUserRecent(target, learningContext, {
       lastViewedAt: now,
       userId,
     });
   }
   const partitions = yield* enqueuePopularitySignals(
-    ctx.db,
     target,
     args,
     learningContext,
@@ -310,11 +287,7 @@ export const recordUniqueContentView = Effect.fn(
           }),
     }
   );
-  yield* schedulePopularityPartitions(
-    ctx.scheduler,
-    partitions,
-    scheduleAnalyticsPartition
-  );
+  yield* schedulePopularityPartitions(partitions);
   return {
     alreadyViewed: false,
     isNewView: true,

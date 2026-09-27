@@ -1,14 +1,15 @@
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 import { validateTryoutResponseSelection } from "@repo/backend/confect/tryouts/response/selection";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs } from "convex/server";
+
 import type {
   TryoutRenderableResponseSpec,
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
 
-type SaveResponseArgs = FunctionArgs<
-  typeof api.tryouts.mutations.responses.save
+type SaveResponseArgs = Ref.Args<
+  typeof refs.public.tryouts.mutations.responses.save
 >;
 export type TryoutResponseSelection = NonNullable<
   TryoutRuntimeQuestion["response"]

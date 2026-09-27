@@ -1,8 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/contentRelease/runtime/publication/internal.spec";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import {
   resolvePublicRoute,
   resolvePublicRoutes,
@@ -16,9 +15,8 @@ const read = FunctionImpl.make(
   "read",
   Effect.fn("contentRelease.runtime.publication.internal.read")(
     function* (args) {
-      const ctx = yield* QueryCtxService;
       return yield* resolvePublicRoute(args.appLocale, args.publicPath).pipe(
-        Effect.provide(convexPublicationLayer(ctx))
+        Effect.provide(publicationLayer)
       );
     }
   )
@@ -29,9 +27,8 @@ const readBatch = FunctionImpl.make(
   "readBatch",
   Effect.fn("contentRelease.runtime.publication.internal.readBatch")(
     function* (args) {
-      const ctx = yield* QueryCtxService;
       return yield* resolvePublicRoutes(args.requests).pipe(
-        Effect.provide(convexPublicationLayer(ctx))
+        Effect.provide(publicationLayer)
       );
     }
   )

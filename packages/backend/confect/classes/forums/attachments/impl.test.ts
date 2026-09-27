@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { FORUM_PENDING_UPLOAD_EXPIRATION_MS } from "@repo/backend/confect/classes/forums/attachments/constants";
 import {
   validateForumAttachmentPolicy,
@@ -14,13 +16,13 @@ import {
   insertSchool,
   insertSchoolMembership,
 } from "@repo/backend/confect/classes/test.helpers";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
 const UPLOAD_TOKEN = "forum-upload-token";
@@ -102,63 +104,61 @@ describe("classes/forums/attachments/impl", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
-  it("enforces the forum attachment file policy", async () => {
-    for (const input of [
-      {
-        mimeType: "image/png",
-        name: "diagram.png",
-        size: 1,
-      },
-      {
-        mimeType: "application/octet-stream",
-        name: " Handout.PDF ",
-        size: 1,
-      },
-      {
-        mimeType: "text/plain",
-        name: "notes.txt",
-        size: 1,
-      },
-    ]) {
-      await expect(
-        runConvexProgram(validateForumAttachmentPolicy(input))
-      ).resolves.toBeUndefined();
-    }
-    for (const [input, code] of [
-      [
+  it.effect("enforces the forum attachment file policy", () =>
+    Effect.gen(function* () {
+      for (const input of [
         {
-          mimeType: "text/plain",
-          name: "large.txt",
-          size: MAX_FORUM_ATTACHMENT_BYTES + 1,
+          mimeType: "image/png",
+          name: "diagram.png",
+          size: 1,
         },
-        "FORUM_ATTACHMENT_TOO_LARGE",
-      ],
-      [
         {
           mimeType: "application/octet-stream",
-          name: "malware.exe",
+          name: " Handout.PDF ",
           size: 1,
         },
-        "FORUM_ATTACHMENT_TYPE_UNSUPPORTED",
-      ],
-      [
         {
-          mimeType: "application/x-msdownload",
-          name: "malware.exe",
+          mimeType: "text/plain",
+          name: "notes.txt",
           size: 1,
         },
-        "FORUM_ATTACHMENT_TYPE_UNSUPPORTED",
-      ],
-    ] as const) {
-      await expect(
-        runConvexProgram(validateForumAttachmentPolicy(input))
-      ).rejects.toMatchObject({
-        data: {
+      ]) {
+        expect(yield* validateForumAttachmentPolicy(input)).toBeUndefined();
+      }
+      for (const [input, code] of [
+        [
+          {
+            mimeType: "text/plain",
+            name: "large.txt",
+            size: MAX_FORUM_ATTACHMENT_BYTES + 1,
+          },
+          "FORUM_ATTACHMENT_TOO_LARGE",
+        ],
+        [
+          {
+            mimeType: "application/octet-stream",
+            name: "malware.exe",
+            size: 1,
+          },
+          "FORUM_ATTACHMENT_TYPE_UNSUPPORTED",
+        ],
+        [
+          {
+            mimeType: "application/x-msdownload",
+            name: "malware.exe",
+            size: 1,
+          },
+          "FORUM_ATTACHMENT_TYPE_UNSUPPORTED",
+        ],
+      ] as const) {
+        expect(
+          yield* validateForumAttachmentPolicy(input).pipe(Effect.flip)
+        ).toMatchObject({
           code,
-        },
-      });
-    }
-  });
+        });
+      }
+    })
+  );
   it("rejects duplicate upload claims and discards finalized pending uploads", async () => {
     vi.setSystemTime(new Date(NOW));
     const { owner, seeded, t } = await createForumOwner();
@@ -408,17 +408,19 @@ describe("classes/forums/attachments/impl", () => {
     });
     await expect(
       t.run((ctx) =>
-        runConvexProgram(
-          validateForumAttachmentStorageClaim(ctx, {
+        Effect.runPromise(
+          validateForumAttachmentStorageClaim({
             storageId,
             uploadId: uploadIds.secondUploadId,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: {
-        code: "FORUM_ATTACHMENT_UPLOAD_ALREADY_CLAIMED",
-      },
+      code: "FORUM_ATTACHMENT_UPLOAD_ALREADY_CLAIMED",
     });
   });
   it("rejects storage already attached to a forum post", async () => {
@@ -456,17 +458,19 @@ describe("classes/forums/attachments/impl", () => {
     });
     await expect(
       t.run((ctx) =>
-        runConvexProgram(
-          validateForumAttachmentStorageClaim(ctx, {
+        Effect.runPromise(
+          validateForumAttachmentStorageClaim({
             storageId,
             uploadId,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: {
-        code: "FORUM_ATTACHMENT_ALREADY_ATTACHED",
-      },
+      code: "FORUM_ATTACHMENT_ALREADY_ATTACHED",
     });
   });
   it("rejects upload URL requests once the pending attachment limit is reached", async () => {

@@ -4,7 +4,7 @@ import {
   tryoutCatalogIdentity,
   tryoutCatalogNodeIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import {
   readPublishedEntrySection,
@@ -17,7 +17,6 @@ import {
 import type { TryoutSectionIdentity } from "@repo/backend/content/tryout/section";
 import { readTryoutSetSections } from "@repo/backend/content/tryout/selection";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 interface TryoutDestinationIdentity extends TryoutSetIdentity {
@@ -28,10 +27,8 @@ interface TryoutDestinationIdentity extends TryoutSetIdentity {
 /** Reads only the active signed rows needed to link one retained attempt. */
 export const readTryoutDestinationPaths = Effect.fn(
   "tryouts.catalog.readDestinationPaths"
-)(function* (ctx: QueryCtx, identity: TryoutDestinationIdentity) {
-  const owner = yield* loadTryoutOwner().pipe(
-    Effect.provide(convexTryoutLayer(ctx))
-  );
+)(function* (identity: TryoutDestinationIdentity) {
+  const owner = yield* loadTryoutOwner().pipe(Effect.provide(tryoutLayer));
   const { snapshotId } = owner;
   const setIdentity = tryoutCatalogNodeIdentity({
     appLocale: AppLocaleSchema.make(identity.locale),
@@ -44,7 +41,7 @@ export const readTryoutDestinationPaths = Effect.fn(
   const set = yield* readTryoutCatalogRowByIdentity(
     snapshotId,
     setIdentity
-  ).pipe(Effect.provide(convexTryoutLayer(ctx)));
+  ).pipe(Effect.provide(tryoutLayer));
   let section: TryoutCatalogRow | null = null;
   let sectionIdentity: string | null = null;
   if (identity.sectionKey) {
@@ -61,14 +58,14 @@ export const readTryoutDestinationPaths = Effect.fn(
     section = yield* readTryoutCatalogRowByIdentity(
       snapshotId,
       selectedSectionIdentity
-    ).pipe(Effect.provide(convexTryoutLayer(ctx)));
+    ).pipe(Effect.provide(tryoutLayer));
   }
   let requestedSectionMatches: boolean | null = null;
   if (identity.requestedSectionPublicPath && sectionIdentity) {
     const requested = yield* readTryoutCatalogRowByPath(snapshotId, {
       appLocale: identity.locale,
       publicPath: identity.requestedSectionPublicPath,
-    }).pipe(Effect.provide(convexTryoutLayer(ctx)));
+    }).pipe(Effect.provide(tryoutLayer));
     if (requested) {
       requestedSectionMatches =
         requested.kind === "section" &&
@@ -89,10 +86,8 @@ export const readTryoutDestinationPaths = Effect.fn(
 /** Resolves one current signed restart target from a frozen set identity. */
 export const readActiveTryoutRestartTarget = Effect.fn(
   "tryouts.catalog.readActiveRestartTarget"
-)(function* (ctx: QueryCtx, identity: TryoutSetIdentity) {
-  const owner = yield* loadTryoutOwner().pipe(
-    Effect.provide(convexTryoutLayer(ctx))
-  );
+)(function* (identity: TryoutSetIdentity) {
+  const owner = yield* loadTryoutOwner().pipe(Effect.provide(tryoutLayer));
   const setIdentity = tryoutCatalogNodeIdentity({
     appLocale: AppLocaleSchema.make(identity.locale),
     countryKey: identity.countryKey,
@@ -104,7 +99,7 @@ export const readActiveTryoutRestartTarget = Effect.fn(
   const set = yield* readTryoutCatalogRowByIdentity(
     owner.snapshotId,
     setIdentity
-  ).pipe(Effect.provide(convexTryoutLayer(ctx)));
+  ).pipe(Effect.provide(tryoutLayer));
   // Exact node identity and indexed-fact verification bind a present row's kind.
   if (set?.kind !== "set") {
     return null;
@@ -112,7 +107,7 @@ export const readActiveTryoutRestartTarget = Effect.fn(
   const sectionRecords = yield* readTryoutSetSections(
     owner.snapshotId,
     set
-  ).pipe(Effect.provide(convexTryoutLayer(ctx)));
+  ).pipe(Effect.provide(tryoutLayer));
   const sections = sectionRecords.map(({ row }) => row);
   const visibleSections = sections.filter(
     (section) => section.visibility === "visible"

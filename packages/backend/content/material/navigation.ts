@@ -1,3 +1,4 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { MATERIAL_GROUP_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
 import { requireExpectedActiveRelease } from "@repo/backend/confect/contentRelease/runtime/pin";
@@ -5,14 +6,13 @@ import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import type { resolveMaterialRoute } from "@repo/backend/content/material/route";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 type AuthenticatedMaterial = NonNullable<
   Effect.Success<ReturnType<typeof resolveMaterialRoute>>["material"]
 >;
 type MaterialGroup = Pick<
-  Doc<"materialCatalog">,
+  Docs["materialCatalog"],
   "appLocale" | "materialKey" | "slot"
 >;
 

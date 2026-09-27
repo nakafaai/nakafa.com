@@ -165,6 +165,7 @@ describe("billing sessions", () => {
         expect(
           authed.action(route.generateCheckoutLink, request)
         ).rejects.toHaveProperty("data", {
+          _tag: "PolarCheckoutError",
           code: polarCheckoutErrorCode,
           message: "Checkout provider unavailable",
         })

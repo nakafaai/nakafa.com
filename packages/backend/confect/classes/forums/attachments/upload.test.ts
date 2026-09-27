@@ -73,6 +73,72 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("forum upload capability", () => {
+  it("cleans an abandoned upload idempotently while preserving bound files", async () => {
+    const { t, uploadId, userId } = await seedUpload();
+    const storageId = await t.run((ctx) =>
+      ctx.storage.store(new Blob(["notes"]))
+    );
+    await t.mutation((ctx) =>
+      ctx.db.patch("schoolClassForumPendingUploads", uploadId, { storageId })
+    );
+    await t.mutation(mutations.cleanup, { storageId });
+    expect(
+      await t.run((ctx) =>
+        ctx.storage.get(storageId).then((blob) => blob?.text() ?? null)
+      )
+    ).not.toBeNull();
+    const attachmentId = await t.mutation(async (ctx) => {
+      const upload = await ctx.db.get(
+        "schoolClassForumPendingUploads",
+        uploadId
+      );
+      if (!upload) {
+        throw new Error("Missing seeded upload");
+      }
+      const postId = await ctx.db.insert("schoolClassForumPosts", {
+        forumId: upload.forumId,
+        classId: upload.classId,
+        body: "Notes",
+        createdBy: userId,
+        sequence: 1,
+        updatedAt: NOW,
+        reactionCounts: [],
+        mentions: [],
+        replyCount: 0,
+      });
+      const attachment = await ctx.db.insert(
+        "schoolClassForumPostAttachments",
+        {
+          postId,
+          forumId: upload.forumId,
+          classId: upload.classId,
+          name: "notes.txt",
+          fileId: storageId,
+          mimeType: "text/plain",
+          size: 5,
+          createdBy: userId,
+        }
+      );
+      await ctx.db.delete("schoolClassForumPendingUploads", uploadId);
+      return attachment;
+    });
+    await t.mutation(mutations.cleanup, { storageId });
+    expect(
+      await t.run((ctx) =>
+        ctx.storage.get(storageId).then((blob) => blob?.text() ?? null)
+      )
+    ).not.toBeNull();
+    await t.mutation((ctx) =>
+      ctx.db.delete("schoolClassForumPostAttachments", attachmentId)
+    );
+    await t.mutation(mutations.cleanup, { storageId });
+    await t.mutation(mutations.cleanup, { storageId });
+    expect(
+      await t.run((ctx) =>
+        ctx.storage.get(storageId).then((blob) => blob?.text() ?? null)
+      )
+    ).toBeNull();
+  });
   it.effect(
     "requires a valid deployment URL and keeps the opaque capability intact",
     () =>

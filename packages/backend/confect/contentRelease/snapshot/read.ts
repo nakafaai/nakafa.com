@@ -1,11 +1,9 @@
-import { DatabaseReader } from "@confect/server";
 import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { loadSnapshot } from "@repo/backend/confect/contentRelease/snapshot/manifest";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 export interface StoredRow {
   readonly index: number;
@@ -37,13 +35,12 @@ export const exactRowJson = Effect.fn("contentRelease.exactSnapshotRowJson")(
 
 /** Reads exact row JSON for one immutable family batch. */
 export const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
-  ctx: QueryCtx,
   family: SnapshotFamily,
   snapshotId: string,
   firstIndex: number,
   rowCount: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   if (family === "program") {
     const [catalog, curriculum] = yield* Effect.all([
       database
@@ -115,8 +112,8 @@ export const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
 
 /** Reads one exact family manifest selected by the staged release. */
 export const manifestProgram = Effect.fn("contentRelease.readSnapshotManifest")(
-  function* (ctx: QueryCtx, releaseId: string, family: SnapshotFamily) {
-    const release = yield* loadRelease(ctx, releaseId);
+  function* (releaseId: string, family: SnapshotFamily) {
+    const release = yield* loadRelease(releaseId);
     const signed = yield* decodeReleaseJson(release.releaseJson);
     const state = signed.manifest.snapshots[family];
     if (state.mode !== "replace" || state.resultSnapshotId === null) {
@@ -125,7 +122,7 @@ export const manifestProgram = Effect.fn("contentRelease.readSnapshotManifest")(
         `Release ${releaseId} does not replace ${family}.`
       );
     }
-    const snapshot = yield* loadSnapshot(ctx, family, state.resultSnapshotId);
+    const snapshot = yield* loadSnapshot(family, state.resultSnapshotId);
     if (!snapshot) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
@@ -139,13 +136,12 @@ export const manifestProgram = Effect.fn("contentRelease.readSnapshotManifest")(
 /** Reads one exact contiguous release-owned snapshot batch. */
 export const rowPageProgram = Effect.fn("contentRelease.readSnapshotBatch")(
   function* (
-    ctx: QueryCtx,
     releaseId: string,
     family: SnapshotFamily,
     afterBatchIndex: number
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const release = yield* loadRelease(ctx, releaseId);
+    const database = yield* DatabaseReader;
+    const release = yield* loadRelease(releaseId);
     const signed = yield* decodeReleaseJson(release.releaseJson);
     const state = signed.manifest.snapshots[family];
     if (state.mode !== "replace" || state.resultSnapshotId === null) {
@@ -229,7 +225,6 @@ export const rowPageProgram = Effect.fn("contentRelease.readSnapshotBatch")(
       );
     }
     const rowJson = yield* loadRows(
-      ctx,
       family,
       batch.snapshotId,
       batch.firstIndex,

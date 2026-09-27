@@ -1,21 +1,19 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   MODEL_BUILD_PAGE_BYTES,
   MODEL_BUILD_PAGE_ROWS,
   type ModelBuildPage,
 } from "@repo/backend/confect/contentRelease/models/spec";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { Effect } from "effect";
 
 /** Validates one bounded inactive material page against candidate heads. */
 export const validateMaterialModel = Effect.fn(
   "contentRelease.validateMaterialModel"
-)(function* (ctx: MutationCtx, build: Doc<"contentModelBuilds">) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (build: Docs["contentModelBuilds"]) {
+  const database = yield* DatabaseReader;
   const page = yield* database
     .table("materialCatalog")
     .index("by_slot_and_contentKey_and_appLocale", (index) =>
@@ -30,7 +28,7 @@ export const validateMaterialModel = Effect.fn(
     .pipe(Effect.orDie);
   yield* Effect.forEach(page.page, (row) =>
     verifyEffectiveMaterial(row, build.sequence).pipe(
-      Effect.provide(convexPublicationLayer(ctx))
+      Effect.provide(publicationLayer)
     )
   );
   return {

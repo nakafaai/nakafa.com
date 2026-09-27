@@ -2,11 +2,7 @@ import { DatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
-import {
-  ChatAccessError,
-  ChatAccessFailure,
-} from "@repo/backend/confect/chats/access/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -40,7 +36,7 @@ describe("private chat ownership", () => {
     });
     expect(
       await t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           requireChatOwner(chatId, owner.userId).pipe(
             Effect.provide(DatabaseReader.layer(databaseSchema, ctx.db))
           )
@@ -51,37 +47,40 @@ describe("private chat ownership", () => {
       userId: owner.userId,
     });
     const forbidden = await t.query((ctx) =>
-      runConvexProgram(
+      Effect.runPromise(
         requireChatOwner(chatId, outsider.userId).pipe(
           Effect.flip,
           Effect.orDie,
-          Effect.map(Schema.encodeSync(ChatAccessFailure)),
+          Effect.map(Schema.encodeSync(ChatAccessError)),
           Effect.provide(DatabaseReader.layer(databaseSchema, ctx.db))
         )
       )
     );
     expect(forbidden).toEqual({
+      _tag: "ChatAccessError",
       code: "FORBIDDEN",
       message: "You do not have permission to modify this chat.",
     });
     await t.mutation((ctx) => ctx.db.delete("chats", chatId));
     const missing = await t.query((ctx) =>
-      runConvexProgram(
+      Effect.runPromise(
         requireChatOwner(chatId, owner.userId).pipe(
           Effect.flip,
           Effect.orDie,
-          Effect.map(Schema.encodeSync(ChatAccessFailure)),
+          Effect.map(Schema.encodeSync(ChatAccessError)),
           Effect.provide(DatabaseReader.layer(databaseSchema, ctx.db))
         )
       )
     );
     const wire = {
+      _tag: "ChatAccessError",
       code: "CHAT_NOT_FOUND",
       message: `Chat not found for chatId: ${chatId}`,
     };
     expect(missing).toEqual(wire);
     expect(
-      Schema.decodeSync(ChatAccessFailure)({
+      Schema.decodeSync(ChatAccessError)({
+        _tag: "ChatAccessError",
         code: "CHAT_NOT_FOUND",
         message: wire.message,
       })

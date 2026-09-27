@@ -1,18 +1,17 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseWriter,
-  MutationCtx as MutationCtxService,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
+import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import spec from "@repo/backend/confect/chats/mutations.spec";
 import {
   insertParts,
   rewriteTranscript,
 } from "@repo/backend/confect/chats/transcript/write";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
+import { DEFAULT_TITLE } from "@repo/backend/confect/nina/presentation.spec";
 import { Clock, Effect, Layer, Struct } from "effect";
 
 /** Creates a new chat for the authenticated user. */
@@ -21,9 +20,8 @@ const createChat = FunctionImpl.make(
   spec,
   "createChat",
   Effect.fn("chats.mutations.createChat")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const database = yield* DatabaseWriter;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const chatId = yield* database
       .table("chats")
       .insert({
@@ -42,9 +40,8 @@ const updateChatTitle = FunctionImpl.make(
   spec,
   "updateChatTitle",
   Effect.fn("chats.mutations.updateChatTitle")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const database = yield* DatabaseWriter;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const chat = yield* requireChatOwner(
       args.chatId,
       user.appUser._id,
@@ -64,9 +61,8 @@ const updateChatVisibility = FunctionImpl.make(
   spec,
   "updateChatVisibility",
   Effect.fn("chats.mutations.updateChatVisibility")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const database = yield* DatabaseWriter;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const chat = yield* requireChatOwner(
       args.chatId,
       user.appUser._id,
@@ -86,13 +82,17 @@ const saveMessage = FunctionImpl.make(
   spec,
   "saveMessage",
   Effect.fn("chats.mutations.saveMessage")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const database = yield* DatabaseWriter;
     const { message, parts } = args;
-    const user = yield* requireAuth(ctx);
-    yield* requireChatOwner(message.chatId, user.appUser._id);
+    const user = yield* requireAuth();
+    const chat = yield* requireChatOwner(message.chatId, user.appUser._id);
+    if (chat.threadId) {
+      return yield* new ChatAccessError({
+        code: "FORBIDDEN",
+        message: "Reload this chat to continue with Nina.",
+      });
+    }
     yield* rewriteTranscript(message.chatId, message.identifier, "user");
-
     const messageId = yield* database
       .table("messages")
       .insert({
@@ -116,9 +116,8 @@ const createChatWithMessage = FunctionImpl.make(
   spec,
   "createChatWithMessage",
   Effect.fn("chats.mutations.createChatWithMessage")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const database = yield* DatabaseWriter;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const chatId = yield* database
       .table("chats")
       .insert({
@@ -153,9 +152,8 @@ const deleteChat = FunctionImpl.make(
   spec,
   "deleteChat",
   Effect.fn("chats.mutations.deleteChat")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const database = yield* DatabaseWriter;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     yield* requireChatOwner(
       args.chatId,
       user.appUser._id,
@@ -173,5 +171,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(createChatWithMessage),
   Layer.provide(deleteChat),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

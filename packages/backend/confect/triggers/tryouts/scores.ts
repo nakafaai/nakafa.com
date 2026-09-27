@@ -1,10 +1,8 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { readAttemptSetIdentity } from "@repo/backend/confect/tryouts/runtime/lookup";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Effect, flow, Schema } from "effect";
 
@@ -31,11 +29,8 @@ function toTryoutScoreAnalyticsError(error: unknown) {
 export const tryoutScoresHandler = Effect.fn(
   "triggers.tryouts.captureTryoutScoreEvent"
 )(
-  function* (
-    ctx: GenericMutationCtx<DataModel>,
-    change: Change<DataModel, "tryoutScores">
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (change: Change<DataModel, "tryoutScores">) {
+    const database = yield* DatabaseReader;
     if (change.operation !== "insert") {
       return;
     }
@@ -53,7 +48,7 @@ export const tryoutScoresHandler = Effect.fn(
       );
     }
     const identity = readAttemptSetIdentity(attempt);
-    yield* captureProductEvent(ctx, {
+    yield* captureProductEvent({
       distinctId: score.userId,
       event: {
         name: "tryout attempt completed",

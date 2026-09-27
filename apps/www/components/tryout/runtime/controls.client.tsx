@@ -1,20 +1,19 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import { StopIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
-import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutTimer } from "@/components/tryout/runtime/countdown";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
@@ -35,8 +34,9 @@ export function TryoutRuntimeControls({
 }) {
   const { expired, returnHref, runtime } = value;
   const router = useRouter();
-  const prewarmData = useTryoutDataIntent();
-  const completeSection = useMutation(api.tryouts.mutations.sections.complete);
+  const completeSection = useMutation(
+    refs.public.tryouts.mutations.sections.complete
+  );
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
   const [isOpen, { close: closeDialog, open: openDialog }] =
@@ -48,13 +48,9 @@ export function TryoutRuntimeControls({
   );
   const isBusy = isPending || expired;
 
-  /** Prefetch the set route and warm its authenticated data before return. */
+  /** Prefetch the set route before return. */
   function prepareReturnRoute() {
     router.prefetch(returnHref);
-    prewarmData({
-      attemptId: runtime.attemptId,
-      kind: "set",
-    });
   }
 
   /** Prepare the return route before opening completion confirmation. */
@@ -68,7 +64,6 @@ export function TryoutRuntimeControls({
     if (isBusy) {
       return;
     }
-
     startTransition(async () => {
       await Effect.runPromise(
         Effect.tryPromise(() =>
@@ -77,6 +72,7 @@ export function TryoutRuntimeControls({
             sectionKey: runtime.section.sectionKey,
           })
         ).pipe(
+          Effect.flatMap(Effect.fromResult),
           Effect.tap(() =>
             Effect.sync(() => {
               closeDialog();
@@ -97,7 +93,6 @@ export function TryoutRuntimeControls({
       );
     });
   }
-
   return (
     <>
       <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
@@ -116,7 +111,9 @@ export function TryoutRuntimeControls({
           >
             <NumberFormat
               aria-hidden="true"
-              format={{ useGrouping: false }}
+              format={{
+                useGrouping: false,
+              }}
               suffix={` / ${runtime.section.totalQuestions}`}
               value={runtime.section.answeredCount}
             />
@@ -162,7 +159,6 @@ export function TryoutRuntimeControls({
             openCompletionDialog();
             return;
           }
-
           closeDialog();
         }}
         title={tTryouts("complete-part-title")}

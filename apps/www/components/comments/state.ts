@@ -1,9 +1,9 @@
-import type { api } from "@repo/backend/convex/_generated/api";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { FunctionReturnType } from "convex/server";
 
-type Comment = FunctionReturnType<
-  typeof api.comments.queries.getCommentsByUserId
+type Comment = Ref.Returns<
+  typeof refs.public.comments.queries.getCommentsByUserId
 >["page"][number];
 type Vote = -1 | 0 | 1;
 

@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
 import {
   getPopularitySignalDay,
@@ -7,11 +10,9 @@ import {
   type LearningPopularityScope,
   POPULARITY_DAY_MS,
 } from "@repo/backend/confect/contents/popularity";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect, flow, Struct } from "effect";
 
-type PopularityCycleMode = Doc<"learningPopularityCycles">["mode"];
+type PopularityCycleMode = Docs["learningPopularityCycles"]["mode"];
 interface CycleKey {
   readonly day: number;
   readonly scopeMode: LearningPopularityScope;
@@ -24,8 +25,8 @@ interface CyclePageKey extends CycleKey {
 
 /** Reads the unique maintenance watermark for one popularity namespace. */
 const loadCycle = Effect.fn("contents.metrics.loadCycle")(
-  function* (ctx: MutationCtx, key: Omit<CycleKey, "day">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (key: Omit<CycleKey, "day">) {
+    const database = yield* DatabaseReader;
     return yield* database
       .table("learningPopularityCycles")
       .get("by_scopeMode_and_windowKey", key.scopeMode, key.windowKey)
@@ -42,13 +43,12 @@ export const beginPopularityCycle = Effect.fn(
   "contents.metrics.beginPopularityCycle"
 )(
   function* (
-    ctx: MutationCtx,
     key: CycleKey & {
       readonly forceRepair: boolean;
     }
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const cycle = yield* loadCycle(ctx, key);
+    const writer = yield* DatabaseWriter;
+    const cycle = yield* loadCycle(key);
     if (
       cycle?.completedDay === key.day &&
       !(key.forceRepair && cycle.mode === "expiry")
@@ -109,8 +109,8 @@ export const beginPopularityCycle = Effect.fn(
  */
 export const getPopularityCyclePage = Effect.fn(
   "contents.metrics.getPopularityCyclePage"
-)(function* (ctx: MutationCtx, key: CyclePageKey) {
-  const cycle = yield* loadCycle(ctx, key);
+)(function* (key: CyclePageKey) {
+  const cycle = yield* loadCycle(key);
   const continueCursor = cycle?.cursor ?? "";
   const timestamp = yield* Clock.currentTimeMillis;
   if (
@@ -136,12 +136,8 @@ export const getPopularityCyclePage = Effect.fn(
 export const advancePopularityCycle = Effect.fn(
   "contents.metrics.advancePopularityCycle"
 )(
-  function* (
-    ctx: MutationCtx,
-    cycle: Doc<"learningPopularityCycles">,
-    cursor: string
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (cycle: Docs["learningPopularityCycles"], cursor: string) {
+    const writer = yield* DatabaseWriter;
     yield* writer
       .table("learningPopularityCycles")
       .replace(cycle._id, {
@@ -157,12 +153,8 @@ export const advancePopularityCycle = Effect.fn(
 export const completePopularityCycle = Effect.fn(
   "contents.metrics.completePopularityCycle"
 )(
-  function* (
-    ctx: MutationCtx,
-    cycle: Doc<"learningPopularityCycles">,
-    day: number
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (cycle: Docs["learningPopularityCycles"], day: number) {
+    const writer = yield* DatabaseWriter;
     yield* writer
       .table("learningPopularityCycles")
       .replace(cycle._id, {

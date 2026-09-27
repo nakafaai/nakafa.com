@@ -1,9 +1,7 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Effect, Struct } from "effect";
 
@@ -12,11 +10,8 @@ import { Effect, Struct } from "effect";
  */
 export const messagesHandler = Effect.fn(
   "triggers.chats.messages.messagesHandler"
-)(function* (
-  ctx: GenericMutationCtx<DataModel>,
-  change: Change<DataModel, "messages">
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (change: Change<DataModel, "messages">) {
+  const database = yield* DatabaseReader;
   const message = change.newDoc;
   if (change.operation !== "insert" || !message) {
     return;
@@ -42,7 +37,7 @@ export const messagesHandler = Effect.fn(
     return;
   }
   if (message.role === "user") {
-    yield* captureProductEvent(ctx, {
+    yield* captureProductEvent({
       distinctId: chat.userId,
       event: {
         name: "chat message sent",
@@ -64,7 +59,7 @@ export const messagesHandler = Effect.fn(
     if (!message.generationErrorCode) {
       return;
     }
-    yield* captureProductEvent(ctx, {
+    yield* captureProductEvent({
       distinctId: chat.userId,
       event: {
         name: "chat response failed",
@@ -80,7 +75,7 @@ export const messagesHandler = Effect.fn(
     });
     return;
   }
-  yield* captureProductEvent(ctx, {
+  yield* captureProductEvent({
     distinctId: chat.userId,
     event: {
       name: "chat response completed",

@@ -1,7 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import users from "@repo/backend/confect/_generated/tables/users";
-import type { getCurrentUser } from "@repo/backend/confect/auth/identity";
+import { Account } from "@repo/backend/confect/auth/schema";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema, Struct } from "effect";
 /**
  * Gets the authenticated Better Auth user and matching app user, if present.
@@ -10,7 +11,10 @@ import { Schema, Struct } from "effect";
  */
 export default GroupSpec.make()
   .addFunction(
-    FunctionSpec.convexPublicQuery<typeof getCurrentUser>()("getCurrentUser")
+    FunctionSpec.publicQuery({
+      name: "getCurrentUser",
+      returns: () => Schema.NullOr(Account),
+    }).middleware(Session)
   )
   .addFunction(
     FunctionSpec.publicQuery({

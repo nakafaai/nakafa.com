@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   type AttemptEndReason,
   getAttemptStatusFromEndReason,
@@ -22,13 +25,12 @@ import {
   scoreRawAnswers,
 } from "@repo/backend/confect/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/confect/tryouts/score";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { Effect, flow, Struct } from "effect";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Effect, Struct } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
-type TryoutResponse = Doc<"tryoutResponses">;
+type TryoutAttempt = Docs["tryoutAttempts"];
+type TryoutPlacement = Docs["tryoutAttemptPlacements"];
+type TryoutResponse = Docs["tryoutResponses"];
 type AnswerCountScoringStrategy = Exclude<TryoutScoringStrategy, "irt">;
 interface AnswerCountScoreSource {
   readonly attemptId: Id<"tryoutAttempts">;
@@ -47,65 +49,53 @@ interface AttemptScoreOwner {
   readonly tryoutSnapshotId: string;
 }
 
+/** Hides persistence diagnostics from the attempt ownership boundary. */
+function toAttemptReadError(cause: unknown) {
+  return new TryoutRuntimeError({
+    cause,
+    code: "TRYOUT_RUNTIME_FAILED",
+    message: "Unable to load try-out attempt.",
+  });
+}
+
 /** Loads one complete source reused by terminal section and attempt scoring. */
 export const loadAttemptScoreSource = Effect.fn(
   "tryouts.runtime.loadAttemptScoreSource"
-)(function* (
-  ctx: MutationCtx,
-  attempt: TryoutAttempt,
-  placements: readonly TryoutPlacement[]
-) {
+)(function* (attempt: TryoutAttempt, placements: readonly TryoutPlacement[]) {
   if (attempt.scoringStrategy !== "irt") {
     return answerCountScoreSource(attempt, attempt.scoringStrategy);
   }
-  const irt = yield* loadAttemptIrtSource(ctx, attempt, placements);
+  const irt = yield* loadAttemptIrtSource(attempt, placements);
   return irtScoreSource(attempt, irt);
 });
 
 /** Loads one bounded section source for a non-terminal section score. */
 export const loadSectionScoreSource = Effect.fn(
   "tryouts.runtime.loadSectionScoreSource"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    readonly attempt: TryoutAttempt;
-    readonly placements: readonly TryoutPlacement[];
-    readonly sectionIdentity: string;
-  }
-) {
+)(function* (args: {
+  readonly attempt: TryoutAttempt;
+  readonly placements: readonly TryoutPlacement[];
+  readonly sectionIdentity: string;
+}) {
   if (args.attempt.scoringStrategy !== "irt") {
     return answerCountScoreSource(args.attempt, args.attempt.scoringStrategy);
   }
-  const irt = yield* loadSectionIrtSource(ctx, args);
+  const irt = yield* loadSectionIrtSource(args);
   return irtScoreSource(args.attempt, irt);
 });
 
 /** Loads one owned attempt or rejects it before mutating runtime rows. */
 export const requireOwnedAttempt = Effect.fn(
   "tryouts.runtime.requireOwnedAttempt"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    attemptId: Id<"tryoutAttempts">;
-    userId: Id<"users">;
-  }
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (args: { attemptId: Id<"tryoutAttempts">; userId: Id<"users"> }) {
+  const database = yield* DatabaseReader;
   const attempt = yield* database
     .table("tryoutAttempts")
     .get(args.attemptId)
     .pipe(
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail)),
-      Effect.mapError(
-        (cause) =>
-          new TryoutRuntimeError({
-            cause,
-            code: "TRYOUT_RUNTIME_FAILED",
-            message: "Unable to load try-out attempt.",
-          })
-      )
+      Effect.mapError(toAttemptReadError),
+      Effect.catchDefect((cause) => Effect.fail(toAttemptReadError(cause)))
     );
   if (!attempt || attempt.userId !== args.userId) {
     return yield* new TryoutAttemptStateError({
@@ -165,25 +155,21 @@ export const scoreTryoutSection = Effect.fn("tryouts.runtime.scoreSection")(
 /** Finalizes one attempt and stores the score snapshot exactly once. */
 export const finalizeAttemptScore = Effect.fn(
   "tryouts.runtime.finalizeAttemptScore"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    endReason: AttemptEndReason;
-    now: number;
-    responseIndex: TryoutResponseIndex;
-    source: TryoutScoreSource;
-  }
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (args: {
+  attempt: TryoutAttempt;
+  endReason: AttemptEndReason;
+  now: number;
+  responseIndex: TryoutResponseIndex;
+  source: TryoutScoreSource;
+}) {
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const existingScore = yield* database
     .table("tryoutScores")
     .get("by_tryoutAttemptId", args.attempt._id)
     .pipe(
       Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+      Effect.mapError(toTryoutRuntimeError)
     );
   if (existingScore) {
     return {
@@ -214,10 +200,7 @@ export const finalizeAttemptScore = Effect.fn(
         score,
       })
     )
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-    );
+    .pipe(Effect.mapError(toTryoutRuntimeError));
   const status = getAttemptStatusFromEndReason(args.endReason);
   yield* writer
     .table("tryoutAttempts")
@@ -229,11 +212,8 @@ export const finalizeAttemptScore = Effect.fn(
       status,
       totalCorrect: score.totalCorrect,
     })
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-    );
-  yield* writeTryoutSetProgress(ctx, {
+    .pipe(Effect.mapError(toTryoutRuntimeError));
+  yield* writeTryoutSetProgress({
     attempt: args.attempt,
     publishedScore: score.publishedScore,
     status,

@@ -1,4 +1,5 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
 import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
@@ -9,8 +10,7 @@ import {
   ArticleCategoryTitleSchema,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
@@ -20,8 +20,8 @@ import {
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
 
-type DiscoveryItem = FunctionReturnType<
-  typeof api.contentRelease.article.latest
+type DiscoveryItem = Ref.Returns<
+  typeof refs.public.contentRelease.article.latest
 >["articles"][number];
 /** Decodes one backend-verified discovery row into the article card contract. */
 const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
@@ -40,7 +40,9 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
       Schema.decodeEffect(PublicationDatesSchema)({
         ...(item.dateModified === undefined
           ? {}
-          : { dateModified: item.dateModified }),
+          : {
+              dateModified: item.dateModified,
+            }),
         datePublished: item.datePublished,
       }),
       Schema.decodeEffect(PublicPathSchema)(item.publicPath),
@@ -62,10 +64,15 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
       ...dates,
       ...(item.description === undefined
         ? {}
-        : { description: item.description }),
+        : {
+            description: item.description,
+          }),
       official: item.official,
       publicPath,
-      route: { category: routeCategory, slug: routeSlug },
+      route: {
+        category: routeCategory,
+        slug: routeSlug,
+      },
       title: item.title,
     } satisfies PublishedArticleSummary;
   }
@@ -78,18 +85,19 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
     expectedActiveReleaseId?: ContentReleasePin
   ) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readNakafaRuntimeQuery(
-      env.NEXT_PUBLIC_CONVEX_URL,
-      api.contentRelease.article.bucket,
-      {
+    const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.contentRelease.article.bucket, {
         appLocale,
         bucket,
-      }
-    );
+      })
+    ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
     const activeReleaseId = yield* decodeContentReleasePin(
       result.activeReleaseId,
       expectedActiveReleaseId,
-      { appLocale, publicPath: "articles" }
+      {
+        appLocale,
+        publicPath: "articles",
+      }
     );
     if (!result.managed || activeReleaseId === null) {
       return yield* new PublishedProjectionError({
@@ -98,12 +106,18 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
       });
     }
     if (result.articles === null) {
-      return { activeReleaseId, articles: null };
+      return {
+        activeReleaseId,
+        articles: null,
+      };
     }
     const articles = yield* Effect.forEach(result.articles, (article) =>
       decodeDiscoveryItem(article, locale)
     );
-    return { activeReleaseId, articles };
+    return {
+      activeReleaseId,
+      articles,
+    };
   }
 );
 /** Reads a bounded newest-first article set for feed discovery. */
@@ -114,18 +128,19 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
     expectedActiveReleaseId?: ContentReleasePin
   ) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readNakafaRuntimeQuery(
-      env.NEXT_PUBLIC_CONVEX_URL,
-      api.contentRelease.article.latest,
-      {
+    const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.contentRelease.article.latest, {
         appLocale,
         limit,
-      }
-    );
+      })
+    ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
     const activeReleaseId = yield* decodeContentReleasePin(
       result.activeReleaseId,
       expectedActiveReleaseId,
-      { appLocale, publicPath: "articles" }
+      {
+        appLocale,
+        publicPath: "articles",
+      }
     );
     if (!result.managed || activeReleaseId === null) {
       return yield* new PublishedProjectionError({
@@ -136,7 +151,10 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
     const articles = yield* Effect.forEach(result.articles, (article) =>
       decodeDiscoveryItem(article, locale)
     );
-    return { activeReleaseId, articles };
+    return {
+      activeReleaseId,
+      articles,
+    };
   }
 );
 /** Reads a bounded newest-first article set for one exact category. */
@@ -149,19 +167,20 @@ export const readPublishedCategoryArticles = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.article.listing,
-    {
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.article.listing, {
       appLocale,
       category,
       limit,
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,
-    { appLocale, publicPath: `articles/${category}` }
+    {
+      appLocale,
+      publicPath: `articles/${category}`,
+    }
   );
   if (!result.managed || activeReleaseId === null) {
     return yield* new PublishedProjectionError({
@@ -172,5 +191,8 @@ export const readPublishedCategoryArticles = Effect.fn(
   const articles = yield* Effect.forEach(result.articles, (article) =>
     decodeDiscoveryItem(article, locale)
   );
-  return { activeReleaseId, articles };
+  return {
+    activeReleaseId,
+    articles,
+  };
 });

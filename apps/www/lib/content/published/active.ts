@@ -1,11 +1,11 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 
 const ActiveContentIdentitySchema = Schema.NullOr(
@@ -24,10 +24,8 @@ export type ActiveContentReleaseId =
 export const readActiveContentIdentity = Effect.fn(
   "NakafaContent.readActiveContentIdentity"
 )(function* () {
-  const identity = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.runtime.active.read,
-    {}
-  );
+  const identity = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.runtime.active.read, {})
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   return yield* Schema.decodeEffect(ActiveContentIdentitySchema)(identity);
 });

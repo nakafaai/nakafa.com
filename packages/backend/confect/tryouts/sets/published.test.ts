@@ -1,16 +1,17 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
 import { tryoutCatalogFacts } from "@repo/backend/confect/contentRelease/tryout/facts";
 import {
   TRYOUT_CATALOG_LIMIT,
   TRYOUT_PROGRESS_DOCUMENT_LIMIT,
 } from "@repo/backend/confect/contentRelease/tryout/limits";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -50,7 +51,10 @@ describe("tryouts/sets/published", () => {
           const result = yield* Effect.promise(() =>
             authed.query(api.tryouts.queries.sets.list, {
               ...catalogListArgs,
-              sort: { direction, field },
+              sort: {
+                direction,
+                field,
+              },
             })
           );
           expect(result.page.map(({ setKey }) => setKey)).toEqual(expected);
@@ -58,7 +62,10 @@ describe("tryouts/sets/published", () => {
         const anonymous = yield* Effect.promise(() =>
           t.query(api.tryouts.queries.sets.list, {
             ...catalogListArgs,
-            sort: { direction: "desc", field: "publishedScore" },
+            sort: {
+              direction: "desc",
+              field: "publishedScore",
+            },
           })
         );
         expect(anonymous.page.map(({ setKey }) => setKey)).toEqual(
@@ -80,7 +87,6 @@ describe("tryouts/sets/published", () => {
         });
       })
   );
-
   it.effect("returns an empty page for an absent signed track", () =>
     Effect.gen(function* () {
       const { authed } = yield* activateTryoutSetCatalog();
@@ -97,7 +103,6 @@ describe("tryouts/sets/published", () => {
       });
     })
   );
-
   it.effect(
     "rejects duplicate, oversized, and conflicting stored progress identities",
     () =>
@@ -130,24 +135,29 @@ describe("tryouts/sets/published", () => {
             expect(
               authed.query(api.tryouts.queries.sets.list, {
                 ...catalogListArgs,
-                sort: { direction: "asc", field: "order" },
+                sort: {
+                  direction: "asc",
+                  field: "order",
+                },
               })
             ).rejects.toMatchObject({
-              data: { code: "CONTENT_RELEASE_INTEGRITY" },
+              data: {
+                code: "CONTENT_RELEASE_INTEGRITY",
+              },
             })
           );
         }
       })
   );
-
   it.effect(
     "rejects two stored catalog routes that reuse one set identity",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const { authed, t } = yield* activateTryoutSetCatalog();
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const rows = yield* Effect.promise(() =>
                   ctx.db.query("tryoutCatalog").collect()
@@ -185,7 +195,11 @@ describe("tryouts/sets/published", () => {
                     }),
                   })
                 );
-              })
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
@@ -193,7 +207,10 @@ describe("tryouts/sets/published", () => {
           expect(
             authed.query(api.tryouts.queries.sets.list, {
               ...catalogListArgs,
-              sort: { direction: "asc", field: "order" },
+              sort: {
+                direction: "asc",
+                field: "order",
+              },
             })
           ).rejects.toMatchObject({
             data: {
@@ -204,10 +221,8 @@ describe("tryouts/sets/published", () => {
         );
       })
   );
-
   it("joins signed sets without exposing unpublished progress", async () => {
     vi.setSystemTime(new Date(TRYOUT_START_NOW));
-
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -226,11 +241,16 @@ describe("tryouts/sets/published", () => {
       examKey: TRYOUT_START_EXAM,
       filter: "not-started",
       locale: "id",
-      paginationOpts: { cursor: null, numItems: 10 },
-      sort: { direction: "asc", field: "order" },
+      paginationOpts: {
+        cursor: null,
+        numItems: 10,
+      },
+      sort: {
+        direction: "asc",
+        field: "order",
+      },
       trackKey: TRYOUT_START_TRACK,
     };
-
     const before = await authed.query(api.tryouts.queries.sets.list, args);
     const attempt = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
@@ -271,16 +291,21 @@ describe("tryouts/sets/published", () => {
     const list = await authed.query(api.tryouts.queries.sets.list, {
       ...args,
       filter: "all",
-      sort: { direction: "desc", field: "publishedScore" },
+      sort: {
+        direction: "desc",
+        field: "publishedScore",
+      },
     });
     const inProgress = await authed.query(api.tryouts.queries.sets.list, {
       ...args,
       filter: "in-progress",
     });
     const after = await authed.query(api.tryouts.queries.sets.list, args);
-
     expect(before.page).toMatchObject([
-      { attemptStatus: null, setKey: TRYOUT_START_SET },
+      {
+        attemptStatus: null,
+        setKey: TRYOUT_START_SET,
+      },
     ]);
     expect(list.page).toMatchObject([
       {

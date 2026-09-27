@@ -1,12 +1,12 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { welcomeIntentInputValidator } from "@repo/backend/confect/emails/welcome/schema";
 import {
-  WelcomeIntentDeferredErrorWire,
-  WelcomeIntentErrorWire,
+  WelcomeIntentDeferredError,
+  WelcomeIntentError,
 } from "@repo/backend/confect/emails/welcome/spec";
-import { SiteConfigErrorWire } from "@repo/backend/confect/site/spec";
+import { SiteConfigError } from "@repo/backend/confect/site/spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
   .addFunction(
@@ -18,10 +18,10 @@ export default GroupSpec.make()
       returns: () => welcomeIntentInputValidator,
       error: () =>
         Schema.Union([
-          WelcomeIntentErrorWire,
-          WelcomeIntentDeferredErrorWire,
-          ReleaseErrorWire,
-          SiteConfigErrorWire,
+          WelcomeIntentError,
+          WelcomeIntentDeferredError,
+          ReleaseError,
+          SiteConfigError,
         ]),
     })
   )
@@ -36,6 +36,6 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Null,
       error: () =>
-        Schema.Union([WelcomeIntentErrorWire, WelcomeIntentDeferredErrorWire]),
+        Schema.Union([WelcomeIntentError, WelcomeIntentDeferredError]),
     })
   );

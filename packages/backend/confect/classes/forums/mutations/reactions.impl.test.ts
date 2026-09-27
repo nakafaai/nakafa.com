@@ -1,8 +1,7 @@
-import { DatabaseWriter } from "@confect/server";
+import { DatabaseWriter, RegisteredConvexFunction } from "@confect/server";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { triggers } from "@repo/backend/confect/functions";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
 import { Effect } from "effect";
@@ -48,10 +47,17 @@ describe("registered forum reactions", () => {
       forumId,
       emoji: "👍",
     });
-    await admin.mutation(reactions.togglePostReaction, { postId, emoji: "👍" });
+    await admin.mutation(reactions.togglePostReaction, {
+      postId,
+      emoji: "👍",
+    });
     const replyId = await admin.mutation(
       api.classes.forums.mutations.posts.createForumPost,
-      { forumId, parentId: postId, body: "A retained reply" }
+      {
+        forumId,
+        parentId: postId,
+        body: "A retained reply",
+      }
     );
     await t.mutation((ctx) => ctx.db.delete(users.admin.userId));
     const forum = await student.query(
@@ -62,16 +68,30 @@ describe("registered forum reactions", () => {
     );
     expect(forum).toMatchObject({
       user: null,
-      reactionUsers: [{ count: 1, emoji: "👍", reactors: ["Unknown"] }],
+      reactionUsers: [
+        {
+          count: 1,
+          emoji: "👍",
+          reactors: ["Unknown"],
+        },
+      ],
     });
     const list = await student.query(
       api.classes.forums.queries.forums.getForums,
       {
         classId,
-        paginationOpts: { cursor: null, numItems: 10 },
+        paginationOpts: {
+          cursor: null,
+          numItems: 10,
+        },
       }
     );
-    expect(list.page).toMatchObject([{ _id: forumId, user: null }]);
+    expect(list.page).toMatchObject([
+      {
+        _id: forumId,
+        user: null,
+      },
+    ]);
     const posts = await student.query(
       api.classes.forums.queries.pages.getForumPosts,
       {
@@ -80,14 +100,19 @@ describe("registered forum reactions", () => {
     );
     expect(posts.find((post) => post._id === postId)).toMatchObject({
       user: null,
-      reactionUsers: [{ count: 1, emoji: "👍", reactors: ["Unknown"] }],
+      reactionUsers: [
+        {
+          count: 1,
+          emoji: "👍",
+          reactors: ["Unknown"],
+        },
+      ],
     });
     expect(posts.find((post) => post._id === replyId)).toMatchObject({
       user: null,
       replyToUser: null,
     });
   });
-
   it("removes a user's reactions when their forum and post have already been deleted", async () => {
     const { t, student, users, forumId, postId } = await createForumFixture();
     await student.mutation(reactions.toggleForumReaction, {
@@ -112,7 +137,10 @@ describe("registered forum reactions", () => {
         forum: await ctx.db.query("schoolClassForumReactions").take(10),
         post: await ctx.db.query("schoolClassForumPostReactions").take(10),
       }))
-    ).toEqual({ forum: [], post: [] });
+    ).toEqual({
+      forum: [],
+      post: [],
+    });
   });
   it("updates the forum and post counts atomically and exposes each viewer's reactions", async () => {
     const { t, admin, student, classId, forumId, postId } =
@@ -143,21 +171,35 @@ describe("registered forum reactions", () => {
       for (const reaction of await ctx.db
         .query("schoolClassForumReactions")
         .take(10)) {
-        await runConvexProgram(
+        await Effect.runPromise(
           writer
             .table("schoolClassForumReactions")
-            .patch(reaction._id, { emoji: reaction.emoji })
-            .pipe(Effect.orDie)
+            .patch(reaction._id, {
+              emoji: reaction.emoji,
+            })
+            .pipe(
+              Effect.orDie,
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+              )
+            )
         );
       }
       for (const reaction of await ctx.db
         .query("schoolClassForumPostReactions")
         .take(10)) {
-        await runConvexProgram(
+        await Effect.runPromise(
           writer
             .table("schoolClassForumPostReactions")
-            .patch(reaction._id, { emoji: reaction.emoji })
-            .pipe(Effect.orDie)
+            .patch(reaction._id, {
+              emoji: reaction.emoji,
+            })
+            .pipe(
+              Effect.orDie,
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+              )
+            )
         );
       }
     });

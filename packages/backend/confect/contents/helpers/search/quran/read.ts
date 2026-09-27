@@ -1,7 +1,7 @@
-import { DatabaseReader } from "@confect/server";
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { quranSearchIdentity } from "@repo/backend/confect/contentRelease/quran/facts";
 import { QURAN_SEARCH_RESULT_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
 import { validateSearchQuery } from "@repo/backend/confect/contentRelease/search/input";
@@ -14,12 +14,10 @@ import {
   getExactRouteQuery,
   getRouteSearchText,
 } from "@repo/backend/confect/contents/helpers/search/terms";
-import { convexQuranLayer } from "@repo/backend/content/quran/convex";
+import { quranLayer } from "@repo/backend/content/quran/confect";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { readQuranRow } from "@repo/backend/content/quran/row";
 import { authenticateQuranSearchHit } from "@repo/backend/content/quran/search";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Option, Schema } from "effect";
 
 type ContentSearchInput = Schema.Schema.Type<
@@ -35,7 +33,6 @@ interface SignedQuranSearch {
 export const readSignedQuranSearchDocuments = Effect.fn(
   "contents.search.readSignedQuranDocuments"
 )(function* (
-  ctx: QueryCtx,
   args: ContentSearchInput,
   queryTexts: readonly string[],
   requestedLimit: number
@@ -44,21 +41,17 @@ export const readSignedQuranSearchDocuments = Effect.fn(
   if (scanLimit === 0) {
     return [];
   }
-  const owner = yield* loadQuranOwner().pipe(
-    Effect.provide(convexQuranLayer(ctx))
-  );
+  const owner = yield* loadQuranOwner().pipe(Effect.provide(quranLayer));
   if (owner.snapshotId === null) {
     return [];
   }
   if (queryTexts.length === 0) {
     const rows = yield* browseQuranRows(
-      ctx,
       owner.snapshotId,
       args.locale,
       scanLimit
     );
     const authenticated = yield* authenticateQuranRows(
-      ctx,
       owner.snapshotId,
       rows,
       args.locale
@@ -72,12 +65,7 @@ export const readSignedQuranSearchDocuments = Effect.fn(
   const exactDocuments = yield* Effect.forEach(
     exactSurahNumbers.slice(0, scanLimit),
     (surahNumber) =>
-      readSignedQuranSearchDocument(
-        ctx,
-        owner.snapshotId,
-        args.locale,
-        surahNumber
-      ),
+      readSignedQuranSearchDocument(owner.snapshotId, args.locale, surahNumber),
     {
       concurrency: "unbounded",
     }
@@ -99,7 +87,6 @@ export const readSignedQuranSearchDocuments = Effect.fn(
     )
   );
   const { groups, rows } = yield* readTextCandidates(
-    ctx,
     owner.snapshotId,
     args.locale,
     queries,
@@ -108,7 +95,6 @@ export const readSignedQuranSearchDocuments = Effect.fn(
     remaining
   );
   const authenticated = yield* authenticateQuranRows(
-    ctx,
     owner.snapshotId,
     rows,
     args.locale
@@ -139,7 +125,6 @@ export const readSignedQuranSearchDocuments = Effect.fn(
 const readSignedQuranSearchDocument = Effect.fn(
   "contents.search.readSignedQuranSearchDocument"
 )(function* (
-  ctx: QueryCtx,
   snapshotId: string,
   appLocale: ContentSearchInput["locale"],
   surahNumber: number
@@ -148,7 +133,7 @@ const readSignedQuranSearchDocument = Effect.fn(
     snapshotId,
     quranSearchIdentity(appLocale, surahNumber),
     QuranSearchRowSchema
-  ).pipe(Effect.provide(convexQuranLayer(ctx)));
+  ).pipe(Effect.provide(quranLayer));
   return buildSignedQuranSearchDocument(signed, appLocale);
 });
 
@@ -204,12 +189,11 @@ function buildSignedQuranSearchDocument(
 
 /** Browses one locale in its immutable signed row order. */
 const browseQuranRows = Effect.fn("contents.search.browseQuranRows")(function* (
-  ctx: QueryCtx,
   snapshotId: string,
   appLocale: ContentSearchInput["locale"],
   scanLimit: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   return yield* database
     .table("quranSearch")
     .index("by_snapshotId_and_appLocale_and_index", (index) =>
@@ -220,16 +204,15 @@ const browseQuranRows = Effect.fn("contents.search.browseQuranRows")(function* (
 });
 /** Authenticates bounded index hits before exposing their signed graph rows. */
 function authenticateQuranRows(
-  ctx: QueryCtx,
   snapshotId: string,
-  rows: readonly Doc<"quranSearch">[],
+  rows: readonly Docs["quranSearch"][],
   appLocale: ContentSearchInput["locale"]
 ) {
   return Effect.forEach(
     rows,
     (row) =>
       authenticateQuranSearchHit(snapshotId, row).pipe(
-        Effect.provide(convexQuranLayer(ctx)),
+        Effect.provide(quranLayer),
         Effect.map((signed) => ({
           document: buildSignedQuranSearchDocument(signed, appLocale),
           row,

@@ -1,8 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { AnalyticsErasureRequestErrorWire } from "@repo/backend/confect/analytics/erasure/spec";
-import { ConsentPersistenceErrorWire } from "@repo/backend/confect/consents/schema";
-import { failureWire } from "@repo/backend/confect/failure";
+import { AnalyticsErasureRequestError } from "@repo/backend/confect/analytics/erasure/spec";
+import { ConsentPersistenceError } from "@repo/backend/confect/consents/schema";
 import { Schema } from "effect";
 export const productAnalyticsCaptureFailedCode =
   "PRODUCT_ANALYTICS_CAPTURE_FAILED";
@@ -15,10 +14,7 @@ export class ProductAnalyticsCaptureError extends Schema.TaggedError<ProductAnal
   }
 ) {}
 /** Maps one Convex or PostHog failure into the analytics capture channel. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const ProductAnalyticsCaptureErrorWire = failureWire(
-  ProductAnalyticsCaptureError
-);
+
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalQuery({
@@ -28,10 +24,7 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Boolean,
       error: () =>
-        Schema.Union([
-          ProductAnalyticsCaptureErrorWire,
-          ConsentPersistenceErrorWire,
-        ]),
+        Schema.Union([ProductAnalyticsCaptureError, ConsentPersistenceError]),
     })
   )
   .addFunction(
@@ -47,8 +40,8 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () =>
         Schema.Union([
-          ProductAnalyticsCaptureErrorWire,
-          AnalyticsErasureRequestErrorWire,
+          ProductAnalyticsCaptureError,
+          AnalyticsErasureRequestError,
         ]),
     })
   );

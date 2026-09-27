@@ -1,5 +1,7 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -12,6 +14,7 @@ import {
   makeMaterialProjection,
 } from "@repo/backend/test/content/material";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
+import { Effect } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const canonicalContext = {
@@ -41,11 +44,18 @@ async function insertMaterialRecent(
     userId,
   });
 }
-
 describe("contents/queries/recent", () => {
   it("hydrates a recent card from the current signed material", async () => {
     const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -54,7 +64,6 @@ describe("contents/queries/recent", () => {
       await insertMaterialRecent(ctx, FUNCTION_MATERIAL, viewer.userId, NOW);
       return viewer;
     });
-
     const results = await t
       .withIdentity({
         sessionId: identity.sessionId,
@@ -63,7 +72,6 @@ describe("contents/queries/recent", () => {
       .query(api.contents.queries.recent.getRecentlyViewed, {
         locale: "en",
       });
-
     expect(results).toEqual([
       expect.objectContaining({
         assetId: FUNCTION_MATERIAL.graph.assetId,
@@ -96,7 +104,9 @@ describe("contents/queries/recent", () => {
           sessionId: identity.sessionId,
           subject: identity.authUserId,
         })
-        .query(api.contents.queries.recent.getRecentlyViewed, { locale: "en" })
+        .query(api.contents.queries.recent.getRecentlyViewed, {
+          locale: "en",
+        })
     ).resolves.toEqual(results);
     await t.mutation(async (ctx) => {
       const state = await ctx.db.query("contentState").unique();
@@ -109,7 +119,9 @@ describe("contents/queries/recent", () => {
           sessionId: identity.sessionId,
           subject: identity.authUserId,
         })
-        .query(api.contents.queries.recent.getRecentlyViewed, { locale: "en" })
+        .query(api.contents.queries.recent.getRecentlyViewed, {
+          locale: "en",
+        })
     ).rejects.toMatchObject({
       data: {
         code: "RECENT_LEARNING_IO_FAILED",
@@ -117,13 +129,20 @@ describe("contents/queries/recent", () => {
       },
     });
   });
-
   it("skips missing signed targets and fills the requested result limit", async () => {
     const current = makeMaterialProjection("en", 1, 10);
     const missingFirst = makeMaterialProjection("en", 2, 11);
     const missingSecond = makeMaterialProjection("en", 3, 12);
     const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [current]);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([current]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -134,7 +153,6 @@ describe("contents/queries/recent", () => {
       await insertMaterialRecent(ctx, missingSecond, viewer.userId, NOW + 100);
       return viewer;
     });
-
     const results = await t
       .withIdentity({
         sessionId: identity.sessionId,
@@ -144,7 +162,6 @@ describe("contents/queries/recent", () => {
         locale: "en",
         limit: 1,
       });
-
     expect(results).toEqual([
       expect.objectContaining({
         assetId: current.graph.assetId,
@@ -153,17 +170,23 @@ describe("contents/queries/recent", () => {
       }),
     ]);
   });
-
   it("returns no cards for a zero result limit", async () => {
     const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "recent-zero-limit",
       })
     );
-
     await expect(
       t
         .withIdentity({
@@ -176,11 +199,17 @@ describe("contents/queries/recent", () => {
         })
     ).resolves.toEqual([]);
   });
-
   it("returns no cards without an authenticated learner", async () => {
     const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
-
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await expect(
       t.query(api.contents.queries.recent.getRecentlyViewed, {
         locale: "en",

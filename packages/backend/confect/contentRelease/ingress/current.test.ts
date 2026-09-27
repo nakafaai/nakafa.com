@@ -1,3 +1,5 @@
+import { RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
@@ -7,7 +9,6 @@ import {
   readCurrentPublication,
   readRecovery,
 } from "@repo/backend/confect/contentRelease/ingress/current";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -59,28 +60,32 @@ function current(stored: unknown) {
   const t = convexTest(schema, convexModules);
   return t.action((ctx) => {
     vi.spyOn(ctx, "runQuery").mockResolvedValue(stored);
-    return runConvexProgram(
-      readCurrentPublication(ctx).pipe(
-        Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
+    return Effect.runPromise(
+      readCurrentPublication().pipe(
+        Effect.provideService(
+          ContentVerificationKeyResolver,
+          TEST_KEY_RESOLVER
+        ),
+        Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
       )
     );
   });
 }
-
 describe("authenticated current publication evidence", () => {
   it("rejects individually authentic releases that form an incoherent current pair", async () => {
     await expect(
       current({
         active: completed(ingressRelease),
-        candidate: { ...completed(ingressRelease), phase: "verified" },
+        candidate: {
+          ...completed(ingressRelease),
+          phase: "verified",
+        },
         recovery: null,
         tryoutRuntimeBundleJson: null,
       })
     ).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: "Current release state violates its exact contract.",
-      },
+      code: "CONTENT_RELEASE_INTEGRITY",
+      message: "Current release state violates its exact contract.",
     });
   });
   it.effect(
@@ -96,11 +101,12 @@ describe("authenticated current publication evidence", () => {
               recovery: null,
               tryoutRuntimeBundleJson: JSON.stringify(fixture.bundle),
             })
-          ).resolves.toMatchObject({ tryoutRuntimeBundle: fixture.bundle })
+          ).resolves.toMatchObject({
+            tryoutRuntimeBundle: fixture.bundle,
+          })
         );
       })
   );
-
   it.effect("rejects a permanent bundle without an active publication", () =>
     Effect.gen(function* () {
       const fixture = yield* makeRuntimeIngressFixture();
@@ -113,15 +119,12 @@ describe("authenticated current publication evidence", () => {
             tryoutRuntimeBundleJson: JSON.stringify(fixture.bundle),
           })
         ).rejects.toMatchObject({
-          data: {
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: expect.stringContaining("without an active release"),
-          },
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining("without an active release"),
         })
       );
     })
   );
-
   it.effect("rejects a permanent bundle whose signed payload was changed", () =>
     Effect.gen(function* () {
       const fixture = yield* makeRuntimeIngressFixture();
@@ -137,17 +140,19 @@ describe("authenticated current publication evidence", () => {
             }),
           })
         ).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          code: "CONTENT_RELEASE_INTEGRITY",
         })
       );
     })
   );
-
   it("rejects an authenticated candidate with an invalid durable phase", async () => {
     await expect(
       current({
         active: null,
-        candidate: { ...completed(ingressRelease), phase: "completed" },
+        candidate: {
+          ...completed(ingressRelease),
+          phase: "completed",
+        },
         recovery: null,
         tryoutRuntimeBundleJson: null,
       })
@@ -156,7 +161,6 @@ describe("authenticated current publication evidence", () => {
       message: expect.stringContaining('["candidate"]["phase"]'),
     });
   });
-
   it.each(["identity", "receipt"] as const)(
     "rejects recovery %s that no longer binds the original candidate",
     async (corruption) => {
@@ -177,8 +181,8 @@ describe("authenticated current publication evidence", () => {
                   : value.receipt,
             },
           });
-          return runConvexProgram(
-            readRecovery(ctx, {
+          return Effect.runPromise(
+            readRecovery({
               recoveryId: ingressRecoveryId,
               releaseId:
                 corruption === "identity" ? "release-other" : ingressReleaseId,
@@ -186,19 +190,18 @@ describe("authenticated current publication evidence", () => {
               Effect.provideService(
                 ContentVerificationKeyResolver,
                 TEST_KEY_RESOLVER
-              )
+              ),
+              Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
             )
           );
         })
       ).rejects.toMatchObject({
-        data: {
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: expect.stringContaining(
-            corruption === "identity"
-              ? "does not bind candidate"
-              : "lost terminal evidence"
-          ),
-        },
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: expect.stringContaining(
+          corruption === "identity"
+            ? "does not bind candidate"
+            : "lost terminal evidence"
+        ),
       });
     }
   );

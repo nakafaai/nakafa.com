@@ -1,4 +1,5 @@
 import type { ActiveAppLocaleList } from "@nakafa/aksara-contracts/locale";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
 import { requireExpectedActiveRelease } from "@repo/backend/confect/contentRelease/runtime/pin";
@@ -8,7 +9,6 @@ import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
 import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
 import { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, Option } from "effect";
 
 type AuthenticatedMaterial = NonNullable<
@@ -59,7 +59,7 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
 const assembleMaterialMetadata = Effect.fn(
   "contentRelease.assembleMaterialMetadata"
 )(function* (
-  appLocale: Doc<"materialCatalog">["appLocale"],
+  appLocale: Docs["materialCatalog"]["appLocale"],
   route: Effect.Success<ReturnType<typeof resolveMaterialRoute>>,
   expectedActiveReleaseId?: string | null
 ) {
@@ -111,7 +111,7 @@ const assembleMaterialMetadata = Effect.fn(
 /** Combines authenticated lesson metadata with its ordered navigation. */
 const assembleMaterialModel = Effect.fn("contentRelease.assembleMaterialModel")(
   function* (
-    appLocale: Doc<"materialCatalog">["appLocale"],
+    appLocale: Docs["materialCatalog"]["appLocale"],
     route: Effect.Success<ReturnType<typeof resolveMaterialRoute>>,
     expectedActiveReleaseId?: string | null
   ) {
@@ -139,7 +139,7 @@ const assembleMaterialModel = Effect.fn("contentRelease.assembleMaterialModel")(
 export const readMaterialLesson = Effect.fn(
   "contentRelease.readMaterialLesson"
 )(function* (
-  appLocale: Doc<"materialCatalog">["appLocale"],
+  appLocale: Docs["materialCatalog"]["appLocale"],
   publicPath: string
 ) {
   const route = yield* resolveMaterialRoute(appLocale, publicPath);
@@ -156,7 +156,7 @@ export const readMaterialLesson = Effect.fn(
 /** Resolves the complete active shell model for one localized material lesson. */
 export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
   function* (
-    appLocale: Doc<"materialCatalog">["appLocale"],
+    appLocale: Docs["materialCatalog"]["appLocale"],
     publicPath: string,
     expectedActiveReleaseId?: string | null
   ) {

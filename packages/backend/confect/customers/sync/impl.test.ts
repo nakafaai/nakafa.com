@@ -1,17 +1,17 @@
-import { ActionRunner } from "@confect/server";
+import { ActionRunner, RegisteredFunction } from "@confect/server";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   requireCustomer,
   syncCustomerForUser,
   syncOptionalCustomer,
 } from "@repo/backend/confect/customers/sync/impl";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 
 const polarGateway = vi.hoisted(() => ({
   createCustomer: vi.fn(),
@@ -21,7 +21,9 @@ const polarGateway = vi.hoisted(() => ({
   updateCustomer: vi.fn(),
   updateCustomerMetadata: vi.fn(),
 }));
-vi.mock("@repo/backend/confect/customers/polar/live", () => ({ polarGateway }));
+vi.mock("@repo/backend/confect/customers/polar/live", () => ({
+  polarGateway,
+}));
 
 /** Seeds a real local identity for customer synchronization. */
 async function setup(linked = false) {
@@ -39,7 +41,9 @@ async function setup(linked = false) {
       await ctx.db.insert("customers", {
         externalId: "sync-auth",
         id: "polar-sync",
-        metadata: { userId: id },
+        metadata: {
+          userId: id,
+        },
         userId: id,
       });
     }
@@ -49,22 +53,26 @@ async function setup(linked = false) {
     email: "sync@example.com",
     externalId: "sync-auth",
     id: "polar-sync",
-    metadata: { userId },
+    metadata: {
+      userId,
+    },
     name: "Sync User",
   };
   polarGateway.getCustomerByExternalId.mockReturnValue(
     Effect.succeed(customer)
   );
   polarGateway.getCustomerById.mockReturnValue(Effect.succeed(customer));
-  return { customer, t, userId };
+  return {
+    customer,
+    t,
+    userId,
+  };
 }
-
 describe("customer synchronization", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     polarGateway.deleteCustomer.mockReturnValue(Effect.succeed(null));
   });
-
   it("round-trips a customer identity conflict without exposing provider identities", async () => {
     const { customer, t, userId } = await setup(true);
     polarGateway.getCustomerById.mockReturnValue(
@@ -83,9 +91,11 @@ describe("customer synchronization", () => {
       t.action(internal.customers.actions.internal.syncCustomer, {
         userId,
       })
-    ).rejects.toMatchObject({ data: payload });
+    ).rejects.toMatchObject({
+      data: payload,
+    });
     const decoded = await t.action((ctx) =>
-      runConvexProgram(
+      Effect.runPromise(
         Effect.gen(function* () {
           const runAction = yield* ActionRunner.ActionRunner;
           return yield* runAction(
@@ -97,10 +107,20 @@ describe("customer synchronization", () => {
             Effect.catchTag("PolarCustomerEmailConflict", Effect.succeed),
             Effect.orDie
           );
-        }).pipe(Effect.provide(ActionRunner.layer(ctx.runAction)))
+        }).pipe(
+          Effect.provide(
+            Layer.provideMerge(
+              ActionRunner.layer(ctx.runAction),
+              RegisteredFunction.actionLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
     );
-    expect(decoded).toEqual({ ...payload, _tag: "PolarCustomerEmailConflict" });
+    expect(decoded).toEqual({
+      ...payload,
+      _tag: "PolarCustomerEmailConflict",
+    });
     expect(JSON.stringify(decoded)).not.toContain("private-foreign");
     expect(polarGateway.updateCustomer).not.toHaveBeenCalled();
     const stored = await t.query((ctx) => ctx.db.query("customers").unique());
@@ -109,16 +129,23 @@ describe("customer synchronization", () => {
       externalId: customer.externalId,
     });
   });
-
   it.each([false, true])(
     "reconciles optional and required customers with existing link %s",
     async (linked) => {
       const { customer, t, userId } = await setup(linked);
       const optional = await t.action((ctx) =>
-        runConvexProgram(syncOptionalCustomer(ctx, userId))
+        Effect.runPromise(
+          syncOptionalCustomer(userId).pipe(
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
+        )
       );
       const required = await t.action((ctx) =>
-        runConvexProgram(requireCustomer(ctx, userId))
+        Effect.runPromise(
+          requireCustomer(userId).pipe(
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
+        )
       );
       expect(optional).toStrictEqual(required);
       expect(required).toMatchObject({
@@ -142,16 +169,18 @@ describe("customer synchronization", () => {
       ).toBe(required.localCustomerId);
     }
   );
-
   it("creates a required customer without a preexisting local link", async () => {
     const { t, userId } = await setup();
     const result = await t.action((ctx) =>
-      runConvexProgram(requireCustomer(ctx, userId))
+      Effect.runPromise(
+        requireCustomer(userId).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+        )
+      )
     );
     expect(result.id).toBe("polar-sync");
     expect(polarGateway.getCustomerById).not.toHaveBeenCalled();
   });
-
   it.each(["missing", "prepared", "deleted"])(
     "rejects unavailable %s users before contacting Polar",
     async (state) => {
@@ -163,27 +192,41 @@ describe("customer synchronization", () => {
               "users",
               userId,
               state === "prepared"
-                ? { deletionPreparedAt: 1 }
-                : { deletedAt: 1 }
+                ? {
+                    deletionPreparedAt: 1,
+                  }
+                : {
+                    deletedAt: 1,
+                  }
             )
       );
       expect(
         await t.action((ctx) =>
-          runConvexProgram(syncOptionalCustomer(ctx, userId))
+          Effect.runPromise(
+            syncOptionalCustomer(userId).pipe(
+              Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+            )
+          )
         )
       ).toBeNull();
       expect(
         await t.action((ctx) =>
-          runConvexProgram(
-            requireCustomer(ctx, userId).pipe(
+          Effect.runPromise(
+            requireCustomer(userId).pipe(
               Effect.match({
-                onFailure: (error) => ({ ...error, message: error.message }),
+                onFailure: (error) => ({
+                  ...error,
+                  message: error.message,
+                }),
                 onSuccess: () => null,
-              })
+              }),
+              Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
             )
           )
         )
-      ).toMatchObject({ _tag: "UserNotFound" });
+      ).toMatchObject({
+        _tag: "UserNotFound",
+      });
       expect(polarGateway.getCustomerByExternalId).not.toHaveBeenCalled();
       expect(
         await t.action(internal.customers.actions.internal.syncCustomer, {
@@ -192,7 +235,6 @@ describe("customer synchronization", () => {
       ).toBeNull();
     }
   );
-
   it.each([null, undefined])(
     "binds missing Polar metadata with local ID %s",
     async (localCustomerId) => {
@@ -201,7 +243,10 @@ describe("customer synchronization", () => {
         Effect.succeed(null)
       );
       polarGateway.createCustomer.mockReturnValue(
-        Effect.succeed({ ...customer, metadata: {} })
+        Effect.succeed({
+          ...customer,
+          metadata: {},
+        })
       );
       polarGateway.updateCustomerMetadata.mockReturnValue(
         Effect.succeed(customer)
@@ -212,24 +257,33 @@ describe("customer synchronization", () => {
         return;
       }
       const result = await t.action((ctx) =>
-        runConvexProgram(
-          syncCustomerForUser(ctx, {
-            ...(localCustomerId === undefined ? {} : { localCustomerId }),
+        Effect.runPromise(
+          syncCustomerForUser({
+            ...(localCustomerId === undefined
+              ? {}
+              : {
+                  localCustomerId,
+                }),
             user,
-          })
+          }).pipe(
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
         )
       );
-      expect(result.metadata).toStrictEqual({ userId });
+      expect(result.metadata).toStrictEqual({
+        userId,
+      });
       expect(polarGateway.createCustomer.mock.calls[0]?.[0]).not.toHaveProperty(
         "localCustomerId"
       );
       expect(polarGateway.updateCustomerMetadata).toHaveBeenCalledWith({
         polarCustomerId: customer.id,
-        metadata: { userId },
+        metadata: {
+          userId,
+        },
       });
     }
   );
-
   it("cleans the Polar customer if the user disappears during reconciliation", async () => {
     const { customer, t, userId } = await setup();
     polarGateway.getCustomerByExternalId.mockReturnValue(
@@ -241,7 +295,11 @@ describe("customer synchronization", () => {
       })
     );
     const result = await t.action((ctx) =>
-      runConvexProgram(syncOptionalCustomer(ctx, userId))
+      Effect.runPromise(
+        syncOptionalCustomer(userId).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+        )
+      )
     );
     expect(result).toBeNull();
     expect(polarGateway.deleteCustomer).toHaveBeenCalledWith(customer.id);
@@ -249,21 +307,28 @@ describe("customer synchronization", () => {
       await t.query((ctx) =>
         ctx.db.query("customerDeletionTombstones").collect()
       )
-    ).toMatchObject([{ polarCustomerId: customer.id }]);
+    ).toMatchObject([
+      {
+        polarCustomerId: customer.id,
+      },
+    ]);
   });
-
   it("preserves typed failures when loading local customer state", async () => {
     const { t, userId } = await setup();
     const failure = await t.action((ctx) => {
       vi.spyOn(ctx, "runQuery").mockRejectedValueOnce(
         new Error("query unavailable")
       );
-      return runConvexProgram(
-        requireCustomer(ctx, userId).pipe(
+      return Effect.runPromise(
+        requireCustomer(userId).pipe(
           Effect.match({
-            onFailure: (error) => ({ ...error, message: error.message }),
+            onFailure: (error) => ({
+              ...error,
+              message: error.message,
+            }),
             onSuccess: () => null,
-          })
+          }),
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
         )
       );
     });
@@ -272,19 +337,22 @@ describe("customer synchronization", () => {
       message: "Failed to load local customer sync state",
     });
   });
-
   it("preserves typed failures when persisting the reconciled customer", async () => {
     const { t, userId } = await setup();
     const failure = await t.action((ctx) => {
       vi.spyOn(ctx, "runMutation").mockRejectedValueOnce(
         new Error("write unavailable")
       );
-      return runConvexProgram(
-        requireCustomer(ctx, userId).pipe(
+      return Effect.runPromise(
+        requireCustomer(userId).pipe(
           Effect.match({
-            onFailure: (error) => ({ ...error, message: error.message }),
+            onFailure: (error) => ({
+              ...error,
+              message: error.message,
+            }),
             onSuccess: () => null,
-          })
+          }),
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
         )
       );
     });
@@ -293,7 +361,6 @@ describe("customer synchronization", () => {
       message: "Failed to save local customer row",
     });
   });
-
   it.each(["runQuery", "runMutation"] as const)(
     "rejects a malformed resolved %s result without persisting a customer link",
     async (operation) => {
@@ -303,9 +370,15 @@ describe("customer synchronization", () => {
           vi.spyOn(ctx, operation).mockResolvedValueOnce({
             unexpected: "response",
           });
-          return runConvexProgram(requireCustomer(ctx, userId));
+          return Effect.runPromise(
+            requireCustomer(userId).pipe(
+              Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+            )
+          );
         })
-      ).rejects.toMatchObject({ data: { code: "CUSTOMER_SYNC_IO_ERROR" } });
+      ).rejects.toMatchObject({
+        code: "CUSTOMER_SYNC_IO_ERROR",
+      });
       expect(
         await t.query((ctx) => ctx.db.query("customers").collect())
       ).toEqual([]);

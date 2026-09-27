@@ -3,7 +3,6 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { loadActiveForumWithAccess } from "@repo/backend/confect/classes/forums/access";
@@ -12,6 +11,7 @@ import spec from "@repo/backend/confect/classes/forums/mutations/reactions.spec"
 import { validateForumReactionValue } from "@repo/backend/confect/classes/forums/reactions";
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
 
 /**
@@ -25,9 +25,8 @@ const togglePostReaction = FunctionImpl.make(
     function* (args) {
       const writer = yield* DatabaseWriter;
       const database = yield* DatabaseReader;
-      const ctx = yield* MutationCtxService;
       const emoji = yield* validateForumReactionValue(args.emoji);
-      const user = yield* requireAuth(ctx);
+      const user = yield* requireAuth();
       const userId = user.appUser._id;
       const post = yield* database
         .table("schoolClassForumPosts")
@@ -42,7 +41,7 @@ const togglePostReaction = FunctionImpl.make(
           message: "Post not found.",
         });
       }
-      yield* loadActiveForumWithAccess(ctx, post.forumId, userId);
+      yield* loadActiveForumWithAccess(post.forumId, userId);
       const existingReaction = yield* database
         .table("schoolClassForumPostReactions")
         .get("by_postId_and_userId_and_emoji", args.postId, userId, emoji)
@@ -92,15 +91,10 @@ const toggleForumReaction = FunctionImpl.make(
     function* (args) {
       const writer = yield* DatabaseWriter;
       const database = yield* DatabaseReader;
-      const ctx = yield* MutationCtxService;
       const emoji = yield* validateForumReactionValue(args.emoji);
-      const user = yield* requireAuth(ctx);
+      const user = yield* requireAuth();
       const userId = user.appUser._id;
-      const { forum } = yield* loadActiveForumWithAccess(
-        ctx,
-        args.forumId,
-        userId
-      );
+      const { forum } = yield* loadActiveForumWithAccess(args.forumId, userId);
       const existingReaction = yield* database
         .table("schoolClassForumReactions")
         .get("by_forumId_and_userId_and_emoji", args.forumId, userId, emoji)
@@ -146,5 +140,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(togglePostReaction),
   Layer.provide(toggleForumReaction),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

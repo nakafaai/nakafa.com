@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 export const tryoutCatalogValidator = Schema.Struct({
@@ -38,7 +38,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => tryoutCatalogValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -48,7 +48,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => tryoutSitemapCountValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -59,7 +59,7 @@ export default GroupSpec.make()
         page: Schema.Finite,
       }),
       returns: () => tryoutSitemapPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -69,6 +69,6 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => tryoutTaxonomyValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

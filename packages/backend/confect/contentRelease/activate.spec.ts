@@ -3,7 +3,7 @@ import {
   activationResultValidator,
   preparationResultValidator,
 } from "@repo/backend/confect/contentRelease/activation/spec";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Schema } from "effect";
 export const activationArgs = {
   manifestHash: Schema.String,
@@ -18,7 +18,7 @@ export default GroupSpec.make()
       name: "prepare",
       args: () => activationArgs,
       returns: () => preparationResultValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -26,7 +26,7 @@ export default GroupSpec.make()
       name: "activate",
       args: () => activationArgs,
       returns: () => activationResultValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -34,7 +34,7 @@ export default GroupSpec.make()
       name: "prepareRecovery",
       args: () => activationArgs,
       returns: () => preparationResultValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -42,6 +42,6 @@ export default GroupSpec.make()
       name: "activateRecovery",
       args: () => activationArgs,
       returns: () => activationResultValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

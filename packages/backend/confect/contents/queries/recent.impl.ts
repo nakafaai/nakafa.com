@@ -1,8 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { listRecentLearning } from "@repo/backend/confect/contents/queries/recent";
 import spec from "@repo/backend/confect/contents/queries/recent.spec";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
 
 const getRecentlyViewed = FunctionImpl.make(
@@ -10,11 +10,11 @@ const getRecentlyViewed = FunctionImpl.make(
   spec,
   "getRecentlyViewed",
   Effect.fn("contents.queries.recent.getRecentlyViewed")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* listRecentLearning(ctx, args);
+    return yield* listRecentLearning(args);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getRecentlyViewed),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

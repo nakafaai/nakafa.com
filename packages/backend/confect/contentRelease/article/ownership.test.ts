@@ -1,10 +1,11 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   reconcileCategory,
   stageCategory,
   validateCategoryClaim,
 } from "@repo/backend/confect/contentRelease/article/ownership";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -40,34 +41,42 @@ function articleEntry(options?: {
 
 /** Runs the category claim through the native Convex mutation boundary. */
 function claim(ctx: MutationCtx) {
-  return runConvexProgram(
-    Effect.gen(function* () {
-      const article = articleEntry();
-      const route = TEST_ARTICLE_PROJECTION.categoryRouteSlug;
-      yield* stageCategory(ctx, article, route);
-      yield* validateCategoryClaim(ctx, article);
-    })
+  return Effect.gen(function* () {
+    const article = articleEntry();
+    const route = TEST_ARTICLE_PROJECTION.categoryRouteSlug;
+    yield* stageCategory(article, route);
+    yield* validateCategoryClaim(article);
+  }).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(confectSchema, ctx))
   );
 }
-
 describe("contentRelease/article/ownership", () => {
   it.each(["material/politics/article", "articles/Invalid Category/article"])(
     "preserves the category when a surviving article has invalid path %s",
     async (publicPath) => {
       const t = convexTest(schema, convexModules);
-      await t.mutation(claim);
+      await t.mutation((ctx) => Effect.runPromise(claim(ctx)));
       const before = await t.query((ctx) =>
         ctx.db.query("articleCategories").unique()
       );
       await t.mutation((ctx) =>
-        ctx.db.insert("articleCatalog", { ...articleEntry(), publicPath })
+        ctx.db.insert("articleCatalog", {
+          ...articleEntry(),
+          publicPath,
+        })
       );
       await expect(
         t.mutation((ctx) =>
-          runConvexProgram(reconcileCategory(ctx, "blue", "en", "politics"))
+          Effect.runPromise(
+            reconcileCategory("blue", "en", "politics").pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
         )
       ).rejects.toMatchObject({
-        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        code: "CONTENT_RELEASE_INTEGRITY",
       });
       expect(
         await t.query((ctx) => ctx.db.query("articleCategories").unique())
@@ -76,10 +85,16 @@ describe("contentRelease/article/ownership", () => {
   );
   it("removes the last category once when its representative disappears", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation(claim);
+    await t.mutation((ctx) => Effect.runPromise(claim(ctx)));
     for (let attempt = 0; attempt < 2; attempt += 1) {
       await t.mutation((ctx) =>
-        runConvexProgram(reconcileCategory(ctx, "blue", "en", "politics"))
+        Effect.runPromise(
+          reconcileCategory("blue", "en", "politics").pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       );
       expect(
         await t.query((ctx) => ctx.db.query("articleCategories").collect())
@@ -93,7 +108,7 @@ describe("contentRelease/article/ownership", () => {
     "rejects a %s category owner before publication",
     async (corruption) => {
       const t = convexTest(schema, convexModules);
-      await t.mutation(claim);
+      await t.mutation((ctx) => Effect.runPromise(claim(ctx)));
       await t.mutation(async (ctx) => {
         const category = await ctx.db.query("articleCategories").unique();
         assert(category);
@@ -101,7 +116,9 @@ describe("contentRelease/article/ownership", () => {
           const { _id, _creationTime, ...fields } = category;
           await ctx.db.insert("articleCategories", fields);
         } else {
-          await ctx.db.patch(category._id, { route: "invalid/route" });
+          await ctx.db.patch(category._id, {
+            route: "invalid/route",
+          });
         }
       });
       const before = await t.query((ctx) =>
@@ -109,15 +126,22 @@ describe("contentRelease/article/ownership", () => {
       );
       await expect(
         t.mutation((ctx) =>
-          runConvexProgram(validateCategoryClaim(ctx, articleEntry()))
+          Effect.runPromise(
+            validateCategoryClaim(articleEntry()).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
         )
-      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+      ).rejects.toMatchObject({
+        code: "CONTENT_RELEASE_INTEGRITY",
+      });
       expect(
         await t.query((ctx) => ctx.db.query("articleCategories").collect())
       ).toEqual(before);
     }
   );
-
   it("rejects conflicting metadata for one category", async () => {
     const conflict = convexTest(schema, convexModules);
     await conflict.mutation(async (ctx) => {
@@ -135,12 +159,12 @@ describe("contentRelease/article/ownership", () => {
         title: TEST_ARTICLE_PROJECTION.categoryTitle,
       });
     });
-
-    await expect(conflict.mutation(claim)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    await expect(
+      conflict.mutation((ctx) => Effect.runPromise(claim(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
-
   it("rejects a final route claimed by another category", async () => {
     const conflict = convexTest(schema, convexModules);
     await conflict.mutation(async (ctx) => {
@@ -158,12 +182,12 @@ describe("contentRelease/article/ownership", () => {
         title: "History",
       });
     });
-
-    await expect(conflict.mutation(claim)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    await expect(
+      conflict.mutation((ctx) => Effect.runPromise(claim(ctx)))
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
-
   it("rejects final member title and renderer divergence", async () => {
     const conflict = convexTest(schema, convexModules);
     const categoryId = await conflict.mutation((ctx) =>
@@ -183,17 +207,20 @@ describe("contentRelease/article/ownership", () => {
     );
     await expect(
       conflict.mutation((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           Effect.gen(function* () {
             const article = articleEntry();
-            return yield* validateCategoryClaim(ctx, article);
-          })
+            return yield* validateCategoryClaim(article);
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
-
     await conflict.mutation((ctx) =>
       ctx.db.patch("articleCategories", categoryId, {
         rendererDomain: "site",
@@ -202,15 +229,19 @@ describe("contentRelease/article/ownership", () => {
     );
     await expect(
       conflict.mutation((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           Effect.gen(function* () {
             const article = articleEntry();
-            return yield* validateCategoryClaim(ctx, article);
-          })
+            return yield* validateCategoryClaim(article);
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
 });

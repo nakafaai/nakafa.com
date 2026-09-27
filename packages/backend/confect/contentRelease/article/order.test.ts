@@ -1,11 +1,12 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { paginateArticles } from "@repo/backend/confect/contentRelease/article/order";
 import {
   PROJECTION_PAGE_BYTES,
   PROJECTION_PAGE_LIMIT,
   PUBLICATION_SCAN_LIMIT,
 } from "@repo/backend/confect/contentRelease/paging";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { articlePublicationCursor } from "@repo/backend/content/article/cursor";
 import schema from "@repo/backend/convex/schema";
@@ -23,32 +24,37 @@ describe("contentRelease/article/order", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
     const read = (maximumBytesRead: number) =>
-      t.query((ctx) =>
-        runConvexProgram(
-          paginateArticles(ctx, "blue", "en", "politics", {
+      t.query((_ctx) =>
+        Effect.runPromise(
+          paginateArticles("blue", "en", "politics", {
             cursor: null,
             maximumBytesRead,
             maximumRowsRead: PUBLICATION_SCAN_LIMIT,
             numItems: 1,
-          })
+          }).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, _ctx.db))
+          )
         )
       );
     await expect(read(0)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
+      code: "CONTENT_RELEASE_LIMIT",
     });
     await t.mutation(async (ctx) => {
       const row = await ctx.db.query("articleCatalog").unique();
       assert(row);
-      await ctx.db.patch(row._id, { sequence: Number.NaN });
+      await ctx.db.patch(row._id, {
+        sequence: Number.NaN,
+      });
     });
     await expect(read(PROJECTION_PAGE_BYTES)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
   it.effect(
     "rejects a portable position from another slot, locale, or category",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) => insertRuntimeArticles(ctx, 1))
@@ -65,28 +71,32 @@ describe("contentRelease/article/order", () => {
         ] as const) {
           yield* Effect.promise(() =>
             expect(
-              t.query((ctx) =>
-                runConvexProgram(
-                  paginateArticles(ctx, slot, locale, category, {
+              t.query((_ctx) =>
+                Effect.runPromiseWith(runtimeServices)(
+                  paginateArticles(slot, locale, category, {
                     cursor,
                     maximumBytesRead: PROJECTION_PAGE_BYTES,
                     maximumRowsRead: PUBLICATION_SCAN_LIMIT,
                     numItems: 1,
-                  })
+                  }).pipe(
+                    Effect.provide(
+                      ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+                    )
+                  )
                 )
               )
             ).rejects.toMatchObject({
-              data: { code: "CONTENT_RELEASE_INTEGRITY" },
+              code: "CONTENT_RELEASE_INTEGRITY",
             })
           );
         }
       })
   );
-
   it.effect(
     "keeps a byte-limited lookahead row available after a portable split",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) => insertRuntimeArticles(ctx, 3))
@@ -109,14 +119,18 @@ describe("contentRelease/article/order", () => {
         );
         assert(row);
         const first = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              paginateArticles(ctx, "blue", "en", "politics", {
+          t.query((_ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              paginateArticles("blue", "en", "politics", {
                 cursor: null,
                 maximumBytesRead: getDocumentSize(row) + 1,
                 maximumRowsRead: PUBLICATION_SCAN_LIMIT,
                 numItems: 1,
-              })
+              }).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+                )
+              )
             )
           )
         );
@@ -129,14 +143,18 @@ describe("contentRelease/article/order", () => {
           testArticleProjection(2).contentKey,
         ]);
         const next = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            runConvexProgram(
-              paginateArticles(ctx, "blue", "en", "politics", {
+          t.query((_ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              paginateArticles("blue", "en", "politics", {
                 cursor: first.continueCursor,
                 maximumBytesRead: PROJECTION_PAGE_BYTES,
                 maximumRowsRead: PUBLICATION_SCAN_LIMIT,
                 numItems: 2,
-              })
+              }).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+                )
+              )
             )
           )
         );
@@ -147,7 +165,6 @@ describe("contentRelease/article/order", () => {
         expect(next.isDone).toBe(true);
       })
   );
-
   it("accepts deployed seven-field positions and emits portable positions", async () => {
     const target = convexTest(schema, convexModules);
     await target.mutation((ctx) => insertRuntimeArticles(ctx, 3));
@@ -169,14 +186,16 @@ describe("contentRelease/article/order", () => {
       throw new Error("Expected an article position fixture.");
     }
     const legacy = `${ARTICLE_PUBLICATION_CURSOR_PREFIX}${JSON.stringify([first.slot, first.appLocale, first.category, first.datePublished, first.contentKey, first._creationTime, first._id])}`;
-    const result = await target.query((ctx) =>
-      runConvexProgram(
-        paginateArticles(ctx, "blue", "en", "politics", {
+    const result = await target.query((_ctx) =>
+      Effect.runPromise(
+        paginateArticles("blue", "en", "politics", {
           cursor: legacy,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
           maximumRowsRead: 4,
           numItems: 1,
-        })
+        }).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, _ctx.db))
+        )
       )
     );
     expect(result.page.map(({ contentKey }) => contentKey)).toEqual([
@@ -187,7 +206,6 @@ describe("contentRelease/article/order", () => {
     );
     expect(position).toHaveLength(5);
   });
-
   it("returns one full page without a false split boundary", async () => {
     const t = convexTest(schema, convexModules);
     const articleCount = PROJECTION_PAGE_LIMIT + 2;
@@ -196,20 +214,23 @@ describe("contentRelease/article/order", () => {
         testArticleProjection(index, "2026-07-23")
       )
     );
-
     const first = await t.query(async (ctx) => {
-      const result = await runConvexProgram(
-        paginateArticles(ctx, "blue", "en", "politics", {
+      const result = await Effect.runPromise(
+        paginateArticles("blue", "en", "politics", {
           cursor: null,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
           maximumRowsRead: PUBLICATION_SCAN_LIMIT,
           numItems: PROJECTION_PAGE_LIMIT,
-        })
+        }).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
       );
       const metrics = await ctx.meta.getTransactionMetrics();
-      return { metrics, result };
+      return {
+        metrics,
+        result,
+      };
     });
-
     expect(first.result.page).toHaveLength(PROJECTION_PAGE_LIMIT);
     expect(first.result.isDone).toBe(false);
     expect(first.result.pageStatus).toBeUndefined();
@@ -220,20 +241,23 @@ describe("contentRelease/article/order", () => {
     expect(first.metrics.documentsRead.used).toBeLessThanOrEqual(
       PUBLICATION_SCAN_LIMIT
     );
-
     const second = await t.query(async (ctx) => {
-      const result = await runConvexProgram(
-        paginateArticles(ctx, "blue", "en", "politics", {
+      const result = await Effect.runPromise(
+        paginateArticles("blue", "en", "politics", {
           cursor: first.result.continueCursor,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
           maximumRowsRead: PUBLICATION_SCAN_LIMIT,
           numItems: PROJECTION_PAGE_LIMIT,
-        })
+        }).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
       );
       const metrics = await ctx.meta.getTransactionMetrics();
-      return { metrics, result };
+      return {
+        metrics,
+        result,
+      };
     });
-
     expect(second.result.page).toHaveLength(2);
     expect(second.result.isDone).toBe(true);
     expect(second.result.pageStatus).toBeUndefined();
@@ -246,25 +270,30 @@ describe("contentRelease/article/order", () => {
     );
     expect(new Set(contentKeys)).toHaveProperty("size", articleCount);
   });
-
   it("bounds publication lookahead by physical rows and bytes", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => insertRuntimeArticles(ctx, 3));
-
     const rowBound = await t.query(async (ctx) => {
-      const result = await runConvexProgram(
-        paginateArticles(ctx, "blue", "en", "politics", {
+      const result = await Effect.runPromise(
+        paginateArticles("blue", "en", "politics", {
           cursor: null,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
           maximumRowsRead: 4,
           numItems: 1,
-        })
+        }).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
       );
       const metrics = await ctx.meta.getTransactionMetrics();
-      return { metrics, result };
+      return {
+        metrics,
+        result,
+      };
     });
     expect(rowBound.result.page).toMatchObject([
-      { contentKey: testArticleProjection(2).contentKey },
+      {
+        contentKey: testArticleProjection(2).contentKey,
+      },
     ]);
     expect(
       rowBound.result.continueCursor.startsWith(
@@ -272,23 +301,31 @@ describe("contentRelease/article/order", () => {
       )
     ).toBe(true);
     expect(rowBound.metrics.documentsRead.used).toBeLessThanOrEqual(4);
-
     const byteBound = await t.query(async (ctx) => {
-      const result = await runConvexProgram(
-        paginateArticles(ctx, "blue", "en", "politics", {
+      const result = await Effect.runPromise(
+        paginateArticles("blue", "en", "politics", {
           cursor: null,
           maximumBytesRead: 1,
           maximumRowsRead: 4,
           numItems: 1,
-        })
+        }).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
       );
       const metrics = await ctx.meta.getTransactionMetrics();
-      return { metrics, result };
+      return {
+        metrics,
+        result,
+      };
     });
     expect(byteBound.result).toMatchObject({
       isDone: false,
       pageStatus: "SplitRequired",
-      page: [{ contentKey: testArticleProjection(2).contentKey }],
+      page: [
+        {
+          contentKey: testArticleProjection(2).contentKey,
+        },
+      ],
     });
     expect(
       byteBound.result.continueCursor.startsWith(

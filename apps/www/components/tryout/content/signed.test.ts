@@ -1,3 +1,9 @@
+import { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
+
+const layerMock = vi.hoisted(() => vi.fn());
+
 import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 
 // @vitest-environment node
@@ -24,23 +30,19 @@ import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
-import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PROTECTED_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
-import { api, internal } from "@repo/backend/convex/_generated/api";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { makeFunctionReference } from "convex/server";
-import { Effect } from "effect";
+import { type Context, Effect, Layer, Predicate } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
@@ -56,24 +58,36 @@ const cacheMock = vi.hoisted(() => vi.fn());
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const tokenMock = vi.hoisted(() => vi.fn());
 const queryMock = vi.hoisted(() =>
-  vi.fn<
-    (
-      reference: unknown,
-      request: TryoutHistoryRequest,
-      options: { token: string }
-    ) => Promise<TryoutBodyBatch | null>
-  >()
+  vi.fn<Context.Service.Shape<typeof HttpClient.HttpClient>["query"]>()
 );
 const siteUrl = "https://runtime.example.test";
 const endpoint = `${siteUrl}${PROTECTED_CONTENT_RUNTIME_PATH}`;
-const attemptQuery = makeFunctionReference<
-  "query",
-  TryoutHistoryRequest,
-  TryoutBodyBatch | null
->("tryouts/queries/content:getBatch");
-
-vi.mock("convex/nextjs", () => ({ fetchQuery: queryMock }));
-vi.mock("@/lib/auth/server", () => ({ getToken: tokenMock }));
+const attemptQuery = refs.public.tryouts.queries.content.getBatch;
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) => {
+        layerMock(...args);
+        return Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: (reference, ...request) =>
+                queryMock(reference, request[0] ?? {}),
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args)));
+      },
+    },
+  };
+});
+vi.mock("@/lib/auth/server", () => ({
+  getToken: tokenMock,
+}));
 vi.mock("next/cache", () => ({
   cacheLife: vi.fn(),
   cacheTag: cacheMock,
@@ -83,6 +97,7 @@ vi.mock("@repo/next-config/keys", () => ({
 }));
 vi.mock("@/env", () => ({
   env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
     get NEXT_PUBLIC_CONVEX_SITE_URL() {
       return runtimeSiteMock();
     },
@@ -92,7 +107,9 @@ vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(
     "@repo/backend/test/content/proof"
   );
-  return { contentKeyResolver: TEST_KEY_RESOLVER };
+  return {
+    contentKeyResolver: TEST_KEY_RESOLVER,
+  };
 });
 
 /** Selects a public question through the real active Convex catalog query. */
@@ -104,12 +121,16 @@ const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
     makeLandingSource()
   );
   const runtime = yield* createTestPublication(source.source);
-  const featured = yield* Effect.promise(() =>
-    runtime.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+  const featured = yield* runtime.query(
+    refs.public.tryouts.queries.catalog.getFeaturedQuestion,
+    {
       appLocale: "en",
-    })
+    }
   );
-  return { runtime, question: featured.question };
+  return {
+    runtime,
+    question: featured.question,
+  };
 });
 
 /** Routes the app transport into real session and retained membership queries. */
@@ -132,9 +153,19 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
         (selector) => selector.delivery === "authenticated"
       ),
     };
-    queryMock.mockImplementation((_reference, request, options) => {
-      expect(options.token).toBe("technical-session-token");
-      return owned.query(attemptQuery, request);
+    queryMock.mockImplementation((reference, ...args) => {
+      expect(layerMock).toHaveBeenLastCalledWith("https://test.convex.cloud", {
+        auth: "technical-session-token",
+      });
+      return Ref.runWithCodec(
+        reference,
+        args[0] ?? {},
+        (functionReference, encodedArgs) => {
+          assert(Predicate.isObject(encodedArgs));
+          return owned.query(functionReference, encodedArgs);
+        },
+        (cause) => new HttpClient.HttpClientError({ cause })
+      );
     });
     const question = yield* Effect.fromNullishOr(access.questions[0]);
     const answer = yield* Effect.fromNullishOr(access.answers[0]);
@@ -149,7 +180,6 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
     };
   }
 );
-
 beforeEach(() => {
   vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
   cacheMock.mockReset();
@@ -164,11 +194,9 @@ beforeEach(() => {
   });
   vi.stubGlobal("fetch", fetchMock);
 });
-
 afterEach(() => {
   vi.unstubAllGlobals();
 });
-
 describe("signed try-out execution", () => {
   it.effect(
     "renders complete original question and answer bodies after release compaction",
@@ -181,7 +209,9 @@ describe("signed try-out execution", () => {
         const [questionCode, answerCode] = yield* Effect.promise(() =>
           Promise.all(
             [rawMdx, answerMdx].map((body) =>
-              compile(body, { outputFormat: "function-body" })
+              compile(body, {
+                outputFormat: "function-body",
+              })
             )
           )
         );
@@ -195,7 +225,6 @@ describe("signed try-out execution", () => {
           fixture.attemptId,
           fixture.access
         );
-
         expect(rendered.questions).toHaveLength(1);
         expect(rendered.answers).toHaveLength(1);
         const question = yield* Effect.fromNullishOr(rendered.questions[0]);
@@ -231,18 +260,15 @@ describe("signed try-out execution", () => {
         );
       })
   );
-
   it.effect(
     "verifies and executes the same signed exchange through live HTTP",
     () =>
       Effect.gen(function* () {
         const fixture = yield* readFixture();
         const request = yield* makeTryoutRuntimeRequest([fixture.question]);
-        const row = yield* Effect.promise(() =>
-          fixture.runtime.query(
-            internal.contentRelease.runtime.tryout.internal.read,
-            request
-          )
+        const row = yield* fixture.runtime.query(
+          refs.internal.contentRelease.runtime.tryout.internal.read,
+          request
         );
         const found = yield* decodeProtectedRuntimeRow(
           row,
@@ -261,12 +287,13 @@ describe("signed try-out execution", () => {
           },
           status: 200,
         });
-        Object.defineProperty(response, "url", { value: endpoint });
+        Object.defineProperty(response, "url", {
+          value: endpoint,
+        });
         fetchMock.mockResolvedValueOnce(response);
         runtimeKeysMock.mockReturnValue({
           CONTENT_RUNTIME_TOKEN: "technical-test-token",
         });
-
         const rendered = yield* loadTryoutQuestion(fixture.question);
         expect(renderToStaticMarkup(rendered.content)).toBe(
           "Technical question"
@@ -280,7 +307,6 @@ describe("signed try-out execution", () => {
         );
       })
   );
-
   it.effect(
     "rejects a missing ordered item at the real exchange boundary before executing MDX",
     () =>
@@ -290,15 +316,19 @@ describe("signed try-out execution", () => {
             "throw new TypeError('must not execute an incomplete exchange');",
         });
         const row = yield* Effect.promise(() =>
-          fixture.owned.query(attemptQuery, fixture.seed.request)
+          fixture.owned.query(
+            Ref.getFunctionReference(attemptQuery),
+            fixture.seed.request
+          )
         );
         expect(row).not.toBeNull();
         const found = yield* Effect.fromNullishOr(row);
-        queryMock.mockResolvedValue({
-          ...found,
-          items: found.items.slice(0, 1),
-        });
-
+        queryMock.mockReturnValue(
+          Effect.succeed({
+            ...found,
+            items: found.items.slice(0, 1),
+          })
+        );
         expect(
           yield* loadSignedTryoutContent(
             fixture.attemptId,
@@ -318,7 +348,6 @@ describe("signed try-out execution", () => {
         expect(cacheMock).not.toHaveBeenCalled();
       })
   );
-
   it.effect(
     "rejects an empty exported access before transport or caching",
     () =>
@@ -338,7 +367,6 @@ describe("signed try-out execution", () => {
         expect(cacheMock).not.toHaveBeenCalled();
       })
   );
-
   it.effect(
     "preserves a missing live credential as a typed configuration cause",
     () =>
@@ -357,7 +385,6 @@ describe("signed try-out execution", () => {
         expect(cacheMock).not.toHaveBeenCalled();
       })
   );
-
   it.effect(
     "preserves authenticated module failures and never caches incomplete rendering",
     () =>
@@ -380,7 +407,6 @@ describe("signed try-out execution", () => {
         expect(cacheMock).not.toHaveBeenCalled();
       })
   );
-
   it.effect("rechecks the live session after successful rendering", () =>
     Effect.gen(function* () {
       const fixture = yield* readOwnedFixture({
@@ -399,13 +425,14 @@ describe("signed try-out execution", () => {
         )
       ).toMatchObject({
         _tag: "ContentRuntimeVerificationError",
-        cause: { _tag: "ContentRuntimeMissingError" },
+        cause: {
+          _tag: "ContentRuntimeMissingError",
+        },
       });
       expect(queryMock).toHaveBeenCalledTimes(2);
       expect(cacheMock).toHaveBeenCalledOnce();
     })
   );
-
   it.effect(
     "rejects absent or failed sessions before querying any attempt",
     () =>
@@ -428,25 +455,32 @@ describe("signed try-out execution", () => {
             fixture.attemptId,
             fixture.access
           ).pipe(Effect.flip)
-        ).toMatchObject({ _tag: "ContentRuntimeVerificationError", cause });
+        ).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+          cause,
+        });
         expect(queryMock).not.toHaveBeenCalled();
         expect(cacheMock).not.toHaveBeenCalled();
       })
   );
-
   it.effect(
     "preserves live authorization failures without entering rendering",
     () =>
       Effect.gen(function* () {
         const fixture = yield* readOwnedFixture();
-        const cause = new TypeError("Authorization query unavailable.");
-        queryMock.mockRejectedValueOnce(cause);
+        const cause = new HttpClient.HttpClientError({
+          cause: new TypeError("Authorization query unavailable."),
+        });
+        queryMock.mockReturnValueOnce(Effect.fail(cause));
         expect(
           yield* loadSignedTryoutContent(
             fixture.attemptId,
             fixture.access
           ).pipe(Effect.flip)
-        ).toMatchObject({ _tag: "ContentRuntimeVerificationError", cause });
+        ).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+          cause,
+        });
         expect(cacheMock).not.toHaveBeenCalled();
       })
   );

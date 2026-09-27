@@ -1,5 +1,5 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   abortEvidence,
   validateAbortedRelease,
@@ -21,10 +21,8 @@ import type {
   statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/binding";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, type Schema } from "effect";
 export type ReleaseStatus = Schema.Schema.Type<typeof statusValidator>;
 export type CurrentStatus = Schema.Schema.Type<typeof currentValidator>;
@@ -33,10 +31,9 @@ export type StagedBundle = NonNullable<CurrentStatus["candidate"]>;
 
 /** Validates and returns one invisible slot's public lifecycle phase. */
 export const stagedPhase = Effect.fn("contentRelease.stagedPhase")(function* (
-  ctx: QueryCtx,
-  release: Doc<"contentReleases">
+  release: Docs["contentReleases"]
 ) {
-  const state = yield* loadState(ctx);
+  const state = yield* loadState();
   if (!(state && ownsRole(state, release.role, release))) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -76,15 +73,14 @@ export const stagedPhase = Effect.fn("contentRelease.stagedPhase")(function* (
 
 /** Loads one exact stored bundle for an invisible candidate or recovery. */
 export const stagedBundle = Effect.fn("contentRelease.stagedBundle")(function* (
-  ctx: QueryCtx,
   releaseId: string | undefined
 ) {
   if (releaseId === undefined) {
     return null;
   }
-  const release = yield* loadRelease(ctx, releaseId);
+  const release = yield* loadRelease(releaseId);
   return {
-    phase: yield* stagedPhase(ctx, release),
+    phase: yield* stagedPhase(release),
     releaseJson: release.releaseJson,
     rendererJson: release.rendererJson,
   } satisfies StagedBundle;
@@ -92,15 +88,14 @@ export const stagedBundle = Effect.fn("contentRelease.stagedBundle")(function* (
 
 /** Loads the completed active release and its optional permanent runtime pair. */
 export const activePublication = Effect.fn("contentRelease.activePublication")(
-  function* (ctx: QueryCtx) {
+  function* () {
     const active = yield* loadActiveIdentity().pipe(
-      Effect.provide(convexPublicationLayer(ctx))
+      Effect.provide(publicationLayer)
     );
     if (!active) {
       return null;
     }
     const runtime = yield* findReleaseTryoutRuntime(
-      ctx,
       active.signed,
       active.release.tryoutRuntimeBundleHash
     );
@@ -116,10 +111,8 @@ export const activePublication = Effect.fn("contentRelease.activePublication")(
 );
 
 /** Reads authenticated recovery bytes for the singleton publication state. */
-export const currentProgram = Effect.fn("contentRelease.current")(function* (
-  ctx: QueryCtx
-) {
-  const state = yield* loadState(ctx);
+export const currentProgram = Effect.fn("contentRelease.current")(function* () {
+  const state = yield* loadState();
   if (!state) {
     return {
       active: null,
@@ -128,22 +121,21 @@ export const currentProgram = Effect.fn("contentRelease.current")(function* (
       tryoutRuntimeBundleJson: null,
     } satisfies CurrentStatus;
   }
-  const publication = yield* activePublication(ctx);
+  const publication = yield* activePublication();
   return {
     active: publication?.active ?? null,
-    candidate: yield* stagedBundle(ctx, state.candidateReleaseId),
-    recovery: yield* stagedBundle(ctx, state.recoveryReleaseId),
+    candidate: yield* stagedBundle(state.candidateReleaseId),
+    recovery: yield* stagedBundle(state.recoveryReleaseId),
     tryoutRuntimeBundleJson: publication?.tryoutRuntimeBundleJson ?? null,
   } satisfies CurrentStatus;
 });
 
 /** Reads one indexed release phase without exposing publication internals. */
 export const statusProgram = Effect.fn("contentRelease.status")(function* (
-  ctx: QueryCtx,
   manifestHash: string,
   releaseId: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const release = yield* database
     .table("contentReleases")
     .get("by_releaseId", releaseId)
@@ -167,11 +159,7 @@ export const statusProgram = Effect.fn("contentRelease.status")(function* (
     );
   }
   if (release.status === "completed") {
-    yield* findReleaseTryoutRuntime(
-      ctx,
-      signed,
-      release.tryoutRuntimeBundleHash
-    );
+    yield* findReleaseTryoutRuntime(signed, release.tryoutRuntimeBundleHash);
     return {
       manifestHash,
       phase: "completed",
@@ -180,7 +168,7 @@ export const statusProgram = Effect.fn("contentRelease.status")(function* (
     } satisfies ReleaseStatus;
   }
   if (release.status === "aborted") {
-    yield* validateAbortedRelease(ctx, releaseId);
+    yield* validateAbortedRelease(releaseId);
     return {
       manifestHash,
       phase: "aborted",
@@ -189,7 +177,7 @@ export const statusProgram = Effect.fn("contentRelease.status")(function* (
   }
   return {
     manifestHash,
-    phase: yield* stagedPhase(ctx, release),
+    phase: yield* stagedPhase(release),
     releaseId,
   } satisfies ReleaseStatus;
 });

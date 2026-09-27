@@ -1,49 +1,69 @@
-# ADR 0001: Single NinaHarness with Internal LearningCapabilities and Production Evals
+# ADR 0001: Native Agent conversations with Confect domain operations
 
 ## Status
 
-Accepted for PR #187.
+Accepted architecture for Nina and learning engagement.
 
 ## Context
 
-Nina needs durable learning context, AI SDK streaming, deterministic education
-tools, bounded operational traces, and production evals without exposing AI SDK
-callback shapes through app routes. Learning engagement also needs Continue
-Learning and popularity reads that stay bounded as raw view volume grows.
+Nina needs durable conversations, reconnectable streaming, verified learning
+context, deterministic tools, and credit accounting. Next.js renders the product;
+the backend owns conversation execution and persistence.
 
 ## Decision
 
-Nakafa uses one package-owned `NinaHarness` Effect service with a single external
-`stream` Interface. The Next route remains the HTTP/auth boundary and binds
-app-owned adapters for Convex persistence, diagnostics, and Nakafa content/search
-services.
+`packages/backend/confect/nina` owns Nina. Confect specs declare validated public
+and internal functions, and named Effect programs implement their behavior.
+Generated database and runner services supply dependencies. Convex component SDK
+calls use the generated context service at the SDK boundary.
 
-ToolLoopAgent, `prepareStep`, repair, writer callbacks, model selection,
-LearningCapability policy, evidence envelopes, trace summaries, and AI SDK UI
-stream response composition stay internal to `packages/ai/nina`.
+A public mutation authenticates the learner, verifies page context, reserves
+credits, saves the prompt through the Agent component, and schedules generation
+in one transaction. A stable request key makes retries idempotent. The scheduled
+action invokes Agent with a Vercel AI Gateway model. Lifecycle mutations settle
+successful responses or refund failed and cancelled responses once.
 
-Math, Nakafa, and research are internal LearningCapabilities. They return
-schema-derived evidence instead of owning public app contracts. Math is
-deterministic-first; Nakafa owns Nakafa content evidence; research is reserved for
-source-heavy, current, or external work.
+The Agent component owns threads, messages, tool results, and stream deltas.
+Application tables retain product ownership, visibility, credit transactions,
+turn state, and learning context. They do not duplicate the Agent transcript.
+React uses Confect hooks for application functions and the official Agent
+`useUIMessages` hook for stream synchronization. Sending uses the official Agent
+optimistic update contract. There is no Next.js AI transport route or separate AI
+backend package.
 
-Production evals use schema-derived EvalCases, EvalSuites, and EvalRuns over
-NinaHarness and LearningCapability seams. Provider-backed evals are opt-in for
-provider behavior changes; deterministic suites are the default readiness gate.
+Math, Nakafa retrieval, and external research are Agent tools implemented as
+Effect programs. Specialist agents use the same Vercel Gateway provider and
+Agent usage handler. Tool results retain progressive evidence cards and final
+model-facing evidence. Context compaction changes provider input only; it does
+not discard the stored transcript. Math uses deterministic computation, Nakafa
+uses authenticated signed content, and research admits retrieved sources.
 
-Learning engagement uses durable read models and counters for product reads. Raw
-daily viewer keys expire after their UTC day, and aggregate daily signals expire
-after all finite windows have consumed them. Lifetime popularity is stored in durable counters, with Aggregate
-reserved for ranked read indexes where it simplifies bounded top-N reads.
+Expected generation failures become typed, stable reason codes. The application
+dictionary owns user-facing copy and recovery guidance. Operational exception
+reports carry bounded routing facts and redacted code frames. Optional product
+analytics remains subject to account consent.
 
-## Consequences
+## Verification
 
-- Routes do not own AI SDK callback, tool-loop, or capability contracts.
-- Product contracts derive from Effect Schema, generated Convex types, AI SDK
-  interop types, or Effect services instead of duplicated TypeScript shapes.
-- LearningCapability traces are bounded operational data, not canonical chat
-  transcripts.
-- App adapters can change deployment details without changing NinaHarness.
-- Popularity retention follows the actual consumer horizons and transactional
-  write ownership recorded in ADR 0008. It never reconstructs lifetime totals
-  from expired viewer keys or finite-window signals.
+Contract tests cover typed failures, credit reservation and settlement,
+idempotency, ownership, uploads, context, and history migration. Agent integration
+tests use the real component with controlled provider models. Local production
+browser acceptance checks optimistic sending, reconnects, attachments, scrolling,
+and stable layout. Provider-backed acceptance verifies the configured Gateway
+separately from deterministic tests.
+
+## Learning engagement
+
+Continue Learning and popularity use durable read models with bounded reads.
+Daily viewer keys expire after their UTC day. Daily signals remain through their
+finite consumer windows, while lifetime counters remain durable. Retention
+follows ADR 0008 and does not reconstruct lifetime totals from expired inputs.
+
+## References
+
+- https://confect.dev/v10/concepts/services
+- https://confect.dev/v10/server/components
+- https://confect.dev/v10/clients/react
+- https://docs.convex.dev/agents/streaming
+- https://docs.convex.dev/agents/messages#optimistic-updates-for-sending-messages
+- https://docs.convex.dev/agents/usage-tracking

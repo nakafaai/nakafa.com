@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import { finalizeAccountDeletion } from "@repo/backend/confect/auth/deletion/finalize";
 import { launchDeletedUserCleanupProgram } from "@repo/backend/confect/customers/deletion/workflow";
 import spec from "@repo/backend/confect/customers/deletion/workflow.spec";
@@ -13,12 +12,7 @@ const finalizeDeletedUserCleanup = FunctionImpl.make(
   "finalizeDeletedUserCleanup",
   Effect.fn("customers.deletion.workflow.finalizeDeletedUserCleanup")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
-      yield* finalizeAccountDeletion(
-        ctx,
-        args.authId,
-        args.expectedPreparation
-      );
+      yield* finalizeAccountDeletion(args.authId, args.expectedPreparation);
       return null;
     }
   )
@@ -29,8 +23,7 @@ const launchDeletedUserCleanup = FunctionImpl.make(
   "launchDeletedUserCleanup",
   Effect.fn("customers.deletion.workflow.launchDeletedUserCleanup")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
-      yield* launchDeletedUserCleanupProgram(ctx, args.authId, args.userId);
+      yield* launchDeletedUserCleanupProgram(args.authId, args.userId);
       return null;
     }
   )

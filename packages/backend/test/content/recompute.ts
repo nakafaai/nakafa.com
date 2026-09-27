@@ -24,7 +24,6 @@ import { stageItemProgram } from "@repo/backend/confect/contentRelease/items";
 import { stageProgram as stageRelease } from "@repo/backend/confect/contentRelease/manifest";
 import { stageProjectionProgram } from "@repo/backend/confect/contentRelease/projection";
 import { stageProgram as stageRoutes } from "@repo/backend/confect/contentRelease/routes";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_PROOF_RENDERER,
@@ -36,9 +35,14 @@ import { Effect, Schema, Stream } from "effect";
 
 /** Stages a complete authenticated genesis release across real bounded batches. */
 export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
-  function* (ctx: MutationCtx, count: number, releaseId: ReleaseId) {
+  function* (count: number, releaseId: ReleaseId) {
     const entries = yield* Effect.forEach(
-      Array.from({ length: count }, (_, index) => index),
+      Array.from(
+        {
+          length: count,
+        },
+        (_, index) => index
+      ),
       Effect.fn("backendTest.pagedReleaseEntry")(function* (index) {
         const contentKey = ContentKeySchema.make(
           `test:proof-${String(index).padStart(3, "0")}`
@@ -46,8 +50,13 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
         const sourcePath = CorpusSourcePathSchema.make(
           `packages/corpus/test/proof-${index}/en.mdx`
         );
-        const artifact = testSignedArtifact("mathematics", { contentKey });
-        const projectionJson = testProjectionJson({ contentKey, index });
+        const artifact = testSignedArtifact("mathematics", {
+          contentKey,
+        });
+        const projectionJson = testProjectionJson({
+          contentKey,
+          index,
+        });
         const projection = yield* Schema.decodeEffect(
           Schema.fromJsonString(MaterialLessonProjectionSchema)
         )(projectionJson);
@@ -90,7 +99,14 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
             state: "absent",
           },
         });
-        return { artifact, head, item, projection, projectionJson, rollback };
+        return {
+          artifact,
+          head,
+          item,
+          projection,
+          projectionJson,
+          rollback,
+        };
       })
     );
     const routes = [...entries]
@@ -145,7 +161,6 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
       })
     );
     yield* stageRelease(
-      ctx,
       "candidate",
       JSON.stringify(signed),
       JSON.stringify(TEST_PROOF_RENDERER)
@@ -154,19 +169,16 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
       const batchIndex = start / MAX_ITEM_BATCH_COUNT;
       const batch = entries.slice(start, start + MAX_ITEM_BATCH_COUNT);
       yield* stageItemProgram(
-        ctx,
         releaseId,
         batchIndex,
         batch.map(({ item }) => JSON.stringify(item))
       );
       yield* stageArtifacts(
-        ctx,
         releaseId,
         batchIndex,
         batch.map(({ artifact }) => JSON.stringify(artifact))
       );
       yield* stageProjectionProgram(
-        ctx,
         releaseId,
         batchIndex,
         batch.map(({ projectionJson }) => projectionJson)
@@ -174,7 +186,6 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
     }
     for (let start = 0; start < count; start += MAX_ITEM_BATCH_COUNT) {
       yield* stageRoutes(
-        ctx,
         releaseId,
         start / MAX_ITEM_BATCH_COUNT,
         routes

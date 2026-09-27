@@ -11,7 +11,6 @@ import { Schema } from "effect";
  * The minimal class fields needed to render the class join screen.
  */
 
-import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 /**
  * School class member role validator
  */
@@ -66,10 +65,6 @@ export type ClassRouteResult = Schema.Schema.Type<
 export const classJoinMutationResultValidator = Schema.Struct({
   classId: IdSchema("schoolClasses"),
 });
-export const paginatedClassesValidator = PaginationResultSchema(
-  schoolClassesTable.Doc
-);
-
 /**
  * School class member base validator (without system fields)
  */
@@ -88,7 +83,7 @@ const classMemberUserValidator = Schema.Struct({
  * Class member with user data validator (for getPeople)
  * Used internally for paginatedPeopleValidator
  */
-const classMemberWithUserValidator = Schema.Struct({
+export const classMemberWithUserValidator = Schema.Struct({
   ...schoolClassMembersTable.Doc.fields,
   ...{
     user: classMemberUserValidator,
@@ -98,6 +93,3 @@ const classMemberWithUserValidator = Schema.Struct({
 /**
  * Paginated people validator (for getPeople query)
  */
-export const paginatedPeopleValidator = PaginationResultSchema(
-  classMemberWithUserValidator
-);

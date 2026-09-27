@@ -20,17 +20,15 @@ import {
   type TryoutHistoryRequest,
 } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Reads a bounded signed batch under fresh session, ownership and phase checks. */
 export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
-  ctx: QueryCtx,
   request: TryoutHistoryRequest
 ) {
-  const auth = yield* getOptionalAppUserForRead(ctx);
+  const auth = yield* getOptionalAppUserForRead();
   if (!auth) {
     return null;
   }
@@ -45,7 +43,6 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
     });
   }
   const attempt = yield* readOwnedAttemptById(
-    ctx,
     request.attemptId,
     auth.appUser._id
   );
@@ -56,13 +53,13 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
     Effect.Success<ReturnType<typeof readHistoryPlacement>>
   >[] = [];
   for (const selector of request.selectors) {
-    const placement = yield* readHistoryPlacement(ctx, attempt, selector);
+    const placement = yield* readHistoryPlacement(attempt, selector);
     if (!placement) {
       return null;
     }
     placements.push(placement);
   }
-  const stored = yield* loadAttemptRuntimeBundle(ctx, attempt);
+  const stored = yield* loadAttemptRuntimeBundle(attempt);
   const [bundle, renderer] = yield* Effect.all([
     decodeTryoutRuntimeBundleJson(stored.bundleJson),
     decodeRendererJson(stored.rendererJson),
@@ -82,7 +79,7 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
     });
   }
   yield* loadVerifiedSnapshot("tryout", attempt.tryoutSnapshotId).pipe(
-    Effect.provide(convexPublicationLayer(ctx))
+    Effect.provide(publicationLayer)
   );
   const result: TryoutBodyBatch = {
     bundleJson: stored.bundleJson,
@@ -91,7 +88,7 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
   };
   let responseBytes = protectedRuntimeResponseBytes(result);
   for (const placement of placements) {
-    const item = yield* readHistoryArtifact(ctx, placement);
+    const item = yield* readHistoryArtifact(placement);
     responseBytes +=
       protectedRuntimeResponseBytes(item) + (result.items.length > 0 ? 1 : 0);
     if (responseBytes > MAX_PROTECTED_RUNTIME_RESPONSE_BYTES) {

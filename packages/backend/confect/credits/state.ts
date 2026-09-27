@@ -1,20 +1,14 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { UsersDoc } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type CreditStateUser = Pick<
-  Doc<"users">,
-  "credits" | "creditsResetAt" | "plan"
->;
-type CreditDb = QueryCtx["db"] | MutationCtx["db"];
+type CreditStateUser = Pick<UsersDoc, "credits" | "creditsResetAt" | "plan">;
 type EffectiveCreditState = ReturnType<
   typeof getEffectiveCreditStateForResetTimestamp
 >;
@@ -84,8 +78,9 @@ function creditStateFailure() {
 
 /** The plan index must own at most one materialized reset boundary. */
 const readPeriod = Effect.fn("credits.readPeriod")(
-  function* (db: CreditDb, plan: UserPlan) {
-    return yield* DatabaseReader.make(databaseSchema, db)
+  function* (plan: UserPlan) {
+    const reader = yield* DatabaseReader;
+    return yield* reader
       .table("creditResetPeriods")
       .get("by_plan", plan)
       .pipe(
@@ -99,32 +94,31 @@ const readPeriod = Effect.fn("credits.readPeriod")(
 /** Loads the stored current reset boundary for a plan. */
 export const getStoredCreditResetTimestamp = Effect.fn(
   "credits.storedBoundary"
-)(function* (db: CreditDb, plan: UserPlan) {
-  const period = yield* readPeriod(db, plan);
+)(function* (plan: UserPlan) {
+  const period = yield* readPeriod(plan);
   return period?.resetAt ?? null;
 });
 
 /** Resolves the current reset boundary for write paths. */
 export const resolveCurrentCreditResetTimestamp = Effect.fn(
   "credits.currentBoundary"
-)(function* (db: MutationCtx["db"], plan: UserPlan, now: number) {
+)(function* (plan: UserPlan, now: number) {
   const currentResetTimestamp = getCurrentCreditResetTimestamp(plan, now);
-  const storedResetTimestamp = yield* getStoredCreditResetTimestamp(db, plan);
+  const storedResetTimestamp = yield* getStoredCreditResetTimestamp(plan);
   if (
     storedResetTimestamp !== null &&
     storedResetTimestamp >= currentResetTimestamp
   ) {
     return storedResetTimestamp;
   }
-  yield* upsertStoredCreditResetTimestamp(db, plan, currentResetTimestamp);
+  yield* upsertStoredCreditResetTimestamp(plan, currentResetTimestamp);
   return currentResetTimestamp;
 });
 
 /** Resolves one user's effective credit state for the current reset period. */
 export const resolveEffectiveCreditState = Effect.fn("credits.effectiveState")(
-  function* (db: MutationCtx["db"], user: CreditStateUser, now: number) {
+  function* (user: CreditStateUser, now: number) {
     const resetTimestamp = yield* resolveCurrentCreditResetTimestamp(
-      db,
       user.plan,
       now
     );
@@ -132,18 +126,20 @@ export const resolveEffectiveCreditState = Effect.fn("credits.effectiveState")(
   }
 );
 
-/** Upserts one materialized reset boundary in the SDK's current transaction. */
+/** Upserts one materialized reset boundary in the current transaction. */
 export const upsertStoredCreditResetTimestamp = Effect.fn(
   "credits.writeBoundary"
 )(
-  function* (db: MutationCtx["db"], plan: UserPlan, resetAt: number) {
-    const existing = yield* readPeriod(db, plan);
-    const periods = DatabaseWriter.make(databaseSchema, db).table(
-      "creditResetPeriods"
-    );
+  function* (plan: UserPlan, resetAt: number) {
+    const existing = yield* readPeriod(plan);
+    const writer = yield* DatabaseWriter;
+    const periods = writer.table("creditResetPeriods");
     if (!existing) {
       yield* periods
-        .insert({ plan, resetAt })
+        .insert({
+          plan,
+          resetAt,
+        })
         .pipe(Effect.mapError(creditStateFailure));
       return null;
     }
@@ -151,7 +147,9 @@ export const upsertStoredCreditResetTimestamp = Effect.fn(
       return null;
     }
     yield* periods
-      .patch(existing._id, { resetAt })
+      .patch(existing._id, {
+        resetAt,
+      })
       .pipe(Effect.mapError(creditStateFailure));
     return null;
   },

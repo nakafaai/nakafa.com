@@ -1,7 +1,10 @@
+/**
+ * Aggregate forum posts by forum-local sequence so queries can count unread
+ * posts after one read boundary in logarithmic time.
+ */
 import { TableAggregate } from "@convex-dev/aggregate";
 import { components } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
-
 /**
  * Aggregate forum posts by forum-local sequence so queries can count unread
  * posts after one read boundary in logarithmic time.

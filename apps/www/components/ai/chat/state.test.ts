@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   patchChatPage,
   removeChatFromPage,
@@ -27,7 +28,7 @@ const page = [
     userId: "user-1" as Id<"users">,
     visibility: "public",
   },
-] satisfies Doc<"chats">[];
+] satisfies Docs["chats"][];
 
 describe("chat query state", () => {
   it("patches only the matching chat", () => {

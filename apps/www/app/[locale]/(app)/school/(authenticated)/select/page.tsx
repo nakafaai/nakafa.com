@@ -1,10 +1,13 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Effect } from "effect";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { SchoolSelectList } from "@/components/school/select-list";
-import { fetchAuthQuery, getToken } from "@/lib/auth/server";
+import { env } from "@/env";
+import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Render the school selection page for users who belong to many schools. */
@@ -26,26 +29,36 @@ async function AuthenticatedSchoolSelection({
     params,
     getToken(),
   ]);
-
   if (!token) {
     return null;
   }
-
   const locale = getLocaleOrThrow(rawLocale);
-
-  const [t, landingState] = await Promise.all([
-    getTranslations({ locale, namespace: "School.Onboarding" }),
-    fetchAuthQuery(api.schools.queries.getMySchoolLandingState, {}),
+  const [t, initialSchoolPage] = await Promise.all([
+    getTranslations({
+      locale,
+      namespace: "School.Onboarding",
+    }),
+    Effect.runPromise(
+      Effect.flatMap(HttpClient.HttpClient, (client) =>
+        client.query(refs.public.schools.queries.getMySchoolsPage, {
+          paginationOpts: { cursor: null, numItems: 20 },
+        })
+      ).pipe(
+        Effect.provide(
+          HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, {
+            auth: token,
+          })
+        ),
+        Effect.withTracerTiming(false)
+      )
+    ),
   ]);
-
-  if (landingState.kind === "none") {
+  if (initialSchoolPage.isDone && initialSchoolPage.page.length === 0) {
     redirect(`/${locale}/school/onboarding`);
   }
-
-  if (landingState.kind === "single") {
-    redirect(`/${locale}/school/${landingState.slug}`);
+  if (initialSchoolPage.isDone && initialSchoolPage.page.length === 1) {
+    redirect(`/${locale}/school/${initialSchoolPage.page[0].slug}`);
   }
-
   return (
     <main className="mx-auto flex min-h-svh w-full max-w-3xl flex-col justify-center gap-8 px-6 py-12">
       <header className="space-y-3 text-center">
@@ -57,7 +70,7 @@ async function AuthenticatedSchoolSelection({
         </p>
       </header>
 
-      <SchoolSelectList />
+      <SchoolSelectList initialSchoolPage={initialSchoolPage} />
 
       <NavigationLink
         className="mx-auto text-primary text-sm underline-offset-4 hover:underline"

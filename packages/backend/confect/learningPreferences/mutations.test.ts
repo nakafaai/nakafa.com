@@ -1,3 +1,7 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import {
   ActiveAppLocaleListSchema,
@@ -8,9 +12,9 @@ import {
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { authReader } from "@repo/backend/confect/auth/reader";
 import { readLearningPreferenceByUserId } from "@repo/backend/confect/learningPreferences/impl";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -29,7 +33,6 @@ const PREFERENCE_APP_LOCALES = Schema.decodeSync(ActiveAppLocaleListSchema)([
   "en",
   "id",
 ]);
-
 const PREFERENCE_PROGRAMS = [
   makePreferenceProgram(1, "merdeka", "ID", "merdeka", "Kurikulum Merdeka"),
   makePreferenceProgram(
@@ -49,7 +52,6 @@ const PREFERENCE_PROGRAMS = [
   ),
   makePreferenceProgram(5, "snbt", "ID", "snbt", "SNBT", "admission-exam"),
 ];
-
 type PreferenceTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
 /** Creates one authenticated preference-test user. */
@@ -57,9 +59,9 @@ const seedPreferenceUser = Effect.fn("test.learningPreferences.seedUser")(
   function* (t: PreferenceTest) {
     return yield* Effect.promise(() =>
       t.mutation((ctx) =>
-        runConvexProgram(
-          Effect.promise(() => seedAuthenticatedUser(ctx, { now: NOW }))
-        )
+        seedAuthenticatedUser(ctx, {
+          now: NOW,
+        })
       )
     );
   }
@@ -69,23 +71,29 @@ const seedPreferenceUser = Effect.fn("test.learningPreferences.seedUser")(
 const seedTryoutPreferenceUser = Effect.fn(
   "test.learningPreferences.seedTryoutUser"
 )(function* (t: PreferenceTest) {
+  const runtimeServices = yield* Effect.context<never>();
   return yield* Effect.promise(() =>
     t.mutation((ctx) =>
-      runConvexProgram(
+      Effect.runPromiseWith(runtimeServices)(
         Effect.gen(function* () {
           const user = yield* Effect.promise(() =>
-            seedAuthenticatedUser(ctx, { now: NOW })
+            seedAuthenticatedUser(ctx, {
+              now: NOW,
+            })
           );
           yield* Effect.promise(() =>
             activateTryoutStartSource(ctx, "visible")
           );
           return user;
-        })
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       )
     )
   );
 });
-
 describe("learningPreferences", () => {
   it.effect(
     "lists school curriculum preferences in catalog display order",
@@ -93,13 +101,11 @@ describe("learningPreferences", () => {
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
         yield* syncPrograms(t);
-
         const programs = yield* Effect.promise(() =>
           t.query(api.learningPreferences.queries.listCurriculumPrograms, {
             locale: "id",
           })
         );
-
         expect(programs.map((program) => program.key)).toEqual([
           "merdeka",
           "cambridge-international",
@@ -113,7 +119,6 @@ describe("learningPreferences", () => {
         });
       })
   );
-
   it.effect(
     "saves and reads the authenticated user's preferred curriculum",
     () =>
@@ -121,12 +126,12 @@ describe("learningPreferences", () => {
         const t = createConvexTestWithBetterAuth();
         const identity = yield* seedPreferenceUser(t);
         yield* syncPrograms(t);
-
         const guestPreference = yield* Effect.promise(() =>
-          t.query(api.learningPreferences.queries.getCurrent, { locale: "id" })
+          t.query(api.learningPreferences.queries.getCurrent, {
+            locale: "id",
+          })
         );
         expect(guestPreference).toBeNull();
-
         const authed = t.withIdentity({
           sessionId: identity.sessionId,
           subject: identity.authUserId,
@@ -147,7 +152,6 @@ describe("learningPreferences", () => {
             }
           )
         );
-
         expect(saved).toMatchObject({
           preferredCurriculumProgramKey: "united-states",
           program: {
@@ -165,21 +169,18 @@ describe("learningPreferences", () => {
         expect(current).toEqual(saved);
       })
   );
-
   it.effect(
     "saves and reads the authenticated user's preferred try-out country",
     () =>
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
         const identity = yield* seedTryoutPreferenceUser(t);
-
         const guestPreference = yield* Effect.promise(() =>
           t.query(api.learningPreferences.queries.getCurrentTryout, {
             locale: "id",
           })
         );
         expect(guestPreference).toBeNull();
-
         const authed = t.withIdentity({
           sessionId: identity.sessionId,
           subject: identity.authUserId,
@@ -193,7 +194,6 @@ describe("learningPreferences", () => {
             }
           )
         );
-
         expect(saved).toMatchObject({
           country: {
             countryCode: "ID",
@@ -217,7 +217,6 @@ describe("learningPreferences", () => {
         expect(currentCurriculum).toBeNull();
       })
   );
-
   it.effect("rejects a try-out country missing from the signed catalog", () =>
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
@@ -226,7 +225,6 @@ describe("learningPreferences", () => {
         sessionId: identity.sessionId,
         subject: identity.authUserId,
       });
-
       yield* Effect.promise(() =>
         expect(
           authed.mutation(
@@ -245,11 +243,9 @@ describe("learningPreferences", () => {
       );
     })
   );
-
   it.effect("preserves the shared authentication contracts", () =>
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
-
       yield* Effect.promise(() =>
         expect(
           t.mutation(
@@ -266,24 +262,18 @@ describe("learningPreferences", () => {
           },
         })
       );
-
       const identity = yield* seedPreferenceUser(t);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
-            Effect.promise(() =>
-              ctx.db.patch("users", identity.userId, {
-                deletionPreparedAt: NOW,
-              })
-            )
-          )
+          ctx.db.patch("users", identity.userId, {
+            deletionPreparedAt: NOW,
+          })
         )
       );
       const authed = t.withIdentity({
         sessionId: identity.sessionId,
         subject: identity.authUserId,
       });
-
       yield* Effect.promise(() =>
         expect(
           authed.mutation(
@@ -302,7 +292,6 @@ describe("learningPreferences", () => {
       );
     })
   );
-
   it("redacts unexpected auth provider failures for preference reads and writes", async () => {
     const t = createConvexTestWithBetterAuth();
     const auth = vi
@@ -315,8 +304,9 @@ describe("learningPreferences", () => {
       })
     ).rejects.toMatchObject({
       data: {
-        code: "CURRICULUM_PREFERENCE_AUTH_FAILED",
-        message: "Unable to authenticate the curriculum preference request.",
+        _tag: "AuthReadError",
+        code: "AUTH_READ_FAILED",
+        message: "Unable to read authentication state.",
       },
     });
     await expect(
@@ -326,28 +316,36 @@ describe("learningPreferences", () => {
       })
     ).rejects.toMatchObject({
       data: {
-        code: "TRYOUT_PREFERENCE_AUTH_FAILED",
-        message: "Unable to authenticate the try-out preference request.",
+        _tag: "AuthReadError",
+        code: "AUTH_READ_FAILED",
+        message: "Unable to read authentication state.",
       },
     });
     for (const query of [
       api.learningPreferences.queries.getCurrent,
       api.learningPreferences.queries.getCurrentTryout,
     ]) {
-      await expect(t.query(query, { locale: "id" })).rejects.toMatchObject({
-        data: { code: "LEARNING_PREFERENCE_IO_FAILED" },
+      await expect(
+        t.query(query, {
+          locale: "id",
+        })
+      ).rejects.toMatchObject({
+        data: {
+          _tag: "AuthReadError",
+          code: "AUTH_READ_FAILED",
+        },
       });
     }
     auth.mockRestore();
   });
-
   it.effect("redacts preference persistence failures", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const identity = yield* seedPreferenceUser(t);
       const failure = yield* Effect.promise(() =>
         t.query((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.acquireUseRelease(
               Effect.sync(() =>
                 vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
@@ -355,7 +353,7 @@ describe("learningPreferences", () => {
                 })
               ),
               () =>
-                readLearningPreferenceByUserId(ctx, identity.userId).pipe(
+                readLearningPreferenceByUserId(identity.userId).pipe(
                   Effect.match({
                     onFailure: (error) => ({
                       _tag: error._tag,
@@ -366,11 +364,12 @@ describe("learningPreferences", () => {
                   })
                 ),
               (querySpy) => Effect.sync(() => querySpy.mockRestore())
+            ).pipe(
+              Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
             )
           )
         )
       );
-
       expect(failure).toMatchObject({
         _tag: "LearningPreferencePersistenceError",
         code: "LEARNING_PREFERENCE_PERSISTENCE_FAILED",
@@ -378,18 +377,15 @@ describe("learningPreferences", () => {
       });
     })
   );
-
   it.effect("rejects non-curriculum program keys", () =>
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
       const identity = yield* seedPreferenceUser(t);
       yield* syncPrograms(t);
-
       const authed = t.withIdentity({
         sessionId: identity.sessionId,
         subject: identity.authUserId,
       });
-
       yield* Effect.promise(() =>
         expect(
           authed.mutation(
@@ -413,11 +409,22 @@ describe("learningPreferences", () => {
 /** Activates the reviewed program copy as one signed snapshot. */
 const syncPrograms = Effect.fn("test.learningPreferences.syncPrograms")(
   function* (t: PreferenceTest) {
+    const runtimeServices = yield* Effect.context<never>();
     const data = yield* makeProgramSnapshotData(
       PREFERENCE_PROGRAMS,
       PREFERENCE_APP_LOCALES
     );
-    yield* Effect.promise(() => activateProgramSnapshot(t, data));
+    yield* Effect.promise(() =>
+      t.mutation((ctx) =>
+        Effect.runPromiseWith(runtimeServices)(
+          activateProgramSnapshot(data).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
+      )
+    );
   }
 );
 
@@ -431,7 +438,6 @@ function makePreferenceProgram(
   kind: LearningProgram["kind"] = "school-curriculum"
 ) {
   const base = makeTechnicalProgram(index, kind);
-
   return LearningProgramSchema.make({
     ...base,
     key: LearningProgramKeySchema.make(key),
@@ -441,8 +447,16 @@ function makePreferenceProgram(
     },
     recommendedCountry: countryCode,
     translations: [
-      { appLocale: ActiveAppLocaleSchema.make("en"), publicSlug, title },
-      { appLocale: ActiveAppLocaleSchema.make("id"), publicSlug, title },
+      {
+        appLocale: ActiveAppLocaleSchema.make("en"),
+        publicSlug,
+        title,
+      },
+      {
+        appLocale: ActiveAppLocaleSchema.make("id"),
+        publicSlug,
+        title,
+      },
     ],
   });
 }

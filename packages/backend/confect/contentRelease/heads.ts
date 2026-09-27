@@ -1,15 +1,13 @@
-import { DatabaseReader } from "@confect/server";
 import {
   type ContentHead,
   HeadPageRequestSchema,
   HeadPageSchema,
 } from "@nakafa/aksara-contracts/release/head";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { loadReadableSnapshot } from "@repo/backend/confect/contentRelease/snapshot";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolveContentHead } from "@repo/backend/content/publication/projection";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Schema } from "effect";
 
 /** Decodes one bounded active-head request into the exact shared contract. */
@@ -30,24 +28,18 @@ export const decodeRequest = Effect.fn("contentRelease.decodeHeadPage")(
 );
 /** Proves the requested release is an exact active or verified snapshot. */
 export const snapshotSequence = Effect.fn("contentRelease.snapshotSequence")(
-  function* (ctx: QueryCtx, releaseId: string, manifestHash: string) {
-    const { release } = yield* loadReadableSnapshot(
-      ctx,
-      releaseId,
-      manifestHash
-    );
+  function* (releaseId: string, manifestHash: string) {
+    const { release } = yield* loadReadableSnapshot(releaseId, manifestHash);
     return release.sequence;
   }
 );
 /** Reads one canonical family directory page from an immutable sequence. */
 export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
-  ctx: QueryCtx,
   input: unknown
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const request = yield* decodeRequest(input);
   const sequence = yield* snapshotSequence(
-    ctx,
     request.activeReleaseId,
     request.activeManifestHash
   );
@@ -70,7 +62,7 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
       key.contentKey,
       key.artifactLocale,
       sequence
-    ).pipe(Effect.provide(convexPublicationLayer(ctx)));
+    ).pipe(Effect.provide(publicationLayer));
     if (head) {
       heads.push(head);
     }

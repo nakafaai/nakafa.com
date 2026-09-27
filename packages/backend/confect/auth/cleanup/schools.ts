@@ -1,8 +1,9 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
 
 const MEMBERSHIP_BATCH_SIZE = 25;
@@ -11,9 +12,9 @@ const ACTIVITY_REFERENCE_BATCH_SIZE = 25;
 
 /** Deletes one bounded batch of school and class memberships. */
 const cleanupMemberships = Effect.fn("auth.cleanup.cleanupMemberships")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const classMemberships = yield* database
       .table("schoolClassMembers")
       .index("by_userId", (query) => query.eq("userId", userId))
@@ -40,9 +41,9 @@ const cleanupMemberships = Effect.fn("auth.cleanup.cleanupMemberships")(
 
 /** Deletes one bounded batch of school audit rows containing user metadata. */
 const cleanupActivity = Effect.fn("auth.cleanup.cleanupSchoolActivity")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const inviteRows = yield* database
       .table("schoolActivityLogs")
       .index("by_metadata_invitedUserId", (query) =>
@@ -101,9 +102,9 @@ const cleanupActivity = Effect.fn("auth.cleanup.cleanupSchoolActivity")(
  */
 export const cleanupUserSchoolData = Effect.fn(
   "auth.cleanup.cleanupUserSchoolData"
-)(function* (ctx: MutationCtx, userId: Id<"users">) {
-  if (yield* cleanupMemberships(ctx, userId)) {
+)(function* (userId: Id<"users">) {
+  if (yield* cleanupMemberships(userId)) {
     return true;
   }
-  return yield* cleanupActivity(ctx, userId);
+  return yield* cleanupActivity(userId);
 });

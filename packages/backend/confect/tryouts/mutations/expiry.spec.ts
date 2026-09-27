@@ -1,14 +1,14 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
-import { TryoutAttemptStateErrorWire } from "@repo/backend/confect/tryouts/attempt";
+import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
-  TryoutProgressErrorWire,
-  TryoutProgressSizeErrorWire,
+  TryoutProgressError,
+  TryoutProgressSizeError,
 } from "@repo/backend/confect/tryouts/progress/spec";
 import {
-  TryoutResponseIntegrityErrorWire,
-  TryoutResponseSelectionErrorWire,
+  TryoutResponseIntegrityError,
+  TryoutResponseSelectionError,
 } from "@repo/backend/confect/tryouts/response/spec";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
 import { Schema } from "effect";
@@ -23,13 +23,12 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () =>
         Schema.Union([
-          TryoutAttemptStateErrorWire,
-
+          TryoutAttemptStateError,
           TryoutRuntimeErrorWire,
-          TryoutResponseIntegrityErrorWire,
-          TryoutResponseSelectionErrorWire,
-          TryoutProgressErrorWire,
-          TryoutProgressSizeErrorWire,
+          TryoutResponseIntegrityError,
+          TryoutResponseSelectionError,
+          TryoutProgressError,
+          TryoutProgressSizeError,
         ]),
     }).middleware(Atomic)
   )
@@ -43,13 +42,12 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () =>
         Schema.Union([
-          TryoutAttemptStateErrorWire,
-
+          TryoutAttemptStateError,
           TryoutRuntimeErrorWire,
-          TryoutResponseIntegrityErrorWire,
-          TryoutResponseSelectionErrorWire,
-          TryoutProgressErrorWire,
-          TryoutProgressSizeErrorWire,
+          TryoutResponseIntegrityError,
+          TryoutResponseSelectionError,
+          TryoutProgressError,
+          TryoutProgressSizeError,
         ]),
     }).middleware(Atomic)
   )

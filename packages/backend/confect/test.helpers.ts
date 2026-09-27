@@ -1,3 +1,4 @@
+import agentTest from "@convex-dev/agent/test";
 import aggregateTest from "@convex-dev/aggregate/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import posthogTest from "@posthog/convex/test";
@@ -54,6 +55,7 @@ export function createConvexTestWithBetterAuth() {
   );
   registerLearningPopularityAggregate(t);
   rateLimiterTest.register(t, "agentRateLimiter");
+  agentTest.register(t, "nina");
   posthogTest.register(t);
   return t;
 }

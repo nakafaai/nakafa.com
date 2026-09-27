@@ -1,11 +1,9 @@
+import { FunctionImpl, GroupImpl } from "@confect/server";
+import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  FunctionImpl,
-  GroupImpl,
-} from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
+} from "@repo/backend/confect/_generated/services";
 import {
   completeCustomerDeletionCheckpointProgram,
   deleteCustomerByIdProgram,
@@ -21,8 +19,7 @@ const deleteCustomerById = FunctionImpl.make(
   "deleteCustomerById",
   Effect.fn("customers.mutations.internal.deleteCustomerById")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
-      return yield* deleteCustomerByIdProgram(ctx, args.id);
+      return yield* deleteCustomerByIdProgram(args.id);
     }
   )
 );
@@ -32,9 +29,7 @@ const recordCustomerDeletionCheckpoint = FunctionImpl.make(
   "recordCustomerDeletionCheckpoint",
   Effect.fn("customers.mutations.internal.recordCustomerDeletionCheckpoint")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
       yield* recordCustomerDeletionCheckpointProgram(
-        ctx,
         args.polarCustomerId,
         args.userId
       );
@@ -48,9 +43,7 @@ const completeCustomerDeletionCheckpoint = FunctionImpl.make(
   "completeCustomerDeletionCheckpoint",
   Effect.fn("customers.mutations.internal.completeCustomerDeletionCheckpoint")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
       yield* completeCustomerDeletionCheckpointProgram(
-        ctx,
         args.userId,
         args.polarCustomerId
       );
@@ -63,9 +56,8 @@ const upsertCustomer = FunctionImpl.make(
   spec,
   "upsertCustomer",
   Effect.fn("customers.mutations.internal.upsertCustomer")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const tombstone = yield* database
       .table("customerDeletionTombstones")
       .get("by_polarCustomerId", args.customer.id)
@@ -132,7 +124,10 @@ const upsertCustomer = FunctionImpl.make(
       ) {
         yield* writer.table("customers").delete(existingByUser._id);
       }
-      return { customerId: existing._id, kind: "stored" };
+      return {
+        customerId: existing._id,
+        kind: "stored",
+      };
     }
     const customerId = yield* writer
       .table("customers")

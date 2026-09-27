@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   appLocaleValidator,
   contentFamilyValidator,
@@ -17,6 +17,6 @@ export default GroupSpec.make().addFunction(
       publicPath: Schema.String,
     }),
     returns: () => routeResultValidator,
-    error: () => ReleaseErrorWire,
+    error: () => ReleaseError,
   })
 );

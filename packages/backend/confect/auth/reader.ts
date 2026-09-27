@@ -1,6 +1,6 @@
 import { createClient } from "@convex-dev/better-auth";
 import authSchema from "@repo/backend/components/betterAuth/schema";
-import { components } from "@repo/backend/convex/_generated/api";
+import { components } from "@repo/backend/confect/_generated/components";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 
 /**

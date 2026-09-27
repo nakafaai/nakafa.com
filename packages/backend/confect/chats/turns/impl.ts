@@ -1,33 +1,47 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import { MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
-import { getModelCreditCost, type ModelId } from "@repo/ai/config/model";
 import { components } from "@repo/backend/confect/_generated/components";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import {
   CHAT_TURN_EXPIRY_MS,
   ChatTurnError,
+  type chatTurnValidator,
 } from "@repo/backend/confect/chats/turns/spec";
 import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
 } from "@repo/backend/confect/credits/state";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { Clock, Duration, Effect, Struct } from "effect";
+import {
+  getModelCreditCost,
+  type ModelId,
+} from "@repo/backend/confect/nina/config/model";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Clock, Duration, Effect, type Schema, Struct } from "effect";
 
 // Admission quota is independent of refundable credits. Five starts may burst;
 // ten per minute permits interactive retries without unbounded hold cycling.
 const chatRateLimiter = new RateLimiter(components.agentRateLimiter, {
-  chatTurn: { kind: "token bucket", rate: 10, period: MINUTE, capacity: 5 },
+  chatTurn: {
+    kind: "token bucket",
+    rate: 10,
+    period: MINUTE,
+    capacity: 5,
+  },
 });
 
 /** Atomically hold credits before provider work, using the SDK's transaction. */
-export const reserveChatTurn = Effect.fn("chats.turns.reserve")(
-  function* (ctx: MutationCtx, user: Doc<"users">, modelId: ModelId) {
+export const reserveChatCredits = Effect.fn("chats.credits.reserve")(
+  function* (user: Docs["users"], modelId: ModelId) {
+    const ctx = yield* MutationCtxService;
     const now = yield* Clock.currentTimeMillis;
-    const state = yield* resolveEffectiveCreditState(ctx.db, user, now).pipe(
+    const state = yield* resolveEffectiveCreditState(user, now).pipe(
       Effect.mapError(
         () =>
           new ChatTurnError({
@@ -45,7 +59,10 @@ export const reserveChatTurn = Effect.fn("chats.turns.reserve")(
     }
     // The component SDK owns its quota algorithm and component mutation contract.
     const quota = yield* Effect.tryPromise({
-      try: () => chatRateLimiter.limit(ctx, "chatTurn", { key: user._id }),
+      try: () =>
+        chatRateLimiter.limit(ctx, "chatTurn", {
+          key: user._id,
+        }),
       catch: () =>
         new ChatTurnError({
           code: "CHAT_TURN_IO_FAILED",
@@ -58,12 +75,15 @@ export const reserveChatTurn = Effect.fn("chats.turns.reserve")(
         message: "Too many chat requests. Try again shortly.",
       });
     }
-    const database = DatabaseWriter.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseWriter;
     const resetGrant = getCreditResetGrantTransaction(user, state);
     if (resetGrant) {
       yield* database
         .table("creditTransactions")
-        .insert({ userId: user._id, ...resetGrant })
+        .insert({
+          userId: user._id,
+          ...resetGrant,
+        })
         .pipe(Effect.orDie);
     }
     const balance = state.credits - credits;
@@ -81,29 +101,20 @@ export const reserveChatTurn = Effect.fn("chats.turns.reserve")(
         amount: -credits,
         type: "usage",
         balanceAfter: balance,
-        metadata: { modelId, phase: "reserved" },
+        metadata: {
+          modelId,
+          phase: "reserved",
+        },
       })
       .pipe(Effect.orDie);
-    const turnId = yield* database
-      .table("chatTurns")
-      .insert({
-        userId: user._id,
-        modelId,
-        credits,
-        creditsResetAt: state.creditsResetAt,
-        transactionId,
-        ...Struct.pick(user, ["planCreditGrantId"]),
-      })
-      .pipe(Effect.orDie);
-    yield* Effect.gen(function* () {
-      const scheduler = yield* Scheduler.Scheduler;
-      yield* scheduler.runAfter(
-        Duration.millis(CHAT_TURN_EXPIRY_MS),
-        refs.internal.chats.turns.mutations.expire,
-        { turnId }
-      );
-    }).pipe(Effect.provide(Scheduler.layer(ctx.scheduler)));
-    return turnId;
+    return {
+      userId: user._id,
+      modelId,
+      credits,
+      creditsResetAt: state.creditsResetAt,
+      transactionId,
+      ...Struct.pick(user, ["planCreditGrantId"]),
+    };
   },
   // Translate native storage defects at this ledger boundary without catching
   // expected insufficient-credit, quota, or ownership failures.
@@ -116,15 +127,40 @@ export const reserveChatTurn = Effect.fn("chats.turns.reserve")(
   )
 );
 
+/** Holds credit for the deployed HTTP caller until its rollout retires. */
+export const reserveChatTurn = Effect.fn("chats.turns.reserve")(
+  function* (user: Docs["users"], modelId: ModelId) {
+    const reservation = yield* reserveChatCredits(user, modelId);
+    const database = yield* DatabaseWriter;
+    const turnId = yield* database
+      .table("chatTurns")
+      .insert(reservation)
+      .pipe(Effect.orDie);
+    const scheduler = yield* Scheduler;
+    yield* scheduler.runAfter(
+      Duration.millis(CHAT_TURN_EXPIRY_MS),
+      refs.internal.chats.turns.mutations.expire,
+      { turnId }
+    );
+    return turnId;
+  },
+  Effect.catchDefect(
+    () =>
+      new ChatTurnError({
+        code: "CHAT_TURN_IO_FAILED",
+        message: "Unable to reserve chat credits.",
+      })
+  )
+);
+
 /** Resolve an unguessable hold once; browsers cannot enumerate reservations. */
 export const readChatTurn = Effect.fn("chats.turns.read")(
   function* (
-    ctx: MutationCtx,
     turnId: Id<"chatTurns">,
     userId: Id<"users">,
     modelId: string | undefined
   ) {
-    const turn = yield* DatabaseReader.make(databaseSchema, ctx.db)
+    const turn = yield* (yield* DatabaseReader)
       .table("chatTurns")
       .get(turnId)
       .pipe(
@@ -153,11 +189,14 @@ export const readChatTurn = Effect.fn("chats.turns.read")(
 );
 
 /** Refund a failed or abandoned turn at most once, within its credit period. */
-export const refundChatTurn = Effect.fn("chats.turns.refund")(
-  function* (ctx: MutationCtx, turn: Doc<"chatTurns">) {
+export const refundChatCredits = Effect.fn("chats.credits.refund")(
+  function* (
+    turn: Schema.Schema.Type<typeof chatTurnValidator>,
+    reservationId: string
+  ) {
     const now = yield* Clock.currentTimeMillis;
-    const reader = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const user = yield* reader
       .table("users")
       .get(turn.userId)
@@ -166,7 +205,7 @@ export const refundChatTurn = Effect.fn("chats.turns.refund")(
         Effect.orDie
       );
     if (user && !isAccountDeletionPending(user)) {
-      const state = yield* resolveEffectiveCreditState(ctx.db, user, now).pipe(
+      const state = yield* resolveEffectiveCreditState(user, now).pipe(
         Effect.mapError(
           () =>
             new ChatTurnError({
@@ -179,7 +218,10 @@ export const refundChatTurn = Effect.fn("chats.turns.refund")(
       if (resetGrant) {
         yield* writer
           .table("creditTransactions")
-          .insert({ userId: user._id, ...resetGrant })
+          .insert({
+            userId: user._id,
+            ...resetGrant,
+          })
           .pipe(Effect.orDie);
       }
       // An earlier grant must not enlarge a replacement credit allowance.
@@ -203,11 +245,28 @@ export const refundChatTurn = Effect.fn("chats.turns.refund")(
           amount: credits,
           type: "refund",
           balanceAfter: balance,
-          metadata: { modelId: turn.modelId, reservationId: turn._id },
+          metadata: {
+            modelId: turn.modelId,
+            reservationId,
+          },
         })
         .pipe(Effect.orDie);
     }
-    yield* writer.table("chatTurns").delete(turn._id);
+  },
+  Effect.catchDefect(
+    () =>
+      new ChatTurnError({
+        code: "CHAT_TURN_IO_FAILED",
+        message: "Unable to release chat credits.",
+      })
+  )
+);
+
+/** Retires the deployed HTTP reservation after its refundable ledger write. */
+export const refundChatTurn = Effect.fn("chats.turns.refund")(
+  function* (turn: Docs["chatTurns"]) {
+    yield* refundChatCredits(turn, turn._id);
+    yield* (yield* DatabaseWriter).table("chatTurns").delete(turn._id);
   },
   Effect.catchDefect(
     () =>

@@ -1,7 +1,6 @@
-import { DatabaseReader } from "@confect/server";
 import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { familyForProjection } from "@nakafa/aksara-contracts/projection/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   loadRouteBinding,
@@ -13,7 +12,6 @@ import {
   PROOF_PAGE_BYTES,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 export interface RouteCatalogPage {
   readonly checked: number;
@@ -23,9 +21,9 @@ export interface RouteCatalogPage {
 
 /** Validates one bounded active-route directory page at a frozen sequence. */
 export const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(
-  function* (ctx: QueryCtx, releaseId: string, cursor: null | string) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const release = yield* catalogRelease(ctx, releaseId);
+  function* (releaseId: string, cursor: null | string) {
+    const database = yield* DatabaseReader;
+    const release = yield* catalogRelease(releaseId);
     const stored = yield* database
       .table("contentPaths")
       .index(
@@ -42,7 +40,6 @@ export const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(
       .pipe(Effect.orDie);
     for (const path of stored.page) {
       const binding = yield* loadRouteBinding(
-        ctx,
         path.appLocale,
         path.publicPath,
         release.sequence
@@ -57,7 +54,6 @@ export const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(
         );
       }
       const head = yield* loadVersion(
-        ctx,
         binding.contentKey,
         ArtifactLocaleSchema.make(path.appLocale),
         release.sequence

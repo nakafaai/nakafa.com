@@ -1,21 +1,22 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { ContentReleaseItem } from "@nakafa/aksara-contracts/release";
 import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadExactVersion } from "@repo/backend/confect/contentRelease/model";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Option, Schema } from "effect";
 
 /** Rejects a delete whose content identity still owns a visible route. */
 const checkDeletedRoute = Effect.fn("contentRelease.checkDeletedRoute")(
-  function* (ctx: MutationCtx, row: Doc<"contentItems">, head: ContentHead) {
+  function* (row: Docs["contentItems"], head: ContentHead) {
     if (head.family === "question") {
       return;
     }
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const publicPath = yield* Effect.fromNullishOr(head.publicPath).pipe(
       Effect.orDie
     );
@@ -51,12 +52,16 @@ const checkDeletedRoute = Effect.fn("contentRelease.checkDeletedRoute")(
 
 /** Inserts one immutable delete version or validates its idempotent retry. */
 export const writeDelete = Effect.fn("contentRelease.writeDelete")(function* (
-  ctx: MutationCtx,
-  row: Doc<"contentItems">,
-  change: Extract<ContentReleaseItem["change"], { operation: "delete" }>,
+  row: Docs["contentItems"],
+  change: Extract<
+    ContentReleaseItem["change"],
+    {
+      operation: "delete";
+    }
+  >,
   head: ContentHead
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const writer = yield* DatabaseWriter;
   if (
     change.contentKey !== row.contentKey ||
     change.artifactLocale !== row.artifactLocale
@@ -67,7 +72,6 @@ export const writeDelete = Effect.fn("contentRelease.writeDelete")(function* (
     );
   }
   const existing = yield* loadExactVersion(
-    ctx,
     row.contentKey,
     row.artifactLocale,
     row.sequence
@@ -86,7 +90,7 @@ export const writeDelete = Effect.fn("contentRelease.writeDelete")(function* (
     }
     return;
   }
-  yield* checkDeletedRoute(ctx, row, head);
+  yield* checkDeletedRoute(row, head);
   yield* writer
     .table("contentHeads")
     .insert({

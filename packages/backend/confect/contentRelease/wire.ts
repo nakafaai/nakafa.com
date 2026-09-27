@@ -20,9 +20,9 @@ import {
   type ContentSnapshotRowSchema,
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+/** Stores one signed release without introducing a second wire canonicalizer. */
 import type { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import type { SignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/spec";
-
 /** Stores one signed release without introducing a second wire canonicalizer. */
 export function encodeReleaseJson(
   release: typeof SignedContentReleaseSchema.Type

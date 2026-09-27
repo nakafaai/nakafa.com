@@ -1,9 +1,10 @@
 "use client";
 
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
-import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth, useConvexConnectionState } from "convex/react";
+
 import { useState } from "react";
 import type {
   TryoutCatalogBootstrap,
@@ -124,18 +125,19 @@ export function useTryoutSetData({
   const size = window.size;
 
   const args = { ...request, paginationOpts: { cursor: null, numItems: size } };
-  const query = useQueryWithStatus(
-    api.tryouts.queries.sets.list,
+  const query = useQuery(
+    refs.public.tryouts.queries.sets.list,
     ready ? args : "skip"
   );
   // The canonical query hook returns pending, never stale success or error, for skip.
   const viewerMismatch =
-    query.isSuccess && query.data.viewerId !== activeViewer;
-  const success = query.isSuccess && query.data.viewerId === activeViewer;
+    QueryResult.isSuccess(query) && query.value.viewerId !== activeViewer;
+  const success =
+    QueryResult.isSuccess(query) && query.value.viewerId === activeViewer;
   const current = useCommittedResult(
     bootstrap,
     viewerMismatch ? "unavailable" : activeScope,
-    success ? { args, result: query.data } : undefined
+    success ? { args, result: query.value } : undefined
   );
 
   const fulfilled =
@@ -143,7 +145,7 @@ export function useTryoutSetData({
   const offline =
     (connection.connectionCount > 0 || connection.connectionRetries > 0) &&
     !connection.isWebSocketConnected;
-  const error = query.isError || viewerMismatch;
+  const error = QueryResult.isFailure(query) || viewerMismatch;
   const busy = !(fulfilled || error);
 
   return {

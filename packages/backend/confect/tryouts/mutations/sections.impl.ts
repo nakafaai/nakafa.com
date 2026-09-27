@@ -1,8 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
   getSectionEndReason,
@@ -22,15 +22,14 @@ const start = FunctionImpl.make(
   spec,
   "start",
   Effect.fn("tryouts.mutations.sections.start")(function* (args) {
-    const ctx = yield* MutationCtxService;
     return yield* Effect.gen(function* () {
-      const { appUser } = yield* requireAuth(ctx);
-      const attempt = yield* requireOwnedAttempt(ctx, {
+      const { appUser } = yield* requireAuth();
+      const attempt = yield* requireOwnedAttempt({
         attemptId: args.attemptId,
         userId: appUser._id,
       });
       const now = yield* Clock.currentTimeMillis;
-      return yield* startSectionAttempt(ctx, {
+      return yield* startSectionAttempt({
         attempt,
         now,
         sectionKey: args.sectionKey,
@@ -43,10 +42,9 @@ const complete = FunctionImpl.make(
   spec,
   "complete",
   Effect.fn("tryouts.mutations.sections.complete")(function* (args) {
-    const ctx = yield* MutationCtxService;
     return yield* Effect.gen(function* () {
-      const { appUser } = yield* requireAuth(ctx);
-      const attempt = yield* requireOwnedAttempt(ctx, {
+      const { appUser } = yield* requireAuth();
+      const attempt = yield* requireOwnedAttempt({
         attemptId: args.attemptId,
         userId: appUser._id,
       });
@@ -63,11 +61,11 @@ const complete = FunctionImpl.make(
           message: "Try-out attempt time has expired.",
         });
       }
-      const section = yield* requireActiveSectionAttempt(ctx, {
+      const section = yield* requireActiveSectionAttempt({
         attempt,
         sectionKey: args.sectionKey,
       });
-      yield* finalizeSectionAttempt(ctx, {
+      yield* finalizeSectionAttempt({
         attempt,
         endReason: getSectionEndReason(section, now),
         now,
@@ -81,5 +79,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(start),
   Layer.provide(complete),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

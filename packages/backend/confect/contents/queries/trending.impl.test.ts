@@ -1,13 +1,18 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import {
   type MaterialLessonProjection,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { getDefaultPopularityWindow } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { listTrendingSubjects } from "@repo/backend/confect/contents/trending/impl";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -17,13 +22,14 @@ import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import type { Locale } from "@repo/contents/content";
 import { convexTest } from "convex-test";
-import { Data } from "effect";
+import { Data, Effect } from "effect";
 
 class TrendingStorageUnavailable extends Data.TaggedError(
   "TrendingStorageUnavailable"
-)<{ readonly message: string }> {}
+)<{
+  readonly message: string;
+}> {}
 afterEach(() => vi.restoreAllMocks());
-
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const canonicalContext = {
   contextKey: "canonical",
@@ -69,34 +75,17 @@ async function insertMaterialCounter(
   await learningPopularityRankings.insert(ctx, counter);
   return counterId;
 }
-
 describe("contents/queries/trending", () => {
   it("reports a typed error when ranked popularity storage is unavailable", async () => {
     const t = createTrendingConvexTest();
     vi.spyOn(learningPopularityRankings, "paginate").mockRejectedValueOnce(
-      new TrendingStorageUnavailable({ message: "ranking unavailable" })
+      new TrendingStorageUnavailable({
+        message: "ranking unavailable",
+      })
     );
     await expect(
-      t.query(getTrendingSubjects, { locale: "en" })
-    ).rejects.toMatchObject({
-      data: {
-        code: "TRENDING_SUBJECT_IO_FAILED",
-        message: "Unable to load trending subjects.",
-      },
-    });
-  });
-
-  it("fails without returning partial cards when a ranked counter cannot be read", async () => {
-    const t = createTrendingConvexTest();
-    const projection = makeMaterialProjection("en", 1, 30);
-    await activateMaterialCatalog(t, [projection]);
-    await t.mutation((ctx) => insertMaterialCounter(ctx, projection, "en", 10));
-    await expect(
-      t.query((ctx) => {
-        vi.spyOn(ctx.db, "get").mockRejectedValueOnce(
-          new TrendingStorageUnavailable({ message: "counter unavailable" })
-        );
-        return runConvexProgram(listTrendingSubjects(ctx, { locale: "en" }));
+      t.query(getTrendingSubjects, {
+        locale: "en",
       })
     ).rejects.toMatchObject({
       data: {
@@ -105,13 +94,54 @@ describe("contents/queries/trending", () => {
       },
     });
   });
-
+  it("fails without returning partial cards when a ranked counter cannot be read", async () => {
+    const t = createTrendingConvexTest();
+    const projection = makeMaterialProjection("en", 1, 30);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([projection]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
+    await t.mutation((ctx) => insertMaterialCounter(ctx, projection, "en", 10));
+    await expect(
+      t.query((ctx) => {
+        vi.spyOn(ctx.db, "get").mockRejectedValueOnce(
+          new TrendingStorageUnavailable({
+            message: "counter unavailable",
+          })
+        );
+        return Effect.runPromise(
+          listTrendingSubjects({
+            locale: "en",
+          }).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db)),
+            Effect.provideService(QueryCtxService, ctx)
+          )
+        );
+      })
+    ).rejects.toMatchObject({
+      code: "TRENDING_SUBJECT_IO_FAILED",
+      message: "Unable to load trending subjects.",
+    });
+  });
   it("skips lost aggregate targets and counters below the view threshold", async () => {
     const stale = makeMaterialProjection("en", 1, 30);
     const popular = makeMaterialProjection("en", 2, 31);
     const quiet = makeMaterialProjection("en", 3, 32);
     const target = createTrendingConvexTest();
-    await activateMaterialCatalog(target, [stale, popular, quiet]);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([stale, popular, quiet]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await target.mutation(async (ctx) => {
       const staleId = await insertMaterialCounter(ctx, stale, "en", 100);
       await insertMaterialCounter(ctx, popular, "en", 10);
@@ -119,9 +149,14 @@ describe("contents/queries/trending", () => {
       await ctx.db.delete("learningPopularityCounters", staleId);
     });
     await expect(
-      target.query(getTrendingSubjects, { locale: "en" })
+      target.query(getTrendingSubjects, {
+        locale: "en",
+      })
     ).resolves.toMatchObject([
-      { content_id: popular.graph.assetId, viewCount: 10 },
+      {
+        content_id: popular.graph.assetId,
+        viewCount: 10,
+      },
     ]);
   });
   it("returns ranked cards hydrated from current signed materials", async () => {
@@ -129,20 +164,26 @@ describe("contents/queries/trending", () => {
     const second = makeMaterialProjection("en", 2, 21);
     const ignoredLocale = makeMaterialProjection("id", 1, 20);
     const target = createTrendingConvexTest();
-    await activateMaterialCatalog(target, [first, second, ignoredLocale]);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([first, second, ignoredLocale]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await target.mutation(async (ctx) => {
       await insertMaterialCounter(ctx, first, "en", 7);
       await insertMaterialCounter(ctx, second, "en", 10);
       await insertMaterialCounter(ctx, ignoredLocale, "id", 100);
     });
-
     const results = await target.query(getTrendingSubjects, {
       locale: "en",
       limit: 2,
       minViews: 5,
       windowKey: getDefaultPopularityWindow(),
     });
-
     expect(results).toEqual([
       expect.objectContaining({
         assetId: second.graph.assetId,
@@ -170,7 +211,6 @@ describe("contents/queries/trending", () => {
     expect(results[0]).not.toHaveProperty("id");
     expect(results[0]).not.toHaveProperty("slug");
   });
-
   it("pages past a missing ranking and preserves a renamed material", async () => {
     const missing = makeMaterialProjection("en", 1, 30);
     const previous = makeMaterialProjection("en", 2, 31);
@@ -184,19 +224,25 @@ describe("contents/queries/trending", () => {
       ),
     });
     const target = createTrendingConvexTest();
-    await activateMaterialCatalog(target, [current]);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([current]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await target.mutation(async (ctx) => {
       await insertMaterialCounter(ctx, missing, "en", 100);
       await insertMaterialCounter(ctx, previous, "en", 10);
     });
-
     const results = await target.query(getTrendingSubjects, {
       locale: "en",
       limit: 1,
       minViews: 5,
       windowKey: getDefaultPopularityWindow(),
     });
-
     expect(results).toEqual([
       expect.objectContaining({
         assetId: current.graph.assetId,
@@ -205,10 +251,8 @@ describe("contents/queries/trending", () => {
       }),
     ]);
   });
-
   it("returns no cards for a zero result limit", async () => {
     const target = createTrendingConvexTest();
-
     await expect(
       target.query(getTrendingSubjects, {
         locale: "en",

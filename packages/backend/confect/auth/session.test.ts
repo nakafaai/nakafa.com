@@ -1,72 +1,66 @@
 import { Ref } from "@confect/core";
-import { afterEach, assert, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { authReader } from "@repo/backend/confect/auth/reader";
-import {
-  getOptionalActiveAppUser,
-  getOptionalAppUserForRead,
-  requireAuth,
-  requireAuthForAction,
-} from "@repo/backend/confect/auth/session";
 import { AuthFailure, SessionRequired } from "@repo/backend/confect/auth/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { api } from "@repo/backend/convex/_generated/api";
-import { Effect, Option, Schema } from "effect";
+import { Option, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 11, 0, 0);
+const currentUser = Ref.getFunctionReference(
+  refs.public.auth.queries.getCurrentUser
+);
+const schoolLanding = Ref.getFunctionReference(
+  refs.public.schools.queries.getMySchoolLandingState
+);
+const createChat = Ref.getFunctionReference(
+  refs.public.chats.mutations.createChat
+);
+const admitOnboarding = Ref.getFunctionReference(
+  refs.public.onboarding.mutations.admit
+);
+const customerPortal = Ref.getFunctionReference(
+  refs.public.customers.actions.sessions.generateCustomerPortalUrl
+);
+
+beforeEach(() => vi.setSystemTime(NOW));
 afterEach(() => vi.restoreAllMocks());
+
 describe("session-validated app identity", () => {
-  it("resolves the same active account for reads, writes, and actions", async () => {
+  it("resolves the same active account through registered reads and writes", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "active-auth",
-      })
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "active-auth" })
     );
     const authenticated = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,
     });
-    expect(
-      await authenticated.query((ctx) =>
-        runConvexProgram(getOptionalAppUserForRead(ctx))
-      )
-    ).toMatchObject({
-      appUser: {
-        _id: identity.userId,
-      },
+    expect(await authenticated.query(currentUser, {})).toMatchObject({
+      appUser: { _id: identity.userId },
     });
-    expect(
-      await authenticated.mutation((ctx) =>
-        runConvexProgram(getOptionalActiveAppUser(ctx))
-      )
-    ).toMatchObject({
-      appUser: {
-        _id: identity.userId,
-      },
+    expect(await authenticated.query(schoolLanding, {})).toEqual({
+      kind: "none",
     });
-    expect(
-      await authenticated.query((ctx) => runConvexProgram(requireAuth(ctx)))
-    ).toMatchObject({
-      appUser: {
-        _id: identity.userId,
-      },
+    const chatId = await authenticated.mutation(createChat, { type: "study" });
+    expect(await t.query((ctx) => ctx.db.get(chatId))).toMatchObject({
+      userId: identity.userId,
     });
-    expect(
-      await authenticated.action((ctx) =>
-        runConvexProgram(requireAuthForAction(ctx))
-      )
-    ).toMatchObject({
-      appUser: {
-        _id: identity.userId,
-      },
+    expect(await authenticated.mutation(admitOnboarding, {})).toMatchObject({
+      isAuthenticated: true,
     });
   });
+
   it("does not trust an identity whose Better Auth session expired", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
@@ -81,217 +75,129 @@ describe("session-validated app identity", () => {
       subject: identity.authUserId,
     });
     for (const caller of [t, expired]) {
-      expect(
-        await caller.query((ctx) =>
-          runConvexProgram(getOptionalAppUserForRead(ctx))
-        )
-      ).toBeNull();
-      expect(
-        await caller.mutation((ctx) =>
-          runConvexProgram(getOptionalActiveAppUser(ctx))
-        )
-      ).toBeNull();
+      expect(await caller.query(currentUser, {})).toBeNull();
+      expect(await caller.mutation(admitOnboarding, {})).toMatchObject({
+        isAuthenticated: false,
+      });
       const failure = await caller
-        .mutation(api.chats.mutations.createChat, { type: "study" })
+        .mutation(createChat, { type: "study" })
         .catch((error: unknown) => error);
       assert(Ref.isConvexError(failure));
-      expect(failure.data).toBe("Unauthenticated");
       const decoded = Ref.decodeErrorOption(
         refs.public.chats.mutations.createChat,
         failure.data
       );
       assert(Option.isSome(decoded));
       expect(decoded.value).toBeInstanceOf(SessionRequired);
-      expect(Schema.encodeSync(AuthFailure)(decoded.value)).toBe(
-        "Unauthenticated"
-      );
+      expect(Schema.encodeSync(AuthFailure)(decoded.value)).toEqual({
+        _tag: "SessionRequired",
+        code: "UNAUTHENTICATED",
+        message: "Unauthenticated",
+      });
+      await expect(caller.query(schoolLanding, {})).rejects.toMatchObject({
+        data: { _tag: "SessionRequired" },
+      });
+      await expect(caller.action(customerPortal, {})).rejects.toMatchObject({
+        data: { _tag: "SessionRequired" },
+      });
     }
   });
-  it("rejects a removed account and prevents deleted users from becoming anonymous writers", async () => {
+
+  it("rejects removed accounts instead of allowing them to write anonymously", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "removed-auth",
-      })
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "removed-auth" })
     );
     const authenticated = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,
     });
     await t.mutation((ctx) =>
-      ctx.db.patch("users", identity.userId, {
-        deletedAt: NOW,
-      })
+      ctx.db.patch("users", identity.userId, { deletedAt: NOW })
     );
-    expect(
-      await authenticated.query((ctx) =>
-        runConvexProgram(getOptionalAppUserForRead(ctx))
-      )
-    ).toBeNull();
-    expect(
-      await authenticated.mutation((ctx) =>
-        runConvexProgram(
-          getOptionalActiveAppUser(ctx).pipe(
-            Effect.flip,
-            Effect.orDie,
-            Effect.map(({ _tag, code, message }) => ({
-              _tag,
-              code,
-              message,
-            }))
-          )
-        )
-      )
-    ).toMatchObject({
-      _tag: "AccountUnavailable",
-      code: "UNAUTHORIZED",
+    expect(await authenticated.query(currentUser, {})).toBeNull();
+    await expect(
+      authenticated.mutation(createChat, { type: "study" })
+    ).rejects.toMatchObject({
+      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
+    });
+    await expect(
+      authenticated.mutation(admitOnboarding, {})
+    ).rejects.toMatchObject({
+      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
     await t.mutation((ctx) => ctx.db.delete("users", identity.userId));
-    expect(
-      await authenticated.query((ctx) =>
-        runConvexProgram(getOptionalAppUserForRead(ctx))
-      )
-    ).toBeNull();
-    expect(
-      await authenticated.query((ctx) =>
-        runConvexProgram(
-          requireAuth(ctx).pipe(
-            Effect.flip,
-            Effect.orDie,
-            Effect.map(({ _tag, code, message }) => ({
-              _tag,
-              code,
-              message,
-            }))
-          )
-        )
-      )
-    ).toMatchObject({
-      _tag: "AccountUnavailable",
-      code: "UNAUTHORIZED",
+    expect(await authenticated.query(currentUser, {})).toBeNull();
+    await expect(
+      authenticated.mutation(admitOnboarding, {})
+    ).rejects.toMatchObject({
+      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
-    expect(
-      await authenticated.action((ctx) =>
-        runConvexProgram(
-          requireAuthForAction(ctx).pipe(
-            Effect.flip,
-            Effect.orDie,
-            Effect.map(({ _tag, code, message }) => ({
-              _tag,
-              code,
-              message,
-            }))
-          )
-        )
-      )
-    ).toMatchObject({
-      _tag: "AccountUnavailable",
-      code: "UNAUTHORIZED",
+    await expect(authenticated.query(schoolLanding, {})).rejects.toMatchObject({
+      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
+    });
+    await expect(
+      authenticated.action(customerPortal, {})
+    ).rejects.toMatchObject({
+      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
   });
+
   it("fails closed with a typed, sanitized error when the session component is unavailable", async () => {
     vi.spyOn(authReader, "safeGetAuthUser").mockRejectedValueOnce(
       new Error("private adapter details")
     );
     const t = createConvexTestWithBetterAuth();
-    const failure = await t.query((ctx) =>
-      runConvexProgram(
-        requireAuth(ctx).pipe(
-          Effect.flip,
-          Effect.orDie,
-          Effect.map(({ _tag, code, message }) => ({
-            _tag,
-            code,
-            message,
-          }))
-        )
-      )
+    const failure = await t
+      .query(schoolLanding, {})
+      .catch((error: unknown) => error);
+    assert(Ref.isConvexError(failure));
+    const decoded = Ref.decodeErrorOption(
+      refs.public.schools.queries.getMySchoolLandingState,
+      failure.data
     );
-    expect(failure).toMatchObject({
+    assert(Option.isSome(decoded));
+    assert(decoded.value._tag === "AuthReadError");
+    expect(Schema.encodeSync(AuthFailure)(decoded.value)).toEqual({
       _tag: "AuthReadError",
-    });
-    assert(failure.code === "AUTH_READ_FAILED");
-    expect(
-      Schema.encodeSync(AuthFailure)(
-        Schema.decodeUnknownSync(AuthFailure)({
-          code: failure.code,
-          message: failure.message,
-        })
-      )
-    ).toEqual({
       code: "AUTH_READ_FAILED",
       message: "Unable to read authentication state.",
     });
+    expect(failure.data).not.toHaveProperty("cause");
   });
-  it("keeps prepared users readable while rejecting new mutations", async () => {
+
+  it("keeps prepared users readable while rejecting authenticated operations", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "prepared-auth",
-      })
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "prepared-auth" })
     );
     await t.mutation((ctx) =>
-      ctx.db.patch("users", identity.userId, {
-        deletionPreparedAt: NOW,
-      })
+      ctx.db.patch("users", identity.userId, { deletionPreparedAt: NOW })
     );
     const authenticated = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,
     });
-    const optionalUserId = await authenticated.query(async (ctx) => {
-      const auth = await runConvexProgram(getOptionalAppUserForRead(ctx));
-      return auth?.appUser._id ?? null;
-    });
-    expect(optionalUserId).toBe(identity.userId);
-    await expect(
-      authenticated.mutation(async (ctx) => {
-        const auth = await runConvexProgram(getOptionalActiveAppUser(ctx));
-        return auth?.appUser._id ?? null;
-      })
-    ).rejects.toMatchObject({
-      data: {
-        code: "UNAUTHORIZED",
-      },
+    expect(await authenticated.query(currentUser, {})).toMatchObject({
+      appUser: { _id: identity.userId },
     });
     await expect(
-      authenticated.query(
-        async (ctx) => await runConvexProgram(requireAuth(ctx))
-      )
+      authenticated.mutation(createChat, { type: "study" })
     ).rejects.toMatchObject({
-      data: {
-        code: "UNAUTHORIZED",
-      },
+      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
-  });
-  it("rejects prepared users when an in-flight action re-enters Convex", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "prepared-action",
-      })
-    );
-    await t.mutation((ctx) =>
-      ctx.db.patch("users", identity.userId, {
-        deletionPreparedAt: NOW,
-      })
-    );
     await expect(
-      t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
-        .action(
-          async (ctx) => await runConvexProgram(requireAuthForAction(ctx))
-        )
+      authenticated.mutation(admitOnboarding, {})
     ).rejects.toMatchObject({
-      data: {
-        code: "UNAUTHORIZED",
-      },
+      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
+    });
+    await expect(authenticated.query(schoolLanding, {})).rejects.toMatchObject({
+      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
+    });
+    await expect(
+      authenticated.action(customerPortal, {})
+    ).rejects.toMatchObject({
+      data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
   });
 });

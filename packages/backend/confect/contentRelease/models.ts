@@ -1,6 +1,9 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadState } from "@repo/backend/confect/contentRelease/model";
 import {
@@ -14,10 +17,6 @@ import type {
   ModelBuildRestartResult,
   ModelBuildStatus,
 } from "@repo/backend/confect/contentRelease/models/spec";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import type { SystemDataModel } from "convex/server";
 import { Clock, Duration, Effect } from "effect";
 
@@ -29,11 +28,8 @@ export function isRunningJob(job: Pick<ScheduledFunction, "state"> | null) {
 
 /** Reads the durable state of one inactive-buffer build lineage. */
 export const readModelStatus = Effect.fn("contentRelease.readModelStatus")(
-  function* (ctx: QueryCtx, releaseId: string) {
-    const [build, state] = yield* Effect.all([
-      loadModelBuild(ctx),
-      loadState(ctx),
-    ]);
+  function* (releaseId: string) {
+    const [build, state] = yield* Effect.all([loadModelBuild(), loadState()]);
     if (build?.releaseId !== releaseId) {
       if (state?.activeReleaseId === releaseId) {
         return {
@@ -59,7 +55,7 @@ export const readModelStatus = Effect.fn("contentRelease.readModelStatus")(
         `Model build ${releaseId} lost its scheduler identity.`
       );
     }
-    const job = yield* DatabaseReader.make(databaseSchema, ctx.db)
+    const job = yield* (yield* DatabaseReader)
       .table("_scheduled_functions")
       .get(syncJobId)
       .pipe(
@@ -77,12 +73,10 @@ export const readModelStatus = Effect.fn("contentRelease.readModelStatus")(
 
 /** Executes one generation-fenced page and schedules its sole successor. */
 export const resumeModelBuild = Effect.fn("contentRelease.resumeModelBuild")(
-  function* (ctx: MutationCtx, releaseId: string, generation: number) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const build = yield* loadModelBuild(ctx);
+  function* (releaseId: string, generation: number) {
+    const scheduler = yield* Scheduler;
+    const writer = yield* DatabaseWriter;
+    const build = yield* loadModelBuild();
     if (
       !build ||
       build.releaseId !== releaseId ||
@@ -91,8 +85,8 @@ export const resumeModelBuild = Effect.fn("contentRelease.resumeModelBuild")(
     ) {
       return null;
     }
-    const { release, signed } = yield* loadModelBuildRelease(ctx, build);
-    const progress = yield* advanceModelPage(ctx, build, release, signed);
+    const { release, signed } = yield* loadModelBuildRelease(build);
+    const progress = yield* advanceModelPage(build, release, signed);
     const phase = progress.done
       ? nextModelPhase(build, build.phase)
       : build.phase;
@@ -127,12 +121,10 @@ export const resumeModelBuild = Effect.fn("contentRelease.resumeModelBuild")(
 
 /** Restarts one failed lineage only while its observed fence still wins. */
 export const restartModelBuild = Effect.fn("contentRelease.restartModelBuild")(
-  function* (ctx: MutationCtx, args: ModelBuildRestartArgs) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const build = yield* loadModelBuild(ctx);
+  function* (args: ModelBuildRestartArgs) {
+    const scheduler = yield* Scheduler;
+    const writer = yield* DatabaseWriter;
+    const build = yield* loadModelBuild();
     if (
       !build ||
       build.releaseId !== args.releaseId ||
@@ -144,7 +136,7 @@ export const restartModelBuild = Effect.fn("contentRelease.restartModelBuild")(
         status: "stale",
       } satisfies ModelBuildRestartResult;
     }
-    const job = yield* DatabaseReader.make(databaseSchema, ctx.db)
+    const job = yield* (yield* DatabaseReader)
       .table("_scheduled_functions")
       .get(args.expectedJobId)
       .pipe(

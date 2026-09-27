@@ -1,5 +1,7 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
@@ -12,7 +14,6 @@ import {
 import type { UserPlan } from "@repo/backend/confect/users/schema";
 import { products } from "@repo/backend/confect/utils/polar/products";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect, flow, Option } from "effect";
 
 const freePlan = "free" satisfies UserPlan;
@@ -32,8 +33,8 @@ function toSubscriptionPlanSyncIoError(error: unknown) {
 
 /** Loads the app customer linked to one Polar customer ID. */
 const loadCustomer = Effect.fn("triggers.subscriptions.loadCustomer")(
-  function* (db: MutationCtx["db"], customerId: SubscriptionDoc["customerId"]) {
-    const database = DatabaseReader.make(databaseSchema, db);
+  function* (customerId: SubscriptionDoc["customerId"]) {
+    const database = yield* DatabaseReader;
     return yield* database
       .table("customers")
       .get("by_polarId", customerId)
@@ -49,8 +50,8 @@ const loadCustomer = Effect.fn("triggers.subscriptions.loadCustomer")(
 const loadActiveProSubscription = Effect.fn(
   "triggers.subscriptions.loadActiveProSubscription"
 )(
-  function* (db: MutationCtx["db"], customerId: SubscriptionDoc["customerId"]) {
-    const database = DatabaseReader.make(databaseSchema, db);
+  function* (customerId: SubscriptionDoc["customerId"]) {
+    const database = yield* DatabaseReader;
     return yield* database
       .table("subscriptions")
       .index("by_customerId_and_status_and_productId", (q) =>
@@ -68,18 +69,16 @@ const loadActiveProSubscription = Effect.fn(
 /** Applies one durable user plan update and the matching credit transaction. */
 const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
   function* (
-    ctx: MutationCtx,
     user: UserDoc,
     newPlan: UserPlan,
     now: number,
     subscription: SubscriptionDoc
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const writer = yield* DatabaseWriter;
     const previousPlan = user.plan;
     const timestamp = new Date(now);
     const newCreditConfig = getPlanCreditConfig(newPlan);
     const nextResetTimestamp = yield* resolveCurrentCreditResetTimestamp(
-      ctx.db,
       newPlan,
       now
     ).pipe(Effect.mapError(toSubscriptionPlanSyncIoError));
@@ -117,7 +116,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
           newPlan,
         })
       );
-      yield* captureProductEvent(ctx, {
+      yield* captureProductEvent({
         distinctId: user._id,
         event: {
           name: "subscription started",
@@ -128,7 +127,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
         },
         timestamp,
       });
-      yield* captureProductEvent(ctx, {
+      yield* captureProductEvent({
         distinctId: user._id,
         event: {
           name: "plan changed",
@@ -175,7 +174,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
       })
     );
     if (subscription.status === canceledSubscriptionStatus) {
-      yield* captureProductEvent(ctx, {
+      yield* captureProductEvent({
         distinctId: user._id,
         event: {
           name: "subscription canceled",
@@ -187,7 +186,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
         timestamp,
       });
     }
-    yield* captureProductEvent(ctx, {
+    yield* captureProductEvent({
       distinctId: user._id,
       event: {
         name: "plan changed",
@@ -215,9 +214,9 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
 export const syncCustomerPlan = Effect.fn(
   "triggers.subscriptions.syncCustomerPlan"
 )(
-  function* (ctx: MutationCtx, subscription: SubscriptionDoc) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const customer = yield* loadCustomer(ctx.db, subscription.customerId);
+  function* (subscription: SubscriptionDoc) {
+    const database = yield* DatabaseReader;
+    const customer = yield* loadCustomer(subscription.customerId);
     if (!customer) {
       yield* Effect.logWarning("Subscription trigger: Customer not found").pipe(
         Effect.annotateLogs({
@@ -248,7 +247,6 @@ export const syncCustomerPlan = Effect.fn(
     }
     const now = yield* Clock.currentTimeMillis;
     const activeSubscription = yield* loadActiveProSubscription(
-      ctx.db,
       subscription.customerId
     );
     const plan = activeSubscription ? proPlan : freePlan;
@@ -256,7 +254,7 @@ export const syncCustomerPlan = Effect.fn(
     if (plan === user.plan) {
       return;
     }
-    yield* applyPlanChange(ctx, user, plan, now, sourceSubscription);
+    yield* applyPlanChange(user, plan, now, sourceSubscription);
   },
   Effect.catchDefect(flow(toSubscriptionPlanSyncIoError, Effect.fail))
 );

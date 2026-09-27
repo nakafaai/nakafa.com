@@ -1,3 +1,4 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -20,11 +21,6 @@ import {
   type DeleteExpiredCapabilityTracesArgs,
   type ListCapabilityTracesArgs,
 } from "@repo/backend/confect/chats/traces/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Duration, Effect } from "effect";
 
 const defaultTraceReadLimit = 20;
@@ -32,8 +28,8 @@ const maxTraceReadLimit = 100;
 
 /** Resolve a readable account while keeping prepared-account recovery available. */
 const requireTraceReadOwner = Effect.fn("chats.traces.requireReader")(
-  function* (ctx: QueryCtx) {
-    const user = yield* getOptionalAppUserForRead(ctx);
+  function* () {
+    const user = yield* getOptionalAppUserForRead();
     if (!user) {
       return yield* new AccountUnavailable({
         code: accountUnavailableCode,
@@ -46,11 +42,10 @@ const requireTraceReadOwner = Effect.fn("chats.traces.requireReader")(
 
 /** Persist one bounded operational trace in the mutation's atomic database. */
 export const saveCapabilityTrace = Effect.fn("chats.traces.save")(function* (
-  ctx: MutationCtx,
-  chatId: Doc<"chats">["_id"],
+  chatId: Docs["chats"]["_id"],
   trace: CapabilityTraceInput
 ) {
-  const { appUser } = yield* requireAuth(ctx);
+  const { appUser } = yield* requireAuth();
   yield* requireChatOwner(chatId, appUser._id);
   const database = yield* DatabaseWriter;
   return yield* database
@@ -67,10 +62,9 @@ export const saveCapabilityTrace = Effect.fn("chats.traces.save")(function* (
 
 /** List recent trace summaries through bounded decoded indexes. */
 export const listCapabilityTraces = Effect.fn("chats.traces.list")(function* (
-  ctx: QueryCtx,
   args: ListCapabilityTracesArgs
 ) {
-  const user = yield* requireTraceReadOwner(ctx);
+  const user = yield* requireTraceReadOwner();
   const limit = Math.min(
     args.limit ?? defaultTraceReadLimit,
     maxTraceReadLimit
@@ -120,8 +114,13 @@ export const deleteExpiredCapabilityTraces = Effect.fn(
     yield* scheduler.runAfter(
       Duration.zero,
       refs.internal.chats.traces.mutations.deleteExpiredBatch,
-      { now: args.now }
+      {
+        now: args.now,
+      }
     );
   }
-  return { deleted: page.length, hasMore };
+  return {
+    deleted: page.length,
+    hasMore,
+  };
 });

@@ -1,7 +1,8 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { reconcileMaterialModel } from "@repo/backend/confect/contentRelease/models/material";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
@@ -9,6 +10,7 @@ import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { insertModelBuild } from "@repo/backend/test/content/model";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { convexTest, type TestConvex } from "convex-test";
+import { Effect } from "effect";
 
 async function reconcile(
   t: TestConvex<typeof schema>,
@@ -20,12 +22,20 @@ async function reconcile(
     let pages = 0;
     do {
       const result = await t.mutation(async (ctx) => ({
-        page: await runConvexProgram(
-          reconcileMaterialModel(ctx, {
+        page: await Effect.runPromise(
+          reconcileMaterialModel({
             ...build,
             phase,
-            ...(cursor === undefined ? {} : { cursor }),
-          })
+            ...(cursor === undefined
+              ? {}
+              : {
+                  cursor,
+                }),
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         ),
         metrics: await ctx.meta.getTransactionMetrics(),
       }));
@@ -37,7 +47,6 @@ async function reconcile(
   }
   return writes;
 }
-
 function read(t: TestConvex<typeof schema>, slot: ModelSlot) {
   return t.query(async (ctx) => ({
     catalog: await ctx.db
@@ -55,12 +64,10 @@ function read(t: TestConvex<typeof schema>, slot: ModelSlot) {
       .take(100),
   }));
 }
-
 function values(row: Doc<"materialCatalog" | "materialBuckets">) {
   const { _creationTime, _id, slot, ...fields } = row;
   return fields;
 }
-
 describe("contentRelease/models/material", () => {
   it("preserves curriculum ordering and counts while reconciling aborted buffer changes", async () => {
     const t = convexTest({
@@ -68,10 +75,20 @@ describe("contentRelease/models/material", () => {
       modules: convexModules,
       transactionLimits: true,
     });
-    await activateMaterialCatalog(
-      t,
-      Array.from({ length: 40 }, (_, index) =>
-        makeMaterialProjection("en", index + 1)
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog(
+          Array.from(
+            {
+              length: 40,
+            },
+            (_, index) => makeMaterialProjection("en", index + 1)
+          )
+        ).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       )
     );
     const build = await t.mutation((ctx) =>
@@ -88,7 +105,6 @@ describe("contentRelease/models/material", () => {
     const initial = await read(t, "green");
     expect(await reconcile(t, build)).toBe(0);
     await expect(read(t, "green")).resolves.toEqual(initial);
-
     await t.mutation(async (ctx) => {
       const [missingMaterial, changedMaterial] = initial.catalog;
       const [missingBucket, changedBucket] = initial.buckets;
@@ -110,15 +126,19 @@ describe("contentRelease/models/material", () => {
         contentKey: "material:aborted",
       });
       await ctx.db.delete("materialBuckets", missingBucket._id);
-      await ctx.db.patch("materialBuckets", changedBucket._id, { count: 999 });
+      await ctx.db.patch("materialBuckets", changedBucket._id, {
+        count: 999,
+      });
       const {
         _id: bucketId,
         _creationTime: bucketCreated,
         ...bucket
       } = missingBucket;
-      await ctx.db.insert("materialBuckets", { ...bucket, bucket: "aborted" });
+      await ctx.db.insert("materialBuckets", {
+        ...bucket,
+        bucket: "aborted",
+      });
     });
-
     expect(await reconcile(t, build)).toBe(6);
     const repaired = await read(t, "green");
     expect({

@@ -1,6 +1,6 @@
-import { DatabaseReader, FunctionImpl, GroupImpl } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/customers/integrity/internal.spec";
 import { Effect, Layer } from "effect";
 
@@ -10,8 +10,7 @@ const listUsersForCustomerIntegrity = FunctionImpl.make(
   "listUsersForCustomerIntegrity",
   Effect.fn("customers.integrity.internal.listUsersForCustomerIntegrity")(
     function* (args) {
-      const ctx = yield* QueryCtxService;
-      const rows = yield* DatabaseReader.make(databaseSchema, ctx.db)
+      const rows = yield* (yield* DatabaseReader)
         .table("users")
         .index("by_creation_time")
         .paginate(args.paginationOpts)
@@ -34,8 +33,7 @@ const listCustomersForIntegrity = FunctionImpl.make(
   "listCustomersForIntegrity",
   Effect.fn("customers.integrity.internal.listCustomersForIntegrity")(
     function* (args) {
-      const ctx = yield* QueryCtxService;
-      const rows = yield* DatabaseReader.make(databaseSchema, ctx.db)
+      const rows = yield* (yield* DatabaseReader)
         .table("customers")
         .index("by_creation_time")
         .paginate(args.paginationOpts)
@@ -59,8 +57,7 @@ const listActiveSubscriptionsForIntegrity = FunctionImpl.make(
   "listActiveSubscriptionsForIntegrity",
   Effect.fn("customers.integrity.internal.listActiveSubscriptionsForIntegrity")(
     function* (args) {
-      const ctx = yield* QueryCtxService;
-      const database = DatabaseReader.make(databaseSchema, ctx.db);
+      const database = yield* DatabaseReader;
       const rows = yield* database
         .table("subscriptions")
         .index("by_status", (q) => q.eq("status", "active"))

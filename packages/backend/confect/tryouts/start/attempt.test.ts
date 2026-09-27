@@ -1,5 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -22,6 +23,7 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
+import { Effect } from "effect";
 
 describe("tryouts/start/attempt", () => {
   it.each([
@@ -45,9 +47,15 @@ describe("tryouts/start/attempt", () => {
           setKey: TRYOUT_START_SET,
           trackKey: TRYOUT_START_TRACK,
         };
-        const source = await runConvexProgram(loadTryoutStartSource(ctx, args));
-        const attempt = await runConvexProgram(
-          createTryoutAttempt(ctx, {
+        const source = await Effect.runPromise(
+          loadTryoutStartSource(args).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        );
+        const attempt = await Effect.runPromise(
+          createTryoutAttempt({
             access: {
               accessEndsAt: NOW + 60_000,
               accessSourceKind,
@@ -60,14 +68,22 @@ describe("tryouts/start/attempt", () => {
             scaleVersion: null,
             source,
             userId: user.userId,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
-        await runConvexProgram(
-          startSectionAttempt(ctx, {
+        await Effect.runPromise(
+          startSectionAttempt({
             attempt,
             now: NOW + 120_000,
             sectionKey: TRYOUT_START_SECTION,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
         return {
           attempt,
@@ -86,7 +102,6 @@ describe("tryouts/start/attempt", () => {
       expect(stored.section?.expiresAt).toBeGreaterThan(NOW + 120_000);
     }
   );
-
   it("rolls back the new attempt if its progress row cannot be written", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
@@ -106,12 +121,18 @@ describe("tryouts/start/attempt", () => {
           setKey: TRYOUT_START_SET,
           trackKey: TRYOUT_START_TRACK,
         };
-        const source = await runConvexProgram(loadTryoutStartSource(ctx, args));
+        const source = await Effect.runPromise(
+          loadTryoutStartSource(args).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        );
         vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
           throw new Error("Progress storage unavailable.");
         });
-        return runConvexProgram(
-          createTryoutAttempt(ctx, {
+        return Effect.runPromise(
+          createTryoutAttempt({
             access: {
               accessEndsAt: NOW + 60_000,
               accessSourceKind: "free",
@@ -123,14 +144,16 @@ describe("tryouts/start/attempt", () => {
             scaleVersion: null,
             source,
             userId: identity.userId,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
       })
     ).rejects.toMatchObject({
-      data: {
-        code: "TRYOUT_PROGRESS_WRITE_FAILED",
-        message: "Unable to update try-out progress.",
-      },
+      code: "TRYOUT_PROGRESS_WRITE_FAILED",
+      message: "Unable to update try-out progress.",
     });
     const stored = await t.query(async (ctx) => ({
       attempts: await ctx.db.query("tryoutAttempts").collect(),

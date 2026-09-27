@@ -1,7 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -12,15 +11,7 @@ import { makeTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
-const SIGNED_SET_IDENTITY = tryoutCatalogNodeIdentity({
-  appLocale: AppLocaleSchema.make("id"),
-  countryKey: "indonesia",
-  examKey: "snbt",
-  kind: "set",
-  setKey: "set-1",
-  trackKey: "2027",
-});
-type ProgressInput = Parameters<typeof writeTryoutSetProgress>[1];
+type ProgressInput = Parameters<typeof writeTryoutSetProgress>[0];
 type ProgressScoreMismatch = Pick<
   ProgressInput,
   "publishedScore" | "status"
@@ -33,11 +24,12 @@ type ProgressScoreMismatch = Pick<
 const expectProgressScoreMismatch = Effect.fn(
   "tryouts.progress.test.expectProgressScoreMismatch"
 )(function* (scenario: ProgressScoreMismatch) {
+  const runtimeServices = yield* Effect.context<never>();
   const t = createConvexTestWithBetterAuth();
   yield* Effect.promise(() =>
     expect(
       t.mutation((ctx) =>
-        runConvexProgram(
+        Effect.runPromiseWith(runtimeServices)(
           Effect.gen(function* () {
             const user = yield* Effect.promise(() =>
               seedAuthenticatedUser(ctx, {
@@ -59,30 +51,33 @@ const expectProgressScoreMismatch = Effect.fn(
             if (!attempt) {
               return yield* Effect.die("Expected progress score fixtures.");
             }
-            yield* writeTryoutSetProgress(ctx, {
+            yield* writeTryoutSetProgress({
               attempt,
               publishedScore: scenario.publishedScore,
               status: scenario.status,
               updatedAt: TRYOUT_TEST_NOW,
             });
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: {
-        code: scenario.code,
-        message: scenario.message,
-      },
+      code: scenario.code,
+      message: scenario.message,
     })
   );
 });
 describe("tryouts/progress", () => {
   it.effect("keeps only the latest attempt and maps every workflow rank", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const progress = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.gen(function* () {
               const user = yield* Effect.promise(() =>
                 seedAuthenticatedUser(ctx, {
@@ -105,13 +100,13 @@ describe("tryouts/progress", () => {
               if (!firstAttempt) {
                 return yield* Effect.die("Expected first attempt fixture.");
               }
-              yield* writeTryoutSetProgress(ctx, {
+              yield* writeTryoutSetProgress({
                 attempt: firstAttempt,
                 publishedScore: null,
                 status: "in-progress",
                 updatedAt: TRYOUT_TEST_NOW,
               });
-              yield* writeTryoutSetProgress(ctx, {
+              yield* writeTryoutSetProgress({
                 attempt: firstAttempt,
                 publishedScore: 75,
                 status: "completed",
@@ -137,13 +132,13 @@ describe("tryouts/progress", () => {
               if (!latestAttempt) {
                 return yield* Effect.die("Expected latest attempt fixture.");
               }
-              yield* writeTryoutSetProgress(ctx, {
+              yield* writeTryoutSetProgress({
                 attempt: latestAttempt,
                 publishedScore: 50,
                 status: "expired",
                 updatedAt: TRYOUT_TEST_NOW + 2,
               });
-              yield* writeTryoutSetProgress(ctx, {
+              yield* writeTryoutSetProgress({
                 attempt: firstAttempt,
                 publishedScore: null,
                 status: "in-progress",
@@ -152,14 +147,21 @@ describe("tryouts/progress", () => {
               return yield* Effect.promise(() =>
                 ctx.db
                   .query("tryoutSetProgress")
-                  .withIndex("by_userId_and_setIdentity", (query) =>
+                  .withIndex("by_userId_and_set", (query) =>
                     query
                       .eq("userId", user.userId)
-                      .eq("setIdentity", SIGNED_SET_IDENTITY)
+                      .eq("countryKey", set.countryKey)
+                      .eq("examKey", set.examKey)
+                      .eq("trackKey", set.trackKey)
+                      .eq("setKey", set.setKey)
                   )
                   .unique()
               );
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           )
         )
       );
@@ -220,20 +222,22 @@ describe("tryouts/progress", () => {
             throw new Error("Expected an attempt.");
           }
           vi.spyOn(ctx.db, "insert").mockRejectedValueOnce(cause);
-          return runConvexProgram(
-            writeTryoutSetProgress(ctx, {
+          return Effect.runPromise(
+            writeTryoutSetProgress({
               attempt,
               publishedScore: null,
               status: "in-progress",
               updatedAt: TRYOUT_TEST_NOW,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
         })
       ).rejects.toMatchObject({
-        data: {
-          code,
-          message: "Unable to update try-out progress.",
-        },
+        code,
+        message: "Unable to update try-out progress.",
       });
       expect(
         await t.query((ctx) => ctx.db.query("tryoutSetProgress").collect())

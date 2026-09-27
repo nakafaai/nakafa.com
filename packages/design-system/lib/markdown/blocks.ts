@@ -1,8 +1,5 @@
 import { Lexer } from "marked";
 
-const HASH_MODULO = 1_000_000_007;
-const HASH_MULTIPLIER = 31;
-
 export interface MarkdownBlockModel {
   readonly content: string;
   readonly key: string;
@@ -48,26 +45,15 @@ export function readMarkdownBlocks(
   responseId: string,
   markdown: string
 ): readonly MarkdownBlockModel[] {
-  const occurrences = new Map<string, number>();
+  let offset = 0;
 
   return parseMarkdownIntoBlocks(markdown).map((content) => {
-    const duplicateIndex = occurrences.get(content) ?? 0;
-    occurrences.set(content, duplicateIndex + 1);
+    const start = offset;
+    offset += content.length;
 
     return {
       content,
-      key: `${responseId}-block-${hashString(content)}-${duplicateIndex}`,
+      key: `${responseId}-block-${start}`,
     };
   });
-}
-
-/** Creates a compact deterministic hash for React block keys. */
-function hashString(value: string) {
-  let hash = 0;
-
-  for (const char of value) {
-    hash = (hash * HASH_MULTIPLIER + char.charCodeAt(0)) % HASH_MODULO;
-  }
-
-  return hash.toString(36);
 }

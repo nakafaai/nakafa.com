@@ -1,5 +1,5 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   indexTryoutResponses,
   requireTryoutResponseSectionSnapshot,
@@ -7,15 +7,13 @@ import {
 } from "@repo/backend/confect/tryouts/response/integrity";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { Effect, flow } from "effect";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Effect } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
-type TryoutResponse = Doc<"tryoutResponses">;
-type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
-type TryoutReadContext = Pick<QueryCtx, "db">;
+type TryoutAttempt = Docs["tryoutAttempts"];
+type TryoutPlacement = Docs["tryoutAttemptPlacements"];
+type TryoutResponse = Docs["tryoutResponses"];
+type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 type SectionCoverage = "complete" | "partial";
 interface ResponsePlacementLink {
   readonly placement: TryoutPlacement;
@@ -36,12 +34,11 @@ export interface TryoutAttemptResponseIndex extends TryoutResponseIndex {
 export const loadSectionResponseIndex = Effect.fn(
   "tryouts.response.loadSectionIntegrity"
 )(function* (
-  ctx: TryoutReadContext,
   attempt: TryoutAttempt,
   section: TryoutSectionAttempt,
   placements: readonly TryoutPlacement[]
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const snapshot = yield* requireTryoutResponseSectionSnapshot(
     attempt,
     section
@@ -52,10 +49,7 @@ export const loadSectionResponseIndex = Effect.fn(
       index.eq("tryoutSectionAttemptId", section._id)
     )
     .take(section.totalQuestions + 1)
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-    );
+    .pipe(Effect.mapError(toTryoutRuntimeError));
   if (responses.length > section.totalQuestions) {
     return yield* responseIntegrity(
       "TRYOUT_RESPONSE_COUNT_EXCEEDED",
@@ -87,12 +81,11 @@ export const loadSectionResponseIndex = Effect.fn(
 export const loadAttemptResponses = Effect.fn(
   "tryouts.response.loadAttemptIntegrity"
 )(function* (
-  ctx: TryoutReadContext,
   attempt: TryoutAttempt,
   placements: readonly TryoutPlacement[],
   sectionCoverage: SectionCoverage
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const validatedPlacements = yield* validateTryoutResponsePlacementInventory({
     attemptId: attempt._id,
     expectedQuestionCount: attempt.totalQuestions,
@@ -107,20 +100,14 @@ export const loadAttemptResponses = Effect.fn(
           index.eq("tryoutAttemptId", attempt._id)
         )
         .take(attempt.totalQuestions + 1)
-        .pipe(
-          Effect.orDie,
-          Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-        ),
+        .pipe(Effect.mapError(toTryoutRuntimeError)),
       sections: database
         .table("tryoutSectionAttempts")
         .index("by_tryoutAttemptId_and_sectionOrder", (index) =>
           index.eq("tryoutAttemptId", attempt._id)
         )
         .take(attempt.sectionSnapshots.length + 1)
-        .pipe(
-          Effect.orDie,
-          Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-        ),
+        .pipe(Effect.mapError(toTryoutRuntimeError)),
     },
     {
       concurrency: "unbounded",

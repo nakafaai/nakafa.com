@@ -1,5 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { schoolActivitySchema } from "@repo/backend/confect/schools/schema";
 import {
   createConvexTestWithBetterAuth,
@@ -144,6 +145,7 @@ it.effect(
   "records role transitions with exact optional teacher metadata and tolerates removed invites",
   () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const { t, users, classId, schoolId } =
         yield* Effect.promise(createClassFixture);
       yield* Effect.promise(() =>
@@ -161,57 +163,77 @@ it.effect(
           });
           const student = await ctx.db.get("schoolClassMembers", id);
           assert(student);
-          await runConvexProgram(
-            schoolClassMembersHandler(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            schoolClassMembersHandler({
               id,
               operation: "insert",
               oldDoc: null,
               newDoc: student,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
           const teacher = {
             ...student,
             role: "teacher",
             teacherRole: "assistant",
           } as const;
-          await runConvexProgram(
-            schoolClassMembersHandler(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            schoolClassMembersHandler({
               id,
               operation: "update",
               oldDoc: student,
               newDoc: teacher,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
-          await runConvexProgram(
-            schoolClassMembersHandler(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            schoolClassMembersHandler({
               id,
               operation: "update",
               oldDoc: teacher,
               newDoc: teacher,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
           const unassignedTeacher = {
             ...student,
             role: "teacher",
           } as const;
-          await runConvexProgram(
-            schoolClassMembersHandler(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            schoolClassMembersHandler({
               id,
               operation: "update",
               oldDoc: teacher,
               newDoc: unassignedTeacher,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
-          await runConvexProgram(
-            schoolClassMembersHandler(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            schoolClassMembersHandler({
               id,
               operation: "update",
               oldDoc: unassignedTeacher,
               newDoc: student,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
-          await runConvexProgram(
-            schoolClassMembersHandler(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            schoolClassMembersHandler({
               id,
               operation: "delete",
               oldDoc: {
@@ -219,7 +241,11 @@ it.effect(
                 removedBy: users.admin.userId,
               },
               newDoc: null,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
         })
       );

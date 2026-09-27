@@ -1,11 +1,12 @@
+import { useMutation } from "@confect/react";
 import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   MAX_FORUM_ATTACHMENT_BYTES,
   MAX_FORUM_POST_ATTACHMENTS,
 } from "@repo/backend/confect/classes/forums/constants";
-import { api } from "@repo/backend/convex/_generated/api";
 import {
   InputGroup,
   InputGroupAddon,
@@ -16,7 +17,6 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
-import { useMutation } from "convex/react";
 import { Effect, Schema } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { useTranslations } from "next-intl";
@@ -58,13 +58,13 @@ export function ForumPostInput() {
   const [composerRef] = useResizeObserver<HTMLFormElement>();
   const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const generateUploadUrl = useMutation(
-    api.classes.forums.mutations.uploads.generateUploadUrl
+    refs.public.classes.forums.mutations.uploads.generateUploadUrl
   );
   const discardForumUploads = useMutation(
-    api.classes.forums.mutations.uploads.discardForumUploads
+    refs.public.classes.forums.mutations.uploads.discardForumUploads
   );
   const saveForumUpload = useMutation(
-    api.classes.forums.mutations.uploads.saveForumUpload
+    refs.public.classes.forums.mutations.uploads.saveForumUpload
   );
   const createPost = useCreateForumPost();
   const [{ files }, { removeFile, clearFiles, openFileDialog, getInputProps }] =

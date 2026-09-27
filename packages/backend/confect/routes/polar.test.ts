@@ -3,11 +3,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { SDKValidationError } from "@polar-sh/sdk/models/errors/sdkvalidationerror";
 import { WebhookVerificationError } from "@polar-sh/sdk/webhooks";
-import { registerPolarRoutes } from "@repo/backend/confect/routes/polar";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { HonoWithConvex } from "convex-helpers/server/hono";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { Effect, Schema } from "effect";
-import { Hono } from "hono";
 
 const mocks = vi.hoisted(() => ({
   processEvent: vi.fn(),
@@ -28,23 +25,16 @@ vi.mock("@repo/backend/confect/customers/polar/webhook", () => ({
   processPolarWebhookEvent: mocks.processEvent,
 }));
 
-function createApp() {
-  const app: HonoWithConvex<ActionCtx> = new Hono();
-  registerPolarRoutes(app);
-  return app;
-}
-
-const postWebhook = Effect.fn("routes.polar.test.postWebhook")((body = "{}") =>
-  Effect.promise(() =>
-    Promise.resolve(
-      createApp().request("/polar/events", {
-        body,
-        headers: { "content-type": "application/json" },
-        method: "POST",
-      })
-    )
-  )
-);
+const postWebhook = Effect.fn("routes.polar.test.postWebhook")(function* (
+  body = "{}"
+) {
+  const target = yield* Confect.pipe(Effect.provide(confectLayer));
+  return yield* target.fetch("/polar/events", {
+    body,
+    headers: { "content-type": "application/json" },
+    method: "POST",
+  });
+});
 
 const readResponseText = Effect.fn("routes.polar.test.readResponseText")(
   (response: Response) => Effect.promise(() => response.text())

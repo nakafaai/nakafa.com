@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -305,8 +305,8 @@ describe("tryouts/queries/attemptPage", () => {
       const patchProgress = (values: ProgressPatch) => () =>
         t.mutation((ctx) => ctx.db.patch(progress.id, values));
 
-      yield* corrupt(patchProgress({ countryKey: "germany" }));
-      yield* invoke(patchProgress({ countryKey: TRYOUT_START_COUNTRY }));
+      yield* corrupt(patchProgress({ appLocale: "en" }));
+      yield* invoke(patchProgress({ appLocale: "id" }));
 
       yield* corrupt(patchAttempt({ countryKey: "germany" }));
       yield* corrupt(
@@ -404,7 +404,8 @@ describe("tryouts/queries/attemptPage", () => {
 
         const request = retainedRequest(started.attemptId, sectionPublicPath);
         const readRetainedSection = () => readSection(request);
-        expect(yield* readRetainedSection()).toMatchObject({
+        const retainedSection = yield* readRetainedSection();
+        expect(retainedSection).toMatchObject({
           activeSectionPublicPath: sectionPublicPath,
           activeSetPublicPath: setPublicPath,
           content: { answers: [], kind: "signed" },
@@ -415,6 +416,11 @@ describe("tryouts/queries/attemptPage", () => {
           kind: "retained",
           page: { section: { sectionKey: TRYOUT_START_SECTION } },
         });
+
+        assert(retainedSection);
+        assert(retainedSection.kind === "retained");
+        assert(retainedSection.content.kind === "signed");
+        expect(retainedSection.content.questions).toHaveLength(1);
 
         yield* invoke(() => t.mutation(activateRenamedTryoutStartSource));
         expect(yield* readRetainedSection()).toMatchObject({

@@ -1,4 +1,3 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { ContentReleaseItem } from "@nakafa/aksara-contracts/release";
 import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
 import {
@@ -6,7 +5,11 @@ import {
   RollbackSnapshotEntrySchema,
   type RollbackSnapshotState,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -14,10 +17,8 @@ import {
   loadItem,
   loadVersion,
 } from "@repo/backend/confect/contentRelease/model";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { contentHead } from "@repo/backend/content/publication/projection";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect } from "effect";
 
 type PresentRollbackState = Exclude<
@@ -77,9 +78,8 @@ function absentRollback(
 /** Captures signed rollback evidence from immutable prior versions. */
 const rollbackEvidence = Effect.fn("contentRelease.rollbackEvidence")(
   function* (
-    ctx: MutationCtx,
     item: ContentReleaseItem,
-    prior: Doc<"contentHeads"> | null,
+    prior: Docs["contentHeads"] | null,
     sequence: number | undefined
   ) {
     if (sequence === undefined) {
@@ -89,7 +89,7 @@ const rollbackEvidence = Effect.fn("contentRelease.rollbackEvidence")(
       return absentRollback(item, prior?.sequence);
     }
     const head = yield* contentHead(prior, sequence).pipe(
-      Effect.provide(convexPublicationLayer(ctx))
+      Effect.provide(publicationLayer)
     );
     const entry = RollbackSnapshotEntrySchema.make({
       index: item.index,
@@ -105,9 +105,9 @@ const rollbackEvidence = Effect.fn("contentRelease.rollbackEvidence")(
 
 /** Creates one permanent directory key without changing existing identity. */
 const ensureContentKey = Effect.fn("contentRelease.ensureContentKey")(
-  function* (ctx: MutationCtx, item: ContentReleaseItem, sequence: number) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (item: ContentReleaseItem, sequence: number) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const existing = yield* database
       .table("contentKeys")
       .get(
@@ -142,19 +142,16 @@ const ensureContentKey = Effect.fn("contentRelease.ensureContentKey")(
 
 /** Stages one item while retaining only immutable prior-version evidence. */
 export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
-  function* (
-    ctx: MutationCtx,
-    input: {
-      readonly batchHash: string;
-      readonly batchIndex: number;
-      readonly item: ContentReleaseItem;
-      readonly itemJson: string;
-      readonly priorSequence: number | undefined;
-      readonly role: "candidate" | "recovery";
-      readonly sequence: number;
-    }
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (input: {
+    readonly batchHash: string;
+    readonly batchIndex: number;
+    readonly item: ContentReleaseItem;
+    readonly itemJson: string;
+    readonly priorSequence: number | undefined;
+    readonly role: "candidate" | "recovery";
+    readonly sequence: number;
+  }) {
+    const writer = yield* DatabaseWriter;
     const {
       batchHash,
       batchIndex,
@@ -164,9 +161,8 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
       role,
       sequence,
     } = input;
-    const atIndex = yield* loadItem(ctx, item.releaseId, item.index);
+    const atIndex = yield* loadItem(item.releaseId, item.index);
     const atIdentity = yield* loadIdentityItem(
-      ctx,
       item.releaseId,
       item.change.contentKey,
       item.change.artifactLocale
@@ -181,7 +177,6 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
       priorSequence === undefined
         ? null
         : yield* loadVersion(
-            ctx,
             item.change.contentKey,
             item.change.artifactLocale,
             priorSequence
@@ -195,8 +190,8 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
         `Delete ${item.change.contentKey}/${item.change.artifactLocale} has no published head.`
       );
     }
-    yield* ensureContentKey(ctx, item, sequence);
-    const rollback = yield* rollbackEvidence(ctx, item, prior, priorSequence);
+    yield* ensureContentKey(item, sequence);
+    const rollback = yield* rollbackEvidence(item, prior, priorSequence);
     const row = {
       ...(item.change.operation === "upsert"
         ? {

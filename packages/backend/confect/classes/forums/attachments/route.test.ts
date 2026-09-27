@@ -1,107 +1,21 @@
-// @vitest-environment node
-import { Ref } from "@confect/core";
+import { actionLayer } from "@confect/server/RegisteredFunction";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import refs from "@repo/backend/confect/_generated/refs";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   FORUM_PENDING_UPLOAD_EXPIRATION_MS,
   FORUM_PENDING_UPLOAD_LEASE_MS,
 } from "@repo/backend/confect/classes/forums/attachments/constants";
-import { registerForumAttachmentUploadRoute } from "@repo/backend/confect/classes/forums/attachments/route";
+import { attachmentRoutes } from "@repo/backend/confect/classes/forums/attachments/route";
 import { MAX_FORUM_ATTACHMENT_BYTES } from "@repo/backend/confect/classes/forums/constants";
-import {
-  insertClass,
-  insertClassMembership,
-  insertSchool,
-  insertSchoolMembership,
-} from "@repo/backend/confect/classes/test.helpers";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { createPendingUpload } from "@repo/backend/test/forum/upload";
 import { getFunctionName } from "convex/server";
-import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Effect, Schema } from "effect";
-import { Hono } from "hono";
+import { Effect, Layer, Schema } from "effect";
+import { HttpRouter, HttpServer } from "effect/unstable/http";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
 const LEASE_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const uploadTokenSuffixPattern = /[^/]+$/;
-
-const createPendingUpload = Effect.fn(
-  "test.forumAttachments.createPendingUpload"
-)(function* () {
-  const t = createConvexTestWithBetterAuth();
-  const seeded = yield* Effect.promise(() =>
-    t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "forum-upload-route",
-      });
-      const ownership = {
-        now: NOW,
-        userId: user.userId,
-      };
-      const schoolId = await insertSchool(ctx, ownership);
-      const classId = await insertClass(ctx, {
-        ...ownership,
-        schoolId,
-      });
-      const membership = {
-        ...ownership,
-        role: "teacher",
-        schoolId,
-      } satisfies Parameters<typeof insertSchoolMembership>[1];
-      await insertSchoolMembership(ctx, membership);
-      await insertClassMembership(ctx, {
-        ...membership,
-        classId,
-      });
-      const forumId = await ctx.db.insert("schoolClassForums", {
-        body: "Attachment forum body",
-        classId,
-        createdBy: user.userId,
-        isPinned: false,
-        lastPostAt: NOW,
-        lastPostBy: user.userId,
-        nextPostSequence: 1,
-        postCount: 0,
-        reactionCounts: [],
-        schoolId,
-        status: "open",
-        tag: "general",
-        title: "Attachment forum",
-        updatedAt: NOW,
-      });
-      return {
-        ...user,
-        forumId,
-      };
-    })
-  );
-  const owner = t.withIdentity({
-    sessionId: seeded.sessionId,
-    subject: seeded.authUserId,
-  });
-  const upload = yield* Effect.promise(() =>
-    owner.mutation(api.classes.forums.mutations.uploads.generateUploadUrl, {
-      forumId: seeded.forumId,
-    })
-  );
-  const capability = new URL(upload.uploadUrl);
-  const uploadToken = yield* Schema.decodeUnknownEffect(Schema.NonEmptyString)(
-    capability.pathname.split("/").at(-1)
-  );
-  return {
-    capabilityPath: capability.pathname,
-    owner,
-    seeded,
-    t,
-    uploadId: upload.uploadId,
-    uploadToken,
-  };
-});
 type PendingUpload = Effect.Success<ReturnType<typeof createPendingUpload>>;
 const claimPendingUpload = Effect.fn(
   "test.forumAttachments.claimPendingUpload"
@@ -149,7 +63,7 @@ describe("classes/forums/attachments/route", () => {
         vi.stubEnv("SITE_URL", siteOrigin);
         const bodySize = bodyText?.length ?? 0;
         const { capabilityPath, owner, t, uploadId } =
-          yield* createPendingUpload();
+          yield* createPendingUpload(NOW);
         const response = yield* Effect.promise(() =>
           t.fetch(capabilityPath, {
             ...(bodyText === undefined
@@ -221,7 +135,7 @@ describe("classes/forums/attachments/route", () => {
     "rejects a %s capability before consuming its hostile body",
     (state) =>
       Effect.gen(function* () {
-        const pending = yield* createPendingUpload();
+        const pending = yield* createPendingUpload(NOW);
         const { capabilityPath, t, uploadId } = pending;
         if (state === "leased") {
           expect(yield* claimPendingUpload(pending)).toBe(true);
@@ -278,7 +192,7 @@ describe("classes/forums/attachments/route", () => {
   );
   it.effect("reclaims an interrupted upload after its lease expires", () =>
     Effect.gen(function* () {
-      const pendingUpload = yield* createPendingUpload();
+      const pendingUpload = yield* createPendingUpload(NOW);
       const { capabilityPath, t, uploadId } = pendingUpload;
       expect(yield* claimPendingUpload(pendingUpload)).toBe(true);
       vi.setSystemTime(NOW + FORUM_PENDING_UPLOAD_LEASE_MS);
@@ -319,7 +233,7 @@ describe("classes/forums/attachments/route", () => {
     "rejects $bodyFailure without binding storage",
     ({ bodyFailure, status }) =>
       Effect.gen(function* () {
-        const { capabilityPath, t, uploadId } = yield* createPendingUpload();
+        const { capabilityPath, t, uploadId } = yield* createPendingUpload(NOW);
         const headers = new Headers();
         if (bodyFailure !== "missing-content-type") {
           headers.set("content-type", "text/plain");
@@ -373,21 +287,31 @@ describe("classes/forums/attachments/route", () => {
     ].flatMap((failure) =>
       ["claim", "settle", "release"].includes(failure)
         ? [
-            { failure, invalid: false },
-            { failure, invalid: true },
+            {
+              failure,
+              invalid: false,
+            },
+            {
+              failure,
+              invalid: true,
+            },
           ]
-        : [{ failure, invalid: false }]
+        : [
+            {
+              failure,
+              invalid: false,
+            },
+          ]
     )
   )(
     "preserves upload safety for $failure (invalid: $invalid)",
     ({ failure, invalid }) =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const { capabilityPath, seeded, t, uploadId } =
-          yield* createPendingUpload();
+          yield* createPendingUpload(NOW);
         const result = yield* Effect.promise(() =>
           t.action(async (ctx) => {
-            const app: HonoWithConvex<ActionCtx> = new Hono();
-            registerForumAttachmentUploadRoute(app);
             const originalMutation = ctx.runMutation;
             const runMutation: typeof ctx.runMutation = (
               reference,
@@ -399,7 +323,9 @@ describe("classes/forums/attachments/route", () => {
                 name === `classes/forums/attachments/upload:${failedMutation}`
               ) {
                 return invalid
-                  ? Promise.resolve({ invalid: true })
+                  ? Promise.resolve({
+                      invalid: true,
+                    })
                   : Promise.reject(new Error("Private mutation failure."));
               }
               return originalMutation(reference, ...args);
@@ -433,16 +359,36 @@ describe("classes/forums/attachments/route", () => {
                 throw new Error("Random source unavailable.");
               });
             }
-            const response = await app.request(
-              `https://example.convex.site${capabilityPath}`,
-              {
-                body: "hello",
-                headers: {
-                  "content-type": "text/plain",
-                },
-                method: "POST",
-              },
-              ctx
+            const response = await Effect.runPromiseWith(runtimeServices)(
+              Effect.acquireUseRelease(
+                Effect.sync(() =>
+                  HttpRouter.toWebHandler(
+                    attachmentRoutes.pipe(
+                      Layer.provideMerge(actionLayer(confectSchema, ctx)),
+                      Layer.provide(HttpServer.layerServices)
+                    ),
+                    {
+                      disableLogger: true,
+                    }
+                  )
+                ),
+                ({ handler }) =>
+                  Effect.promise(() =>
+                    handler(
+                      new Request(
+                        `https://example.convex.site${capabilityPath}`,
+                        {
+                          body: "hello",
+                          headers: {
+                            "content-type": "text/plain",
+                          },
+                          method: "POST",
+                        }
+                      )
+                    )
+                  ),
+                ({ dispose }) => Effect.promise(dispose)
+              )
             );
             expectPrivate(response);
             return {
@@ -474,14 +420,9 @@ describe("classes/forums/attachments/route", () => {
         expect(state.storage).toHaveLength(failure === "cleanup" ? 1 : 0);
         if (failure === "cleanup") {
           vi.setSystemTime(NOW + 24 * 60 * 60 * 1000 + 1);
-          expect(
-            yield* Effect.promise(() =>
-              t.mutation(
-                Ref.getFunctionReference(refs.internal.storage.sweep),
-                {}
-              )
-            )
-          ).toEqual({ deleted: 1, done: true, scanned: 1 });
+          yield* Effect.promise(() =>
+            t.finishAllScheduledFunctions(() => vi.runAllTimers())
+          );
           expect(
             yield* Effect.promise(() =>
               t.query((ctx) => ctx.db.system.query("_storage").collect())

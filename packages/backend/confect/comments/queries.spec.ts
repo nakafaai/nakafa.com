@@ -1,11 +1,10 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
-import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import commentsTable from "@repo/backend/confect/_generated/tables/comments";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { commentVoteValidator } from "@repo/backend/confect/comments/schema";
 import { userDataValidator } from "@repo/backend/confect/lib/validators/user";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 export const publicCommentUserValidator = Schema.Struct({
   _id: userDataValidator.fields._id,
@@ -25,24 +24,22 @@ export const commentWithUserValidator = Schema.Struct({
 /** Load the current viewer's vote for each bounded comment page row. */
 export default GroupSpec.make()
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "getCommentsBySlug",
       args: () => ({
         slug: Schema.String,
-        paginationOpts: PaginationOptionsSchema,
       }),
-      returns: () => PaginationResultSchema(commentWithUserValidator),
+      item: () => commentWithUserValidator,
       error: () => AuthFailure,
-    })
+    }).middleware(Session)
   )
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "getCommentsByUserId",
       args: () => ({
         userId: IdSchema("users"),
-        paginationOpts: PaginationOptionsSchema,
       }),
-      returns: () => PaginationResultSchema(commentWithViewerVoteValidator),
+      item: () => commentWithViewerVoteValidator,
       error: () => AuthFailure,
-    })
+    }).middleware(Session)
   );

@@ -1,5 +1,5 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { toLearningContextQuery } from "@repo/backend/confect/contents/context";
 import { buildContentSearchRef } from "@repo/backend/confect/contents/helpers/search/documents";
@@ -11,8 +11,6 @@ import {
 import { resolveLearningContext } from "@repo/backend/confect/contents/views/context";
 import { hydrateMaterialTarget } from "@repo/backend/confect/contents/views/target";
 import type { recentlyViewedSubjectValidator } from "@repo/backend/confect/lib/validators/trending";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, flow, Schema, Struct } from "effect";
 export type RecentlyViewedSubject = Schema.Schema.Type<
@@ -43,11 +41,11 @@ export function toRecentLearningIoError(error: unknown) {
 export const listRecentLearning = Effect.fn(
   "contents.recent.listRecentLearning"
 )(
-  function* (ctx: QueryCtx, args: ListRecentLearningArgs) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (args: ListRecentLearningArgs) {
+    const database = yield* DatabaseReader;
     const rawLimit = args.limit ?? defaultRecentLearningLimit;
     const limit = Math.min(Math.max(rawLimit, 0), maxRecentLearningLimit);
-    const user = yield* getOptionalAppUserForRead(ctx).pipe(
+    const user = yield* getOptionalAppUserForRead().pipe(
       Effect.mapError(toRecentLearningIoError)
     );
     if (!(user && limit > 0)) {
@@ -68,7 +66,7 @@ export const listRecentLearning = Effect.fn(
       .take(recentLearningCandidateLimit)
       .pipe(Effect.orDie);
     for (const row of recentRows) {
-      const subject = yield* toRecentlyViewedSubject(ctx, row);
+      const subject = yield* toRecentlyViewedSubject(row);
       if (subject) {
         subjects.push(subject);
       }
@@ -84,8 +82,8 @@ export const listRecentLearning = Effect.fn(
 /** Projects one ranked recent row to the public home-card result shape. */
 export const toRecentlyViewedSubject = Effect.fn(
   "contents.recent.toRecentlyViewedSubject"
-)(function* (ctx: QueryCtx, row: Doc<"userLearningRecents">) {
-  const route = yield* hydrateMaterialTarget(ctx, {
+)(function* (row: Docs["userLearningRecents"]) {
+  const route = yield* hydrateMaterialTarget({
     contentId: row.content_id,
     locale: row.locale,
   });
@@ -93,14 +91,16 @@ export const toRecentlyViewedSubject = Effect.fn(
     return;
   }
   const context = yield* resolveLearningContext(
-    ctx,
     route,
     row.contextMode === "placement"
       ? {
           mode: "placement",
           ...Struct.renameKeys(
             Struct.pick(row, ["contextNodeKey", "contextProgramKey"]),
-            { contextNodeKey: "nodeKey", contextProgramKey: "programKey" }
+            {
+              contextNodeKey: "nodeKey",
+              contextProgramKey: "programKey",
+            }
           ),
         }
       : undefined

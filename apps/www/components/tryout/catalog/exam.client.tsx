@@ -1,8 +1,10 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
+import type { Ref } from "@confect/core";
+
+import type refs from "@repo/backend/confect/_generated/refs";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import type { FunctionReturnType } from "convex/server";
+
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import {
@@ -16,7 +18,7 @@ import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { getTryoutTrackCatalogArtwork } from "@/lib/tryout/artwork";
 
-type ExamPageQuery = typeof api.tryouts.queries.catalog.getExamPage;
+type ExamPageQuery = typeof refs.public.tryouts.queries.catalog.getExamPage;
 
 /** Renders one realtime try-out exam page from Convex. */
 export function TryoutExamPageClient({
@@ -24,7 +26,7 @@ export function TryoutExamPageClient({
   page,
 }: {
   locale: Locale;
-  page: NonNullable<FunctionReturnType<ExamPageQuery>>;
+  page: NonNullable<Ref.Returns<ExamPageQuery>>;
 }) {
   const tTryouts = useTranslations("Tryouts");
 

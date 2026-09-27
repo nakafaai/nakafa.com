@@ -1,11 +1,11 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
+type TryoutAttempt = Docs["tryoutAttempts"];
+type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 
 /** Validates current progress before one section becomes terminal. */
 export const readSectionCompletion = Effect.fn(

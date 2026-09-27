@@ -1,20 +1,17 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { readTryoutRuntimeRetention } from "@repo/backend/confect/contentRelease/tryout/runtime";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 const CLEANUP_RUNTIME_LIMIT = 2;
-type ReadCtx = MutationCtx | QueryCtx;
 
 /** Loads the bounded permanent rows owned by one release cleanup. */
 const loadAbortRuntime = Effect.fn("contentRelease.loadAbortRuntime")(
-  function* (ctx: ReadCtx, releaseId: string) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (releaseId: string) {
+    const database = yield* DatabaseReader;
     const rows = yield* database
       .table("tryoutRuntimeBundles")
       .index("by_cleanupReleaseId", (query) =>
@@ -35,11 +32,11 @@ const loadAbortRuntime = Effect.fn("contentRelease.loadAbortRuntime")(
 /** Removes only permanent rows with no attempt or state-owned consumer. */
 export const deleteAbortRuntime = Effect.fn(
   "contentRelease.deleteAbortRuntime"
-)(function* (ctx: MutationCtx, releaseId: string) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const rows = yield* loadAbortRuntime(ctx, releaseId);
+)(function* (releaseId: string) {
+  const writer = yield* DatabaseWriter;
+  const rows = yield* loadAbortRuntime(releaseId);
   for (const row of rows) {
-    const retention = yield* readTryoutRuntimeRetention(ctx, row, {
+    const retention = yield* readTryoutRuntimeRetention(row, {
       ignoredReleaseId: releaseId,
     });
     const cleanupReleaseId = retention.retainingReleaseId;
@@ -61,10 +58,10 @@ export const deleteAbortRuntime = Effect.fn(
 
 /** Detects cleanup-owned permanent rows with no durable runtime consumer. */
 export const hasAbortRuntime = Effect.fn("contentRelease.hasAbortRuntime")(
-  function* (ctx: ReadCtx, releaseId: string) {
-    const rows = yield* loadAbortRuntime(ctx, releaseId);
+  function* (releaseId: string) {
+    const rows = yield* loadAbortRuntime(releaseId);
     for (const row of rows) {
-      const retention = yield* readTryoutRuntimeRetention(ctx, row, {
+      const retention = yield* readTryoutRuntimeRetention(row, {
         ignoredReleaseId: releaseId,
       });
       if (!retention.retainedByAttempt) {

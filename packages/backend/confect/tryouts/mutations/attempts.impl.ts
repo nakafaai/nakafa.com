@@ -1,8 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/tryouts/mutations/attempts.spec";
 import { startTryoutAttempt } from "@repo/backend/confect/tryouts/start/impl";
 import { Clock, Effect, Layer } from "effect";
@@ -13,11 +13,10 @@ const startAttempt = FunctionImpl.make(
   spec,
   "startAttempt",
   Effect.fn("tryouts.mutations.attempts.startAttempt")(function* (args) {
-    const ctx = yield* MutationCtxService;
     return yield* Effect.gen(function* () {
-      const { appUser } = yield* requireAuth(ctx);
+      const { appUser } = yield* requireAuth();
       const now = yield* Clock.currentTimeMillis;
-      return yield* startTryoutAttempt(ctx, {
+      return yield* startTryoutAttempt({
         args,
         now,
         userId: appUser._id,
@@ -28,5 +27,6 @@ const startAttempt = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(startAttempt),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

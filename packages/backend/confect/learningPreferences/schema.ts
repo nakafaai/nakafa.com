@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const curriculumProgramOptionValidator = Schema.Struct({
   countryCode: Schema.optionalKey(Schema.String),
@@ -41,10 +40,7 @@ export class LearningPreferencePersistenceError extends Schema.TaggedError<Learn
 ) {}
 
 /** Maps unknown database failures into the preference persistence contract. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const LearningPreferencePersistenceErrorWire = failureWire(
-  LearningPreferencePersistenceError
-);
+
 export const curriculumPreferenceIoFailedCode =
   "CURRICULUM_PREFERENCE_IO_FAILED";
 export const curriculumProgramNotFoundCode = "CURRICULUM_PROGRAM_NOT_FOUND";
@@ -61,6 +57,3 @@ export class CurriculumPreferenceError extends Schema.TaggedError<CurriculumPref
 ) {}
 /** Compact curriculum option consumed by selectors and preference storage. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const CurriculumPreferenceErrorWire = failureWire(
-  CurriculumPreferenceError
-);

@@ -1,12 +1,9 @@
-import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
-import chatsTable from "@repo/backend/confect/_generated/tables/chats";
 import messagePartsTable from "@repo/backend/confect/_generated/tables/messageParts";
 import messagesTable from "@repo/backend/confect/_generated/tables/messages";
 import { Schema } from "effect";
 /**
  * Paginated chats validator
  */
-export const paginatedChatsValidator = PaginationResultSchema(chatsTable.Doc);
 
 /**
  * Message with parts document validator
@@ -23,6 +20,3 @@ export type MessageWithPartsDoc = Schema.Schema.Type<
 >;
 
 /** Paginated chat transcript validator. */
-export const paginatedMessagesValidator = PaginationResultSchema(
-  messageWithPartsDocValidator
-);

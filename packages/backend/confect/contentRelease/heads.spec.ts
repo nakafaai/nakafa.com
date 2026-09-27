@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   contentFamilyValidator,
   headPageValidator,
@@ -18,6 +18,6 @@ export default GroupSpec.make().addFunction(
       limit: Schema.Finite,
     }),
     returns: () => headPageValidator,
-    error: () => ReleaseErrorWire,
+    error: () => ReleaseError,
   })
 );

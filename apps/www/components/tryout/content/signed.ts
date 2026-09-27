@@ -1,17 +1,15 @@
+import { HttpClient } from "@confect/js";
 import "server-only";
-
 import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
-import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
-import { fetchQuery } from "convex/nextjs";
-import { makeFunctionReference } from "convex/server";
 import { Array as Arr, Effect } from "effect";
 import { cacheLife, cacheTag } from "next/cache";
 import { renderLiveItem } from "@/components/tryout/content/artifact";
@@ -34,18 +32,16 @@ import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 const SIGNED_RENDER_CONCURRENCY = 4;
-const attemptContentQuery = makeFunctionReference<
-  "query",
-  TryoutHistoryRequest,
-  TryoutBodyBatch | null
->("tryouts/queries/content:getBatch");
 
 /** Dispatches one attempt-owned signed access at the sole runtime boundary. */
 export const loadSignedTryoutContent = Effect.fn(
   "NakafaContent.loadSignedTryout"
 )(function* (attemptId: Id<"tryoutAttempts">, access: SignedContentAccess) {
   const token = yield* Effect.tryPromise({
-    catch: (cause) => new ContentRuntimeVerificationError({ cause }),
+    catch: (cause) =>
+      new ContentRuntimeVerificationError({
+        cause,
+      }),
     try: () => getToken(),
   });
   if (!token) {
@@ -65,7 +61,10 @@ export const loadTryoutQuestion = Effect.fn("NakafaContent.loadTryoutQuestion")(
     const plan = planTryoutContentBatches([question], []);
     const rendered = yield* renderContentPlan(plan, (selectors) =>
       Effect.tryPromise({
-        catch: (cause) => new ContentRuntimeVerificationError({ cause }),
+        catch: (cause) =>
+          new ContentRuntimeVerificationError({
+            cause,
+          }),
         try: () => renderBatch(selectors),
       })
     );
@@ -107,17 +106,30 @@ const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
   token: string,
   selectors: readonly TryoutSelector[]
 ) {
-  const row = yield* Effect.tryPromise({
-    catch: (cause) => new ContentRuntimeVerificationError({ cause }),
-    try: () =>
-      fetchQuery(
-        attemptContentQuery,
-        { attemptId, selectors: [...selectors] },
-        { token }
-      ),
-  });
+  const row = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.tryouts.queries.content.getBatch, {
+      attemptId,
+      selectors: [...selectors],
+    })
+  ).pipe(
+    Effect.provide(
+      HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, {
+        auth: token,
+      })
+    ),
+    Effect.withTracerTiming(false),
+    Effect.mapError(
+      (cause) =>
+        new ContentRuntimeVerificationError({
+          cause,
+        })
+    )
+  );
   return yield* Effect.tryPromise({
-    catch: (cause) => new ContentRuntimeVerificationError({ cause }),
+    catch: (cause) =>
+      new ContentRuntimeVerificationError({
+        cause,
+      }),
     try: () => renderAttemptBatch(selectors, row),
   });
 });
@@ -188,14 +200,18 @@ const renderFoundItems = Effect.fn("NakafaContent.renderFoundItems")(function* (
     // Exchange verification already checks equal counts and ordered identities.
     Arr.zip(selectors, items),
     ([selector, item]) => renderLiveItem(item, selector),
-    { concurrency: SIGNED_RENDER_CONCURRENCY }
+    {
+      concurrency: SIGNED_RENDER_CONCURRENCY,
+    }
   );
 });
 
 /** Reads the server-owned protected runtime target. */
 const readRuntimeTarget = Effect.try({
   catch: () =>
-    new ContentRuntimeConfigurationError({ key: "CONTENT_RUNTIME_TOKEN" }),
+    new ContentRuntimeConfigurationError({
+      key: "CONTENT_RUNTIME_TOKEN",
+    }),
   try: () => ({
     siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
     token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,

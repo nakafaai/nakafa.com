@@ -1,10 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { ModelIdSchema } from "@repo/ai/config/model";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
@@ -19,6 +17,7 @@ import {
 } from "@repo/backend/confect/chats/turns/impl";
 import type { CreditTransactionMetadata } from "@repo/backend/confect/credits/schema";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
 import { Effect, Layer, Struct } from "effect";
 
 /**
@@ -32,7 +31,6 @@ const saveAssistantResponse = FunctionImpl.make(
   spec,
   "saveAssistantResponse",
   Effect.fn("chats.assistantResponses.saveAssistantResponse")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const { userId, message, parts } = args;
@@ -46,16 +44,15 @@ const saveAssistantResponse = FunctionImpl.make(
     if (!appUser || isAccountDeletionPending(appUser)) {
       return null;
     }
-    const turn = yield* readChatTurn(
-      ctx,
-      args.turnId,
-      appUser._id,
-      message.modelId
-    );
+    const turn = yield* readChatTurn(args.turnId, appUser._id, message.modelId);
     if (!turn) {
       return null;
     }
-    yield* requireChatOwner(message.chatId, appUser._id);
+    const chat = yield* requireChatOwner(message.chatId, appUser._id);
+    if (chat.threadId) {
+      yield* refundChatTurn(turn);
+      return null;
+    }
     yield* rewriteTranscript(message.chatId, message.identifier, "assistant");
     const modelId = ModelIdSchema.make(turn.modelId);
     const messageId = yield* writer
@@ -101,7 +98,6 @@ const saveAssistantFailure = FunctionImpl.make(
   spec,
   "saveAssistantFailure",
   Effect.fn("chats.assistantResponses.saveAssistantFailure")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const { userId, message } = args;
@@ -115,16 +111,15 @@ const saveAssistantFailure = FunctionImpl.make(
     if (!appUser || isAccountDeletionPending(appUser)) {
       return null;
     }
-    const turn = yield* readChatTurn(
-      ctx,
-      args.turnId,
-      appUser._id,
-      message.modelId
-    );
+    const turn = yield* readChatTurn(args.turnId, appUser._id, message.modelId);
     if (!turn) {
       return null;
     }
-    yield* requireChatOwner(message.chatId, appUser._id);
+    const chat = yield* requireChatOwner(message.chatId, appUser._id);
+    if (chat.threadId) {
+      yield* refundChatTurn(turn);
+      return null;
+    }
     yield* rewriteTranscript(message.chatId, message.identifier, "assistant");
     const messageId = yield* writer
       .table("messages")
@@ -137,7 +132,7 @@ const saveAssistantFailure = FunctionImpl.make(
         generationErrorCode: message.generationErrorCode,
       })
       .pipe(Effect.orDie);
-    yield* refundChatTurn(ctx, turn);
+    yield* refundChatTurn(turn);
     return {
       messageId,
     };

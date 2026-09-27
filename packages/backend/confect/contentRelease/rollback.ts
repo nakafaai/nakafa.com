@@ -1,4 +1,3 @@
-import { DatabaseReader } from "@confect/server";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
   canonicalizeRollbackPage,
@@ -14,7 +13,8 @@ import {
   RoutePageRequestSchema,
   type RouteRollbackRecord,
 } from "@nakafa/aksara-contracts/release/route/page";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   ReleaseError,
   releaseFail,
@@ -27,14 +27,12 @@ import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Schema } from "effect";
 
 /** Proves one release is an exact active or verified-candidate rollback source. */
 export const rollbackSource = Effect.fn("contentRelease.rollbackSource")(
-  function* (ctx: QueryCtx, releaseId: string, manifestHash: string) {
-    return yield* loadReadableSnapshot(ctx, releaseId, manifestHash);
+  function* (releaseId: string, manifestHash: string) {
+    return yield* loadReadableSnapshot(releaseId, manifestHash);
   }
 );
 /** Creates one bounded body-bearing rollback page. */
@@ -55,8 +53,8 @@ export function makeRollbackPage(
 }
 /** Reads one bounded exact prior-state page from the active release. */
 export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
-  function* (ctx: QueryCtx, input: unknown) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (input: unknown) {
+    const database = yield* DatabaseReader;
     const request = yield* Schema.decodeUnknownEffect(
       RollbackPageRequestSchema
     )(input).pipe(
@@ -75,7 +73,6 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
       );
     }
     const { signed } = yield* rollbackSource(
-      ctx,
       request.rollbackOf,
       request.rollbackOfManifestHash
     );
@@ -108,7 +105,7 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
           `Rollback source ${request.rollbackOf} is not contiguous.`
         );
       }
-      const record = yield* rollbackRecord(ctx, row);
+      const record = yield* rollbackRecord(row);
       const candidate = makeRollbackPage(request, total, [...records, record]);
       if (
         new TextEncoder().encode(canonicalizeRollbackPage(candidate))
@@ -129,9 +126,8 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
 );
 /** Resolves the owner immediately before one signed route change. */
 export const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(
-  function* (ctx: QueryCtx, row: Doc<"contentBindings">, baseSequence: number) {
+  function* (row: Docs["contentBindings"], baseSequence: number) {
     const prior = yield* loadRouteBinding(
-      ctx,
       row.appLocale,
       row.publicPath,
       baseSequence
@@ -154,8 +150,8 @@ export const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(
 );
 /** Reads one bounded exact prior-owner page from the active release. */
 export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
-  function* (ctx: QueryCtx, input: unknown) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (input: unknown) {
+    const database = yield* DatabaseReader;
     const request = yield* Schema.decodeUnknownEffect(RoutePageRequestSchema)(
       input
     ).pipe(
@@ -174,7 +170,6 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
       );
     }
     const { baseSequence, signed } = yield* rollbackSource(
-      ctx,
       request.rollbackOf,
       request.rollbackOfManifestHash
     );
@@ -204,7 +199,7 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
       }
       records.push({
         current: yield* decodeRouteJson(row.routeJson),
-        priorContentKey: yield* priorRouteOwner(ctx, row, baseSequence),
+        priorContentKey: yield* priorRouteOwner(row, baseSequence),
       });
     }
     const nextIndex = records.at(-1)?.current.index ?? request.afterIndex;

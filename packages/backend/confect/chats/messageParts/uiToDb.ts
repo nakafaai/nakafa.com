@@ -1,4 +1,7 @@
-import type { MyUIMessage, MyUIMessagePart } from "@repo/ai/types/message";
+import type {
+  MyUIMessage,
+  MyUIMessagePart,
+} from "@repo/backend/confect/chats/message";
 import { toPersistedProviderMetadata } from "@repo/backend/confect/chats/messageParts/providerMetadata";
 import type { DBPart } from "@repo/backend/confect/chats/messageParts/shared";
 import type { ToolState } from "@repo/backend/confect/chats/schema";

@@ -1,8 +1,10 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
+import type { Ref } from "@confect/core";
+
+import type refs from "@repo/backend/confect/_generated/refs";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import type { FunctionReturnType } from "convex/server";
+
 import {
   CatalogCard,
   CatalogCardGradient,
@@ -13,8 +15,9 @@ import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
-type CountryPageQuery = typeof api.tryouts.queries.catalog.getCountryPage;
-type CountryPage = NonNullable<FunctionReturnType<CountryPageQuery>>;
+type CountryPageQuery =
+  typeof refs.public.tryouts.queries.catalog.getCountryPage;
+type CountryPage = NonNullable<Ref.Returns<CountryPageQuery>>;
 type CountryExamCard = CountryPage["exams"][number] & {
   readonly imageSrc?: string;
 };

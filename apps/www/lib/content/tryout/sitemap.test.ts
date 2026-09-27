@@ -7,30 +7,43 @@ import {
   makeRuntimeSource,
 } from "@repo/backend/test/content/publication";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import {
   readPublishedTryoutSitemap,
   readPublishedTryoutSitemapCount,
 } from "@/lib/content/tryout/sitemap";
-import { createTestNativeQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: runtimeQueryMock,
-}));
-
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 describe("published try-out sitemap", () => {
   beforeEach(() => {
     runtimeQueryMock.mockReset();
   });
-
   it.effect.each(APP_LOCALE_CODES)(
     "reads the complete authenticated %s route inventory",
     (locale) =>
       Effect.gen(function* () {
         const fixture = yield* makeTryoutRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
-        runtimeQueryMock.mockImplementation(createTestNativeQuery(context));
+        runtimeQueryMock.mockImplementation(context.query);
         expect(yield* readPublishedTryoutSitemapCount(locale)).toEqual({
           pageCount: 1,
           routeCount: 5,
@@ -48,7 +61,6 @@ describe("published try-out sitemap", () => {
         expect(yield* readPublishedTryoutSitemap(locale, -1)).toBeNull();
       })
   );
-
   it.effect(
     "fails closed when the authenticated release has no try-out snapshot",
     () =>
@@ -56,17 +68,18 @@ describe("published try-out sitemap", () => {
         const inactive = yield* createTestPublication(
           makeRuntimeSource().source
         );
-        runtimeQueryMock.mockImplementation(createTestNativeQuery(inactive));
+        runtimeQueryMock.mockImplementation(inactive.query);
         expect(
           yield* readPublishedTryoutSitemapCount("id").pipe(Effect.flip)
         ).toMatchObject({
-          _tag: "NakafaAgentDataReadError",
-          cause: expect.stringContaining("CONTENT_RELEASE_MISSING"),
+          _tag: "ReleaseError",
+          code: "CONTENT_RELEASE_MISSING",
         });
       })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

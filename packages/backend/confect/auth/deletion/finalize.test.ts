@@ -1,7 +1,10 @@
+import { Ref } from "@confect/core";
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
+
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
-import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
+import refs from "@repo/backend/confect/_generated/refs";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { finalizeAccountDeletion } from "@repo/backend/confect/auth/deletion/finalize";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -13,26 +16,29 @@ import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 10, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
-
 describe("auth/deletion/finalize", () => {
   afterEach(() => vi.useRealTimers());
-
   it("does not restart absent or already-running cleanup and repairs its missing receipt", async () => {
     const t = convexTest(schema, convexModules);
-    const scheduleCleanup = vi.fn(() => Effect.void);
     await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(ctx, "missing-user", undefined, scheduleCleanup)
+      Effect.runPromise(
+        finalizeAccountDeletion("missing-user").pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
       )
     );
     const userId = await t.mutation(async (ctx) => {
       const id = await seedDeletionUser(ctx, "started-user");
-      await ctx.db.patch("users", id, { deletionCleanupStartedAt: NOW });
+      await ctx.db.patch("users", id, {
+        deletionCleanupStartedAt: NOW,
+      });
       return id;
     });
     await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(ctx, "started-user", undefined, scheduleCleanup)
+      Effect.runPromise(
+        finalizeAccountDeletion("started-user").pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
       )
     );
     await t.mutation((ctx) =>
@@ -45,11 +51,23 @@ describe("auth/deletion/finalize", () => {
       })
     );
     await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(ctx, "started-user", undefined, scheduleCleanup)
+      Effect.runPromise(
+        finalizeAccountDeletion("started-user").pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
       )
     );
-    expect(scheduleCleanup).not.toHaveBeenCalled();
+    expect(
+      await t.query(async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+          (job) =>
+            job.name ===
+            Ref.getConvexFunctionName(
+              refs.internal.customers.deletion.workflow.launchDeletedUserCleanup
+            )
+        )
+      )
+    ).toHaveLength(0);
     await expect(
       t.query((ctx) => ctx.db.query("accountDeletionReceipts").unique())
     ).resolves.toMatchObject({
@@ -57,32 +75,26 @@ describe("auth/deletion/finalize", () => {
       committedAt: NOW,
     });
   });
-
   it("rolls back anonymization when durable cleanup scheduling fails", async () => {
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation((ctx) =>
       seedDeletionUser(ctx, "scheduler-failure")
     );
     const before = await t.query((ctx) => ctx.db.get("users", userId));
-    const scheduleCleanup = vi.fn(() =>
-      Effect.fail(toUserCleanupError(new Error("scheduler offline")))
-    );
     await expect(
-      t.mutation((ctx) =>
-        runConvexProgram(
-          finalizeAccountDeletion(
-            ctx,
-            "scheduler-failure",
-            undefined,
-            scheduleCleanup
+      t.mutation((ctx) => {
+        vi.spyOn(ctx.scheduler, "runAfter").mockRejectedValueOnce(
+          new Error("scheduler offline")
+        );
+        return Effect.runPromise(
+          finalizeAccountDeletion("scheduler-failure").pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
           )
-        )
-      )
+        );
+      })
     ).rejects.toMatchObject({
-      data: {
-        code: "USER_CLEANUP_FAILED",
-        message: "Unable to complete account cleanup.",
-      },
+      code: "USER_CLEANUP_FAILED",
+      message: "Unable to complete account cleanup.",
     });
     await expect(
       t.query((ctx) => ctx.db.get("users", userId))
@@ -91,29 +103,20 @@ describe("auth/deletion/finalize", () => {
       t.query((ctx) => ctx.db.query("accountDeletionPreparations").collect())
     ).resolves.toEqual([]);
   });
-
   it("atomically transfers schools, tombstones the user, and queues cleanup", async () => {
     const t = convexTest(schema, convexModules);
-    const scheduleCleanup = vi.fn(() => Effect.void);
     const seeded = await t.mutation((ctx) =>
       seedPreparedDeletionSchool(ctx, "finalize-owner", NOW, ATTEMPT_ID)
     );
-
     await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(
-          ctx,
-          "finalize-owner",
-          {
-            attemptId: ATTEMPT_ID,
-            preparationId: seeded.preparationId,
-            recoveryGeneration: 0,
-          },
-          scheduleCleanup
-        )
+      Effect.runPromise(
+        finalizeAccountDeletion("finalize-owner", {
+          attemptId: ATTEMPT_ID,
+          preparationId: seeded.preparationId,
+          recoveryGeneration: 0,
+        }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
       )
     );
-
     const state = await t.query(async (ctx) => ({
       owner: await ctx.db.get("users", seeded.ownerId),
       preparation: await ctx.db.get(
@@ -128,7 +131,6 @@ describe("auth/deletion/finalize", () => {
       ),
       transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
     }));
-
     expect(state.owner?.deletedAt).toEqual(expect.any(Number));
     expect(state.owner).toMatchObject({
       authId: `deleted:${seeded.ownerId}`,
@@ -153,15 +155,32 @@ describe("auth/deletion/finalize", () => {
     });
     expect(state.successorMembership?.role).toBe("admin");
     expect(state.transfers).toHaveLength(0);
-    expect(scheduleCleanup).toHaveBeenCalledWith(expect.any(Object), {
-      authId: "finalize-owner",
-      userId: seeded.ownerId,
-    });
+    expect(
+      await t.query(async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+          (job) =>
+            job.name ===
+            Ref.getConvexFunctionName(
+              refs.internal.customers.deletion.workflow.launchDeletedUserCleanup
+            )
+        )
+      )
+    ).toContainEqual(
+      expect.objectContaining({
+        args: [
+          {
+            authId: "finalize-owner",
+            userId: seeded.ownerId,
+          },
+        ],
+        state: {
+          kind: "pending",
+        },
+      })
+    );
   });
-
   it("ignores recovery for a newer preparation", async () => {
     const t = convexTest(schema, convexModules);
-    const scheduleCleanup = vi.fn(() => Effect.void);
     const seeded = await t.mutation(async (ctx) => {
       const result = await seedPreparedDeletionSchool(
         ctx,
@@ -177,77 +196,81 @@ describe("auth/deletion/finalize", () => {
       });
       return result;
     });
-
     await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(
-          ctx,
-          "newer-finalize-owner",
-          {
-            attemptId: ATTEMPT_ID,
-            preparationId: seeded.preparationId,
-            recoveryGeneration: 0,
-          },
-          scheduleCleanup
-        )
+      Effect.runPromise(
+        finalizeAccountDeletion("newer-finalize-owner", {
+          attemptId: ATTEMPT_ID,
+          preparationId: seeded.preparationId,
+          recoveryGeneration: 0,
+        }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
       )
     );
-
     const state = await t.query(async (ctx) => ({
       owner: await ctx.db.get("users", seeded.ownerId),
       school: await ctx.db.get("schools", seeded.schoolId),
     }));
-
     expect(state.owner?.deletionPreparedAt).toBe(NOW + 1);
     expect(state.owner).not.toHaveProperty("deletedAt");
     expect(state.school?.createdBy).toBe(seeded.ownerId);
-    expect(scheduleCleanup).not.toHaveBeenCalled();
+    expect(
+      await t.query(async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+          (job) =>
+            job.name ===
+            Ref.getConvexFunctionName(
+              refs.internal.customers.deletion.workflow.launchDeletedUserCleanup
+            )
+        )
+      )
+    ).toHaveLength(0);
   });
-
   it("requeues cleanup from the finalized journal after profile anonymization", async () => {
     const t = convexTest(schema, convexModules);
-    const scheduleCleanup = vi.fn(() => Effect.void);
     const seeded = await t.mutation((ctx) =>
       seedPreparedDeletionSchool(ctx, "requeue-finalize-owner", NOW, ATTEMPT_ID)
     );
-
     await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(
-          ctx,
-          "requeue-finalize-owner",
+      Effect.runPromise(
+        finalizeAccountDeletion("requeue-finalize-owner", {
+          attemptId: ATTEMPT_ID,
+          preparationId: seeded.preparationId,
+          recoveryGeneration: 0,
+        }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
+      )
+    );
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        finalizeAccountDeletion("requeue-finalize-owner").pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      )
+    );
+    expect(
+      await t.query(async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+          (job) =>
+            job.name ===
+            Ref.getConvexFunctionName(
+              refs.internal.customers.deletion.workflow.launchDeletedUserCleanup
+            )
+        )
+      )
+    ).toContainEqual(
+      expect.objectContaining({
+        args: [
           {
-            attemptId: ATTEMPT_ID,
-            preparationId: seeded.preparationId,
-            recoveryGeneration: 0,
+            authId: "requeue-finalize-owner",
+            userId: seeded.ownerId,
           },
-          scheduleCleanup
-        )
-      )
+        ],
+        state: {
+          kind: "pending",
+        },
+      })
     );
-    scheduleCleanup.mockClear();
-
-    await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(
-          ctx,
-          "requeue-finalize-owner",
-          undefined,
-          scheduleCleanup
-        )
-      )
-    );
-
-    expect(scheduleCleanup).toHaveBeenCalledWith(expect.any(Object), {
-      authId: "requeue-finalize-owner",
-      userId: seeded.ownerId,
-    });
   });
-
   it("retains a shared school on the tombstone after reservation corruption", async () => {
     const t = convexTest(schema, convexModules);
-    const scheduleCleanup = vi.fn(() => Effect.void);
-    const scheduleContinuation = vi.fn(() => Effect.void);
     const seeded = await t.mutation(async (ctx) => {
       const result = await seedPreparedDeletionSchool(
         ctx,
@@ -260,41 +283,47 @@ describe("auth/deletion/finalize", () => {
       });
       return result;
     });
-
     await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(
-          ctx,
-          "blocked-finalize-owner",
-          {
-            attemptId: ATTEMPT_ID,
-            preparationId: seeded.preparationId,
-            recoveryGeneration: 0,
-          },
-          scheduleCleanup,
-          scheduleContinuation
-        )
+      Effect.runPromise(
+        finalizeAccountDeletion("blocked-finalize-owner", {
+          attemptId: ATTEMPT_ID,
+          preparationId: seeded.preparationId,
+          recoveryGeneration: 0,
+        }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
       )
     );
-    expect(scheduleContinuation).toHaveBeenCalledOnce();
-    expect(scheduleCleanup).not.toHaveBeenCalled();
-
-    await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(
-          ctx,
-          "blocked-finalize-owner",
-          {
-            attemptId: ATTEMPT_ID,
-            preparationId: seeded.preparationId,
-            recoveryGeneration: 0,
-          },
-          scheduleCleanup,
-          scheduleContinuation
+    expect(
+      await t.query(async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+          (job) =>
+            job.name ===
+            Ref.getConvexFunctionName(
+              refs.internal.customers.deletion.workflow
+                .finalizeDeletedUserCleanup
+            )
         )
       )
+    ).toHaveLength(1);
+    expect(
+      await t.query(async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+          (job) =>
+            job.name ===
+            Ref.getConvexFunctionName(
+              refs.internal.customers.deletion.workflow.launchDeletedUserCleanup
+            )
+        )
+      )
+    ).toHaveLength(0);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        finalizeAccountDeletion("blocked-finalize-owner", {
+          attemptId: ATTEMPT_ID,
+          preparationId: seeded.preparationId,
+          recoveryGeneration: 0,
+        }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
+      )
     );
-
     const state = await t.query(async (ctx) => ({
       owner: await ctx.db.get("users", seeded.ownerId),
       preparation: await ctx.db.get(
@@ -304,42 +333,52 @@ describe("auth/deletion/finalize", () => {
       school: await ctx.db.get("schools", seeded.schoolId),
       transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
     }));
-
     expect(state.owner?.deletedAt).toEqual(expect.any(Number));
     expect(state.owner).not.toHaveProperty("deletionPreparedAt");
     expect(state.preparation?.finalizedAt).toEqual(expect.any(Number));
     expect(state.school?.createdBy).toBe(seeded.ownerId);
     expect(state.transfers).toEqual([]);
-    expect(scheduleCleanup).toHaveBeenCalledWith(expect.any(Object), {
-      authId: "blocked-finalize-owner",
-      userId: seeded.ownerId,
-    });
+    expect(
+      await t.query(async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+          (job) =>
+            job.name ===
+            Ref.getConvexFunctionName(
+              refs.internal.customers.deletion.workflow.launchDeletedUserCleanup
+            )
+        )
+      )
+    ).toContainEqual(
+      expect.objectContaining({
+        args: [
+          {
+            authId: "blocked-finalize-owner",
+            userId: seeded.ownerId,
+          },
+        ],
+        state: {
+          kind: "pending",
+        },
+      })
+    );
   });
-
   it("journals direct auth removals without a preparation", async () => {
     const t = convexTest(schema, convexModules);
-    const scheduleCleanup = vi.fn(() => Effect.void);
     const userId = await t.mutation((ctx) =>
       seedDeletionUser(ctx, "direct-auth-removal")
     );
-
     await t.mutation((ctx) =>
-      runConvexProgram(
-        finalizeAccountDeletion(
-          ctx,
-          "direct-auth-removal",
-          undefined,
-          scheduleCleanup
+      Effect.runPromise(
+        finalizeAccountDeletion("direct-auth-removal").pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
         )
       )
     );
-
     const state = await t.query(async (ctx) => ({
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
       receipt: await ctx.db.query("accountDeletionReceipts").unique(),
       user: await ctx.db.get("users", userId),
     }));
-
     expect(state.user?.deletedAt).toEqual(expect.any(Number));
     expect(state.user).toMatchObject({
       authId: `deleted:${userId}`,
@@ -352,19 +391,36 @@ describe("auth/deletion/finalize", () => {
       userId,
     });
     expect(state.receipt).toBeNull();
-    expect(scheduleCleanup).toHaveBeenCalledWith(expect.any(Object), {
-      authId: "direct-auth-removal",
-      userId,
-    });
+    expect(
+      await t.query(async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+          (job) =>
+            job.name ===
+            Ref.getConvexFunctionName(
+              refs.internal.customers.deletion.workflow.launchDeletedUserCleanup
+            )
+        )
+      )
+    ).toContainEqual(
+      expect.objectContaining({
+        args: [
+          {
+            authId: "direct-auth-removal",
+            userId,
+          },
+        ],
+        state: {
+          kind: "pending",
+        },
+      })
+    );
   });
-
   it.each([true, false])(
     "preserves preparation presence in a transfer continuation: %s",
     async (versioned) => {
       vi.useFakeTimers();
       vi.setSystemTime(NOW);
       const t = convexTest(schema, convexModules);
-      const scheduleCleanup = vi.fn(() => Effect.void);
       const seeded = await t.mutation(async (ctx) => {
         const result = await seedPreparedDeletionSchool(
           ctx,
@@ -384,18 +440,14 @@ describe("auth/deletion/finalize", () => {
             recoveryGeneration: 0,
           }
         : undefined;
-
       await t.mutation((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           finalizeAccountDeletion(
-            ctx,
             "scheduled-finalize-owner",
-            expectedPreparation,
-            scheduleCleanup
-          )
+            expectedPreparation
+          ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
         )
       );
-
       const jobs = await t.query((ctx) =>
         ctx.db.system.query("_scheduled_functions").collect()
       );
@@ -406,15 +458,30 @@ describe("auth/deletion/finalize", () => {
               authId: "scheduled-finalize-owner",
               ...(expectedPreparation === undefined
                 ? {}
-                : { expectedPreparation }),
+                : {
+                    expectedPreparation,
+                  }),
             },
           ],
           name: "customers/deletion/workflow:finalizeDeletedUserCleanup",
           scheduledTime: NOW,
-          state: { kind: "pending" },
+          state: {
+            kind: "pending",
+          },
         },
       ]);
-      expect(scheduleCleanup).not.toHaveBeenCalled();
+      expect(
+        await t.query(async (ctx) =>
+          (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+            (job) =>
+              job.name ===
+              Ref.getConvexFunctionName(
+                refs.internal.customers.deletion.workflow
+                  .launchDeletedUserCleanup
+              )
+          )
+        )
+      ).toHaveLength(0);
       const continuation = jobs[0];
       assert(continuation);
       await t.mutation((ctx) => ctx.scheduler.cancel(continuation._id));

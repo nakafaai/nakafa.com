@@ -1,7 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { ActionCtx as ActionCtxService } from "@repo/backend/confect/_generated/services";
 import {
   recomputeProgram,
   verifyArtifactBatchProgram,
@@ -15,9 +14,7 @@ const verifyArtifacts = FunctionImpl.make(
   spec,
   "verifyArtifacts",
   Effect.fn("contentRelease.proof.verify.verifyArtifacts")(function* (args) {
-    const ctx = yield* ActionCtxService;
     return yield* verifyArtifactBatchProgram(
-      ctx,
       args.manifestHash,
       args.releaseId,
       args.batchIndex
@@ -31,9 +28,7 @@ const verifyRelease = FunctionImpl.make(
   spec,
   "verifyRelease",
   Effect.fn("contentRelease.proof.verify.verifyRelease")(function* (args) {
-    const ctx = yield* ActionCtxService;
     return yield* recomputeProgram(
-      ctx,
       args.manifestHash,
       args.releaseId,
       args.verifiedArtifacts

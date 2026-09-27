@@ -2,10 +2,7 @@ import {
   learningPopularityFiniteWindowValues,
   learningPopularityScopeValues,
 } from "@repo/backend/confect/contents/popularity";
-import {
-  failureWire,
-  getUnknownErrorMessage,
-} from "@repo/backend/confect/failure";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const invalidContentAnalyticsPartitionCode =
   "INVALID_CONTENT_ANALYTICS_PARTITION";
@@ -146,10 +143,7 @@ export class InvalidContentAnalyticsPartitionError extends Schema.TaggedError<In
 ) {}
 
 /** Raised when Convex IO fails while leasing or draining content analytics. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const InvalidContentAnalyticsPartitionErrorWire = failureWire(
-  InvalidContentAnalyticsPartitionError
-);
+
 export class ContentAnalyticsIoError extends Schema.TaggedError<ContentAnalyticsIoError>()(
   "ContentAnalyticsIoError",
   {
@@ -159,8 +153,7 @@ export class ContentAnalyticsIoError extends Schema.TaggedError<ContentAnalytics
 ) {}
 
 /** Maps thrown Convex IO failures into the analytics domain error channel. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const ContentAnalyticsIoErrorWire = failureWire(ContentAnalyticsIoError);
+
 export function toContentAnalyticsIoError(error: unknown) {
   return new ContentAnalyticsIoError({
     code: contentAnalyticsIoFailedCode,

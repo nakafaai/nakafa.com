@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   type ReleaseError,
   releaseFail,
@@ -12,8 +15,6 @@ import {
   COMPACTION_PAGE_BYTES,
   ROLLBACK_RETENTION_MS,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Effect, Option } from "effect";
 
 const RELEASE_SCAN_COUNT = 32;
@@ -33,9 +34,9 @@ export interface CompactionCycle {
   readonly cursor: null | string;
   readonly floor: number;
   readonly from: number;
-  readonly phase: NonNullable<Doc<"contentState">["compactPhase"]>;
+  readonly phase: NonNullable<Docs["contentState"]["compactPhase"]>;
   readonly startedAt: number;
-  readonly state: Doc<"contentState">;
+  readonly state: Docs["contentState"];
 }
 
 /** Decodes one optional singleton slot without accepting partial identity. */
@@ -73,11 +74,7 @@ const slotIdentity = Effect.fn("contentRelease.compactionSlot")(function* (
 
 /** Loads the exact release and direct base sequences that must remain reachable. */
 const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
-  function* (
-    ctx: MutationCtx,
-    release: Doc<"contentReleases">,
-    identity?: SlotIdentity
-  ) {
+  function* (release: Docs["contentReleases"], identity?: SlotIdentity) {
     const { sequence } = release;
     if (
       !isSequence(sequence) ||
@@ -108,7 +105,7 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
     if (baseId === null || baseHash === null) {
       return [sequence];
     }
-    const base = yield* loadRelease(ctx, baseId);
+    const base = yield* loadRelease(baseId);
     if (!isSequence(base.sequence)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -128,8 +125,8 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
 /** Protects all stored history when one reachability fact is unprovable. */
 const earliestStoredSequence = Effect.fn(
   "contentRelease.earliestStoredSequence"
-)(function* (ctx: MutationCtx, state: Doc<"contentState">) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (state: Docs["contentState"]) {
+  const database = yield* DatabaseReader;
   const earliest = yield* database
     .table("contentReleases")
     .index("by_sequence", "asc")
@@ -140,10 +137,9 @@ const earliestStoredSequence = Effect.fn(
 
 /** Computes the earliest sequence protected by slots and known-good history. */
 const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
-  ctx: MutationCtx,
-  state: Doc<"contentState">
+  state: Docs["contentState"]
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const slots = yield* Effect.all([
     slotIdentity(
       "active",
@@ -168,8 +164,8 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
     if (slot === null) {
       return Effect.succeed<null | readonly number[]>([]);
     }
-    return loadRelease(ctx, slot.releaseId).pipe(
-      Effect.flatMap((release) => protectedRelease(ctx, release, slot)),
+    return loadRelease(slot.releaseId).pipe(
+      Effect.flatMap((release) => protectedRelease(release, slot)),
       // A missing slot release is an unprovable reachability fact: never
       // break compaction, protect the stored history instead.
       Effect.catchTag("ReleaseError", (error: ReleaseError) =>
@@ -189,12 +185,12 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
     .take(2)
     .pipe(Effect.orDie);
   const completedSequences = yield* Effect.forEach(completed, (release) =>
-    protectedRelease(ctx, release)
+    protectedRelease(release)
   );
   const sequences: number[] = [];
   for (const entry of [...slotSequences, ...completedSequences]) {
     if (entry === null) {
-      return yield* earliestStoredSequence(ctx, state);
+      return yield* earliestStoredSequence(state);
     }
     sequences.push(...entry);
   }
@@ -203,11 +199,10 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
 
 /** Advances through only a bounded old release window before a protected floor. */
 const retainedFloor = Effect.fn("contentRelease.retainedFloor")(function* (
-  ctx: MutationCtx,
   from: number,
   ceiling: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const page = yield* database
     .table("contentReleases")
     .index("by_sequence", (query) =>
@@ -243,7 +238,7 @@ const retainedFloor = Effect.fn("contentRelease.retainedFloor")(function* (
 
 /** Validates and returns a previously persisted compaction cycle. */
 const activeCycle = Effect.fn("contentRelease.activeCompaction")(function* (
-  state: Doc<"contentState">,
+  state: Docs["contentState"],
   compactedFloor: number
 ) {
   const required = [
@@ -289,9 +284,9 @@ const activeCycle = Effect.fn("contentRelease.activeCompaction")(function* (
 
 /** Resumes an active cycle or starts one conservative bounded history range. */
 export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
-  function* (ctx: MutationCtx) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const state = yield* ensureState(ctx);
+  function* () {
+    const writer = yield* DatabaseWriter;
+    const state = yield* ensureState();
     const compactedFloor = state.compactedFloor ?? 0;
     if (
       !(
@@ -312,8 +307,8 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
         cycle: existing,
       } as const;
     }
-    const ceiling = yield* protectedFloor(ctx, state);
-    const floor = yield* retainedFloor(ctx, compactedFloor, ceiling);
+    const ceiling = yield* protectedFloor(state);
+    const floor = yield* retainedFloor(compactedFloor, ceiling);
     if (floor <= compactedFloor) {
       return {
         complete: true,

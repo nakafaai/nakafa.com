@@ -37,22 +37,30 @@ const request = Effect.fn("polar.request")(function* <Value>(
   call: (client: PolarCore) => Promise<Result<Value, unknown>>
 ) {
   const client = yield* readPolarClient().pipe(
-    Effect.mapError((cause) => new PolarRequestError({ cause }))
+    Effect.mapError(
+      (cause) =>
+        new PolarRequestError({
+          cause,
+        })
+    )
   );
   const result = yield* Effect.tryPromise({
     try: () => call(client),
-    catch: (cause) => new PolarRequestError({ cause }),
+    catch: (cause) =>
+      new PolarRequestError({
+        cause,
+      }),
   });
   if (!result.ok) {
-    return yield* new PolarRequestError({ cause: result.error });
+    return yield* new PolarRequestError({
+      cause: result.error,
+    });
   }
   return result.value;
 });
-
 function isMissingCustomer(error: unknown) {
   return error instanceof PolarError && error.statusCode === 404;
 }
-
 function isDuplicateEmail(error: unknown) {
   return (
     error instanceof HTTPValidationError &&
@@ -92,7 +100,9 @@ export const polarGateway: PolarCustomerGateway = {
           })
       )
     );
-    return { url: checkout.url };
+    return {
+      url: checkout.url,
+    };
   }),
   createCustomer: Effect.fn("polar.createCustomer")(function* (
     input: Parameters<PolarCustomerGateway["createCustomer"]>[0]
@@ -124,7 +134,9 @@ export const polarGateway: PolarCustomerGateway = {
   createCustomerPortalSession: Effect.fn("polar.createCustomerPortalSession")(
     function* (customerId: string) {
       const session = yield* request((client) =>
-        customerSessionsCreate(client, { customerId })
+        customerSessionsCreate(client, {
+          customerId,
+        })
       ).pipe(
         Effect.mapError(
           ({ cause }) =>
@@ -135,12 +147,17 @@ export const polarGateway: PolarCustomerGateway = {
             })
         )
       );
-      return { url: session.customerPortalUrl };
+      return {
+        url: session.customerPortalUrl,
+      };
     }
   ),
   deleteCustomer: Effect.fn("polar.deleteCustomer")(function* (id: string) {
     return yield* request((client) =>
-      customersDelete(client, { anonymize: true, id })
+      customersDelete(client, {
+        anonymize: true,
+        id,
+      })
     ).pipe(
       Effect.as(null),
       Effect.catchTag("PolarRequestError", ({ cause }) =>
@@ -160,7 +177,10 @@ export const polarGateway: PolarCustomerGateway = {
     email: string
   ) {
     const page = yield* request((client) =>
-      customersList(client, { email, limit: 1 })
+      customersList(client, {
+        email,
+        limit: 1,
+      })
     ).pipe(
       Effect.mapError(
         ({ cause }) =>
@@ -176,7 +196,9 @@ export const polarGateway: PolarCustomerGateway = {
   getCustomerByExternalId: Effect.fn("polar.getCustomerByExternalId")(
     function* (externalId: string) {
       return yield* request((client) =>
-        customersGetExternal(client, { externalId })
+        customersGetExternal(client, {
+          externalId,
+        })
       ).pipe(
         Effect.catchTag("PolarRequestError", ({ cause }) =>
           isMissingCustomer(cause)
@@ -193,7 +215,11 @@ export const polarGateway: PolarCustomerGateway = {
     }
   ),
   getCustomerById: Effect.fn("polar.getCustomerById")(function* (id: string) {
-    return yield* request((client) => customersGet(client, { id })).pipe(
+    return yield* request((client) =>
+      customersGet(client, {
+        id,
+      })
+    ).pipe(
       Effect.catchTag("PolarRequestError", ({ cause }) =>
         isMissingCustomer(cause)
           ? Effect.succeed(null)
@@ -237,7 +263,9 @@ export const polarGateway: PolarCustomerGateway = {
     return yield* request((client) =>
       customersUpdate(client, {
         id: input.polarCustomerId,
-        customerUpdate: { metadata: input.metadata },
+        customerUpdate: {
+          metadata: input.metadata,
+        },
       })
     ).pipe(
       Effect.mapError(

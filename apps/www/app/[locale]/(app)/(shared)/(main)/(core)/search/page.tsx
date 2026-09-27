@@ -5,6 +5,8 @@ import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back-button";
+import { env } from "@/env";
+import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 
@@ -31,7 +33,7 @@ export default function Page() {
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
       <div className="mx-auto w-full max-w-3xl px-6 py-24">
         <div className="relative space-y-12">
-          <HomeHeader />
+          <SearchHeader />
 
           <div className="flex flex-col gap-2">
             <BackButton
@@ -55,3 +57,24 @@ export default function Page() {
     </div>
   );
 }
+
+/** Resolves the greeting in the request stream before showing the search form. */
+async function SearchHeader() {
+  const token = await getToken();
+  const account = token
+    ? await Effect.runPromise(
+        Effect.flatMap(HttpClient.HttpClient, (client) =>
+          client.query(refs.public.auth.queries.getCurrentUser, {})
+        ).pipe(
+          Effect.provide(
+            HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, { auth: token })
+          )
+        )
+      )
+    : null;
+  return <HomeHeader name={account?.authUser.name ?? null} />;
+}
+
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
+import { Effect } from "effect";

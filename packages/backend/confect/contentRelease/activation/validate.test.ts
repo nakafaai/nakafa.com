@@ -1,19 +1,17 @@
 import { describe, expect, it } from "@effect/vitest";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import {
   validateActivationRenderer,
   validateCandidate,
   validateRecovery,
 } from "@repo/backend/confect/contentRelease/activation/validate";
 import { encodeRendererJson } from "@repo/backend/confect/contentRelease/wire";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import schema from "@repo/backend/convex/schema";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   insertActivationPair,
   makeActivationPair,
 } from "@repo/backend/test/content/activation";
 import { TEST_PROOF_RENDERER } from "@repo/backend/test/content/proof";
-import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("activation identity validation", () => {
@@ -29,59 +27,73 @@ describe("activation identity validation", () => {
           rendererJson,
           recovery.manifestHash
         ).pipe(Effect.flip)
-      ).toMatchObject({ code: "CONTENT_RELEASE_CONFLICT" });
+      ).toMatchObject({
+        code: "CONTENT_RELEASE_CONFLICT",
+      });
     })
   );
-
-  it("rejects a recovery whose frozen state changed after candidate verification", async () => {
-    const t = convexTest(schema, convexModules);
-    const { candidate, recovery } = makeActivationPair();
-    await t.mutation((ctx) =>
-      runConvexProgram(insertActivationPair(ctx, candidate, recovery))
-    );
-    await t.mutation(async (ctx) => {
-      const row = await ctx.db
-        .query("contentReleases")
-        .withIndex("by_releaseId", (q) =>
-          q.eq("releaseId", recovery.manifest.releaseId)
-        )
-        .unique();
-      if (!row) {
-        throw new Error("Expected the retained inverse.");
-      }
-      await ctx.db.patch("contentReleases", row._id, { status: "staging" });
-    });
-    await expect(
-      t.mutation((ctx) =>
-        runConvexProgram(
-          validateCandidate(
-            ctx,
-            candidate.manifest.releaseId,
-            encodeRendererJson(TEST_PROOF_RENDERER),
-            candidate.manifestHash
-          )
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-  });
-
-  it("rejects recovery activation while a candidate still owns its publication slot", async () => {
-    const t = convexTest(schema, convexModules);
-    const { candidate, recovery } = makeActivationPair();
-    await t.mutation((ctx) =>
-      runConvexProgram(insertActivationPair(ctx, candidate, recovery))
-    );
-    await expect(
-      t.mutation((ctx) =>
-        runConvexProgram(
-          validateRecovery(
-            ctx,
-            recovery.manifest.releaseId,
-            encodeRendererJson(TEST_PROOF_RENDERER),
-            recovery.manifestHash
-          )
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-  });
+  it.effect(
+    "rejects a recovery whose frozen state changed after candidate verification",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* t.run(
+          Effect.gen(function* () {
+            const tCtx = yield* MutationCtx;
+            const { candidate, recovery } = makeActivationPair();
+            yield* insertActivationPair(tCtx, candidate, recovery);
+            yield* Effect.gen(function* () {
+              const row = yield* Effect.promise(() =>
+                tCtx.db
+                  .query("contentReleases")
+                  .withIndex("by_releaseId", (q) =>
+                    q.eq("releaseId", recovery.manifest.releaseId)
+                  )
+                  .unique()
+              );
+              if (!row) {
+                throw new Error("Expected the retained inverse.");
+              }
+              yield* Effect.promise(() =>
+                tCtx.db.patch("contentReleases", row._id, {
+                  status: "staging",
+                })
+              );
+            });
+            expect(
+              yield* validateCandidate(
+                candidate.manifest.releaseId,
+                encodeRendererJson(TEST_PROOF_RENDERER),
+                candidate.manifestHash
+              ).pipe(Effect.flip)
+            ).toMatchObject({
+              code: "CONTENT_RELEASE_INTEGRITY",
+            });
+          })
+        );
+      })
+  );
+  it.effect(
+    "rejects recovery activation while a candidate still owns its publication slot",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* t.run(
+          Effect.gen(function* () {
+            const tCtx = yield* MutationCtx;
+            const { candidate, recovery } = makeActivationPair();
+            yield* insertActivationPair(tCtx, candidate, recovery);
+            expect(
+              yield* validateRecovery(
+                recovery.manifest.releaseId,
+                encodeRendererJson(TEST_PROOF_RENDERER),
+                recovery.manifestHash
+              ).pipe(Effect.flip)
+            ).toMatchObject({
+              code: "CONTENT_RELEASE_STATE",
+            });
+          })
+        );
+      })
+  );
 });

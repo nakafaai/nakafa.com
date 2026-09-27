@@ -1,4 +1,5 @@
 "use client";
+import { useMutation } from "@confect/react";
 import {
   Add01Icon,
   ArrowDown01Icon,
@@ -8,7 +9,7 @@ import {
   Time04Icon,
 } from "@hugeicons/core-free-icons";
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
 import {
@@ -34,7 +35,6 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
-import { useMutation } from "convex/react";
 import { startOfDay } from "date-fns";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
@@ -61,13 +61,13 @@ import {
 import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 
-interface MaterialGroupDialogShellProps {
+interface MaterialGroupDialogShellProps<E> {
   defaultValues: MaterialGroupFormValues;
   description: string;
   errorContext: OperationalExceptionProperties;
   errorMessage: string;
   formId: string;
-  onSubmit: (value: MaterialGroupFormValues) => Promise<void>;
+  onSubmit: (value: MaterialGroupFormValues) => Effect.Effect<void, E>;
   open: boolean;
   setOpenAction: (open: boolean) => void;
   submitIcon: React.ComponentProps<typeof HugeIcons>["icon"];
@@ -85,7 +85,7 @@ export function CreateMaterialGroupDialog({
   const t = useTranslations("School.Classes");
   const classId = useClass((state) => state.class._id);
   const createMaterialGroup = useMutation(
-    api.classes.materials.mutations.createMaterialGroup
+    refs.public.classes.materials.mutations.createMaterialGroup
   );
   return (
     <MaterialGroupDialogShell
@@ -99,15 +99,17 @@ export function CreateMaterialGroupDialog({
       errorContext={{ source: "school-material-group-create" }}
       errorMessage={t("create-material-group-failed")}
       formId="school-classes-materials-new-form"
-      onSubmit={async (value) => {
+      onSubmit={(value) => {
         const { scheduledAt, ...fields } = value;
-        await createMaterialGroup({
-          ...fields,
-          classId,
-          ...(value.status === "scheduled" && scheduledAt !== undefined
-            ? { scheduledAt }
-            : {}),
-        });
+        return Effect.tryPromise(() =>
+          createMaterialGroup({
+            ...fields,
+            classId,
+            ...(value.status === "scheduled" && scheduledAt !== undefined
+              ? { scheduledAt }
+              : {}),
+          })
+        ).pipe(Effect.flatMap(Effect.fromResult), Effect.asVoid);
       }}
       open={open}
       setOpenAction={setOpenAction}
@@ -143,15 +145,17 @@ export function EditMaterialGroupDialog({
       }}
       errorMessage={t("update-material-group-failed")}
       formId={`edit-material-group-${group._id}`}
-      onSubmit={async (value) => {
+      onSubmit={(value) => {
         const { scheduledAt, ...fields } = value;
-        await updateMaterialGroup({
-          groupId: group._id,
-          ...fields,
-          ...(value.status === "scheduled" && scheduledAt !== undefined
-            ? { scheduledAt }
-            : {}),
-        });
+        return Effect.tryPromise(() =>
+          updateMaterialGroup({
+            groupId: group._id,
+            ...fields,
+            ...(value.status === "scheduled" && scheduledAt !== undefined
+              ? { scheduledAt }
+              : {}),
+          })
+        ).pipe(Effect.flatMap(Effect.fromResult), Effect.asVoid);
       }}
       open={open}
       setOpenAction={setOpenAction}
@@ -162,7 +166,7 @@ export function EditMaterialGroupDialog({
   );
 }
 /** Render the shared material-group form shell used by create and edit variants. */
-function MaterialGroupDialogShell({
+function MaterialGroupDialogShell<E>({
   defaultValues,
   description,
   errorContext,
@@ -174,7 +178,7 @@ function MaterialGroupDialogShell({
   submitIcon,
   submitLabel,
   title,
-}: MaterialGroupDialogShellProps) {
+}: MaterialGroupDialogShellProps<E>) {
   const [minimumDate] = useState(() => startOfDay(new Date()));
   const t = useTranslations("School.Classes");
   const locale = useLocale();
@@ -185,20 +189,22 @@ function MaterialGroupDialogShell({
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(async () => {
-          await onSubmit(value);
-          form.reset();
-          setOpenAction(false);
-        }).pipe(
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            reportClientException(error, errorContext).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  toast.error(errorMessage);
-                })
-              )
-            )
-          )
+        onSubmit(value).pipe(
+          Effect.matchEffect({
+            onSuccess: () =>
+              Effect.sync(() => {
+                form.reset();
+                setOpenAction(false);
+              }),
+            onFailure: (error) =>
+              reportClientException(error, errorContext).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(errorMessage);
+                  })
+                )
+              ),
+          })
         )
       );
     },

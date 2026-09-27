@@ -1,5 +1,6 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
+
 import type {
   OnboardingAnswer,
   OnboardingFocus,
@@ -8,8 +9,8 @@ import type {
   OnboardingRole,
 } from "@/components/programs/onboarding/options";
 
-export type OnboardingProfile = FunctionReturnType<
-  typeof api.onboarding.queries.getStatus
+export type OnboardingProfile = Ref.Returns<
+  typeof refs.public.onboarding.queries.getStatus
 >["profile"];
 
 export interface OnboardingAnswers {

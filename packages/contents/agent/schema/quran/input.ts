@@ -1,5 +1,5 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { LocaleSchema } from "@repo/contents/content";
-import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema, Struct } from "effect";
 
 /** Runtime schema for Quran passage input. */
@@ -17,9 +17,9 @@ export const NakafaAgentQuranReferenceOptionsSchema = Schema.Struct({
       "Whether to include published tafsir text when the locale has an embedded edition.",
   }),
   locale: LocaleSchema.pipe(
-    Schema.withDecodingDefaultType(Effect.succeed(routing.defaultLocale))
+    Schema.withDecodingDefaultType(Effect.succeed(ACTIVE_APP_LOCALE_CODES[0]))
   ).annotate({
-    default: routing.defaultLocale,
+    default: ACTIVE_APP_LOCALE_CODES[0],
     description: "Translation locale.",
   }),
   surah: Schema.Finite.pipe(

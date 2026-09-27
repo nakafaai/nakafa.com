@@ -1,9 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  MutationCtx as MutationCtxService,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { deleteForumPendingUpload } from "@repo/backend/confect/classes/forums/attachments/impl";
 import spec from "@repo/backend/confect/classes/forums/internalMutations.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
@@ -16,7 +13,6 @@ const deleteExpiredPendingUpload = FunctionImpl.make(
   Effect.fn("classes.forums.internalMutations.deleteExpiredPendingUpload")(
     function* (args) {
       const database = yield* DatabaseReader;
-      const ctx = yield* MutationCtxService;
       const upload = yield* database
         .table("schoolClassForumPendingUploads")
         .get(args.uploadId)
@@ -27,7 +23,7 @@ const deleteExpiredPendingUpload = FunctionImpl.make(
       if (!upload) {
         return null;
       }
-      yield* deleteForumPendingUpload(ctx, upload);
+      yield* deleteForumPendingUpload(upload);
       return null;
     }
   )

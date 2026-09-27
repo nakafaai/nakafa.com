@@ -1,11 +1,13 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 import { StageArtifactBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import {
   MAX_ARTIFACT_BATCH_BYTES,
   MAX_ARTIFACT_BATCH_COUNT,
 } from "@nakafa/aksara-contracts/transport/limits";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { storeContentArtifact } from "@repo/backend/confect/contentRelease/artifact/store";
 import {
   hashBatch,
@@ -25,7 +27,6 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getConvexSize } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 
@@ -69,7 +70,6 @@ export const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(
 /** Persists one immutable artifact and marks its exact staged item ready. */
 export const stageArtifact = Effect.fn("contentRelease.stageArtifact")(
   function* (
-    ctx: MutationCtx,
     releaseId: string,
     batchIndex: number,
     batchHash: string,
@@ -77,9 +77,8 @@ export const stageArtifact = Effect.fn("contentRelease.stageArtifact")(
     artifactJson: string,
     now: number
   ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const writer = yield* DatabaseWriter;
     const item = yield* loadIdentityItem(
-      ctx,
       releaseId,
       artifact.payload.contentKey,
       artifact.payload.artifactLocale
@@ -109,7 +108,6 @@ export const stageArtifact = Effect.fn("contentRelease.stageArtifact")(
     }
     const retainUntil = now + ROLLBACK_RETENTION_MS;
     const stored = yield* storeContentArtifact(
-      ctx,
       artifact,
       artifactJson,
       now,
@@ -129,13 +127,12 @@ export const stageArtifact = Effect.fn("contentRelease.stageArtifact")(
 /** Stages one canonical artifact batch with exact immutable retry identity. */
 export const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(
   function* (
-    ctx: MutationCtx,
     releaseId: string,
     batchIndex: number,
     sources: readonly string[]
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const { artifacts } = yield* decodeBatch(releaseId, batchIndex, sources);
     const entries = artifacts.map((artifact) => ({
       artifact,
@@ -157,7 +154,7 @@ export const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(
       batchIndex,
       values
     );
-    const { release } = yield* loadStaged(ctx, releaseId);
+    const { release } = yield* loadStaged(releaseId);
     if (release.status !== "staging" || release.abortingAt !== undefined) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
@@ -198,7 +195,6 @@ export const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(
     for (const { artifact, artifactJson } of entries) {
       if (
         yield* stageArtifact(
-          ctx,
           releaseId,
           batchIndex,
           batchHash,

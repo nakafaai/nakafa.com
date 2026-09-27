@@ -5,12 +5,11 @@ import {
   hasSameContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { loadSnapshot } from "@repo/backend/confect/contentRelease/snapshot/manifest";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Checks every signed snapshot base against the active release results. */
@@ -31,7 +30,7 @@ function hasActiveSnapshotBase(
 /** Proves every zero-copy transition selects an existing verified snapshot. */
 export const validateExistingSnapshots = Effect.fn(
   "contentRelease.validateExistingSnapshots"
-)(function* (ctx: MutationCtx, manifest: ContentReleaseManifest) {
+)(function* (manifest: ContentReleaseManifest) {
   const entries: readonly (readonly [
     ContentSnapshotKind,
     ContentSnapshotState,
@@ -44,7 +43,7 @@ export const validateExistingSnapshots = Effect.fn(
     if (snapshot.mode === "replace" || snapshot.resultSnapshotId === null) {
       continue;
     }
-    const stored = yield* loadSnapshot(ctx, family, snapshot.resultSnapshotId);
+    const stored = yield* loadSnapshot(family, snapshot.resultSnapshotId);
     if (!stored || stored.verifiedAt === undefined) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
@@ -57,11 +56,7 @@ export const validateExistingSnapshots = Effect.fn(
 /** Proves a candidate manifest extends the exact completed active release. */
 export const validateCandidateBase = Effect.fn(
   "contentRelease.validateCandidateBase"
-)(function* (
-  ctx: MutationCtx,
-  manifest: ContentReleaseManifest,
-  state: Doc<"contentState">
-) {
+)(function* (manifest: ContentReleaseManifest, state: Docs["contentState"]) {
   if (
     (state.activeReleaseId ?? null) !== manifest.baseReleaseId ||
     (state.activeManifestHash ?? null) !== manifest.baseManifestHash
@@ -74,7 +69,7 @@ export const validateCandidateBase = Effect.fn(
   if (manifest.baseReleaseId === null) {
     return;
   }
-  const base = yield* loadRelease(ctx, manifest.baseReleaseId);
+  const base = yield* loadRelease(manifest.baseReleaseId);
   const signed = yield* decodeReleaseJson(base.releaseJson);
   if (
     base.status !== "completed" ||
@@ -95,10 +90,9 @@ export const validateCandidateBase = Effect.fn(
 export const validateRecoveryBase = Effect.fn(
   "contentRelease.validateRecoveryBase"
 )(function* (
-  ctx: MutationCtx,
   manifest: ContentReleaseManifest,
   rendererJson: string,
-  state: Doc<"contentState">
+  state: Docs["contentState"]
 ) {
   if (!(state.candidateReleaseId && state.candidateManifestHash)) {
     return yield* releaseFail(
@@ -106,7 +100,7 @@ export const validateRecoveryBase = Effect.fn(
       "A recovery release requires one verified candidate."
     );
   }
-  const candidate = yield* loadRelease(ctx, state.candidateReleaseId);
+  const candidate = yield* loadRelease(state.candidateReleaseId);
   const signed = yield* decodeReleaseJson(candidate.releaseJson);
   if (
     candidate.role !== "candidate" ||

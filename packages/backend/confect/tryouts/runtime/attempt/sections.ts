@@ -1,18 +1,15 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutReadContext = Pick<QueryCtx, "db">;
+type TryoutAttempt = Docs["tryoutAttempts"];
 
 /** Loads every started section within the attempt's signed snapshot bound. */
 export const loadAttemptSections = Effect.fn(
   "tryouts.runtime.loadAttemptSections"
-)(function* (ctx: TryoutReadContext, attempt: TryoutAttempt) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (attempt: TryoutAttempt) {
+  const database = yield* DatabaseReader;
   const sections = yield* database
     .table("tryoutSectionAttempts")
     .index("by_tryoutAttemptId_and_sectionOrder", (query) =>
@@ -32,7 +29,7 @@ export const loadAttemptSections = Effect.fn(
 /** Derives the active or next resumable section from immutable attempt state. */
 export function readAttemptResume(
   attempt: TryoutAttempt,
-  sections: readonly Doc<"tryoutSectionAttempts">[]
+  sections: readonly Docs["tryoutSectionAttempts"][]
 ) {
   const inProgressSection = sections.find(
     (section) => section.status === "in-progress"
@@ -49,6 +46,5 @@ export function readAttemptResume(
   return {
     activeSectionKey: inProgressSection?.sectionKey ?? null,
     resumeSectionKey: resumeSection?.sectionKey ?? null,
-    resumeSectionPublicPath: resumeSection?.publicPath ?? null,
   };
 }

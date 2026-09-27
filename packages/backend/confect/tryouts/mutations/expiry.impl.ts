@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import {
   expireScheduledAttempt,
@@ -17,8 +16,7 @@ const attempt = FunctionImpl.make(
   spec,
   "attempt",
   Effect.fn("tryouts.mutations.expiry.attempt")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* expireScheduledAttempt(ctx, args);
+    return yield* expireScheduledAttempt(args);
   })
 );
 const section = FunctionImpl.make(
@@ -26,8 +24,7 @@ const section = FunctionImpl.make(
   spec,
   "section",
   Effect.fn("tryouts.mutations.expiry.section")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* expireScheduledSection(ctx, args);
+    return yield* expireScheduledSection(args);
   })
 );
 const sweep = FunctionImpl.make(
@@ -35,8 +32,7 @@ const sweep = FunctionImpl.make(
   spec,
   "sweep",
   Effect.fn("tryouts.mutations.expiry.sweep")(function* () {
-    const ctx = yield* MutationCtxService;
-    return yield* startExpirySweep(ctx);
+    return yield* startExpirySweep();
   })
 );
 const reconcileAttempts = FunctionImpl.make(
@@ -44,8 +40,7 @@ const reconcileAttempts = FunctionImpl.make(
   spec,
   "reconcileAttempts",
   Effect.fn("tryouts.mutations.expiry.reconcileAttempts")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* reconcileMissedAttemptExpiries(ctx, args.before);
+    return yield* reconcileMissedAttemptExpiries(args.before);
   })
 );
 const reconcileSections = FunctionImpl.make(
@@ -53,8 +48,7 @@ const reconcileSections = FunctionImpl.make(
   spec,
   "reconcileSections",
   Effect.fn("tryouts.mutations.expiry.reconcileSections")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* reconcileMissedSectionExpiries(ctx, {
+    return yield* reconcileMissedSectionExpiries({
       before: args.before,
       scheduledAttemptIds: args.scheduledAttemptIds,
     });

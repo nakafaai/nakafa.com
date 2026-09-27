@@ -1,14 +1,10 @@
-import {
-  FunctionImpl,
-  GroupImpl,
-  MutationRunner,
-  Scheduler,
-} from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx as ActionCtxService,
-  MutationCtx as MutationCtxService,
+  MutationRunner,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import {
   toUserCleanupError,
@@ -28,12 +24,9 @@ const sweepAccountDeletionRecovery = FunctionImpl.make(
   "sweepAccountDeletionRecovery",
   Effect.fn("auth.deletion.recovery.sweepAccountDeletionRecovery")(
     function* () {
-      const ctx = yield* MutationCtxService;
       return yield* Effect.gen(function* () {
-        const scheduler = yield* Scheduler.Scheduler.pipe(
-          Effect.provide(Scheduler.layer(ctx.scheduler))
-        );
-        const hasMore = yield* sweepAccountDeletionRecoveryProgram(ctx);
+        const scheduler = yield* Scheduler;
+        const hasMore = yield* sweepAccountDeletionRecoveryProgram();
         if (hasMore) {
           yield* scheduler
             .runAfter(
@@ -53,7 +46,7 @@ const recoverAccountDeletion = FunctionImpl.make(
   "recoverAccountDeletion",
   Effect.fn("auth.deletion.recovery.recoverAccountDeletion")(function* (args) {
     const ctx = yield* ActionCtxService;
-    const runMutation = yield* MutationRunner.MutationRunner;
+    const runMutation = yield* MutationRunner;
     yield* recoverAccountDeletionProgram({
       authUserExists: tryUserCleanup(() =>
         authReader.getAnyUserById(ctx, args.authId)

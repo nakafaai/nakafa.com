@@ -1,10 +1,11 @@
+import type { Ref } from "@confect/core";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type refs from "@repo/backend/confect/_generated/refs";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
-import { slugify } from "@repo/design-system/lib/routing/slug";
-import type { FunctionReturnType } from "convex/server";
+import { slugify } from "@repo/utilities/slug";
+
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
@@ -24,8 +25,8 @@ export interface PublishedMaterialContext {
   readonly mapping: CurriculumRoute;
   readonly parent: CurriculumRoute;
   readonly resolvedCanonicalPath: NonNullable<
-    FunctionReturnType<
-      typeof api.contentRelease.program.context
+    Ref.Returns<
+      typeof refs.public.contentRelease.program.context
     >["resolvedCanonicalPath"]
   >;
 }
@@ -37,7 +38,7 @@ export const decodePublishedMaterialContext = Effect.fn(
   locale: Locale,
   material: PublishedMaterialIdentity,
   context: MaterialContextIdentity,
-  result: FunctionReturnType<typeof api.contentRelease.program.context>
+  result: Ref.Returns<typeof refs.public.contentRelease.program.context>
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   if (!result.managed) {

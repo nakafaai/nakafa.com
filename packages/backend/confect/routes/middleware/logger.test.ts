@@ -1,38 +1,48 @@
 import { expect, it } from "@effect/vitest";
-import { createQueryFreeRequestLogger } from "@repo/backend/confect/routes/middleware/logger";
-import { Effect } from "effect";
-import { Hono } from "hono";
-
-const completedRequestPattern =
-  /^--> GET \/api\/auth\/callback\/google 202 \d+ms$/;
+import { requestLogger } from "@repo/backend/confect/routes/middleware/logger";
+import { Effect, Layer, Logger } from "effect";
+import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 
 it.effect("logs request paths without OAuth query diagnostics", () =>
   Effect.gen(function* () {
     const messages: string[] = [];
-    const app = new Hono();
-    app.use(
-      "*",
-      createQueryFreeRequestLogger((message) => messages.push(message))
+    const capture = Logger.map(Logger.formatStructured, (entry) => {
+      messages.push(JSON.stringify(entry));
+    });
+    const routes = HttpRouter.add(
+      "GET",
+      "/api/auth/callback/google",
+      HttpServerResponse.text("Accepted", { status: 202 })
+    ).pipe(
+      Layer.provide(requestLogger.layer),
+      Layer.provideMerge(Logger.layer([capture]))
     );
-    app.get("/api/auth/callback/google", (context) =>
-      context.text("Accepted", 202)
+    const response = yield* Effect.acquireUseRelease(
+      Effect.sync(() =>
+        HttpRouter.toWebHandler(routes, { disableLogger: true })
+      ),
+      ({ handler }) =>
+        Effect.promise(() =>
+          handler(
+            new Request(
+              "http://localhost/api/auth/callback/google?error=access_denied&error_description=private+provider+diagnostic&state=private-state"
+            )
+          )
+        ),
+      ({ dispose }) => Effect.promise(dispose)
     );
-
-    const response = yield* Effect.promise(
-      async () =>
-        await app.request(
-          "http://localhost/api/auth/callback/google?error=access_denied&error_description=private+provider+diagnostic&state=private-state"
-        )
-    );
-
     expect(response.status).toBe(202);
-    expect(messages).toHaveLength(2);
-    expect(messages[0]).toBe("<-- GET /api/auth/callback/google");
-    expect(messages[1]).toMatch(completedRequestPattern);
-    expect(messages.join("\n")).not.toContain("access_denied");
-    expect(messages.join("\n")).not.toContain("error_description");
-    expect(messages.join("\n")).not.toContain("private+provider+diagnostic");
-    expect(messages.join("\n")).not.toContain("state=");
-    expect(messages.join("\n")).not.toContain("private-state");
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain('"path":"/api/auth/callback/google"');
+    expect(messages[0]).toContain('"status":202');
+    for (const secret of [
+      "access_denied",
+      "error_description",
+      "private+provider+diagnostic",
+      "state=",
+      "private-state",
+    ]) {
+      expect(messages.join("\n")).not.toContain(secret);
+    }
   })
 );

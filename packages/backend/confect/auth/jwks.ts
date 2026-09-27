@@ -1,8 +1,9 @@
+import { ConvexConfigProvider } from "@confect/server";
 import authSchema from "@repo/backend/components/betterAuth/schema";
 import { createAuth } from "@repo/backend/confect/auth/runtime";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 /**
  * Returns the latest Better Auth static JWKS payload for Convex env updates.
@@ -21,7 +22,9 @@ export const getLatestJwks = internalAction({
     })
   ),
   handler: async (ctx) => {
-    const auth = await runConvexProgram(createAuth(ctx));
+    const auth = await Effect.runPromise(
+      createAuth(ctx).pipe(Effect.provide(ConvexConfigProvider.layer))
+    );
     return auth.api.getLatestJwks();
   },
 });

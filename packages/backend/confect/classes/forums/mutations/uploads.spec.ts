@@ -1,15 +1,16 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ClassAccessFailure } from "@repo/backend/confect/classes/access/spec";
+import { ClassAccessError } from "@repo/backend/confect/classes/access/spec";
 import {
-  ForumAttachmentErrorWire,
+  ForumAttachmentError,
   ForumAttachmentIoErrorWire,
-  ForumAttachmentUploadConfigErrorWire,
+  ForumAttachmentUploadConfigError,
 } from "@repo/backend/confect/classes/forums/attachments/spec";
-import { ForumFailure } from "@repo/backend/confect/classes/forums/spec";
+import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import { forumUploadUrlResultValidator } from "@repo/backend/confect/classes/forums/validators";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 
 /**
@@ -26,12 +27,14 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AuthFailure,
-          ForumAttachmentUploadConfigErrorWire,
-          ForumAttachmentErrorWire,
-          ClassAccessFailure,
-          ForumFailure,
+          ForumAttachmentUploadConfigError,
+          ForumAttachmentError,
+          ClassAccessError,
+          ForumError,
         ]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -48,11 +51,13 @@ export default GroupSpec.make()
         Schema.Union([
           AuthFailure,
           ForumAttachmentIoErrorWire,
-          ForumAttachmentErrorWire,
-          ForumFailure,
-          ClassAccessFailure,
+          ForumAttachmentError,
+          ForumError,
+          ClassAccessError,
         ]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -64,5 +69,7 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Null,
       error: () => Schema.Union([AuthFailure, ForumAttachmentIoErrorWire]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   );

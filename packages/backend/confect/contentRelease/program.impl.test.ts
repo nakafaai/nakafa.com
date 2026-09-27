@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -12,21 +14,41 @@ import { Effect } from "effect";
 const program = api.contentRelease.program;
 const appLocale = "en";
 const publicPath = "curriculum/technical-program-1";
-
 describe("contentRelease/program registered queries", () => {
   it.effect(
     "returns the current catalog, route, path and sitemap identity",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const data = yield* makeProgramSnapshotData();
-        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         const [catalog, route, path, buckets] = yield* Effect.promise(() =>
           Promise.all([
-            t.query(program.catalog, { appLocale }),
-            t.query(program.route, { appLocale, publicPath }),
-            t.query(program.path, { appLocale, publicPath }),
-            t.query(program.sitemapBuckets, { appLocale }),
+            t.query(program.catalog, {
+              appLocale,
+            }),
+            t.query(program.route, {
+              appLocale,
+              publicPath,
+            }),
+            t.query(program.path, {
+              appLocale,
+              publicPath,
+            }),
+            t.query(program.sitemapBuckets, {
+              appLocale,
+            }),
           ])
         );
         expect(catalog).toMatchObject({
@@ -46,11 +68,17 @@ describe("contentRelease/program registered queries", () => {
           routeJson: path.routeJson,
         });
         expect(path.managed).toBe(true);
-        expect(buckets).toMatchObject({ managed: true, routeCount: 2 });
+        expect(buckets).toMatchObject({
+          managed: true,
+          routeCount: 2,
+        });
         const sitemap = yield* Effect.promise(() =>
           Promise.all(
             buckets.buckets.map((bucket) =>
-              t.query(program.sitemapPage, { appLocale, bucket })
+              t.query(program.sitemapPage, {
+                appLocale,
+                bucket,
+              })
             )
           )
         );
@@ -59,20 +87,34 @@ describe("contentRelease/program registered queries", () => {
         });
       })
   );
-
   it.effect(
     "keeps split and completed cursors bound to the active snapshot",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const data = yield* makeProgramSnapshotData();
-        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         const first = yield* Effect.promise(() =>
           t.query(program.page, {
             appLocale,
             expectedManifestHash: null,
             expectedReleaseId: null,
-            paginationOpts: { cursor: null, maximumRowsRead: 2, numItems: 2 },
+            paginationOpts: {
+              cursor: null,
+              maximumRowsRead: 2,
+              numItems: 2,
+            },
           })
         );
         expect(first.result).toMatchObject({
@@ -121,18 +163,32 @@ describe("contentRelease/program registered queries", () => {
                 numItems: 2,
               },
             })
-          ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } })
+          ).rejects.toMatchObject({
+            data: {
+              code: "CONTENT_RELEASE_LIMIT",
+            },
+          })
         );
       })
   );
-
   it.effect(
     "returns an empty native page after the last curriculum route is removed",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const data = yield* makeProgramSnapshotData();
-        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             for (const row of await ctx.db
@@ -147,7 +203,11 @@ describe("contentRelease/program registered queries", () => {
             appLocale,
             expectedManifestHash: null,
             expectedReleaseId: null,
-            paginationOpts: { cursor: null, endCursor: null, numItems: 2 },
+            paginationOpts: {
+              cursor: null,
+              endCursor: null,
+              numItems: 2,
+            },
           })
         );
         expect(result.result).toMatchObject({
@@ -157,14 +217,16 @@ describe("contentRelease/program registered queries", () => {
         });
       })
   );
-
   it.effect(
     "returns unmanaged and restarts an obsolete page before publication",
     () =>
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
         const route = yield* Effect.promise(() =>
-          t.query(program.route, { appLocale, publicPath })
+          t.query(program.route, {
+            appLocale,
+            publicPath,
+          })
         );
         expect(route).toMatchObject({
           managed: false,
@@ -176,26 +238,42 @@ describe("contentRelease/program registered queries", () => {
             appLocale,
             expectedManifestHash: "obsolete-manifest",
             expectedReleaseId: "obsolete-release",
-            paginationOpts: { cursor: "obsolete-cursor", numItems: 2 },
+            paginationOpts: {
+              cursor: "obsolete-cursor",
+              numItems: 2,
+            },
           })
         );
         expect(stale).toMatchObject({
           activeManifestHash: null,
           activeReleaseId: null,
           managed: false,
-          result: { isDone: true, page: [] },
+          result: {
+            isDone: true,
+            page: [],
+          },
           snapshotId: null,
           sourceRevision: null,
           stale: true,
         });
       })
   );
-
   it.effect("rejects a curriculum route whose owning program disappeared", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const data = yield* makeProgramSnapshotData();
-      yield* Effect.promise(() => activateProgramSnapshot(t, data));
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateProgramSnapshot(data).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
       yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           for (const row of await ctx.db.query("programCatalog").collect()) {
@@ -205,8 +283,15 @@ describe("contentRelease/program registered queries", () => {
       );
       yield* Effect.promise(() =>
         expect(
-          t.query(program.route, { appLocale, publicPath })
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+          t.query(program.route, {
+            appLocale,
+            publicPath,
+          })
+        ).rejects.toMatchObject({
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
+        })
       );
     })
   );

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { chatResponseFailureCode } from "@repo/ai/config/generation";
-import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
+import { chatResponseFailureCode } from "@repo/backend/confect/nina/config/generation";
+import {
+  getModelCreditCost,
+  ModelIdSchema,
+} from "@repo/backend/confect/nina/config/model";
 import { Option, Schema } from "effect";
 
 const contentViewProperties = {

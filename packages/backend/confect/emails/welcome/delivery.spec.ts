@@ -1,7 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { WelcomeIntentErrorWire } from "@repo/backend/confect/emails/welcome/spec";
-import { failureWire } from "@repo/backend/confect/failure";
+import { WelcomeIntentError } from "@repo/backend/confect/emails/welcome/spec";
 import {
   AccountReadyEmailInputError,
   AccountReadyEmailRenderError,
@@ -16,9 +15,9 @@ export default GroupSpec.makeNode().addFunction(
     returns: () => Schema.Null,
     error: () =>
       Schema.Union([
-        WelcomeIntentErrorWire,
-        failureWire(AccountReadyEmailInputError),
-        failureWire(AccountReadyEmailRenderError),
+        WelcomeIntentError,
+        AccountReadyEmailInputError,
+        AccountReadyEmailRenderError,
       ]),
   })
 );

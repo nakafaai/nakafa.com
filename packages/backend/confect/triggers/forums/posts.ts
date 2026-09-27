@@ -1,22 +1,22 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+} from "@repo/backend/confect/_generated/services";
 import {
   forumPostsByAuthorSequence,
   forumPostsBySequence,
 } from "@repo/backend/confect/classes/forums/aggregate";
 import { updateForumReadState } from "@repo/backend/confect/classes/forums/readState";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Clock, Effect, Option } from "effect";
 
 /** Keep the aggregate component synchronized in the post's transaction. */
 const syncForumPostAggregates = Effect.fn(
   "triggers.forums.posts.syncForumPostAggregates"
-)(function* (
-  ctx: MutationCtx,
-  change: Change<DataModel, "schoolClassForumPosts">
-) {
+)(function* (change: Change<DataModel, "schoolClassForumPosts">) {
+  const ctx = yield* MutationCtxService;
   if (change.operation === "insert") {
     yield* Effect.promise(() =>
       forumPostsBySequence.insert(ctx, change.newDoc)
@@ -44,16 +44,13 @@ const syncForumPostAggregates = Effect.fn(
 /** Update forum counters, reply counts, and the author's read boundary atomically. */
 export const forumPostsHandler = Effect.fn(
   "triggers.forums.posts.forumPostsHandler"
-)(function* (
-  ctx: MutationCtx,
-  change: Change<DataModel, "schoolClassForumPosts">
-) {
-  yield* syncForumPostAggregates(ctx, change);
+)(function* (change: Change<DataModel, "schoolClassForumPosts">) {
+  yield* syncForumPostAggregates(change);
   if (change.operation === "update") {
     return;
   }
-  const reader = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const post = change.operation === "insert" ? change.newDoc : change.oldDoc;
   const forum = yield* reader
     .table("schoolClassForums")
@@ -73,7 +70,7 @@ export const forumPostsHandler = Effect.fn(
           updatedAt: yield* Clock.currentTimeMillis,
         })
         .pipe(Effect.orDie);
-      yield* updateForumReadState(ctx, {
+      yield* updateForumReadState({
         forumId: post.forumId,
         classId: post.classId,
         userId: post.createdBy,

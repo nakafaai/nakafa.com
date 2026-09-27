@@ -1,16 +1,15 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+} from "@repo/backend/confect/_generated/services";
 import {
   ABORT_PAGE_BYTES,
   ABORT_PAGE_LIMIT,
   hasAbortTransactionHeadroom,
 } from "@repo/backend/confect/contentRelease/abort/budget";
 import { retainOrphanedArtifacts } from "@repo/backend/confect/contentRelease/retention";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Effect, Option } from "effect";
 
 interface AbortCounts {
@@ -32,13 +31,12 @@ export function abortRowCount(release: AbortCounts) {
 
 /** Removes a directory key only when this release created its identity. */
 const deleteOwnedKey = Effect.fn("contentRelease.deleteAbortKey")(function* (
-  ctx: MutationCtx,
   contentKey: string,
-  artifactLocale: Doc<"contentKeys">["artifactLocale"],
+  artifactLocale: Docs["contentKeys"]["artifactLocale"],
   sequence: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const key = yield* database
     .table("contentKeys")
     .get("by_contentKey_and_artifactLocale", contentKey, artifactLocale)
@@ -53,13 +51,12 @@ const deleteOwnedKey = Effect.fn("contentRelease.deleteAbortKey")(function* (
 
 /** Removes a route identity only when this release first introduced it. */
 const deleteOwnedPath = Effect.fn("contentRelease.deleteAbortPath")(function* (
-  ctx: MutationCtx,
-  appLocale: Doc<"contentPaths">["appLocale"],
+  appLocale: Docs["contentPaths"]["appLocale"],
   publicPath: string,
   sequence: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const path = yield* database
     .table("contentPaths")
     .get("by_appLocale_and_publicPath", appLocale, publicPath)
@@ -74,8 +71,8 @@ const deleteOwnedPath = Effect.fn("contentRelease.deleteAbortPath")(function* (
 
 /** Checks whether an aborted release still owns auxiliary publication state. */
 export const hasAbortResidue = Effect.fn("contentRelease.hasAbortResidue")(
-  function* (ctx: MutationCtx | QueryCtx, sequence: number) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (sequence: number) {
+    const database = yield* DatabaseReader;
     const [key, path] = yield* Effect.all([
       database
         .table("contentKeys")
@@ -99,11 +96,11 @@ export const hasAbortResidue = Effect.fn("contentRelease.hasAbortResidue")(
 
 /** Stops a deletion page as soon as measured transaction headroom is exhausted. */
 const deleteMeasuredPage = Effect.fn("contentRelease.deleteMeasuredAbortPage")(
-  function* <Row>(
-    ctx: MutationCtx,
+  function* <Row, R>(
     rows: readonly Row[],
-    deleteRow: (row: Row) => Effect.Effect<void>
+    deleteRow: (row: Row) => Effect.Effect<void, never, R>
   ) {
+    const ctx = yield* MutationCtxService;
     let processed = 0;
     for (const row of rows) {
       yield* deleteRow(row);
@@ -121,8 +118,8 @@ const deleteMeasuredPage = Effect.fn("contentRelease.deleteMeasuredAbortPage")(
 
 /** Deletes one measured release-owned page and its staged directory identities. */
 export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
-  function* (ctx: MutationCtx, releaseId: string, sequence: number) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (releaseId: string, sequence: number) {
+    const database = yield* DatabaseReader;
     const head = yield* database
       .table("contentHeads")
       .index("by_releaseId_and_index", (query) =>
@@ -144,13 +141,12 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
         })
         .pipe(Effect.orDie);
       return yield* deleteMeasuredPage(
-        ctx,
         heads.page,
         Effect.fn("contentRelease.deleteAbortHead")(function* (row) {
-          const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+          const writer = yield* DatabaseWriter;
           yield* writer.table("contentHeads").delete(row._id);
           if (row.artifactHash) {
-            yield* retainOrphanedArtifacts(ctx, [row.artifactHash]);
+            yield* retainOrphanedArtifacts([row.artifactHash]);
           }
         })
       );
@@ -176,11 +172,10 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
         })
         .pipe(Effect.orDie);
       return yield* deleteMeasuredPage(
-        ctx,
         bindings.page,
         Effect.fn("contentRelease.deleteAbortBinding")(function* (row) {
-          const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-          yield* deleteOwnedPath(ctx, row.appLocale, row.publicPath, sequence);
+          const writer = yield* DatabaseWriter;
+          yield* deleteOwnedPath(row.appLocale, row.publicPath, sequence);
           yield* writer.table("contentBindings").delete(row._id);
         })
       );
@@ -206,19 +201,13 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
         })
         .pipe(Effect.orDie);
       return yield* deleteMeasuredPage(
-        ctx,
         items.page,
         Effect.fn("contentRelease.deleteAbortItem")(function* (row) {
-          const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-          yield* deleteOwnedKey(
-            ctx,
-            row.contentKey,
-            row.artifactLocale,
-            sequence
-          );
+          const writer = yield* DatabaseWriter;
+          yield* deleteOwnedKey(row.contentKey, row.artifactLocale, sequence);
           yield* writer.table("contentItems").delete(row._id);
           if (row.artifactHash) {
-            yield* retainOrphanedArtifacts(ctx, [row.artifactHash]);
+            yield* retainOrphanedArtifacts([row.artifactHash]);
           }
         })
       );
@@ -246,10 +235,9 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
       })
       .pipe(Effect.orDie);
     return yield* deleteMeasuredPage(
-      ctx,
       batches.page,
       Effect.fn("contentRelease.deleteAbortSnapshotBatch")(function* (row) {
-        const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+        const writer = yield* DatabaseWriter;
         yield* writer.table("snapshotBatches").delete(row._id);
       })
     );

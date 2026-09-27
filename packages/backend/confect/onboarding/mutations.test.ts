@@ -1,7 +1,8 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import workflowTest from "@convex-dev/workflow/test";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { declareWelcomeIntent } from "@repo/backend/confect/emails/welcome/impl";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   activateOnboardingPrograms,
@@ -10,7 +11,6 @@ import {
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 7, 31, 12, 0, 0);
-
 describe("onboarding", () => {
   it.effect("records first-run admission exactly once", () =>
     Effect.gen(function* () {
@@ -31,37 +31,31 @@ describe("onboarding", () => {
       expect(first).toEqual({
         isAuthenticated: true,
         isRequired: true,
-        profile: { updatedAt: NOW },
+        profile: {
+          updatedAt: NOW,
+        },
       });
-      expect(repeated).toEqual({
-        isAuthenticated: true,
-        isRequired: true,
-        profile: { updatedAt: NOW },
+      expect(repeated).toEqual(first);
+      expect(stored).toMatchObject({
+        admittedAt: NOW,
+        updatedAt: NOW,
       });
-      expect(stored).toMatchObject({ admittedAt: NOW, updatedAt: NOW });
       expect(stored?.startedAt).toBeUndefined();
-      expect(status).toEqual({
-        isAuthenticated: true,
-        isRequired: true,
-        profile: { updatedAt: NOW },
-      });
+      expect(status).toEqual(first);
     })
   );
-
   it.effect("keeps privileged admission outside learner lifecycle state", () =>
     Effect.gen(function* () {
       const { authenticated, test } = yield* createOnboardingTest(
         NOW,
         "administrator"
       );
-
       const admission = yield* Effect.promise(() =>
         authenticated.mutation(api.onboarding.mutations.admit, {})
       );
       const stored = yield* Effect.promise(() =>
         test.query((ctx) => ctx.db.query("onboardingProfiles").unique())
       );
-
       expect(admission).toEqual({
         isAuthenticated: true,
         isRequired: false,
@@ -70,7 +64,6 @@ describe("onboarding", () => {
       expect(stored).toBeNull();
     })
   );
-
   it.effect("reports an unauthenticated admission without creating state", () =>
     Effect.gen(function* () {
       const { test } = yield* createOnboardingTest(NOW);
@@ -88,7 +81,6 @@ describe("onboarding", () => {
       expect(stored).toBeNull();
     })
   );
-
   it.effect(
     "records questionnaire start without rewriting admission time",
     () =>
@@ -97,17 +89,18 @@ describe("onboarding", () => {
         yield* Effect.promise(() =>
           authenticated.mutation(api.onboarding.mutations.admit, {})
         );
-
         vi.setSystemTime(new Date(NOW + 1000));
         yield* Effect.promise(() =>
           authenticated.mutation(api.onboarding.mutations.saveAnswer, {
-            answer: { kind: "region", value: "germany" },
+            answer: {
+              kind: "region",
+              value: "germany",
+            },
           })
         );
         const stored = yield* Effect.promise(() =>
           test.query((ctx) => ctx.db.query("onboardingProfiles").unique())
         );
-
         expect(stored).toMatchObject({
           admittedAt: NOW,
           startedAt: NOW + 1000,
@@ -115,17 +108,18 @@ describe("onboarding", () => {
         });
       })
   );
-
   it.effect(
     "keeps every draft answer separate from applied user settings",
     () =>
       Effect.gen(function* () {
         const { authenticated, identity, test } =
           yield* createOnboardingTest(NOW);
-
         const profile = yield* Effect.promise(() =>
           authenticated.mutation(api.onboarding.mutations.saveAnswer, {
-            answer: { kind: "role", value: "teacher" },
+            answer: {
+              kind: "role",
+              value: "teacher",
+            },
           })
         );
         const stored = yield* Effect.promise(() =>
@@ -135,8 +129,10 @@ describe("onboarding", () => {
             user: await ctx.db.get("users", identity.userId),
           }))
         );
-
-        expect(profile).toEqual({ role: "teacher", updatedAt: NOW });
+        expect(profile).toEqual({
+          role: "teacher",
+          updatedAt: NOW,
+        });
         expect(stored.preference).toBeNull();
         expect(stored.profile).toMatchObject({
           admittedAt: NOW,
@@ -145,13 +141,11 @@ describe("onboarding", () => {
         expect(stored.user?.role).toBeUndefined();
       })
   );
-
   it.effect("applies role and Indonesian curriculum atomically on Finish", () =>
     Effect.gen(function* () {
       const { authenticated, identity, test } =
         yield* createOnboardingTest(NOW);
       yield* activateOnboardingPrograms(test);
-
       const result = yield* Effect.promise(() =>
         authenticated.mutation(api.onboarding.mutations.finish, {
           answers: {
@@ -171,7 +165,6 @@ describe("onboarding", () => {
           user: await ctx.db.get("users", identity.userId),
         }))
       );
-
       expect(result).toEqual({
         destination: {
           kind: "curriculum-program",
@@ -180,28 +173,33 @@ describe("onboarding", () => {
         locale: "id",
       });
       expect(stored.user?.role).toBe("student");
-      expect(admission).toMatchObject({ isRequired: false });
+      expect(admission).toMatchObject({
+        isRequired: false,
+      });
       expect(stored.preference?.preferredCurriculumProgramKey).toBe("merdeka");
       expect(stored.profile?.completedAt).toBe(NOW);
       expect(stored.profile?.admittedAt).toBe(NOW);
       expect(stored.profile?.startedAt).toBe(NOW);
     })
   );
-
   it.effect(
     "activates the declared welcome delivery with the selected locale",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const { authenticated, identity, test } =
           yield* createOnboardingTest(NOW);
         workflowTest.register(test);
         yield* activateOnboardingPrograms(test);
         yield* Effect.promise(() =>
           test.mutation((ctx) =>
-            runConvexProgram(declareWelcomeIntent(ctx, identity.userId))
+            Effect.runPromiseWith(runtimeServices)(
+              declareWelcomeIntent(identity.userId).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
           )
         );
-
         yield* Effect.promise(() =>
           authenticated.mutation(api.onboarding.mutations.finish, {
             answers: {
@@ -214,7 +212,6 @@ describe("onboarding", () => {
         const delivery = yield* Effect.promise(() =>
           test.query((ctx) => ctx.db.query("welcomeEmailIntents").unique())
         );
-
         expect(delivery).toMatchObject({
           locale: "de",
           phase: "scheduled",
@@ -226,14 +223,12 @@ describe("onboarding", () => {
         expect(delivery.workflowId).toEqual(expect.any(String));
       })
   );
-
   it.effect(
     "rolls back every setting when the default curriculum is missing",
     () =>
       Effect.gen(function* () {
         const { authenticated, identity, test } =
           yield* createOnboardingTest(NOW);
-
         yield* Effect.promise(() =>
           expect(
             authenticated.mutation(api.onboarding.mutations.finish, {
@@ -250,7 +245,6 @@ describe("onboarding", () => {
             },
           })
         );
-
         const stored = yield* Effect.promise(() =>
           test.query(async (ctx) => ({
             preference: await ctx.db.query("learningPreferences").unique(),
@@ -258,18 +252,19 @@ describe("onboarding", () => {
             user: await ctx.db.get("users", identity.userId),
           }))
         );
-        expect(stored).toMatchObject({ preference: null, profile: null });
+        expect(stored).toMatchObject({
+          preference: null,
+          profile: null,
+        });
         expect(stored.user?.role).toBeUndefined();
       })
   );
-
   it.effect(
     "uses English and the Singapore curriculum before opening try-out",
     () =>
       Effect.gen(function* () {
         const { authenticated, test } = yield* createOnboardingTest(NOW);
         yield* activateOnboardingPrograms(test);
-
         const result = yield* Effect.promise(() =>
           authenticated.mutation(api.onboarding.mutations.finish, {
             answers: {
@@ -282,15 +277,15 @@ describe("onboarding", () => {
         const preference = yield* Effect.promise(() =>
           test.query((ctx) => ctx.db.query("learningPreferences").unique())
         );
-
         expect(result).toEqual({
-          destination: { kind: "tryout" },
+          destination: {
+            kind: "tryout",
+          },
           locale: "en",
         });
         expect(preference?.preferredCurriculumProgramKey).toBe("singapore-moe");
       })
   );
-
   it.effect("uses German and Cambridge as the Germany default", () =>
     Effect.gen(function* () {
       const { authenticated, identity, test } =
@@ -317,7 +312,6 @@ describe("onboarding", () => {
       const preference = yield* Effect.promise(() =>
         test.query((ctx) => ctx.db.query("learningPreferences").unique())
       );
-
       expect(result).toEqual({
         destination: {
           kind: "curriculum-program",
@@ -330,7 +324,6 @@ describe("onboarding", () => {
       );
     })
   );
-
   it.effect("does not let a completed profile rewrite user settings", () =>
     Effect.gen(function* () {
       const { authenticated, identity, test } =
@@ -345,7 +338,6 @@ describe("onboarding", () => {
           },
         })
       );
-
       yield* Effect.promise(() =>
         expect(
           authenticated.mutation(api.onboarding.mutations.finish, {
@@ -362,7 +354,6 @@ describe("onboarding", () => {
           },
         })
       );
-
       const stored = yield* Effect.promise(() =>
         test.query(async (ctx) => ({
           preference: await ctx.db.query("learningPreferences").unique(),
@@ -381,14 +372,12 @@ describe("onboarding", () => {
       );
     })
   );
-
   it.effect("keeps privileged accounts outside self-service onboarding", () =>
     Effect.gen(function* () {
       const { authenticated } = yield* createOnboardingTest(
         NOW,
         "administrator"
       );
-
       const status = yield* Effect.promise(() =>
         authenticated.query(api.onboarding.queries.getStatus, {})
       );
@@ -397,11 +386,13 @@ describe("onboarding", () => {
         isRequired: false,
         profile: null,
       });
-
       yield* Effect.promise(() =>
         expect(
           authenticated.mutation(api.onboarding.mutations.saveAnswer, {
-            answer: { kind: "role", value: "student" },
+            answer: {
+              kind: "role",
+              value: "student",
+            },
           })
         ).rejects.toMatchObject({
           data: {
@@ -410,7 +401,6 @@ describe("onboarding", () => {
           },
         })
       );
-
       yield* Effect.promise(() =>
         expect(
           authenticated.mutation(api.onboarding.mutations.finish, {
@@ -429,22 +419,26 @@ describe("onboarding", () => {
       );
     })
   );
-
   it.effect("rejects a signed-out draft write", () =>
     Effect.gen(function* () {
       const { test } = yield* createOnboardingTest(NOW);
       yield* Effect.promise(() =>
         expect(
           test.mutation(api.onboarding.mutations.saveAnswer, {
-            answer: { kind: "focus", value: "learning" },
+            answer: {
+              kind: "focus",
+              value: "learning",
+            },
           })
         ).rejects.toMatchObject({
-          data: { code: "UNAUTHENTICATED", message: "Unauthenticated" },
+          data: {
+            code: "UNAUTHENTICATED",
+            message: "Unauthenticated",
+          },
         })
       );
     })
   );
-
   it.effect("rejects admission while account deletion is pending", () =>
     Effect.gen(function* () {
       const { authenticated, identity, test } =
@@ -460,12 +454,14 @@ describe("onboarding", () => {
         expect(
           authenticated.mutation(api.onboarding.mutations.admit, {})
         ).rejects.toMatchObject({
-          data: { code: "UNAUTHORIZED", message: "User not found." },
+          data: {
+            code: "UNAUTHORIZED",
+            message: "User not found.",
+          },
         })
       );
     })
   );
-
   it.effect("redacts inconsistent account linkage during a draft write", () =>
     Effect.gen(function* () {
       const { authenticated, identity, test } =
@@ -485,12 +481,16 @@ describe("onboarding", () => {
       yield* Effect.promise(() =>
         expect(
           authenticated.mutation(api.onboarding.mutations.saveAnswer, {
-            answer: { kind: "role", value: "student" },
+            answer: {
+              kind: "role",
+              value: "student",
+            },
           })
         ).rejects.toMatchObject({
           data: {
-            code: "ONBOARDING_AUTH_FAILED",
-            message: "Unable to authenticate the onboarding request.",
+            _tag: "AuthReadError",
+            code: "AUTH_READ_FAILED",
+            message: "Unable to read authentication state.",
           },
         })
       );

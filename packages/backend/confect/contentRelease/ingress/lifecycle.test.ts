@@ -1,7 +1,6 @@
-import {
-  type ConvexTaggedError,
-  getUnknownErrorMessage,
-} from "@repo/backend/confect/failure";
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
@@ -12,7 +11,6 @@ import {
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { advancePublication } from "@repo/backend/confect/contentRelease/ingress/lifecycle";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type {
   ActionCtx,
@@ -133,13 +131,19 @@ const markProofFailed = Effect.fn("test.contentRelease.markProofFailed")(
 /** Runs one lifecycle program through the explicit technical verification key. */
 const runLifecycle = Effect.fn("test.contentRelease.runLifecycle")(function* <
   A,
-  E extends ConvexTaggedError,
+  E,
 >(
   target: TestConvex<typeof schema>,
   makeProgram: (
     ctx: ActionCtx
-  ) => Effect.Effect<A, E, ContentVerificationKeyResolver>
+  ) => Effect.Effect<
+    A,
+    E,
+    | ContentVerificationKeyResolver
+    | RegisteredFunction.ActionServices<typeof confectSchema>
+  >
 ) {
+  const runtimeServices = yield* Effect.context<never>();
   return yield* Effect.tryPromise({
     catch: (cause) =>
       new ObservedLifecycleActionFailure({
@@ -147,12 +151,13 @@ const runLifecycle = Effect.fn("test.contentRelease.runLifecycle")(function* <
       }),
     try: () =>
       target.action((ctx) =>
-        runConvexProgram(
+        Effect.runPromiseWith(runtimeServices)(
           makeProgram(ctx).pipe(
             Effect.provideService(
               ContentVerificationKeyResolver,
               TEST_KEY_RESOLVER
-            )
+            ),
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
           )
         )
       ),
@@ -168,7 +173,7 @@ describe("content release lifecycle ingress", () => {
           vi.spyOn(ctx, "runMutation").mockResolvedValue({
             phase: "verifying",
           });
-          return advancePublication(ctx, {
+          return advancePublication({
             operation: "verify",
             release,
           });
@@ -202,8 +207,8 @@ describe("content release lifecycle ingress", () => {
         yield* Effect.promise(() =>
           completeContentProof(t, release.manifestHash, releaseId)
         );
-        const response = yield* runLifecycle(t, (ctx) =>
-          advancePublication(ctx, {
+        const response = yield* runLifecycle(t, (_ctx) =>
+          advancePublication({
             operation: "verify",
             release,
           })
@@ -223,6 +228,7 @@ describe("content release lifecycle ingress", () => {
   );
   it.effect("surfaces only the stable terminal proof category", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
@@ -235,10 +241,18 @@ describe("content release lifecycle ingress", () => {
         )
       );
       yield* Effect.promise(() =>
-        t.mutation((ctx) => runConvexProgram(markProofFailed(ctx)))
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            markProofFailed(ctx).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
       );
-      const failure = yield* runLifecycle(t, (ctx) =>
-        advancePublication(ctx, {
+      const failure = yield* runLifecycle(t, (_ctx) =>
+        advancePublication({
           operation: "verify",
           release,
         })
@@ -252,16 +266,21 @@ describe("content release lifecycle ingress", () => {
     "aborts through the server-owned cursor and returns exact evidence",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
-              insertRelease(ctx, JSON.stringify(TEST_PROOF_RENDERER))
+            Effect.runPromiseWith(runtimeServices)(
+              insertRelease(ctx, JSON.stringify(TEST_PROOF_RENDERER)).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
-        const response = yield* runLifecycle(t, (ctx) =>
-          advancePublication(ctx, {
+        const response = yield* runLifecycle(t, (_ctx) =>
+          advancePublication({
             operation: "abort",
             releaseId,
           })
@@ -282,16 +301,21 @@ describe("content release lifecycle ingress", () => {
     "rejects activation when the frozen renderer identity drifted",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
-              insertRelease(ctx, JSON.stringify(testProofRenderer("h1")))
+            Effect.runPromiseWith(runtimeServices)(
+              insertRelease(ctx, JSON.stringify(testProofRenderer("h1"))).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
-        const failure = yield* runLifecycle(t, (ctx) =>
-          advancePublication(ctx, {
+        const failure = yield* runLifecycle(t, (_ctx) =>
+          advancePublication({
             operation: "activate",
             release,
           })
@@ -311,8 +335,8 @@ describe("content release lifecycle ingress", () => {
           `${prefix}${release.signature.slice(1)}`
         ),
       };
-      const failure = yield* runLifecycle(t, (ctx) =>
-        advancePublication(ctx, {
+      const failure = yield* runLifecycle(t, (_ctx) =>
+        advancePublication({
           operation: "verify",
           release: tampered,
         })
@@ -324,23 +348,28 @@ describe("content release lifecycle ingress", () => {
   );
   it.effect("keeps the external activation receipt unchanged", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const pair = makeActivationPair();
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
-            insertActivationPair(ctx, pair.candidate, pair.recovery)
+          Effect.runPromiseWith(runtimeServices)(
+            insertActivationPair(ctx, pair.candidate, pair.recovery).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           )
         )
       );
-      const activated = yield* runLifecycle(t, (ctx) =>
-        advancePublication(ctx, {
+      const activated = yield* runLifecycle(t, (_ctx) =>
+        advancePublication({
           operation: "activate",
           release: pair.candidate,
         })
       );
-      const repeated = yield* runLifecycle(t, (ctx) =>
-        advancePublication(ctx, {
+      const repeated = yield* runLifecycle(t, (_ctx) =>
+        advancePublication({
           operation: "activate",
           release: pair.candidate,
         })
@@ -360,8 +389,8 @@ describe("content release lifecycle ingress", () => {
           t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect())
         )
       ).toEqual([]);
-      const recovered = yield* runLifecycle(t, (ctx) =>
-        advancePublication(ctx, {
+      const recovered = yield* runLifecycle(t, (_ctx) =>
+        advancePublication({
           operation: "activateRecovery",
           release: pair.recovery,
         })
@@ -375,8 +404,8 @@ describe("content release lifecycle ingress", () => {
         },
       });
       expect(recovered.value).not.toHaveProperty("kind");
-      const repeatedRecovery = yield* runLifecycle(t, (ctx) =>
-        advancePublication(ctx, {
+      const repeatedRecovery = yield* runLifecycle(t, (_ctx) =>
+        advancePublication({
           operation: "activateRecovery",
           release: pair.recovery,
         })

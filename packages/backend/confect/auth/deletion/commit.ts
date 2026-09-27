@@ -1,7 +1,10 @@
-import { DatabaseReader, Scheduler } from "@confect/server";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  MutationCtx,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import {
   toUserCleanupError,
   tryUserCleanup,
@@ -10,7 +13,6 @@ import {
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/confect/auth/deletion/constants";
 import { finalizeAccountDeletion } from "@repo/backend/confect/auth/deletion/finalize";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/confect/auth/deletion/spec";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Duration, Effect, flow, Schema } from "effect";
 
 const betterAuthDeletePageSchema = Schema.Struct({
@@ -25,11 +27,14 @@ interface AccountDeletionCommitOperations {
   readonly deleteSessions: Effect.Effect<number, UserCleanupError>;
   readonly scheduleContinuation: Effect.Effect<unknown, UserCleanupError>;
 }
-function createAccountDeletionCommitOperations(
-  ctx: MutationCtx,
+const createAccountDeletionCommitOperations = Effect.fn(
+  "auth.deletion.commitOperations"
+)(function* (
   authId: string,
   expectedPreparation: AccountDeletionPreparationVersion
-): AccountDeletionCommitOperations {
+) {
+  const ctx = yield* MutationCtx;
+  const scheduler = yield* Scheduler;
   const deletePage = Effect.fn("auth.deletion.deleteAuthPage")(function* (
     model: "account" | "session"
   ) {
@@ -73,19 +78,18 @@ function createAccountDeletionCommitOperations(
       })
     ),
     deleteSessions: deletePage("session"),
-    scheduleContinuation: Scheduler.Scheduler.pipe(
-      Effect.flatMap((scheduler) =>
-        scheduler.runAfter(
-          Duration.zero,
-          refs.internal.auth.deletion.continueAccountDeletionCommit,
-          { authId, expectedPreparation }
-        )
-      ),
-      Effect.provide(Scheduler.layer(ctx.scheduler)),
-      Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-    ),
-  };
-}
+    scheduleContinuation: scheduler
+      .runAfter(
+        Duration.zero,
+        refs.internal.auth.deletion.continueAccountDeletionCommit,
+        {
+          authId,
+          expectedPreparation,
+        }
+      )
+      .pipe(Effect.catchDefect(flow(toUserCleanupError, Effect.fail))),
+  } satisfies AccountDeletionCommitOperations;
+});
 
 /**
  * Finishes a claimed Better Auth deletion in bounded component transactions.
@@ -94,25 +98,15 @@ function createAccountDeletionCommitOperations(
  * atomically with app finalization.
  * @see https://docs.convex.dev/components/using#transactions
  */
-export const continueAccountDeletionCommitProgram: (
-  ctx: MutationCtx,
-  authId: string,
-  expectedPreparation: AccountDeletionPreparationVersion,
-  operations?: AccountDeletionCommitOperations
-) => Effect.Effect<boolean, UserCleanupError> = Effect.fn(
+export const continueAccountDeletionCommitProgram = Effect.fn(
   "auth.deletion.continueAccountDeletionCommit"
 )(
   function* (
-    ctx: MutationCtx,
     authId: string,
     expectedPreparation: AccountDeletionPreparationVersion,
-    operations = createAccountDeletionCommitOperations(
-      ctx,
-      authId,
-      expectedPreparation
-    )
+    operations?: AccountDeletionCommitOperations
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const preparation = yield* database
       .table("accountDeletionPreparations")
       .get("by_authId", authId)
@@ -134,16 +128,22 @@ export const continueAccountDeletionCommitProgram: (
     if (preparation.finalizedAt !== undefined) {
       return true;
     }
-    if ((yield* operations.deleteSessions) > 0) {
-      yield* operations.scheduleContinuation;
+    const commit =
+      operations ??
+      (yield* createAccountDeletionCommitOperations(
+        authId,
+        expectedPreparation
+      ));
+    if ((yield* commit.deleteSessions) > 0) {
+      yield* commit.scheduleContinuation;
       return true;
     }
-    if ((yield* operations.deleteAccounts) > 0) {
-      yield* operations.scheduleContinuation;
+    if ((yield* commit.deleteAccounts) > 0) {
+      yield* commit.scheduleContinuation;
       return true;
     }
-    yield* operations.deleteAuthUser;
-    yield* finalizeAccountDeletion(ctx, authId, expectedPreparation);
+    yield* commit.deleteAuthUser;
+    yield* finalizeAccountDeletion(authId, expectedPreparation);
     return true;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))

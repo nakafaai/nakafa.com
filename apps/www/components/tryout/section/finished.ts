@@ -1,13 +1,13 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 
 export type TryoutFinishedSectionStatus = Exclude<
-  Doc<"tryoutSectionAttempts">["status"],
+  Docs["tryoutSectionAttempts"]["status"],
   "in-progress"
 >;
 
 /** Reads the canonical terminal status from one Convex section attempt. */
 export function getTryoutFinishedSectionStatus(
-  section: Pick<Doc<"tryoutSectionAttempts">, "status"> | null
+  section: Pick<Docs["tryoutSectionAttempts"], "status"> | null
 ): TryoutFinishedSectionStatus | null {
   if (!section || section.status === "in-progress") {
     return null;

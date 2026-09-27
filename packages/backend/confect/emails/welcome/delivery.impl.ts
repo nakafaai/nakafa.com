@@ -1,11 +1,10 @@
-import {
-  FunctionImpl,
-  GroupImpl,
-  MutationRunner,
-  QueryRunner,
-} from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { deliverWelcomeEmailProgram } from "@repo/backend/confect/emails/welcome/delivery";
 import spec from "@repo/backend/confect/emails/welcome/delivery.spec";
 import { toWelcomeIntentError } from "@repo/backend/confect/emails/welcome/impl";
@@ -18,8 +17,8 @@ const sendWelcomeEmail = FunctionImpl.make(
   Effect.fn("emails.welcome.delivery.sendWelcomeEmail")(function* ({
     intentId,
   }) {
-    const runQuery = yield* QueryRunner.QueryRunner;
-    const runMutation = yield* MutationRunner.MutationRunner;
+    const runQuery = yield* QueryRunner;
+    const runMutation = yield* MutationRunner;
     return yield* deliverWelcomeEmailProgram(
       runQuery(refs.internal.emails.welcome.internal.readIntentInput, {
         intentId,

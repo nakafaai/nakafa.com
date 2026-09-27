@@ -1,6 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ProductAnalyticsCaptureErrorWire } from "@repo/backend/confect/analytics/capture.spec";
-import { ConsentPersistenceErrorWire } from "@repo/backend/confect/consents/schema";
+import { ProductAnalyticsCaptureError } from "@repo/backend/confect/analytics/capture.spec";
+import { ConsentPersistenceError } from "@repo/backend/confect/consents/schema";
 import {
   CheckoutSessionIoErrorWire,
   checkoutAdmissionArgsValidator,
@@ -15,8 +15,8 @@ export default GroupSpec.make().addFunction(
     error: () =>
       Schema.Union([
         CheckoutSessionIoErrorWire,
-        ConsentPersistenceErrorWire,
-        ProductAnalyticsCaptureErrorWire,
+        ConsentPersistenceError,
+        ProductAnalyticsCaptureError,
       ]),
   })
 );

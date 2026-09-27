@@ -1,28 +1,22 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { decodeArtifactJson } from "@repo/backend/confect/contentRelease/parse";
+import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import {
   TryoutHistoryError,
   type TryoutHistoryRequest,
 } from "@repo/backend/confect/tryouts/runtime/history/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { Effect, flow } from "effect";
+import { Effect } from "effect";
 
 type TryoutHistorySelector = TryoutHistoryRequest["selectors"][number];
 
 /** Resolves exact frozen membership and section access without parsing old rows. */
 export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
-  function* (
-    ctx: QueryCtx,
-    attempt: Doc<"tryoutAttempts">,
-    selector: TryoutHistorySelector
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (attempt: Docs["tryoutAttempts"], selector: TryoutHistorySelector) {
+    const database = yield* DatabaseReader;
     if (
-      selector.appLocale !== attempt.appLocale ||
       selector.bundleHash !== attempt.tryoutBundleHash ||
       selector.snapshotId !== attempt.tryoutSnapshotId ||
       selector.snapshotReleaseId !== attempt.snapshotReleaseId
@@ -44,8 +38,7 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
       )
       .pipe(
         Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie,
-        Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+        Effect.mapError(toTryoutRuntimeError)
       );
     if (!section) {
       return null;
@@ -60,7 +53,6 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
       );
     }
     const access = yield* readTryoutSectionContentAccess(
-      ctx,
       attempt,
       section.status
     );
@@ -80,8 +72,7 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
       )
       .pipe(
         Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie,
-        Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+        Effect.mapError(toTryoutRuntimeError)
       );
     const question = selector.delivery === "authenticated";
     if (
@@ -89,8 +80,6 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
       frozen.contentHash !== selector.contentHash ||
       frozen.sourcePath !== selector.sourcePath ||
       frozen.sourceRevision !== selector.sourceRevision ||
-      (question ? frozen.questionArtifactHash : frozen.answerArtifactHash) !==
-        selector.artifactHash ||
       (question ? frozen.questionContentKey : frozen.answerContentKey) !==
         selector.contentKey
     ) {
@@ -105,8 +94,7 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
       )
       .pipe(
         Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie,
-        Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+        Effect.mapError(toTryoutRuntimeError)
       );
     if (
       !retained ||
@@ -127,10 +115,17 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
         "Try-out placement lost its original snapshot membership."
       );
     }
+    const body = question
+      ? {
+          artifactHash: frozen.questionArtifactHash,
+          artifactLocale: retained.questionArtifactLocale,
+        }
+      : yield* readAttemptAnswer(attempt, frozen, selector.appLocale);
+    if (body.artifactHash !== selector.artifactHash) {
+      return null;
+    }
     return {
-      artifactLocale: question
-        ? retained.questionArtifactLocale
-        : retained.answerArtifactLocale,
+      artifactLocale: body.artifactLocale,
       frozen,
       selector,
     };
@@ -140,20 +135,18 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
 /** Returns an unchanged artifact only after its exact frozen body checks pass. */
 export const readHistoryArtifact = Effect.fn("tryouts.history.readArtifact")(
   function* (
-    ctx: QueryCtx,
     placement: NonNullable<
       Effect.Success<ReturnType<typeof readHistoryPlacement>>
     >
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const { artifactLocale, frozen, selector } = placement;
     const stored = yield* database
       .table("contentArtifacts")
       .get("by_artifactHash", selector.artifactHash)
       .pipe(
         Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie,
-        Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+        Effect.mapError(toTryoutRuntimeError)
       );
     if (!stored) {
       return yield* historyIntegrity("Try-out placement lost its signed body.");

@@ -7,45 +7,56 @@ import {
   agentOptionsResponse,
   problemResponse,
 } from "@repo/backend/confect/routes/agent/response";
-import {
-  type AgentApp,
-  runMeteredRequest,
-} from "@repo/backend/confect/routes/agent/runtime";
+import { runMeteredRequest } from "@repo/backend/confect/routes/agent/runtime";
+import { RequestIdentity } from "@repo/backend/confect/routes/middleware/identity";
 import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/agent/constants";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { Effect, Option } from "effect";
-
-/** Registers the canonical content read and its matching preflight. */
-export function registerAgentContentRoute(api: AgentApp) {
-  api.get("/content", (context) =>
-    runMeteredRequest(
-      context.env,
-      context.req.raw,
-      context.get("requestId"),
-      readContentInput(new URL(context.req.url)).pipe(
-        Effect.flatMap((ref) =>
-          decodeAgentInput(
-            NakafaAgentContentRefInputSchema,
-            ref,
-            "Invalid Nakafa content reference."
+import {
+  HttpRouter,
+  HttpServerRequest,
+  HttpServerResponse,
+} from "effect/unstable/http";
+/** Serves the bounded public content contract through native Confect services. */
+export const contentRoutes = [
+  HttpRouter.route(
+    "GET",
+    "/content",
+    Effect.gen(function* () {
+      const request = yield* HttpServerRequest.toWeb(
+        yield* HttpServerRequest.HttpServerRequest
+      );
+      const requestId = yield* RequestIdentity;
+      return HttpServerResponse.fromWeb(
+        yield* runMeteredRequest(
+          request,
+          requestId,
+          readContentInput(new URL(request.url)).pipe(
+            Effect.flatMap((ref) =>
+              decodeAgentInput(
+                NakafaAgentContentRefInputSchema,
+                ref,
+                "Invalid Nakafa content reference."
+              )
+            ),
+            Effect.flatMap((ref) => getNakafaContent(ref)),
+            Effect.map(
+              Option.match({
+                onNone: () => contentNotFoundResponse(request, requestId),
+                onSome: agentJsonResponse,
+              })
+            )
           )
-        ),
-        Effect.flatMap((ref) => getNakafaContent(context.env, ref)),
-        Effect.map(
-          Option.match({
-            onNone: () =>
-              contentNotFoundResponse(
-                context.req.raw,
-                context.get("requestId")
-              ),
-            onSome: agentJsonResponse,
-          })
         )
-      )
-    )
-  );
-  api.options("/content", () => agentOptionsResponse());
-}
+      );
+    })
+  ),
+  HttpRouter.route(
+    "OPTIONS",
+    "/content",
+    HttpServerResponse.fromWeb(agentOptionsResponse())
+  ),
+];
 
 /** Returns a stable missing-content problem. */
 function contentNotFoundResponse(request: Request, requestId: string) {

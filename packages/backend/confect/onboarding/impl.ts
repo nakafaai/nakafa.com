@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { activateWelcomeIntent } from "@repo/backend/confect/emails/welcome/impl";
 import { setPreferredCurriculumProgram } from "@repo/backend/confect/learningPreferences/impl";
 import { readCurriculumProgram } from "@repo/backend/confect/learningPreferences/program";
@@ -21,15 +24,10 @@ import {
   toOnboardingProfile,
   toOnboardingStatus,
 } from "@repo/backend/confect/onboarding/status";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
-import { Clock, Effect, flow, type Schema } from "effect";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Clock, Effect, type Schema } from "effect";
 
 type OnboardingAnswer = Schema.Schema.Type<typeof onboardingAnswerValidator>;
-type OnboardingCtx = MutationCtx | QueryCtx;
 const onboardingPersistenceFailedMessage =
   "Unable to read or persist onboarding progress.";
 /** Maps unknown database failures into the stable onboarding contract. */
@@ -51,15 +49,15 @@ function toOnboardingCurriculumError() {
 /** Reads one user's resumable onboarding profile. */
 export const readOnboardingProfileByUserId = Effect.fn(
   "onboarding.readProfileByUserId"
-)(function* (ctx: OnboardingCtx, userId: Id<"users">) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (userId: Id<"users">) {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("onboardingProfiles")
     .get("by_userId", userId)
     .pipe(
       Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-      Effect.orDie,
-      Effect.catchDefect(flow(toOnboardingPersistenceError, Effect.fail))
+      Effect.mapError(toOnboardingPersistenceError),
+      Effect.catchDefect(() => Effect.fail(toOnboardingPersistenceError()))
     );
 });
 
@@ -82,11 +80,10 @@ function answerFields(answer: OnboardingAnswer) {
 
 /** Records the first authoritative decision requiring user onboarding. */
 export const admitOnboarding = Effect.fn("onboarding.admit")(function* (
-  ctx: MutationCtx,
-  user: Pick<Doc<"users">, "_id" | "role">
+  user: Pick<Docs["users"], "_id" | "role">
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const profile = yield* readOnboardingProfileByUserId(ctx, user._id);
+  const writer = yield* DatabaseWriter;
+  const profile = yield* readOnboardingProfileByUserId(user._id);
   const status = toOnboardingStatus(user, profile);
   if (!status.isRequired || profile?.admittedAt !== undefined) {
     return status;
@@ -99,8 +96,8 @@ export const admitOnboarding = Effect.fn("onboarding.admit")(function* (
         admittedAt: now,
       })
       .pipe(
-        Effect.orDie,
-        Effect.catchDefect(flow(toOnboardingPersistenceError, Effect.fail))
+        Effect.mapError(toOnboardingPersistenceError),
+        Effect.catchDefect(() => Effect.fail(toOnboardingPersistenceError()))
       );
   } else {
     yield* writer
@@ -111,19 +108,19 @@ export const admitOnboarding = Effect.fn("onboarding.admit")(function* (
         userId: user._id,
       })
       .pipe(
-        Effect.orDie,
-        Effect.catchDefect(flow(toOnboardingPersistenceError, Effect.fail))
+        Effect.mapError(toOnboardingPersistenceError),
+        Effect.catchDefect(() => Effect.fail(toOnboardingPersistenceError()))
       );
   }
-  const admittedProfile = yield* readOnboardingProfileByUserId(ctx, user._id);
+  const admittedProfile = yield* readOnboardingProfileByUserId(user._id);
   return toOnboardingStatus(user, admittedProfile);
 });
 
 /** Saves one draft answer without applying user settings early. */
 export const saveOnboardingAnswer = Effect.fn("onboarding.saveAnswer")(
-  function* (ctx: MutationCtx, userId: Id<"users">, answer: OnboardingAnswer) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const current = yield* readOnboardingProfileByUserId(ctx, userId);
+  function* (userId: Id<"users">, answer: OnboardingAnswer) {
+    const writer = yield* DatabaseWriter;
+    const current = yield* readOnboardingProfileByUserId(userId);
     if (current?.completedAt !== undefined) {
       return yield* new OnboardingProfileError({
         code: onboardingAlreadyCompleteCode,
@@ -142,8 +139,8 @@ export const saveOnboardingAnswer = Effect.fn("onboarding.saveAnswer")(
         .table("onboardingProfiles")
         .patch(current._id, values)
         .pipe(
-          Effect.orDie,
-          Effect.catchDefect(flow(toOnboardingPersistenceError, Effect.fail))
+          Effect.mapError(toOnboardingPersistenceError),
+          Effect.catchDefect(() => Effect.fail(toOnboardingPersistenceError()))
         );
     } else {
       yield* writer
@@ -153,8 +150,8 @@ export const saveOnboardingAnswer = Effect.fn("onboarding.saveAnswer")(
           userId,
         })
         .pipe(
-          Effect.orDie,
-          Effect.catchDefect(flow(toOnboardingPersistenceError, Effect.fail))
+          Effect.mapError(toOnboardingPersistenceError),
+          Effect.catchDefect(() => Effect.fail(toOnboardingPersistenceError()))
         );
     }
     return toOnboardingProfile({
@@ -166,12 +163,11 @@ export const saveOnboardingAnswer = Effect.fn("onboarding.saveAnswer")(
 
 /** Applies every onboarding answer and returns the first app destination. */
 export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
-  ctx: MutationCtx,
   userId: Id<"users">,
   answers: OnboardingCompletion
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const profile = yield* readOnboardingProfileByUserId(ctx, userId);
+  const writer = yield* DatabaseWriter;
+  const profile = yield* readOnboardingProfileByUserId(userId);
   if (profile?.completedAt !== undefined) {
     return yield* new OnboardingProfileError({
       code: onboardingAlreadyCompleteCode,
@@ -180,7 +176,6 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
   }
   const defaults = getOnboardingRegionDefaults(answers.region);
   const curriculum = yield* readCurriculumProgram(
-    ctx,
     defaults.locale,
     defaults.curriculumProgramKey
   ).pipe(Effect.mapError(toOnboardingCurriculumError));
@@ -197,11 +192,10 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
       role: answers.role,
     })
     .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toOnboardingPersistenceError, Effect.fail))
+      Effect.mapError(toOnboardingPersistenceError),
+      Effect.catchDefect(() => Effect.fail(toOnboardingPersistenceError()))
     );
   yield* setPreferredCurriculumProgram({
-    ctx,
     now,
     programKey: curriculum.key,
     userId,
@@ -217,8 +211,8 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
         updatedAt: now,
       })
       .pipe(
-        Effect.orDie,
-        Effect.catchDefect(flow(toOnboardingPersistenceError, Effect.fail))
+        Effect.mapError(toOnboardingPersistenceError),
+        Effect.catchDefect(() => Effect.fail(toOnboardingPersistenceError()))
       );
   } else {
     yield* writer
@@ -232,11 +226,11 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
         userId,
       })
       .pipe(
-        Effect.orDie,
-        Effect.catchDefect(flow(toOnboardingPersistenceError, Effect.fail))
+        Effect.mapError(toOnboardingPersistenceError),
+        Effect.catchDefect(() => Effect.fail(toOnboardingPersistenceError()))
       );
   }
-  yield* activateWelcomeIntent(ctx, userId, defaults.locale).pipe(
+  yield* activateWelcomeIntent(userId, defaults.locale).pipe(
     Effect.mapError(toOnboardingPersistenceError)
   );
   return {

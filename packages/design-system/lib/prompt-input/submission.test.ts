@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
 import {
   PromptInputCompletionError,
+  type PromptInputMessage,
   PromptInputSubmitError,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
@@ -9,6 +10,7 @@ import { Effect } from "effect";
 
 function createPromptFile(): PromptInputFile {
   return {
+    file: new File(["lesson"], "lesson.txt", { type: "text/plain" }),
     filename: "lesson.txt",
     id: "attachment-1",
     mediaType: "text/plain",
@@ -20,8 +22,8 @@ function createPromptFile(): PromptInputFile {
 describe("prompt input submission", () => {
   it.effect("submits synchronously and applies success state", () =>
     Effect.gen(function* () {
-      const onSubmit = vi.fn();
-      const onSuccess = vi.fn();
+      const onSubmit = vi.fn(() => true);
+      const onSuccess = vi.fn(() => true);
 
       yield* submitPromptInput({
         event: "submit-event",
@@ -33,14 +35,7 @@ describe("prompt input submission", () => {
 
       expect(onSubmit).toHaveBeenCalledWith(
         {
-          files: [
-            {
-              filename: "lesson.txt",
-              mediaType: "text/plain",
-              type: "file",
-              url: "https://nakafa.test/lesson.txt",
-            },
-          ],
+          files: [createPromptFile()],
           text: "Explain this lesson.",
         },
         "submit-event"
@@ -59,6 +54,7 @@ describe("prompt input submission", () => {
         onSubmit: () =>
           Promise.resolve().then(() => {
             order.push("submitted");
+            return true;
           }),
         onSuccess: () => {
           order.push("completed");
@@ -70,10 +66,30 @@ describe("prompt input submission", () => {
     })
   );
 
+  it.effect("retains original files when a consumer rejects admission", () =>
+    Effect.gen(function* () {
+      const file = createPromptFile();
+      const onSuccess = vi.fn();
+      const onSubmit = vi.fn((message: PromptInputMessage) => {
+        expect(message.files?.[0]?.file).toBe(file.file);
+        return Promise.resolve(false);
+      });
+      yield* submitPromptInput({
+        event: "submit-event",
+        files: [file],
+        text: "Hello",
+        onSubmit,
+        onSuccess,
+      });
+
+      expect(onSuccess).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("types synchronous consumer failures", () =>
     Effect.gen(function* () {
       const cause = new Error("Submit failed immediately.");
-      const onSuccess = vi.fn();
+      const onSuccess = vi.fn(() => true);
       const error = yield* submitPromptInput({
         event: "submit-event",
         files: [],
@@ -93,7 +109,7 @@ describe("prompt input submission", () => {
   it.effect("types asynchronous consumer failures", () =>
     Effect.gen(function* () {
       const cause = new Error("Submit promise rejected.");
-      const onSuccess = vi.fn();
+      const onSuccess = vi.fn(() => true);
       const error = yield* submitPromptInput({
         event: "submit-event",
         files: [],
@@ -114,7 +130,7 @@ describe("prompt input submission", () => {
       const error = yield* submitPromptInput({
         event: "submit-event",
         files: [],
-        onSubmit: vi.fn(),
+        onSubmit: vi.fn(() => true),
         onSuccess: () => {
           throw cause;
         },

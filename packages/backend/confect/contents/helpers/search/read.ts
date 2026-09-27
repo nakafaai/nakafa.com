@@ -8,7 +8,6 @@ import { readSignedQuranSearchDocuments } from "@repo/backend/confect/contents/h
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { readSignedTryoutSearchDocuments } from "@repo/backend/confect/contents/helpers/search/tryout";
 import type { NakafaSection } from "@repo/backend/confect/lib/validators/contents";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, type Schema } from "effect";
 
 type ContentSearchInput = Schema.Schema.Type<
@@ -19,13 +18,12 @@ type ContentSearchInput = Schema.Schema.Type<
 export const readContentSearchDocuments = Effect.fn(
   "contents.search.readDocuments"
 )(function* (
-  ctx: QueryCtx,
   args: ContentSearchInput,
   queryTexts: readonly string[],
   scanLimit: number
 ) {
   const owner = readsPublishedSection(args.section)
-    ? yield* loadSearchOwner(ctx)
+    ? yield* loadSearchOwner()
     : null;
   const publishedFamilies = getPublishedSearchFamilies(owner, args.section);
   const { published, quran, tryout } = yield* Effect.all(
@@ -33,7 +31,6 @@ export const readContentSearchDocuments = Effect.fn(
       published:
         owner && publishedFamilies.length > 0
           ? readPublishedSearchDocuments(
-              ctx,
               args,
               queryTexts,
               scanLimit,
@@ -42,10 +39,10 @@ export const readContentSearchDocuments = Effect.fn(
             )
           : Effect.succeed([]),
       quran: readsSection(args.section, "quran")
-        ? readSignedQuranSearchDocuments(ctx, args, queryTexts, scanLimit)
+        ? readSignedQuranSearchDocuments(args, queryTexts, scanLimit)
         : Effect.succeed([]),
       tryout: readsSection(args.section, "tryout")
-        ? readSignedTryoutSearchDocuments(ctx, args, queryTexts, scanLimit)
+        ? readSignedTryoutSearchDocuments(args, queryTexts, scanLimit)
         : Effect.succeed([]),
     },
     {

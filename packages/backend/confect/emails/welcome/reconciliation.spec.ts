@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { WelcomeIntentErrorWire } from "@repo/backend/confect/emails/welcome/spec";
+import { WelcomeIntentError } from "@repo/backend/confect/emails/welcome/spec";
 import { Schema } from "effect";
 export const welcomeIntentReconciliationPhaseValidator = Schema.Literals([
   "scheduled",
@@ -13,6 +13,6 @@ export default GroupSpec.make().addFunction(
       phase: welcomeIntentReconciliationPhaseValidator,
     }),
     returns: () => Schema.Null,
-    error: () => WelcomeIntentErrorWire,
+    error: () => WelcomeIntentError,
   })
 );

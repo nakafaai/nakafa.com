@@ -1,3 +1,4 @@
+import type { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
@@ -8,10 +9,9 @@ import {
   toQuranInterpretationRequestError,
 } from "@repo/backend/client/quran/interpretation";
 import { QuranPublicationError } from "@repo/backend/client/quran/publication";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type refs from "@repo/backend/confect/_generated/refs";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { makeQuranTafsirProjection } from "@repo/backend/test/quran/rows";
-import type { FunctionReturnType } from "convex/server";
-import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
 const source = {
@@ -22,8 +22,8 @@ const source = {
   sourceOrigin: { kind: "git" as const, sha: "c".repeat(40) },
   sourceRevision: "c".repeat(40),
 };
-type QuranInterpretationResult = FunctionReturnType<
-  typeof api.contentRelease.quran.tafsir
+type QuranInterpretationResult = Ref.Returns<
+  typeof refs.public.contentRelease.quran.tafsir
 >;
 const activeInterpretation = {
   ...source,
@@ -122,7 +122,7 @@ describe("signed Quran interpretation decoder", () => {
   );
   it("recognizes only a typed snapshot conflict request failure", () => {
     const conflict = toQuranInterpretationRequestError(
-      new ConvexError({
+      new ReleaseError({
         code: "CONTENT_RELEASE_CONFLICT",
         message: "The active Quran snapshot changed.",
       })
@@ -131,13 +131,16 @@ describe("signed Quran interpretation decoder", () => {
     expect(isQuranSnapshotConflict(conflict)).toBe(true);
     for (const error of [
       new Error("Network error"),
-      new ConvexError({ code: "CONTENT_RELEASE_CONFLICT" }),
+      { code: "CONTENT_RELEASE_CONFLICT" },
       toQuranInterpretationRequestError(new Error("Network error")),
-      toQuranInterpretationRequestError(new ConvexError("plain")),
-      toQuranInterpretationRequestError(new ConvexError(null)),
-      toQuranInterpretationRequestError(new ConvexError({})),
+      toQuranInterpretationRequestError("plain"),
+      toQuranInterpretationRequestError(null),
+      toQuranInterpretationRequestError({}),
       toQuranInterpretationRequestError(
-        new ConvexError({ code: "CONTENT_RELEASE_INVALID_REQUEST" })
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INVALID_REQUEST",
+          message: "Invalid request",
+        })
       ),
     ]) {
       expect(isQuranSnapshotConflict(error)).toBe(false);

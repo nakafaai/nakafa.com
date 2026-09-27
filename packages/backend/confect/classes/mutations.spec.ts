@@ -1,16 +1,16 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ClassAccessFailure } from "@repo/backend/confect/classes/access/spec";
+import { ClassAccessError } from "@repo/backend/confect/classes/access/spec";
 import {
   schoolClassImageValidator,
   schoolClassVisibilityValidator,
 } from "@repo/backend/confect/classes/schema";
 import { classJoinMutationResultValidator } from "@repo/backend/confect/classes/validators";
-import { failureWire } from "@repo/backend/confect/failure";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
-import { InvitationFailure } from "@repo/backend/confect/schools/invitations/spec";
-import { PermissionDeniedWire } from "@repo/backend/confect/schools/permission/spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
+import { InvitationError } from "@repo/backend/confect/schools/invitations/spec";
+import { PermissionDenied } from "@repo/backend/confect/schools/permission/spec";
 import { Schema } from "effect";
 export class ClassMutationError extends Schema.TaggedError<ClassMutationError>()(
   "ClassMutationError",
@@ -24,7 +24,6 @@ export class ClassMutationError extends Schema.TaggedError<ClassMutationError>()
     message: Schema.String,
   }
 ) {}
-export const ClassMutationFailure = failureWire(ClassMutationError);
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
@@ -37,8 +36,10 @@ export default GroupSpec.make()
         visibility: schoolClassVisibilityValidator,
       }),
       returns: () => IdSchema("schoolClasses"),
-      error: () => Schema.Union([AuthFailure, PermissionDeniedWire]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, PermissionDenied]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -50,11 +51,13 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AuthFailure,
-          ClassMutationFailure,
-          ClassAccessFailure,
-          InvitationFailure,
+          ClassMutationError,
+          ClassAccessError,
+          InvitationError,
         ]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -65,8 +68,10 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Null,
       error: () =>
-        Schema.Union([AuthFailure, PermissionDeniedWire, ClassAccessFailure]),
-    }).middleware(Atomic)
+        Schema.Union([AuthFailure, PermissionDenied, ClassAccessError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -78,11 +83,13 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AuthFailure,
-          ClassAccessFailure,
-          ClassMutationFailure,
-          InvitationFailure,
+          ClassAccessError,
+          ClassMutationError,
+          InvitationError,
         ]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -95,9 +102,11 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AuthFailure,
-          PermissionDeniedWire,
-          ClassAccessFailure,
-          ClassMutationFailure,
+          PermissionDenied,
+          ClassAccessError,
+          ClassMutationError,
         ]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   );

@@ -1,7 +1,6 @@
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
-import { failureWire } from "@repo/backend/confect/failure";
 import { publicTryoutSetValidator } from "@repo/backend/confect/tryouts/queries/catalogModel";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
@@ -67,6 +66,3 @@ export class PublishedSetPaginationError extends Schema.TaggedError<PublishedSet
 ) {}
 /** Paginates one signed list and invalidates cursors when its rows move. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const PublishedSetPaginationErrorWire = failureWire(
-  PublishedSetPaginationError
-);

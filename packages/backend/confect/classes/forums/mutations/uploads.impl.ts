@@ -4,7 +4,6 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx as MutationCtxService,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
@@ -25,6 +24,7 @@ import { createForumAttachmentUploadUrl } from "@repo/backend/confect/classes/fo
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/confect/classes/forums/constants";
 import spec from "@repo/backend/confect/classes/forums/mutations/uploads.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { generateId } from "@repo/backend/confect/utils/id";
 import { Clock, DateTime, Effect, Layer } from "effect";
 
@@ -39,14 +39,9 @@ const generateUploadUrl = FunctionImpl.make(
     function* (args) {
       const writer = yield* DatabaseWriter;
       const database = yield* DatabaseReader;
-      const ctx = yield* MutationCtxService;
-      const user = yield* requireAuth(ctx);
+      const user = yield* requireAuth();
       const userId = user.appUser._id;
-      const { forum } = yield* loadOpenForumWithAccess(
-        ctx,
-        args.forumId,
-        userId
-      );
+      const { forum } = yield* loadOpenForumWithAccess(args.forumId, userId);
       const activePendingUploads = yield* database
         .table("schoolClassForumPendingUploads")
         .index("by_forumId_and_uploadedBy", (q) =>
@@ -100,7 +95,6 @@ const saveForumUpload = FunctionImpl.make(
     function* (args) {
       const writer = yield* DatabaseWriter;
       const database = yield* DatabaseReader;
-      const ctx = yield* MutationCtxService;
       const upload = yield* database
         .table("schoolClassForumPendingUploads")
         .get(args.uploadId)
@@ -129,7 +123,7 @@ const saveForumUpload = FunctionImpl.make(
             message: "Forum post attachment upload not found.",
           });
         }
-        yield* deleteForumPendingUpload(ctx, upload);
+        yield* deleteForumPendingUpload(upload);
         return args.uploadId;
       }
       if (upload.storageId && !hasBoundStorage) {
@@ -138,7 +132,7 @@ const saveForumUpload = FunctionImpl.make(
           message: "Forum post attachment upload has already been finalized.",
         });
       }
-      const user = yield* requireAuth(ctx);
+      const user = yield* requireAuth();
       const userId = user.appUser._id;
       if (upload.uploadedBy !== userId) {
         return yield* new ForumAttachmentError({
@@ -146,7 +140,7 @@ const saveForumUpload = FunctionImpl.make(
           message: "Forum post attachment upload not found.",
         });
       }
-      yield* loadOpenForumWithAccess(ctx, upload.forumId, userId);
+      yield* loadOpenForumWithAccess(upload.forumId, userId);
       if (upload.mimeType !== args.type || upload.size !== args.size) {
         return yield* new ForumAttachmentError({
           code: forumAttachmentMetadataMismatchCode,
@@ -159,11 +153,11 @@ const saveForumUpload = FunctionImpl.make(
         name: args.name,
         size: args.size,
       });
-      yield* validateStoredForumAttachmentMetadata(ctx, {
+      yield* validateStoredForumAttachmentMetadata({
         size: args.size,
         storageId: args.storageId,
       });
-      yield* validateForumAttachmentStorageClaim(ctx, {
+      yield* validateForumAttachmentStorageClaim({
         storageId: args.storageId,
         uploadId: args.uploadId,
       });
@@ -190,8 +184,7 @@ const discardForumUploads = FunctionImpl.make(
   Effect.fn("classes.forums.mutations.uploads.discardForumUploads")(
     function* (args) {
       const database = yield* DatabaseReader;
-      const ctx = yield* MutationCtxService;
-      const user = yield* requireAuth(ctx);
+      const user = yield* requireAuth();
       const userId = user.appUser._id;
       for (const uploadId of args.uploadIds) {
         const upload = yield* database
@@ -204,7 +197,7 @@ const discardForumUploads = FunctionImpl.make(
         if (!upload || upload.uploadedBy !== userId) {
           continue;
         }
-        yield* deleteForumPendingUpload(ctx, upload);
+        yield* deleteForumPendingUpload(upload);
       }
       return null;
     }
@@ -215,5 +208,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(saveForumUpload),
   Layer.provide(discardForumUploads),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

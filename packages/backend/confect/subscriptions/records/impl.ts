@@ -1,13 +1,14 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import {
   type SubscriptionRecord,
   SubscriptionRecordIoError,
   subscriptionRecordIoFailedCode,
 } from "@repo/backend/confect/subscriptions/records/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
 
 /** Maps thrown Convex IO failures into the subscription record error channel. */
@@ -21,8 +22,8 @@ function toSubscriptionRecordIoError(error: unknown) {
 /** Loads one stored subscription by its Polar subscription ID. */
 const loadSubscriptionByPolarId = Effect.fn(
   "subscriptions.records.loadSubscriptionByPolarId"
-)(function* (db: MutationCtx["db"], subscriptionId: SubscriptionRecord["id"]) {
-  const database = DatabaseReader.make(databaseSchema, db);
+)(function* (subscriptionId: SubscriptionRecord["id"]) {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("subscriptions")
     .get("by_subscriptionId", subscriptionId)
@@ -35,8 +36,8 @@ const loadSubscriptionByPolarId = Effect.fn(
 /** Loads the terminal customer-deletion marker for a Polar customer ID. */
 const loadCustomerDeletionTombstone = Effect.fn(
   "subscriptions.records.loadCustomerDeletionTombstone"
-)(function* (db: MutationCtx["db"], polarCustomerId: string) {
-  const database = DatabaseReader.make(databaseSchema, db);
+)(function* (polarCustomerId: string) {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("customerDeletionTombstones")
     .get("by_polarCustomerId", polarCustomerId)
@@ -52,13 +53,11 @@ const loadCustomerDeletionTombstone = Effect.fn(
 const discardSubscriptionForDeletedCustomer = Effect.fn(
   "subscriptions.records.discardSubscriptionForDeletedCustomer"
 )(function* (
-  ctx: MutationCtx,
   subscription: SubscriptionRecord,
-  existingSubscription: Doc<"subscriptions"> | null
+  existingSubscription: Docs["subscriptions"] | null
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const writer = yield* DatabaseWriter;
   const tombstone = yield* loadCustomerDeletionTombstone(
-    ctx.db,
     subscription.customerId
   );
   if (!tombstone) {
@@ -81,15 +80,13 @@ const discardSubscriptionForDeletedCustomer = Effect.fn(
 export const createSubscriptionRecord = Effect.fn(
   "subscriptions.records.createSubscriptionRecord"
 )(
-  function* (ctx: MutationCtx, subscription: SubscriptionRecord) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (subscription: SubscriptionRecord) {
+    const writer = yield* DatabaseWriter;
     const existingSubscription = yield* loadSubscriptionByPolarId(
-      ctx.db,
       subscription.id
     );
     if (
       yield* discardSubscriptionForDeletedCustomer(
-        ctx,
         subscription,
         existingSubscription
       )
@@ -118,15 +115,13 @@ export const createSubscriptionRecord = Effect.fn(
 export const updateSubscriptionRecord = Effect.fn(
   "subscriptions.records.updateSubscriptionRecord"
 )(
-  function* (ctx: MutationCtx, subscription: SubscriptionRecord) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (subscription: SubscriptionRecord) {
+    const writer = yield* DatabaseWriter;
     const existingSubscription = yield* loadSubscriptionByPolarId(
-      ctx.db,
       subscription.id
     );
     if (
       yield* discardSubscriptionForDeletedCustomer(
-        ctx,
         subscription,
         existingSubscription
       )

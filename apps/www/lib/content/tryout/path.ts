@@ -1,22 +1,19 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
-
-import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs } from "convex/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 
-type TryoutLocalizedPathArgs = FunctionArgs<
-  typeof api.tryouts.queries.catalog.getLocalizedPath
+type TryoutLocalizedPathArgs = Ref.Args<
+  typeof refs.public.tryouts.queries.catalog.getLocalizedPath
 >;
 
 /** Resolves one signed try-out route to its exact localized counterpart. */
 export const readPublishedTryoutLocalizedPath = Effect.fn(
   "www.tryouts.readLocalizedPath"
 )(function* (args: TryoutLocalizedPathArgs) {
-  return yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.tryouts.queries.catalog.getLocalizedPath,
-    args
-  );
+  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.tryouts.queries.catalog.getLocalizedPath, args)
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
 });

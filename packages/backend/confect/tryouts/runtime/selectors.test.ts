@@ -1,5 +1,6 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { assert, beforeEach, describe, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
@@ -9,12 +10,12 @@ import { Effect } from "effect";
 beforeEach(() => {
   vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
 });
-
 describe("tryouts/runtime/selectors", () => {
   it.effect(
     "projects immutable question selectors and only authorized answers",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* Effect.promise(() =>
           t.mutation((ctx) =>
@@ -38,15 +39,18 @@ describe("tryouts/runtime/selectors", () => {
               );
               assert.isNotNull(attempt);
               assert.isNotNull(placement);
-              return runConvexProgram(
+              return Effect.runPromiseWith(runtimeServices)(
                 projectTryoutSignedContent({
                   answers,
                   appLocale: "id",
                   attempt,
-                  ctx,
                   placements: [placement],
                   totalQuestions: 1,
-                })
+                }).pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               );
             })
           );
@@ -58,11 +62,11 @@ describe("tryouts/runtime/selectors", () => {
         }
       })
   );
-
   it.effect(
-    "rejects incomplete frozen identities and mismatched locale or placement count",
+    "rejects incomplete frozen identities and mismatched placement count",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* Effect.promise(() =>
           t.mutation((ctx) =>
@@ -79,7 +83,6 @@ describe("tryouts/runtime/selectors", () => {
           "questionArtifactHash",
           "questionContentKey",
           "sectionKey",
-          "locale",
           "placements",
         ]) {
           const result = yield* Effect.promise(() =>
@@ -94,16 +97,20 @@ describe("tryouts/runtime/selectors", () => {
               );
               assert.isNotNull(attempt);
               assert.isNotNull(placement);
-              return runConvexProgram(
+              return Effect.runPromiseWith(runtimeServices)(
                 projectTryoutSignedContent({
                   answers: true,
-                  appLocale: field === "locale" ? "en" : "id",
+                  appLocale: "id",
                   attempt,
-                  ctx,
                   placements:
                     field === "placements"
                       ? []
-                      : [{ ...placement, [field]: "" }],
+                      : [
+                          {
+                            ...placement,
+                            [field]: "",
+                          },
+                        ],
                   totalQuestions: 1,
                 }).pipe(
                   Effect.match({
@@ -112,7 +119,10 @@ describe("tryouts/runtime/selectors", () => {
                       tag: error._tag,
                     }),
                     onSuccess: () => null,
-                  })
+                  }),
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
                 )
               );
             })

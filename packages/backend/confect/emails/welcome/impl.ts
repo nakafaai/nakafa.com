@@ -1,6 +1,11 @@
 import type { WorkflowId } from "@convex-dev/workflow";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+} from "@repo/backend/confect/_generated/services";
+import {
   toUserCleanupError,
   tryUserCleanup,
   USER_CLEANUP_FAILED_CODE,
@@ -16,7 +21,6 @@ import {
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
 export function toWelcomeIntentError() {
   return new WelcomeIntentError({
@@ -36,18 +40,20 @@ export function deferWelcomeIntent() {
     message: "Welcome email is deferred during account deletion preparation.",
   });
 }
-function readWelcomeIntentByUserId(ctx: MutationCtx, userId: Id<"users">) {
-  return DatabaseReader.make(databaseSchema, ctx.db)
-    .table("welcomeEmailIntents")
-    .get("by_userId", userId)
-    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
-}
+const readWelcomeIntentByUserId = Effect.fn("emails.welcome.readIntent")(
+  function* (userId: Id<"users">) {
+    return yield* (yield* DatabaseReader)
+      .table("welcomeEmailIntents")
+      .get("by_userId", userId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+  }
+);
 
 /** Declares the only welcome-email cohort intent when the app user is created. */
 export const declareWelcomeIntent = Effect.fn("emails.welcome.declareIntent")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const existing = yield* readWelcomeIntentByUserId(ctx, userId).pipe(
+  function* (userId: Id<"users">) {
+    const writer = yield* DatabaseWriter;
+    const existing = yield* readWelcomeIntentByUserId(userId).pipe(
       Effect.mapError(toWelcomeIntentError)
     );
     if (existing) {
@@ -68,20 +74,11 @@ export const declareWelcomeIntent = Effect.fn("emails.welcome.declareIntent")(
  * Activates only an intent declared at user creation. Historical accounts are
  * not backfilled because their legacy welcome delivery cannot be proven.
  */
-export const activateWelcomeIntent: (
-  ctx: MutationCtx,
-  userId: Id<"users">,
-  locale: ActiveAppLocaleCode
-) => Effect.Effect<boolean, WelcomeIntentError> = Effect.fn(
-  "emails.welcome.activateIntent"
-)(
-  function* (
-    ctx: MutationCtx,
-    userId: Id<"users">,
-    locale: ActiveAppLocaleCode
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const intent = yield* readWelcomeIntentByUserId(ctx, userId).pipe(
+export const activateWelcomeIntent = Effect.fn("emails.welcome.activateIntent")(
+  function* (userId: Id<"users">, locale: ActiveAppLocaleCode) {
+    const ctx = yield* MutationCtxService;
+    const writer = yield* DatabaseWriter;
+    const intent = yield* readWelcomeIntentByUserId(userId).pipe(
       Effect.mapError(toWelcomeIntentError)
     );
     if (intent?.phase !== "awaiting-onboarding") {
@@ -114,15 +111,11 @@ export const activateWelcomeIntent: (
 );
 
 /** Cancels pending work and erases the app-owned intent during account deletion. */
-export const removeWelcomeIntent: (
-  ctx: MutationCtx,
-  userId: Id<"users">
-) => Effect.Effect<void, UserCleanupError> = Effect.fn(
-  "emails.welcome.removeIntent"
-)(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const intent = yield* readWelcomeIntentByUserId(ctx, userId).pipe(
+export const removeWelcomeIntent = Effect.fn("emails.welcome.removeIntent")(
+  function* (userId: Id<"users">) {
+    const ctx = yield* MutationCtxService;
+    const writer = yield* DatabaseWriter;
+    const intent = yield* readWelcomeIntentByUserId(userId).pipe(
       Effect.mapError(toUserCleanupError)
     );
     if (!intent) {
@@ -160,6 +153,3 @@ export const removeWelcomeIntent: (
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
-
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";

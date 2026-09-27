@@ -1,7 +1,10 @@
 "use node";
 
-import { MutationRunner, QueryRunner } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type {
@@ -9,7 +12,6 @@ import type {
   ModelBuildRestartResult,
   ModelBuildStatus,
 } from "@repo/backend/confect/contentRelease/models/spec";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Context, Duration, Effect, Layer } from "effect";
 export type ModelBuildWaitPolicy = "observe" | "restart-failed-once";
 export interface ModelBuildCoordinatorService {
@@ -27,29 +29,26 @@ export class ModelBuildCoordinator extends Context.Service<
   ModelBuildCoordinatorService
 >()("@repo/backend/contentRelease/ModelBuildCoordinator") {}
 
-/** Binds one action context to the private model build functions. */
-export function makeModelBuildCoordinatorLive(ctx: ActionCtx) {
-  return Layer.succeed(ModelBuildCoordinator, {
-    restart: (args) =>
-      MutationRunner.MutationRunner.pipe(
-        Effect.flatMap((runMutation) =>
-          runMutation(refs.internal.contentRelease.models.restart, args)
-        ),
-        Effect.provide(MutationRunner.layer(ctx.runMutation)),
-        Effect.catchTag("SchemaError", Effect.die)
+/** Resolves the private model-build functions through native Confect runners. */
+export const modelBuildCoordinatorLayer = Layer.effect(
+  ModelBuildCoordinator,
+  Effect.gen(function* () {
+    const runMutation = yield* MutationRunner;
+    const runQuery = yield* QueryRunner;
+    return ModelBuildCoordinator.of({
+      restart: Effect.fn("contentRelease.restartModelBuild")((args) =>
+        runMutation(refs.internal.contentRelease.models.restart, args).pipe(
+          Effect.catchTag("SchemaError", Effect.die)
+        )
       ),
-    status: (releaseId) =>
-      QueryRunner.QueryRunner.pipe(
-        Effect.flatMap((runQuery) =>
-          runQuery(refs.internal.contentRelease.models.status, {
-            releaseId,
-          })
-        ),
-        Effect.provide(QueryRunner.layer(ctx.runQuery)),
-        Effect.catchTag("SchemaError", Effect.die)
+      status: Effect.fn("contentRelease.readModelBuild")((releaseId) =>
+        runQuery(refs.internal.contentRelease.models.status, {
+          releaseId,
+        }).pipe(Effect.catchTag("SchemaError", Effect.die))
       ),
-  });
-}
+    });
+  })
+);
 
 /** Waits for actual readiness with at most one fenced failed-job restart. */
 export const waitForModelBuild: (

@@ -1,5 +1,5 @@
 import { learningPopularityWindowValues } from "@repo/backend/confect/contents/popularity";
-import { failureWire } from "@repo/backend/confect/failure";
+import { publicFailure } from "@repo/backend/confect/failure";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import {
   type TrendingSubject,
@@ -37,5 +37,4 @@ export class TrendingSubjectIoError extends Schema.TaggedError<TrendingSubjectIo
     message: Schema.String,
   }
 ) {}
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const TrendingSubjectIoErrorWire = failureWire(TrendingSubjectIoError);
+export const TrendingSubjectIoErrorWire = publicFailure(TrendingSubjectIoError);

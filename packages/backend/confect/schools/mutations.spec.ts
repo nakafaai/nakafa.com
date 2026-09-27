@@ -1,11 +1,12 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import {
-  SchoolCreateFailure,
-  SchoolReadFailure,
+  SchoolCreateError,
+  SchoolReadError,
 } from "@repo/backend/confect/schools/errors";
-import { InvitationFailure } from "@repo/backend/confect/schools/invitations/spec";
+import { InvitationError } from "@repo/backend/confect/schools/invitations/spec";
 import { schoolTypeValidator } from "@repo/backend/confect/schools/schema";
 import { schoolIdentityResultValidator } from "@repo/backend/confect/schools/validators";
 import { Schema } from "effect";
@@ -23,8 +24,10 @@ export default GroupSpec.make()
         type: schoolTypeValidator,
       }),
       returns: () => schoolIdentityResultValidator,
-      error: () => Schema.Union([AuthFailure, SchoolCreateFailure]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, SchoolCreateError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -34,6 +37,8 @@ export default GroupSpec.make()
       }),
       returns: () => schoolIdentityResultValidator,
       error: () =>
-        Schema.Union([AuthFailure, InvitationFailure, SchoolReadFailure]),
-    }).middleware(Atomic)
+        Schema.Union([AuthFailure, InvitationError, SchoolReadError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   );

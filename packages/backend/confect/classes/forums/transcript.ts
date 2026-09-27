@@ -1,17 +1,12 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { enrichForumPosts } from "@repo/backend/confect/classes/forums/posts";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 export const getForumReadState = Effect.fn(
   "classes.forums.transcript.getForumReadState"
-)(function* (
-  ctx: QueryCtx,
-  forumId: Id<"schoolClassForums">,
-  currentUserId: Id<"users">
-) {
-  return yield* DatabaseReader.make(databaseSchema, ctx.db)
+)(function* (forumId: Id<"schoolClassForums">, currentUserId: Id<"users">) {
+  return yield* (yield* DatabaseReader)
     .table("schoolClassForumReadStates")
     .get("by_forumId_and_userId", forumId, currentUserId)
     .pipe(
@@ -30,21 +25,18 @@ export const getForumReadState = Effect.fn(
  */
 export const createForumFeedPosts = Effect.fn(
   "classes.forums.transcript.createForumFeedPosts"
-)(function* (
-  ctx: QueryCtx,
-  {
-    currentUserId,
-    forumId,
-    posts,
-  }: {
-    currentUserId: Id<"users">;
-    forumId: Id<"schoolClassForums">;
-    posts: Doc<"schoolClassForumPosts">[];
-  }
-) {
+)(function* ({
+  currentUserId,
+  forumId,
+  posts,
+}: {
+  currentUserId: Id<"users">;
+  forumId: Id<"schoolClassForums">;
+  posts: Docs["schoolClassForumPosts"][];
+}) {
   const [enrichedPosts, readState] = yield* Effect.all([
-    enrichForumPosts(ctx, posts, currentUserId),
-    getForumReadState(ctx, forumId, currentUserId),
+    enrichForumPosts(posts, currentUserId),
+    getForumReadState(forumId, currentUserId),
   ]);
   const lastReadSequence = readState?.lastReadSequence ?? 0;
   return enrichedPosts.map((post) => ({

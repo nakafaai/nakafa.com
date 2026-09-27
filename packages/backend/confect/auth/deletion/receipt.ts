@@ -1,5 +1,7 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   toUserCleanupError,
   type UserCleanupError,
@@ -8,14 +10,7 @@ import {
   ACCOUNT_DELETION_ATTEMPT_RETENTION_MS,
   ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
-import {
-  type AccountDeletionAttemptStatus,
-  accountDeletionAttemptStatus,
-} from "@repo/backend/confect/auth/deletion/spec";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
+import { accountDeletionAttemptStatus } from "@repo/backend/confect/auth/deletion/spec";
 import { Clock, Effect, flow } from "effect";
 
 type AuthUserExists = (
@@ -26,15 +21,11 @@ type AuthUserExists = (
  * Resolves whether a browser attempt committed without trusting an auth error
  * as proof. Receipts survive the personal-data cleanup journal briefly.
  */
-export const getAccountDeletionAttemptStatusProgram: (
-  ctx: QueryCtx,
-  attemptId: string,
-  authUserExists: AuthUserExists
-) => Effect.Effect<AccountDeletionAttemptStatus, UserCleanupError> = Effect.fn(
+export const getAccountDeletionAttemptStatusProgram = Effect.fn(
   "auth.deletion.getAccountDeletionAttemptStatus"
 )(
-  function* (ctx: QueryCtx, attemptId: string, authUserExists: AuthUserExists) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (attemptId: string, authUserExists: AuthUserExists) {
+    const database = yield* DatabaseReader;
     const receipt = yield* database
       .table("accountDeletionReceipts")
       .get("by_attemptId", attemptId)
@@ -67,48 +58,34 @@ export const getAccountDeletionAttemptStatusProgram: (
 );
 
 /** Persists only the opaque browser attempt token after deletion commits. */
-export const recordAccountDeletionReceipt: (
-  ctx: MutationCtx,
-  attemptId: string | undefined,
-  committedAt: number
-) => Effect.Effect<void, UserCleanupError> = Effect.fn(
+export const recordAccountDeletionReceipt = Effect.fn(
   "auth.deletion.recordAccountDeletionReceipt"
-)(
-  function* (
-    ctx: MutationCtx,
-    attemptId: string | undefined,
-    committedAt: number
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    if (attemptId === undefined) {
-      return;
-    }
-    const receipt = yield* database
-      .table("accountDeletionReceipts")
-      .get("by_attemptId", attemptId)
-      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
-    if (receipt) {
-      return;
-    }
-    yield* writer.table("accountDeletionReceipts").insert({
-      attemptId,
-      committedAt,
-    });
-  },
-  Effect.orDie,
-  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-);
+)(function* (attemptId: string | undefined, committedAt: number) {
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  if (attemptId === undefined) {
+    return;
+  }
+  const receipt = yield* database
+    .table("accountDeletionReceipts")
+    .get("by_attemptId", attemptId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+  if (receipt) {
+    return;
+  }
+  yield* writer.table("accountDeletionReceipts").insert({
+    attemptId,
+    committedAt,
+  });
+}, Effect.mapError(toUserCleanupError));
 
 /** Deletes one bounded page of expired commit receipts. */
-export const sweepAccountDeletionReceiptsProgram: (
-  ctx: MutationCtx
-) => Effect.Effect<boolean, UserCleanupError> = Effect.fn(
+export const sweepAccountDeletionReceiptsProgram = Effect.fn(
   "auth.deletion.sweepAccountDeletionReceipts"
 )(
-  function* (ctx: MutationCtx) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* () {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const now = yield* Clock.currentTimeMillis;
     const receipts = yield* database
       .table("accountDeletionReceipts")

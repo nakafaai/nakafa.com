@@ -1,8 +1,11 @@
-import { describe, expect, it } from "@effect/vitest";
+import { DatabaseReader } from "@confect/server";
+import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { readAttemptSetPage } from "@repo/backend/confect/tryouts/runtime/attempt/page";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   activateTryoutStartSource,
@@ -52,6 +55,87 @@ const startFixture = Effect.fn("attemptPage.test.startFixture")(function* (
 
 describe("attempt page authorization and frozen routes", () => {
   it.effect(
+    "does not substitute current content for a missing retained language",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const { client, started, t } = yield* startFixture("visible");
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const rows = await ctx.db.query("tryoutCatalog").collect();
+            for (const row of rows) {
+              if (row.appLocale === "en") {
+                await ctx.db.delete(row._id);
+              }
+            }
+          })
+        );
+        const current = {
+          ...identity,
+          kind: "current" as const,
+          locale: "en" as const,
+        };
+        const retained = {
+          kind: "retained" as const,
+          attemptId: started.attemptId,
+          locale: "en" as const,
+        };
+        for (const request of [current, { ...retained, publicPath: setPath }]) {
+          expect(
+            yield* Effect.promise(() =>
+              client.query(api.tryouts.queries.attemptPage.getSet, { request })
+            )
+          ).toBeNull();
+        }
+        for (const request of [
+          { ...current, sectionKey: TRYOUT_START_SECTION },
+          { ...retained, publicPath: sectionPath },
+        ]) {
+          expect(
+            yield* Effect.promise(() =>
+              client.query(api.tryouts.queries.attemptPage.getSection, {
+                request,
+              })
+            )
+          ).toBeNull();
+        }
+        yield* Effect.promise(() =>
+          expect(
+            client.mutation(api.tryouts.mutations.attempts.startAttempt, {
+              ...identity,
+              locale: "en",
+              destinationSectionKey: TRYOUT_START_SECTION,
+            })
+          ).rejects.toMatchObject({
+            data: {
+              code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
+              message: "The retained exam has no destination in this language.",
+            },
+          })
+        );
+        yield* Effect.promise(() =>
+          t.query(async (ctx) => {
+            const attempt = await ctx.db.get(started.attemptId);
+            assert.isNotNull(attempt);
+            await expect(
+              Effect.runPromiseWith(runtimeServices)(
+                readAttemptSetPage(
+                  { locale: "en", publicPath: setPath },
+                  attempt,
+                  identity
+                ).pipe(
+                  Effect.provide(DatabaseReader.layer(confectSchema, ctx.db))
+                )
+              )
+            ).rejects.toMatchObject({
+              code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
+              message: "The retained exam has no page in this language.",
+            });
+          })
+        );
+      })
+  );
+  it.effect(
     "returns no set overlay for anonymous readers or an unattempted set",
     () =>
       Effect.gen(function* () {
@@ -80,7 +164,7 @@ describe("attempt page authorization and frozen routes", () => {
   );
 
   it.effect(
-    "does not expose a retained attempt under another locale, path, ID, or owner",
+    "does not expose a retained attempt under another path, ID, or owner",
     () =>
       Effect.gen(function* () {
         const { client, started, t } = yield* startFixture("visible");
@@ -92,7 +176,6 @@ describe("attempt page authorization and frozen routes", () => {
         };
         const sectionRequest = { ...setRequest, publicPath: sectionPath };
         for (const request of [
-          { ...setRequest, locale: "en" as const },
           { ...setRequest, publicPath: `${setPath}-other` },
           { ...setRequest, attemptId: "not-an-id" },
         ]) {
@@ -103,7 +186,6 @@ describe("attempt page authorization and frozen routes", () => {
           ).toBeNull();
         }
         for (const request of [
-          { ...sectionRequest, locale: "en" as const },
           { ...sectionRequest, publicPath: `${sectionPath}-other` },
           { ...sectionRequest, attemptId: "not-an-id" },
         ]) {

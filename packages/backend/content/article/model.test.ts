@@ -8,23 +8,36 @@ import {
   ArticleProjectionSchema,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { convexArticleLayer } from "@repo/backend/content/article/convex";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationCtx,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { articleLayer } from "@repo/backend/content/article/confect";
 import { readArticleModel } from "@repo/backend/content/article/model";
-import { api } from "@repo/backend/convex/_generated/api";
-import schema from "@repo/backend/convex/schema";
 import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
-import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
 const localizedRoutes = [
-  { appLocale: "en", article: "article-route", category: "politics" },
-  { appLocale: "id", article: "rute-artikel", category: "politik" },
-  { appLocale: "de", article: "artikel-route", category: "politik" },
+  {
+    appLocale: "en",
+    article: "article-route",
+    category: "politics",
+  },
+  {
+    appLocale: "id",
+    article: "rute-artikel",
+    category: "politik",
+  },
+  {
+    appLocale: "de",
+    article: "artikel-route",
+    category: "politik",
+  },
 ] as const;
 
 /** Builds one locale-owned route for a shared source article identity. */
@@ -58,185 +71,246 @@ function localizedArticle(index: number) {
 function decodeProjection(source: string) {
   return Schema.decodeUnknownSync(ArticleProjectionSchema)(JSON.parse(source));
 }
-
 describe("contentRelease/article/model", () => {
-  it("delivers one bounded coherent article shell and body through a single query", async () => {
-    const target = convexTest(schema, convexModules);
-    await target.mutation((ctx) =>
-      insertRuntimeArticles(ctx, localizedRoutes.length, localizedArticle)
-    );
-    const result = await target.query(api.contentRelease.article.delivery, {
-      appLocale: "en",
-      publicPath: localizedArticle(0).publicPath,
-    });
-    const runtime = JSON.parse(result.runtimeJson ?? "");
-    expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
-    expect(runtime.projection).toEqual(
-      JSON.parse(result.model.projectionJson ?? "")
-    );
-    expect(runtime.delivery).toBe("public");
-    const missing = await target.query(api.contentRelease.article.delivery, {
-      appLocale: "en",
-      publicPath: "articles/missing",
-    });
-    expect(missing.model.projectionJson).toBeNull();
-    expect(missing.runtimeJson).toBeNull();
-  });
   it.effect(
-    "rejects a published article whose active catalog row disappeared",
+    "delivers one bounded coherent article shell and body through a single query",
     () =>
       Effect.gen(function* () {
-        const target = convexTest(schema, convexModules);
-        yield* Effect.promise(() =>
-          target.mutation((ctx) => insertRuntimeArticles(ctx, 1))
-        );
-        yield* Effect.promise(() =>
-          target.mutation(async (ctx) => {
-            const row = await ctx.db.query("articleCatalog").unique();
-            assert(row);
-            await ctx.db.delete("articleCatalog", row._id);
-          })
-        );
-        yield* Effect.promise(() =>
-          expect(
-            target.query(api.contentRelease.article.route, {
-              appLocale: "en",
-              publicPath: testArticleProjection(0).publicPath,
-            })
-          ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const targetCtx = yield* MutationCtx;
+            yield* Effect.promise(() =>
+              insertRuntimeArticles(
+                targetCtx,
+                localizedRoutes.length,
+                localizedArticle
+              )
+            );
+            const result = yield* (yield* QueryRunner)(
+              refs.public.contentRelease.article.delivery,
+              {
+                appLocale: "en",
+                publicPath: localizedArticle(0).publicPath,
+              }
+            );
+            const runtime = JSON.parse(result.runtimeJson ?? "");
+            expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
+            expect(runtime.projection).toEqual(
+              JSON.parse(result.model.projectionJson ?? "")
+            );
+            expect(runtime.delivery).toBe("public");
+            const missing = yield* (yield* QueryRunner)(
+              refs.public.contentRelease.article.delivery,
+              {
+                appLocale: "en",
+                publicPath: "articles/missing",
+              }
+            );
+            expect(missing.model.projectionJson).toBeNull();
+            expect(missing.runtimeJson).toBeNull();
           })
         );
       })
   );
-
-  it("fails closed before signed article publication", async () => {
-    const target = convexTest(schema, convexModules);
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readArticleModel("en", "articles/test/missing").pipe(
-            Effect.provide(convexArticleLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_MISSING" },
-    });
-  });
-
-  it("returns the route and every reciprocal locale counterpart", async () => {
-    const target = convexTest(schema, convexModules);
-    const requested = localizedArticle(0);
-    await target.mutation((ctx) =>
-      insertRuntimeArticles(ctx, localizedRoutes.length, localizedArticle)
-    );
-
-    const result = await target.query(api.contentRelease.article.route, {
-      appLocale: requested.appLocale,
-      publicPath: requested.publicPath,
-    });
-
-    expect(result).toMatchObject({
-      activeAppLocales: ["en", "id", "de"],
-      activeReleaseId: expect.any(String),
-    });
-    expect(decodeProjection(result.projectionJson ?? "")).toEqual(requested);
-    expect(result.alternateJson.map(decodeProjection)).toMatchObject([
-      { appLocale: "en", publicPath: localizedArticle(0).publicPath },
-      { appLocale: "id", publicPath: localizedArticle(1).publicPath },
-      { appLocale: "de", publicPath: localizedArticle(2).publicPath },
-    ]);
-  });
-
-  it("returns a missing route inside the current signed family", async () => {
-    const target = convexTest(schema, convexModules);
-    await target.mutation((ctx) =>
-      insertRuntimeArticles(ctx, localizedRoutes.length, localizedArticle)
-    );
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readArticleModel("en", "articles/politics/missing").pipe(
-            Effect.provide(convexArticleLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      alternateJson: [],
-      projectionJson: null,
-    });
-  });
-
-  it("rejects an article whose locale counterpart is missing", async () => {
-    const target = convexTest(schema, convexModules);
-    const projection = localizedArticle(0);
-    await target.mutation((ctx) =>
-      insertRuntimeArticles(ctx, 1, localizedArticle)
-    );
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readArticleModel(projection.appLocale, projection.publicPath).pipe(
-            Effect.provide(convexArticleLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
-
-  it("rejects stale catalog metadata and an unexpected release", async () => {
-    const target = convexTest(schema, convexModules);
-    const requested = localizedArticle(0);
-    await target.mutation((ctx) =>
-      insertRuntimeArticles(ctx, localizedRoutes.length, localizedArticle)
-    );
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readArticleModel(
-            requested.appLocale,
-            requested.publicPath,
-            "release-unexpected"
-          ).pipe(Effect.provide(convexArticleLayer(ctx)))
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
-    });
-    await target.mutation(async (ctx) => {
-      const row = await ctx.db
-        .query("articleCatalog")
-        .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
-          index
-            .eq("slot", "blue")
-            .eq("appLocale", requested.appLocale)
-            .eq("publicPath", requested.publicPath)
-        )
-        .unique();
-      if (!row) {
-        throw new Error("Expected one current article row.");
-      }
-      await ctx.db.patch("articleCatalog", row._id, {
-        datePublished: "2020-01-01",
-      });
-    });
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readArticleModel(requested.appLocale, requested.publicPath).pipe(
-            Effect.provide(convexArticleLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
+  it.effect(
+    "rejects a published article whose active catalog row disappeared",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const targetCtx = yield* MutationCtx;
+            yield* Effect.promise(() => insertRuntimeArticles(targetCtx, 1));
+            yield* Effect.gen(function* () {
+              const row = yield* Effect.promise(() =>
+                targetCtx.db.query("articleCatalog").unique()
+              );
+              assert(row);
+              yield* Effect.promise(() =>
+                targetCtx.db.delete("articleCatalog", row._id)
+              );
+            });
+            expect(
+              yield* (yield* QueryRunner)(
+                refs.public.contentRelease.article.route,
+                {
+                  appLocale: "en",
+                  publicPath: testArticleProjection(0).publicPath,
+                }
+              ).pipe(Effect.flip)
+            ).toMatchObject({
+              code: "CONTENT_RELEASE_INTEGRITY",
+            });
+          })
+        );
+      })
+  );
+  it.effect("fails closed before signed article publication", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const _targetCtx = yield* MutationCtx;
+          expect(
+            yield* readArticleModel("en", "articles/test/missing").pipe(
+              Effect.provide(articleLayer),
+              Effect.flip
+            )
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_MISSING",
+          });
+        })
+      );
+    })
+  );
+  it.effect("returns the route and every reciprocal locale counterpart", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const targetCtx = yield* MutationCtx;
+          const requested = localizedArticle(0);
+          yield* Effect.promise(() =>
+            insertRuntimeArticles(
+              targetCtx,
+              localizedRoutes.length,
+              localizedArticle
+            )
+          );
+          const result = yield* (yield* QueryRunner)(
+            refs.public.contentRelease.article.route,
+            {
+              appLocale: requested.appLocale,
+              publicPath: requested.publicPath,
+            }
+          );
+          expect(result).toMatchObject({
+            activeAppLocales: ["en", "id", "de"],
+            activeReleaseId: expect.any(String),
+          });
+          expect(decodeProjection(result.projectionJson ?? "")).toEqual(
+            requested
+          );
+          expect(result.alternateJson.map(decodeProjection)).toMatchObject([
+            {
+              appLocale: "en",
+              publicPath: localizedArticle(0).publicPath,
+            },
+            {
+              appLocale: "id",
+              publicPath: localizedArticle(1).publicPath,
+            },
+            {
+              appLocale: "de",
+              publicPath: localizedArticle(2).publicPath,
+            },
+          ]);
+        })
+      );
+    })
+  );
+  it.effect("returns a missing route inside the current signed family", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const targetCtx = yield* MutationCtx;
+          yield* Effect.promise(() =>
+            insertRuntimeArticles(
+              targetCtx,
+              localizedRoutes.length,
+              localizedArticle
+            )
+          );
+          expect(
+            yield* readArticleModel("en", "articles/politics/missing").pipe(
+              Effect.provide(articleLayer)
+            )
+          ).toMatchObject({
+            alternateJson: [],
+            projectionJson: null,
+          });
+        })
+      );
+    })
+  );
+  it.effect("rejects an article whose locale counterpart is missing", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const targetCtx = yield* MutationCtx;
+          const projection = localizedArticle(0);
+          yield* Effect.promise(() =>
+            insertRuntimeArticles(targetCtx, 1, localizedArticle)
+          );
+          expect(
+            yield* readArticleModel(
+              projection.appLocale,
+              projection.publicPath
+            ).pipe(Effect.provide(articleLayer), Effect.flip)
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
+        })
+      );
+    })
+  );
+  it.effect("rejects stale catalog metadata and an unexpected release", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const targetCtx = yield* MutationCtx;
+          const requested = localizedArticle(0);
+          yield* Effect.promise(() =>
+            insertRuntimeArticles(
+              targetCtx,
+              localizedRoutes.length,
+              localizedArticle
+            )
+          );
+          expect(
+            yield* readArticleModel(
+              requested.appLocale,
+              requested.publicPath,
+              "release-unexpected"
+            ).pipe(Effect.provide(articleLayer), Effect.flip)
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_STATE",
+          });
+          yield* Effect.gen(function* () {
+            const row = yield* Effect.promise(() =>
+              targetCtx.db
+                .query("articleCatalog")
+                .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
+                  index
+                    .eq("slot", "blue")
+                    .eq("appLocale", requested.appLocale)
+                    .eq("publicPath", requested.publicPath)
+                )
+                .unique()
+            );
+            if (!row) {
+              throw new Error("Expected one current article row.");
+            }
+            yield* Effect.promise(() =>
+              targetCtx.db.patch("articleCatalog", row._id, {
+                datePublished: "2020-01-01",
+              })
+            );
+          });
+          expect(
+            yield* readArticleModel(
+              requested.appLocale,
+              requested.publicPath
+            ).pipe(Effect.provide(articleLayer), Effect.flip)
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
+        })
+      );
+    })
+  );
 });

@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import { scheduleRetainedEmailCleanup } from "@repo/backend/confect/emails/retention";
 import spec from "@repo/backend/confect/emails/retention.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
@@ -11,8 +10,7 @@ const cleanupRetainedEmailData = FunctionImpl.make(
   spec,
   "cleanupRetainedEmailData",
   Effect.fn("emails.retention.cleanupRetainedEmailData")(function* () {
-    const ctx = yield* MutationCtxService;
-    return yield* scheduleRetainedEmailCleanup(ctx);
+    return yield* scheduleRetainedEmailCleanup();
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

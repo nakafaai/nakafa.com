@@ -1,11 +1,15 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
-import { chatResponseFailureCode } from "@repo/ai/config/generation";
-import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE } from "@repo/backend/confect/chats/constants";
 import { reserveChatTurn } from "@repo/backend/confect/chats/turns/impl";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { chatResponseFailureCode } from "@repo/backend/confect/nina/config/generation";
+import {
+  getModelCreditCost,
+  ModelIdSchema,
+} from "@repo/backend/confect/nina/config/model";
 import {
   createConvexTestWithBetterAuth,
   seedAnalyticsConsent,
@@ -15,21 +19,19 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 const liteModel = ModelIdSchema.make("nakafa-lite");
 const liteCreditCost = getModelCreditCost(liteModel);
-
 describe("chats/assistantResponses", () => {
   beforeEach(() => {
     vi.setSystemTime(new Date(NOW));
   });
-
   it("records a reset grant before the usage transaction", async () => {
     const t = convexTest(schema, convexModules);
     rateLimiterTest.register(t, "agentRateLimiter");
     posthogTest.register(t);
-
     const { chatId, userId } = await t.mutation(async (ctx) => {
       const userId = await ctx.db.insert("users", {
         authId: "chat_user_auth",
@@ -39,7 +41,10 @@ describe("chats/assistantResponses", () => {
         name: "Chat User",
         plan: "free",
       });
-      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId,
+      });
       const chatId = await ctx.db.insert("chats", {
         title: "Set 1",
         type: "study",
@@ -47,13 +52,19 @@ describe("chats/assistantResponses", () => {
         userId,
         visibility: "private",
       });
-
-      return { chatId, userId };
+      return {
+        chatId,
+        userId,
+      };
     });
     const turnId = await t.mutation(async (ctx) => {
       const user = await ctx.db.get("users", userId);
       assert(user);
-      return runConvexProgram(reserveChatTurn(ctx, user, liteModel));
+      return Effect.runPromise(
+        reserveChatTurn(user, liteModel).pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      );
     });
     const result = await t.mutation(
       internal.chats.assistantResponses.saveAssistantResponse,
@@ -79,12 +90,10 @@ describe("chats/assistantResponses", () => {
         .collect(),
       user: await ctx.db.get("users", userId),
     }));
-
     expect(result).not.toBeNull();
     if (result === null) {
       return;
     }
-
     expect(result.credits).toBe(liteCreditCost);
     expect(result.newBalance).toBe(7 - liteCreditCost);
     expect(state.user).toMatchObject({
@@ -135,12 +144,10 @@ describe("chats/assistantResponses", () => {
       }),
     ]);
   });
-
   it("persists a failed response and refunds its reserved credits", async () => {
     const t = convexTest(schema, convexModules);
     rateLimiterTest.register(t, "agentRateLimiter");
     posthogTest.register(t);
-
     const { chatId, userId } = await t.mutation(async (ctx) => {
       const userId = await ctx.db.insert("users", {
         authId: "failed_chat_user_auth",
@@ -150,7 +157,10 @@ describe("chats/assistantResponses", () => {
         name: "Failed Chat User",
         plan: "free",
       });
-      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId,
+      });
       const chatId = await ctx.db.insert("chats", {
         title: "Failure",
         type: "study",
@@ -158,13 +168,19 @@ describe("chats/assistantResponses", () => {
         userId,
         visibility: "private",
       });
-
-      return { chatId, userId };
+      return {
+        chatId,
+        userId,
+      };
     });
     const turnId = await t.mutation(async (ctx) => {
       const user = await ctx.db.get("users", userId);
       assert(user);
-      return runConvexProgram(reserveChatTurn(ctx, user, liteModel));
+      return Effect.runPromise(
+        reserveChatTurn(user, liteModel).pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      );
     });
     const result = await t.mutation(
       internal.chats.assistantResponses.saveAssistantFailure,
@@ -187,12 +203,10 @@ describe("chats/assistantResponses", () => {
         .collect(),
       user: await ctx.db.get("users", userId),
     }));
-
     expect(result).not.toBeNull();
     if (result === null) {
       return;
     }
-
     expect(result.messageId).toBeDefined();
     expect(state.user?.credits).toBe(10);
     expect(
@@ -231,13 +245,11 @@ describe("chats/assistantResponses", () => {
       }),
     ]);
   });
-
   it.each(["prepared", "removed"])(
     "ignores scheduled writes for %s accounts",
     async (accountState) => {
       const t = convexTest(schema, convexModules);
       rateLimiterTest.register(t, "agentRateLimiter");
-
       const { chatId, userId } = await t.mutation(async (ctx) => {
         const userId = await ctx.db.insert("users", {
           authId: "deleting-chat-user",
@@ -254,18 +266,26 @@ describe("chats/assistantResponses", () => {
           userId,
           visibility: "private",
         });
-
-        return { chatId, userId };
+        return {
+          chatId,
+          userId,
+        };
       });
       const turnId = await t.mutation(async (ctx) => {
         const user = await ctx.db.get("users", userId);
         assert(user);
-        return runConvexProgram(reserveChatTurn(ctx, user, liteModel));
+        return Effect.runPromise(
+          reserveChatTurn(user, liteModel).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        );
       });
       await t.mutation((ctx) =>
         accountState === "removed"
           ? ctx.db.delete("users", userId)
-          : ctx.db.patch("users", userId, { deletionPreparedAt: NOW })
+          : ctx.db.patch("users", userId, {
+              deletionPreparedAt: NOW,
+            })
       );
       const response = await t.mutation(
         internal.chats.assistantResponses.saveAssistantResponse,
@@ -301,24 +321,23 @@ describe("chats/assistantResponses", () => {
           .collect(),
         user: await ctx.db.get("users", userId),
       }));
-
       expect(response).toBeNull();
       expect(failure).toBeNull();
       expect(state.messages).toEqual([]);
       expect(state.scheduledJobs).toEqual([
-        expect.objectContaining({ name: expect.stringContaining("expire") }),
+        expect.objectContaining({
+          name: expect.stringContaining("expire"),
+        }),
       ]);
       expect(state.user?.credits).toBe(
         accountState === "removed" ? undefined : 10 - liteCreditCost
       );
     }
   );
-
   it("replaces a failed marker when the response succeeds later", async () => {
     const t = convexTest(schema, convexModules);
     rateLimiterTest.register(t, "agentRateLimiter");
     posthogTest.register(t);
-
     const { chatId, userId } = await t.mutation(async (ctx) => {
       const userId = await ctx.db.insert("users", {
         authId: "retry_chat_user_auth",
@@ -335,14 +354,19 @@ describe("chats/assistantResponses", () => {
         userId,
         visibility: "private",
       });
-
-      return { chatId, userId };
+      return {
+        chatId,
+        userId,
+      };
     });
-
     const turnId = await t.mutation(async (ctx) => {
       const user = await ctx.db.get("users", userId);
       assert(user);
-      return runConvexProgram(reserveChatTurn(ctx, user, liteModel));
+      return Effect.runPromise(
+        reserveChatTurn(user, liteModel).pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      );
     });
     await t.mutation(internal.chats.assistantResponses.saveAssistantFailure, {
       userId,
@@ -357,7 +381,11 @@ describe("chats/assistantResponses", () => {
     const retryTurnId = await t.mutation(async (ctx) => {
       const user = await ctx.db.get("users", userId);
       assert(user);
-      return runConvexProgram(reserveChatTurn(ctx, user, liteModel));
+      return Effect.runPromise(
+        reserveChatTurn(user, liteModel).pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      );
     });
     await t.mutation(internal.chats.assistantResponses.saveAssistantResponse, {
       userId,
@@ -377,7 +405,6 @@ describe("chats/assistantResponses", () => {
       messages: await ctx.db.query("messages").collect(),
       user: await ctx.db.get("users", userId),
     }));
-
     expect(state.user?.credits).toBe(10 - liteCreditCost);
     expect(state.messages).toEqual([
       expect.objectContaining({
@@ -392,11 +419,13 @@ describe("chats/assistantResponses", () => {
       }),
     ]);
   });
-
   it("preserves the transcript and reservation when a rewrite exceeds its transaction bound", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW, credits: 10 })
+      seedAuthenticatedUser(ctx, {
+        now: NOW,
+        credits: 10,
+      })
     );
     const owner = t.withIdentity({
       subject: identity.authUserId,
@@ -422,7 +451,6 @@ describe("chats/assistantResponses", () => {
         });
       }
     });
-
     await expect(
       t.mutation(internal.chats.assistantResponses.saveAssistantResponse, {
         userId: identity.userId,
@@ -436,7 +464,9 @@ describe("chats/assistantResponses", () => {
         parts: [],
       })
     ).rejects.toMatchObject({
-      data: { code: "CHAT_ASSISTANT_RESPONSE_REWRITE_EXCEEDED" },
+      data: {
+        code: "CHAT_ASSISTANT_RESPONSE_REWRITE_EXCEEDED",
+      },
     });
     const state = await t.query(async (ctx) => ({
       messages: await ctx.db.query("messages").collect(),
@@ -447,12 +477,17 @@ describe("chats/assistantResponses", () => {
     expect(state.messages).toHaveLength(
       CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE + 1
     );
-    expect(state.turn).toMatchObject({ _id: turnId });
+    expect(state.turn).toMatchObject({
+      _id: turnId,
+    });
     expect(state.user?.credits).toBe(10 - liteCreditCost);
     expect(state.ledger).toEqual([
       expect.objectContaining({
         type: "usage",
-        metadata: { modelId: "nakafa-lite", phase: "reserved" },
+        metadata: {
+          modelId: "nakafa-lite",
+          phase: "reserved",
+        },
       }),
     ]);
   });

@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/credits/mutations.spec";
 import {
   getCurrentCreditResetTimestamp,
@@ -14,9 +13,7 @@ const syncCreditResetPeriod = FunctionImpl.make(
   spec,
   "syncCreditResetPeriod",
   Effect.fn("credits.mutations.syncCreditResetPeriod")(function* (args) {
-    const ctx = yield* MutationCtxService;
     yield* upsertStoredCreditResetTimestamp(
-      ctx.db,
       args.plan,
       getCurrentCreditResetTimestamp(args.plan, yield* Clock.currentTimeMillis)
     );
@@ -28,15 +25,12 @@ const syncAllCreditResetPeriods = FunctionImpl.make(
   spec,
   "syncAllCreditResetPeriods",
   Effect.fn("credits.mutations.syncAllCreditResetPeriods")(function* () {
-    const ctx = yield* MutationCtxService;
     const now = yield* Clock.currentTimeMillis;
     yield* upsertStoredCreditResetTimestamp(
-      ctx.db,
       "free",
       getCurrentCreditResetTimestamp("free", now)
     );
     yield* upsertStoredCreditResetTimestamp(
-      ctx.db,
       "pro",
       getCurrentCreditResetTimestamp("pro", now)
     );

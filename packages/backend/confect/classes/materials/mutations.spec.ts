@@ -1,11 +1,12 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ClassAccessFailure } from "@repo/backend/confect/classes/access/spec";
-import { MaterialGroupFailure } from "@repo/backend/confect/classes/materials/spec";
+import { ClassAccessError } from "@repo/backend/confect/classes/access/spec";
+import { MaterialGroupError } from "@repo/backend/confect/classes/materials/spec";
 import { schoolClassMaterialStatusValidator } from "@repo/backend/confect/classes/schema";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
-import { PermissionDeniedWire } from "@repo/backend/confect/schools/permission/spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
+import { PermissionDenied } from "@repo/backend/confect/schools/permission/spec";
 import { Schema } from "effect";
 /**
  * Reorder direction validator
@@ -26,11 +27,13 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AuthFailure,
-          PermissionDeniedWire,
-          ClassAccessFailure,
-          MaterialGroupFailure,
+          PermissionDenied,
+          ClassAccessError,
+          MaterialGroupError,
         ]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -46,11 +49,13 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AuthFailure,
-          PermissionDeniedWire,
-          ClassAccessFailure,
-          MaterialGroupFailure,
+          PermissionDenied,
+          ClassAccessError,
+          MaterialGroupError,
         ]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.internalMutation({
@@ -72,11 +77,13 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AuthFailure,
-          PermissionDeniedWire,
-          ClassAccessFailure,
-          MaterialGroupFailure,
+          PermissionDenied,
+          ClassAccessError,
+          MaterialGroupError,
         ]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -89,9 +96,11 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AuthFailure,
-          PermissionDeniedWire,
-          ClassAccessFailure,
-          MaterialGroupFailure,
+          PermissionDenied,
+          ClassAccessError,
+          MaterialGroupError,
         ]),
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   );

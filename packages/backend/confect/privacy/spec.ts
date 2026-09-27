@@ -1,7 +1,4 @@
-import {
-  failureWire,
-  getUnknownErrorMessage,
-} from "@repo/backend/confect/failure";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { Effect, Schema } from "effect";
 
 const privacyCleanupFailedCode = "PRIVACY_CLEANUP_FAILED";
@@ -25,15 +22,13 @@ export class PrivacyCleanupError extends Schema.TaggedError<PrivacyCleanupError>
 ) {}
 
 /** Lifts one workflow operation into the privacy cleanup error channel. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const PrivacyCleanupErrorWire = failureWire(PrivacyCleanupError);
+
 export function tryPrivacyCleanup<A>(operation: () => Promise<A>) {
   return Effect.tryPromise({
     catch: toPrivacyCleanupError,
     try: operation,
   });
 }
-
 export function toPrivacyCleanupError(error: unknown) {
   return new PrivacyCleanupError({
     code: privacyCleanupFailedCode,

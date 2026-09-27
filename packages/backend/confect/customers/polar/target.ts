@@ -1,11 +1,12 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  QueryCtx as QueryCtxService,
+} from "@repo/backend/confect/_generated/services";
 import {
   PolarCustomerWebhookTargetIoError,
   type polarCustomerWebhookTargetValidator,
 } from "@repo/backend/confect/customers/polar/spec";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, type Schema } from "effect";
 
 type PolarCustomerWebhookTarget = Schema.Schema.Type<
@@ -27,8 +28,9 @@ function toWebhookTargetError(error: unknown) {
 /** Loads a webhook user reference from Polar metadata when it is valid. */
 const getUserByMetadataId = Effect.fn(
   "customers.polar.getWebhookUserByMetadataId"
-)(function* (ctx: QueryCtx, metadataUserId: string | undefined) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (metadataUserId: string | undefined) {
+  const ctx = yield* QueryCtxService;
+  const database = yield* DatabaseReader;
   if (!metadataUserId) {
     return null;
   }
@@ -47,8 +49,8 @@ const getUserByMetadataId = Effect.fn(
 /** Loads a webhook user reference from the Better Auth external ID. */
 const getUserByExternalId = Effect.fn(
   "customers.polar.getWebhookUserByExternalId"
-)(function* (ctx: QueryCtx, externalId: string | undefined) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (externalId: string | undefined) {
+  const database = yield* DatabaseReader;
   if (!externalId) {
     return null;
   }
@@ -62,15 +64,11 @@ const getUserByExternalId = Effect.fn(
 });
 
 /** Resolves whether a Polar webhook belongs to one active app user. */
-export const resolvePolarCustomerWebhookTarget: (
-  ctx: QueryCtx,
-  input: PolarCustomerWebhookTargetInput
-) => Effect.Effect<
-  PolarCustomerWebhookTarget,
-  PolarCustomerWebhookTargetIoError
-> = Effect.fn("customers.polar.resolveWebhookTarget")(
-  function* (ctx: QueryCtx, input: PolarCustomerWebhookTargetInput) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+export const resolvePolarCustomerWebhookTarget = Effect.fn(
+  "customers.polar.resolveWebhookTarget"
+)(
+  function* (input: PolarCustomerWebhookTargetInput) {
+    const database = yield* DatabaseReader;
     const tombstone = yield* database
       .table("customerDeletionTombstones")
       .get("by_polarCustomerId", input.polarCustomerId)
@@ -84,8 +82,8 @@ export const resolvePolarCustomerWebhookTarget: (
       } satisfies PolarCustomerWebhookTarget;
     }
     const [userByMetadataId, userByExternalId] = yield* Effect.all([
-      getUserByMetadataId(ctx, input.metadataUserId),
-      getUserByExternalId(ctx, input.externalId),
+      getUserByMetadataId(input.metadataUserId),
+      getUserByExternalId(input.externalId),
     ]);
     if (
       userByMetadataId &&

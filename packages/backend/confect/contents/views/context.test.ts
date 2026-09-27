@@ -1,3 +1,5 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { describe, expect, it } from "@effect/vitest";
 import {
   CorpusSourcePathSchema,
@@ -19,6 +21,7 @@ import {
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
 import {
   type LearningContextInput,
@@ -26,7 +29,6 @@ import {
 } from "@repo/backend/confect/contents/context";
 import { resolveLearningContext } from "@repo/backend/confect/contents/views/context";
 import { validateIncomingContentTarget } from "@repo/backend/confect/contents/views/target";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -71,12 +73,12 @@ const RENAMED_MATERIAL = MaterialLessonProjectionSchema.make({
     `${FUNCTION_MATERIAL.parentPath}/function-concept-renamed`
   ),
 });
-
 class ObservedContextQueryFailure extends Schema.TaggedError<ObservedContextQueryFailure>()(
   "ObservedContextQueryFailure",
-  { cause: Schema.Unknown }
+  {
+    cause: Schema.Unknown,
+  }
 ) {}
-
 class UnexpectedContextTestState extends Data.TaggedError(
   "UnexpectedContextTestState"
 )<{
@@ -153,6 +155,7 @@ const stagePlacement = Effect.fn("contents.views.test.stagePlacement")(
     snapshotId: string,
     canonicalPath: typeof FUNCTION_MATERIAL.publicPath
   ) {
+    const runtimeServices = yield* Effect.context<never>();
     const routes = [subjectRoute(), groupRoute(), mappingRoute(canonicalPath)];
     const rows = yield* Effect.forEach(routes, (route) =>
       Effect.gen(function* () {
@@ -170,14 +173,13 @@ const stagePlacement = Effect.fn("contents.views.test.stagePlacement")(
     for (const [offset, row] of rows.entries()) {
       yield* Effect.promise(() =>
         target.mutation((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             stageProgramRow(
-              ctx,
               snapshotId,
               offset + 100,
               row.source,
               row.rowJson
-            )
+            ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
           )
         )
       );
@@ -191,13 +193,17 @@ const readContext = Effect.fn("contents.views.test.readContext")(function* (
   projection: MaterialLessonProjection,
   context?: LearningContextInput
 ) {
+  const runtimeServices = yield* Effect.context<never>();
   return yield* Effect.tryPromise({
-    catch: (cause) => new ObservedContextQueryFailure({ cause }),
+    catch: (cause) =>
+      new ObservedContextQueryFailure({
+        cause,
+      }),
     try: () =>
       target.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromiseWith(runtimeServices)(
           Effect.gen(function* () {
-            const material = yield* validateIncomingContentTarget(ctx, {
+            const material = yield* validateIncomingContentTarget({
               contentId: projection.graph.assetId,
               locale: "en",
               publicPath: projection.publicPath,
@@ -210,8 +216,10 @@ const readContext = Effect.fn("contents.views.test.readContext")(function* (
                 })
               );
             }
-            return yield* resolveLearningContext(ctx, material, context);
-          })
+            return yield* resolveLearningContext(material, context);
+          }).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
         )
       ),
   });
@@ -224,27 +232,56 @@ const activatePlacement = Effect.fn("contents.views.test.activatePlacement")(
     canonicalPath: typeof FUNCTION_MATERIAL.publicPath,
     projection: MaterialLessonProjection = FUNCTION_MATERIAL
   ) {
+    const runtimeServices = yield* Effect.context<never>();
     const data = yield* makeProgramSnapshotData();
-    yield* Effect.promise(() => activateProgramSnapshot(target, data));
+    yield* Effect.promise(() =>
+      target.mutation((ctx) =>
+        Effect.runPromiseWith(runtimeServices)(
+          activateProgramSnapshot(data).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    );
     yield* stagePlacement(target, data.snapshotId, canonicalPath);
     yield* Effect.promise(() =>
-      target.mutation((ctx) => insertMaterialProjection(ctx, projection))
+      target.mutation((ctx) =>
+        Effect.runPromiseWith(runtimeServices)(
+          insertMaterialProjection(projection).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
     );
   }
 );
-
 describe("contents/views/context", () => {
   it.effect.each([
-    { mode: "placement" },
-    { mode: "placement", nodeKey: GROUP_KEY },
-    { mode: "placement", programKey: PROGRAM_KEY },
+    {
+      mode: "placement",
+    },
+    {
+      mode: "placement",
+      nodeKey: GROUP_KEY,
+    },
+    {
+      mode: "placement",
+      programKey: PROGRAM_KEY,
+    },
   ] satisfies LearningContextInput[])(
     "keeps an incomplete placement hint canonical: %j",
     (hint) =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const target = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
-          activateMaterialCatalog(target, [FUNCTION_MATERIAL])
+          target.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
+          )
         );
         expect(yield* readContext(target, FUNCTION_MATERIAL, hint)).toEqual({
           contextKey: "canonical",
@@ -252,55 +289,70 @@ describe("contents/views/context", () => {
         });
       })
   );
-
   it("keeps article visits canonical even when a curriculum placement hint is supplied", async () => {
     const target = convexTest(schema, convexModules);
     const projection = testArticleProjection(0);
     await target.mutation((ctx) => insertRuntimeArticles(ctx, 1));
     await target.query(async (ctx) => {
-      const article = await runConvexProgram(
-        validateIncomingContentTarget(ctx, {
+      const article = await Effect.runPromise(
+        validateIncomingContentTarget({
           contentId: projection.graph.assetId,
           locale: "en",
           publicPath: projection.publicPath,
           section: "articles",
-        })
+        }).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
       );
       if (!article) {
         expect.fail("Expected the signed article target.");
       }
       expect(
-        await runConvexProgram(resolveLearningContext(ctx, article, PLACEMENT))
+        await Effect.runPromise(
+          resolveLearningContext(article, PLACEMENT).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
       ).toEqual({
         contextKey: "canonical",
         contextMode: "canonical",
       });
     });
   });
-
   it.effect("keeps a direct visit canonical", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const target = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
-        activateMaterialCatalog(target, [FUNCTION_MATERIAL])
+        target.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+              Effect.provide(mutationLayer(confectSchema, ctx))
+            )
+          )
+        )
       );
-
       expect(yield* readContext(target, FUNCTION_MATERIAL)).toEqual({
         contextKey: "canonical",
         contextMode: "canonical",
       });
     })
   );
-
   it.effect(
     "falls back to canonical context when signed curriculum ownership is unavailable",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const target = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
-          activateMaterialCatalog(target, [FUNCTION_MATERIAL])
+          target.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
+          )
         );
-
         expect(
           yield* readContext(target, FUNCTION_MATERIAL, PLACEMENT)
         ).toEqual({
@@ -309,12 +361,10 @@ describe("contents/views/context", () => {
         });
       })
   );
-
   it.effect("resolves an exact current signed curriculum placement", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
       yield* activatePlacement(target, FUNCTION_MATERIAL.publicPath);
-
       expect(
         yield* readContext(target, FUNCTION_MATERIAL, PLACEMENT)
       ).toMatchObject({
@@ -328,7 +378,6 @@ describe("contents/views/context", () => {
       });
     })
   );
-
   it.effect(
     "keeps a stable parent placement after a signed lesson rename",
     () =>
@@ -339,7 +388,6 @@ describe("contents/views/context", () => {
           FUNCTION_MATERIAL.parentPath,
           RENAMED_MATERIAL
         );
-
         expect(
           yield* readContext(target, RENAMED_MATERIAL, PLACEMENT)
         ).toMatchObject({
@@ -349,12 +397,10 @@ describe("contents/views/context", () => {
         });
       })
   );
-
   it.effect("makes an unverified signed placement canonical", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
       yield* activatePlacement(target, FUNCTION_MATERIAL.publicPath);
-
       expect(
         yield* readContext(target, FUNCTION_MATERIAL, {
           mode: "placement",
@@ -368,19 +414,33 @@ describe("contents/views/context", () => {
     })
   );
 });
-
 it.effect("records canonical and verified placement popularity scopes", () =>
   Effect.gen(function* () {
+    const runtimeServices = yield* Effect.context<never>();
     const target = convexTest(schema, convexModules);
     const data = yield* makeProgramSnapshotData();
-    yield* Effect.promise(() => activateProgramSnapshot(target, data));
+    yield* Effect.promise(() =>
+      target.mutation((ctx) =>
+        Effect.runPromiseWith(runtimeServices)(
+          activateProgramSnapshot(data).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    );
     yield* stagePlacement(
       target,
       data.snapshotId,
       FUNCTION_MATERIAL.publicPath
     );
     yield* Effect.promise(() =>
-      target.mutation((ctx) => insertMaterialProjection(ctx, FUNCTION_MATERIAL))
+      target.mutation((ctx) =>
+        Effect.runPromiseWith(runtimeServices)(
+          insertMaterialProjection(FUNCTION_MATERIAL).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
     );
     const context = yield* readContext(target, FUNCTION_MATERIAL, PLACEMENT);
     expect(context).toMatchObject({
@@ -397,10 +457,18 @@ it.effect("records canonical and verified placement popularity scopes", () =>
       nodeKey: GROUP_KEY,
       programKey: PROGRAM_KEY,
     });
-    expect(toLearningContextQuery({ ...context, contextProgramKey: "" })).toBe(
-      ""
-    );
-    expect(toLearningContextQuery({ ...context, contextNodeKey: "" })).toBe("");
+    expect(
+      toLearningContextQuery({
+        ...context,
+        contextProgramKey: "",
+      })
+    ).toBe("");
+    expect(
+      toLearningContextQuery({
+        ...context,
+        contextNodeKey: "",
+      })
+    ).toBe("");
     yield* Effect.promise(() =>
       target.mutation(api.contents.mutations.views.recordContentView, {
         contentId: FUNCTION_MATERIAL.graph.assetId,

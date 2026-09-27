@@ -1,14 +1,16 @@
-import { ActionRunner } from "@confect/server";
 import { MAX_PROTECTED_RUNTIME_REQUEST_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import refs from "@repo/backend/confect/_generated/refs";
+import { ActionRunner } from "@repo/backend/confect/_generated/services";
 import { readRuntimeRequest } from "@repo/backend/confect/contentRelease/http/runtime/request";
 import { privateRuntimeResponse } from "@repo/backend/confect/contentRelease/http/runtime/response";
 import { failureResult } from "@repo/backend/confect/contentRelease/runtime/result";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
-import { type ActionCtx, env } from "@repo/backend/convex/_generated/server";
-import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Effect, flow, Result, Schema } from "effect";
+import { Config, Effect, flow, Result, Schema } from "effect";
+import {
+  HttpRouter,
+  HttpServerRequest,
+  HttpServerResponse,
+} from "effect/unstable/http";
 
 /** The isolated Node verifier could not return one sanitized response. */
 class ProtectedRuntimeActionError extends Schema.TaggedError<ProtectedRuntimeActionError>()(
@@ -19,16 +21,8 @@ class ProtectedRuntimeActionError extends Schema.TaggedError<ProtectedRuntimeAct
 /** Calls the Node-only verifier without exposing an action failure. */
 const dispatchProtectedRuntime = Effect.fn(
   "contentRelease.dispatchProtectedRuntime"
-)(function* (
-  ctx: ActionCtx,
-  input: {
-    readonly byteLength: number;
-    readonly source: string;
-  }
-) {
-  const runAction = yield* ActionRunner.ActionRunner.pipe(
-    Effect.provide(ActionRunner.layer(ctx.runAction))
-  );
+)(function* (input: { readonly byteLength: number; readonly source: string }) {
+  const runAction = yield* ActionRunner;
   const result = yield* runAction(
     refs.internal.contentRelease.runtime.tryout.dispatch.dispatch,
     input
@@ -46,27 +40,26 @@ const dispatchProtectedRuntime = Effect.fn(
 
 /** Authenticates and forwards one bounded protected runtime request. */
 const protectedRuntimeRoute = Effect.fn("contentRelease.protectedRuntimeRoute")(
-  function* (ctx: ActionCtx, request: Request) {
+  function* (request: Request) {
     const input = yield* readRuntimeRequest(
       request,
-      env.CONTENT_RUNTIME_TOKEN,
+      yield* Config.String("CONTENT_RUNTIME_TOKEN").pipe(Effect.orDie),
       MAX_PROTECTED_RUNTIME_REQUEST_BYTES
     );
     if (input.kind === "rejected") {
       return input.result;
     }
-    return yield* dispatchProtectedRuntime(ctx, input.body);
+    return yield* dispatchProtectedRuntime(input.body);
   }
 );
-
-/** Registers the server-authenticated protected content read route. */
-export function registerProtectedContentRuntimeRoute<
-  Variables extends Record<string, unknown>,
->(app: HonoWithConvex<ActionCtx, Variables>) {
-  app.post(PROTECTED_CONTENT_RUNTIME_PATH, async (context) => {
-    const result = await runConvexProgram(
-      protectedRuntimeRoute(context.env, context.req.raw)
+export const protectedRuntimeRoutes = HttpRouter.add(
+  "POST",
+  PROTECTED_CONTENT_RUNTIME_PATH,
+  Effect.gen(function* () {
+    const request = yield* HttpServerRequest.toWeb(
+      yield* HttpServerRequest.HttpServerRequest
     );
-    return privateRuntimeResponse(result);
-  });
-}
+    const result = yield* protectedRuntimeRoute(request);
+    return HttpServerResponse.fromWeb(privateRuntimeResponse(result));
+  })
+);

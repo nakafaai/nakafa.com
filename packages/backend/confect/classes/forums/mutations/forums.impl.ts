@@ -1,9 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseWriter,
-  MutationCtx as MutationCtxService,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import {
   loadActiveClass,
@@ -16,6 +13,7 @@ import {
 import spec from "@repo/backend/confect/classes/forums/mutations/forums.spec";
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { isAdmin } from "@repo/backend/confect/schools/membership";
 import { Clock, Effect, Layer } from "effect";
 
@@ -28,10 +26,9 @@ const createForum = FunctionImpl.make(
   "createForum",
   Effect.fn("classes.forums.mutations.forums.createForum")(function* (args) {
     const writer = yield* DatabaseWriter;
-    const ctx = yield* MutationCtxService;
-    const user = yield* requireAuth(ctx);
+    const user = yield* requireAuth();
     const userId = user.appUser._id;
-    const classData = yield* loadActiveClass(ctx, args.classId);
+    const classData = yield* loadActiveClass(args.classId);
     const title = args.title.trim();
     const body = args.body.trim();
     if (title.length < MIN_FORUM_THREAD_TEXT_LENGTH) {
@@ -47,7 +44,6 @@ const createForum = FunctionImpl.make(
       });
     }
     const { classMembership, schoolMembership } = yield* requireClassAccess(
-      ctx,
       args.classId,
       classData.schoolId,
       userId
@@ -90,5 +86,6 @@ const createForum = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(createForum),
   Layer.provide(atomic),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

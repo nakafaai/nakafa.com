@@ -1,6 +1,9 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
 import {
   getFinitePopularityWindows,
@@ -8,14 +11,13 @@ import {
   getPopularityWindowStartDay,
   learningPopularityScopeValues,
 } from "@repo/backend/confect/contents/popularity";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Clock, Duration, Effect, flow, Option } from "effect";
 
 const PAGE_SIZE = 128;
 /** Every finite window must have consumed its outgoing day before deletion. */
 const hasCompletedWindows = Effect.fn("contents.metrics.hasCompletedWindows")(
-  function* (ctx: MutationCtx, day: number) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (day: number) {
+    const database = yield* DatabaseReader;
     for (const scopeMode of learningPopularityScopeValues) {
       for (const windowKey of getFinitePopularityWindows()) {
         const cycle = yield* database
@@ -43,12 +45,10 @@ const hasCompletedWindows = Effect.fn("contents.metrics.hasCompletedWindows")(
 export const pruneLearningPopularity = Effect.fn(
   "contents.metrics.pruneLearningPopularity"
 )(
-  function* (ctx: MutationCtx) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* () {
+    const scheduler = yield* Scheduler;
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const day = getPopularitySignalDay(yield* Clock.currentTimeMillis);
     const viewers = yield* database
       .table("learningPopularityViewerSignals")
@@ -63,7 +63,7 @@ export const pruneLearningPopularity = Effect.fn(
       .pipe(Effect.map(Option.getOrNull), Effect.orDie);
     // Do not read maintenance rows when there are no expired daily inputs.
     const waitingForMaintenance =
-      expiredSignal !== null && !(yield* hasCompletedWindows(ctx, day));
+      expiredSignal !== null && !(yield* hasCompletedWindows(day));
     for (const viewer of viewers) {
       yield* writer.table("learningPopularityViewerSignals").delete(viewer._id);
     }

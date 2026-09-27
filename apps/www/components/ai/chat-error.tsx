@@ -1,152 +1,113 @@
 "use client";
 
+import { Alert02Icon } from "@hugeicons/core-free-icons";
 import {
-  Alert02Icon,
-  PartyIcon,
-  Settings01Icon,
-} from "@hugeicons/core-free-icons";
-import { products } from "@repo/backend/confect/utils/polar/products";
-import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+  Alert,
+  AlertDescription,
+} from "@repo/design-system/components/ui/alert";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useLocale, useTranslations } from "next-intl";
-import { Activity } from "react";
-import { CHAT_ERRORS } from "@/app/api/chat/constants";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
+import { useTranslations } from "next-intl";
 import { useChat } from "@/components/ai/context/use-chat";
-import { useBillingNavigation } from "@/lib/billing/use-navigation.client";
-import { isActiveLocale } from "@/lib/i18n/active";
+import { useMessage } from "@/components/ai/context/use-message";
+import {
+  ninaFailureFeedback,
+  ninaResponseFeedback,
+} from "@/components/ai/feedback";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 
-interface AiChatErrorSurfaceProps {
-  children?: React.ReactNode;
-  message: string;
-}
-
-function AiChatErrorSurface({ children, message }: AiChatErrorSurfaceProps) {
-  return (
-    <Empty className="rounded-xl border bg-card text-card-foreground">
-      <EmptyHeader>
-        <EmptyMedia className="bg-destructive/5" variant="icon">
-          <HugeIcons className="text-destructive" icon={Alert02Icon} />
-        </EmptyMedia>
-        <EmptyDescription>{message}</EmptyDescription>
-      </EmptyHeader>
-      {children}
-    </Empty>
-  );
-}
-AiChatErrorSurface.displayName = "AiChatErrorSurface";
-
-/** Shows a persisted assistant generation failure after chat refresh. */
+/** Read the turn attached to this message, including older failed responses. */
 export function AiChatPersistedError() {
   const t = useTranslations("Ai");
-
-  return <AiChatErrorSurface message={t("error-message")} />;
+  const state = useMessage((value) => value.turn?.state);
+  const reason =
+    state?.status === "failed" ? (state.reason ?? "unknown") : "unknown";
+  return (
+    <Alert variant="destructive">
+      <HugeIcons icon={Alert02Icon} />
+      <AlertDescription>
+        {t(`failures.${ninaResponseFeedback[reason].message}`)}
+      </AlertDescription>
+    </Alert>
+  );
 }
-AiChatPersistedError.displayName = "AiChatPersistedError";
 
+/** Admission failures and failed turns without an Agent assistant message. */
 export function AiChatError() {
   const t = useTranslations("Ai");
-
-  const error = useChat((state) => state.chat.error);
-
-  if (!error) {
+  const authNavigation = useCurrentAuthNavigation();
+  const error = useChat((state) => state.error);
+  const turn = useChat((state) => state.turn);
+  const messages = useChat((state) => state.messages);
+  const retry = useChat((state) => state.retry);
+  const canWrite = useChat((state) => state.canWrite);
+  const busy = useChat((state) => state.busy);
+  const hasInlineFailure = messages.some(
+    (message) =>
+      message.role === "assistant" &&
+      message.order === turn?.order &&
+      message.status === "failed"
+  );
+  if (!error && (turn?.state.status !== "failed" || hasInlineFailure)) {
     return null;
   }
-
-  let errorMessage = t("error-message");
-
-  const errorCode = error.message.trim();
-  const isInsufficientCredits =
-    errorCode === CHAT_ERRORS.INSUFFICIENT_CREDITS.code;
-  if (isInsufficientCredits) {
-    errorMessage = t("insufficient-credits");
-  } else if (errorCode === CHAT_ERRORS.RATE_LIMITED.code) {
-    errorMessage = t("rate-limit-message");
-  }
-
+  const feedback = error
+    ? ninaFailureFeedback[error.code]
+    : ninaResponseFeedback[
+        turn?.state.status === "failed"
+          ? (turn.state.reason ?? "unknown")
+          : "unknown"
+      ];
   return (
-    <AiChatErrorSurface message={errorMessage}>
-      {isInsufficientCredits ? <ButtonCheckout /> : <ButtonRegenerate />}
-    </AiChatErrorSurface>
+    <MessageScrollerItem messageId="failure">
+      <Alert variant="destructive">
+        <HugeIcons icon={Alert02Icon} />
+        <AlertDescription>
+          <p>{t(`failures.${feedback.message}`)}</p>
+          {!error && canWrite && feedback.action === "retry" ? (
+            <Button
+              disabled={busy}
+              onClick={() => retry()}
+              size="sm"
+              variant="outline"
+            >
+              {t("retry")}
+            </Button>
+          ) : null}
+          {feedback.action === "credits" ? (
+            <Button
+              nativeButton={false}
+              render={<NavigationLink href="/user/settings/subscriptions" />}
+              size="sm"
+              variant="outline"
+            >
+              {t("review-credits")}
+            </Button>
+          ) : null}
+          {feedback.action === "sign-in" ? (
+            <Button
+              nativeButton={false}
+              render={<NavigationLink {...authNavigation.linkProps} />}
+              size="sm"
+              variant="outline"
+            >
+              {t("sign-in-again")}
+            </Button>
+          ) : null}
+          {feedback.action === "new-chat" ? (
+            <Button
+              nativeButton={false}
+              render={<NavigationLink href="/chat" />}
+              size="sm"
+              variant="outline"
+            >
+              {t("new-chat")}
+            </Button>
+          ) : null}
+        </AlertDescription>
+      </Alert>
+    </MessageScrollerItem>
   );
 }
-AiChatError.displayName = "AiChatError";
-
-function ButtonCheckout() {
-  const locale = useLocale();
-  const t = useTranslations("Auth");
-
-  const billing = useBillingNavigation();
-
-  const { data: hasSubscription } = useQueryWithStatus(
-    api.subscriptions.queries.hasActiveSubscription,
-    { productId: products.pro.id }
-  );
-  const handleCheckout = () => {
-    if (!isActiveLocale(locale)) {
-      return;
-    }
-
-    billing.openCheckout({
-      locale,
-      source: "chat-checkout",
-    });
-  };
-
-  const handleManageSubscription = () => {
-    if (!isActiveLocale(locale)) {
-      return;
-    }
-
-    billing.openPortal({
-      source: "chat-portal",
-    });
-  };
-
-  return (
-    <div className="flex items-center gap-4">
-      <Activity mode={hasSubscription ? "visible" : "hidden"}>
-        <Button
-          disabled={billing.isPending || !isActiveLocale(locale)}
-          onClick={handleManageSubscription}
-          variant="secondary"
-        >
-          <Spinner icon={Settings01Icon} isLoading={billing.isPending} />
-          {t("manage")}
-        </Button>
-      </Activity>
-      <Activity mode={hasSubscription ? "hidden" : "visible"}>
-        <Button
-          disabled={billing.isPending || !isActiveLocale(locale)}
-          onClick={handleCheckout}
-          variant="secondary"
-        >
-          <Spinner icon={PartyIcon} isLoading={billing.isPending} />
-          {t("get-pro")}
-        </Button>
-      </Activity>
-    </div>
-  );
-}
-ButtonCheckout.displayName = "ButtonCheckout";
-
-function ButtonRegenerate() {
-  const t = useTranslations("Ai");
-
-  const regenerate = useChat((state) => state.chat.regenerate);
-
-  return (
-    <Button onClick={() => regenerate()} variant="secondary">
-      {t("retry")}
-    </Button>
-  );
-}
-ButtonRegenerate.displayName = "ButtonRegenerate";

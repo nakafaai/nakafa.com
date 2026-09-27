@@ -1,22 +1,18 @@
 import type { AgentEdgeContract } from "@repo/backend/agent/edge";
-import { env } from "@repo/backend/convex/_generated/server";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/agent/errors";
-import { Effect } from "effect";
+import { Config, Effect } from "effect";
 
 const MAX_EDGE_SECRETS = 2;
 
 /** Reads and compares one edge secret without exposing it in diagnostics. */
 export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
   function* (request: Request, contract: AgentEdgeContract) {
-    const configured = yield* Effect.sync(
-      () => env[contract.secretEnvironment]
+    const configured = yield* Config.String(contract.secretEnvironment).pipe(
+      Effect.mapError(unavailableEdgeSecret)
     );
-    if (!configured) {
-      return yield* unavailableEdgeSecret();
-    }
     const acceptedSecrets = configured
       .split(",")
       .map((secret) => secret.trim());

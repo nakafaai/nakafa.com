@@ -1,17 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { readTryoutTaxonomy } from "@repo/backend/confect/contentRelease/tryout/taxonomy";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import schema from "@repo/backend/convex/schema";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
-import { convexTest } from "convex-test";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Builds one localized technical exam beneath the shared country fixture. */
 function makeTryoutExam(locale: ActiveAppLocaleCode) {
@@ -40,42 +38,63 @@ function makeTryoutExam(locale: ActiveAppLocaleCode) {
     title: "SNBT",
   });
 }
-
 describe("contentRelease/tryout/taxonomy", () => {
-  it("requires one active signed Tryout publication", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await expect(
-      t.query((ctx) => runConvexProgram(readTryoutTaxonomy(ctx, "en")))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
-  });
-
-  it("derives localized options and route count from one verified catalog", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog: [
-          makeTryoutCatalogRow("en").record.row,
-          makeTryoutExam("en"),
-          makeTryoutCatalogRow("id").record.row,
-          makeTryoutExam("id"),
-          makeTryoutCatalogRow("de").record.row,
-          makeTryoutExam("de"),
-        ],
-        placements: [
-          makeTryoutPlacementRow("en").record.row,
-          makeTryoutPlacementRow("id").record.row,
-          makeTryoutPlacementRow("de").record.row,
-        ],
+  it.effect("requires one active signed Tryout publication", () =>
+    Effect.gen(function* () {
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          expect(
+            yield* readTryoutTaxonomy("en").pipe(Effect.flip)
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_MISSING",
+          });
+        })
+      );
+    })
+  );
+  it.effect(
+    "derives localized options and route count from one verified catalog",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* t.run(
+          Effect.gen(function* () {
+            const tCtx = yield* MutationCtx;
+            yield* Effect.promise(() =>
+              activateTryoutSnapshot(tCtx, {
+                catalog: [
+                  makeTryoutCatalogRow("en").record.row,
+                  makeTryoutExam("en"),
+                  makeTryoutCatalogRow("id").record.row,
+                  makeTryoutExam("id"),
+                  makeTryoutCatalogRow("de").record.row,
+                  makeTryoutExam("de"),
+                ],
+                placements: [
+                  makeTryoutPlacementRow("en").record.row,
+                  makeTryoutPlacementRow("id").record.row,
+                  makeTryoutPlacementRow("de").record.row,
+                ],
+              })
+            );
+            expect(yield* readTryoutTaxonomy("id")).toEqual({
+              countries: [
+                {
+                  id: "indonesia",
+                  label: "Negara teknis",
+                },
+              ],
+              exams: [
+                {
+                  id: "snbt",
+                  label: "SNBT",
+                },
+              ],
+              routeCount: 2,
+            });
+          })
+        );
       })
-    );
-
-    await expect(
-      t.query((ctx) => runConvexProgram(readTryoutTaxonomy(ctx, "id")))
-    ).resolves.toEqual({
-      countries: [{ id: "indonesia", label: "Negara teknis" }],
-      exams: [{ id: "snbt", label: "SNBT" }],
-      routeCount: 2,
-    });
-  });
+  );
 });

@@ -1,10 +1,9 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/contentRelease/program.spec";
 import { readProgramCatalog } from "@repo/backend/content/program/catalog";
+import { programLayer } from "@repo/backend/content/program/confect";
 import { readProgramContext } from "@repo/backend/content/program/context";
-import { convexProgramLayer } from "@repo/backend/content/program/convex";
 import { readProgramPage } from "@repo/backend/content/program/page";
 import { readProgramPath } from "@repo/backend/content/program/path";
 import { readProgramRoute } from "@repo/backend/content/program/route";
@@ -20,9 +19,8 @@ const catalog = FunctionImpl.make(
   spec,
   "catalog",
   Effect.fn("contentRelease.program.catalog")(function* ({ appLocale }) {
-    const ctx = yield* QueryCtxService;
     return yield* readProgramCatalog(appLocale).pipe(
-      Effect.provide(convexProgramLayer(ctx))
+      Effect.provide(programLayer)
     );
   })
 );
@@ -31,9 +29,8 @@ const subjects = FunctionImpl.make(
   spec,
   "subjects",
   Effect.fn("contentRelease.program.subjects")(function* ({ appLocale }) {
-    const ctx = yield* QueryCtxService;
     return yield* readProgramSubjects(appLocale).pipe(
-      Effect.provide(convexProgramLayer(ctx))
+      Effect.provide(programLayer)
     );
   })
 );
@@ -42,7 +39,6 @@ const context = FunctionImpl.make(
   spec,
   "context",
   Effect.fn("contentRelease.program.context")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readProgramContext(
       args.appLocale,
       {
@@ -55,7 +51,7 @@ const context = FunctionImpl.make(
       },
       args.expectedActiveReleaseId
     ).pipe(
-      Effect.provide(convexProgramLayer(ctx)),
+      Effect.provide(programLayer),
       Effect.map(({ context: resolved, managed }) => ({
         groupJson: resolved?.groupJson ?? null,
         managed,
@@ -71,13 +67,12 @@ const page = FunctionImpl.make(
   spec,
   "page",
   Effect.fn("contentRelease.program.page")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readProgramPage(
       args.appLocale,
       args.expectedManifestHash,
       args.expectedReleaseId,
       args.paginationOpts
-    ).pipe(Effect.provide(convexProgramLayer(ctx)));
+    ).pipe(Effect.provide(programLayer));
   })
 );
 const path = FunctionImpl.make(
@@ -88,9 +83,8 @@ const path = FunctionImpl.make(
     appLocale,
     publicPath,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readProgramPath(appLocale, publicPath).pipe(
-      Effect.provide(convexProgramLayer(ctx))
+      Effect.provide(programLayer)
     );
   })
 );
@@ -102,9 +96,8 @@ const route = FunctionImpl.make(
     appLocale,
     publicPath,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readProgramRoute(appLocale, publicPath).pipe(
-      Effect.provide(convexProgramLayer(ctx))
+      Effect.provide(programLayer)
     );
   })
 );
@@ -113,9 +106,8 @@ const sitemapBuckets = FunctionImpl.make(
   spec,
   "sitemapBuckets",
   Effect.fn("contentRelease.program.sitemapBuckets")(function* ({ appLocale }) {
-    const ctx = yield* QueryCtxService;
     return yield* readProgramBuckets(appLocale).pipe(
-      Effect.provide(convexProgramLayer(ctx))
+      Effect.provide(programLayer)
     );
   })
 );
@@ -127,9 +119,8 @@ const sitemapPage = FunctionImpl.make(
     appLocale,
     bucket,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readProgramSitemap(appLocale, bucket).pipe(
-      Effect.provide(convexProgramLayer(ctx))
+      Effect.provide(programLayer)
     );
   })
 );

@@ -11,7 +11,7 @@ import {
 } from "@repo/backend/confect/customers/polar/spec";
 import {
   CustomerSyncIoErrorWire,
-  UserNotFoundWire,
+  UserNotFound,
 } from "@repo/backend/confect/customers/sync/spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
@@ -32,7 +32,7 @@ export default GroupSpec.make()
           PolarPortalErrorWire,
           PolarDeleteErrorWire,
           PolarUpdateErrorWire,
-          UserNotFoundWire,
+          UserNotFound,
         ]),
     })
   )

@@ -1,6 +1,7 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { compactRows } from "@repo/backend/confect/contentRelease/compact/rows";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -8,6 +9,7 @@ import {
   insertCompletedRelease,
 } from "@repo/backend/test/content/compact";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 describe("contentRelease/compact/rows", () => {
   it("retires predecessors below the prior floor while preserving current tombstones and recreated content", async () => {
@@ -34,7 +36,11 @@ describe("contentRelease/compact/rows", () => {
             artifactHash = sequence === 3 ? hashes[1] : "current";
           }
           await ctx.db.insert("contentHeads", {
-            ...(artifactHash === undefined ? {} : { artifactHash }),
+            ...(artifactHash === undefined
+              ? {}
+              : {
+                  artifactHash,
+                }),
             artifactLocale: "en",
             contentKey,
             family: "material",
@@ -60,13 +66,25 @@ describe("contentRelease/compact/rows", () => {
     });
     const compact = (phase: "heads" | "bindings", cursor: string | null) =>
       t.mutation((ctx) =>
-        runConvexProgram(compactRows(ctx, phase, 3, 4, cursor, 0))
+        Effect.runPromise(
+          compactRows(phase, 3, 4, cursor, 0).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       );
     const first = await compact("heads", null);
-    expect(first).toMatchObject({ deleted: 4, done: false });
+    expect(first).toMatchObject({
+      deleted: 4,
+      done: false,
+    });
     assert.ok(first.cursor);
     const second = await compact("heads", first.cursor);
-    expect(second).toMatchObject({ deleted: 0, done: false });
+    expect(second).toMatchObject({
+      deleted: 0,
+      done: false,
+    });
     assert.ok(second.cursor);
     expect(await compact("heads", second.cursor)).toEqual({
       cursor: null,
@@ -84,7 +102,11 @@ describe("contentRelease/compact/rows", () => {
       artifacts: await ctx.db.query("contentArtifacts").collect(),
     }));
     expect(remaining.heads).toMatchObject([
-      { contentKey: "deleted", operation: "delete", sequence: 4 },
+      {
+        contentKey: "deleted",
+        operation: "delete",
+        sequence: 4,
+      },
       {
         artifactHash: "current",
         contentKey: "recreated",
@@ -98,7 +120,6 @@ describe("contentRelease/compact/rows", () => {
       remaining.artifacts.every(({ retainUntil }) => retainUntil > Date.now())
     ).toBe(true);
   });
-
   it("pages route anchors without dropping the last page", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -118,20 +139,38 @@ describe("contentRelease/compact/rows", () => {
       }
     });
     const first = await t.mutation((ctx) =>
-      runConvexProgram(compactRows(ctx, "bindings", 3, 4, null, 0))
+      Effect.runPromise(
+        compactRows("bindings", 3, 4, null, 0).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
-    expect(first).toMatchObject({ deleted: 0, done: false });
+    expect(first).toMatchObject({
+      deleted: 0,
+      done: false,
+    });
     assert.ok(first.cursor);
     expect(
       await t.mutation((ctx) =>
-        runConvexProgram(compactRows(ctx, "bindings", 3, 4, first.cursor, 0))
+        Effect.runPromise(
+          compactRows("bindings", 3, 4, first.cursor, 0).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
-    ).toEqual({ cursor: null, deleted: 0, done: true });
+    ).toEqual({
+      cursor: null,
+      deleted: 0,
+      done: true,
+    });
     expect(
       await t.query((ctx) => ctx.db.query("contentBindings").collect())
     ).toHaveLength(33);
   });
-
   it("deletes obsolete tombstone items across bounded pages without touching the floor", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -153,20 +192,43 @@ describe("contentRelease/compact/rows", () => {
       }
     });
     const first = await t.mutation((ctx) =>
-      runConvexProgram(compactRows(ctx, "items", 3, 4, null, 0))
+      Effect.runPromise(
+        compactRows("items", 3, 4, null, 0).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
     );
-    expect(first).toMatchObject({ deleted: 4, done: false });
+    expect(first).toMatchObject({
+      deleted: 4,
+      done: false,
+    });
     assert.ok(first.cursor);
     expect(
       await t.mutation((ctx) =>
-        runConvexProgram(compactRows(ctx, "items", 3, 4, first.cursor, 0))
+        Effect.runPromise(
+          compactRows("items", 3, 4, first.cursor, 0).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       )
-    ).toEqual({ cursor: null, deleted: 1, done: true });
+    ).toEqual({
+      cursor: null,
+      deleted: 1,
+      done: true,
+    });
     expect(
       await t.query((ctx) => ctx.db.query("contentItems").collect())
-    ).toMatchObject([{ contentKey: "deleted-5", sequence: 4 }]);
+    ).toMatchObject([
+      {
+        contentKey: "deleted-5",
+        sequence: 4,
+      },
+    ]);
   });
-
   it.each(["batches", "releases"] as const)(
     "resumes obsolete %s through a full maintenance page",
     async (phase) => {
@@ -191,15 +253,34 @@ describe("contentRelease/compact/rows", () => {
         }
       });
       const first = await t.mutation((ctx) =>
-        runConvexProgram(compactRows(ctx, phase, 1, 34, null, 0))
+        Effect.runPromise(
+          compactRows(phase, 1, 34, null, 0).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        )
       );
-      expect(first).toMatchObject({ deleted: 32, done: false });
+      expect(first).toMatchObject({
+        deleted: 32,
+        done: false,
+      });
       assert.ok(first.cursor);
       expect(
         await t.mutation((ctx) =>
-          runConvexProgram(compactRows(ctx, phase, 1, 34, first.cursor, 0))
+          Effect.runPromise(
+            compactRows(phase, 1, 34, first.cursor, 0).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
         )
-      ).toEqual({ cursor: null, deleted: 1, done: true });
+      ).toEqual({
+        cursor: null,
+        deleted: 1,
+        done: true,
+      });
       const remaining = await t.query(async (ctx) => {
         const rows =
           phase === "releases"

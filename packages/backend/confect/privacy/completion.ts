@@ -1,17 +1,19 @@
 import { SchemaToValidator } from "@confect/core";
-import { Scheduler } from "@confect/server";
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { vWorkflowId } from "@convex-dev/workflow";
 import { vResultValidator } from "@convex-dev/workpool";
 import refs from "@repo/backend/confect/_generated/refs";
+import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { Scheduler } from "@repo/backend/confect/_generated/services";
 import { internalMutation } from "@repo/backend/confect/functions";
 import { WORKFLOW_RECOVERY_DELAY_MS } from "@repo/backend/confect/privacy/recovery";
 import {
   cleanupSourceValidator,
+  PrivacyCleanupError,
   toPrivacyCleanupError,
 } from "@repo/backend/confect/privacy/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { v } from "convex/values";
-import { Duration, Effect, flow } from "effect";
+import { Duration, Effect, Scheduler as EffectScheduler, flow } from "effect";
 /** Retains incomplete privacy journals and releases successful ones. */
 export const handleCleanupComplete = internalMutation({
   args: {
@@ -23,36 +25,43 @@ export const handleCleanupComplete = internalMutation({
   },
   returns: v.null(),
   handler: (ctx, args): Promise<null> =>
-    runConvexProgram(
-      Effect.gen(function* () {
-        const scheduler = yield* Scheduler.Scheduler.pipe(
-          Effect.provide(Scheduler.layer(ctx.scheduler))
-        );
-        if (args.result.kind === "success") {
-          yield* scheduler.runAfter(
-            Duration.zero,
-            refs.internal.privacy.recovery.cleanupWorkflowStorage,
-            { source: args.context.source, workflowId: args.workflowId }
-          );
-          return null;
-        }
-        yield* Effect.logError(
-          "Privacy cleanup workflow requires recovery"
-        ).pipe(
-          Effect.annotateLogs({
-            resultKind: args.result.kind,
+    Effect.gen(function* () {
+      const scheduler = yield* Scheduler;
+      if (args.result.kind === "success") {
+        yield* scheduler.runAfter(
+          Duration.zero,
+          refs.internal.privacy.recovery.cleanupWorkflowStorage,
+          {
             source: args.context.source,
             workflowId: args.workflowId,
-          })
+          }
         );
-        yield* scheduler
-          .runAfter(
-            Duration.millis(WORKFLOW_RECOVERY_DELAY_MS),
-            refs.internal.privacy.recovery.retryCleanupWorkflow,
-            { source: args.context.source, workflowId: args.workflowId }
-          )
-          .pipe(Effect.catchDefect(flow(toPrivacyCleanupError, Effect.fail)));
         return null;
+      }
+      yield* Effect.logError("Privacy cleanup workflow requires recovery").pipe(
+        Effect.annotateLogs({
+          resultKind: args.result.kind,
+          source: args.context.source,
+          workflowId: args.workflowId,
+        })
+      );
+      yield* scheduler
+        .runAfter(
+          Duration.millis(WORKFLOW_RECOVERY_DELAY_MS),
+          refs.internal.privacy.recovery.retryCleanupWorkflow,
+          {
+            source: args.context.source,
+            workflowId: args.workflowId,
+          }
+        )
+        .pipe(Effect.catchDefect(flow(toPrivacyCleanupError, Effect.fail)));
+      return null;
+    }).pipe(
+      Effect.provide(
+        RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+      ),
+      RegisteredFunction.runHandlerPromise(PrivacyCleanupError, {
+        scheduler: new EffectScheduler.MixedScheduler("sync"),
       })
     ),
 });

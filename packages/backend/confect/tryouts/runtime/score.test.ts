@@ -1,5 +1,7 @@
-import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
+import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
@@ -12,11 +14,10 @@ import {
   scoreTryoutSection,
   summarizeResponses,
 } from "@repo/backend/confect/tryouts/runtime/score";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import {
+  finalizeLoadedAttempt,
   FROZEN_SCORE_NOW as NOW,
   FROZEN_SCORE_SET_IDENTITY as SET_IDENTITY,
   FROZEN_SCORE_SNAPSHOT_ID as SNAPSHOT_ID,
@@ -24,36 +25,6 @@ import {
 } from "@repo/backend/test/tryout/score";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-
-type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
-
-/** Finalizes an attempt through the same single placement read as production. */
-const finalizeLoadedAttempt = Effect.fn(
-  "tryouts.runtime.test.finalizeLoadedAttempt"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    readonly attempt: TryoutAttempt;
-    readonly endReason: TryoutEndReason;
-    readonly now: number;
-  }
-) {
-  const placements = yield* loadAttemptPlacements(ctx, args.attempt);
-  const responseIndex = yield* loadAttemptResponses(
-    ctx,
-    args.attempt,
-    placements,
-    "complete"
-  );
-  const source = yield* loadAttemptScoreSource(
-    ctx,
-    args.attempt,
-    responseIndex.placements
-  );
-
-  return yield* finalizeAttemptScore(ctx, { ...args, responseIndex, source });
-});
 
 describe("tryouts/runtime/score", () => {
   it("masks unexpected owned attempt lookup failures", async () => {
@@ -68,57 +39,54 @@ describe("tryouts/runtime/score", () => {
     const storageCause = new Error("internal tryoutAttempts storage details");
     await t.mutation(async (ctx) => {
       const get = vi.spyOn(ctx.db, "get").mockRejectedValue(storageCause);
-      const failure = await runConvexProgram(
-        requireOwnedAttempt(ctx, {
+      const failure = await Effect.runPromise(
+        requireOwnedAttempt({
           attemptId: seeded.attemptId,
           userId: seeded.identity.userId,
-        }).pipe(Effect.flip, Effect.orDie)
+        }).pipe(
+          Effect.flip,
+          Effect.orDie,
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
       );
       expect(failure).toMatchObject({
         code: "TRYOUT_RUNTIME_FAILED",
         message: "Unable to load try-out attempt.",
       });
-      expect(failure.cause).toBeInstanceOf(TryoutRuntimeError);
-      expect(failure.cause).toMatchObject({ cause: storageCause });
+      expect(failure).toBeInstanceOf(TryoutRuntimeError);
+      expect(failure.cause).toBe(storageCause);
       await expect(
-        runConvexProgram(
-          requireOwnedAttempt(ctx, {
+        Effect.runPromise(
+          requireOwnedAttempt({
             attemptId: seeded.attemptId,
             userId: seeded.identity.userId,
-          })
+          }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
         )
       ).rejects.toMatchObject({
-        data: {
-          code: "TRYOUT_RUNTIME_FAILED",
-          message: "Unable to load try-out attempt.",
-        },
+        code: "TRYOUT_RUNTIME_FAILED",
+        message: "Unable to load try-out attempt.",
       });
       get.mockRestore();
     });
   });
-
   it.effect(
     "scores from the frozen bundle after the active release advances",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
-
         const snapshot = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const attempt = yield* seedFrozenTryoutScoreState(ctx);
-                yield* finalizeLoadedAttempt(ctx, {
-                  attempt,
-                  endReason: "submitted",
-                  now: NOW,
-                });
-
-                yield* finalizeLoadedAttempt(ctx, {
-                  attempt,
-                  endReason: "submitted",
-                  now: NOW + 1,
-                });
+                for (const now of [NOW, NOW + 1]) {
+                  yield* finalizeLoadedAttempt({
+                    attempt,
+                    endReason: "submitted",
+                    now,
+                  });
+                }
                 const score = yield* Effect.promise(() =>
                   ctx.db
                     .query("tryoutScores")
@@ -130,13 +98,14 @@ describe("tryouts/runtime/score", () => {
                 const finalizedAttempt = yield* Effect.promise(() =>
                   ctx.db.get(attempt._id)
                 );
-
-                return { finalizedAttempt, score };
-              })
+                return {
+                  finalizedAttempt,
+                  score,
+                };
+              }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
             )
           )
         );
-
         expect(snapshot.finalizedAttempt).toMatchObject({
           endReason: "submitted",
           status: "completed",
@@ -152,13 +121,13 @@ describe("tryouts/runtime/score", () => {
         });
       })
   );
-
   it.effect("rejects stale response correctness before terminal writes", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.gen(function* () {
               const fixture = yield* Effect.promise(() =>
                 seedTryoutContentAccessState(ctx, {
@@ -205,15 +174,14 @@ describe("tryouts/runtime/score", () => {
                 })
               );
               return fixture;
-            })
+            }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
           )
         )
       );
-
       yield* Effect.promise(() =>
         expect(
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const attempt = yield* Effect.promise(() =>
                   ctx.db.get(seeded.attemptId)
@@ -223,22 +191,21 @@ describe("tryouts/runtime/score", () => {
                     "Expected one active try-out attempt."
                   );
                 }
-                return yield* finalizeLoadedAttempt(ctx, {
+                return yield* finalizeLoadedAttempt({
                   attempt,
                   endReason: "submitted",
                   now: NOW + 1000,
                 });
-              })
+              }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
             )
           )
         ).rejects.toMatchObject({
-          data: { code: "TRYOUT_RESPONSE_SELECTION_MISMATCH" },
+          code: "TRYOUT_RESPONSE_SELECTION_MISMATCH",
         })
       );
-
       const stored = yield* Effect.promise(() =>
         t.query((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.gen(function* () {
               const attempt = yield* Effect.promise(() =>
                 ctx.db.get(seeded.attemptId)
@@ -249,8 +216,14 @@ describe("tryouts/runtime/score", () => {
               const section = yield* Effect.promise(() =>
                 ctx.db.get(seeded.sectionAttemptId)
               );
-              return { attempt, scores, section };
-            })
+              return {
+                attempt,
+                scores,
+                section,
+              };
+            }).pipe(
+              Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+            )
           )
         )
       );
@@ -268,15 +241,15 @@ describe("tryouts/runtime/score", () => {
       });
     })
   );
-
   it.effect(
     "rejects duplicate placement identities before terminal writes",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const fixture = yield* Effect.promise(() =>
                   seedTryoutContentAccessState(ctx, {
@@ -300,17 +273,23 @@ describe("tryouts/runtime/score", () => {
                     "Expected a complete try-out integrity fixture."
                   );
                 }
-
                 yield* Effect.promise(() =>
                   ctx.db.patch(attempt._id, {
                     scoreStatus: "official",
                     scoringStrategy: "raw",
-                    sectionSnapshots: [{ ...snapshot, questionCount: 2 }],
+                    sectionSnapshots: [
+                      {
+                        ...snapshot,
+                        questionCount: 2,
+                      },
+                    ],
                     totalQuestions: 2,
                   })
                 );
                 yield* Effect.promise(() =>
-                  ctx.db.patch(section._id, { totalQuestions: 2 })
+                  ctx.db.patch(section._id, {
+                    totalQuestions: 2,
+                  })
                 );
                 const { _creationTime, _id, ...placementValues } = placement;
                 yield* Effect.promise(() =>
@@ -320,15 +299,14 @@ describe("tryouts/runtime/score", () => {
                   })
                 );
                 return fixture;
-              })
+              }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
             )
           )
         );
-
         yield* Effect.promise(() =>
           expect(
             t.mutation((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 Effect.gen(function* () {
                   const attempt = yield* Effect.promise(() =>
                     ctx.db.get(seeded.attemptId)
@@ -338,22 +316,21 @@ describe("tryouts/runtime/score", () => {
                       "Expected one active try-out attempt."
                     );
                   }
-                  return yield* finalizeLoadedAttempt(ctx, {
+                  return yield* finalizeLoadedAttempt({
                     attempt,
                     endReason: "submitted",
                     now: NOW + 1000,
                   });
-                })
+                }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
               )
             )
           ).rejects.toMatchObject({
-            data: { code: "TRYOUT_PLACEMENT_DUPLICATE" },
+            code: "TRYOUT_PLACEMENT_DUPLICATE",
           })
         );
-
         const stored = yield* Effect.promise(() =>
           t.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const attempt = yield* Effect.promise(() =>
                   ctx.db.get(seeded.attemptId)
@@ -367,8 +344,17 @@ describe("tryouts/runtime/score", () => {
                 const section = yield* Effect.promise(() =>
                   ctx.db.get(seeded.sectionAttemptId)
                 );
-                return { attempt, progress, scores, section };
-              })
+                return {
+                  attempt,
+                  progress,
+                  scores,
+                  section,
+                };
+              }).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
             )
           )
         );
@@ -398,41 +384,57 @@ describe("tryouts/runtime/score", () => {
   )("rolls back terminal writes on %s", async (kind, code) => {
     const t = convexTest(schema, convexModules);
     const attempt = await t.mutation((ctx) =>
-      runConvexProgram(seedFrozenTryoutScoreState(ctx))
+      Effect.runPromise(
+        seedFrozenTryoutScoreState(ctx).pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      )
     );
     await expect(
       t.mutation(async (ctx) => {
-        const placements = await runConvexProgram(
-          loadAttemptPlacements(ctx, attempt)
+        const placements = await Effect.runPromise(
+          loadAttemptPlacements(attempt).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
         );
-        const responseIndex = await runConvexProgram(
-          loadAttemptResponses(ctx, attempt, placements, "complete")
+        const responseIndex = await Effect.runPromise(
+          loadAttemptResponses(attempt, placements, "complete").pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
         );
-        const source = await runConvexProgram(
-          loadAttemptScoreSource(ctx, attempt, placements)
+        const source = await Effect.runPromise(
+          loadAttemptScoreSource(attempt, placements).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
         );
         if (kind === "foreign source") {
           const { _id, _creationTime, ...values } = attempt;
           const foreignId = await ctx.db.insert("tryoutAttempts", values);
-          return runConvexProgram(
+          return Effect.runPromise(
             scoreTryoutSection({
               attempt,
               placements,
               responses: [],
-              source: { ...source, attemptId: foreignId },
+              source: {
+                ...source,
+                attemptId: foreignId,
+              },
               totalQuestions: 1,
-            })
+            }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
           );
         }
         if (kind === "wrong strategy") {
-          return runConvexProgram(
+          return Effect.runPromise(
             scoreTryoutSection({
-              attempt: { ...attempt, scoringStrategy: "irt" },
+              attempt: {
+                ...attempt,
+                scoringStrategy: "irt",
+              },
               placements,
               responses: [],
               source,
               totalQuestions: 1,
-            })
+            }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
           );
         }
         if (kind === "progress failure") {
@@ -443,45 +445,56 @@ describe("tryouts/runtime/score", () => {
               throw new Error("Progress storage unavailable.");
             });
         }
-        return runConvexProgram(
-          finalizeAttemptScore(ctx, {
+        return Effect.runPromise(
+          finalizeAttemptScore({
             attempt:
               kind === "inactive"
-                ? { ...attempt, status: "completed" }
+                ? {
+                    ...attempt,
+                    status: "completed",
+                  }
                 : attempt,
             endReason: "submitted",
             now: NOW,
             responseIndex,
             source,
-          })
+          }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
         );
       })
     ).rejects.toMatchObject({
-      data: {
-        code,
-      },
+      code,
     });
     expect(
       await t.query((ctx) => ctx.db.query("tryoutScores").collect())
     ).toEqual([]);
     expect(await t.query((ctx) => ctx.db.get(attempt._id))).toEqual(attempt);
   });
-
   it("counts only complete responses and distinguishes incorrect answers", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
-      await runConvexProgram(seedFrozenTryoutScoreState(ctx));
+      await Effect.runPromise(
+        seedFrozenTryoutScoreState(ctx).pipe(
+          Effect.provide(mutationLayer(confectSchema, ctx))
+        )
+      );
       const response = await ctx.db.query("tryoutResponses").unique();
-      if (!response) {
-        throw new Error("Expected a scored response.");
-      }
+      assert.isNotNull(response, "Expected a scored response.");
       expect(
         summarizeResponses([
           response,
-          { ...response, isComplete: false },
-          { ...response, isCorrect: false },
+          {
+            ...response,
+            isComplete: false,
+          },
+          {
+            ...response,
+            isCorrect: false,
+          },
         ])
-      ).toEqual({ answeredCount: 2, correctAnswers: 1 });
+      ).toEqual({
+        answeredCount: 2,
+        correctAnswers: 1,
+      });
     });
   });
 });

@@ -1,6 +1,6 @@
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { SubscriptionRecurringInterval } from "@repo/backend/confect/subscriptions/schema";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { WithoutSystemFields } from "convex/server";
 
 const INTERVAL_MAP: Record<string, SubscriptionRecurringInterval> = {
@@ -40,7 +40,7 @@ function getSchoolIdFromMetadata(
  */
 export function convertToDatabaseSubscription(
   subscription: Subscription
-): WithoutSystemFields<Doc<"subscriptions">> {
+): WithoutSystemFields<Docs["subscriptions"]> {
   const schoolId = getSchoolIdFromMetadata(subscription.metadata);
   return {
     id: subscription.id,

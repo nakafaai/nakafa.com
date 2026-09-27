@@ -1,6 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -11,7 +13,6 @@ import {
   TRYOUT_CATALOG_DOCUMENT_LIMIT,
   TRYOUT_PLACEMENT_DOCUMENT_LIMIT,
 } from "@repo/backend/confect/contentRelease/tryout/limits";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 type TryoutRow = Extract<
@@ -37,14 +38,13 @@ type PlacementRow = Extract<
 export const stageTryoutCatalog = Effect.fn(
   "contentRelease.stageTryoutCatalog"
 )(function* (
-  ctx: MutationCtx,
   snapshotId: string,
   index: number,
   source: CatalogRow,
   rowJson: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const facts = tryoutCatalogFacts(source.record);
   const stored = {
     ...facts,
@@ -95,14 +95,13 @@ export const stageTryoutCatalog = Effect.fn(
 export const stageTryoutPlacement = Effect.fn(
   "contentRelease.stageTryoutPlacement"
 )(function* (
-  ctx: MutationCtx,
   snapshotId: string,
   index: number,
   source: PlacementRow,
   rowJson: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const facts = tryoutPlacementFacts(source.record);
   const stored = {
     ...facts,

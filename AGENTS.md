@@ -20,7 +20,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Lint and format: Biome through Ultracite
 - Tests: Vitest
 - Apps: `apps/www`, `apps/api`, `apps/mcp`, `apps/email`
-- Main packages: `packages/backend`, `packages/design-system`, `packages/contents`, `packages/ai`, `packages/testing`
+- Main packages: `packages/backend`, `packages/design-system`, `packages/contents`, `packages/testing`
 - Same-app imports use `@/*`; cross-package imports use `@repo/*`.
 - `packages/testing` owns shared Vitest defaults by runtime. Node workspaces use `@repo/testing/node`, React workspaces use `@repo/testing/react`, and each workspace keeps only local aliases, setup, projects, and coverage policy.
 - `packages/utilities` owns generic cross-domain primitives only. Keep content contracts, roles, taxonomy, Convex values, AI vocabulary, UI copy, and product helpers in their domain-owning package.
@@ -54,7 +54,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - `Effect.runPromise`, `Effect.runSync`, and `Effect.runPromiseExit` belong only at framework, CLI, script-main, test, or browser event boundaries. Services, domain modules, projections, and helper chains compose Effects without running them.
 - Private pure helpers are allowed only for small deterministic transformations after validation when they cannot fail, perform IO, access dependencies, mutate shared state, or define a public source of truth.
 - Name shared modules by domain capability, such as `lib/analytics`, `lib/content`, or `lib/checkout`. Do not create `lib/effect` catch-alls.
-- In `packages/ai`, keep provider calls, tool execution, search, scraping, repair, and orchestration explicit in Effect. Keep provider configuration in config boundaries, make source scoping language-neutral, reflect actual provider calls in UI data, and back final output with retrieved evidence, deterministic math, or a stated limitation.
+- In `packages/backend/confect/nina`, keep provider calls, tool execution, search, scraping, repair, and orchestration explicit in Effect. Keep provider configuration in config boundaries, make source scoping language-neutral, reflect actual provider calls in UI data, and back final output with retrieved evidence, deterministic math, or a stated limitation.
 - Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request or uncached data. Use the framework Promise boundary for request-less static work and document the exception with `https://nextjs.org/docs/messages/next-prerender-current-time`.
 - After touching app effectful code, scan touched paths for raw `try/catch`. After touching domain source or projections, scan for assertions, broad records, `any`, generic errors, raw throws, runners, and silent source fallbacks. Explain every retained framework exception.
 - `scripts/check/effect.ts` enforces this in every authored module under `apps`, `packages`, and `scripts`: no raw `try`/`catch` statement and no `typeof ... === "object"` narrowing. Narrow unknown input with `Predicate` or `Schema` and model expected failure with a tagged Effect error.

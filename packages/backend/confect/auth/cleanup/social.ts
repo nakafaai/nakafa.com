@@ -1,9 +1,10 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { deleteMessageBatchFromPoint } from "@repo/backend/confect/chats/transcript/write";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow, Option } from "effect";
 
 const BOOKMARK_BATCH_SIZE = 25;
@@ -14,9 +15,9 @@ const CHAT_TRACE_BATCH_SIZE = 50;
 
 /** Deletes one bounded batch of bookmarks and their collections. */
 const cleanupBookmarks = Effect.fn("auth.cleanup.cleanupBookmarks")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const bookmarks = yield* database
       .table("bookmarks")
       .index("by_userId", (query) => query.eq("userId", userId))
@@ -43,9 +44,9 @@ const cleanupBookmarks = Effect.fn("auth.cleanup.cleanupBookmarks")(
 
 /** Deletes one bounded batch of a user's comments and votes. */
 const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const votes = yield* database
       .table("commentVotes")
       .index("by_userId", (query) => query.eq("userId", userId))
@@ -121,9 +122,9 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
 
 /** Deletes one bounded batch of Nina traces, including orphaned chat traces. */
 const cleanupChatTraces = Effect.fn("auth.cleanup.cleanupChatTraces")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const traces = yield* database
       .table("ninaCapabilityTraces")
       .index("by_userId", (query) => query.eq("userId", userId))
@@ -139,9 +140,9 @@ const cleanupChatTraces = Effect.fn("auth.cleanup.cleanupChatTraces")(
 
 /** Deletes one chat and its bounded transcript batches after traces are gone. */
 const cleanupChats = Effect.fn("auth.cleanup.cleanupChats")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const chat = yield* database
       .table("chats")
       .index("by_userId", (query) => query.eq("userId", userId))
@@ -160,18 +161,39 @@ const cleanupChats = Effect.fn("auth.cleanup.cleanupChats")(
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
 
+/** Retires this account's upload grants; Agent retains file-reference ownership. */
+const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
+  function* (userId: Id<"users">) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const uploads = yield* reader
+      .table("ninaUploads")
+      .index("by_userId_and_expiresAt", (q) => q.eq("userId", userId))
+      .take(25)
+      .pipe(Effect.orDie);
+    for (const upload of uploads) {
+      yield* writer.table("ninaUploads").delete(upload._id).pipe(Effect.orDie);
+    }
+    return uploads.length > 0;
+  },
+  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+);
+
 /** Deletes one bounded batch of user-authored social and saved content. */
 export const cleanupUserSocialData = Effect.fn(
   "auth.cleanup.cleanupUserSocialData"
-)(function* (ctx: MutationCtx, userId: Id<"users">) {
-  if (yield* cleanupBookmarks(ctx, userId)) {
+)(function* (userId: Id<"users">) {
+  if (yield* cleanupBookmarks(userId)) {
     return true;
   }
-  if (yield* cleanupComments(ctx, userId)) {
+  if (yield* cleanupComments(userId)) {
     return true;
   }
-  if (yield* cleanupChatTraces(ctx, userId)) {
+  if (yield* cleanupChatTraces(userId)) {
     return true;
   }
-  return yield* cleanupChats(ctx, userId);
+  if (yield* cleanupNinaUploads(userId)) {
+    return true;
+  }
+  return yield* cleanupChats(userId);
 });

@@ -1,20 +1,20 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import {
   readLocalStorageValue,
   useDocumentVisibility,
   useLocalStorage,
 } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
-import { api } from "@repo/backend/convex/_generated/api";
-import { useConvexAuth, useMutation } from "convex/react";
-import { Effect } from "effect";
+import { useConvexAuth } from "convex/react";
+import { Effect, Result } from "effect";
 import { nanoid } from "nanoid";
 import { useEffect } from "react";
-import { readContentViewErrorCode } from "@/lib/content/views/code";
 import { createContentViewKey } from "@/lib/content/views/key";
 import { useContentViews } from "@/lib/context/use-content-views";
 import { useViewer } from "@/lib/identity/client";
@@ -49,7 +49,7 @@ export function useRecordContentView({
   delay = 3000,
 }: UseRecordContentViewOptions) {
   const recordView = useMutation(
-    api.contents.mutations.views.recordContentView
+    refs.public.contents.mutations.views.recordContentView
   );
 
   const markAsViewed = useContentViews((s) => s.markAsViewed);
@@ -114,29 +114,23 @@ export function useRecordContentView({
             section,
           })
         ).pipe(
-          Effect.tap(() => Effect.sync(() => markAsViewed(viewKey))),
-          Effect.catchTag("UnknownError", ({ cause: error }) => {
-            const errorCode = readContentViewErrorCode(error);
-
-            // A write that never reached Convex carries no code: the browser
-            // could not open or keep the socket, which is an expected delivery
-            // failure for this best-effort counter. The dedupe key stays unset
-            // so the next visit retries, and only typed failures reach
-            // operational exceptions with their server code attached.
-            if (errorCode === undefined) {
-              return Effect.void;
-            }
-
-            return Effect.sync(() =>
-              captureException(error, {
-                contentId,
-                contextMode: context?.mode ?? "canonical",
-                convex_error_code: errorCode,
-                locale,
-                source: "record-content-view",
-              })
-            );
-          })
+          Effect.flatMap((result) =>
+            Result.match(result, {
+              onSuccess: () => Effect.sync(() => markAsViewed(viewKey)),
+              onFailure: (error) =>
+                Effect.sync(() =>
+                  captureException(error, {
+                    contentId,
+                    contextMode: context?.mode ?? "canonical",
+                    convex_error_code: error.code,
+                    locale,
+                    source: "record-content-view",
+                  })
+                ),
+            })
+          ),
+          // A transport failure leaves the dedupe key unset for the next visit.
+          Effect.catchTag("UnknownError", () => Effect.void)
         )
       );
     }, delay);

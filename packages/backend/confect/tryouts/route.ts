@@ -1,8 +1,7 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { TryoutKeySchema } from "@nakafa/aksara-contracts/tryout/key";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
-import type { ConvexTaggedError } from "@repo/backend/confect/failure";
-import { failureWire } from "@repo/backend/confect/failure";
+import { publicFailure } from "@repo/backend/confect/failure";
 import { Effect, Schema } from "effect";
 /** Accepts one route key at the Convex transport boundary. */
 export const tryoutRouteKeyValidator = Schema.String;
@@ -22,16 +21,16 @@ const TryoutSetIdentitySchema = Schema.Struct({
   trackKey: TryoutKeySchema,
 });
 /** Expected failure while decoding one authored try-out route identity. */
-export class TryoutRouteError
-  extends Schema.TaggedError<TryoutRouteError>()("TryoutRouteError", {
+export class TryoutRouteError extends Schema.TaggedError<TryoutRouteError>()(
+  "TryoutRouteError",
+  {
     cause: Schema.optional(Schema.Unknown),
     code: Schema.Literal("TRYOUT_ROUTE_INVALID"),
     message: Schema.String,
-  })
-  implements ConvexTaggedError {}
+  }
+) {}
 /** Decodes transport strings through the canonical Aksara key contracts. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const TryoutRouteErrorWire = failureWire(TryoutRouteError);
+export const TryoutRouteErrorWire = publicFailure(TryoutRouteError);
 export const decodeTryoutSetIdentity = Effect.fn(
   "tryouts.route.decodeSetIdentity"
 )(function* (input: unknown) {

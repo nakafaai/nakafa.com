@@ -1,7 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 export const programPageValidator = Schema.Struct({
@@ -75,7 +75,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => programCatalogValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -89,7 +89,7 @@ export default GroupSpec.make()
           managed: Schema.Boolean,
           routeJson: Schema.mutable(Schema.Array(Schema.String)),
         }),
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -108,7 +108,7 @@ export default GroupSpec.make()
         publicPath: Schema.String,
       }),
       returns: () => programContextValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -121,7 +121,7 @@ export default GroupSpec.make()
         paginationOpts: PaginationOptionsSchema,
       }),
       returns: () => programPageValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -132,7 +132,7 @@ export default GroupSpec.make()
         publicPath: Schema.String,
       }),
       returns: () => programPathValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -143,7 +143,7 @@ export default GroupSpec.make()
         publicPath: Schema.String,
       }),
       returns: () => programRouteValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -153,7 +153,7 @@ export default GroupSpec.make()
         appLocale: appLocaleValidator,
       }),
       returns: () => programBucketsValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -164,6 +164,6 @@ export default GroupSpec.make()
         bucket: Schema.String,
       }),
       returns: () => programSitemapValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

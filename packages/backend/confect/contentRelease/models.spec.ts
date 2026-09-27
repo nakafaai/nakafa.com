@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   modelBuildRestartArgsValidator,
   modelBuildRestartResultValidator,
@@ -21,7 +21,7 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => modelBuildStatusValidator,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   )
   .addFunction(
@@ -32,6 +32,6 @@ export default GroupSpec.make()
         releaseId: Schema.String,
       }),
       returns: () => Schema.Null,
-      error: () => ReleaseErrorWire,
+      error: () => ReleaseError,
     })
   );

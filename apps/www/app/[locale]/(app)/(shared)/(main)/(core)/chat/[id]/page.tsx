@@ -1,73 +1,21 @@
-import { api } from "@repo/backend/convex/_generated/api";
+"use client";
+
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { fetchQuery } from "convex/nextjs";
-import { Effect } from "effect";
-import type { Metadata } from "next";
-import { cache, Suspense, use } from "react";
+import { useParams } from "next/navigation";
+import { Suspense } from "react";
+import { ChatHeader } from "@/components/ai/chat-header";
 import { AiChatPage } from "@/components/ai/chat-page";
-import { captureServerExceptionSafely } from "@/lib/analytics/server";
-import { getToken } from "@/lib/auth/server";
 
-/** Loads the current chat title once per request for metadata generation. */
-const getChatTitle = cache(async (id: Id<"chats">) => {
-  const token = await getToken();
-
-  return await fetchQuery(
-    api.chats.queries.getChatTitle,
-    { chatId: id },
-    token ? { token } : undefined
-  );
-});
-
-/** Generates the metadata for one authenticated chat route. */
-export async function generateMetadata({
-  params,
-}: {
-  params: PageProps<"/[locale]/chat/[id]">["params"];
-}): Promise<Metadata> {
-  const { id } = await params;
-  const defaultMetadata = {};
-  const title = await Effect.runPromise(
-    Effect.tryPromise(() => getChatTitle(id as Id<"chats">)).pipe(
-      Effect.catchTag("UnknownError", ({ cause: error }) =>
-        Effect.gen(function* () {
-          yield* captureServerExceptionSafely(error, {
-            source: "chat-page-metadata",
-          });
-
-          return null;
-        })
-      )
-    )
-  );
-
-  if (!title) {
-    return defaultMetadata;
-  }
-
-  return {
-    title: {
-      absolute: title,
-    },
-  };
-}
-
-/** Renders the chat route with a local Suspense boundary for runtime params. */
-export default function Page(props: PageProps<"/[locale]/chat/[id]">) {
+/** URL params resolve synchronously on client navigation, preserving the prompt. */
+export default function Page() {
   return (
-    <Suspense fallback={null}>
-      <ChatRouteContent params={props.params} />
+    <Suspense fallback={<ChatHeader />}>
+      <ChatRoute />
     </Suspense>
   );
 }
 
-/** Resolves the runtime chat id inside the nearest Suspense boundary. */
-function ChatRouteContent({
-  params,
-}: {
-  params: PageProps<"/[locale]/chat/[id]">["params"];
-}) {
-  const { id } = use(params);
-
-  return <AiChatPage chatId={id as Id<"chats">} />;
+function ChatRoute() {
+  const { id } = useParams<{ id: Id<"chats"> }>();
+  return <AiChatPage chatId={id} key={id} />;
 }

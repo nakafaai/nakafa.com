@@ -6,7 +6,6 @@ import { cleanupUserSocialData } from "@repo/backend/confect/auth/cleanup/social
 import { cleanupUserTryouts } from "@repo/backend/confect/auth/cleanup/tryouts";
 import { cleanupFinalizedAccountDeletion } from "@repo/backend/confect/auth/deletion/cancel";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /**
@@ -16,26 +15,26 @@ import { Effect } from "effect";
  */
 export const cleanupDeletedUserProgram = Effect.fn(
   "auth.cleanup.cleanupDeletedUser"
-)(function* (ctx: MutationCtx, userId: Id<"users">) {
-  if (yield* cleanupUserTryouts(ctx, userId)) {
+)(function* (userId: Id<"users">) {
+  if (yield* cleanupUserTryouts(userId)) {
     return true;
   }
-  if (yield* cleanupUserSchoolCommunity(ctx, userId)) {
+  if (yield* cleanupUserSchoolCommunity(userId)) {
     return true;
   }
-  if (yield* cleanupUserSchoolData(ctx, userId)) {
+  if (yield* cleanupUserSchoolData(userId)) {
     return true;
   }
-  if (yield* cleanupUserSocialData(ctx, userId)) {
+  if (yield* cleanupUserSocialData(userId)) {
     return true;
   }
-  if (yield* cleanupUserLearningData(ctx, userId)) {
+  if (yield* cleanupUserLearningData(userId)) {
     return true;
   }
-  if (yield* cleanupUserConsents(ctx, userId)) {
+  if (yield* cleanupUserConsents(userId)) {
     return true;
   }
-  if (yield* cleanupFinalizedAccountDeletion(ctx, userId)) {
+  if (yield* cleanupFinalizedAccountDeletion(userId)) {
     return true;
   }
   return false;

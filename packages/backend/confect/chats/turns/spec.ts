@@ -1,6 +1,5 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { modelIdValueValidator } from "@repo/backend/confect/chats/schema";
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 /** In-flight credit holds are owned by one authenticated user and model. */
@@ -27,4 +26,3 @@ export class ChatTurnError extends Schema.TaggedError<ChatTurnError>()(
     message: Schema.String,
   }
 ) {}
-export const ChatTurnFailure = failureWire(ChatTurnError);

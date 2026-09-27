@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { compactArtifacts } from "@repo/backend/confect/contentRelease/compact/artifacts";
 import {
   loadRouteBinding,
@@ -13,8 +16,6 @@ import {
   COMPACTION_PAGE_BYTES,
   COMPACTION_PAGE_COUNT,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
 
 const compactionPage = {
@@ -40,15 +41,13 @@ interface RowPage {
 
 /** Deletes one content version while retaining the exact floor anchor. */
 const compactHead = Effect.fn("contentRelease.compactHead")(function* (
-  ctx: MutationCtx,
-  row: Doc<"contentHeads">,
+  row: Docs["contentHeads"],
   from: number,
   floor: number
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const writer = yield* DatabaseWriter;
   // This transaction selected row inside the floor, so an anchor must exist.
   const anchor = yield* loadVersion(
-    ctx,
     row.contentKey,
     row.artifactLocale,
     floor
@@ -63,7 +62,6 @@ const compactHead = Effect.fn("contentRelease.compactHead")(function* (
     deleted += 1;
   }
   const prior = yield* loadVersion(
-    ctx,
     row.contentKey,
     row.artifactLocale,
     row.sequence - 1
@@ -75,21 +73,19 @@ const compactHead = Effect.fn("contentRelease.compactHead")(function* (
     }
     deleted += 1;
   }
-  yield* retainOrphanedArtifacts(ctx, artifacts);
+  yield* retainOrphanedArtifacts(artifacts);
   return deleted;
 });
 
 /** Deletes one route version while retaining the exact floor anchor. */
 const compactBinding = Effect.fn("contentRelease.compactBinding")(function* (
-  ctx: MutationCtx,
-  row: Doc<"contentBindings">,
+  row: Docs["contentBindings"],
   from: number,
   floor: number
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const writer = yield* DatabaseWriter;
   // This transaction selected row inside the floor, so an anchor must exist.
   const anchor = yield* loadRouteBinding(
-    ctx,
     row.appLocale,
     row.publicPath,
     floor
@@ -100,7 +96,6 @@ const compactBinding = Effect.fn("contentRelease.compactBinding")(function* (
     deleted += 1;
   }
   const prior = yield* loadRouteBinding(
-    ctx,
     row.appLocale,
     row.publicPath,
     row.sequence - 1
@@ -114,12 +109,11 @@ const compactBinding = Effect.fn("contentRelease.compactBinding")(function* (
 
 /** Compacts one bounded immutable content-version page. */
 const compactHeads = Effect.fn("contentRelease.compactHeads")(function* (
-  ctx: MutationCtx,
   from: number,
   floor: number,
   cursor: null | string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const page = yield* database
     .table("contentHeads")
     .index("by_sequence", (query) =>
@@ -132,7 +126,7 @@ const compactHeads = Effect.fn("contentRelease.compactHeads")(function* (
     .pipe(Effect.orDie);
   let deleted = 0;
   for (const row of page.page) {
-    deleted += yield* compactHead(ctx, row, from, floor);
+    deleted += yield* compactHead(row, from, floor);
   }
   return {
     cursor: page.isDone ? null : page.continueCursor,
@@ -143,12 +137,11 @@ const compactHeads = Effect.fn("contentRelease.compactHeads")(function* (
 
 /** Compacts one bounded immutable route-version page. */
 const compactBindings = Effect.fn("contentRelease.compactBindings")(function* (
-  ctx: MutationCtx,
   from: number,
   floor: number,
   cursor: null | string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const page = yield* database
     .table("contentBindings")
     .index("by_sequence", (query) =>
@@ -161,7 +154,7 @@ const compactBindings = Effect.fn("contentRelease.compactBindings")(function* (
     .pipe(Effect.orDie);
   let deleted = 0;
   for (const row of page.page) {
-    deleted += yield* compactBinding(ctx, row, from, floor);
+    deleted += yield* compactBinding(row, from, floor);
   }
   return {
     cursor: page.isDone ? null : page.continueCursor,
@@ -172,13 +165,12 @@ const compactBindings = Effect.fn("contentRelease.compactBindings")(function* (
 
 /** Deletes one bounded obsolete release-item page. */
 const compactItems = Effect.fn("contentRelease.compactItems")(function* (
-  ctx: MutationCtx,
   from: number,
   floor: number,
   cursor: null | string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const page = yield* database
     .table("contentItems")
     .index("by_sequence", (query) =>
@@ -193,7 +185,6 @@ const compactItems = Effect.fn("contentRelease.compactItems")(function* (
     yield* writer.table("contentItems").delete(row._id);
   }
   yield* retainOrphanedArtifacts(
-    ctx,
     page.page.flatMap(({ artifactHash }) =>
       artifactHash === undefined ? [] : [artifactHash]
     )
@@ -207,14 +198,9 @@ const compactItems = Effect.fn("contentRelease.compactItems")(function* (
 
 /** Deletes one bounded obsolete snapshot-ledger page. */
 const compactBatches = Effect.fn("contentRelease.compactSnapshotBatches")(
-  function* (
-    ctx: MutationCtx,
-    from: number,
-    floor: number,
-    cursor: null | string
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (from: number, floor: number, cursor: null | string) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const page = yield* database
       .table("snapshotBatches")
       .index("by_sequence_and_family_and_batchIndex", (query) =>
@@ -238,13 +224,12 @@ const compactBatches = Effect.fn("contentRelease.compactSnapshotBatches")(
 
 /** Deletes one bounded obsolete release-record page after dependent rows. */
 const compactReleases = Effect.fn("contentRelease.compactReleases")(function* (
-  ctx: MutationCtx,
   from: number,
   floor: number,
   cursor: null | string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const page = yield* database
     .table("contentReleases")
     .index("by_sequence", (query) =>
@@ -267,30 +252,29 @@ const compactReleases = Effect.fn("contentRelease.compactReleases")(function* (
 
 /** Runs one persisted bounded page for the current compaction phase. */
 export const compactRows = Effect.fn("contentRelease.compactRows")(function* (
-  ctx: MutationCtx,
-  phase: NonNullable<Doc<"contentState">["compactPhase"]>,
+  phase: NonNullable<Docs["contentState"]["compactPhase"]>,
   from: number,
   floor: number,
   cursor: null | string,
   startedAt: number
 ) {
   if (phase === "heads") {
-    return yield* compactHeads(ctx, from, floor, cursor);
+    return yield* compactHeads(from, floor, cursor);
   }
   if (phase === "bindings") {
-    return yield* compactBindings(ctx, from, floor, cursor);
+    return yield* compactBindings(from, floor, cursor);
   }
   if (phase === "items") {
-    return yield* compactItems(ctx, from, floor, cursor);
+    return yield* compactItems(from, floor, cursor);
   }
   if (phase === "batches") {
-    return yield* compactBatches(ctx, from, floor, cursor);
+    return yield* compactBatches(from, floor, cursor);
   }
   if (phase === "artifacts") {
-    return yield* compactArtifacts(ctx, cursor, startedAt);
+    return yield* compactArtifacts(cursor, startedAt);
   }
   if (phase === "snapshots") {
-    return yield* compactSnapshots(ctx, startedAt);
+    return yield* compactSnapshots(startedAt);
   }
-  return yield* compactReleases(ctx, from, floor, cursor);
+  return yield* compactReleases(from, floor, cursor);
 });

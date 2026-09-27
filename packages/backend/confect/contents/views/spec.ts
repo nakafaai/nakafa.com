@@ -1,7 +1,7 @@
 import { learningContextInputValidator } from "@repo/backend/confect/contents/context";
 import { graphContentIdValidator } from "@repo/backend/confect/contents/graph";
 import { contentViewSectionValidator } from "@repo/backend/confect/contents/views/section";
-import { failureWire } from "@repo/backend/confect/failure";
+import { publicFailure } from "@repo/backend/confect/failure";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import { Schema } from "effect";
 export const contentViewIoFailedCode = "CONTENT_VIEW_IO_FAILED";
@@ -42,8 +42,7 @@ export class ContentViewIoError extends Schema.TaggedError<ContentViewIoError>()
 ) {}
 
 /** Maps an unknown infrastructure failure into the content-view error channel. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const ContentViewIoErrorWire = failureWire(ContentViewIoError);
+export const ContentViewIoErrorWire = publicFailure(ContentViewIoError);
 export function toContentViewIoError(error: unknown) {
   return new ContentViewIoError({
     code: contentViewIoFailedCode,

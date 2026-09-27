@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import { reconcileWelcomeIntentLifecycleProgram } from "@repo/backend/confect/emails/welcome/reconciliation";
 import spec from "@repo/backend/confect/emails/welcome/reconciliation.spec";
 import { Effect, Layer } from "effect";
@@ -11,8 +10,7 @@ const reconcileWelcomeIntentLifecycle = FunctionImpl.make(
   "reconcileWelcomeIntentLifecycle",
   Effect.fn("emails.welcome.reconciliation.reconcileWelcomeIntentLifecycle")(
     function* ({ cursor, phase }) {
-      const ctx = yield* MutationCtxService;
-      return yield* reconcileWelcomeIntentLifecycleProgram(ctx, phase, cursor);
+      return yield* reconcileWelcomeIntentLifecycleProgram(phase, cursor);
     }
   )
 );

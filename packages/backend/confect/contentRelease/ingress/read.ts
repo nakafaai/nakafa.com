@@ -1,8 +1,11 @@
 "use node";
 
-import { MutationRunner, QueryRunner } from "@confect/server";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import {
   loadVerifiedRelease,
   matchManifest,
@@ -10,7 +13,6 @@ import {
   readRecovery,
 } from "@repo/backend/confect/contentRelease/ingress/current";
 import { readRollback } from "@repo/backend/confect/contentRelease/ingress/rollback";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 type ReadRequest = Extract<
@@ -26,25 +28,20 @@ type ReadRequest = Extract<
       | "status";
   }
 >;
-type ReadContext = Pick<ActionCtx, "runMutation" | "runQuery">;
 /** Executes one authenticated bounded publication read or cleanup request. */
 export const readPublication = Effect.fn("contentRelease.readPublication")(
-  function* (ctx: ReadContext, request: ReadRequest) {
-    const runQuery = yield* QueryRunner.QueryRunner.pipe(
-      Effect.provide(QueryRunner.layer(ctx.runQuery))
-    );
-    const runMutation = yield* MutationRunner.MutationRunner.pipe(
-      Effect.provide(MutationRunner.layer(ctx.runMutation))
-    );
+  function* (request: ReadRequest) {
+    const runQuery = yield* QueryRunner;
+    const runMutation = yield* MutationRunner;
     if (request.operation === "current") {
       return {
         ok: true,
         operation: request.operation,
-        value: yield* readCurrentPublication(ctx),
+        value: yield* readCurrentPublication(),
       };
     }
     if (request.operation === "headPage") {
-      const bundle = yield* loadVerifiedRelease(ctx, request.activeReleaseId);
+      const bundle = yield* loadVerifiedRelease(request.activeReleaseId);
       yield* matchManifest(
         bundle.release,
         request.activeManifestHash,
@@ -67,7 +64,7 @@ export const readPublication = Effect.fn("contentRelease.readPublication")(
       return {
         ok: true,
         operation: request.operation,
-        value: yield* readRecovery(ctx, {
+        value: yield* readRecovery({
           recoveryId: request.recoveryId,
           releaseId: request.releaseId,
         }),
@@ -82,7 +79,7 @@ export const readPublication = Effect.fn("contentRelease.readPublication")(
         }
       ).pipe(Effect.catchTag("SchemaError", Effect.die));
       if (value.phase !== "missing") {
-        const bundle = yield* loadVerifiedRelease(ctx, request.releaseId);
+        const bundle = yield* loadVerifiedRelease(request.releaseId);
         yield* matchManifest(
           bundle.release,
           request.manifestHash,
@@ -99,7 +96,7 @@ export const readPublication = Effect.fn("contentRelease.readPublication")(
       request.operation === "rollbackPage" ||
       request.operation === "routePage"
     ) {
-      const value = yield* readRollback(ctx, request);
+      const value = yield* readRollback(request);
       return {
         ok: true,
         operation: request.operation,

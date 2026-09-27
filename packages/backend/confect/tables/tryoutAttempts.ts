@@ -66,10 +66,29 @@ export default Table.make(() =>
     "status",
     "expiresAt",
   ])
-  .index("by_userId_and_setIdentity_and_startedAt", [
+  .index("by_userId_and_set_and_startedAt", [
     "userId",
-    "setIdentity",
+    "countryKey",
+    "examKey",
+    "trackKey",
+    "setKey",
     "startedAt",
+  ])
+  .index("by_userId_and_set_and_attemptNumber", [
+    "userId",
+    "countryKey",
+    "examKey",
+    "trackKey",
+    "setKey",
+    "attemptNumber",
+  ])
+  .index("by_userId_and_set_and_status", [
+    "userId",
+    "countryKey",
+    "examKey",
+    "trackKey",
+    "setKey",
+    "status",
   ])
   .index("by_setIdentity_and_scoreStatus_and_status_and_startedAt", [
     "setIdentity",

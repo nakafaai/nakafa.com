@@ -1,3 +1,5 @@
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import {
@@ -16,20 +18,20 @@ import {
   WORKFLOW_RECOVERY_DELAY_MS,
 } from "@repo/backend/confect/privacy/recovery";
 import { cleanupSource } from "@repo/backend/confect/privacy/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { registerWorkflow } from "@repo/backend/test/workflow";
-import { Data } from "effect";
+import { Data, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 8, 27);
 class WorkflowUnavailable extends Data.TaggedError("WorkflowUnavailable")<{
   readonly message: string;
 }> {}
-
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
+  vi.useFakeTimers({
+    toFake: ["Date", "setTimeout", "clearTimeout"],
+  });
   vi.setSystemTime(NOW);
   vi.stubEnv("POSTHOG_HOST", "https://eu.i.posthog.com");
   vi.stubEnv("POSTHOG_PROJECT_ID", "114144");
@@ -41,9 +43,12 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
-
 async function admit() {
-  const requests: { body: string; method: string; url: string }[] = [];
+  const requests: {
+    body: string;
+    method: string;
+    url: string;
+  }[] = [];
   vi.stubGlobal(
     "fetch",
     vi.fn<typeof fetch>(async (input, init) => {
@@ -75,18 +80,28 @@ async function admit() {
     })
   );
   await t.action((ctx) =>
-    runConvexProgram(requestAnalyticsErasure(ctx, userId))
+    Effect.runPromise(
+      requestAnalyticsErasure(userId).pipe(
+        Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+      )
+    )
   );
   const admitted = await t.query((ctx) => workflow.list(ctx));
   const journal = admitted.page[0];
   assert(journal);
-  return { t, requests, userId, workflowId: journal.workflowId };
+  return {
+    t,
+    requests,
+    userId,
+    workflowId: journal.workflowId,
+  };
 }
-
 async function failWorkflow(fixture: Awaited<ReturnType<typeof admit>>) {
   const { t, workflowId } = fixture;
   const state = await t.query((ctx) =>
-    ctx.runQuery(components.workflow.workflow.getStatus, { workflowId })
+    ctx.runQuery(components.workflow.workflow.getStatus, {
+      workflowId,
+    })
   );
   await t.mutation((ctx) =>
     ctx.runMutation(components.workflow.workflow.complete, {
@@ -99,7 +114,6 @@ async function failWorkflow(fixture: Awaited<ReturnType<typeof admit>>) {
     })
   );
 }
-
 async function readJobs(
   fixture: Awaited<ReturnType<typeof admit>>,
   name: string
@@ -110,7 +124,6 @@ async function readJobs(
     )
   ).filter((job) => job.name === `privacy/recovery:${name}`);
 }
-
 async function expectErased(fixture: Awaited<ReturnType<typeof admit>>) {
   expect(fixture.requests).toEqual([
     {
@@ -126,14 +139,17 @@ async function expectErased(fixture: Awaited<ReturnType<typeof admit>>) {
   ]);
   expect((await fixture.t.query((ctx) => workflow.list(ctx))).page).toEqual([]);
 }
-
 describe("privacy workflow recovery", () => {
   it("executes durable erasure and releases the successful journal", async () => {
     const fixture = await admit();
     await fixture.t.finishAllScheduledFunctions(vi.runAllTimers);
     await expectErased(fixture);
     expect(await readJobs(fixture, "cleanupWorkflowStorage")).toEqual([
-      expect.objectContaining({ state: { kind: "success" } }),
+      expect.objectContaining({
+        state: {
+          kind: "success",
+        },
+      }),
     ]);
     await fixture.t.mutation(internal.privacy.recovery.cleanupWorkflowStorage, {
       workflowId: fixture.workflowId,
@@ -141,7 +157,6 @@ describe("privacy workflow recovery", () => {
     });
     expect(await readJobs(fixture, "cleanupWorkflowStorage")).toHaveLength(1);
   });
-
   it.each(["failed", "canceled"] as const)(
     "restarts a %s workflow after its recovery delay and completes erasure",
     async (status) => {
@@ -155,25 +170,30 @@ describe("privacy workflow recovery", () => {
       }
       expect(
         await fixture.t.query((ctx) => workflow.status(ctx, fixture.workflowId))
-      ).toMatchObject({ type: status });
+      ).toMatchObject({
+        type: status,
+      });
       await fixture.t.finishAllScheduledFunctions(vi.runAllTimers);
       await expectErased(fixture);
       expect(await readJobs(fixture, "retryCleanupWorkflow")).toEqual([
         expect.objectContaining({
           scheduledTime: NOW + WORKFLOW_RECOVERY_DELAY_MS,
-          state: { kind: "success" },
+          state: {
+            kind: "success",
+          },
         }),
       ]);
     }
   );
-
   it.each(["status", "restart"] as const)(
     "retains and retries recovery when Workflow %s is temporarily unavailable",
     async (operation) => {
       const fixture = await admit();
       await failWorkflow(fixture);
       vi.spyOn(workflow, operation).mockRejectedValueOnce(
-        new WorkflowUnavailable({ message: "component unavailable" })
+        new WorkflowUnavailable({
+          message: "component unavailable",
+        })
       );
       await fixture.t.finishAllScheduledFunctions(vi.runAllTimers);
       await expectErased(fixture);
@@ -185,14 +205,15 @@ describe("privacy workflow recovery", () => {
       expect(jobs.every((job) => job.state.kind === "success")).toBe(true);
     }
   );
-
   it("retries journal release without rerunning external erasure", async () => {
     const fixture = await admit();
     let failedAt: number | undefined;
     vi.spyOn(workflow, "cleanup").mockImplementationOnce(() => {
       failedAt = Date.now();
       return Promise.reject(
-        new WorkflowUnavailable({ message: "component unavailable" })
+        new WorkflowUnavailable({
+          message: "component unavailable",
+        })
       );
     });
     await fixture.t.finishAllScheduledFunctions(vi.runAllTimers);
@@ -203,7 +224,6 @@ describe("privacy workflow recovery", () => {
     expect(jobs[1]?.scheduledTime).toBe(failedAt + WORKFLOW_RECOVERY_DELAY_MS);
     expect(jobs.every((job) => job.state.kind === "success")).toBe(true);
   });
-
   it.each(["recovery", "journal"] as const)(
     "preserves the journal and reports a typed failure when %s cannot be rescheduled",
     async (operation) => {
@@ -213,28 +233,33 @@ describe("privacy workflow recovery", () => {
         workflow,
         operation === "recovery" ? "status" : "cleanup"
       ).mockRejectedValueOnce(
-        new WorkflowUnavailable({ message: "component unavailable" })
+        new WorkflowUnavailable({
+          message: "component unavailable",
+        })
       );
       await expect(
         fixture.t.mutation((ctx) => {
           vi.spyOn(ctx.scheduler, "runAfter").mockRejectedValueOnce(
-            new WorkflowUnavailable({ message: "scheduler unavailable" })
+            new WorkflowUnavailable({
+              message: "scheduler unavailable",
+            })
           );
-          return runConvexProgram(
+          return Effect.runPromise(
             (operation === "recovery"
               ? retryCleanupWorkflowProgram
               : cleanupWorkflowStorageProgram)(
-              ctx,
               fixture.workflowId,
               cleanupSource.consentOverlap
+            ).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
             )
           );
         })
       ).rejects.toMatchObject({
-        data: {
-          code: "PRIVACY_CLEANUP_FAILED",
-          message: "scheduler unavailable",
-        },
+        code: "PRIVACY_CLEANUP_FAILED",
+        message: "scheduler unavailable",
       });
       expect(
         (await fixture.t.query((ctx) => workflow.list(ctx))).page
@@ -243,17 +268,21 @@ describe("privacy workflow recovery", () => {
       await expectErased(fixture);
     }
   );
-
   it("does not restart a workflow whose successful result is already committed", async () => {
     const fixture = await admit();
     const { t, workflowId } = fixture;
     const state = await t.query((ctx) =>
-      ctx.runQuery(components.workflow.workflow.getStatus, { workflowId })
+      ctx.runQuery(components.workflow.workflow.getStatus, {
+        workflowId,
+      })
     );
     await t.mutation((ctx) =>
       ctx.runMutation(components.workflow.workflow.complete, {
         generationNumber: state.workflow.generationNumber,
-        runResult: { kind: "success", returnValue: null },
+        runResult: {
+          kind: "success",
+          returnValue: null,
+        },
         workflowId,
       })
     );
@@ -262,7 +291,9 @@ describe("privacy workflow recovery", () => {
       source: cleanupSource.consentOverlap,
     });
     const after = await t.query((ctx) =>
-      ctx.runQuery(components.workflow.workflow.getStatus, { workflowId })
+      ctx.runQuery(components.workflow.workflow.getStatus, {
+        workflowId,
+      })
     );
     expect(after.workflow.generationNumber).toBe(
       state.workflow.generationNumber

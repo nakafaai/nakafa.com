@@ -1,8 +1,11 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx as MutationCtxService,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Clock, Duration, Effect } from "effect";
 
@@ -18,15 +21,11 @@ import { Clock, Duration, Effect } from "effect";
  */
 export const materialGroupsHandler = Effect.fn(
   "triggers.materials.groups.materialGroupsHandler"
-)(function* (
-  ctx: GenericMutationCtx<DataModel>,
-  change: Change<DataModel, "schoolClassMaterialGroups">
-) {
-  const scheduler = yield* Scheduler.Scheduler.pipe(
-    Effect.provide(Scheduler.layer(ctx.scheduler))
-  );
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (change: Change<DataModel, "schoolClassMaterialGroups">) {
+  const ctx = yield* MutationCtxService;
+  const scheduler = yield* Scheduler;
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   if (change.operation !== "delete") {
     return;
   }

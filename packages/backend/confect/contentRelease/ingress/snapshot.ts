@@ -1,6 +1,5 @@
 "use node";
 
-import { MutationRunner } from "@confect/server";
 import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import { verifyProgramSnapshotHash } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { verifyProgramSnapshotRowHash } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
@@ -15,13 +14,13 @@ import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog
 import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import refs from "@repo/backend/confect/_generated/refs";
+import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
 import {
   encodeSnapshotJson,
   encodeSnapshotRowJson,
 } from "@repo/backend/confect/contentRelease/wire";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 type SnapshotRequest = Extract<
@@ -168,10 +167,8 @@ export const verifySnapshotBatch = Effect.fn(
 
 /** Verifies and stages one immutable structured-family manifest. */
 export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
-  function* (ctx: ActionCtx, request: SnapshotRequest) {
-    const runMutation = yield* MutationRunner.MutationRunner.pipe(
-      Effect.provide(MutationRunner.layer(ctx.runMutation))
-    );
+  function* (request: SnapshotRequest) {
+    const runMutation = yield* MutationRunner;
     yield* verifySnapshotManifest(request.snapshot);
     return yield* runMutation(
       refs.internal.contentRelease.snapshot.manifest.stageSnapshot,
@@ -186,10 +183,8 @@ export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
 /** Verifies and stages one bounded structured-family row batch. */
 export const stageSnapshotBatch = Effect.fn(
   "contentRelease.stageSnapshotBatch"
-)(function* (ctx: ActionCtx, request: SnapshotBatchRequest) {
-  const runMutation = yield* MutationRunner.MutationRunner.pipe(
-    Effect.provide(MutationRunner.layer(ctx.runMutation))
-  );
+)(function* (request: SnapshotBatchRequest) {
+  const runMutation = yield* MutationRunner;
   yield* verifySnapshotBatch(request.family, request.snapshotId, request.rows);
   return yield* runMutation(
     refs.internal.contentRelease.snapshot.batch.stageSnapshotBatch,

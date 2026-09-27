@@ -1,31 +1,31 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   CONTENT_BUCKET_SIZE,
   isProjectionBucket,
 } from "@repo/backend/confect/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type ArticleAppLocale = Doc<"articleBuckets">["appLocale"];
+type ArticleAppLocale = Docs["articleBuckets"]["appLocale"];
 type BucketKind = "article" | "category";
 
 /** Updates one non-empty bucket count in the same transaction as its route. */
 export const adjustArticleBucket = Effect.fn(
   "contentRelease.adjustArticleBucket"
 )(function* (
-  ctx: MutationCtx,
   slot: ModelSlot,
   appLocale: ArticleAppLocale,
   bucket: string,
   kind: BucketKind,
   delta: -1 | 1
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   if (!isProjectionBucket(bucket)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

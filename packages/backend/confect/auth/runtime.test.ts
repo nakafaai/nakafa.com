@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { GoogleAuthConfigError } from "@repo/backend/confect/auth/config";
 import {
@@ -14,7 +16,6 @@ import {
   sanitizeProviderErrorRedirectResponse,
   verifyAccountDeletionPreparation,
 } from "@repo/backend/confect/auth/runtime";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { SiteConfigError } from "@repo/backend/confect/site/spec";
 import {
   createConvexTestWithBetterAuth,
@@ -119,11 +120,12 @@ describe("auth/runtime", () => {
     "fails auth creation with a typed error when %s is absent",
     (environment) =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         vi.stubEnv(environment, undefined);
         const test = createConvexTestWithBetterAuth();
         yield* Effect.promise(() =>
           test.run((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const failure = yield* createAuth(ctx).pipe(
                   Effect.flip,
@@ -135,7 +137,11 @@ describe("auth/runtime", () => {
                     : GoogleAuthConfigError
                 );
                 return null;
-              })
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
@@ -149,7 +155,7 @@ describe("auth/runtime", () => {
       const discovery = yield* Effect.promise(() =>
         test.fetch("/.well-known/openid-configuration")
       );
-      const auth = yield* Effect.promise(() =>
+      const authFailure = yield* Effect.tryPromise(() =>
         test.fetch("/api/auth/sign-in/social", {
           body: JSON.stringify({
             callbackURL: "/en/home",
@@ -161,10 +167,13 @@ describe("auth/runtime", () => {
           },
           method: "POST",
         })
-      );
+      ).pipe(Effect.flip);
       expect(discovery.status).toBe(302);
-      expect(auth.status).toBe(500);
-      expect(auth.headers.get("location")).toBeNull();
+      expect(discovery.headers.get("location")).toBe(
+        "/api/auth/convex/.well-known/openid-configuration"
+      );
+      // The component HTTP boundary lets Convex turn an invalid setup into 500.
+      expect(authFailure.cause).toBeInstanceOf(SiteConfigError);
     })
   );
   it.effect.each(["http://localhost:3000", "https://local.nakafa.com"])(
@@ -462,7 +471,13 @@ it("publishes only public key material from configured Better Auth signing keys"
     atob(provider.jwks.slice(provider.jwks.indexOf(",") + 1))
   );
   expect(keys).toEqual({
-    keys: [{ ...publicKey, alg: "RS256", kid: "technical-signing-key" }],
+    keys: [
+      {
+        ...publicKey,
+        alg: "RS256",
+        kid: "technical-signing-key",
+      },
+    ],
   });
   expect(JSON.stringify(keys)).not.toContain("private-material");
   const t = createConvexTestWithBetterAuth();

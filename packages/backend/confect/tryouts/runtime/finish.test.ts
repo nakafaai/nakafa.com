@@ -1,5 +1,6 @@
-import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
+import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import {
@@ -23,13 +24,13 @@ import {
 } from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const EXPIRED_AT = NOW - 1000;
 const SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 const FIRST_SECTION = "pengetahuan-kuantitatif";
 const SECOND_SECTION = "penalaran-matematika";
-
 describe("tryouts/runtime/finish", () => {
   it.each([false, true])(
     "expires IRT sections at the attempt deadline despite earlier entitlement expiry: %s",
@@ -59,9 +60,7 @@ describe("tryouts/runtime/finish", () => {
         );
         const firstPlacement = alignedSections[0]?.signed.placements[0];
         const secondPlacement = alignedSections[1]?.signed.placements[0];
-        if (!(firstPlacement && secondPlacement)) {
-          throw new Error("Expected signed try-out placement fixtures.");
-        }
+        assert(firstPlacement && secondPlacement);
         const source = makeSignedTryoutSource(set, alignedSections);
         const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
           model: "2pl",
@@ -72,14 +71,18 @@ describe("tryouts/runtime/finish", () => {
           tryoutSnapshotId: source.snapshot.snapshotId,
         });
         for (const placement of [firstPlacement, secondPlacement]) {
-          await insertIrtScaleItem(ctx, { placement, scaleVersionId });
+          await insertIrtScaleItem(ctx, {
+            placement,
+            scaleVersionId,
+          });
         }
-
         const attemptId = await insertTryoutAttempt(ctx, {
           expiresAt: EXPIRED_AT,
           scaleVersionId,
           sectionSnapshots: alignedSections.map(({ signed }) =>
-            tryoutSectionSnapshot({ signed })
+            tryoutSectionSnapshot({
+              signed,
+            })
           ),
           set,
           snapshotId: source.snapshot.snapshotId,
@@ -87,7 +90,9 @@ describe("tryouts/runtime/finish", () => {
           userId,
         });
         if (earlyAccess) {
-          await ctx.db.patch(attemptId, { accessEndsAt: EXPIRED_AT - 1000 });
+          await ctx.db.patch(attemptId, {
+            accessEndsAt: EXPIRED_AT - 1000,
+          });
         }
         const sectionAttemptId = await insertTryoutSectionAttempt(ctx, {
           expiresAt: EXPIRED_AT,
@@ -95,15 +100,12 @@ describe("tryouts/runtime/finish", () => {
           tryoutAttemptId: attemptId,
         });
         const attempt = await ctx.db.get(attemptId);
-        if (!attempt) {
-          throw new Error("Expected try-out attempt fixture.");
-        }
-
-        await runConvexProgram(
-          createAttemptPlacements(ctx, {
+        assert.isNotNull(attempt, "Expected try-out attempt fixture.");
+        await Effect.runPromise(
+          createAttemptPlacements({
             attempt,
             source,
-          })
+          }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
         );
         const placement = await ctx.db
           .query("tryoutAttemptPlacements")
@@ -113,17 +115,16 @@ describe("tryouts/runtime/finish", () => {
               q.eq("tryoutAttemptId", attemptId).eq("sectionKey", FIRST_SECTION)
           )
           .unique();
-
-        if (!placement) {
-          throw new Error("Expected try-out placement fixture.");
-        }
-
+        assert.isNotNull(placement, "Expected try-out placement fixture.");
         await ctx.db.insert("tryoutResponses", {
           answeredAt: NOW - 5000,
           isComplete: true,
           isCorrect: true,
           placementId: placement._id,
-          selection: { kind: "single-choice", optionKey: "option-1" },
+          selection: {
+            kind: "single-choice",
+            optionKey: "option-1",
+          },
           timeSpent: 1000,
           tryoutAttemptId: attemptId,
           tryoutSectionAttemptId: sectionAttemptId,
@@ -131,28 +132,24 @@ describe("tryouts/runtime/finish", () => {
         });
         if (earlyAccess) {
           const section = await ctx.db.get(sectionAttemptId);
-          if (!section) {
-            throw new Error("Expected an opened section.");
-          }
-          await runConvexProgram(
-            finalizeSectionAttempt(ctx, {
+          assert.isNotNull(section, "Expected an opened section.");
+          await Effect.runPromise(
+            finalizeSectionAttempt({
               attempt,
               section,
               now: NOW - 2000,
               endReason: "submitted",
-            })
+            }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
           );
         }
         const currentAttempt = await ctx.db.get(attemptId);
-        if (!currentAttempt) {
-          throw new Error("Expected an active attempt.");
-        }
+        assert.isNotNull(currentAttempt, "Expected an active attempt.");
         const query = vi.spyOn(ctx.db, "query");
-        await runConvexProgram(
-          expireAttempt(ctx, {
+        await Effect.runPromise(
+          expireAttempt({
             attempt: currentAttempt,
             now: NOW,
-          })
+          }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
         );
         const placementQueryCount = query.mock.calls.filter(
           ([tableName]) => tableName === "tryoutAttemptPlacements"
@@ -164,7 +161,6 @@ describe("tryouts/runtime/finish", () => {
           ([tableName]) => tableName === "irtCalibrationRuns"
         ).length;
         query.mockRestore();
-
         const sections = await ctx.db
           .query("tryoutSectionAttempts")
           .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
@@ -177,7 +173,6 @@ describe("tryouts/runtime/finish", () => {
             q.eq("tryoutAttemptId", attemptId)
           )
           .unique();
-
         return {
           attempt: await ctx.db.get(attemptId),
           calibrationRunQueryCount,
@@ -187,7 +182,6 @@ describe("tryouts/runtime/finish", () => {
           sections,
         };
       });
-
       expect(snapshot).toMatchObject({
         attempt: {
           completedSectionKeys: [FIRST_SECTION, SECOND_SECTION],
@@ -205,13 +199,21 @@ describe("tryouts/runtime/finish", () => {
         sections: [
           {
             endReason: earlyAccess ? "submitted" : "time-expired",
-            score: { rawScore: 100, scoringStrategy: "irt", theta: 4 },
+            score: {
+              rawScore: 100,
+              scoringStrategy: "irt",
+              theta: 4,
+            },
             sectionKey: FIRST_SECTION,
             status: earlyAccess ? "completed" : "expired",
           },
           {
             endReason: "time-expired",
-            score: { rawScore: 0, scoringStrategy: "irt", theta: -4 },
+            score: {
+              rawScore: 0,
+              scoringStrategy: "irt",
+              theta: -4,
+            },
             sectionKey: SECOND_SECTION,
             status: "expired",
           },
@@ -219,7 +221,6 @@ describe("tryouts/runtime/finish", () => {
       });
     }
   );
-
   it.each([
     {
       expectedCode: "TRYOUT_PLACEMENT_DUPLICATE",
@@ -247,10 +248,7 @@ describe("tryouts/runtime/finish", () => {
         const placement = await ctx.db.get(fixture.placementId);
         const section = await ctx.db.get(fixture.sectionAttemptId);
         const snapshot = attempt?.sectionSnapshots.at(0);
-        if (!(attempt && placement && section && snapshot)) {
-          throw new Error("Expected a complete try-out integrity fixture.");
-        }
-
+        assert(attempt && placement && section && snapshot);
         if (kind === "attempt question total mismatch") {
           await ctx.db.patch(attempt._id, {
             scoreStatus: "official",
@@ -261,10 +259,17 @@ describe("tryouts/runtime/finish", () => {
           await ctx.db.patch(attempt._id, {
             scoreStatus: "official",
             scoringStrategy: "raw",
-            sectionSnapshots: [{ ...snapshot, questionCount: 2 }],
+            sectionSnapshots: [
+              {
+                ...snapshot,
+                questionCount: 2,
+              },
+            ],
             totalQuestions: 2,
           });
-          await ctx.db.patch(section._id, { totalQuestions: 2 });
+          await ctx.db.patch(section._id, {
+            totalQuestions: 2,
+          });
         }
         if (kind === "duplicate question slot") {
           const { _creationTime, _id, ...placementValues } = placement;
@@ -275,25 +280,23 @@ describe("tryouts/runtime/finish", () => {
         }
         return fixture;
       });
-
       await expect(
         t.mutation(async (ctx) => {
           const attempt = await ctx.db.get(seeded.attemptId);
           const section = await ctx.db.get(seeded.sectionAttemptId);
-          if (!(attempt && section)) {
-            throw new Error("Expected one active try-out section.");
-          }
-          return await runConvexProgram(
-            finalizeSectionAttempt(ctx, {
+          assert(attempt && section);
+          return await Effect.runPromise(
+            finalizeSectionAttempt({
               attempt,
               endReason: "submitted",
               now: NOW + 1000,
               section,
-            })
+            }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
           );
         })
-      ).rejects.toMatchObject({ data: { code: expectedCode } });
-
+      ).rejects.toMatchObject({
+        code: expectedCode,
+      });
       const stored = await t.query(async (ctx) => ({
         attempt: await ctx.db.get(seeded.attemptId),
         progress: await ctx.db.query("tryoutSetProgress").collect(),
@@ -319,10 +322,8 @@ describe("tryouts/runtime/finish", () => {
       expect(stored.section?.score).toBeUndefined();
     }
   );
-
   it("completes the parent after its final IRT section with one placement query", async () => {
     const t = convexTest(schema, convexModules);
-
     const completed = await t.mutation(async (ctx) => {
       const userId = await insertTryoutUser(ctx, {
         authId: "auth-section-timeout",
@@ -339,9 +340,10 @@ describe("tryouts/runtime/finish", () => {
       const signedSectionFixture = makeSignedTryoutSection(section);
       const signedSection = signedSectionFixture.signed;
       const signedPlacement = signedSection.placements.at(0);
-      if (!signedPlacement) {
-        throw new Error("Expected one signed try-out placement fixture.");
-      }
+      assert.isDefined(
+        signedPlacement,
+        "Expected one signed try-out placement fixture."
+      );
       const source = makeSignedTryoutSource(set, [signedSectionFixture]);
       const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
         model: "2pl",
@@ -357,7 +359,11 @@ describe("tryouts/runtime/finish", () => {
       });
       const attemptId = await insertTryoutAttempt(ctx, {
         scaleVersionId,
-        sectionSnapshots: [tryoutSectionSnapshot({ signed: signedSection })],
+        sectionSnapshots: [
+          tryoutSectionSnapshot({
+            signed: signedSection,
+          }),
+        ],
         set,
         snapshotId: source.snapshot.snapshotId,
         snapshotReleaseId: TEST_RELEASE_ID,
@@ -369,26 +375,21 @@ describe("tryouts/runtime/finish", () => {
       });
       const attempt = await ctx.db.get(attemptId);
       const sectionAttempt = await ctx.db.get(sectionId);
-
-      if (!(attempt && sectionAttempt)) {
-        throw new Error("Expected try-out attempt and section fixtures.");
-      }
-
-      await runConvexProgram(
-        createAttemptPlacements(ctx, {
+      assert(attempt && sectionAttempt);
+      await Effect.runPromise(
+        createAttemptPlacements({
           attempt,
           source,
-        })
+        }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
       );
-
       const query = vi.spyOn(ctx.db, "query");
-      await runConvexProgram(
-        finalizeSectionAttempt(ctx, {
+      await Effect.runPromise(
+        finalizeSectionAttempt({
           attempt,
           endReason: "time-expired",
           now: NOW,
           section: sectionAttempt,
-        })
+        }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
       );
       const placementQueryCount = query.mock.calls.filter(
         ([tableName]) => tableName === "tryoutAttemptPlacements"
@@ -406,7 +407,6 @@ describe("tryouts/runtime/finish", () => {
           index.eq("tryoutAttemptId", attemptId)
         )
         .unique();
-
       return {
         attempt: await ctx.db.get(attemptId),
         calibrationRunQueryCount,
@@ -416,7 +416,6 @@ describe("tryouts/runtime/finish", () => {
         section: await ctx.db.get(sectionId),
       };
     });
-
     expect(completed).toMatchObject({
       attempt: {
         completedSectionKeys: ["penalaran-matematika"],
@@ -441,7 +440,6 @@ describe("tryouts/runtime/finish", () => {
       },
     });
   });
-
   it("rejects duplicate snapshot keys before expiry writes", async () => {
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation(async (ctx) => {
@@ -452,9 +450,7 @@ describe("tryouts/runtime/finish", () => {
       });
       const attempt = await ctx.db.get(seeded.attemptId);
       const firstSnapshot = attempt?.sectionSnapshots[0];
-      if (!(attempt && firstSnapshot)) {
-        throw new Error("Expected one frozen try-out section.");
-      }
+      assert(attempt && firstSnapshot);
       await ctx.db.patch(attempt._id, {
         scoreStatus: "official",
         scoringStrategy: "raw",
@@ -470,19 +466,19 @@ describe("tryouts/runtime/finish", () => {
       });
       return seeded;
     });
-
     await expect(
       t.mutation(async (ctx) => {
         const attempt = await ctx.db.get(fixture.attemptId);
-        if (!attempt) {
-          throw new Error("Expected one active try-out attempt.");
-        }
-        return await runConvexProgram(
-          expireAttempt(ctx, { attempt, now: NOW })
+        assert.isNotNull(attempt, "Expected one active try-out attempt.");
+        return await Effect.runPromise(
+          expireAttempt({
+            attempt,
+            now: NOW,
+          }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
         );
       })
     ).rejects.toMatchObject({
-      data: { code: "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH" },
+      code: "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
     });
     const stored = await t.query(async (ctx) => ({
       attempt: await ctx.db.get(fixture.attemptId),
@@ -494,6 +490,8 @@ describe("tryouts/runtime/finish", () => {
       completedSectionKeys: [],
       status: "in-progress",
     });
-    expect(stored.section).toMatchObject({ status: "in-progress" });
+    expect(stored.section).toMatchObject({
+      status: "in-progress",
+    });
   });
 });

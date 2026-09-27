@@ -1,4 +1,9 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE } from "@repo/backend/confect/auth/deletion/constants";
 import {
   getAccountDeletionAttemptStatusProgram,
@@ -6,7 +11,6 @@ import {
   sweepAccountDeletionReceiptsProgram,
 } from "@repo/backend/confect/auth/deletion/receipt";
 import { accountDeletionAttemptStatus } from "@repo/backend/confect/auth/deletion/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
@@ -18,7 +22,6 @@ const PENDING_ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0621";
 const DELETED_AUTH_ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0622";
 const UNKNOWN_ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0623";
 const FINALIZED_ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0624";
-
 function insertUser(ctx: MutationCtx, authId: string) {
   return Effect.promise(() =>
     ctx.db.insert("users", {
@@ -31,23 +34,22 @@ function insertUser(ctx: MutationCtx, authId: string) {
     })
   );
 }
-
 describe("auth/deletion/receipt", () => {
-  it.effect(
+  it.live(
     "distinguishes committed, pending, and unknown browser attempts",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const pendingUserId = yield* insertUser(ctx, "pending-auth");
                 const deletedAuthUserId = yield* insertUser(
                   ctx,
                   "deleted-auth"
                 );
-
                 yield* Effect.promise(() =>
                   ctx.db.insert("accountDeletionReceipts", {
                     attemptId: COMMITTED_ATTEMPT_ID,
@@ -79,7 +81,11 @@ describe("auth/deletion/receipt", () => {
                     userId: pendingUserId,
                   })
                 );
-              })
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
@@ -89,16 +95,18 @@ describe("auth/deletion/receipt", () => {
         const getStatus = (attemptId: string) =>
           Effect.promise(() =>
             t.query((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 getAccountDeletionAttemptStatusProgram(
-                  ctx,
                   attemptId,
                   authUserExists
+                ).pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
                 )
               )
             )
           );
-
         expect(yield* getStatus(COMMITTED_ATTEMPT_ID)).toBe(
           accountDeletionAttemptStatus.committed
         );
@@ -117,32 +125,28 @@ describe("auth/deletion/receipt", () => {
         expect(authUserExists).toHaveBeenCalledTimes(2);
       })
   );
-
-  it.effect("records one idempotent privacy-minimal receipt", () =>
+  it.live("records one idempotent privacy-minimal receipt", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
-
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.gen(function* () {
-              yield* recordAccountDeletionReceipt(ctx, COMMITTED_ATTEMPT_ID, 1);
-              yield* recordAccountDeletionReceipt(ctx, COMMITTED_ATTEMPT_ID, 2);
-              yield* recordAccountDeletionReceipt(ctx, undefined, 3);
-            })
-          )
-        )
-      );
-      const receipts = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          runConvexProgram(
-            Effect.promise(() =>
-              ctx.db.query("accountDeletionReceipts").collect()
+              yield* recordAccountDeletionReceipt(COMMITTED_ATTEMPT_ID, 1);
+              yield* recordAccountDeletionReceipt(COMMITTED_ATTEMPT_ID, 2);
+              yield* recordAccountDeletionReceipt(undefined, 3);
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
             )
           )
         )
       );
-
+      const receipts = yield* Effect.promise(() =>
+        t.query((ctx) => ctx.db.query("accountDeletionReceipts").collect())
+      );
       expect(receipts).toEqual([
         expect.objectContaining({
           attemptId: COMMITTED_ATTEMPT_ID,
@@ -151,13 +155,13 @@ describe("auth/deletion/receipt", () => {
       ]);
     })
   );
-
-  it.effect("deletes expired receipts in bounded pages", () =>
+  it.live("deletes expired receipts in bounded pages", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          runConvexProgram(
+          Effect.runPromiseWith(runtimeServices)(
             Effect.gen(function* () {
               for (
                 let index = 0;
@@ -177,31 +181,39 @@ describe("auth/deletion/receipt", () => {
                   committedAt: Number.MAX_SAFE_INTEGER,
                 })
               );
-            })
-          )
-        )
-      );
-
-      const firstSweep = yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          runConvexProgram(sweepAccountDeletionReceiptsProgram(ctx))
-        )
-      );
-      const secondSweep = yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          runConvexProgram(sweepAccountDeletionReceiptsProgram(ctx))
-        )
-      );
-      const receipts = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          runConvexProgram(
-            Effect.promise(() =>
-              ctx.db.query("accountDeletionReceipts").collect()
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
             )
           )
         )
       );
-
+      const firstSweep = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            sweepAccountDeletionReceiptsProgram().pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
+      const secondSweep = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            sweepAccountDeletionReceiptsProgram().pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
+      const receipts = yield* Effect.promise(() =>
+        t.query((ctx) => ctx.db.query("accountDeletionReceipts").collect())
+      );
       expect(firstSweep).toBe(true);
       expect(secondSweep).toBe(false);
       expect(receipts).toEqual([

@@ -1,5 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -9,6 +10,7 @@ import { Effect } from "effect";
 describe("auth/cleanup/tryouts", () => {
   it.effect("deletes the last attempt and its attempt-only scale", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
@@ -55,13 +57,17 @@ describe("auth/cleanup/tryouts", () => {
           });
           const attempt = await ctx.db.get("tryoutAttempts", runtime.attemptId);
           assert.ok(attempt);
-          await runConvexProgram(
-            writeTryoutSetProgress(ctx, {
+          await Effect.runPromiseWith(runtimeServices)(
+            writeTryoutSetProgress({
               attempt,
               publishedScore: 100,
               status: "completed",
               updatedAt: attempt.lastActivityAt,
-            })
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
           await ctx.db.insert("tryoutResponses", {
             answeredAt: 1,

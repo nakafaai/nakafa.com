@@ -1,8 +1,9 @@
+import { Ref } from "@confect/core";
 import { afterEach, assert, beforeEach, describe, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { invertContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { decodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/parse";
-import { readConvexErrorData } from "@repo/backend/confect/failure";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -22,7 +23,7 @@ import {
 } from "@repo/backend/test/content/state";
 import { storeRuntimeFixture } from "@repo/backend/test/runtime/bundle";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
 const activateRecovery = internal.contentRelease.activate.activateRecovery;
@@ -182,8 +183,9 @@ describe("contentRelease/recovery", () => {
           releaseId: CANDIDATE.releaseId,
         })
       );
+      assert(Ref.isConvexError(failure));
       assert.strictEqual(
-        readConvexErrorData(failure)?.code,
+        (yield* Schema.decodeUnknownEffect(ReleaseError)(failure.data)).code,
         "CONTENT_RELEASE_INTEGRITY"
       );
     })
@@ -207,8 +209,9 @@ describe("contentRelease/recovery", () => {
         })
       );
       const failure = yield* rejected(() => recoverCandidate(t));
+      assert(Ref.isConvexError(failure));
       assert.strictEqual(
-        readConvexErrorData(failure)?.code,
+        (yield* Schema.decodeUnknownEffect(ReleaseError)(failure.data)).code,
         "CONTENT_RELEASE_INTEGRITY"
       );
       const state = yield* Effect.promise(() =>
@@ -348,8 +351,9 @@ describe("contentRelease/recovery", () => {
             releaseId: LOOKUP_BASE.releaseId,
           })
         );
+        assert(Ref.isConvexError(failure));
         assert.strictEqual(
-          readConvexErrorData(failure)?.code,
+          (yield* Schema.decodeUnknownEffect(ReleaseError)(failure.data)).code,
           "CONTENT_RELEASE_INTEGRITY"
         );
       })

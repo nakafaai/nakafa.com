@@ -23,14 +23,31 @@ import { getAiModel } from "@/lib/data/models";
 export function AiChatMessageCredits() {
   const t = useTranslations("Ai");
 
-  const credits = useMessage((state) => state.message.metadata?.credits);
-  const tokens = useMessage((state) => state.message.metadata?.tokens);
-  const modelId = useMessage((state) => state.message.metadata?.model);
+  const turn = useMessage((state) => state.turn);
+  const role = useMessage((state) => state.message.role);
+  const credits =
+    role === "assistant" && turn?.state.status === "complete"
+      ? (turn.credits ?? 0)
+      : 0;
+  const modelId = turn?.modelId;
+  const input =
+    turn?.tokens?.input ??
+    turn?.usage.reduce((sum, usage) => sum + usage.input, 0) ??
+    0;
+  const output =
+    turn?.tokens?.output ??
+    turn?.usage.reduce((sum, usage) => sum + usage.output, 0) ??
+    0;
+  const tokens = {
+    input,
+    output,
+    total: turn?.tokens?.total ?? input + output,
+  };
 
   const [open, setOpen] = useState(false);
 
   // Only show for assistant messages with credits
-  if (!credits || credits <= 0) {
+  if (credits <= 0) {
     return null;
   }
 
@@ -72,60 +89,57 @@ export function AiChatMessageCredits() {
           </div>
 
           {/* Token Usage */}
-          {tokens &&
-            ((tokens.input ?? 0) > 0 ||
-              (tokens.output ?? 0) > 0 ||
-              (tokens.total ?? 0) > 0) && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <HugeIcons className="size-4" icon={TextAllCapsIcon} />
-                  <div className="text-muted-foreground text-sm">
-                    {t("token-usage")}
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  {/* Input */}
-                  {tokens?.input !== undefined && tokens.input > 0 && (
-                    <div className="flex items-center justify-between rounded-sm bg-muted p-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
-                        <span>{t("input-tokens")}</span>
-                      </div>
-                      <span className="tabular-nums">
-                        {tokens.input.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Output */}
-                  {tokens?.output !== undefined && tokens.output > 0 && (
-                    <div className="flex items-center justify-between rounded-sm bg-muted p-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <HugeIcons className="size-4" icon={ArrowRight02Icon} />
-                        <span>{t("output-tokens")}</span>
-                      </div>
-                      <span className="tabular-nums">
-                        {tokens.output.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Total */}
-                  {tokens?.total !== undefined && tokens.total > 0 && (
-                    <div className="flex items-center justify-between rounded-sm bg-secondary p-2 text-secondary-foreground text-sm">
-                      <div className="flex items-center gap-2">
-                        <HugeIcons className="size-4" icon={Summation01Icon} />
-                        <span>{t("total-tokens")}</span>
-                      </div>
-                      <span className="tabular-nums">
-                        {tokens.total.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
+          {tokens.total > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <HugeIcons className="size-4" icon={TextAllCapsIcon} />
+                <div className="text-muted-foreground text-sm">
+                  {t("token-usage")}
                 </div>
               </div>
-            )}
+
+              <div className="space-y-1">
+                {/* Input */}
+                {tokens.input > 0 && (
+                  <div className="flex items-center justify-between rounded-sm bg-muted p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
+                      <span>{t("input-tokens")}</span>
+                    </div>
+                    <span className="tabular-nums">
+                      {tokens.input.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+
+                {/* Output */}
+                {tokens.output > 0 && (
+                  <div className="flex items-center justify-between rounded-sm bg-muted p-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <HugeIcons className="size-4" icon={ArrowRight02Icon} />
+                      <span>{t("output-tokens")}</span>
+                    </div>
+                    <span className="tabular-nums">
+                      {tokens.output.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+
+                {/* Total */}
+                {tokens.total > 0 && (
+                  <div className="flex items-center justify-between rounded-sm bg-secondary p-2 text-secondary-foreground text-sm">
+                    <div className="flex items-center gap-2">
+                      <HugeIcons className="size-4" icon={Summation01Icon} />
+                      <span>{t("total-tokens")}</span>
+                    </div>
+                    <span className="tabular-nums">
+                      {tokens.total.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>

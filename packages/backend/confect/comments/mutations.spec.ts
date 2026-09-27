@@ -1,8 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { failureWire } from "@repo/backend/confect/failure";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 
 /** Expected denial while writing a comment or its vote. */
@@ -18,7 +18,6 @@ export class CommentWriteError extends Schema.TaggedError<CommentWriteError>()(
     message: Schema.String,
   }
 ) {}
-export const CommentWriteErrorWire = failureWire(CommentWriteError);
 /**
  * Vote action validator: -1 = downvote, 0 = remove vote, 1 = upvote
  */
@@ -38,8 +37,10 @@ export default GroupSpec.make()
         parentId: Schema.optionalKey(IdSchema("comments")),
       }),
       returns: () => IdSchema("comments"),
-      error: () => Schema.Union([AuthFailure, CommentWriteErrorWire]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, CommentWriteError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -49,8 +50,10 @@ export default GroupSpec.make()
         vote: voteActionValidator,
       }),
       returns: () => Schema.Null,
-      error: () => Schema.Union([AuthFailure, CommentWriteErrorWire]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, CommentWriteError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -59,6 +62,8 @@ export default GroupSpec.make()
         commentId: IdSchema("comments"),
       }),
       returns: () => Schema.Null,
-      error: () => Schema.Union([AuthFailure, CommentWriteErrorWire]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, CommentWriteError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   );

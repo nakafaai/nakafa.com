@@ -1,30 +1,30 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import { readAttemptResume } from "@repo/backend/confect/tryouts/runtime/attempt/sections";
+import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import {
   getSectionScoreResult,
   loadAttemptScoreResult,
 } from "@repo/backend/confect/tryouts/score/result";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 interface AttemptStateInput {
-  readonly attempt: Doc<"tryoutAttempts">;
+  readonly appLocale: AppLocaleCode;
+  readonly attempt: Docs["tryoutAttempts"];
   readonly sectionKey?: string;
-  readonly sections: readonly Doc<"tryoutSectionAttempts">[];
+  readonly sections: readonly Docs["tryoutSectionAttempts"][];
 }
 
 /** Projects the loaded attempt graph into its compact reactive state contract. */
 export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
-  function* (
-    ctx: QueryCtx,
-    { attempt, sectionKey, sections }: AttemptStateInput
-  ) {
+  function* ({ appLocale, attempt, sectionKey, sections }: AttemptStateInput) {
     const resume = readAttemptResume(attempt, sections);
     const section = sectionKey
       ? (sections.find((candidate) => candidate.sectionKey === sectionKey) ??
         null)
       : null;
-    const score = yield* loadAttemptScoreResult(ctx, attempt);
+    const score = yield* loadAttemptScoreResult(attempt);
     return {
       activeSectionKey: resume.activeSectionKey,
       attemptId: attempt._id,
@@ -32,7 +32,13 @@ export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
       completedSectionKeys: attempt.completedSectionKeys,
       expiresAt: attempt.expiresAt,
       resumeSectionKey: resume.resumeSectionKey,
-      resumeSectionPublicPath: resume.resumeSectionPublicPath,
+      resumeSectionPublicPath: resume.resumeSectionKey
+        ? yield* readAttemptDestination(
+            attempt,
+            appLocale,
+            resume.resumeSectionKey
+          ).pipe(Effect.mapError(toTryoutRuntimeError))
+        : null,
       score,
       section: section
         ? {

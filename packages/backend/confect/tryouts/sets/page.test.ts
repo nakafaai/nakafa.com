@@ -1,3 +1,7 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
@@ -5,14 +9,14 @@ import {
   TryoutSetSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import {
   type PublishedSetRow,
   paginatePublishedSets,
 } from "@repo/backend/confect/tryouts/sets/page";
 import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import schema from "@repo/backend/convex/schema";
 import {
   insertTryoutAttempt,
@@ -40,16 +44,16 @@ const makeSecondSet = Effect.fn("tryouts.sets.page.test.makeSecondSet")(
     }).pipe(Effect.orDie);
   }
 );
-
 describe("tryouts/sets/page", () => {
   it.effect(
     "invalidates a loaded cursor when user progress changes its rows",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const progressId = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const fixture = yield* Effect.promise(() =>
                   activateTryoutStartSource(ctx, "visible")
@@ -93,17 +97,20 @@ describe("tryouts/sets/page", () => {
                     userId,
                   })
                 );
-              })
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
-
         const failure = yield* Effect.promise(() =>
           t.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               Effect.gen(function* () {
                 const catalog = yield* loadTryoutCatalog("id").pipe(
-                  Effect.provide(convexTryoutLayer(ctx))
+                  Effect.provide(tryoutLayer)
                 );
                 const firstSet = catalog.entries.find(
                   ({ row }) => row.kind === "set" && row.appLocale === "id"
@@ -118,14 +125,25 @@ describe("tryouts/sets/page", () => {
                 }
                 const secondSet = yield* makeSecondSet(firstSet);
                 const initialRows: readonly PublishedSetRow[] = [
-                  { durationSeconds: 60, progress: null, set: firstSet },
-                  { durationSeconds: 120, progress: null, set: secondSet },
+                  {
+                    durationSeconds: 60,
+                    progress: null,
+                    set: firstSet,
+                  },
+                  {
+                    durationSeconds: 120,
+                    progress: null,
+                    set: secondSet,
+                  },
                 ];
                 for (const numItems of [0, -1, 0.5, Number.POSITIVE_INFINITY]) {
                   expect(
                     yield* paginatePublishedSets(
                       catalog,
-                      { cursor: null, numItems },
+                      {
+                        cursor: null,
+                        numItems,
+                      },
                       initialRows
                     ).pipe(Effect.flip, Effect.orDie)
                   ).toMatchObject({
@@ -134,18 +152,28 @@ describe("tryouts/sets/page", () => {
                 }
                 const firstPage = yield* paginatePublishedSets(
                   catalog,
-                  { cursor: null, numItems: 1 },
+                  {
+                    cursor: null,
+                    numItems: 1,
+                  },
                   initialRows
                 );
                 const secondPage = yield* paginatePublishedSets(
                   catalog,
-                  { cursor: firstPage.continueCursor, numItems: 1 },
+                  {
+                    cursor: firstPage.continueCursor,
+                    numItems: 1,
+                  },
                   initialRows
                 );
                 expect(secondPage).toMatchObject({
                   continueCursor: "",
                   isDone: true,
-                  page: [{ setKey: "set-2" }],
+                  page: [
+                    {
+                      setKey: "set-2",
+                    },
+                  ],
                 });
                 const separator = firstPage.continueCursor.lastIndexOf(":");
                 const cursorPrefix = firstPage.continueCursor.slice(
@@ -167,12 +195,23 @@ describe("tryouts/sets/page", () => {
                   });
                 }
                 const changedRows: readonly PublishedSetRow[] = [
-                  { durationSeconds: 60, progress, set: firstSet },
-                  { durationSeconds: 120, progress: null, set: secondSet },
+                  {
+                    durationSeconds: 60,
+                    progress,
+                    set: firstSet,
+                  },
+                  {
+                    durationSeconds: 120,
+                    progress: null,
+                    set: secondSet,
+                  },
                 ];
                 return yield* paginatePublishedSets(
                   catalog,
-                  { cursor: firstPage.continueCursor, numItems: 1 },
+                  {
+                    cursor: firstPage.continueCursor,
+                    numItems: 1,
+                  },
                   changedRows
                 ).pipe(
                   Effect.match({
@@ -183,11 +222,14 @@ describe("tryouts/sets/page", () => {
                     onSuccess: () => null,
                   })
                 );
-              })
+              }).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
             )
           )
         );
-
         expect(failure).toMatchObject({
           code: "INVALID_TRYOUT_SET_CURSOR",
           message: "InvalidCursor: The try-out set pagination state changed.",

@@ -1,3 +1,4 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import {
   type ContentFamily,
   ContentFamilySchema,
@@ -18,8 +19,8 @@ import {
   ArticleSlugSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { writeArticle } from "@repo/backend/confect/contentRelease/article/write";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import type { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
@@ -45,6 +46,7 @@ import {
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime/values";
 import type { FunctionReturnType } from "convex/server";
+import { Effect } from "effect";
 
 type RuntimeRow = Exclude<
   FunctionReturnType<
@@ -52,7 +54,6 @@ type RuntimeRow = Exclude<
   >,
   null
 >;
-
 export const TEST_ARTICLE_KEY = ContentKeySchema.make(
   "articles/politics/dynastic-politics-asian-values"
 );
@@ -74,7 +75,11 @@ export const TEST_ARTICLE_PROJECTION = ArticleProjectionSchema.make({
   appLocale: ActiveAppLocaleSchema.make("en"),
   artifactLocale: ArtifactLocaleSchema.make("en"),
   metadata: {
-    authors: [{ name: "Nakafa" }],
+    authors: [
+      {
+        name: "Nakafa",
+      },
+    ],
     datePublished: "2026-07-23",
     title: "Article runtime verification",
   },
@@ -234,9 +239,14 @@ export async function insertRuntimeRelease(
 ) {
   await insertZeroRelease(ctx, {
     ...TEST_RUNTIME_RELEASE,
-    ownership: { base: [], result: families },
+    ownership: {
+      base: [],
+      result: families,
+    },
     role: "candidate",
-    scope: testPublicationScope({ families }),
+    scope: testPublicationScope({
+      families,
+    }),
     status: "completed",
   });
   await insertTestState(ctx, {
@@ -263,11 +273,12 @@ export async function insertRuntimeArticles(
     articleReleaseId: TEST_RUNTIME_RELEASE.releaseId,
     articleSequence: TEST_RUNTIME_RELEASE.sequence,
   });
-
   for (let index = 0; index < count; index += 1) {
     const projection = projectionAt(index);
     const projectionJson = canonicalizeArticleProjection(projection);
-    await insertRuntimeKey(ctx, projection.contentKey, { projectionJson });
+    await insertRuntimeKey(ctx, projection.contentKey, {
+      projectionJson,
+    });
     await insertRuntimeVersion(ctx, "public", projection.contentKey, {
       artifactHash: testTextHash(
         `${projection.contentKey}/${projection.artifactLocale}`
@@ -294,8 +305,12 @@ export async function insertRuntimeArticles(
     if (!head) {
       throw new Error("Expected one active article head.");
     }
-    await runConvexProgram(
-      writeArticle(ctx, state.articleSlot, head, projection)
+    await Effect.runPromise(
+      writeArticle(state.articleSlot, head, projection).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
     );
   }
 }

@@ -1,12 +1,13 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { evaluateTryoutResponse } from "@repo/backend/confect/tryouts/response/evaluation";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
-type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
-type TryoutResponse = Doc<"tryoutResponses">;
-type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
+type TryoutPlacement = Docs["tryoutAttemptPlacements"];
+type TryoutResponse = Docs["tryoutResponses"];
+type TryoutAttempt = Docs["tryoutAttempts"];
+type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 interface ResponsePlacementLink {
   readonly placement: TryoutPlacement;
@@ -126,7 +127,10 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
   const sections = new Map(
     Array.from(snapshotsByIdentity, ([identity, snapshot]) => [
       identity,
-      { questionOrders: new Set<number>(), snapshot },
+      {
+        questionOrders: new Set<number>(),
+        snapshot,
+      },
     ])
   );
   const placementIdentities = new Set<string>();

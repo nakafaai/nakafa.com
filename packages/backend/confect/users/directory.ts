@@ -1,16 +1,13 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, type Schema, Struct } from "effect";
-
 export type UserData = Schema.Schema.Type<typeof userDataValidator>;
 
 /** Resolve a persisted identity without weakening the unique auth index. */
 export const getAppUserByAuthId = Effect.fn("users.directory.identity")(
-  function* (ctx: QueryCtx, authId: string) {
-    return yield* DatabaseReader.make(databaseSchema, ctx.db)
+  function* (authId: string) {
+    return yield* (yield* DatabaseReader)
       .table("users")
       .get("by_authId", authId)
       .pipe(
@@ -22,10 +19,9 @@ export const getAppUserByAuthId = Effect.fn("users.directory.identity")(
 
 /** Read each distinct user once; deleted users have no directory entry. */
 export const getUserMap = Effect.fn("users.directory.read")(function* (
-  ctx: QueryCtx,
   userIds: readonly Id<"users">[]
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const users = yield* Effect.forEach([...new Set(userIds)], (id) =>
     database
       .table("users")

@@ -1,21 +1,20 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { reconcileModel } from "@repo/backend/confect/contentRelease/models/reconcile";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Reconciles material catalogs and partitions through their native indexes. */
 export const reconcileMaterialModel = Effect.fn(
   "contentRelease.reconcileMaterialModel"
-)(function* (ctx: MutationCtx, build: Doc<"contentModelBuilds">) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (build: Docs["contentModelBuilds"]) {
+  const writer = yield* DatabaseWriter;
   const sourceSlot = build.slots.materialBaseSlot;
   const targetSlot = build.slots.materialTargetSlot;
   if (build.phase === "materialCatalog") {
-    const query = DatabaseReader.make(databaseSchema, ctx.db).table(
-      "materialCatalog"
-    );
+    const query = (yield* DatabaseReader).table("materialCatalog");
     return yield* reconcileModel({
       build,
       source: query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
@@ -46,9 +45,7 @@ export const reconcileMaterialModel = Effect.fn(
       remove: (target) => writer.table("materialCatalog").delete(target._id),
     });
   }
-  const query = DatabaseReader.make(databaseSchema, ctx.db).table(
-    "materialBuckets"
-  );
+  const query = (yield* DatabaseReader).table("materialBuckets");
   return yield* reconcileModel({
     build,
     source: query.stream("by_slot_and_appLocale_and_bucket", (index) =>

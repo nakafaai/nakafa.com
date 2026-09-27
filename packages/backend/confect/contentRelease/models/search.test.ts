@@ -1,8 +1,9 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { SEARCH_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
 import { reconcileSearchModel } from "@repo/backend/confect/contentRelease/models/search";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
@@ -10,9 +11,9 @@ import { insertModelBuild } from "@repo/backend/test/content/model";
 import type { WithoutSystemFields } from "convex/server";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 type SearchRow = WithoutSystemFields<Doc<"contentIndex">>;
-
 function searchRow(index: number): SearchRow {
   return {
     appLocale: "en",
@@ -26,7 +27,6 @@ function searchRow(index: number): SearchRow {
     text: "A signed searchable lesson. ".repeat(12),
   };
 }
-
 async function setup() {
   const t = convexTest({
     schema,
@@ -39,31 +39,49 @@ async function setup() {
   const build = await t.mutation((ctx) => insertModelBuild(ctx, "search"));
   const advance = (cursor?: string) =>
     t.mutation(async (ctx) => ({
-      page: await runConvexProgram(
-        reconcileSearchModel(ctx, {
+      page: await Effect.runPromise(
+        reconcileSearchModel({
           ...build,
-          ...(cursor === undefined ? {} : { cursor }),
-        })
+          ...(cursor === undefined
+            ? {}
+            : {
+                cursor,
+              }),
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
       ),
       metrics: await ctx.meta.getTransactionMetrics(),
     }));
-  return { t, advance };
+  return {
+    t,
+    advance,
+  };
 }
-
 describe("contentRelease/models/search", () => {
   it("keeps unchanged rows and terminates a multi-page merge without model writes", async () => {
     const { t, advance } = await setup();
     const rows = ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) =>
-      Array.from({ length: 32 }, (_, index) => ({
-        ...searchRow(index),
-        appLocale,
-      }))
+      Array.from(
+        {
+          length: 32,
+        },
+        (_, index) => ({
+          ...searchRow(index),
+          appLocale,
+        })
+      )
     );
     const count = rows.length;
     await t.mutation(async (ctx) => {
       for (const row of rows) {
         await ctx.db.insert("contentIndex", row);
-        await ctx.db.insert("contentIndex", { ...row, slot: "green" });
+        await ctx.db.insert("contentIndex", {
+          ...row,
+          slot: "green",
+        });
       }
     });
     const initial = await t.query((ctx) =>
@@ -96,7 +114,6 @@ describe("contentRelease/models/search", () => {
       t.query((ctx) => ctx.db.query("contentIndex").take(count * 2))
     ).resolves.toEqual(initial);
   });
-
   it("repairs aborted residue, adds missing identities, and changes only differing rows", async () => {
     const { t, advance } = await setup();
     await t.mutation(async (ctx) => {
@@ -107,12 +124,24 @@ describe("contentRelease/models/search", () => {
           await ctx.db.insert("contentIndex", {
             ...row,
             slot: "green",
-            ...(index === 2 ? { text: "Aborted body", sequence: 9 } : {}),
-            ...(index === 18 ? { publicPath: "aborted/path" } : {}),
+            ...(index === 2
+              ? {
+                  text: "Aborted body",
+                  sequence: 9,
+                }
+              : {}),
+            ...(index === 18
+              ? {
+                  publicPath: "aborted/path",
+                }
+              : {}),
           });
         }
       }
-      await ctx.db.insert("contentIndex", { ...searchRow(52), slot: "green" });
+      await ctx.db.insert("contentIndex", {
+        ...searchRow(52),
+        slot: "green",
+      });
     });
     const first = await advance();
     expect(first.page.done).toBe(false);
@@ -137,10 +166,12 @@ describe("contentRelease/models/search", () => {
       const { _id, _creationTime, ...fields } = row;
       expect(
         target.find((candidate) => candidate.contentKey === row.contentKey)
-      ).toMatchObject({ ...fields, slot: "green" });
+      ).toMatchObject({
+        ...fields,
+        slot: "green",
+      });
     }
   });
-
   it.each(["source", "target", "both"] as const)(
     "bounds transactions when %s contains maximum-size search bodies",
     async (large) => {
@@ -151,11 +182,19 @@ describe("contentRelease/models/search", () => {
           const row = searchRow(index);
           await ctx.db.insert("contentIndex", {
             ...row,
-            ...(large === "target" ? {} : { text }),
+            ...(large === "target"
+              ? {}
+              : {
+                  text,
+                }),
           });
           await ctx.db.insert("contentIndex", {
             ...row,
-            ...(large === "source" ? {} : { text }),
+            ...(large === "source"
+              ? {}
+              : {
+                  text,
+                }),
             slot: "green",
           });
         });
@@ -176,10 +215,13 @@ describe("contentRelease/models/search", () => {
       expect(writes).toBe(large === "both" ? 0 : 12);
     }
   );
-
   it.each([
     "an-old-native-cursor",
-    JSON.stringify({ version: 2, phase: "search", position: ["a", "en"] }),
+    JSON.stringify({
+      version: 2,
+      phase: "search",
+      position: ["a", "en"],
+    }),
     JSON.stringify({
       version: 1,
       phase: "articleCatalog",
@@ -188,10 +230,9 @@ describe("contentRelease/models/search", () => {
   ])("rejects a cursor outside this phase contract: %s", async (cursor) => {
     const { advance } = await setup();
     await expect(advance(cursor)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
-
   it.each(["blue", "green"] as const)(
     "rejects duplicate %s identities and rolls back preceding repairs",
     async (slot) => {
@@ -203,21 +244,29 @@ describe("contentRelease/models/search", () => {
           slot: "green",
           text: "Aborted",
         });
-        await ctx.db.insert("contentIndex", { ...searchRow(1), slot });
-        await ctx.db.insert("contentIndex", { ...searchRow(1), slot });
+        await ctx.db.insert("contentIndex", {
+          ...searchRow(1),
+          slot,
+        });
+        await ctx.db.insert("contentIndex", {
+          ...searchRow(1),
+          slot,
+        });
       });
       await expect(advance()).rejects.toMatchObject({
-        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        code: "CONTENT_RELEASE_INTEGRITY",
       });
       const rows = await t.query((ctx) => ctx.db.query("contentIndex").take(4));
       expect(rows.find((row) => row.slot === "green")?.text).toBe("Aborted");
     }
   );
-
   it("completes an empty buffer without inventing a continuation", async () => {
     const { advance } = await setup();
     const result = await advance();
-    expect(result.page).toEqual({ done: true, processed: 0 });
+    expect(result.page).toEqual({
+      done: true,
+      processed: 0,
+    });
     expect(result.metrics.documentsWritten.used).toBe(0);
   });
 });

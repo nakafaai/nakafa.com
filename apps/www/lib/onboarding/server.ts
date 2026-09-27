@@ -1,8 +1,9 @@
 import "server-only";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
+import { env } from "@/env";
 
 /** Expected server write failure for one authoritative onboarding admission. */
 export class OnboardingAdmissionError extends Schema.TaggedError<OnboardingAdmissionError>()(
@@ -19,10 +20,15 @@ export class OnboardingStatusReadError extends Schema.TaggedError<OnboardingStat
 /** Reads whether onboarding is required and any resumable draft state. */
 export const readOnboardingStatus = Effect.fn("www.onboarding.readStatus")(
   function* (token: string) {
-    return yield* Effect.tryPromise({
-      catch: (cause) => new OnboardingStatusReadError({ cause }),
-      try: () => fetchQuery(api.onboarding.queries.getStatus, {}, { token }),
-    });
+    return yield* Effect.gen(function* () {
+      const client = yield* HttpClient.HttpClient;
+      return yield* client.query(refs.public.onboarding.queries.getStatus, {});
+    }).pipe(
+      Effect.provide(
+        HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, { auth: token })
+      ),
+      Effect.mapError((cause) => new OnboardingStatusReadError({ cause }))
+    );
   }
 );
 
@@ -30,8 +36,13 @@ export const readOnboardingStatus = Effect.fn("www.onboarding.readStatus")(
 export const recordOnboardingAdmission = Effect.fn(
   "www.onboarding.recordAdmission"
 )(function* (token: string) {
-  return yield* Effect.tryPromise({
-    catch: (cause) => new OnboardingAdmissionError({ cause }),
-    try: () => fetchMutation(api.onboarding.mutations.admit, {}, { token }),
-  });
+  return yield* Effect.gen(function* () {
+    const client = yield* HttpClient.HttpClient;
+    return yield* client.mutation(refs.public.onboarding.mutations.admit, {});
+  }).pipe(
+    Effect.provide(
+      HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, { auth: token })
+    ),
+    Effect.mapError((cause) => new OnboardingAdmissionError({ cause }))
+  );
 });

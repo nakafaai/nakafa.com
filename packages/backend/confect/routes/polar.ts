@@ -11,9 +11,12 @@ import {
   HTTP_FORBIDDEN,
   HTTP_INTERNAL_ERROR,
 } from "@repo/backend/confect/routes/constants";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Config, Effect, Redacted, Schema } from "effect";
+import {
+  HttpRouter,
+  HttpServerRequest,
+  HttpServerResponse,
+} from "effect/unstable/http";
 
 type PolarWebhookEvent = ReturnType<typeof validateEvent>;
 class PolarWebhookReadError extends Schema.TaggedError<PolarWebhookReadError>()(
@@ -91,53 +94,76 @@ const verifyPolarWebhook = Effect.fn("routes.polar.verify")(function* (
   });
 });
 
-/** Register Polar webhook routes on the Hono app. */
-export function registerPolarRoutes<Variables extends Record<string, unknown>>(
-  app: HonoWithConvex<ActionCtx, Variables>
-) {
-  app.post("/polar/events", (c) => {
-    const program = Effect.gen(function* () {
-      const body = yield* readPolarWebhookBody(c.req.raw);
-      const event = yield* verifyPolarWebhook(
-        body,
-        Object.fromEntries(c.req.raw.headers.entries())
-      );
-      const handled = yield* processPolarWebhookEvent(c.env, event);
-      if (!handled) {
-        return c.text("Bad Request: Missing User", HTTP_BAD_REQUEST);
-      }
-      return c.text("Accepted", HTTP_ACCEPTED);
-    }).pipe(
-      Effect.catchTags({
-        PolarWebhookPayloadError: (error) =>
-          Effect.logWarning("Polar webhook payload rejected").pipe(
-            Effect.annotateLogs({ error: error.message }),
-            Effect.as(c.text("Bad Request", HTTP_BAD_REQUEST))
-          ),
-        PolarWebhookReadError: (error) =>
-          Effect.logError("Polar webhook body read failed", error).pipe(
-            Effect.as(c.text("Internal server error", HTTP_INTERNAL_ERROR))
-          ),
-        PolarWebhookSdkError: (error) =>
-          Effect.logError("Polar webhook SDK failed", error).pipe(
-            Effect.as(c.text("Internal server error", HTTP_INTERNAL_ERROR))
-          ),
-        PolarWebhookVerificationError: (error) =>
-          Effect.logWarning("Polar webhook verification failed").pipe(
-            Effect.annotateLogs({ error: error.message }),
-            Effect.as(c.text("Forbidden", HTTP_FORBIDDEN))
-          ),
-      }),
-      Effect.catchCause((cause) =>
-        Effect.logError("Polar webhook processing failed", cause).pipe(
-          Effect.as(c.text("Internal server error", HTTP_INTERNAL_ERROR))
+/** Verifies the provider signature before applying an event. */
+export const polarRoutes = HttpRouter.add(
+  "POST",
+  "/polar/events",
+  Effect.gen(function* () {
+    const request = yield* HttpServerRequest.toWeb(
+      yield* HttpServerRequest.HttpServerRequest
+    );
+    const body = yield* readPolarWebhookBody(request);
+    const event = yield* verifyPolarWebhook(
+      body,
+      Object.fromEntries(request.headers.entries())
+    );
+    const handled = yield* processPolarWebhookEvent(event);
+    return handled
+      ? HttpServerResponse.text("Accepted", {
+          status: HTTP_ACCEPTED,
+        })
+      : HttpServerResponse.text("Bad Request: Missing User", {
+          status: HTTP_BAD_REQUEST,
+        });
+  }).pipe(
+    Effect.catchTags({
+      PolarWebhookPayloadError: (error) =>
+        Effect.logWarning("Polar webhook payload rejected").pipe(
+          Effect.annotateLogs({
+            error: error.message,
+          }),
+          Effect.as(
+            HttpServerResponse.text("Bad Request", {
+              status: HTTP_BAD_REQUEST,
+            })
+          )
+        ),
+      PolarWebhookReadError: (error) =>
+        Effect.logError("Polar webhook body read failed", error).pipe(
+          Effect.as(
+            HttpServerResponse.text("Internal server error", {
+              status: HTTP_INTERNAL_ERROR,
+            })
+          )
+        ),
+      PolarWebhookSdkError: (error) =>
+        Effect.logError("Polar webhook SDK failed", error).pipe(
+          Effect.as(
+            HttpServerResponse.text("Internal server error", {
+              status: HTTP_INTERNAL_ERROR,
+            })
+          )
+        ),
+      PolarWebhookVerificationError: (error) =>
+        Effect.logWarning("Polar webhook verification failed").pipe(
+          Effect.annotateLogs({
+            error: error.message,
+          }),
+          Effect.as(
+            HttpServerResponse.text("Forbidden", {
+              status: HTTP_FORBIDDEN,
+            })
+          )
+        ),
+    }),
+    Effect.catchCause((cause) =>
+      Effect.logError("Polar webhook processing failed", cause).pipe(
+        Effect.as(
+          HttpServerResponse.text("Internal server error", {
+            status: HTTP_INTERNAL_ERROR,
+          })
         )
       )
-    );
-    return Effect.runPromise(
-      program.pipe(Effect.provide(ConvexConfigProvider.layer))
-    );
-  });
-}
-
-import { ConvexConfigProvider } from "@confect/server";
+    )
+  )
+);

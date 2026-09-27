@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { readOgMetadata } from "@/app/og/content";
 
 const mocks = vi.hoisted(() => ({
@@ -14,18 +14,23 @@ const mocks = vi.hoisted(() => ({
   resolveReferenceInput: vi.fn(),
   toMaterialMetadataCopy: vi.fn(),
 }));
-
 vi.mock(
   "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data",
-  () => ({ parseMaterialParams: mocks.parseMaterialParams })
+  () => ({
+    parseMaterialParams: mocks.parseMaterialParams,
+  })
 );
 vi.mock(
   "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata",
-  () => ({ toMaterialMetadataCopy: mocks.toMaterialMetadataCopy })
+  () => ({
+    toMaterialMetadataCopy: mocks.toMaterialMetadataCopy,
+  })
 );
 vi.mock(
   "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner",
-  () => ({ resolveMaterialOwner: mocks.resolveMaterialOwner })
+  () => ({
+    resolveMaterialOwner: mocks.resolveMaterialOwner,
+  })
 );
 vi.mock("@/app/og/article", () => ({
   readArticleOgMetadata: mocks.readArticleOgMetadata,
@@ -37,15 +42,32 @@ vi.mock("@/lib/utils/system", () => ({
   getCachedMetadataFromSlug: mocks.getCachedMetadataFromSlug,
 }));
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: mocks.readNakafaRuntimeQuery,
-}));
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: mocks.readNakafaRuntimeQuery,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 vi.mock("@repo/backend/confect/contentRelease/reference/input", () => ({
   resolveReferenceInput: mocks.resolveReferenceInput,
 }));
-
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readArticleOgMetadata.mockResolvedValue(null);
@@ -57,11 +79,15 @@ beforeEach(() => {
         return null;
       }
       const [, subject, topic, ...lesson] = slug;
-      return { lesson, locale, subject, topic };
+      return {
+        lesson,
+        locale,
+        subject,
+        topic,
+      };
     }
   );
 });
-
 describe("OG content metadata", () => {
   it("reads article metadata through signed or preview ownership", async () => {
     const copy = {
@@ -69,7 +95,6 @@ describe("OG content metadata", () => {
       title: "Signed article",
     };
     mocks.readArticleOgMetadata.mockResolvedValueOnce(copy);
-
     await expect(
       readOgMetadata("en", ["articles", "politics", "signed-article"])
     ).resolves.toEqual(copy);
@@ -80,7 +105,6 @@ describe("OG content metadata", () => {
     ]);
     expect(mocks.getCachedMetadataFromSlug).not.toHaveBeenCalled();
   });
-
   it("returns null for an article path absent from signed or preview ownership", async () => {
     await expect(
       readOgMetadata("en", ["articles", "politics", "missing"])
@@ -88,23 +112,27 @@ describe("OG content metadata", () => {
     expect(mocks.getCachedMetadataFromSlug).not.toHaveBeenCalled();
     expect(mocks.getMaterialModel).not.toHaveBeenCalled();
   });
-
   it("reads material metadata through the published material owner", async () => {
     const metadata = {
       description: "Understand the concept of a function.",
       title: "Function Concept",
     };
-    const copy = { ...metadata };
+    const copy = {
+      ...metadata,
+    };
     mocks.resolveMaterialOwner.mockResolvedValueOnce({
       kind: "published",
       locale: "en",
       publicPath: "subjects/mathematics/function",
     });
     mocks.getMaterialModel.mockResolvedValueOnce({
-      model: { projection: { metadata } },
+      model: {
+        projection: {
+          metadata,
+        },
+      },
     });
     mocks.toMaterialMetadataCopy.mockReturnValueOnce(copy);
-
     await expect(
       readOgMetadata("en", [
         "subjects",
@@ -117,23 +145,27 @@ describe("OG content metadata", () => {
       "en",
       "subjects/mathematics/function"
     );
-    expect(mocks.toMaterialMetadataCopy).toHaveBeenCalledWith({ metadata });
+    expect(mocks.toMaterialMetadataCopy).toHaveBeenCalledWith({
+      metadata,
+    });
     expect(mocks.getCachedMetadataFromSlug).not.toHaveBeenCalled();
   });
-
   it("reads preview material metadata without touching the published model", async () => {
     const metadata = {
       description: "Preview description",
       title: "Preview title",
     };
-    const copy = { ...metadata };
+    const copy = {
+      ...metadata,
+    };
     mocks.resolveMaterialOwner.mockResolvedValueOnce({
       appLocale: "en",
       kind: "preview",
-      preview: { metadata },
+      preview: {
+        metadata,
+      },
     });
     mocks.toMaterialMetadataCopy.mockReturnValueOnce(copy);
-
     await expect(
       readOgMetadata("en", [
         "subjects",
@@ -144,10 +176,8 @@ describe("OG content metadata", () => {
     ).resolves.toEqual(copy);
     expect(mocks.getMaterialModel).not.toHaveBeenCalled();
   });
-
   it("returns null when no material owner resolves", async () => {
     mocks.resolveMaterialOwner.mockResolvedValueOnce(null);
-
     await expect(
       readOgMetadata("en", [
         "subjects",
@@ -159,7 +189,6 @@ describe("OG content metadata", () => {
     expect(mocks.getMaterialModel).not.toHaveBeenCalled();
     expect(mocks.toMaterialMetadataCopy).not.toHaveBeenCalled();
   });
-
   it("returns null when the material release is withdrawn", async () => {
     mocks.resolveMaterialOwner.mockResolvedValueOnce({
       kind: "published",
@@ -167,7 +196,6 @@ describe("OG content metadata", () => {
       publicPath: "subjects/mathematics/function",
     });
     mocks.getMaterialModel.mockResolvedValueOnce(null);
-
     await expect(
       readOgMetadata("en", [
         "subjects",
@@ -178,22 +206,20 @@ describe("OG content metadata", () => {
     ).resolves.toBeNull();
     expect(mocks.toMaterialMetadataCopy).not.toHaveBeenCalled();
   });
-
   it("derives a missing generic description from its title", async () => {
-    mocks.getCachedMetadataFromSlug.mockResolvedValue({ title: "Nakafa" });
-
+    mocks.getCachedMetadataFromSlug.mockResolvedValue({
+      title: "Nakafa",
+    });
     await expect(readOgMetadata("en", ["about"])).resolves.toEqual({
       description: "Nakafa",
       title: "Nakafa",
     });
   });
-
   it("keeps non-material metadata on the generic content owner", async () => {
     mocks.getCachedMetadataFromSlug.mockResolvedValue({
       description: "Nakafa description",
       title: "Nakafa",
     });
-
     await expect(readOgMetadata("en", ["about"])).resolves.toEqual({
       description: "Nakafa description",
       title: "Nakafa",
@@ -202,30 +228,35 @@ describe("OG content metadata", () => {
     expect(mocks.toMaterialMetadataCopy).not.toHaveBeenCalled();
     expect(mocks.readNakafaRuntimeQuery).not.toHaveBeenCalled();
   });
-
   it("reads cached copy for content-owned slugs with a reference", async () => {
-    const copy = { description: "Surah description", title: "Surah 1" };
+    const copy = {
+      description: "Surah description",
+      title: "Surah 1",
+    };
     mocks.resolveReferenceInput.mockReturnValueOnce(
-      Effect.succeed({ family: "quran" })
+      Effect.succeed({
+        family: "quran",
+      })
     );
     mocks.readNakafaRuntimeQuery.mockReturnValueOnce(
-      Effect.succeed({ title: "Surah 1" })
+      Effect.succeed({
+        title: "Surah 1",
+      })
     );
     mocks.getCachedMetadataFromSlug.mockResolvedValueOnce(copy);
-
     await expect(readOgMetadata("en", ["quran", "1"])).resolves.toEqual(copy);
     expect(mocks.getCachedMetadataFromSlug).toHaveBeenCalledWith("en", [
       "quran",
       "1",
     ]);
   });
-
   it("returns null for content-owned slugs with no reference", async () => {
     mocks.resolveReferenceInput.mockReturnValueOnce(
-      Effect.succeed({ family: "quran" })
+      Effect.succeed({
+        family: "quran",
+      })
     );
     mocks.readNakafaRuntimeQuery.mockReturnValueOnce(Effect.succeed(null));
-
     await expect(readOgMetadata("id", ["quran", "999"])).resolves.toBeNull();
     expect(mocks.getCachedMetadataFromSlug).not.toHaveBeenCalled();
   });

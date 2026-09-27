@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { evaluateTryoutResponse } from "@repo/backend/confect/tryouts/response/evaluation";
 import {
@@ -16,12 +19,11 @@ import {
 import type { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { requireOwnedAttempt } from "@repo/backend/confect/tryouts/runtime/score";
 import { loadPlacementSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow } from "effect";
 
-type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
-type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
+type TryoutPlacement = Docs["tryoutAttemptPlacements"];
+type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 
 /** Preserves an expected ownership denial while masking lookup failures. */
 function toOwnedAttemptResponseError(
@@ -48,11 +50,8 @@ function getResponseTimeSpent(section: TryoutSectionAttempt, now: number) {
 
 /** Loads the exact placement selected by one authenticated response. */
 const requirePlacement = Effect.fn("tryouts.response.requirePlacement")(
-  function* (
-    ctx: MutationCtx,
-    placementId: SaveTryoutResponseArgs["placementId"]
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (placementId: SaveTryoutResponseArgs["placementId"]) {
+    const database = yield* DatabaseReader;
     const placement = yield* database
       .table("tryoutAttemptPlacements")
       .get(placementId)
@@ -72,8 +71,8 @@ const requirePlacement = Effect.fn("tryouts.response.requirePlacement")(
 
 /** Loads the active timer that authorizes one placement response. */
 const requireActiveSection = Effect.fn("tryouts.response.requireActiveSection")(
-  function* (ctx: MutationCtx, placement: TryoutPlacement) {
-    const section = yield* loadPlacementSectionAttempt(ctx, placement);
+  function* (placement: TryoutPlacement) {
+    const section = yield* loadPlacementSectionAttempt(placement);
     if (section?.status !== "in-progress") {
       return yield* new TryoutAttemptStateError({
         code: "TRYOUT_SECTION_NOT_ACTIVE",
@@ -89,18 +88,15 @@ const requireActiveSection = Effect.fn("tryouts.response.requireActiveSection")(
  * @see https://docs.convex.dev/functions/mutation-functions#transactions
  */
 export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
-  function* (
-    ctx: MutationCtx,
-    input: {
-      readonly args: SaveTryoutResponseArgs;
-      readonly now: number;
-      readonly userId: Id<"users">;
-    }
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const placement = yield* requirePlacement(ctx, input.args.placementId);
-    const attempt = yield* requireOwnedAttempt(ctx, {
+  function* (input: {
+    readonly args: SaveTryoutResponseArgs;
+    readonly now: number;
+    readonly userId: Id<"users">;
+  }) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const placement = yield* requirePlacement(input.args.placementId);
+    const attempt = yield* requireOwnedAttempt({
       attemptId: placement.tryoutAttemptId,
       userId: input.userId,
     }).pipe(Effect.mapError(toOwnedAttemptResponseError));
@@ -110,7 +106,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
         message: "Try-out attempt is not active.",
       });
     }
-    const section = yield* requireActiveSection(ctx, placement);
+    const section = yield* requireActiveSection(placement);
     const sectionSnapshot = yield* requireTryoutResponseSectionSnapshot(
       attempt,
       section
@@ -155,7 +151,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
         return null;
       }
       yield* writer.table("tryoutResponses").delete(existing._id);
-      yield* updateResponseActivity(ctx, {
+      yield* updateResponseActivity({
         answeredDelta: -Number(existing.isComplete),
         attemptId: attempt._id,
         correctDelta: existing.isCorrect ? -1 : 0,
@@ -183,7 +179,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
           updatedAt: input.now,
         })
         .pipe(Effect.orDie);
-      yield* updateResponseActivity(ctx, {
+      yield* updateResponseActivity({
         answeredDelta,
         attemptId: attempt._id,
         correctDelta,
@@ -206,7 +202,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
         updatedAt: input.now,
       })
       .pipe(Effect.orDie);
-    yield* updateResponseActivity(ctx, {
+    yield* updateResponseActivity({
       answeredDelta: evaluated.isComplete ? 1 : 0,
       attemptId: attempt._id,
       correctDelta: evaluated.isCorrect ? 1 : 0,
@@ -220,17 +216,14 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
 
 /** Applies one response delta to its section and parent activity clocks. */
 const updateResponseActivity = Effect.fn("tryouts.response.updateActivity")(
-  function* (
-    ctx: MutationCtx,
-    input: {
-      readonly answeredDelta: number;
-      readonly attemptId: Id<"tryoutAttempts">;
-      readonly correctDelta: number;
-      readonly now: number;
-      readonly section: TryoutSectionAttempt;
-    }
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (input: {
+    readonly answeredDelta: number;
+    readonly attemptId: Id<"tryoutAttempts">;
+    readonly correctDelta: number;
+    readonly now: number;
+    readonly section: TryoutSectionAttempt;
+  }) {
+    const writer = yield* DatabaseWriter;
     yield* writer.table("tryoutSectionAttempts").patch(input.section._id, {
       answeredCount: input.section.answeredCount + input.answeredDelta,
       correctAnswers: input.section.correctAnswers + input.correctDelta,

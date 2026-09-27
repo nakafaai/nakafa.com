@@ -1,5 +1,4 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   toUserCleanupError,
   type UserCleanupError,
@@ -9,15 +8,14 @@ import {
   hasAccountDeletionCancellation,
 } from "@repo/backend/confect/auth/deletion/cancel";
 import { accountDeletionCancellationOutcome } from "@repo/backend/confect/auth/deletion/spec";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
 
 /** Cancels only the browser attempt that created the active preparation. */
 export const cancelAccountDeletionAttempt = Effect.fn(
   "auth.deletion.attemptCancellation.cancel"
 )(
-  function* (ctx: MutationCtx, authId: string, attemptId: string) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (authId: string, attemptId: string) {
+    const database = yield* DatabaseReader;
     const preparation = yield* database
       .table("accountDeletionPreparations")
       .get("by_authId", authId)
@@ -33,7 +31,7 @@ export const cancelAccountDeletionAttempt = Effect.fn(
     ) {
       return false;
     }
-    return yield* cancelPreparedAccountDeletion(ctx, {
+    return yield* cancelPreparedAccountDeletion({
       ...preparation,
       attemptId,
     });
@@ -49,11 +47,10 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
   "auth.deletion.attemptCancellation.cancelByToken"
 )(
   function* (
-    ctx: MutationCtx,
     attemptId: string,
     authUserExists: (authId: string) => Effect.Effect<boolean, UserCleanupError>
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const preparation = yield* database
       .table("accountDeletionPreparations")
       .get("by_attemptId", attemptId)
@@ -62,7 +59,7 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
         Effect.orDie
       );
     if (!preparation) {
-      return (yield* hasAccountDeletionCancellation(ctx, attemptId))
+      return (yield* hasAccountDeletionCancellation(attemptId))
         ? accountDeletionCancellationOutcome.complete
         : null;
     }
@@ -77,7 +74,6 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
       return null;
     }
     const hasMore = yield* cancelAccountDeletionAttempt(
-      ctx,
       preparation.authId,
       attemptId
     );

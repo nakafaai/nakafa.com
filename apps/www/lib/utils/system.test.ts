@@ -4,12 +4,11 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,
 } from "@/lib/utils/system";
-import { createTestNativeQuery } from "@/test/runtime-query";
 
 const routeMocks = vi.hoisted(() => ({
   read: vi.fn(),
@@ -19,33 +18,47 @@ const cacheMocks = vi.hoisted(() => ({
   tag: vi.fn(),
 }));
 const mockGetTranslations = vi.hoisted(() => vi.fn());
-
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: routeMocks.read,
-}));
-
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: routeMocks.read,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 vi.mock("next-intl/server", () => ({
   getTranslations: mockGetTranslations,
 }));
-
 vi.mock("next/cache", () => ({
   cacheLife: cacheMocks.life,
   cacheTag: cacheMocks.tag,
 }));
-
 const translatedDefaults = {
-  authors: [{ name: "Nakafa" }],
+  authors: [
+    {
+      name: "Nakafa",
+    },
+  ],
   date: "",
   description: "Short description",
   title: "Made with love",
 };
-
 beforeEach(() => {
   routeMocks.read.mockReset();
   cacheMocks.life.mockClear();
   cacheMocks.tag.mockClear();
   mockGetTranslations.mockReset();
-
   routeMocks.read.mockReturnValue(
     Effect.succeed({
       description: "Runtime description",
@@ -58,13 +71,11 @@ beforeEach(() => {
         key === "made-with-love" ? "Made with love" : key
       );
     }
-
     return Promise.resolve((key: string) =>
       key === "short-description" ? "Short description" : key
     );
   });
 });
-
 describe("current content reference metadata", () => {
   it.effect(
     "uses signed snapshot metadata and keeps defaults for absent routes",
@@ -72,13 +83,16 @@ describe("current content reference metadata", () => {
       Effect.gen(function* () {
         const fixture = yield* makeTryoutRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
-        routeMocks.read.mockImplementation(createTestNativeQuery(context));
-
+        routeMocks.read.mockImplementation(context.query);
         expect(
           yield* getMetadataFromSlug("en", ["try-out", "indonesia"])
         ).toMatchObject({
           title: "Indonesia",
-          authors: [{ name: "Nakafa" }],
+          authors: [
+            {
+              name: "Nakafa",
+            },
+          ],
         });
         expect(
           yield* getMetadataFromSlug("en", ["try-out", "missing-country"])
@@ -88,14 +102,17 @@ describe("current content reference metadata", () => {
   it.effect("reads complete metadata from the current signed reference", () =>
     Effect.gen(function* () {
       expect(yield* getMetadataFromSlug("en", ["quran", "1"])).toEqual({
-        authors: [{ name: "Nakafa" }],
+        authors: [
+          {
+            name: "Nakafa",
+          },
+        ],
         date: "",
         description: "Runtime description",
         title: "Runtime title",
       });
     })
   );
-
   it.effect(
     "uses translated defaults when the current reference has no row",
     () =>
@@ -106,7 +123,6 @@ describe("current content reference metadata", () => {
         );
       })
   );
-
   it.effect("preserves typed current-reference read failures", () =>
     Effect.gen(function* () {
       routeMocks.read.mockReturnValueOnce(
@@ -117,15 +133,12 @@ describe("current content reference metadata", () => {
           })
         )
       );
-
       const error = yield* Effect.flip(
         getMetadataFromSlug("id", ["quran", "failed"])
       );
-
       expect(error).toBeInstanceOf(NakafaAgentDataReadError);
     })
   );
-
   it.effect("fills sparse current metadata from translations", () =>
     Effect.gen(function* () {
       routeMocks.read.mockReturnValueOnce(
@@ -134,13 +147,11 @@ describe("current content reference metadata", () => {
           title: "",
         })
       );
-
       expect(yield* getMetadataFromSlug("en", ["quran", "sparse"])).toEqual(
         translatedDefaults
       );
     })
   );
-
   it.effect("reports which translation namespace failed", () =>
     Effect.gen(function* () {
       mockGetTranslations.mockRejectedValueOnce(new Error("Missing Common."));
@@ -151,7 +162,6 @@ describe("current content reference metadata", () => {
         locale: "en",
         namespace: "Common",
       });
-
       mockGetTranslations.mockImplementation(({ namespace }) => {
         if (namespace === "Common") {
           return Promise.resolve(() => "Made with love");
@@ -167,21 +177,20 @@ describe("current content reference metadata", () => {
       });
     })
   );
-
   it.effect("applies the content cache at the route-handler boundary", () =>
     Effect.gen(function* () {
       const metadata = yield* Effect.promise(() =>
         getCachedMetadataFromSlug("en", ["quran", "1"])
       );
-
-      expect(metadata).toMatchObject({ title: "Runtime title" });
+      expect(metadata).toMatchObject({
+        title: "Runtime title",
+      });
       expect(cacheMocks.tag).toHaveBeenCalledExactlyOnceWith(
         "content-scope:quran"
       );
       expect(cacheMocks.life).toHaveBeenCalledWith("contentRuntime");
     })
   );
-
   it.effect.each([
     ["articles", "content-scope:article"],
     ["subjects", "content-scope:material"],
@@ -194,7 +203,6 @@ describe("current content reference metadata", () => {
       expect(cacheMocks.tag).toHaveBeenCalledExactlyOnceWith(tag);
     })
   );
-
   it.effect(
     "keeps a translation-only route independent of content publication",
     () =>
@@ -209,7 +217,8 @@ describe("current content reference metadata", () => {
       })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

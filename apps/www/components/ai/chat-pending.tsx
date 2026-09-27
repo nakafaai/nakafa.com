@@ -1,32 +1,34 @@
 "use client";
 
-import { Message } from "@repo/design-system/components/ai/message";
+import { Message } from "@repo/design-system/components/ui/message";
+import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 
 import { useChat } from "@/components/ai/context/use-chat";
 
 export function AiChatPending() {
-  const status = useChat((state) => state.chat.status);
-  const messages = useChat((state) => state.chat.messages);
+  const busy = useChat((state) => state.busy);
+  const turn = useChat((state) => state.turn);
+  const messages = useChat((state) => state.messages);
 
   // Only show when submitted and no assistant message exists yet
-  if (status !== "submitted") {
+  if (!busy) {
     return null;
   }
 
   const lastMessage = messages.at(-1);
 
   // If last message is already assistant, don't show pending
-  if (lastMessage?.role === "assistant") {
+  if (lastMessage?.role === "assistant" && lastMessage.order === turn?.order) {
     return null;
   }
 
   return (
-    <Message from="assistant">
-      <div className="flex flex-col gap-6">
+    <MessageScrollerItem messageId="pending">
+      <Message>
         <TypingLoader />
-      </div>
-    </Message>
+      </Message>
+    </MessageScrollerItem>
   );
 }
 AiChatPending.displayName = "AiChatPending";

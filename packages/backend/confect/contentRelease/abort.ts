@@ -1,5 +1,7 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   abortRowCount,
   deleteAbortRows,
@@ -20,10 +22,6 @@ import {
   loadModelBuild,
 } from "@repo/backend/confect/contentRelease/models/build";
 import { stopProofWorkflow } from "@repo/backend/confect/contentRelease/proof/coordinator";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Clock, Effect, Option } from "effect";
 
 /** Validates durable progress for one still-invisible abort operation. */
@@ -57,12 +55,12 @@ export const abortEvidence = Effect.fn("contentRelease.abortEvidence")(
 /** Proves one aborted release is terminal and detached from state. */
 export const validateAbortedRelease = Effect.fn(
   "contentRelease.validateAbortedRelease"
-)(function* (ctx: MutationCtx | QueryCtx, releaseId: string) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const release = yield* loadRelease(ctx, releaseId);
-  const state = yield* loadState(ctx);
+)(function* (releaseId: string) {
+  const database = yield* DatabaseReader;
+  const release = yield* loadRelease(releaseId);
+  const state = yield* loadState();
   const [build, rows, residue, runtime] = yield* Effect.all([
-    loadModelBuild(ctx),
+    loadModelBuild(),
     Effect.all([
       database
         .table("contentHeads")
@@ -93,8 +91,8 @@ export const validateAbortedRelease = Effect.fn(
         .first()
         .pipe(Effect.map(Option.getOrNull), Effect.orDie),
     ]),
-    hasAbortResidue(ctx, release.sequence),
-    hasAbortRuntime(ctx, releaseId),
+    hasAbortResidue(release.sequence),
+    hasAbortRuntime(releaseId),
   ]);
   if (
     release.status !== "aborted" ||
@@ -121,11 +119,10 @@ export const validateAbortedRelease = Effect.fn(
 
 /** Abandons only an invisible candidate or retained recovery slot. */
 export const abortProgram = Effect.fn("contentRelease.abort")(function* (
-  ctx: MutationCtx,
   releaseId: string
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const release = yield* loadRelease(ctx, releaseId);
+  const writer = yield* DatabaseWriter;
+  const release = yield* loadRelease(releaseId);
   if (release.status === "completed") {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
@@ -133,7 +130,7 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
     );
   }
   if (release.status === "aborted") {
-    yield* validateAbortedRelease(ctx, releaseId);
+    yield* validateAbortedRelease(releaseId);
     const total = abortRowCount(release);
     return {
       complete: true,
@@ -142,7 +139,7 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
       totalItems: total,
     };
   }
-  const state = yield* loadState(ctx);
+  const state = yield* loadState();
   if (!(state && ownsRole(state, release.role, release))) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
@@ -158,11 +155,11 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
   const before =
     release.status === "aborting" ? yield* abortEvidence(release) : 0;
   if (release.proofWorkflowId) {
-    yield* stopProofWorkflow(ctx, release.proofWorkflowId);
+    yield* stopProofWorkflow(release.proofWorkflowId);
   }
   const total = abortRowCount(release);
-  yield* deleteAbortRuntime(ctx, releaseId);
-  const deleted = yield* deleteAbortRows(ctx, releaseId, release.sequence);
+  yield* deleteAbortRuntime(releaseId);
+  const deleted = yield* deleteAbortRows(releaseId, release.sequence);
   if (deleted === 0 && before < total) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -177,7 +174,7 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
     );
   }
   const complete = processed === total;
-  if (complete && (yield* hasAbortResidue(ctx, release.sequence))) {
+  if (complete && (yield* hasAbortResidue(release.sequence))) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Release ${releaseId} retained staged publication ownership.`
@@ -204,7 +201,7 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
       totalItems: total,
     };
   }
-  yield* deleteModelBuild(ctx, releaseId);
+  yield* deleteModelBuild(releaseId);
   const slot =
     release.role === "candidate"
       ? {

@@ -8,7 +8,7 @@ import {
   type ModelId,
   ModelIdSchema,
   type ModelKey,
-} from "@repo/ai/config/model";
+} from "@repo/backend/confect/nina/config/model";
 import { Function as EffectFunction } from "effect";
 
 const modelIcons = {

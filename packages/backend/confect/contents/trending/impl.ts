@@ -1,5 +1,8 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  QueryCtx as QueryCtxService,
+} from "@repo/backend/confect/_generated/services";
 import { toLearningContextQuery } from "@repo/backend/confect/contents/context";
 import { buildContentSearchRef } from "@repo/backend/confect/contents/helpers/search/documents";
 import {
@@ -15,8 +18,6 @@ import {
 } from "@repo/backend/confect/contents/trending/spec";
 import { hydrateDurableContentTarget } from "@repo/backend/confect/contents/views/target";
 import type { TrendingSubject } from "@repo/backend/confect/lib/validators/trending";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Struct } from "effect";
 
@@ -51,7 +52,6 @@ function getTrendingSettings(args: GetTrendingSubjectsArgs) {
 const loadRankedPopularityCounterIds = Effect.fn(
   "contents.trending.loadRankedPopularityCounterIds"
 )(function* (
-  ctx: QueryCtx,
   args: GetTrendingSubjectsArgs,
   settings: {
     readonly limit: number;
@@ -59,7 +59,8 @@ const loadRankedPopularityCounterIds = Effect.fn(
     readonly windowKey: LearningPopularityWindow;
   }
 ) {
-  const ids: Doc<"learningPopularityCounters">["_id"][] = [];
+  const ctx = yield* QueryCtxService;
+  const ids: Docs["learningPopularityCounters"]["_id"][] = [];
   let cursor: string | undefined;
   let pagesRead = 0;
   while (pagesRead < trendingRankingMaxPages) {
@@ -90,18 +91,15 @@ const loadRankedPopularityCounterIds = Effect.fn(
 /** Hydrates aggregate IDs back into current counter rows without reordering. */
 const loadRankedPopularityCounters = Effect.fn(
   "contents.trending.loadRankedPopularityCounters"
-)(function* (
-  ctx: QueryCtx,
-  ids: readonly Doc<"learningPopularityCounters">["_id"][]
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (ids: readonly Docs["learningPopularityCounters"]["_id"][]) {
+  const database = yield* DatabaseReader;
   const rows = yield* Effect.forEach(ids, (id) =>
     database
       .table("learningPopularityCounters")
       .get(id)
       .pipe(
         Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie,
+        Effect.mapError(toTrendingSubjectIoError),
         Effect.catchDefect((cause) =>
           Effect.fail(toTrendingSubjectIoError(cause))
         )
@@ -113,8 +111,8 @@ const loadRankedPopularityCounters = Effect.fn(
 /** Loads the current signed material for a ranked popularity counter. */
 const loadCurrentTrendingRoute = Effect.fn(
   "contents.trending.loadCurrentTrendingRoute"
-)(function* (ctx: QueryCtx, row: Doc<"learningPopularityCounters">) {
-  const route = yield* hydrateDurableContentTarget(ctx, {
+)(function* (row: Docs["learningPopularityCounters"]) {
+  const route = yield* hydrateDurableContentTarget({
     contentId: row.content_id,
     locale: row.locale,
     section: "material",
@@ -141,7 +139,7 @@ function toTrendingContentRef(
 
 /** Projects a ranked popularity row to the public homepage card shape. */
 function toTrendingSubject(
-  row: Doc<"learningPopularityCounters">,
+  row: Docs["learningPopularityCounters"],
   route: NonNullable<
     Effect.Success<ReturnType<typeof loadCurrentTrendingRoute>>
   >
@@ -166,19 +164,19 @@ function toTrendingSubject(
  */
 export const listTrendingSubjects = Effect.fn(
   "contents.trending.listTrendingSubjects"
-)(function* (ctx: QueryCtx, args: GetTrendingSubjectsArgs) {
+)(function* (args: GetTrendingSubjectsArgs) {
   const settings = getTrendingSettings(args);
   if (settings.limit === 0) {
     return [];
   }
-  const ids = yield* loadRankedPopularityCounterIds(ctx, args, settings);
-  const rows = yield* loadRankedPopularityCounters(ctx, ids);
+  const ids = yield* loadRankedPopularityCounterIds(args, settings);
+  const rows = yield* loadRankedPopularityCounters(ids);
   const subjects: TrendingSubject[] = [];
   for (const row of rows) {
     if (row.score < settings.minViews) {
       continue;
     }
-    const route = yield* loadCurrentTrendingRoute(ctx, row);
+    const route = yield* loadCurrentTrendingRoute(row);
     if (!route) {
       continue;
     }

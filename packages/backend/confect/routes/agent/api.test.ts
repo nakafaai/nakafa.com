@@ -1,9 +1,11 @@
+import { RegisteredConvexFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { Effect } from "effect";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
   API_SECRET,
@@ -23,7 +25,6 @@ import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 
 setupApiTest();
-
 describe("public agent API routes", () => {
   it("fails closed with service unavailable when the origin secret is unconfigured", async () => {
     vi.stubEnv(NAKAFA_API_EDGE_CONTRACT.secretEnvironment, "");
@@ -31,7 +32,10 @@ describe("public agent API routes", () => {
       createConvexTestWithBetterAuth(),
       "/health"
     );
-    await expectProblem(response, { code: "SERVICE_UNAVAILABLE", status: 503 });
+    await expectProblem(response, {
+      code: "SERVICE_UNAVAILABLE",
+      status: 503,
+    });
   });
   it.each(["/", "/health", "/taxonomy", "/content", "/quran/1"])(
     "allows a browser preflight for %s",
@@ -43,30 +47,34 @@ describe("public agent API routes", () => {
       expect(response.headers.get("access-control-allow-origin")).toBe("*");
     }
   );
-
   it("preflights the published OpenAPI document", async () => {
     const response = await fetchOpenApi(createConvexTestWithBetterAuth(), {
       method: "OPTIONS",
     });
     expect(response.status).toBe(204);
   });
-
   it("returns method guidance for a non-read request to an unknown API path", async () => {
     const response = await fetchApi(
       createConvexTestWithBetterAuth(),
       "/unknown",
-      { method: "POST" }
+      {
+        method: "POST",
+      }
     );
-    await expectProblem(response, { code: "METHOD_NOT_ALLOWED", status: 405 });
+    await expectProblem(response, {
+      code: "METHOD_NOT_ALLOWED",
+      status: 405,
+    });
   });
   it("serves the API index, health response, and CORS preflight", async () => {
     const test = createConvexTestWithBetterAuth();
     const [index, health, options] = await Promise.all([
       fetchApi(test, "/"),
       fetchApi(test, "/health"),
-      fetchApi(test, "/search", { method: "OPTIONS" }),
+      fetchApi(test, "/search", {
+        method: "OPTIONS",
+      }),
     ]);
-
     expect(index.status).toBe(200);
     expectPublicJson(index);
     await expect(index.json()).resolves.toMatchObject({
@@ -87,20 +95,22 @@ describe("public agent API routes", () => {
       "GET, OPTIONS"
     );
   });
-
   it("protects and serves the cacheable OpenAPI contract", async () => {
     const test = createConvexTestWithBetterAuth();
     const denied = await test.fetch(
       `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.documentPath}`
     );
-    const rejected = await fetchOpenApi(test, { method: "POST" });
+    const rejected = await fetchOpenApi(test, {
+      method: "POST",
+    });
     const rejectedBody = rejected.clone();
     const response = await fetchOpenApi(test);
     const etag = response.headers.get("etag");
     const revalidated = await fetchOpenApi(test, {
-      headers: { "if-none-match": etag ?? "missing" },
+      headers: {
+        "if-none-match": etag ?? "missing",
+      },
     });
-
     await expectProblem(denied, {
       code: "ORIGIN_ACCESS_DENIED",
       status: 403,
@@ -117,33 +127,30 @@ describe("public agent API routes", () => {
       "public, max-age=3600, s-maxage=3600"
     );
     await expect(response.json()).resolves.toMatchObject({
-      info: { title: "Nakafa Public API" },
+      info: {
+        title: "Nakafa Public API",
+      },
       openapi: "3.1.1",
     });
     expect(revalidated.status).toBe(304);
     expect(revalidated.headers.get("etag")).toBe(etag);
   });
-
   it.each(["/", "/health", "/quran/1?locale=en"])(
     "rejects direct origin access to %s before dispatching a route",
     async (path) => {
       const response = await createConvexTestWithBetterAuth().fetch(
         `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.runtimePath}${path}`
       );
-
       await expectProblem(response, {
         code: "ORIGIN_ACCESS_DENIED",
         status: 403,
       });
     }
   );
-
   it("does not expose the protected origin at the site root", async () => {
     const response = await createConvexTestWithBetterAuth().fetch("/");
-
     expect(response.status).toBe(404);
   });
-
   it.each([
     "/",
     NAKAFA_API_EDGE_CONTRACT.discoveryPath,
@@ -158,32 +165,42 @@ describe("public agent API routes", () => {
       });
       const response = await createConvexTestWithBetterAuth().fetch(
         `${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`,
-        { headers }
+        {
+          headers,
+        }
       );
-
       expect(response.status).toBe(404);
     }
   );
-
   it.each(["/v1", "/v1/content", "/v1/openapi.json", "/v2", "/v2/search"])(
     "does not nest version namespaces inside the protected runtime at %s",
     async (path) => {
       const response = await fetchApi(createConvexTestWithBetterAuth(), path);
-
       await expectProblem(response, {
         code: "ENDPOINT_NOT_FOUND",
         status: 404,
       });
     }
   );
-
   it.each([
     ["/search?unknown=value", {}, "INVALID_REQUEST", 400],
     ["/content", {}, "INVALID_REQUEST", 400],
-    ["/search", { headers: { accept: "text/html" } }, "NOT_ACCEPTABLE", 406],
+    [
+      "/search",
+      {
+        headers: {
+          accept: "text/html",
+        },
+      },
+      "NOT_ACCEPTABLE",
+      406,
+    ],
     [
       "/health",
-      { body: "{}", method: "OPTIONS" },
+      {
+        body: "{}",
+        method: "OPTIONS",
+      },
       "UNSUPPORTED_MEDIA_TYPE",
       415,
     ],
@@ -196,7 +213,14 @@ describe("public agent API routes", () => {
       422,
     ],
     ["/missing", {}, "ENDPOINT_NOT_FOUND", 404],
-    ["/health", { method: "POST" }, "METHOD_NOT_ALLOWED", 405],
+    [
+      "/health",
+      {
+        method: "POST",
+      },
+      "METHOD_NOT_ALLOWED",
+      405,
+    ],
   ] as const)(
     "returns a structured problem for %s",
     async (path, init, code, status) => {
@@ -205,16 +229,17 @@ describe("public agent API routes", () => {
         path,
         init
       );
-      await expectProblem(response, { code, status });
+      await expectProblem(response, {
+        code,
+        status,
+      });
     }
   );
-
   it("returns stable empty search pagination from an empty deployment", async () => {
     const response = await fetchApi(
       createConvexTestWithBetterAuth(),
       "/search?query=algebra&locale=en&limit=10&offset=0"
     );
-
     expect(response.status).toBe(200);
     expectPublicJson(response);
     await expect(response.json()).resolves.toMatchObject({
@@ -225,7 +250,6 @@ describe("public agent API routes", () => {
       offset: 0,
     });
   });
-
   it("searches one authenticated current article", async () => {
     const test = createConvexTestWithBetterAuth();
     const article = testArticleProjection(0);
@@ -248,7 +272,6 @@ describe("public agent API routes", () => {
       test,
       "/search?query=rational%20function&locale=en&section=articles"
     );
-
     expect(response.status).toBe(200);
     expectPublicJson(response);
     await expect(response.json()).resolves.toMatchObject({
@@ -264,7 +287,6 @@ describe("public agent API routes", () => {
       ],
     });
   });
-
   it("reads authenticated article markdown through its canonical URL", async () => {
     const test = createConvexTestWithBetterAuth();
     const article = testArticleProjection(0);
@@ -273,7 +295,6 @@ describe("public agent API routes", () => {
       `https://nakafa.com/en/${article.publicPath}`
     );
     const response = await fetchApi(test, `/content?ref=${reference}`);
-
     expect(response.status).toBe(200);
     expectPublicJson(response);
     await expect(response.json()).resolves.toMatchObject({
@@ -285,16 +306,22 @@ describe("public agent API routes", () => {
       title: article.metadata.title,
     });
   });
-
   it("reads authenticated material markdown through its content ID", async () => {
     const test = createConvexTestWithBetterAuth();
     const material = makeMaterialProjection("en", 1);
-    await activateMaterialCatalog(test, [material], ["en"]);
+    await test.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([material], ["en"]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     const response = await fetchApi(
       test,
       `/content?ref=${encodeURIComponent(material.graph.assetId)}`
     );
-
     expect(response.status).toBe(200);
     expectPublicJson(response);
     await expect(response.json()).resolves.toMatchObject({
@@ -306,26 +333,37 @@ describe("public agent API routes", () => {
       title: material.metadata.title,
     });
   });
-
-  it("keeps material topics citation-only without a runtime read", async () => {
-    const test = createConvexTestWithBetterAuth();
-    const material = makeMaterialProjection("en", 1);
-    const topic = await runConvexProgram(
-      deriveMaterialTopicReference(material)
-    );
-    await activateMaterialCatalog(test, [material], ["en"]);
-
-    const response = await fetchApi(
-      test,
-      `/content?ref=${encodeURIComponent(topic.graph.assetId)}`
-    );
-
-    await expectProblem(response, {
-      code: "CONTENT_NOT_FOUND",
-      status: 404,
-    });
-  });
-
+  it.effect("keeps material topics citation-only without a runtime read", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const test = createConvexTestWithBetterAuth();
+      const material = makeMaterialProjection("en", 1);
+      const topic = yield* deriveMaterialTopicReference(material);
+      yield* Effect.promise(() =>
+        test.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateMaterialCatalog([material], ["en"]).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
+      const response = yield* Effect.promise(() =>
+        fetchApi(
+          test,
+          `/content?ref=${encodeURIComponent(topic.graph.assetId)}`
+        )
+      );
+      yield* Effect.promise(() =>
+        expectProblem(response, {
+          code: "CONTENT_NOT_FOUND",
+          status: 404,
+        })
+      );
+    })
+  );
   it("fails closed when an article catalog identity is corrupted", async () => {
     const test = createConvexTestWithBetterAuth();
     const article = testArticleProjection(0);
@@ -343,23 +381,19 @@ describe("public agent API routes", () => {
       `https://nakafa.com/en/${article.publicPath}`
     );
     const response = await fetchApi(test, `/content?ref=${reference}`);
-
     await expectProblem(response, {
       code: "SERVICE_UNAVAILABLE",
       status: 503,
     });
   });
-
   it("fails closed when the signed taxonomy publication is unavailable", async () => {
     const test = createConvexTestWithBetterAuth();
     const response = await fetchApi(test, "/taxonomy?locale=en");
-
     await expectProblem(response, {
       code: "SERVICE_UNAVAILABLE",
       status: 503,
     });
   });
-
   it("fails closed when the trusted quota identity is unavailable", async () => {
     const test = createConvexTestWithBetterAuth();
     const headers = new Headers({
@@ -367,17 +401,19 @@ describe("public agent API routes", () => {
     });
     const response = await test.fetch(
       `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.runtimePath}/search`,
-      { headers }
+      {
+        headers,
+      }
     );
-
     await expectProblem(response, {
       code: "SERVICE_UNAVAILABLE",
       status: 503,
     });
   });
-
   it("limits metered reads without limiting health checks", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.useFakeTimers({
+      toFake: ["Date"],
+    });
     const now = Date.UTC(2026, 8, 6, 12);
     vi.setSystemTime(now);
     const test = createConvexTestWithBetterAuth();
@@ -386,8 +422,10 @@ describe("public agent API routes", () => {
       expect((await fetchApi(test, "/health")).status).toBe(200);
     }
     const limited = await fetchApi(test, "/search");
-
-    await expectProblem(limited, { code: "RATE_LIMITED", status: 429 });
+    await expectProblem(limited, {
+      code: "RATE_LIMITED",
+      status: 429,
+    });
     expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0);
 
     // Two reads per second restore one token after half a second.

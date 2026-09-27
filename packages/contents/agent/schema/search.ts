@@ -1,3 +1,4 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   NakafaAgentContentSummarySchema,
   NakafaAgentSectionSchema,
@@ -9,7 +10,6 @@ import {
   NAKAFA_AGENT_MAX_QUERIES,
 } from "@repo/contents/agent/search";
 import { LocaleSchema } from "@repo/contents/content";
-import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema, Struct } from "effect";
 
 /** Runtime schema for one Convex-backed search result item. */
@@ -42,9 +42,9 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
     description: "Maximum number of results to return.",
   }),
   locale: LocaleSchema.pipe(
-    Schema.withDecodingDefaultType(Effect.succeed(routing.defaultLocale))
+    Schema.withDecodingDefaultType(Effect.succeed(ACTIVE_APP_LOCALE_CODES[0]))
   ).annotate({
-    default: routing.defaultLocale,
+    default: ACTIVE_APP_LOCALE_CODES[0],
     description: "Locale to search.",
   }),
   offset: Schema.Finite.pipe(
@@ -122,6 +122,18 @@ export const NakafaAgentSearchResultSchema = Schema.Struct({
 export type NakafaAgentSearchOptions = Schema.Codec.Encoded<
   typeof NakafaAgentSearchOptionsSchema
 >;
+
+/** Recorded search facts retain the executed request when admission limits change. */
+export const NakafaAgentSearchFactsSchema =
+  NakafaAgentSearchOptionsSchema.mapFields((fields) => ({
+    ...fields,
+    limit: NakafaAgentSearchResultSchema.fields.limit,
+    locale: LocaleSchema,
+    offset: NakafaAgentSearchResultSchema.fields.offset,
+    queries: Schema.optionalKey(
+      Schema.mutable(Schema.Array(Schema.NonEmptyString))
+    ),
+  }));
 export type NakafaAgentSearchInput = Schema.Schema.Type<
   typeof NakafaAgentSearchOptionsSchema
 >;

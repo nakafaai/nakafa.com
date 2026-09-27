@@ -1,9 +1,11 @@
-import { MutationRunner } from "@confect/server";
+import { ConvexConfigProvider, RegisteredFunction } from "@confect/server";
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { isActionCtx } from "@convex-dev/better-auth/utils";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
+import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { ensurePostHogErasureConfigured } from "@repo/backend/confect/analytics/erasure/action";
 import authConfig from "@repo/backend/confect/auth";
 import type { UserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
@@ -24,7 +26,7 @@ import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { openAPI } from "better-auth/plugins";
-import { Effect, Redacted, Schema } from "effect";
+import { Effect, Layer, Redacted, Schema } from "effect";
 
 const deletionUnavailableError = () =>
   APIError.from("INTERNAL_SERVER_ERROR", {
@@ -149,23 +151,14 @@ export const verifyAccountDeletionPreparation = Effect.fn(
   }
 });
 const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
-  function* (
-    ctx: GenericCtx<DataModel>,
-    authId: string,
-    rawAttemptId: string | null
-  ) {
+  function* (authId: string, rawAttemptId: string | null) {
     yield* ensurePostHogErasureConfigured().pipe(
       Effect.mapError(deletionUnavailableError)
     );
-    if (!isActionCtx(ctx)) {
-      return yield* Effect.fail(deletionUnavailableError());
-    }
     const attemptId = yield* Schema.decodeUnknownEffect(
       Schema.String.check(Schema.isUUID())
     )(rawAttemptId).pipe(Effect.mapError(deletionUnavailableError));
-    const runMutation = yield* MutationRunner.MutationRunner.pipe(
-      Effect.provide(MutationRunner.layer(ctx.runMutation))
-    );
+    const runMutation = yield* MutationRunner;
     yield* verifyAccountDeletionPreparation(
       runMutation(refs.internal.auth.deletion.claimAccountDeletion, {
         attemptId,
@@ -194,13 +187,22 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     user: {
       deleteUser: {
         beforeDelete: (user, request): Promise<void> =>
-          Effect.runPromise(
-            ensureAccountDeletionReady(
-              ctx,
+          Effect.gen(function* () {
+            if (!isActionCtx(ctx)) {
+              return yield* Effect.fail(deletionUnavailableError());
+            }
+            return yield* ensureAccountDeletionReady(
               user.id,
               request?.headers.get(ACCOUNT_DELETION_ATTEMPT_HEADER) ?? null
-            )
-          ),
+            ).pipe(
+              Effect.provide(
+                Layer.provideMerge(
+                  RegisteredFunction.actionLayer(databaseSchema, ctx),
+                  ConvexConfigProvider.layer
+                )
+              )
+            );
+          }).pipe(Effect.runPromise),
         enabled: true,
       },
     },

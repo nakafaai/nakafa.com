@@ -4,10 +4,17 @@ import type { ReactNode } from "react";
 import { UserSettingsDeleteAccount } from "@/components/user/settings/delete-account";
 import { UserSettingsName } from "@/components/user/settings/name";
 import { UserSettingsRole } from "@/components/user/settings/role";
-import { useViewer } from "@/lib/identity/client";
+import { type CurrentUser, useViewer } from "@/lib/identity/client";
 
-export function UserSettingsProfilePage({ children }: { children: ReactNode }) {
-  const user = useViewer((state) => state.account);
+export function UserSettingsProfilePage({
+  children,
+  initialAccount,
+}: {
+  children: ReactNode;
+  initialAccount: CurrentUser;
+}) {
+  const identity = useViewer((state) => state);
+  const user = identity.isPending ? initialAccount : identity.account;
 
   if (!user) {
     return null;

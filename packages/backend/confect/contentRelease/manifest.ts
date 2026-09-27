@@ -1,6 +1,9 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   validateCandidateBase,
   validateExistingSnapshots,
@@ -25,16 +28,14 @@ import {
   encodeReleaseJson,
   encodeRendererJson,
 } from "@repo/backend/confect/contentRelease/wire";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { WithoutSystemFields } from "convex/server";
 import { Clock, Effect, type Schema } from "effect";
-export type ReleaseRole = Doc<"contentReleases">["role"];
+export type ReleaseRole = Docs["contentReleases"]["role"];
 export type ReleaseStatus = Schema.Schema.Type<typeof statusValidator>;
 
 /** Projects one durable release into its exact shared lifecycle status. */
 export const releaseStatus = Effect.fn("contentRelease.releaseStatus")(
-  function* (release: Doc<"contentReleases">) {
+  function* (release: Docs["contentReleases"]) {
     const signed = yield* decodeReleaseJson(release.releaseJson);
     if (release.status === "completed") {
       return {
@@ -55,13 +56,12 @@ export const releaseStatus = Effect.fn("contentRelease.releaseStatus")(
 /** Confirms an idempotent release still owns the same immutable role slot. */
 export const validateExisting = Effect.fn("contentRelease.validateExisting")(
   function* (
-    ctx: MutationCtx,
-    release: Doc<"contentReleases">,
+    release: Docs["contentReleases"],
     role: ReleaseRole,
     releaseJson: string,
     rendererJson: string,
     signed: SignedContentRelease,
-    state: Doc<"contentState">
+    state: Docs["contentState"]
   ) {
     if (
       release.role !== role ||
@@ -74,7 +74,7 @@ export const validateExisting = Effect.fn("contentRelease.validateExisting")(
       );
     }
     const [derivedFamilies, storedFamilies] = yield* Effect.all([
-      deriveReleaseFamilies(ctx, signed.manifest),
+      deriveReleaseFamilies(signed.manifest),
       loadReleaseFamilies(release),
     ]);
     if (
@@ -115,13 +115,12 @@ export const validateExisting = Effect.fn("contentRelease.validateExisting")(
 
 /** Starts or idempotently resumes one candidate or recovery release. */
 export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
-  ctx: MutationCtx,
   role: ReleaseRole,
   releaseJson: string,
   rendererJson: string
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const signed = yield* decodeReleaseJson(releaseJson);
   const renderer = yield* decodeRendererJson(rendererJson);
   const canonicalRelease = encodeReleaseJson(signed);
@@ -132,7 +131,7 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
       `Content release ${signed.manifest.releaseId} does not bind its renderer.`
     );
   }
-  const state = yield* ensureState(ctx);
+  const state = yield* ensureState();
   const existing = yield* database
     .table("contentReleases")
     .get("by_releaseId", signed.manifest.releaseId)
@@ -142,7 +141,6 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     );
   if (existing) {
     yield* validateExisting(
-      ctx,
       existing,
       role,
       canonicalRelease,
@@ -159,7 +157,7 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
         "A candidate or retained recovery already owns publication state."
       );
     }
-    yield* validateCandidateBase(ctx, signed.manifest, state);
+    yield* validateCandidateBase(signed.manifest, state);
   } else {
     if (state.recoveryReleaseId) {
       return yield* releaseFail(
@@ -167,10 +165,10 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
         `Recovery ${state.recoveryReleaseId} already owns publication state.`
       );
     }
-    yield* validateRecoveryBase(ctx, signed.manifest, canonicalRenderer, state);
+    yield* validateRecoveryBase(signed.manifest, canonicalRenderer, state);
   }
-  yield* validateExistingSnapshots(ctx, signed.manifest);
-  const families = yield* deriveReleaseFamilies(ctx, signed.manifest);
+  yield* validateExistingSnapshots(signed.manifest);
+  const families = yield* deriveReleaseFamilies(signed.manifest);
   const now = yield* Clock.currentTimeMillis;
   const sequence = state.nextSequence;
   const row = {
@@ -196,7 +194,7 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     status: "staging",
     tryoutRuntimeRequired: true,
     updatedAt: now,
-  } satisfies WithoutSystemFields<Doc<"contentReleases">>;
+  } satisfies WithoutSystemFields<Docs["contentReleases"]>;
   yield* ensureDocumentSize(`Content release ${row.releaseId}`, row);
   yield* writer.table("contentReleases").insert(row).pipe(Effect.orDie);
   const slot =

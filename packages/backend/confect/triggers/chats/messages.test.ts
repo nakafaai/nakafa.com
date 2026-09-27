@@ -1,7 +1,8 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -61,13 +62,17 @@ describe("chat message analytics", () => {
             createDeletedUserTombstone(user.userId, Date.now())
           );
         }
-        await runConvexProgram(
-          messagesHandler(ctx, {
+        await Effect.runPromise(
+          messagesHandler({
             id: messageId,
             operation: "insert",
             oldDoc: null,
             newDoc: message,
-          })
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         );
       });
       expect(captureProductEvent).not.toHaveBeenCalled();

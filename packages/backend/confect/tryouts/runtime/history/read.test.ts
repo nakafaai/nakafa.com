@@ -1,49 +1,49 @@
+import { Ref } from "@confect/core";
 import { assert, beforeEach, describe, it } from "@effect/vitest";
 import {
   MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
   MAX_PROTECTED_RUNTIME_SELECTORS,
 } from "@nakafa/aksara-contracts/runtime/protected/limits";
+import refs from "@repo/backend/confect/_generated/refs";
 import { decodeCurrentSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
-import { readTryoutHistory } from "@repo/backend/confect/tryouts/runtime/history/read";
 import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { makeFunctionReference } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
+const readReference = Ref.getFunctionReference(
+  refs.public.tryouts.queries.content.getBatch
+);
 type Harness = Pick<ReturnType<typeof createConvexTestWithBetterAuth>, "query">;
-const readReference = makeFunctionReference<
-  "query",
-  TryoutHistoryRequest,
-  TryoutBodyBatch | null
->("tryouts/queries/content:getBatch");
-
 function read(t: Harness, request: TryoutHistoryRequest) {
-  return t.query(readReference, request);
+  return t
+    .query(readReference, request)
+    .then((value) =>
+      Ref.decodeReturnsSync(refs.public.tryouts.queries.content.getBatch, value)
+    );
 }
-
-function readFailure(t: Harness, request: TryoutHistoryRequest) {
-  return t.query((ctx) =>
-    runConvexProgram(
-      readTryoutHistory(ctx, request).pipe(
-        Effect.match({
-          onFailure: ({ code, message }) => ({ code, message }),
-          onSuccess: () => ({
-            code: "UNEXPECTED_SUCCESS",
-            message: "Expected a typed failure.",
-          }),
-        })
-      )
-    )
+async function readFailure(
+  t: Pick<ReturnType<typeof createConvexTestWithBetterAuth>, "query">,
+  request: TryoutHistoryRequest
+) {
+  const failure = await t
+    .query(readReference, request)
+    .catch((error: unknown) => error);
+  assert(Ref.isConvexError(failure));
+  const decoded = Ref.decodeErrorOption(
+    refs.public.tryouts.queries.content.getBatch,
+    failure.data
   );
+  assert(Option.isSome(decoded));
+  return {
+    code: decoded.value.code,
+    message: decoded.value.message,
+  };
 }
-
 async function setup(historical = false) {
   const t = createConvexTestWithBetterAuth();
   const seed = await t.mutation((ctx) => insertHistoryAttempt(ctx, historical));
@@ -51,11 +51,13 @@ async function setup(historical = false) {
     subject: seed.identity.authUserId,
     sessionId: seed.identity.sessionId,
   });
-  return { owned, seed, t };
+  return {
+    owned,
+    seed,
+    t,
+  };
 }
-
 beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
-
 describe("tryouts/runtime/history/read", () => {
   it.effect(
     "requires current Pro access for old answer selectors while keeping questions free",
@@ -64,7 +66,9 @@ describe("tryouts/runtime/history/read", () => {
         const { owned, seed, t } = yield* Effect.promise(() => setup());
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch("users", seed.identity.userId, { plan: "free" })
+            ctx.db.patch("users", seed.identity.userId, {
+              plan: "free",
+            })
           )
         );
         assert.isNull(yield* Effect.promise(() => read(owned, seed.request)));
@@ -82,7 +86,9 @@ describe("tryouts/runtime/history/read", () => {
         );
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch("users", seed.identity.userId, { plan: "pro" })
+            ctx.db.patch("users", seed.identity.userId, {
+              plan: "pro",
+            })
           )
         );
         assert.isNotNull(
@@ -90,13 +96,14 @@ describe("tryouts/runtime/history/read", () => {
         );
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch("users", seed.identity.userId, { plan: "free" })
+            ctx.db.patch("users", seed.identity.userId, {
+              plan: "free",
+            })
           )
         );
         assert.isNull(yield* Effect.promise(() => read(owned, seed.request)));
       })
   );
-
   it.effect("preserves old signed bytes after active release compaction", () =>
     Effect.gen(function* () {
       const { owned, seed, t } = yield* Effect.promise(() => setup(true));
@@ -137,7 +144,6 @@ describe("tryouts/runtime/history/read", () => {
       }
     })
   );
-
   it.effect(
     "keeps the attempt release separate from a reused permanent bundle",
     () =>
@@ -146,7 +152,9 @@ describe("tryouts/runtime/history/read", () => {
         const snapshotReleaseId = "newer-attempt-release";
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch(seed.request.attemptId, { snapshotReleaseId })
+            ctx.db.patch(seed.request.attemptId, {
+              snapshotReleaseId,
+            })
           )
         );
         const result = yield* Effect.promise(() =>
@@ -163,7 +171,6 @@ describe("tryouts/runtime/history/read", () => {
         assert.notStrictEqual(snapshotReleaseId, seed.runtime.sourceReleaseId);
       })
   );
-
   it.effect("requires the current session and exact attempt owner", () =>
     Effect.gen(function* () {
       const { owned, seed, t } = yield* Effect.promise(() => setup());
@@ -192,7 +199,6 @@ describe("tryouts/runtime/history/read", () => {
       assert.isNull(yield* Effect.promise(() => read(owned, seed.request)));
     })
   );
-
   it.effect(
     "reads active questions while withholding answers and unstarted sections",
     () =>
@@ -203,7 +209,9 @@ describe("tryouts/runtime/history/read", () => {
             await ctx.db.patch(seed.request.attemptId, {
               status: "in-progress",
             });
-            await ctx.db.patch(seed.sectionId, { status: "in-progress" });
+            await ctx.db.patch(seed.sectionId, {
+              status: "in-progress",
+            });
           })
         );
         assert.isNull(yield* Effect.promise(() => read(owned, seed.request)));
@@ -228,7 +236,6 @@ describe("tryouts/runtime/history/read", () => {
         );
       })
   );
-
   it.effect(
     "rejects another placement even when its artifact remains signed",
     () =>
@@ -271,7 +278,6 @@ describe("tryouts/runtime/history/read", () => {
         );
       })
   );
-
   it.effect(
     "rejects damaged frozen snapshot membership with a typed error",
     () =>
@@ -279,7 +285,9 @@ describe("tryouts/runtime/history/read", () => {
         const { owned, seed, t } = yield* Effect.promise(() => setup(true));
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            ctx.db.patch(seed.retainedId, { rowHash: "changed" })
+            ctx.db.patch(seed.retainedId, {
+              rowHash: "changed",
+            })
           )
         );
         const error = yield* Effect.promise(() =>
@@ -291,7 +299,6 @@ describe("tryouts/runtime/history/read", () => {
         });
       })
   );
-
   it.effect(
     "bounds selector count and complete request bytes before database selection",
     () =>
@@ -302,7 +309,9 @@ describe("tryouts/runtime/history/read", () => {
         for (const selectors of [
           [],
           Array.from(
-            { length: MAX_PROTECTED_RUNTIME_SELECTORS + 1 },
+            {
+              length: MAX_PROTECTED_RUNTIME_SELECTORS + 1,
+            },
             () => question
           ),
           [
@@ -313,19 +322,23 @@ describe("tryouts/runtime/history/read", () => {
           ],
         ]) {
           const error = yield* Effect.promise(() =>
-            readFailure(owned, { ...seed.request, selectors })
+            readFailure(owned, {
+              ...seed.request,
+              selectors,
+            })
           );
           assert.strictEqual(error.code, "TRYOUT_HISTORY_REQUEST_INVALID");
         }
       })
   );
-
   it.effect("rejects a permanent bundle with changed stored provenance", () =>
     Effect.gen(function* () {
       const { owned, seed, t } = yield* Effect.promise(() => setup());
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          ctx.db.patch(seed.runtime._id, { sourceGitSha: "changed-source" })
+          ctx.db.patch(seed.runtime._id, {
+            sourceGitSha: "changed-source",
+          })
         )
       );
       assert.strictEqual(
@@ -334,7 +347,6 @@ describe("tryouts/runtime/history/read", () => {
       );
     })
   );
-
   it.effect(
     "stops a valid signed batch before exceeding its response byte ceiling",
     () =>
@@ -354,12 +366,17 @@ describe("tryouts/runtime/history/read", () => {
         const question = seed.request.selectors[0];
         assert.isDefined(question);
         const selectors = Array.from(
-          { length: MAX_PROTECTED_RUNTIME_SELECTORS },
+          {
+            length: MAX_PROTECTED_RUNTIME_SELECTORS,
+          },
           () => question
         );
         assert.strictEqual(
           (yield* Effect.promise(() =>
-            readFailure(owned, { ...seed.request, selectors })
+            readFailure(owned, {
+              ...seed.request,
+              selectors,
+            })
           )).code,
           "TRYOUT_HISTORY_RESPONSE_TOO_LARGE"
         );

@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { ActionCtx as ActionCtxService } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/customers/actions/internal.spec";
 import { cleanupDeletedUserBilling } from "@repo/backend/confect/customers/deletion/billing";
 import { syncOptionalCustomer } from "@repo/backend/confect/customers/sync/impl";
@@ -11,8 +10,7 @@ const syncCustomer = FunctionImpl.make(
   spec,
   "syncCustomer",
   Effect.fn("customers.actions.internal.syncCustomer")(function* (args) {
-    const ctx = yield* ActionCtxService;
-    const customer = yield* syncOptionalCustomer(ctx, args.userId);
+    const customer = yield* syncOptionalCustomer(args.userId);
     return customer?.localCustomerId ?? null;
   })
 );
@@ -22,8 +20,7 @@ const cleanupDeletedUserCustomerData = FunctionImpl.make(
   "cleanupDeletedUserCustomerData",
   Effect.fn("customers.actions.internal.cleanupDeletedUserCustomerData")(
     function* (args) {
-      const ctx = yield* ActionCtxService;
-      return yield* cleanupDeletedUserBilling(ctx, args.userId, args.authId);
+      return yield* cleanupDeletedUserBilling(args.userId, args.authId);
     }
   )
 );

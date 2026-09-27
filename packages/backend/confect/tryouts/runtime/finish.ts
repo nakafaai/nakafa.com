@@ -1,5 +1,5 @@
-import { DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
   readSectionCompletion,
   requireFinalSectionAttempts,
@@ -24,29 +24,24 @@ import {
   summarizeResponses,
   type TryoutScoreSource,
 } from "@repo/backend/confect/tryouts/runtime/score";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, flow } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
+type TryoutAttempt = Docs["tryoutAttempts"];
+type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 
 /** Creates an expired section attempt for a section the user never opened. */
 const createExpiredSectionAttempt = Effect.fn(
   "tryouts.runtime.createExpiredSectionAttempt"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    now: number;
-    responseIndex: TryoutResponseIndex;
-    scoreSource: TryoutScoreSource;
-    snapshot: TryoutSectionSnapshot;
-  }
-) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (args: {
+  attempt: TryoutAttempt;
+  now: number;
+  responseIndex: TryoutResponseIndex;
+  scoreSource: TryoutScoreSource;
+  snapshot: TryoutSectionSnapshot;
+}) {
+  const writer = yield* DatabaseWriter;
   const score = yield* scoreTryoutSection({
     attempt: args.attempt,
     placements: args.responseIndex.placements,
@@ -79,16 +74,13 @@ const createExpiredSectionAttempt = Effect.fn(
 /** Creates expired attempts for unopened sections before final scoring. */
 const createMissingExpiredSectionAttempts = Effect.fn(
   "tryouts.runtime.createMissingExpiredSections"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    now: number;
-    responseIndex: TryoutResponseIndex;
-    scoreSource: TryoutScoreSource;
-    sections: readonly TryoutSectionAttempt[];
-  }
-) {
+)(function* (args: {
+  attempt: TryoutAttempt;
+  now: number;
+  responseIndex: TryoutResponseIndex;
+  scoreSource: TryoutScoreSource;
+  sections: readonly TryoutSectionAttempt[];
+}) {
   const attemptedSectionKeys = new Set(
     args.sections.map((section) => section.sectionKey)
   );
@@ -96,7 +88,7 @@ const createMissingExpiredSectionAttempts = Effect.fn(
     if (attemptedSectionKeys.has(snapshot.sectionKey)) {
       continue;
     }
-    yield* createExpiredSectionAttempt(ctx, {
+    yield* createExpiredSectionAttempt({
       attempt: args.attempt,
       now: args.now,
       responseIndex: selectSectionResponseIndex(
@@ -113,24 +105,20 @@ const createMissingExpiredSectionAttempts = Effect.fn(
 export const finalizeSectionAttempt = Effect.fn(
   "tryouts.runtime.finalizeSectionAttempt"
 )(
-  function* (
-    ctx: MutationCtx,
-    args: {
-      attempt: TryoutAttempt;
-      endReason: TryoutEndReason;
-      now: number;
-      section: TryoutSectionAttempt;
-    }
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  function* (args: {
+    attempt: TryoutAttempt;
+    endReason: TryoutEndReason;
+    now: number;
+    section: TryoutSectionAttempt;
+  }) {
+    const writer = yield* DatabaseWriter;
     const completion = yield* readSectionCompletion(args.attempt, args.section);
     let attemptResponseIndex: TryoutAttemptResponseIndex | null = null;
     let scoreSource: TryoutScoreSource;
     let sectionResponseIndex: TryoutResponseIndex;
     if (completion.completesAttempt) {
-      const placements = yield* loadAttemptPlacements(ctx, args.attempt);
+      const placements = yield* loadAttemptPlacements(args.attempt);
       attemptResponseIndex = yield* loadAttemptResponses(
-        ctx,
         args.attempt,
         placements,
         "complete"
@@ -140,7 +128,6 @@ export const finalizeSectionAttempt = Effect.fn(
         attemptResponseIndex.sections
       );
       scoreSource = yield* loadAttemptScoreSource(
-        ctx,
         args.attempt,
         attemptResponseIndex.placements
       );
@@ -150,17 +137,15 @@ export const finalizeSectionAttempt = Effect.fn(
       );
     } else {
       const placements = yield* loadSectionPlacements(
-        ctx,
         args.attempt,
         completion.snapshot
       );
       sectionResponseIndex = yield* loadSectionResponseIndex(
-        ctx,
         args.attempt,
         args.section,
         placements
       );
-      scoreSource = yield* loadSectionScoreSource(ctx, {
+      scoreSource = yield* loadSectionScoreSource({
         attempt: args.attempt,
         placements: sectionResponseIndex.placements,
         sectionIdentity: args.section.sectionIdentity,
@@ -196,7 +181,7 @@ export const finalizeSectionAttempt = Effect.fn(
         kind: "completed",
       };
     }
-    yield* finalizeAttemptScore(ctx, {
+    yield* finalizeAttemptScore({
       attempt: {
         ...args.attempt,
         completedSectionKeys: completion.completedSectionKeys,
@@ -216,23 +201,15 @@ export const finalizeSectionAttempt = Effect.fn(
 
 /** Expires one whole attempt and any in-progress section attempts it owns. */
 export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
-  function* (
-    ctx: MutationCtx,
-    args: {
-      attempt: TryoutAttempt;
-      now: number;
-    }
-  ) {
-    const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-    const placements = yield* loadAttemptPlacements(ctx, args.attempt);
+  function* (args: { attempt: TryoutAttempt; now: number }) {
+    const writer = yield* DatabaseWriter;
+    const placements = yield* loadAttemptPlacements(args.attempt);
     const responseIndex = yield* loadAttemptResponses(
-      ctx,
       args.attempt,
       placements,
       "partial"
     );
     const scoreSource = yield* loadAttemptScoreSource(
-      ctx,
       args.attempt,
       responseIndex.placements
     );
@@ -263,7 +240,7 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
         })
         .pipe(Effect.orDie);
     }
-    yield* createMissingExpiredSectionAttempts(ctx, {
+    yield* createMissingExpiredSectionAttempts({
       attempt: args.attempt,
       now: args.now,
       responseIndex,
@@ -279,7 +256,7 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
         lastActivityAt: args.now,
       })
       .pipe(Effect.orDie);
-    return yield* finalizeAttemptScore(ctx, {
+    return yield* finalizeAttemptScore({
       attempt: {
         ...args.attempt,
         completedSectionKeys: args.attempt.sectionSnapshots.map(

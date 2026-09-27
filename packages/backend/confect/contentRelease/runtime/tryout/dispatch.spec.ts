@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Schema } from "effect";
 /** Request JSON could not satisfy the exact protected runtime contract. */
 export class ProtectedRuntimeRequestError extends Schema.TaggedError<ProtectedRuntimeRequestError>()(
@@ -20,6 +20,6 @@ export default GroupSpec.makeNode().addFunction(
         body: Schema.String,
         status: Schema.Finite,
       }),
-    error: () => ReleaseErrorWire,
+    error: () => ReleaseError,
   })
 );

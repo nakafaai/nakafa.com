@@ -1,6 +1,6 @@
-import { DatabaseReader, FunctionImpl, GroupImpl } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getAppUserByAuthId } from "@repo/backend/confect/users/directory";
 import spec from "@repo/backend/confect/users/queries.spec";
 import { Effect, Layer } from "effect";
@@ -14,8 +14,7 @@ const getUserById = FunctionImpl.make(
   spec,
   "getUserById",
   Effect.fn("users.queries.getUserById")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     return yield* database
       .table("users")
       .get(args.userId)
@@ -30,8 +29,7 @@ const getUserByAuthId = FunctionImpl.make(
   spec,
   "getUserByAuthId",
   Effect.fn("users.queries.getUserByAuthId")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* getAppUserByAuthId(ctx, args.authId);
+    return yield* getAppUserByAuthId(args.authId);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

@@ -1,12 +1,15 @@
+import { RegisteredFunction } from "@confect/server";
 import type { MutationCtx } from "@repo/backend/components/betterAuth/_generated/server";
 import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
 import schema from "@repo/backend/components/betterAuth/schema";
-import { tryUserCleanup } from "@repo/backend/confect/auth/cleanup/spec";
+import {
+  tryUserCleanup,
+  UserCleanupErrorWire,
+} from "@repo/backend/confect/auth/cleanup/spec";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/confect/auth/deletion/constants";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { v } from "convex/values";
 import { stream } from "convex-helpers/server/stream";
-import { Effect, Result, Schema } from "effect";
+import { Effect, Scheduler as EffectScheduler, Result, Schema } from "effect";
 
 const oauthLinkVerificationSchema = Schema.fromJsonString(
   Schema.Struct({
@@ -62,7 +65,10 @@ export const deleteUserVerificationPage = mutation({
     isDone: v.boolean(),
   }),
   handler: (ctx, args) =>
-    runConvexProgram(
-      deleteUserVerificationPageProgram(ctx, args.authId, args.cursor)
+    deleteUserVerificationPageProgram(ctx, args.authId, args.cursor).pipe(
+      Effect.withTracerTiming(false),
+      RegisteredFunction.runHandlerPromise(UserCleanupErrorWire, {
+        scheduler: new EffectScheduler.MixedScheduler("sync"),
+      })
     ),
 });

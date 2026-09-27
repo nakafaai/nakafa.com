@@ -1,41 +1,37 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   deleteMaterial,
   writeMaterial,
 } from "@repo/backend/confect/contentRelease/material/write";
 import { loadModelItems } from "@repo/backend/confect/contentRelease/models/items";
 import type { ModelBuildPage } from "@repo/backend/confect/contentRelease/models/spec";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
-type ModelBuild = Doc<"contentModelBuilds">;
+type ModelBuild = Docs["contentModelBuilds"];
 
 /** Applies one release identity to the inactive material buffer. */
 const syncMaterialIdentity = Effect.fn("contentRelease.syncMaterialIdentity")(
   function* (
-    ctx: MutationCtx,
     build: ModelBuild,
     contentKey: string,
-    artifactLocale: Doc<"contentKeys">["artifactLocale"]
+    artifactLocale: Docs["contentKeys"]["artifactLocale"]
   ) {
     const resolved = yield* resolvePublicProjection(
       contentKey,
       artifactLocale,
       build.sequence
-    ).pipe(Effect.provide(convexPublicationLayer(ctx)));
+    ).pipe(Effect.provide(publicationLayer));
     if (resolved?.projection.kind !== "subject-lesson") {
       return yield* deleteMaterial(
-        ctx,
         build.slots.materialTargetSlot,
         contentKey,
         artifactLocale
       );
     }
     yield* writeMaterial(
-      ctx,
       build.slots.materialTargetSlot,
       resolved,
       resolved.projection
@@ -46,19 +42,13 @@ const syncMaterialIdentity = Effect.fn("contentRelease.syncMaterialIdentity")(
 /** Applies one bounded release page to the inactive material buffer. */
 export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
   function* (
-    ctx: MutationCtx,
     build: ModelBuild,
-    release: Doc<"contentReleases">,
+    release: Docs["contentReleases"],
     signed: SignedContentRelease
   ) {
-    const page = yield* loadModelItems(ctx, release, signed, build.itemIndex);
+    const page = yield* loadModelItems(release, signed, build.itemIndex);
     for (const row of page.rows) {
-      yield* syncMaterialIdentity(
-        ctx,
-        build,
-        row.contentKey,
-        row.artifactLocale
-      );
+      yield* syncMaterialIdentity(build, row.contentKey, row.artifactLocale);
     }
     return {
       done: page.done,

@@ -1,7 +1,8 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { reconcileArticleModel } from "@repo/backend/confect/contentRelease/models/article";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
@@ -9,6 +10,7 @@ import { categorizedArticle } from "@repo/backend/test/article/release";
 import { insertModelBuild } from "@repo/backend/test/content/model";
 import { insertRuntimeArticles } from "@repo/backend/test/content/runtime";
 import { convexTest, type TestConvex } from "convex-test";
+import { Effect } from "effect";
 
 async function reconcile(
   t: TestConvex<typeof schema>,
@@ -24,12 +26,20 @@ async function reconcile(
     let pages = 0;
     do {
       const result = await t.mutation(async (ctx) => ({
-        page: await runConvexProgram(
-          reconcileArticleModel(ctx, {
+        page: await Effect.runPromise(
+          reconcileArticleModel({
             ...build,
             phase,
-            ...(cursor === undefined ? {} : { cursor }),
-          })
+            ...(cursor === undefined
+              ? {}
+              : {
+                  cursor,
+                }),
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
         ),
         metrics: await ctx.meta.getTransactionMetrics(),
       }));
@@ -41,7 +51,6 @@ async function reconcile(
   }
   return writes;
 }
-
 function read(t: TestConvex<typeof schema>, slot: ModelSlot) {
   return t.query(async (ctx) => ({
     catalog: await ctx.db
@@ -66,14 +75,12 @@ function read(t: TestConvex<typeof schema>, slot: ModelSlot) {
       .take(100),
   }));
 }
-
 function values(
   row: Doc<"articleCatalog" | "articleCategories" | "articleBuckets">
 ) {
   const { _creationTime, _id, slot, ...fields } = row;
   return fields;
 }
-
 describe("contentRelease/models/article", () => {
   it("preserves article order, category ownership and bucket counts while repairing only dirty rows", async () => {
     const t = convexTest({
@@ -104,7 +111,6 @@ describe("contentRelease/models/article", () => {
     const initial = await read(t, "green");
     expect(await reconcile(t, build)).toBe(0);
     await expect(read(t, "green")).resolves.toEqual(initial);
-
     await t.mutation(async (ctx) => {
       const [missingArticle, changedArticle] = initial.catalog;
       const [missingCategory, changedCategory] = initial.categories;
@@ -153,9 +159,11 @@ describe("contentRelease/models/article", () => {
         _creationTime: bucketCreated,
         ...bucket
       } = missingBucket;
-      await ctx.db.insert("articleBuckets", { ...bucket, bucket: "aborted" });
+      await ctx.db.insert("articleBuckets", {
+        ...bucket,
+        bucket: "aborted",
+      });
     });
-
     expect(await reconcile(t, build)).toBe(9);
     const repaired = await read(t, "green");
     expect({

@@ -1,9 +1,10 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ProductAnalyticsCaptureErrorWire } from "@repo/backend/confect/analytics/capture.spec";
-import { ConsentPersistenceErrorWire } from "@repo/backend/confect/consents/schema";
-import { TryoutAuthFailure } from "@repo/backend/confect/tryouts/auth";
+import { ProductAnalyticsCaptureError } from "@repo/backend/confect/analytics/capture.spec";
+import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { ConsentPersistenceError } from "@repo/backend/confect/consents/schema";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import {
-  TryoutStartErrorWire,
+  TryoutStartError,
   tryoutPaywallSourceValidator,
 } from "@repo/backend/confect/tryouts/start/spec";
 import { Schema } from "effect";
@@ -18,10 +19,10 @@ export default GroupSpec.make().addFunction(
     returns: () => Schema.Null,
     error: () =>
       Schema.Union([
-        TryoutAuthFailure,
-        TryoutStartErrorWire,
-        ConsentPersistenceErrorWire,
-        ProductAnalyticsCaptureErrorWire,
+        AuthFailure,
+        TryoutStartError,
+        ConsentPersistenceError,
+        ProductAnalyticsCaptureError,
       ]),
-  })
+  }).middleware(Session)
 );

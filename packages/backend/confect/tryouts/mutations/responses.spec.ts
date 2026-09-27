@@ -1,12 +1,13 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { TryoutAttemptStateErrorWire } from "@repo/backend/confect/tryouts/attempt";
-import { TryoutAuthFailure } from "@repo/backend/confect/tryouts/auth";
+import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
+import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
   saveTryoutResponseArgsValidator,
   saveTryoutResponseResultValidator,
   TryoutResponseErrorWire,
-  TryoutResponseIntegrityErrorWire,
-  TryoutResponseSelectionErrorWire,
+  TryoutResponseIntegrityError,
+  TryoutResponseSelectionError,
 } from "@repo/backend/confect/tryouts/response/spec";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
 import { Schema } from "effect";
@@ -17,13 +18,12 @@ export default GroupSpec.make().addFunction(
     returns: () => saveTryoutResponseResultValidator,
     error: () =>
       Schema.Union([
-        TryoutAttemptStateErrorWire,
-        TryoutAuthFailure,
-
+        TryoutAttemptStateError,
+        AuthFailure,
         TryoutResponseErrorWire,
         TryoutRuntimeErrorWire,
-        TryoutResponseIntegrityErrorWire,
-        TryoutResponseSelectionErrorWire,
+        TryoutResponseIntegrityError,
+        TryoutResponseSelectionError,
       ]),
-  })
+  }).middleware(Session)
 );

@@ -1,18 +1,13 @@
-import {
-  DatabaseReader,
-  DatabaseWriter,
-  FunctionImpl,
-  GroupImpl,
-  MutationRunner,
-  QueryRunner,
-} from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx as ActionCtxService,
-  MutationCtx as MutationCtxService,
-  QueryCtx as QueryCtxService,
+  DatabaseReader,
+  DatabaseWriter,
+  MutationRunner,
+  QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import {
   toUserCleanupError,
@@ -28,8 +23,7 @@ const loadDeletedUserVerificationCursor = FunctionImpl.make(
   "loadDeletedUserVerificationCursor",
   Effect.fn("auth.deletion.verification.loadDeletedUserVerificationCursor")(
     function* (args) {
-      const ctx = yield* QueryCtxService;
-      const database = DatabaseReader.make(databaseSchema, ctx.db);
+      const database = yield* DatabaseReader;
       const user = yield* database
         .table("users")
         .get(args.userId)
@@ -47,9 +41,8 @@ const saveDeletedUserVerificationCursor = FunctionImpl.make(
   "saveDeletedUserVerificationCursor",
   Effect.fn("auth.deletion.verification.saveDeletedUserVerificationCursor")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
-      const database = DatabaseReader.make(databaseSchema, ctx.db);
-      const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+      const database = yield* DatabaseReader;
+      const writer = yield* DatabaseWriter;
       const user = yield* database
         .table("users")
         .get(args.userId)
@@ -77,8 +70,8 @@ const drainDeletedUserVerifications = FunctionImpl.make(
   Effect.fn("auth.deletion.verification.drainDeletedUserVerifications")(
     function* (args) {
       const ctx = yield* ActionCtxService;
-      const runMutation = yield* MutationRunner.MutationRunner;
-      const runQuery = yield* QueryRunner.QueryRunner;
+      const runMutation = yield* MutationRunner;
+      const runQuery = yield* QueryRunner;
       yield* drainDeletedUserVerificationsProgram({
         deletePage: (cursor) =>
           tryUserCleanup(() =>

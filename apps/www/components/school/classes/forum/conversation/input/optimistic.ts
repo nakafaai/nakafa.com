@@ -1,13 +1,14 @@
-import type { api } from "@repo/backend/convex/_generated/api";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { FunctionArgs } from "convex/server";
+
 import type {
   Forum,
   ForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
 
-type CreateForumPostArgs = FunctionArgs<
-  typeof api.classes.forums.mutations.posts.createForumPost
+type CreateForumPostArgs = Ref.Args<
+  typeof refs.public.classes.forums.mutations.posts.createForumPost
 >;
 
 type ForumPostUser = NonNullable<ForumPost["user"]>;

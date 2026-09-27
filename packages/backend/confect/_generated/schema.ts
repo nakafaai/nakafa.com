@@ -47,6 +47,8 @@ import materialCatalog from "./tables/materialCatalog";
 import messageParts from "./tables/messageParts";
 import messages from "./tables/messages";
 import ninaCapabilityTraces from "./tables/ninaCapabilityTraces";
+import ninaTurns from "./tables/ninaTurns";
+import ninaUploads from "./tables/ninaUploads";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
@@ -130,6 +132,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly messageParts: typeof messageParts;
   readonly messages: typeof messages;
   readonly ninaCapabilityTraces: typeof ninaCapabilityTraces;
+  readonly ninaTurns: typeof ninaTurns;
+  readonly ninaUploads: typeof ninaUploads;
   readonly onboardingProfiles: typeof onboardingProfiles;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
@@ -212,6 +216,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   messageParts,
   messages,
   ninaCapabilityTraces,
+  ninaTurns,
+  ninaUploads,
   onboardingProfiles,
   programBuckets,
   programCatalog,

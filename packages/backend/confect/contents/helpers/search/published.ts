@@ -1,5 +1,5 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import type { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
 import { resolveSearchProjection } from "@repo/backend/confect/contentRelease/search/verify";
@@ -11,8 +11,6 @@ import {
 import { rankContentSearchDocuments } from "@repo/backend/confect/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { getExactRouteQuery } from "@repo/backend/confect/contents/helpers/search/terms";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { Effect, type Schema } from "effect";
 
@@ -50,7 +48,6 @@ export function getPublishedSearchFamilies(
 export const readPublishedSearchDocuments = Effect.fn(
   "contents.search.readPublishedDocuments"
 )(function* (
-  ctx: QueryCtx,
   args: ContentSearchInput,
   queryTexts: readonly string[],
   scanLimit: number,
@@ -62,7 +59,6 @@ export const readPublishedSearchDocuments = Effect.fn(
       families,
       (family) =>
         browseFamily(
-          ctx,
           owner.slot,
           args.locale,
           family,
@@ -77,14 +73,13 @@ export const readPublishedSearchDocuments = Effect.fn(
       NAKAFA_AGENT_SEARCH_WINDOW,
       (row) => row._id
     );
-    const authenticated = yield* authenticateSearchRows(ctx, rows, owner);
+    const authenticated = yield* authenticateSearchRows(rows, owner);
     return authenticated.map(({ document }) => document).slice(0, scanLimit);
   }
   const groups = yield* Effect.forEach(
     queryTexts,
     (queryText) =>
       searchQuery(
-        ctx,
         owner.slot,
         args.locale,
         families,
@@ -105,7 +100,7 @@ export const readPublishedSearchDocuments = Effect.fn(
     NAKAFA_AGENT_SEARCH_WINDOW,
     (row) => row._id
   );
-  const authenticated = yield* authenticateSearchRows(ctx, rows, owner);
+  const authenticated = yield* authenticateSearchRows(rows, owner);
   const documentsByRow = new Map(
     authenticated.map(({ document, row }) => [row._id, document])
   );
@@ -128,7 +123,6 @@ export const readPublishedSearchDocuments = Effect.fn(
 /** Reads one fixed raw candidate window across active published families. */
 const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
   function* (
-    ctx: QueryCtx,
     slot: ModelSlot,
     locale: ContentSearchInput["locale"],
     families: readonly PublishedFamily[],
@@ -139,7 +133,7 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
     const groups = yield* Effect.forEach(
       families,
       (family) =>
-        searchFamily(ctx, slot, locale, family, route, queryText, scanLimit),
+        searchFamily(slot, locale, family, route, queryText, scanLimit),
       {
         concurrency: "unbounded",
       }
@@ -150,7 +144,6 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
 /** Reads full-text and exact-path candidates for one active family. */
 const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
   function* (
-    ctx: QueryCtx,
     slot: ModelSlot,
     locale: ContentSearchInput["locale"],
     family: PublishedFamily,
@@ -158,7 +151,7 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
     queryText: string,
     scanLimit: number
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const exact = route
       ? yield* database
           .table("contentIndex")
@@ -193,13 +186,12 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
 /** Browses one active family through its stable route ordering. */
 const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
   function* (
-    ctx: QueryCtx,
     slot: ModelSlot,
     locale: ContentSearchInput["locale"],
     family: PublishedFamily,
     scanLimit: number
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const rows = yield* database
       .table("contentIndex")
       .index("by_slot_and_appLocale_and_family_and_publicPath", (index) =>
@@ -212,14 +204,13 @@ const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
 );
 /** Authenticates indexed hits before projecting public search documents. */
 function authenticateSearchRows(
-  ctx: QueryCtx,
-  rows: readonly Doc<"contentIndex">[],
+  rows: readonly Docs["contentIndex"][],
   owner: PublishedSearchOwner
 ) {
   return Effect.forEach(
     rows,
     (row) =>
-      authenticateSearchRow(ctx, row, owner).pipe(
+      authenticateSearchRow(row, owner).pipe(
         Effect.map((document) => ({
           document,
           row,
@@ -233,12 +224,8 @@ function authenticateSearchRows(
 /** Verifies one search hit against its active immutable projection. */
 const authenticateSearchRow = Effect.fn(
   "contents.search.authenticatePublishedRow"
-)(function* (
-  ctx: QueryCtx,
-  row: Doc<"contentIndex">,
-  owner: PublishedSearchOwner
-) {
-  const resolved = yield* resolveSearchProjection(ctx, row, owner);
+)(function* (row: Docs["contentIndex"], owner: PublishedSearchOwner) {
+  const resolved = yield* resolveSearchProjection(row, owner);
   const projection = resolved.projection;
   const section = projection.kind === "article" ? "articles" : "material";
   return buildContentSearchDocument({

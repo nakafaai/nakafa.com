@@ -1,5 +1,8 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   ReleaseError,
   releaseFail,
@@ -14,23 +17,15 @@ import {
   COMPACTION_PAGE_BYTES,
   RELEASE_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { Clock, Effect, type Schema } from "effect";
 
-type ReadCtx = MutationCtx | QueryCtx;
 type AppLocale = Schema.Schema.Type<typeof appLocaleValidator>;
 type ArtifactLocale = Schema.Schema.Type<typeof artifactLocaleValidator>;
 type ReleaseRole = Schema.Schema.Type<typeof releaseRoleValidator>;
 
 /** Reads the singleton publication identity through its exact index. */
-export const loadState = Effect.fn("contentRelease.loadState")(function* (
-  ctx: ReadCtx
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+export const loadState = Effect.fn("contentRelease.loadState")(function* () {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("contentState")
     .get("by_key", "primary")
@@ -41,36 +36,35 @@ export const loadState = Effect.fn("contentRelease.loadState")(function* (
 });
 
 /** Creates the empty publication identity exactly once. */
-export const ensureState = Effect.fn("contentRelease.ensureState")(function* (
-  ctx: MutationCtx
-) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const existing = yield* loadState(ctx);
-  if (existing) {
-    return existing;
+export const ensureState = Effect.fn("contentRelease.ensureState")(
+  function* () {
+    const writer = yield* DatabaseWriter;
+    const database = yield* DatabaseReader;
+    const existing = yield* loadState();
+    if (existing) {
+      return existing;
+    }
+    const now = yield* Clock.currentTimeMillis;
+    const id = yield* writer
+      .table("contentState")
+      .insert({
+        articleSlot: INITIAL_MODEL_SLOT,
+        key: "primary",
+        materialSlot: INITIAL_MODEL_SLOT,
+        nextSequence: 1,
+        searchSlot: INITIAL_MODEL_SLOT,
+        updatedAt: now,
+      })
+      .pipe(Effect.orDie);
+    return yield* database.table("contentState").get(id).pipe(Effect.orDie);
   }
-  const now = yield* Clock.currentTimeMillis;
-  const id = yield* writer
-    .table("contentState")
-    .insert({
-      articleSlot: INITIAL_MODEL_SLOT,
-      key: "primary",
-      materialSlot: INITIAL_MODEL_SLOT,
-      nextSequence: 1,
-      searchSlot: INITIAL_MODEL_SLOT,
-      updatedAt: now,
-    })
-    .pipe(Effect.orDie);
-  return yield* database.table("contentState").get(id).pipe(Effect.orDie);
-});
+);
 
 /** Reads one release by its signed identity or fails visibly. */
 export const loadRelease = Effect.fn("contentRelease.loadRelease")(function* (
-  ctx: ReadCtx,
   releaseId: string
 ) {
-  return yield* DatabaseReader.make(databaseSchema, ctx.db)
+  return yield* (yield* DatabaseReader)
     .table("contentReleases")
     .get("by_releaseId", releaseId)
     .pipe(
@@ -93,11 +87,10 @@ export const loadRelease = Effect.fn("contentRelease.loadRelease")(function* (
 
 /** Requires one release to own its exact candidate or recovery slot. */
 export const loadStaged = Effect.fn("contentRelease.loadStaged")(function* (
-  ctx: ReadCtx,
   releaseId: string
 ) {
-  const state = yield* loadState(ctx);
-  const release = yield* loadRelease(ctx, releaseId);
+  const state = yield* loadState();
+  const release = yield* loadRelease(releaseId);
   if (!state) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
@@ -126,12 +119,11 @@ export const loadStaged = Effect.fn("contentRelease.loadStaged")(function* (
 
 /** Resolves the newest immutable content version at or before a sequence. */
 export const loadVersion = Effect.fn("contentRelease.loadVersion")(function* (
-  ctx: ReadCtx,
   contentKey: string,
   artifactLocale: ArtifactLocale,
   sequence: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const rows = yield* database
     .table("contentHeads")
     .index(
@@ -157,12 +149,11 @@ export const loadVersion = Effect.fn("contentRelease.loadVersion")(function* (
 /** Reads one immutable content version at its exact release sequence. */
 export const loadExactVersion = Effect.fn("contentRelease.loadExactVersion")(
   function* (
-    ctx: ReadCtx,
     contentKey: string,
     artifactLocale: ArtifactLocale,
     sequence: number
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     return yield* database
       .table("contentHeads")
       .get(
@@ -180,13 +171,8 @@ export const loadExactVersion = Effect.fn("contentRelease.loadExactVersion")(
 
 /** Resolves the newest immutable route binding before access enforcement. */
 export const loadRouteBinding = Effect.fn("contentRelease.loadRouteBinding")(
-  function* (
-    ctx: ReadCtx,
-    appLocale: AppLocale,
-    publicPath: string,
-    sequence: number
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (appLocale: AppLocale, publicPath: string, sequence: number) {
+    const database = yield* DatabaseReader;
     const rows = yield* database
       .table("contentBindings")
       .index(
@@ -212,11 +198,10 @@ export const loadRouteBinding = Effect.fn("contentRelease.loadRouteBinding")(
 
 /** Reads one ordered release item through its exact index. */
 export const loadItem = Effect.fn("contentRelease.loadItem")(function* (
-  ctx: ReadCtx,
   releaseId: string,
   index: number
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   return yield* database
     .table("contentItems")
     .get("by_releaseId_and_index", releaseId, index)
@@ -228,8 +213,8 @@ export const loadItem = Effect.fn("contentRelease.loadItem")(function* (
 
 /** Reads one byte- and row-bounded page of changed release identities. */
 export const loadReleaseItems = Effect.fn("contentRelease.loadReleaseItems")(
-  function* (ctx: ReadCtx, releaseId: string, afterIndex: number) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (releaseId: string, afterIndex: number) {
+    const database = yield* DatabaseReader;
     return yield* database
       .table("contentItems")
       .index("by_releaseId_and_index", (index) =>
@@ -248,12 +233,11 @@ export const loadReleaseItems = Effect.fn("contentRelease.loadReleaseItems")(
 /** Reads one item through its stable compiled-content identity. */
 export const loadIdentityItem = Effect.fn("contentRelease.loadIdentityItem")(
   function* (
-    ctx: ReadCtx,
     releaseId: string,
     contentKey: string,
     artifactLocale: ArtifactLocale
   ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     return yield* database
       .table("contentItems")
       .get(
@@ -272,16 +256,16 @@ export const loadIdentityItem = Effect.fn("contentRelease.loadIdentityItem")(
 /** Selects the immutable snapshot sequence extended by one staged role. */
 export function stagedBaseSequence(
   role: ReleaseRole,
-  state: Doc<"contentState">
+  state: Docs["contentState"]
 ) {
   return role === "candidate" ? state.activeSequence : state.candidateSequence;
 }
 
 /** Checks whether a release owns the exact singleton role identity. */
 export function ownsRole(
-  state: Doc<"contentState">,
+  state: Docs["contentState"],
   role: ReleaseRole,
-  release: Doc<"contentReleases">
+  release: Docs["contentReleases"]
 ) {
   if (role === "candidate") {
     return (

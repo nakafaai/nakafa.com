@@ -1,20 +1,18 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadReleaseItems } from "@repo/backend/confect/contentRelease/model";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 export interface ModelItemPage {
   readonly done: boolean;
   readonly nextIndex: number;
-  readonly rows: readonly Doc<"contentItems">[];
+  readonly rows: readonly Docs["contentItems"][];
 }
 
 /** Loads one bounded, contiguous page inside the signed release item count. */
 export const loadModelItems = Effect.fn("contentRelease.loadModelItems")(
   function* (
-    ctx: MutationCtx,
-    release: Doc<"contentReleases">,
+    release: Docs["contentReleases"],
     signed: SignedContentRelease,
     afterIndex: number
   ) {
@@ -25,7 +23,7 @@ export const loadModelItems = Effect.fn("contentRelease.loadModelItems")(
         `Model build ${release.releaseId} advanced beyond item ${completedIndex}.`
       );
     }
-    const page = yield* loadReleaseItems(ctx, release.releaseId, afterIndex);
+    const page = yield* loadReleaseItems(release.releaseId, afterIndex);
     for (const [offset, row] of page.page.entries()) {
       if (row.index !== afterIndex + offset + 1) {
         return yield* releaseFail(

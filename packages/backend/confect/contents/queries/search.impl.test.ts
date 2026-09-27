@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
@@ -21,6 +23,7 @@ import {
 } from "@repo/backend/test/tryout/snapshot";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { ConvexError } from "convex/values";
+import { Effect } from "effect";
 
 const MARKDOWN_PATH_PATTERN = /\.md$/;
 
@@ -50,10 +53,14 @@ async function activateArticleSearch(
   });
   return t;
 }
-
 describe("contents/queries/search:search", () => {
   it.each([
-    { limit: 0, offset: 0, queries: [], code: "CONTENT_SEARCH_LIMIT_INVALID" },
+    {
+      limit: 0,
+      offset: 0,
+      queries: [],
+      code: "CONTENT_SEARCH_LIMIT_INVALID",
+    },
     {
       limit: NAKAFA_AGENT_SEARCH_WINDOW + 1,
       offset: 0,
@@ -87,10 +94,13 @@ describe("contents/queries/search:search", () => {
         locale: "en",
       });
       await expect(result).rejects.toBeInstanceOf(ConvexError);
-      await expect(result).rejects.toMatchObject({ data: { code } });
+      await expect(result).rejects.toMatchObject({
+        data: {
+          code,
+        },
+      });
     }
   );
-
   it("deduplicates query wording before checking the request budget", async () => {
     const t = await activateArticleSearch(1, () => "rational function");
     const result = await t.query(api.contents.queries.search.search, {
@@ -111,7 +121,6 @@ describe("contents/queries/search:search", () => {
         ? "rational function grade eleven asymptote"
         : "unrelated editorial text"
     );
-
     const result = await t.query(api.contents.queries.search.search, {
       limit: 10,
       locale: "en",
@@ -119,7 +128,6 @@ describe("contents/queries/search:search", () => {
       queries: ["rational function"],
       section: "articles",
     });
-
     expect(result.items).toEqual([
       expect.objectContaining({
         content_id: testArticleProjection(0).graph.assetId,
@@ -130,11 +138,18 @@ describe("contents/queries/search:search", () => {
       }),
     ]);
   });
-
   it("resolves an exact current material route", async () => {
     const t = createConvexTestWithBetterAuth();
     const projection = makeMaterialProjection("en", 1);
-    await activateMaterialCatalog(t, [projection]);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([projection]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
     await t.mutation(async (ctx) => {
       await insertRuntimeIndex(ctx, projection.contentKey, {
         artifactLocale: projection.artifactLocale,
@@ -151,7 +166,6 @@ describe("contents/queries/search:search", () => {
         searchSequence: MATERIAL_IDENTITY.sequence,
       });
     });
-
     const result = await t.query(api.contents.queries.search.search, {
       limit: 5,
       locale: "en",
@@ -159,7 +173,6 @@ describe("contents/queries/search:search", () => {
       queries: [projection.publicPath],
       section: "material",
     });
-
     expect(result.items).toEqual([
       expect.objectContaining({
         content_id: projection.graph.assetId,
@@ -168,24 +181,24 @@ describe("contents/queries/search:search", () => {
       }),
     ]);
   });
-
   it("browses current articles in stable route order", async () => {
     const t = await activateArticleSearch(3, () => "browse article");
-
     const result = await t.query(api.contents.queries.search.search, {
       limit: 2,
       locale: "en",
       offset: 0,
       section: "articles",
     });
-
-    expect(result).toMatchObject({ count: 2, has_more: true, next_offset: 2 });
+    expect(result).toMatchObject({
+      count: 2,
+      has_more: true,
+      next_offset: 2,
+    });
     expect(result.items.map(({ route }) => route)).toEqual([
       testArticleProjection(0).publicPath,
       testArticleProjection(1).publicPath,
     ]);
   });
-
   it("returns signed Quran rows through the unified query", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation((ctx) =>
@@ -193,7 +206,6 @@ describe("contents/queries/search:search", () => {
         makeQuranSearch("en", 1, "signed mercy guidance"),
       ])
     );
-
     const result = await t.query(api.contents.queries.search.search, {
       limit: 10,
       locale: "en",
@@ -201,7 +213,6 @@ describe("contents/queries/search:search", () => {
       queries: ["signed mercy"],
       section: "quran",
     });
-
     expect(result.items).toMatchObject([
       {
         content_id: "asset:en:quran:quran-surah:1",
@@ -211,7 +222,6 @@ describe("contents/queries/search:search", () => {
       },
     ]);
   });
-
   it("returns bodyless Tryout catalog refs without claiming markdown", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation((ctx) =>
@@ -226,7 +236,6 @@ describe("contents/queries/search:search", () => {
         ],
       })
     );
-
     const result = await t.query(api.contents.queries.search.search, {
       limit: 10,
       locale: "en",
@@ -234,7 +243,6 @@ describe("contents/queries/search:search", () => {
       queries: ["Technical country"],
       section: "tryout",
     });
-
     expect(result.items).toEqual([
       expect.objectContaining({
         content_id: "asset:en:tryout:technical:country",
@@ -244,29 +252,34 @@ describe("contents/queries/search:search", () => {
     ]);
     expect(result.items[0]).not.toHaveProperty("markdown_url");
   });
-
   it("caps the shared signed search window", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation((ctx) =>
       activateQuranSnapshot(
         ctx,
-        Array.from({ length: NAKAFA_AGENT_SEARCH_WINDOW + 1 }, (_, index) =>
-          makeQuranSearch("en", index + 1, `search window ${index + 1}`)
+        Array.from(
+          {
+            length: NAKAFA_AGENT_SEARCH_WINDOW + 1,
+          },
+          (_, index) =>
+            makeQuranSearch("en", index + 1, `search window ${index + 1}`)
         )
       )
     );
-
     const result = await t.query(api.contents.queries.search.search, {
       limit: 1,
       locale: "en",
       offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
       section: "quran",
     });
-
     expect(result).toMatchObject({
       count: 1,
       has_more: false,
-      items: [{ route: `quran/${NAKAFA_AGENT_SEARCH_WINDOW}` }],
+      items: [
+        {
+          route: `quran/${NAKAFA_AGENT_SEARCH_WINDOW}`,
+        },
+      ],
       offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
     });
   });

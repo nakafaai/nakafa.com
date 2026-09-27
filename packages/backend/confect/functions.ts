@@ -1,13 +1,11 @@
-/**
- * Central trigger registration for Convex database writes.
- *
- * Use these native Convex mutation builders for mutations that write registered
- * app tables so convex-helpers can run the trigger graph atomically.
- * @see https://github.com/get-convex/convex-helpers/blob/main/packages/convex-helpers/README.md#triggers
- */
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
+import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { Effect, Scheduler as EffectScheduler } from "effect";
 
-// Trigger handlers - direct imports only (no barrel files)
-import { runConvexProgram } from "@repo/backend/confect/runtime";
+const runTrigger = RegisteredFunction.runHandlerPromise(undefined, {
+  scheduler: new EffectScheduler.MixedScheduler("sync"),
+});
+
 import { chatsHandler } from "@repo/backend/confect/triggers/chats/chats";
 import { messagesHandler } from "@repo/backend/confect/triggers/chats/messages";
 import { commentsHandler } from "@repo/backend/confect/triggers/comments/comments";
@@ -42,48 +40,93 @@ export const internalMutation = customMutation(
 
 // Active triggers with custom logic
 triggers.register("subscriptions", (ctx, change) =>
-  runConvexProgram(subscriptionsHandler(ctx, change))
+  subscriptionsHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("messages", (ctx, change) =>
-  runConvexProgram(messagesHandler(ctx, change))
+  messagesHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("learningViews", (ctx, change) =>
-  runConvexProgram(learningViewsHandler(ctx, change))
+  learningViewsHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("comments", (ctx, change) =>
-  runConvexProgram(commentsHandler(ctx, change))
+  commentsHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("commentVotes", (ctx, change) =>
-  runConvexProgram(commentVotesHandler(ctx, change))
+  commentVotesHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("chats", (ctx, change) =>
-  runConvexProgram(chatsHandler(ctx, change))
+  chatsHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("schools", (ctx, change) =>
-  runConvexProgram(schoolsHandler(ctx, change))
+  schoolsHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("schoolMembers", (ctx, change) =>
-  runConvexProgram(schoolMembersHandler(ctx, change))
+  schoolMembersHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("schoolClasses", (ctx, change) =>
-  runConvexProgram(schoolClassesHandler(ctx, change))
+  schoolClassesHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("schoolClassMembers", (ctx, change) =>
-  runConvexProgram(schoolClassMembersHandler(ctx, change))
+  schoolClassMembersHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 // The trigger SDK owns this Promise boundary and the wrapped transaction.
 triggers.register("schoolClassForumPosts", (ctx, change) =>
-  runConvexProgram(forumPostsHandler(ctx, change))
+  forumPostsHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("schoolClassForumPostReactions", (ctx, change) =>
-  runConvexProgram(postReactionsHandler(ctx, change))
+  postReactionsHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("schoolClassForumReactions", (ctx, change) =>
-  runConvexProgram(forumReactionsHandler(ctx, change))
+  forumReactionsHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("schoolClassMaterialGroups", (ctx, change) =>
-  runConvexProgram(materialGroupsHandler(ctx, change))
+  materialGroupsHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );
 triggers.register("tryoutScores", (ctx, change) =>
-  runConvexProgram(tryoutScoresHandler(ctx, change))
+  tryoutScoresHandler(change).pipe(
+    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
+    runTrigger
+  )
 );

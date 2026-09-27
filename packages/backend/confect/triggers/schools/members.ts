@@ -1,19 +1,17 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Clock, Effect, Struct } from "effect";
 
 /** Records membership lifecycle changes after invite usage is updated. */
 export const schoolMembersHandler = Effect.fn(
   "triggers.schools.recordMembership"
-)(function* (
-  ctx: GenericMutationCtx<DataModel>,
-  change: Change<DataModel, "schoolMembers">
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (change: Change<DataModel, "schoolMembers">) {
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   if (change.operation === "insert") {
     const member = change.newDoc;
     const inviteCodeId = member.inviteCodeId;

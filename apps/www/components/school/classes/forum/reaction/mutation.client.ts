@@ -1,38 +1,37 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import type { OptimisticLocalStore } from "convex/browser";
-import { useMutation } from "convex/react";
+import { useMutation } from "@confect/react";
+import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
+import refs from "@repo/backend/confect/_generated/refs";
+import { Option } from "effect";
 import { toggleReactionState } from "@/components/school/classes/forum/reaction/state";
 import { useViewer } from "@/lib/identity/client";
 
 /** Toggle a forum reaction across every loaded forum list page. */
 function updateForumLists(
-  localStore: OptimisticLocalStore,
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
   forumId: string,
   emoji: string,
   reactorName?: string
 ) {
   const queries = localStore.getAllQueries(
-    api.classes.forums.queries.forums.getForums
+    refs.public.classes.forums.queries.forums.getForums
   );
-
   for (const query of queries) {
-    if (!query.value) {
+    if (Option.isNone(query.value)) {
       continue;
     }
-
     localStore.setQuery(
-      api.classes.forums.queries.forums.getForums,
+      refs.public.classes.forums.queries.forums.getForums,
       query.args,
-      {
-        ...query.value,
-        page: query.value.page.map((forum) =>
+      Option.some({
+        ...query.value.value,
+        page: query.value.value.page.map((forum) =>
           forum._id === forumId
             ? toggleReactionState(forum, emoji, reactorName)
             : forum
         ),
-      }
+      })
     );
   }
 }
@@ -40,23 +39,23 @@ function updateForumLists(
 /** Return a forum reaction mutation that updates loaded list and detail caches. */
 export function useForumReactionMutation() {
   const reactorName = useViewer((state) => state.viewer?.name);
-
   return useMutation(
-    api.classes.forums.mutations.reactions.toggleForumReaction
+    refs.public.classes.forums.mutations.reactions.toggleForumReaction
   ).withOptimisticUpdate((localStore, { emoji, forumId }) => {
-    const forum = localStore.getQuery(
-      api.classes.forums.queries.forums.getForum,
-      { forumId }
+    const forum = Option.getOrUndefined(
+      localStore.getQuery(refs.public.classes.forums.queries.forums.getForum, {
+        forumId,
+      })
     );
-
     if (forum) {
       localStore.setQuery(
-        api.classes.forums.queries.forums.getForum,
-        { forumId },
-        toggleReactionState(forum, emoji, reactorName)
+        refs.public.classes.forums.queries.forums.getForum,
+        {
+          forumId,
+        },
+        Option.some(toggleReactionState(forum, emoji, reactorName))
       );
     }
-
     updateForumLists(localStore, forumId, emoji, reactorName);
   });
 }
@@ -64,26 +63,25 @@ export function useForumReactionMutation() {
 /** Return a post reaction mutation that updates every loaded transcript cache. */
 export function usePostReactionMutation() {
   const reactorName = useViewer((state) => state.viewer?.name);
-
   return useMutation(
-    api.classes.forums.mutations.reactions.togglePostReaction
+    refs.public.classes.forums.mutations.reactions.togglePostReaction
   ).withOptimisticUpdate((localStore, { emoji, postId }) => {
     const queries = localStore.getAllQueries(
-      api.classes.forums.queries.pages.getForumPosts
+      refs.public.classes.forums.queries.pages.getForumPosts
     );
-
     for (const query of queries) {
-      if (!query.value) {
+      if (Option.isNone(query.value)) {
         continue;
       }
-
       localStore.setQuery(
-        api.classes.forums.queries.pages.getForumPosts,
+        refs.public.classes.forums.queries.pages.getForumPosts,
         query.args,
-        query.value.map((post) =>
-          post._id === postId
-            ? toggleReactionState(post, emoji, reactorName)
-            : post
+        Option.some(
+          query.value.value.map((post) =>
+            post._id === postId
+              ? toggleReactionState(post, emoji, reactorName)
+              : post
+          )
         )
       );
     }

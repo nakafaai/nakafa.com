@@ -1,3 +1,4 @@
+import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
@@ -9,13 +10,13 @@ import {
 import { RoutePageSchema } from "@nakafa/aksara-contracts/release/route/page";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { PublicationRequestSchema } from "@nakafa/aksara-contracts/transport/request";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import type { stageEnvelopeValidator } from "@repo/backend/confect/contentRelease/envelope.spec";
 import { readRollback } from "@repo/backend/confect/contentRelease/ingress/rollback";
 import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -32,7 +33,7 @@ import { convexTest, type TestConvex } from "convex-test";
 import { Cause, Effect, Exit, Schema } from "effect";
 
 type StoredRollbackEnvelope = Schema.Schema.Type<typeof stageEnvelopeValidator>;
-type RollbackReadRequest = Parameters<typeof readRollback>[1];
+type RollbackReadRequest = Parameters<typeof readRollback>[0];
 const prepareRollback = internal.contentRelease.rollback.prepareRollback;
 
 /** Decodes one strict body rollback request owned by this suite. */
@@ -47,7 +48,9 @@ const makeBodyRequest = Effect.fn("test.contentRelease.makeBodyRequest")(
     });
     if (request.operation !== "rollbackPage") {
       return yield* Effect.die(
-        new UnexpectedRollbackTestState({ operation: "select-body-request" })
+        new UnexpectedRollbackTestState({
+          operation: "select-body-request",
+        })
       );
     }
     return request;
@@ -66,7 +69,9 @@ const makeRouteRequest = Effect.fn("test.contentRelease.makeRouteRequest")(
     });
     if (request.operation !== "routePage") {
       return yield* Effect.die(
-        new UnexpectedRollbackTestState({ operation: "select-route-request" })
+        new UnexpectedRollbackTestState({
+          operation: "select-route-request",
+        })
       );
     }
     return request;
@@ -78,14 +83,16 @@ const runRollback = Effect.fn("test.contentRelease.runRollback")(function* (
   target: TestConvex<typeof schema>,
   request: RollbackReadRequest
 ) {
+  const runtimeServices = yield* Effect.context<never>();
   return yield* Effect.promise(() =>
     target.action((ctx) =>
-      runConvexProgram(
-        readRollback(ctx, request).pipe(
+      Effect.runPromiseWith(runtimeServices)(
+        readRollback(request).pipe(
           Effect.provideService(
             ContentVerificationKeyResolver,
             TEST_KEY_RESOLVER
-          )
+          ),
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
         )
       )
     )
@@ -100,6 +107,7 @@ const readRollbackPages = Effect.fn("test.contentRelease.readRollbackPages")(
     envelope: StoredRollbackEnvelope,
     pages: readonly string[]
   ) {
+    const runtimeServices = yield* Effect.context<never>();
     return yield* Effect.promise(() =>
       target.action((ctx) => {
         const runQuery = vi.spyOn(ctx, "runQuery");
@@ -107,12 +115,13 @@ const readRollbackPages = Effect.fn("test.contentRelease.readRollbackPages")(
         for (const page of pages) {
           runQuery.mockResolvedValueOnce(page);
         }
-        return runConvexProgram(
-          readRollback(ctx, request).pipe(
+        return Effect.runPromiseWith(runtimeServices)(
+          readRollback(request).pipe(
             Effect.provideService(
               ContentVerificationKeyResolver,
               TEST_KEY_RESOLVER
-            )
+            ),
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
           )
         );
       })
@@ -203,28 +212,32 @@ function inflateRecord(record: RollbackRecord, byteLength: number) {
     },
   } satisfies RollbackRecord;
 }
-
 describe("content publication rollback reads", () => {
   it.effect(
     "aggregates safe body query transactions into one external page",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const itemCount = RELEASE_PAGE_LIMIT + 1;
         const release = yield* activateAuthenticatedRelease(t, itemCount);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(insertRollbackItems(ctx, itemCount))
+            Effect.runPromiseWith(runtimeServices)(
+              insertRollbackItems(ctx, itemCount).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         );
-
         const request = yield* makeBodyRequest(
           release.manifestHash,
           -1,
           itemCount
         );
         const response = yield* runRollback(t, request);
-
         expect(response).toMatchObject({
           done: true,
           nextIndex: itemCount - 1,
@@ -233,27 +246,31 @@ describe("content publication rollback reads", () => {
         expect(response.records).toHaveLength(itemCount);
       })
   );
-
   it.effect(
     "aggregates safe route query transactions into one external page",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const routeCount = ROUTE_CATALOG_PAGE_LIMIT + 1;
         const release = yield* activateAuthenticatedRelease(t, 0, routeCount);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(insertRollbackRoutes(ctx, routeCount))
+            Effect.runPromiseWith(runtimeServices)(
+              insertRollbackRoutes(ctx, routeCount).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         );
-
         const request = yield* makeRouteRequest(
           release.manifestHash,
           -1,
           routeCount
         );
         const response = yield* runRollback(t, request);
-
         expect(response).toMatchObject({
           done: true,
           nextIndex: routeCount - 1,
@@ -262,7 +279,6 @@ describe("content publication rollback reads", () => {
         expect(response.records).toHaveLength(routeCount);
       })
   );
-
   it.effect("rejects a body cursor beyond the activated release", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -273,13 +289,10 @@ describe("content publication rollback reads", () => {
         itemCount,
         itemCount
       );
-
       const message = yield* rollbackFailure(runRollback(t, request));
-
       expect(message).toContain("Rollback cursor 2 exceeds release");
     })
   );
-
   it.effect("rejects a route cursor beyond the activated release", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -290,13 +303,10 @@ describe("content publication rollback reads", () => {
         routeCount,
         routeCount
       );
-
       const message = yield* rollbackFailure(runRollback(t, request));
-
       expect(message).toContain("Route cursor 2 exceeds release");
     })
   );
-
   it.effect("rejects a body query page that is not valid JSON", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -304,15 +314,12 @@ describe("content publication rollback reads", () => {
       const release = yield* activateAuthenticatedRelease(t, itemCount);
       const envelope = yield* readRollbackEnvelope(t);
       const request = yield* makeBodyRequest(release.manifestHash, -1, 2);
-
       const message = yield* rollbackFailure(
         readRollbackPages(t, request, envelope, ["{not-json"])
       );
-
       expect(message).toContain("Rollback query page is not valid JSON.");
     })
   );
-
   it.effect("rejects a body query page that violates its exact contract", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -320,15 +327,12 @@ describe("content publication rollback reads", () => {
       const release = yield* activateAuthenticatedRelease(t, itemCount);
       const envelope = yield* readRollbackEnvelope(t);
       const request = yield* makeBodyRequest(release.manifestHash, -1, 2);
-
       const message = yield* rollbackFailure(
         readRollbackPages(t, request, envelope, [JSON.stringify({})])
       );
-
       expect(message).toContain("violates its exact contract");
     })
   );
-
   it.effect("rejects an empty body query chunk for a non-empty release", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -336,17 +340,14 @@ describe("content publication rollback reads", () => {
       const release = yield* activateAuthenticatedRelease(t, itemCount);
       const envelope = yield* readRollbackEnvelope(t);
       const request = yield* makeBodyRequest(release.manifestHash, -1, 2);
-
       const message = yield* rollbackFailure(
         readRollbackPages(t, request, envelope, [
           stalledBodyPage(release.manifestHash),
         ])
       );
-
       expect(message).toContain("returned a mismatched query chunk");
     })
   );
-
   it.effect(
     "returns an empty body page when the release owns no transitions",
     () =>
@@ -354,20 +355,30 @@ describe("content publication rollback reads", () => {
         const t = convexTest(schema, convexModules);
         const release = yield* activateAuthenticatedRelease(t, 0);
         const request = yield* makeBodyRequest(release.manifestHash, -1, 1);
-
         const response = yield* runRollback(t, request);
-
-        expect(response).toMatchObject({ done: true, nextIndex: -1, total: 0 });
+        expect(response).toMatchObject({
+          done: true,
+          nextIndex: -1,
+          total: 0,
+        });
         expect(response.records).toHaveLength(0);
       })
   );
-
   it.effect("rejects one transition above the rollback page byte ceiling", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const release = yield* activateAuthenticatedRelease(t, 1);
       yield* Effect.promise(() =>
-        t.mutation((ctx) => runConvexProgram(insertRollbackItems(ctx, 1)))
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            insertRollbackItems(ctx, 1).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
       );
       const envelope = yield* readRollbackEnvelope(t);
       const request = yield* makeBodyRequest(release.manifestHash, -1, 1);
@@ -378,32 +389,38 @@ describe("content publication rollback reads", () => {
       const record = page.records[0];
       if (!record) {
         return yield* Effect.die(
-          new UnexpectedRollbackTestState({ operation: "select-body-record" })
+          new UnexpectedRollbackTestState({
+            operation: "select-body-record",
+          })
         );
       }
       const oversized = JSON.stringify({
         ...page,
         records: [inflateRecord(record, MAX_ROLLBACK_PAGE_BYTES)],
       });
-
       const message = yield* rollbackFailure(
         readRollbackPages(t, request, envelope, [oversized])
       );
-
       expect(message).toContain("exceeds the page byte ceiling");
     })
   );
-
   it.effect(
     "retains transitions when the next one exceeds the byte ceiling",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const itemCount = 2;
         const release = yield* activateAuthenticatedRelease(t, itemCount);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(insertRollbackItems(ctx, itemCount))
+            Effect.runPromiseWith(runtimeServices)(
+              insertRollbackItems(ctx, itemCount).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
           )
         );
         const envelope = yield* readRollbackEnvelope(t);
@@ -423,22 +440,23 @@ describe("content publication rollback reads", () => {
         const [first, second] = page.records;
         if (!(first && second)) {
           return yield* Effect.die(
-            new UnexpectedRollbackTestState({ operation: "select-body-record" })
+            new UnexpectedRollbackTestState({
+              operation: "select-body-record",
+            })
           );
         }
-
         const response = yield* readRollbackPages(t, request, envelope, [
           JSON.stringify({
             ...page,
             records: [first, inflateRecord(second, MAX_ROLLBACK_PAGE_BYTES)],
           }),
         ]);
-
         expect(response.records).toHaveLength(1);
-        expect(response.records[0]).toMatchObject({ index: 0 });
+        expect(response.records[0]).toMatchObject({
+          index: 0,
+        });
       })
   );
-
   it.effect("rejects an empty route query chunk for a non-empty release", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -446,17 +464,14 @@ describe("content publication rollback reads", () => {
       const release = yield* activateAuthenticatedRelease(t, 0, routeCount);
       const envelope = yield* readRollbackEnvelope(t);
       const request = yield* makeRouteRequest(release.manifestHash, -1, 2);
-
       const message = yield* rollbackFailure(
         readRollbackPages(t, request, envelope, [
           stalledRoutePage(release.manifestHash),
         ])
       );
-
       expect(message).toContain("returned a mismatched query chunk");
     })
   );
-
   it.effect(
     "returns an empty route page when the release owns no transitions",
     () =>
@@ -464,10 +479,12 @@ describe("content publication rollback reads", () => {
         const t = convexTest(schema, convexModules);
         const release = yield* activateAuthenticatedRelease(t, 0, 0);
         const request = yield* makeRouteRequest(release.manifestHash, -1, 1);
-
         const response = yield* runRollback(t, request);
-
-        expect(response).toMatchObject({ done: true, nextIndex: -1, total: 0 });
+        expect(response).toMatchObject({
+          done: true,
+          nextIndex: -1,
+          total: 0,
+        });
         expect(response.records).toHaveLength(0);
       })
   );

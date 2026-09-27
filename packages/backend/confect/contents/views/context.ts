@@ -6,17 +6,20 @@ import {
 } from "@repo/backend/confect/contents/context";
 import { toContentViewIoError } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
+import { programLayer } from "@repo/backend/content/program/confect";
 import { readProgramContext } from "@repo/backend/content/program/context";
-import { convexProgramLayer } from "@repo/backend/content/program/convex";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
 
 /** Resolves placement from the active immutable program snapshot. */
 const resolvePublishedContext = Effect.fn(
   "contents.views.resolvePublishedContext"
 )(function* (
-  ctx: QueryCtx,
-  target: Extract<ContentViewTarget, { kind: "curriculum-lesson" }>,
+  target: Extract<
+    ContentViewTarget,
+    {
+      kind: "curriculum-lesson";
+    }
+  >,
   context: LearningContextInput,
   programKey: string,
   nodeKey: string
@@ -28,10 +31,7 @@ const resolvePublishedContext = Effect.fn(
     parentPath: target.parentPath,
     programKey,
     publicPath: target.route,
-  }).pipe(
-    Effect.provide(convexProgramLayer(ctx)),
-    Effect.mapError(toContentViewIoError)
-  );
+  }).pipe(Effect.provide(programLayer), Effect.mapError(toContentViewIoError));
   if (!(resolved.managed && resolved.context)) {
     return createCanonicalLearningContext();
   }
@@ -60,7 +60,6 @@ const resolvePublishedContext = Effect.fn(
 export const resolveLearningContext = Effect.fn(
   "contents.views.context.resolveLearningContext"
 )(function* (
-  ctx: QueryCtx,
   target: ContentViewTarget,
   context: LearningContextInput | undefined
 ) {
@@ -71,7 +70,6 @@ export const resolveLearningContext = Effect.fn(
     return createCanonicalLearningContext();
   }
   return yield* resolvePublishedContext(
-    ctx,
     target,
     context,
     context.programKey,

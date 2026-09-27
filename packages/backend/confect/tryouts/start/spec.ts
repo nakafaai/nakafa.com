@@ -1,8 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
-import type { ConvexTaggedError } from "@repo/backend/confect/failure";
-import { failureWire } from "@repo/backend/confect/failure";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Schema, Struct } from "effect";
@@ -71,19 +69,18 @@ export interface TryoutStartScope {
 }
 
 /** Expected domain failure raised while starting a try-out attempt. */
-export class TryoutStartError
-  extends Schema.TaggedError<TryoutStartError>()("TryoutStartError", {
+export class TryoutStartError extends Schema.TaggedError<TryoutStartError>()(
+  "TryoutStartError",
+  {
     code: Schema.Literals(["TRYOUT_START_FAILED"]),
     message: Schema.String,
-  })
-  implements ConvexTaggedError
-{
+  }
+) {
   declare readonly message: string;
 }
 
 /** Maps a thrown Convex operation into the typed try-out start error channel. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const TryoutStartErrorWire = failureWire(TryoutStartError);
+
 export function toTryoutStartError() {
   return new TryoutStartError({
     code: "TRYOUT_START_FAILED",

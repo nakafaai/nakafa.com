@@ -1,9 +1,10 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { TryoutAttemptStateErrorWire } from "@repo/backend/confect/tryouts/attempt";
-import { TryoutAuthFailure } from "@repo/backend/confect/tryouts/auth";
+import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
+import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
   startAccessArgsValidator,
-  TryoutStartErrorWire,
+  TryoutStartError,
   tryoutStartAccessValidator,
 } from "@repo/backend/confect/tryouts/start/spec";
 import { Schema } from "effect";
@@ -13,10 +14,6 @@ export default GroupSpec.make().addFunction(
     args: () => startAccessArgsValidator.fields,
     returns: () => tryoutStartAccessValidator,
     error: () =>
-      Schema.Union([
-        TryoutAttemptStateErrorWire,
-        TryoutAuthFailure,
-        TryoutStartErrorWire,
-      ]),
-  })
+      Schema.Union([TryoutAttemptStateError, AuthFailure, TryoutStartError]),
+  }).middleware(Session)
 );

@@ -1,7 +1,8 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { decodeArtifactJson } from "@repo/backend/confect/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -26,7 +27,6 @@ function batch(
     snapshotId: fixture.snapshotId,
   };
 }
-
 describe("contentRelease/runtime/tryout/internal", () => {
   it.effect("rejects invalid or reassigned protected selectors", () =>
     Effect.gen(function* () {
@@ -43,16 +43,22 @@ describe("contentRelease/runtime/tryout/internal", () => {
           expect(
             t.query(readProtected, {
               ...batch(fixture),
-              selectors: [{ ...fixture.question, contentKey }],
+              selectors: [
+                {
+                  ...fixture.question,
+                  contentKey,
+                },
+              ],
             })
           ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+            data: {
+              code: "CONTENT_RELEASE_INTEGRITY",
+            },
           })
         );
       }
     })
   );
-
   it.effect("rejects ambiguous permanent bundle ownership", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
@@ -74,9 +80,9 @@ describe("contentRelease/runtime/tryout/internal", () => {
       );
     })
   );
-
   it.effect("rejects a stored artifact moved into another locale", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const fixture = yield* Effect.promise(() =>
         t.mutation(insertProtectedRuntime)
@@ -90,35 +96,41 @@ describe("contentRelease/runtime/tryout/internal", () => {
             )
             .unique();
           assert.isNotNull(stored);
-          const artifact = await runConvexProgram(
-            decodeArtifactJson(stored.artifactJson)
+          const artifact = await Effect.runPromiseWith(runtimeServices)(
+            decodeArtifactJson(stored.artifactJson).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
           );
           await ctx.db.patch(stored._id, {
             artifactJson: JSON.stringify({
               ...artifact,
-              payload: { ...artifact.payload, artifactLocale: "id" },
+              payload: {
+                ...artifact.payload,
+                artifactLocale: "id",
+              },
             }),
           });
         })
       );
       yield* Effect.promise(() =>
         expect(t.query(readProtected, batch(fixture))).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          data: {
+            code: "CONTENT_RELEASE_INTEGRITY",
+          },
         })
       );
     })
   );
-
   it("returns exact signed question and answer bodies", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertProtectedRuntime);
-
     const result = await t.query(readProtected, batch(fixture));
     if (!result) {
       throw new Error("Expected one protected runtime batch.");
     }
     const [question, answer] = result.items;
-
     expect(question).toMatchObject({
       delivery: "authenticated",
       sourcePath: `${fixture.placement.questionSourcePath}/question.en.mdx`,
@@ -129,10 +141,13 @@ describe("contentRelease/runtime/tryout/internal", () => {
     });
     expect(JSON.parse(result.bundleJson)).toMatchObject({
       bundleHash: fixture.request.bundleHash,
-      payload: { snapshot: { snapshotId: fixture.snapshotId } },
+      payload: {
+        snapshot: {
+          snapshotId: fixture.snapshotId,
+        },
+      },
     });
   });
-
   it("keeps the attempt renderer after active release compaction", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertProtectedRuntime);
@@ -145,7 +160,6 @@ describe("contentRelease/runtime/tryout/internal", () => {
       await ctx.db.delete("contentReleases", release._id);
       await ctx.db.delete("contentState", state._id);
     });
-
     await expect(
       t.query(readProtected, batch(fixture, [fixture.question]))
     ).resolves.toMatchObject({
@@ -153,7 +167,6 @@ describe("contentRelease/runtime/tryout/internal", () => {
       rendererJson: expect.any(String),
     });
   });
-
   it("allows one signed artifact to be shared by multiple placements", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertProtectedRuntime);
@@ -172,18 +185,19 @@ describe("contentRelease/runtime/tryout/internal", () => {
       const { _creationTime, _id, ...placement } = stored;
       await ctx.db.insert("tryoutPlacements", placement);
     });
-
     await expect(
       t.query(readProtected, batch(fixture, [fixture.question]))
     ).resolves.toMatchObject({
-      items: [{ delivery: "authenticated" }],
+      items: [
+        {
+          delivery: "authenticated",
+        },
+      ],
     });
   });
-
   it("returns absence for unknown selectors and rejects bundle mismatch", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertProtectedRuntime);
-
     await expect(
       t.query(readProtected, {
         ...batch(fixture),
@@ -207,10 +221,11 @@ describe("contentRelease/runtime/tryout/internal", () => {
         snapshotId: Sha256HashSchema.make(`sha256:${"e".repeat(64)}`),
       })
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+      },
     });
   });
-
   it("fails closed when retained placement or artifact storage is damaged", async () => {
     const placementDamage = convexTest(schema, convexModules);
     const placementFixture = await placementDamage.mutation(
@@ -228,7 +243,9 @@ describe("contentRelease/runtime/tryout/internal", () => {
       if (!placement) {
         throw new Error("Expected protected placement.");
       }
-      await ctx.db.patch("tryoutPlacements", placement._id, { rowJson: "{}" });
+      await ctx.db.patch("tryoutPlacements", placement._id, {
+        rowJson: "{}",
+      });
     });
     await expect(
       placementDamage.query(
@@ -236,9 +253,10 @@ describe("contentRelease/runtime/tryout/internal", () => {
         batch(placementFixture, [placementFixture.question])
       )
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+      },
     });
-
     const artifactDamage = convexTest(schema, convexModules);
     const artifactFixture = await artifactDamage.mutation(
       insertProtectedRuntime
@@ -260,6 +278,10 @@ describe("contentRelease/runtime/tryout/internal", () => {
         readProtected,
         batch(artifactFixture, [artifactFixture.answer])
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_MISSING",
+      },
+    });
   });
 });

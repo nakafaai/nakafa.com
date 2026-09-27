@@ -1,10 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
-  MutationCtx as MutationCtxService,
-  QueryCtx as QueryCtxService,
-} from "@repo/backend/confect/_generated/services";
-import {
   readModelStatus,
   restartModelBuild,
   resumeModelBuild,
@@ -17,8 +13,7 @@ const restart = FunctionImpl.make(
   spec,
   "restart",
   Effect.fn("contentRelease.models.restart")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    return yield* restartModelBuild(ctx, args);
+    return yield* restartModelBuild(args);
   })
 );
 const status = FunctionImpl.make(
@@ -26,8 +21,7 @@ const status = FunctionImpl.make(
   spec,
   "status",
   Effect.fn("contentRelease.models.status")(function* ({ releaseId }) {
-    const ctx = yield* QueryCtxService;
-    return yield* readModelStatus(ctx, releaseId);
+    return yield* readModelStatus(releaseId);
   })
 );
 const resume = FunctionImpl.make(
@@ -38,8 +32,7 @@ const resume = FunctionImpl.make(
     generation,
     releaseId,
   }) {
-    const ctx = yield* MutationCtxService;
-    return yield* resumeModelBuild(ctx, releaseId, generation);
+    return yield* resumeModelBuild(releaseId, generation);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

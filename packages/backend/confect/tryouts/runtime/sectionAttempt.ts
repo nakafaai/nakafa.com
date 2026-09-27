@@ -1,6 +1,10 @@
-import { DatabaseReader, DatabaseWriter, Scheduler } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { loadAttemptSections } from "@repo/backend/confect/tryouts/runtime/attempt/sections";
 import {
@@ -9,11 +13,10 @@ import {
 } from "@repo/backend/confect/tryouts/runtime/error";
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { requireSectionSnapshot } from "@repo/backend/confect/tryouts/runtime/placement";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Duration, Effect, flow } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutAttempt = Docs["tryoutAttempts"];
 interface InternalEntrySection {
   readonly sectionKey: string;
   readonly visibility: "internal-entry" | "visible";
@@ -38,8 +41,8 @@ export const requireInternalEntrySection = Effect.fn(
 /** Resolves the timer row that authorizes answers for one placement. */
 export const loadPlacementSectionAttempt = Effect.fn(
   "tryouts.runtime.loadPlacementSectionAttempt"
-)(function* (ctx: MutationCtx, placement: Doc<"tryoutAttemptPlacements">) {
-  return yield* loadSectionAttempt(ctx, {
+)(function* (placement: Docs["tryoutAttemptPlacements"]) {
+  return yield* loadSectionAttempt({
     attemptId: placement.tryoutAttemptId,
     sectionKey: placement.sectionKey,
   });
@@ -48,14 +51,8 @@ export const loadPlacementSectionAttempt = Effect.fn(
 /** Loads one active section attempt by its stable attempt-owned key. */
 export const requireActiveSectionAttempt = Effect.fn(
   "tryouts.runtime.requireActiveSectionAttempt"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    sectionKey: string;
-  }
-) {
-  const section = yield* loadSectionAttempt(ctx, {
+)(function* (args: { attempt: TryoutAttempt; sectionKey: string }) {
+  const section = yield* loadSectionAttempt({
     attemptId: args.attempt._id,
     sectionKey: args.sectionKey,
   });
@@ -71,18 +68,13 @@ export const requireActiveSectionAttempt = Effect.fn(
 /** Starts one section attempt and its timer inside an active try-out attempt. */
 export const startSectionAttempt = Effect.fn(
   "tryouts.runtime.startSectionAttempt"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    now: number;
-    sectionKey: string;
-  }
-) {
-  const scheduler = yield* Scheduler.Scheduler.pipe(
-    Effect.provide(Scheduler.layer(ctx.scheduler))
-  );
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+)(function* (args: {
+  attempt: TryoutAttempt;
+  now: number;
+  sectionKey: string;
+}) {
+  const scheduler = yield* Scheduler;
+  const writer = yield* DatabaseWriter;
   if (args.attempt.status !== "in-progress") {
     return yield* new TryoutAttemptStateError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
@@ -95,7 +87,7 @@ export const startSectionAttempt = Effect.fn(
       message: "Try-out attempt time has expired.",
     });
   }
-  const existing = yield* loadSectionAttempt(ctx, {
+  const existing = yield* loadSectionAttempt({
     attemptId: args.attempt._id,
     sectionKey: args.sectionKey,
   });
@@ -114,7 +106,7 @@ export const startSectionAttempt = Effect.fn(
       message: "Try-out section already finished.",
     });
   }
-  const currentAttempt = yield* requireNoParallelSectionTimer(ctx, args);
+  const currentAttempt = yield* requireNoParallelSectionTimer(args);
   const snapshot = yield* requireSectionSnapshot(
     currentAttempt,
     args.sectionKey
@@ -141,8 +133,8 @@ export const startSectionAttempt = Effect.fn(
       tryoutAttemptId: currentAttempt._id,
     })
     .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+      Effect.mapError(toTryoutRuntimeError),
+      Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
     );
   yield* writer
     .table("tryoutAttempts")
@@ -150,8 +142,8 @@ export const startSectionAttempt = Effect.fn(
       lastActivityAt: args.now,
     })
     .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+      Effect.mapError(toTryoutRuntimeError),
+      Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
     );
   yield* scheduler
     .runAfter(
@@ -168,21 +160,15 @@ export const startSectionAttempt = Effect.fn(
 
 /** Loads one existing section attempt by its stable section key. */
 const loadSectionAttempt = Effect.fn("tryouts.runtime.loadSectionAttempt")(
-  function* (
-    ctx: MutationCtx,
-    args: {
-      attemptId: Id<"tryoutAttempts">;
-      sectionKey: string;
-    }
-  ) {
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+  function* (args: { attemptId: Id<"tryoutAttempts">; sectionKey: string }) {
+    const database = yield* DatabaseReader;
     return yield* database
       .table("tryoutSectionAttempts")
       .get("by_tryoutAttemptId_and_sectionKey", args.attemptId, args.sectionKey)
       .pipe(
         Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie,
-        Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+        Effect.mapError(toTryoutRuntimeError),
+        Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
       );
   }
 );
@@ -190,22 +176,19 @@ const loadSectionAttempt = Effect.fn("tryouts.runtime.loadSectionAttempt")(
 /** Rejects or expires any other in-progress section timer. */
 const requireNoParallelSectionTimer = Effect.fn(
   "tryouts.runtime.requireNoParallelSectionTimer"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    now: number;
-    sectionKey: string;
-  }
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const sections = yield* loadAttemptSections(ctx, args.attempt);
+)(function* (args: {
+  attempt: TryoutAttempt;
+  now: number;
+  sectionKey: string;
+}) {
+  const database = yield* DatabaseReader;
+  const sections = yield* loadAttemptSections(args.attempt);
   for (const section of sections) {
     if (section.status !== "in-progress") {
       continue;
     }
     if (args.now >= section.expiresAt) {
-      yield* finalizeSectionAttempt(ctx, {
+      yield* finalizeSectionAttempt({
         attempt: args.attempt,
         endReason: "time-expired",
         now: args.now,
@@ -222,8 +205,8 @@ const requireNoParallelSectionTimer = Effect.fn(
     .table("tryoutAttempts")
     .get(args.attempt._id)
     .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+      Effect.mapError(toTryoutRuntimeError),
+      Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
     );
   if (currentAttempt.status !== "in-progress") {
     return yield* new TryoutAttemptStateError({

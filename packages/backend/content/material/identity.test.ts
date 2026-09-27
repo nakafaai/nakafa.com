@@ -1,16 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { convexMaterialLayer } from "@repo/backend/content/material/convex";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { materialLayer } from "@repo/backend/content/material/confect";
 import { readMaterialIdentity } from "@repo/backend/content/material/identity";
-import schema from "@repo/backend/convex/schema";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   activateMaterialCatalog,
   advanceMaterialCatalog,
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material/catalog";
-import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 const projection = makeMaterialProjection("en", 1);
@@ -20,137 +18,158 @@ const identity = {
   expectedMaterialKey: projection.materialKey,
   expectedSectionKey: projection.sectionKey,
 };
-
 describe("contentRelease/material/identity", () => {
-  it("resolves one exact active signed material", async () => {
-    const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target);
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readMaterialIdentity(identity).pipe(
-            Effect.provide(convexMaterialLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toEqual({
-      activeReleaseId: MATERIAL_IDENTITY.releaseId,
-      managed: true,
-      publicPath: projection.publicPath,
-    });
-  });
-
-  it("resolves an inherited material through its effective active head", async () => {
-    const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target);
-    await advanceMaterialCatalog(target);
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readMaterialIdentity(identity).pipe(
-            Effect.provide(convexMaterialLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toEqual({
-      activeReleaseId: "release-next",
-      managed: true,
-      publicPath: projection.publicPath,
-    });
-  });
-
-  it("distinguishes unmanaged and absent material identities", async () => {
-    const unmanaged = convexTest(schema, convexModules);
-    await expect(
-      unmanaged.query((ctx) =>
-        runConvexProgram(
-          readMaterialIdentity(identity).pipe(
-            Effect.provide(convexMaterialLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toEqual({
-      activeReleaseId: null,
-      managed: false,
-      publicPath: null,
-    });
-
-    const absent = convexTest(schema, convexModules);
-    await activateMaterialCatalog(absent);
-    await expect(
-      absent.query((ctx) =>
-        runConvexProgram(
-          readMaterialIdentity({
-            ...identity,
-            contentKey: "material/lesson/test/missing/section-1",
-          }).pipe(Effect.provide(convexMaterialLayer(ctx)))
-        )
-      )
-    ).resolves.toMatchObject({ managed: true, publicPath: null });
-  });
-
-  it("rejects mismatched claims and stale active rows", async () => {
-    const mismatch = convexTest(schema, convexModules);
-    await activateMaterialCatalog(mismatch);
-    await expect(
-      mismatch.query((ctx) =>
-        runConvexProgram(
-          readMaterialIdentity({
-            ...identity,
-            expectedSectionKey: "section-2",
-          }).pipe(Effect.provide(convexMaterialLayer(ctx)))
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-
-    const stale = convexTest(schema, convexModules);
-    await activateMaterialCatalog(stale);
-    await stale.mutation(async (ctx) => {
-      const row = await ctx.db
-        .query("materialCatalog")
-        .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
-          index
-            .eq("slot", "blue")
-            .eq("contentKey", projection.contentKey)
-            .eq("appLocale", projection.appLocale)
-        )
-        .unique();
-      if (!row) {
-        throw new Error("Expected one current material row.");
-      }
-      await ctx.db.patch("materialCatalog", row._id, { sequence: 2 });
-    });
-    await expect(
-      stale.query((ctx) =>
-        runConvexProgram(
-          readMaterialIdentity(identity).pipe(
-            Effect.provide(convexMaterialLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
-
-  it("rejects malformed stable identity inputs", async () => {
-    const target = convexTest(schema, convexModules);
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readMaterialIdentity({
-            ...identity,
-            expectedMaterialKey: "invalid",
-          }).pipe(Effect.provide(convexMaterialLayer(ctx)))
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
-    });
-  });
+  it.effect("resolves one exact active signed material", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const _targetCtx = yield* MutationCtx;
+          yield* activateMaterialCatalog();
+          expect(
+            yield* readMaterialIdentity(identity).pipe(
+              Effect.provide(materialLayer)
+            )
+          ).toEqual({
+            activeReleaseId: MATERIAL_IDENTITY.releaseId,
+            managed: true,
+            publicPath: projection.publicPath,
+          });
+        })
+      );
+    })
+  );
+  it.effect(
+    "resolves an inherited material through its effective active head",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const _targetCtx = yield* MutationCtx;
+            yield* activateMaterialCatalog();
+            yield* advanceMaterialCatalog();
+            expect(
+              yield* readMaterialIdentity(identity).pipe(
+                Effect.provide(materialLayer)
+              )
+            ).toEqual({
+              activeReleaseId: "release-next",
+              managed: true,
+              publicPath: projection.publicPath,
+            });
+          })
+        );
+      })
+  );
+  it.effect("distinguishes unmanaged and absent material identities", () =>
+    Effect.gen(function* () {
+      const unmanaged = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* unmanaged.run(
+        Effect.gen(function* () {
+          const _unmanagedCtx = yield* MutationCtx;
+          expect(
+            yield* readMaterialIdentity(identity).pipe(
+              Effect.provide(materialLayer)
+            )
+          ).toEqual({
+            activeReleaseId: null,
+            managed: false,
+            publicPath: null,
+          });
+          const absent = yield* Confect.pipe(Effect.provide(confectLayer));
+          yield* absent.run(
+            Effect.gen(function* () {
+              const _absentCtx = yield* MutationCtx;
+              yield* activateMaterialCatalog();
+              expect(
+                yield* readMaterialIdentity({
+                  ...identity,
+                  contentKey: "material/lesson/test/missing/section-1",
+                }).pipe(Effect.provide(materialLayer))
+              ).toMatchObject({
+                managed: true,
+                publicPath: null,
+              });
+            })
+          );
+        })
+      );
+    })
+  );
+  it.effect("rejects mismatched claims and stale active rows", () =>
+    Effect.gen(function* () {
+      const mismatch = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* mismatch.run(
+        Effect.gen(function* () {
+          const _mismatchCtx = yield* MutationCtx;
+          yield* activateMaterialCatalog();
+          expect(
+            yield* readMaterialIdentity({
+              ...identity,
+              expectedSectionKey: "section-2",
+            }).pipe(Effect.provide(materialLayer), Effect.flip)
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
+          const stale = yield* Confect.pipe(Effect.provide(confectLayer));
+          yield* stale.run(
+            Effect.gen(function* () {
+              const staleCtx = yield* MutationCtx;
+              yield* activateMaterialCatalog();
+              yield* Effect.gen(function* () {
+                const row = yield* Effect.promise(() =>
+                  staleCtx.db
+                    .query("materialCatalog")
+                    .withIndex(
+                      "by_slot_and_contentKey_and_appLocale",
+                      (index) =>
+                        index
+                          .eq("slot", "blue")
+                          .eq("contentKey", projection.contentKey)
+                          .eq("appLocale", projection.appLocale)
+                    )
+                    .unique()
+                );
+                if (!row) {
+                  throw new Error("Expected one current material row.");
+                }
+                yield* Effect.promise(() =>
+                  staleCtx.db.patch("materialCatalog", row._id, {
+                    sequence: 2,
+                  })
+                );
+              });
+              expect(
+                yield* readMaterialIdentity(identity).pipe(
+                  Effect.provide(materialLayer),
+                  Effect.flip
+                )
+              ).toMatchObject({
+                code: "CONTENT_RELEASE_INTEGRITY",
+              });
+            })
+          );
+        })
+      );
+    })
+  );
+  it.effect("rejects malformed stable identity inputs", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const _targetCtx = yield* MutationCtx;
+          expect(
+            yield* readMaterialIdentity({
+              ...identity,
+              expectedMaterialKey: "invalid",
+            }).pipe(Effect.provide(materialLayer), Effect.flip)
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_LIMIT",
+          });
+        })
+      );
+    })
+  );
 });

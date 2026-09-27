@@ -1,11 +1,12 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
 import { toContentViewIoError } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { Effect, flow, Struct } from "effect";
+import { Effect, Struct } from "effect";
 
 /** Builds a patch that also clears stale optional context fields. */
 function toContextPatch(context: LearningContextStorage) {
@@ -24,16 +25,15 @@ function toContextPatch(context: LearningContextStorage) {
 /** Upserts the signed-in learner's canonical recent content read-model row. */
 export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
   function* (
-    db: MutationCtx["db"],
     route: ContentViewTarget,
     context: LearningContextStorage,
     input: {
       readonly lastViewedAt: number;
-      readonly userId: Doc<"users">["_id"];
+      readonly userId: Docs["users"]["_id"];
     }
   ) {
-    const database = DatabaseReader.make(databaseSchema, db);
-    const writer = DatabaseWriter.make(databaseSchema, db);
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const existing = yield* database
       .table("userLearningRecents")
       .get("by_userId_and_content_id", input.userId, route.content_id)
@@ -50,7 +50,9 @@ export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
       lensId: route.lensId,
       locale: route.locale,
       ...(route.kind === "curriculum-lesson"
-        ? { materialDomain: route.materialDomain }
+        ? {
+            materialDomain: route.materialDomain,
+          }
         : {}),
       route: route.route,
       section: route.section,
@@ -70,6 +72,5 @@ export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
         route.kind === "curriculum-lesson" ? route.materialDomain : undefined,
     });
   },
-  Effect.orDie,
-  Effect.catchDefect(flow(toContentViewIoError, Effect.fail))
+  Effect.mapError(toContentViewIoError)
 );

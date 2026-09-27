@@ -1,12 +1,13 @@
 "use client";
 
+import { QueryResult, useQuery } from "@confect/react";
 import {
   Copy01Icon,
   Tick01Icon,
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -19,7 +20,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -41,11 +41,16 @@ export function SchoolClassesPeopleInvite() {
 
   const clipboard = useClipboard({ timeout: 500 });
 
-  const inviteCodes = useQuery(api.classes.queries.getInviteCodes, {
+  const inviteCodes = useQuery(refs.public.classes.queries.getInviteCodes, {
     classId,
   });
 
-  const inviteCodesByRole = mapInviteCodesByRole(inviteCodes);
+  if (QueryResult.isFailure(inviteCodes)) {
+    throw inviteCodes.error;
+  }
+  const inviteCodesByRole = mapInviteCodesByRole(
+    QueryResult.isSuccess(inviteCodes) ? inviteCodes.value : undefined
+  );
 
   const code = inviteCodesByRole.get(selectedRole)?.code ?? "";
 

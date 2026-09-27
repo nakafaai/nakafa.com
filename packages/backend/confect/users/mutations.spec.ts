@@ -1,8 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { CreditStateFailure } from "@repo/backend/confect/credits/spec";
+import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
+import Session from "@repo/backend/confect/middleware/session.spec";
 import {
   selfSelectableUserRoleValidator,
   userRoleValidator,
@@ -20,7 +21,9 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Null,
       error: () => AuthFailure,
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -30,7 +33,9 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Null,
       error: () => AuthFailure,
-    }).middleware(Atomic)
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   )
   .addFunction(
     FunctionSpec.publicMutation({
@@ -42,6 +47,8 @@ export default GroupSpec.make()
           credits: Schema.Finite,
           userId: IdSchema("users"),
         }),
-      error: () => Schema.Union([AuthFailure, CreditStateFailure]),
-    }).middleware(Atomic)
+      error: () => Schema.Union([AuthFailure, CreditStateError]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
   );

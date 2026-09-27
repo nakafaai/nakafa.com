@@ -1,9 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/contentRelease/material.spec";
 import { readPartnerApiPage } from "@repo/backend/confect/contentRelease/partner/page";
-import { convexMaterialLayer } from "@repo/backend/content/material/convex";
+import { materialLayer } from "@repo/backend/content/material/confect";
 import {
   readLatestMaterials,
   readMaterialBucket,
@@ -29,9 +28,8 @@ const lesson = FunctionImpl.make(
     appLocale,
     publicPath,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readMaterialLesson(appLocale, publicPath).pipe(
-      Effect.provide(convexMaterialLayer(ctx))
+      Effect.provide(materialLayer)
     );
   })
 );
@@ -44,12 +42,11 @@ const navigation = FunctionImpl.make(
     expectedActiveReleaseId,
     materialKey,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readMaterialNavigation(
       appLocale,
       materialKey,
       expectedActiveReleaseId
-    ).pipe(Effect.provide(convexMaterialLayer(ctx)));
+    ).pipe(Effect.provide(materialLayer));
   })
 );
 const identity = FunctionImpl.make(
@@ -57,9 +54,8 @@ const identity = FunctionImpl.make(
   spec,
   "identity",
   Effect.fn("contentRelease.material.identity")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readMaterialIdentity(args).pipe(
-      Effect.provide(convexMaterialLayer(ctx))
+      Effect.provide(materialLayer)
     );
   })
 );
@@ -68,8 +64,7 @@ const apiPage = FunctionImpl.make(
   spec,
   "apiPage",
   Effect.fn("contentRelease.material.apiPage")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    return yield* readPartnerApiPage(ctx, {
+    return yield* readPartnerApiPage({
       ...args,
       family: "material",
     });
@@ -83,9 +78,8 @@ const bucket = FunctionImpl.make(
     appLocale,
     bucket: bucketId,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readMaterialBucket(appLocale, bucketId).pipe(
-      Effect.provide(convexMaterialLayer(ctx))
+      Effect.provide(materialLayer)
     );
   })
 );
@@ -94,9 +88,8 @@ const latest = FunctionImpl.make(
   spec,
   "latest",
   Effect.fn("contentRelease.material.latest")(function* ({ appLocale, limit }) {
-    const ctx = yield* QueryCtxService;
     return yield* readLatestMaterials(appLocale, limit).pipe(
-      Effect.provide(convexMaterialLayer(ctx))
+      Effect.provide(materialLayer)
     );
   })
 );
@@ -109,12 +102,11 @@ const publication = FunctionImpl.make(
     expectedActiveReleaseId,
     publicPath,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readMaterialModel(
       appLocale,
       publicPath,
       expectedActiveReleaseId
-    ).pipe(Effect.provide(convexMaterialLayer(ctx)));
+    ).pipe(Effect.provide(materialLayer));
   })
 );
 const sitemapBuckets = FunctionImpl.make(
@@ -124,9 +116,8 @@ const sitemapBuckets = FunctionImpl.make(
   Effect.fn("contentRelease.material.sitemapBuckets")(function* ({
     appLocale,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readMaterialBuckets(appLocale).pipe(
-      Effect.provide(convexMaterialLayer(ctx))
+      Effect.provide(materialLayer)
     );
   })
 );
@@ -138,9 +129,8 @@ const sitemapPage = FunctionImpl.make(
     appLocale,
     bucket: bucketId,
   }) {
-    const ctx = yield* QueryCtxService;
     return yield* readMaterialSitemap(appLocale, bucketId).pipe(
-      Effect.provide(convexMaterialLayer(ctx))
+      Effect.provide(materialLayer)
     );
   })
 );
@@ -149,13 +139,12 @@ const publications = FunctionImpl.make(
   spec,
   "publications",
   Effect.fn("contentRelease.material.publications")(function* (args) {
-    const ctx = yield* QueryCtxService;
     return yield* readMaterialPage(
       args.appLocale,
       args.expectedManifestHash,
       args.expectedReleaseId,
       args.paginationOpts
-    ).pipe(Effect.provide(convexMaterialLayer(ctx)));
+    ).pipe(Effect.provide(materialLayer));
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

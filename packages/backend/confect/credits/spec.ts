@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 /** A materialized credit boundary could not be read or changed safely. */
@@ -11,4 +10,3 @@ export class CreditStateError extends Schema.TaggedError<CreditStateError>()(
     ),
   }
 ) {}
-export const CreditStateFailure = failureWire(CreditStateError);

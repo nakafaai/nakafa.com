@@ -4,12 +4,10 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import type { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { requirePermission } from "@repo/backend/confect/schools/permission/access";
 import {
   PERMISSIONS,
   PermissionDenied,
-  PermissionDeniedWire,
 } from "@repo/backend/confect/schools/permission/spec";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
@@ -20,10 +18,8 @@ function runPermission<A>(
   ctx: QueryCtx,
   program: Effect.Effect<A, PermissionDenied, DatabaseReader>
 ) {
-  return runConvexProgram(
-    program.pipe(
-      Effect.provide(NativeDatabaseReader.layer(databaseSchema, ctx.db))
-    )
+  return program.pipe(
+    Effect.provide(NativeDatabaseReader.layer(databaseSchema, ctx.db))
   );
 }
 describe("school and class permission grants", () => {
@@ -43,17 +39,19 @@ describe("school and class permission grants", () => {
       },
     ]) {
       const denied = await t.query((ctx) =>
-        runPermission(
-          ctx,
-          requirePermission(PERMISSIONS.CLASS_DELETE, target).pipe(
-            Effect.match({
-              onFailure: ({ _tag, code, message }) => ({
-                _tag,
-                code,
-                message,
-              }),
-              onSuccess: () => undefined,
-            })
+        Effect.runPromise(
+          runPermission(
+            ctx,
+            requirePermission(PERMISSIONS.CLASS_DELETE, target).pipe(
+              Effect.match({
+                onFailure: ({ _tag, code, message }) => ({
+                  _tag,
+                  code,
+                  message,
+                }),
+                onSuccess: () => undefined,
+              })
+            )
           )
         )
       );
@@ -65,12 +63,14 @@ describe("school and class permission grants", () => {
     }
     await expect(
       t.query((ctx) =>
-        runPermission(
-          ctx,
-          requirePermission(PERMISSIONS.CLASS_DELETE, {
-            userId: users.admin.userId,
-            schoolId,
-          }).pipe(Effect.as(true))
+        Effect.runPromise(
+          runPermission(
+            ctx,
+            requirePermission(PERMISSIONS.CLASS_DELETE, {
+              userId: users.admin.userId,
+              schoolId,
+            }).pipe(Effect.as(true))
+          )
         )
       )
     ).resolves.toBe(true);
@@ -84,12 +84,12 @@ describe("school and class permission grants", () => {
     };
     await expect(
       t.query((ctx) =>
-        runPermission(ctx, requirePermission(PERMISSIONS.CLASS_WRITE, target))
+        Effect.runPromise(
+          runPermission(ctx, requirePermission(PERMISSIONS.CLASS_WRITE, target))
+        )
       )
     ).rejects.toMatchObject({
-      data: {
-        code: "FORBIDDEN",
-      },
+      code: "FORBIDDEN",
     });
     const memberId = await t.mutation((ctx) =>
       ctx.db.insert("schoolClassMembers", {
@@ -102,26 +102,28 @@ describe("school and class permission grants", () => {
     );
     await expect(
       t.query((ctx) =>
-        runPermission(
-          ctx,
-          requirePermission(
-            PERMISSIONS.CONTENT_READ,
-            Struct.omit(target, ["schoolId"])
-          ).pipe(Effect.as(true))
+        Effect.runPromise(
+          runPermission(
+            ctx,
+            requirePermission(
+              PERMISSIONS.CONTENT_READ,
+              Struct.omit(target, ["schoolId"])
+            ).pipe(Effect.as(true))
+          )
         )
       )
     ).resolves.toBe(true);
     await expect(
       t.query((ctx) =>
-        runPermission(
-          ctx,
-          requirePermission(PERMISSIONS.CONTENT_DELETE, target)
+        Effect.runPromise(
+          runPermission(
+            ctx,
+            requirePermission(PERMISSIONS.CONTENT_DELETE, target)
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: {
-        code: "FORBIDDEN",
-      },
+      code: "FORBIDDEN",
     });
     await t.mutation((ctx) =>
       ctx.db.patch("schoolClassMembers", memberId, {
@@ -130,15 +132,15 @@ describe("school and class permission grants", () => {
     );
     await expect(
       t.query((ctx) =>
-        runPermission(
-          ctx,
-          requirePermission(PERMISSIONS.CONTENT_DELETE, target)
+        Effect.runPromise(
+          runPermission(
+            ctx,
+            requirePermission(PERMISSIONS.CONTENT_DELETE, target)
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: {
-        code: "FORBIDDEN",
-      },
+      code: "FORBIDDEN",
     });
     await t.mutation((ctx) =>
       ctx.db.patch("schoolClassMembers", memberId, {
@@ -147,22 +149,27 @@ describe("school and class permission grants", () => {
     );
     await expect(
       t.query((ctx) =>
-        runPermission(
-          ctx,
-          requirePermission(PERMISSIONS.CONTENT_DELETE, target).pipe(
-            Effect.as(true)
+        Effect.runPromise(
+          runPermission(
+            ctx,
+            requirePermission(PERMISSIONS.CONTENT_DELETE, target).pipe(
+              Effect.as(true)
+            )
           )
         )
       )
     ).resolves.toBe(true);
     await expect(
       t.query((ctx) =>
-        runPermission(ctx, requirePermission(PERMISSIONS.MEMBER_REMOVE, target))
+        Effect.runPromise(
+          runPermission(
+            ctx,
+            requirePermission(PERMISSIONS.MEMBER_REMOVE, target)
+          )
+        )
       )
     ).rejects.toMatchObject({
-      data: {
-        code: "FORBIDDEN",
-      },
+      code: "FORBIDDEN",
     });
   });
   it.effect(
@@ -181,6 +188,7 @@ describe("school and class permission grants", () => {
         ).pipe(Effect.flip);
         assert(Ref.isConvexError(failure.cause));
         expect(failure.cause.data).toEqual({
+          _tag: "PermissionDenied",
           code: "FORBIDDEN",
           message: "Permission 'class:create' required",
         });
@@ -192,7 +200,7 @@ describe("school and class permission grants", () => {
         expect(decoded.value).toBeInstanceOf(PermissionDenied);
         assert(decoded.value instanceof PermissionDenied);
         expect(
-          yield* Schema.encodeEffect(PermissionDeniedWire)(decoded.value)
+          yield* Schema.encodeEffect(PermissionDenied)(decoded.value)
         ).toEqual(failure.cause.data);
       })
   );

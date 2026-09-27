@@ -1,5 +1,5 @@
 import { assert, describe, expect, it } from "@effect/vitest";
-import type { MyUIMessage } from "@repo/ai/types/message";
+import type { MyUIMessage } from "@repo/backend/confect/chats/message";
 import { mapDBPartToUIMessagePart } from "@repo/backend/confect/chats/messageParts/dbToUi";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/confect/chats/messageParts/uiToDb";
 import { convexModules } from "@repo/backend/confect/test.setup";

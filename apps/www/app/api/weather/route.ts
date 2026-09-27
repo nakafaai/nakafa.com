@@ -1,8 +1,3 @@
-import {
-  DEFAULT_LATITUDE,
-  DEFAULT_LONGITUDE,
-  getCurrentWeather,
-} from "@repo/ai/clients/weather/client";
 import { logError, logHttpRequest } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
 import { Cause, Effect } from "effect";
@@ -13,6 +8,11 @@ import {
   createCorsForbiddenResponse,
   isCorsRequestAllowed,
 } from "@/lib/security/cors";
+import {
+  DEFAULT_LATITUDE,
+  DEFAULT_LONGITUDE,
+  getCurrentWeather,
+} from "@/lib/weather/client";
 
 const logContext = {
   service: "weather-api",

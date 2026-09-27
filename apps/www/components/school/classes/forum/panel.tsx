@@ -1,10 +1,10 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useQuery } from "convex/react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
@@ -13,6 +13,7 @@ import { getSchoolClassesForumHref } from "@/components/school/classes/forum/hel
 import { SchoolClassesForumPanelContent } from "@/components/school/classes/forum/panel-content";
 import { SchoolClassesForumPanelError } from "@/components/school/classes/forum/panel-error";
 import { SchoolClassesForumPanelInfo } from "@/components/school/classes/forum/panel-info";
+import { DataFailure } from "@/components/shared/failure";
 
 /**
  * Render the active forum conversation inside the reusable class detail slot,
@@ -43,9 +44,10 @@ function SchoolClassesForumPanelFrame({
     slug: string;
   }>();
   const searchParams = useSearchParams();
-  const forum = useQuery(api.classes.forums.queries.forums.getForum, {
+  const query = useQuery(refs.public.classes.forums.queries.forums.getForum, {
     forumId,
   });
+  const forum = QueryResult.isSuccess(query) ? query.value : undefined;
   const closeHref = getSchoolClassesForumHref({
     classRouteId,
     queryString: searchParams.toString(),
@@ -69,7 +71,11 @@ function SchoolClassesForumPanelFrame({
         onClose={handleClose}
         title={<SchoolClassesForumPanelInfo forum={forum} />}
       >
-        <SchoolClassesForumPanelContent forum={forum} forumId={forumId} />
+        {QueryResult.isFailure(query) ? (
+          <DataFailure />
+        ) : (
+          <SchoolClassesForumPanelContent forum={forum} forumId={forumId} />
+        )}
       </SchoolClassesDetailPanel>
     </ErrorBoundary>
   );

@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const analyticsErasureRequestFailedCode =
   "ANALYTICS_ERASURE_REQUEST_FAILED";
@@ -11,6 +10,3 @@ export class AnalyticsErasureRequestError extends Schema.TaggedError<AnalyticsEr
   }
 ) {}
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const AnalyticsErasureRequestErrorWire = failureWire(
-  AnalyticsErasureRequestError
-);

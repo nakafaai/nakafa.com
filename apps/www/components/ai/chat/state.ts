@@ -1,6 +1,7 @@
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
-type Chat = Doc<"chats">;
+type Chat = Docs["chats"];
 type ChatPatch = Partial<Pick<Chat, "title" | "visibility">>;
 
 /** Patch one chat in an immutable query page. */

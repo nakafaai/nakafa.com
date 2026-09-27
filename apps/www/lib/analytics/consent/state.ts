@@ -1,3 +1,4 @@
+import type { Ref } from "@confect/core";
 import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   type AnalyticsConsentState,
@@ -5,8 +6,8 @@ import {
   resolveAnalyticsConsentState,
 } from "@repo/analytics/consent";
 import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type refs from "@repo/backend/confect/_generated/refs";
+
 import { Option } from "effect";
 
 export interface BrowserAnalyticsUser {
@@ -24,7 +25,7 @@ export interface BrowserConsentSnapshot {
 }
 
 export type AccountConsentDecision = NonNullable<
-  FunctionReturnType<typeof api.consents.current.get>["decision"]
+  Ref.Returns<typeof refs.public.consents.current.get>["decision"]
 >;
 
 /** Returns whether a browser privacy signal must revoke an account grant. */

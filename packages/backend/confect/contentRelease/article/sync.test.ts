@@ -1,10 +1,12 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import {
   syncArticles,
   verifyArticleBuild,
 } from "@repo/backend/confect/contentRelease/article/sync";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
@@ -12,7 +14,7 @@ import { insertArticleProjection } from "@repo/backend/test/article/release";
 import { insertCompletedRelease } from "@repo/backend/test/content/model";
 import { testArticleProjection } from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const identity = {
   manifestHash: `sha256:${"6".repeat(64)}`,
@@ -32,7 +34,9 @@ async function stageBuild(ctx: MutationCtx) {
     );
   }
   const id = await ctx.db.insert("contentModelBuilds", {
-    base: { kind: "empty" },
+    base: {
+      kind: "empty",
+    },
     generation: 1,
     itemIndex: -1,
     key: "primary",
@@ -53,25 +57,36 @@ async function stageBuild(ctx: MutationCtx) {
   const build = await ctx.db.get("contentModelBuilds", id);
   const release = await ctx.db.query("contentReleases").unique();
   assert(build && release);
-  return { build, release };
+  return {
+    build,
+    release: Schema.decodeSync(contentReleases.Doc)(release),
+  };
 }
-
 describe("article inactive-buffer synchronization", () => {
   it.effect(
     "writes and verifies a complete changed page before the active slot moves",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const staged = yield* Effect.promise(() => t.mutation(stageBuild));
         const signed = yield* decodeReleaseJson(staged.release.releaseJson);
         const result = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
-              syncArticles(ctx, staged.build, staged.release, signed)
+            Effect.runPromiseWith(runtimeServices)(
+              syncArticles(staged.build, staged.release, signed).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
-        expect(result).toEqual({ done: true, itemIndex: 1, processed: 2 });
+        expect(result).toEqual({
+          done: true,
+          itemIndex: 1,
+          processed: 2,
+        });
         const rows = yield* Effect.promise(() =>
           t.query((ctx) => ctx.db.query("articleCatalog").collect())
         );
@@ -79,11 +94,15 @@ describe("article inactive-buffer synchronization", () => {
         expect(rows.every((row) => row.slot === "green")).toBe(true);
         const verified = yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
-              verifyArticleBuild(ctx, {
+            Effect.runPromiseWith(runtimeServices)(
+              verifyArticleBuild({
                 ...staged.build,
                 phase: "articleVerify",
-              })
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
@@ -94,18 +113,22 @@ describe("article inactive-buffer synchronization", () => {
         });
       })
   );
-
   it.effect(
     "removes an inherited article whose effective head is now a deletion",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const staged = yield* Effect.promise(() => t.mutation(stageBuild));
         const signed = yield* decodeReleaseJson(staged.release.releaseJson);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
-              syncArticles(ctx, staged.build, staged.release, signed)
+            Effect.runPromiseWith(runtimeServices)(
+              syncArticles(staged.build, staged.release, signed).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
@@ -123,8 +146,12 @@ describe("article inactive-buffer synchronization", () => {
         );
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            runConvexProgram(
-              syncArticles(ctx, staged.build, staged.release, signed)
+            Effect.runPromiseWith(runtimeServices)(
+              syncArticles(staged.build, staged.release, signed).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
             )
           )
         );
@@ -132,13 +159,19 @@ describe("article inactive-buffer synchronization", () => {
           t.query((ctx) => ctx.db.query("articleCatalog").collect())
         );
         expect(rows).toMatchObject([
-          { contentKey: testArticleProjection(1).contentKey, slot: "green" },
+          {
+            contentKey: testArticleProjection(1).contentKey,
+            slot: "green",
+          },
         ]);
         const categories = yield* Effect.promise(() =>
           t.query((ctx) => ctx.db.query("articleCategories").collect())
         );
         expect(categories).toMatchObject([
-          { contentKey: testArticleProjection(1).contentKey, slot: "green" },
+          {
+            contentKey: testArticleProjection(1).contentKey,
+            slot: "green",
+          },
         ]);
       })
   );

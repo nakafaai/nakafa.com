@@ -1,36 +1,30 @@
-import { DatabaseReader } from "@confect/server";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { Effect, flow } from "effect";
+import { Effect } from "effect";
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
+type TryoutAttempt = Docs["tryoutAttempts"];
+type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 
 /** One exact IRT scale plus items validated against immutable placements. */
 export interface TryoutIrtSource {
   readonly items: readonly {
-    readonly item: Doc<"irtScaleItems">;
+    readonly item: Docs["irtScaleItems"];
     readonly placementId: TryoutPlacement["_id"];
   }[];
-  readonly scale: Doc<"irtScaleVersions">;
+  readonly scale: Docs["irtScaleVersions"];
 }
 
 /** Loads the complete frozen IRT source once for terminal attempt scoring. */
 export const loadAttemptIrtSource = Effect.fn(
   "tryouts.runtime.loadAttemptIrtSource"
-)(function* (
-  ctx: MutationCtx,
-  attempt: TryoutAttempt,
-  placements: readonly TryoutPlacement[]
-) {
-  const scale = yield* loadAttemptScale(ctx, attempt);
-  const items = yield* loadAttemptScaleItems(ctx, scale, placements);
+)(function* (attempt: TryoutAttempt, placements: readonly TryoutPlacement[]) {
+  const scale = yield* loadAttemptScale(attempt);
+  const items = yield* loadAttemptScaleItems(scale, placements);
   return {
     items,
     scale,
@@ -40,16 +34,13 @@ export const loadAttemptIrtSource = Effect.fn(
 /** Loads one section through its exact scale-owned calibration run. */
 export const loadSectionIrtSource = Effect.fn(
   "tryouts.runtime.loadSectionIrtSource"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    readonly attempt: TryoutAttempt;
-    readonly placements: readonly TryoutPlacement[];
-    readonly sectionIdentity: string;
-  }
-) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
-  const scale = yield* loadAttemptScale(ctx, args.attempt);
+)(function* (args: {
+  readonly attempt: TryoutAttempt;
+  readonly placements: readonly TryoutPlacement[];
+  readonly sectionIdentity: string;
+}) {
+  const database = yield* DatabaseReader;
+  const scale = yield* loadAttemptScale(args.attempt);
   const runs = yield* database
     .table("irtCalibrationRuns")
     .index("by_scaleVersionId_and_sectionIdentity_and_startedAt", (query) =>
@@ -58,10 +49,7 @@ export const loadSectionIrtSource = Effect.fn(
         .eq("sectionIdentity", args.sectionIdentity)
     )
     .take(2)
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-    );
+    .pipe(Effect.mapError(toTryoutRuntimeError));
   const run = runs[0];
   if (
     runs.length !== 1 ||
@@ -81,10 +69,7 @@ export const loadSectionIrtSource = Effect.fn(
       query.eq("calibrationRunId", run._id)
     )
     .take(args.placements.length + 1)
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-    );
+    .pipe(Effect.mapError(toTryoutRuntimeError));
   const validatedItems = yield* validateIrtScaleItems({
     items,
     placements: args.placements,
@@ -99,8 +84,8 @@ export const loadSectionIrtSource = Effect.fn(
 /** Loads the exact signed IRT scale frozen by one attempt. */
 const requireIrtScaleVersion = Effect.fn(
   "tryouts.runtime.requireIrtScaleVersion"
-)(function* (ctx: MutationCtx, attempt: TryoutAttempt) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (attempt: TryoutAttempt) {
+  const database = yield* DatabaseReader;
   const scaleVersionId = attempt.scaleVersionId;
   if (!scaleVersionId) {
     return yield* irtRuntimeError(
@@ -113,8 +98,7 @@ const requireIrtScaleVersion = Effect.fn(
     .get(scaleVersionId)
     .pipe(
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+      Effect.mapError(toTryoutRuntimeError)
     );
   if (scale && scaleBelongsToAttempt(scale, attempt)) {
     return scale;
@@ -127,8 +111,8 @@ const requireIrtScaleVersion = Effect.fn(
 
 /** Loads and validates the scale version frozen by one attempt. */
 const loadAttemptScale = Effect.fn("tryouts.runtime.loadAttemptScale")(
-  function* (ctx: MutationCtx, attempt: TryoutAttempt) {
-    const scale = yield* requireIrtScaleVersion(ctx, attempt);
+  function* (attempt: TryoutAttempt) {
+    const scale = yield* requireIrtScaleVersion(attempt);
     if (scale.questionCount !== attempt.totalQuestions) {
       return yield* irtRuntimeError(
         "TRYOUT_IRT_SCALE_COUNT_MISMATCH",
@@ -141,7 +125,7 @@ const loadAttemptScale = Effect.fn("tryouts.runtime.loadAttemptScale")(
 
 /** Verifies one frozen scale belongs to the same signed attempt snapshot. */
 function scaleBelongsToAttempt(
-  scale: Doc<"irtScaleVersions">,
+  scale: Docs["irtScaleVersions"],
   attempt: TryoutAttempt
 ) {
   return (
@@ -154,21 +138,17 @@ function scaleBelongsToAttempt(
 const loadAttemptScaleItems = Effect.fn(
   "tryouts.runtime.loadAttemptScaleItems"
 )(function* (
-  ctx: MutationCtx,
-  scale: Doc<"irtScaleVersions">,
+  scale: Docs["irtScaleVersions"],
   placements: readonly TryoutPlacement[]
 ) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+  const database = yield* DatabaseReader;
   const items = yield* database
     .table("irtScaleItems")
     .index("by_scaleVersionId_and_placementIdentity", (query) =>
       query.eq("scaleVersionId", scale._id)
     )
     .take(placements.length + 1)
-    .pipe(
-      Effect.orDie,
-      Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
-    );
+    .pipe(Effect.mapError(toTryoutRuntimeError));
   return yield* validateIrtScaleItems({
     items,
     placements,
@@ -180,9 +160,9 @@ const loadAttemptScaleItems = Effect.fn(
 const validateIrtScaleItems = Effect.fn(
   "tryouts.runtime.validateIrtScaleItems"
 )(function* (args: {
-  readonly items: readonly Doc<"irtScaleItems">[];
+  readonly items: readonly Docs["irtScaleItems"][];
   readonly placements: readonly TryoutPlacement[];
-  readonly scale: Doc<"irtScaleVersions">;
+  readonly scale: Docs["irtScaleVersions"];
 }) {
   if (args.items.length !== args.placements.length) {
     return yield* irtRuntimeError(
@@ -223,7 +203,10 @@ const validateIrtScaleItems = Effect.fn(
       );
     }
     itemIdentities.add(item.placementIdentity);
-    validated.push({ item, placementId: placement._id });
+    validated.push({
+      item,
+      placementId: placement._id,
+    });
   }
   return validated;
 });

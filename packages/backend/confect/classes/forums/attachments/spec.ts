@@ -1,7 +1,8 @@
-import { failureWire } from "@repo/backend/confect/failure";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { publicFailure } from "@repo/backend/confect/failure";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Schema } from "effect";
-export type ForumPendingUploadDoc = Doc<"schoolClassForumPendingUploads">;
+export type ForumPendingUploadDoc = Docs["schoolClassForumPendingUploads"];
 export const forumAttachmentLimitExceededCode =
   "FORUM_ATTACHMENT_LIMIT_EXCEEDED";
 export const forumAttachmentAlreadySavedCode =
@@ -71,8 +72,7 @@ export class ForumAttachmentError extends Schema.TaggedError<ForumAttachmentErro
   }
 ) {}
 /** Raised when Convex storage or database IO fails during attachment handling. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const ForumAttachmentErrorWire = failureWire(ForumAttachmentError);
+
 export class ForumAttachmentIoError extends Schema.TaggedError<ForumAttachmentIoError>()(
   "ForumAttachmentIoError",
   {
@@ -81,8 +81,7 @@ export class ForumAttachmentIoError extends Schema.TaggedError<ForumAttachmentIo
     message: Schema.String,
   }
 ) {}
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const ForumAttachmentIoErrorWire = failureWire(ForumAttachmentIoError);
+export const ForumAttachmentIoErrorWire = publicFailure(ForumAttachmentIoError);
 export type ForumAttachmentFailure =
   | ForumAttachmentError
   | ForumAttachmentIoError;
@@ -96,6 +95,3 @@ export class ForumAttachmentUploadConfigError extends Schema.TaggedError<ForumAt
 
 /** Builds one opaque, deployment-owned upload capability URL. */
 /** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */
-export const ForumAttachmentUploadConfigErrorWire = failureWire(
-  ForumAttachmentUploadConfigError
-);

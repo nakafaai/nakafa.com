@@ -1,25 +1,22 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { TryoutCountry } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   LearningPreferencePersistenceError,
   learningPreferencePersistenceFailedCode,
   learningPreferencePersistenceFailedMessage,
 } from "@repo/backend/confect/learningPreferences/schema";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { readTryoutCatalogRowByIdentity } from "@repo/backend/content/tryout/row";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
-import { Effect, flow } from "effect";
+import { Effect } from "effect";
 
-type PreferenceCtx = MutationCtx | QueryCtx;
 /** Maps unknown database failures into the preference persistence contract. */
 function toLearningPreferencePersistenceError() {
   return new LearningPreferencePersistenceError({
@@ -41,16 +38,16 @@ export function toTryoutCountryOption(country: TryoutCountry) {
 /** Loads one preference row through the typed persistence error channel. */
 export const readLearningPreferenceByUserId = Effect.fn(
   "learningPreferences.readLearningPreferenceByUserId"
-)(function* (ctx: PreferenceCtx, userId: Id<"users">) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (userId: Id<"users">) {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("learningPreferences")
     .get("by_userId", userId)
     .pipe(
       Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-      Effect.orDie,
-      Effect.catchDefect(
-        flow(toLearningPreferencePersistenceError, Effect.fail)
+      Effect.mapError(toLearningPreferencePersistenceError),
+      Effect.catchDefect(() =>
+        Effect.fail(toLearningPreferencePersistenceError())
       )
     );
 });
@@ -58,16 +55,8 @@ export const readLearningPreferenceByUserId = Effect.fn(
 /** Loads one active try-out country from the signed catalog. */
 export const readActiveTryoutCountry = Effect.fn(
   "learningPreferences.readActiveTryoutCountry"
-)(function* (
-  ctx: QueryCtx,
-  args: {
-    readonly countryKey: string;
-    readonly locale: Locale;
-  }
-) {
-  const owner = yield* loadTryoutOwner().pipe(
-    Effect.provide(convexTryoutLayer(ctx))
-  );
+)(function* (args: { readonly countryKey: string; readonly locale: Locale }) {
+  const owner = yield* loadTryoutOwner().pipe(Effect.provide(tryoutLayer));
   const identity = tryoutCatalogNodeIdentity({
     appLocale: ActiveAppLocaleSchema.make(args.locale),
     countryKey: args.countryKey,
@@ -76,25 +65,19 @@ export const readActiveTryoutCountry = Effect.fn(
   const country = yield* readTryoutCatalogRowByIdentity(
     owner.snapshotId,
     identity
-  ).pipe(Effect.provide(convexTryoutLayer(ctx)));
+  ).pipe(Effect.provide(tryoutLayer));
   return country?.kind === "country" ? country : null;
 });
 
 /** Reads the current explicit try-out country preference. */
 export const readCurrentTryoutCountry = Effect.fn(
   "learningPreferences.readCurrentTryoutCountry"
-)(function* (
-  ctx: QueryCtx,
-  args: {
-    readonly locale: Locale;
-    readonly userId: Id<"users">;
-  }
-) {
-  const preference = yield* readLearningPreferenceByUserId(ctx, args.userId);
+)(function* (args: { readonly locale: Locale; readonly userId: Id<"users"> }) {
+  const preference = yield* readLearningPreferenceByUserId(args.userId);
   if (!preference?.preferredTryoutCountryKey) {
     return null;
   }
-  const country = yield* readActiveTryoutCountry(ctx, {
+  const country = yield* readActiveTryoutCountry({
     countryKey: preference.preferredTryoutCountryKey,
     locale: args.locale,
   });
@@ -111,18 +94,16 @@ export const readCurrentTryoutCountry = Effect.fn(
 export const setPreferredCurriculumProgram = Effect.fn(
   "learningPreferences.setPreferredCurriculumProgram"
 )(function* ({
-  ctx,
   now,
   programKey,
   userId,
 }: {
-  ctx: MutationCtx;
   now: number;
   programKey: string | null;
   userId: Id<"users">;
 }) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const current = yield* readLearningPreferenceByUserId(ctx, userId);
+  const writer = yield* DatabaseWriter;
+  const current = yield* readLearningPreferenceByUserId(userId);
   if (!current) {
     if (programKey === null) {
       return null;
@@ -135,9 +116,9 @@ export const setPreferredCurriculumProgram = Effect.fn(
         userId,
       })
       .pipe(
-        Effect.orDie,
-        Effect.catchDefect(
-          flow(toLearningPreferencePersistenceError, Effect.fail)
+        Effect.mapError(toLearningPreferencePersistenceError),
+        Effect.catchDefect(() =>
+          Effect.fail(toLearningPreferencePersistenceError())
         )
       );
   }
@@ -151,9 +132,9 @@ export const setPreferredCurriculumProgram = Effect.fn(
       updatedAt: now,
     })
     .pipe(
-      Effect.orDie,
-      Effect.catchDefect(
-        flow(toLearningPreferencePersistenceError, Effect.fail)
+      Effect.mapError(toLearningPreferencePersistenceError),
+      Effect.catchDefect(() =>
+        Effect.fail(toLearningPreferencePersistenceError())
       )
     );
   return current._id;
@@ -164,17 +145,15 @@ export const upsertPreferredTryoutCountry = Effect.fn(
   "learningPreferences.upsertPreferredTryoutCountry"
 )(function* ({
   countryKey,
-  ctx,
   now,
   userId,
 }: {
   countryKey: string;
-  ctx: MutationCtx;
   now: number;
   userId: Id<"users">;
 }) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
-  const current = yield* readLearningPreferenceByUserId(ctx, userId);
+  const writer = yield* DatabaseWriter;
+  const current = yield* readLearningPreferenceByUserId(userId);
   if (!current) {
     return yield* writer
       .table("learningPreferences")
@@ -184,9 +163,9 @@ export const upsertPreferredTryoutCountry = Effect.fn(
         userId,
       })
       .pipe(
-        Effect.orDie,
-        Effect.catchDefect(
-          flow(toLearningPreferencePersistenceError, Effect.fail)
+        Effect.mapError(toLearningPreferencePersistenceError),
+        Effect.catchDefect(() =>
+          Effect.fail(toLearningPreferencePersistenceError())
         )
       );
   }
@@ -200,9 +179,9 @@ export const upsertPreferredTryoutCountry = Effect.fn(
       updatedAt: now,
     })
     .pipe(
-      Effect.orDie,
-      Effect.catchDefect(
-        flow(toLearningPreferencePersistenceError, Effect.fail)
+      Effect.mapError(toLearningPreferencePersistenceError),
+      Effect.catchDefect(() =>
+        Effect.fail(toLearningPreferencePersistenceError())
       )
     );
   return current._id;

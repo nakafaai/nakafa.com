@@ -1,8 +1,11 @@
-import { DatabaseReader, DatabaseWriter } from "@confect/server";
 import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
 import { verifyTryoutRuntimeBundleSource } from "@nakafa/aksara-contracts/tryout/runtime/source";
 import type { SignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/spec";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadStaged } from "@repo/backend/confect/contentRelease/model";
@@ -14,7 +17,6 @@ import {
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
 import type { tryoutRuntimeBundleReceiptValidator } from "@repo/backend/confect/contentRelease/spec";
 import { encodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/wire";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
@@ -28,8 +30,8 @@ export type RuntimeReceipt = Schema.Schema.Type<
 /** Reads one permanent runtime bundle by its content-addressed identity. */
 export const findTryoutRuntimeBundleByHash = Effect.fn(
   "tryouts.runtime.findTryoutRuntimeBundleByHash"
-)(function* (ctx: ReadCtx, bundleHash: string) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (bundleHash: string) {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("tryoutRuntimeBundles")
     .get("by_bundleHash", bundleHash)
@@ -42,8 +44,8 @@ export const findTryoutRuntimeBundleByHash = Effect.fn(
 /** Reads the permanent bundle selected by one snapshot and renderer pair. */
 export const findTryoutRuntimeBundle = Effect.fn(
   "tryouts.runtime.findTryoutRuntimeBundle"
-)(function* (ctx: ReadCtx, snapshotId: string, rendererManifestHash: string) {
-  const database = DatabaseReader.make(databaseSchema, ctx.db);
+)(function* (snapshotId: string, rendererManifestHash: string) {
+  const database = yield* DatabaseReader;
   return yield* database
     .table("tryoutRuntimeBundles")
     .get(
@@ -60,9 +62,8 @@ export const findTryoutRuntimeBundle = Effect.fn(
 /** Loads one pair-selected bundle and validates its duplicated lookup facts. */
 export const loadTryoutRuntimeBundle = Effect.fn(
   "tryouts.runtime.loadTryoutRuntimeBundle"
-)(function* (ctx: ReadCtx, snapshotId: string, rendererManifestHash: string) {
+)(function* (snapshotId: string, rendererManifestHash: string) {
   const stored = yield* findTryoutRuntimeBundle(
-    ctx,
     snapshotId,
     rendererManifestHash
   );
@@ -100,7 +101,7 @@ export const loadTryoutRuntimeBundle = Effect.fn(
 export const verifyStoredRuntimeBundle = Effect.fn(
   "tryouts.runtime.verifyStoredRuntimeBundle"
 )(function* (
-  stored: Doc<"tryoutRuntimeBundles">,
+  stored: Docs["tryoutRuntimeBundles"],
   bundle: SignedTryoutRuntimeBundle,
   renderer: RendererManifestEnvelope,
   bundleJson: string,
@@ -135,12 +136,11 @@ export const verifyStoredRuntimeBundle = Effect.fn(
 export const storeAuthenticatedTryoutRuntimeBundle = Effect.fn(
   "tryouts.runtime.storeAuthenticatedTryoutRuntimeBundle"
 )(function* (
-  ctx: MutationCtx,
   bundle: SignedTryoutRuntimeBundle,
   renderer: RendererManifestEnvelope,
   createdAt?: number
 ) {
-  const writer = DatabaseWriter.make(databaseSchema, ctx.db);
+  const writer = yield* DatabaseWriter;
   const storedAt = createdAt ?? (yield* Clock.currentTimeMillis);
   const bundleJson = encodeTryoutRuntimeBundleJson(bundle);
   const rendererJson = JSON.stringify(renderer);
@@ -150,7 +150,7 @@ export const storeAuthenticatedTryoutRuntimeBundle = Effect.fn(
       `Try-out runtime bundle ${bundle.bundleHash} has incoherent renderer or snapshot bytes.`
     );
   }
-  const existing = yield* findTryoutRuntimeBundleByHash(ctx, bundle.bundleHash);
+  const existing = yield* findTryoutRuntimeBundleByHash(bundle.bundleHash);
   if (existing) {
     yield* verifyStoredRuntimeBundle(
       existing,
@@ -168,7 +168,6 @@ export const storeAuthenticatedTryoutRuntimeBundle = Effect.fn(
     } satisfies RuntimeReceipt;
   }
   const pair = yield* loadTryoutRuntimeBundle(
-    ctx,
     bundle.payload.snapshot.snapshotId,
     bundle.payload.rendererManifestHash
   );
@@ -218,7 +217,6 @@ export const storeAuthenticatedTryoutRuntimeBundle = Effect.fn(
 export const stageTryoutRuntimeBundleProgram = Effect.fn(
   "tryouts.runtime.stageTryoutRuntimeBundle"
 )(function* (
-  ctx: MutationCtx,
   sourceBundleJson: string,
   sourceRendererJson: string,
   createdAt?: number
@@ -226,7 +224,7 @@ export const stageTryoutRuntimeBundleProgram = Effect.fn(
   const bundle = yield* decodeTryoutRuntimeBundleJson(sourceBundleJson);
   const renderer = yield* decodeRendererJson(sourceRendererJson);
   const rendererJson = JSON.stringify(renderer);
-  const { release } = yield* loadStaged(ctx, bundle.payload.sourceReleaseId);
+  const { release } = yield* loadStaged(bundle.payload.sourceReleaseId);
   const signedRelease = yield* decodeReleaseJson(release.releaseJson);
   const acceptsBundle =
     release.status === "staging" ||
@@ -252,7 +250,6 @@ export const stageTryoutRuntimeBundleProgram = Effect.fn(
     );
   }
   return yield* storeAuthenticatedTryoutRuntimeBundle(
-    ctx,
     bundle,
     renderer,
     createdAt

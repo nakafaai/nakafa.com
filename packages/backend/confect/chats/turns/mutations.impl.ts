@@ -1,10 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { ModelIdSchema } from "@repo/ai/config/model";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  MutationCtx as MutationCtxService,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import {
   readChatTurn,
@@ -12,6 +8,8 @@ import {
   reserveChatTurn,
 } from "@repo/backend/confect/chats/turns/impl";
 import spec from "@repo/backend/confect/chats/turns/mutations.spec";
+import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
+import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
 import { Effect, Layer } from "effect";
 
 /** Admits one authenticated turn before the HTTP adapter starts provider work. */
@@ -20,13 +18,8 @@ const reserve = FunctionImpl.make(
   spec,
   "reserve",
   Effect.fn("chats.turns.mutations.reserve")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    const { appUser } = yield* requireAuth(ctx);
-    return yield* reserveChatTurn(
-      ctx,
-      appUser,
-      ModelIdSchema.make(args.modelId)
-    );
+    const { appUser } = yield* requireAuth();
+    return yield* reserveChatTurn(appUser, ModelIdSchema.make(args.modelId));
   })
 );
 const release = FunctionImpl.make(
@@ -34,17 +27,11 @@ const release = FunctionImpl.make(
   spec,
   "release",
   Effect.fn("chats.turns.mutations.release")(function* (args) {
-    const ctx = yield* MutationCtxService;
-    const { appUser } = yield* requireAuth(ctx);
+    const { appUser } = yield* requireAuth();
     return yield* Effect.gen(function* () {
-      const turn = yield* readChatTurn(
-        ctx,
-        args.turnId,
-        appUser._id,
-        undefined
-      );
+      const turn = yield* readChatTurn(args.turnId, appUser._id, undefined);
       if (turn) {
-        yield* refundChatTurn(ctx, turn);
+        yield* refundChatTurn(turn);
       }
       return null;
     });
@@ -55,7 +42,6 @@ const expire = FunctionImpl.make(
   spec,
   "expire",
   Effect.fn("chats.turns.mutations.expire")(function* (args) {
-    const ctx = yield* MutationCtxService;
     const reader = yield* DatabaseReader;
     const turn = yield* reader
       .table("chatTurns")
@@ -65,7 +51,7 @@ const expire = FunctionImpl.make(
         Effect.orDie
       );
     if (turn) {
-      yield* refundChatTurn(ctx, turn);
+      yield* refundChatTurn(turn);
     }
     return null;
   })
@@ -74,5 +60,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(reserve),
   Layer.provide(release),
   Layer.provide(expire),
+  Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

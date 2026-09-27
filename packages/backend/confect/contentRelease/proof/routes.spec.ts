@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Schema } from "effect";
 export const routeCatalogValidator = Schema.Struct({
   checked: Schema.Finite,
@@ -14,6 +14,6 @@ export default GroupSpec.make().addFunction(
       releaseId: Schema.String,
     }),
     returns: () => routeCatalogValidator,
-    error: () => ReleaseErrorWire,
+    error: () => ReleaseError,
   })
 );

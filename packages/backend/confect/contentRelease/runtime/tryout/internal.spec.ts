@@ -1,5 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { ReleaseErrorWire } from "@repo/backend/confect/contentRelease/error";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   protectedArgsValidator,
   protectedResultValidator,
@@ -9,6 +9,6 @@ export default GroupSpec.make().addFunction(
     name: "read",
     args: () => protectedArgsValidator,
     returns: () => protectedResultValidator,
-    error: () => ReleaseErrorWire,
+    error: () => ReleaseError,
   })
 );

@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import schema from "@repo/backend/convex/schema";
@@ -12,8 +14,19 @@ describe("standalone material authentication", () => {
     "authenticates stored bytes and rejects another content family",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const target = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateMaterialCatalog(target));
+        yield* Effect.promise(() =>
+          target.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateMaterialCatalog().pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         const row = yield* Effect.promise(() =>
           target.query((ctx) => ctx.db.query("materialCatalog").first())
         );
@@ -26,7 +39,9 @@ describe("standalone material authentication", () => {
             ...row,
             projectionJson: TEST_ARTICLE_PROJECTION_JSON,
           }).pipe(Effect.flip)
-        ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+        ).toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+        });
       })
   );
 });

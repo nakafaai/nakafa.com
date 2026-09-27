@@ -1,35 +1,24 @@
-import { Data, Effect } from "effect";
+import { Effect } from "effect";
 
 interface BillingDestination {
   readonly url: string;
 }
 
-interface BillingNavigationInput {
+interface BillingNavigationInput<E> {
   readonly navigate: (url: string) => void;
-  readonly onFailure: (cause: unknown) => Effect.Effect<void>;
-  readonly request: () => Promise<BillingDestination>;
+  readonly onFailure: (cause: E) => Effect.Effect<void>;
+  readonly request: Effect.Effect<BillingDestination, E>;
 }
 
-/** Typed rejection from a checkout or customer-portal request. */
-class BillingNavigationError extends Data.TaggedError(
-  "BillingNavigationError"
-)<{
-  readonly cause: unknown;
-}> {}
-
-/** Opens a billing destination while containing recoverable request failures. */
+/** Opens a successful billing destination or reports the typed request failure. */
 export const billingNavigationProgram = Effect.fn("www.billing.navigate")(
-  function* (input: BillingNavigationInput) {
-    yield* Effect.tryPromise({
-      try: input.request,
-      catch: (cause) => new BillingNavigationError({ cause }),
-    }).pipe(
-      Effect.tap((destination) =>
-        Effect.sync(() => input.navigate(destination.url))
-      ),
-      Effect.catchTag("BillingNavigationError", (error) =>
-        input.onFailure(error.cause)
-      )
+  function* <E>(input: BillingNavigationInput<E>) {
+    yield* input.request.pipe(
+      Effect.matchEffect({
+        onSuccess: (destination) =>
+          Effect.sync(() => input.navigate(destination.url)),
+        onFailure: input.onFailure,
+      })
     );
   }
 );

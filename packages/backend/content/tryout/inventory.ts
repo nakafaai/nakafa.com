@@ -4,6 +4,7 @@ import type {
 } from "@nakafa/aksara-contracts/tryout/catalog";
 
 /** Returns the questions one decoded section list proves. */
+/** Returns the questions one decoded section list proves. */
 function countQuestions(sections: readonly TryoutSection[]) {
   return sections.reduce((total, section) => total + section.questionCount, 0);
 }

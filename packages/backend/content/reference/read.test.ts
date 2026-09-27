@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationCtx,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
-import { convexModules } from "@repo/backend/confect/test.setup";
-import { api } from "@repo/backend/convex/_generated/api";
-import schema from "@repo/backend/convex/schema";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
@@ -17,210 +19,317 @@ import {
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
-import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 describe("contentRelease/reference/read", () => {
-  it("resolves current signed articles by route and graph identity", async () => {
-    const target = convexTest(schema, convexModules);
-    const article = testArticleProjection(0);
-    await target.mutation((ctx) => insertRuntimeArticles(ctx, 1));
-
-    for (const input of [
-      {
-        kind: "route" as const,
-        appLocale: article.appLocale,
-        publicPath: article.publicPath,
-      },
-      { contentId: article.graph.assetId, kind: "content" as const },
-    ]) {
-      await expect(
-        target.query(api.contentRelease.reference.read, { input })
-      ).resolves.toMatchObject({
-        content_id: article.graph.assetId,
-        route: article.publicPath,
-        section: "articles",
-        title: article.metadata.title,
-      });
-    }
-  });
-
-  it("resolves current signed materials by route and graph identity", async () => {
-    const target = convexTest(schema, convexModules);
-    const material = makeMaterialProjection("en", 1);
-    await activateMaterialCatalog(target, [material]);
-
-    for (const input of [
-      {
-        kind: "route" as const,
-        appLocale: material.appLocale,
-        publicPath: material.publicPath,
-      },
-      { contentId: material.graph.assetId, kind: "content" as const },
-    ]) {
-      await expect(
-        target.query(api.contentRelease.reference.read, { input })
-      ).resolves.toMatchObject({
-        content_id: material.graph.assetId,
-        route: material.publicPath,
-        section: "material",
-        title: material.metadata.title,
-      });
-    }
-  });
-
-  it("resolves current signed material topics by route and graph identity", async () => {
-    const target = convexTest(schema, convexModules);
-    const material = makeMaterialProjection("en", 1);
-    const topic = await runConvexProgram(
-      deriveMaterialTopicReference(material)
-    );
-    await activateMaterialCatalog(target, [material]);
-
-    for (const input of [
-      {
-        kind: "route" as const,
-        appLocale: topic.appLocale,
-        publicPath: topic.publicPath,
-      },
-      { contentId: topic.graph.assetId, kind: "content" as const },
-    ]) {
-      const result = await target.query(api.contentRelease.reference.read, {
-        input,
-      });
-      expect(result).toMatchObject({
-        content_id: topic.graph.assetId,
-        route: topic.publicPath,
-        section: "material",
-        title: topic.title,
-      });
-      expect(result).not.toHaveProperty("markdown_url");
-    }
-  });
-
-  it("resolves one active signed Quran identity", async () => {
-    const target = convexTest(schema, convexModules);
-    const quran = makeQuranSearch("en", 1);
-    await target.mutation((ctx) => activateQuranSnapshot(ctx, [quran]));
-
-    for (const input of [
-      { contentId: quran.graph.assetId, kind: "content" as const },
-      {
-        kind: "route" as const,
-        appLocale: quran.appLocale,
-        publicPath: quran.route,
-      },
-    ]) {
-      await expect(
-        target.query(api.contentRelease.reference.read, { input })
-      ).resolves.toMatchObject({
-        content_id: quran.graph.assetId,
-        route: quran.route,
-        section: "quran",
-        title: quran.title,
-      });
-    }
-  });
-
-  it("resolves one active signed try-out identity", async () => {
-    const target = convexTest(schema, convexModules);
-    const tryout = makeTryoutCatalogRow("en").record.row;
-    await target.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog: [tryout, makeTryoutCatalogRow("id").record.row],
-        placements: [
-          makeTryoutPlacementRow("en").record.row,
-          makeTryoutPlacementRow("id").record.row,
-        ],
+  it.effect(
+    "resolves current signed articles by route and graph identity",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const targetCtx = yield* MutationCtx;
+            const article = testArticleProjection(0);
+            yield* Effect.promise(() => insertRuntimeArticles(targetCtx, 1));
+            for (const input of [
+              {
+                kind: "route" as const,
+                appLocale: article.appLocale,
+                publicPath: article.publicPath,
+              },
+              {
+                contentId: article.graph.assetId,
+                kind: "content" as const,
+              },
+            ]) {
+              expect(
+                yield* (yield* QueryRunner)(
+                  refs.public.contentRelease.reference.read,
+                  {
+                    input,
+                  }
+                )
+              ).toMatchObject({
+                content_id: article.graph.assetId,
+                route: article.publicPath,
+                section: "articles",
+                title: article.metadata.title,
+              });
+            }
+          })
+        );
       })
-    );
-
-    for (const input of [
-      { contentId: tryout.graph.assetId, kind: "content" as const },
-      {
-        kind: "route" as const,
-        appLocale: "en" as const,
-        publicPath: "try-out/indonesia",
-      },
-    ]) {
-      await expect(
-        target.query(api.contentRelease.reference.read, { input })
-      ).resolves.toMatchObject({
-        content_id: tryout.graph.assetId,
-        route: "try-out/indonesia",
-        section: "tryout",
-        title: tryout.title,
-      });
-    }
-  });
-
-  it("rejects a Quran asset index that drifted from its signed row", async () => {
-    const target = convexTest(schema, convexModules);
-    const quran = makeQuranSearch("en", 1);
-    const other = makeQuranSearch("en", 2);
-    await target.mutation((ctx) => activateQuranSnapshot(ctx, [quran]));
-    await target.mutation(async (ctx) => {
-      const search = await ctx.db.query("quranSearch").unique();
-      if (!search) {
-        throw new Error("Expected one Quran search fixture.");
-      }
-      await ctx.db.patch("quranSearch", search._id, {
-        assetId: other.graph.assetId,
-      });
-    });
-
-    await expect(
-      target.query(api.contentRelease.reference.read, {
-        input: {
-          contentId: other.graph.assetId,
-          kind: "content",
-        },
+  );
+  it.effect(
+    "resolves current signed materials by route and graph identity",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const material = makeMaterialProjection("en", 1);
+            yield* activateMaterialCatalog([material]);
+            for (const input of [
+              {
+                kind: "route" as const,
+                appLocale: material.appLocale,
+                publicPath: material.publicPath,
+              },
+              {
+                contentId: material.graph.assetId,
+                kind: "content" as const,
+              },
+            ]) {
+              expect(
+                yield* (yield* QueryRunner)(
+                  refs.public.contentRelease.reference.read,
+                  {
+                    input,
+                  }
+                )
+              ).toMatchObject({
+                content_id: material.graph.assetId,
+                route: material.publicPath,
+                section: "material",
+                title: material.metadata.title,
+              });
+            }
+          })
+        );
       })
-    ).rejects.toThrow("changed its signed projection");
-  });
-
-  it("returns null when no active signed family owns the identity", async () => {
-    const target = convexTest(schema, convexModules);
-
-    await expect(
-      target.query(api.contentRelease.reference.read, {
-        input: {
-          kind: "route",
-          appLocale: "en",
-          publicPath: "articles/missing/item",
-        },
+  );
+  it.effect(
+    "resolves current signed material topics by route and graph identity",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const material = makeMaterialProjection("en", 1);
+            const topic = yield* deriveMaterialTopicReference(material);
+            yield* activateMaterialCatalog([material]);
+            for (const input of [
+              {
+                kind: "route" as const,
+                appLocale: topic.appLocale,
+                publicPath: topic.publicPath,
+              },
+              {
+                contentId: topic.graph.assetId,
+                kind: "content" as const,
+              },
+            ]) {
+              const result = yield* (yield* QueryRunner)(
+                refs.public.contentRelease.reference.read,
+                {
+                  input,
+                }
+              );
+              expect(result).toMatchObject({
+                content_id: topic.graph.assetId,
+                route: topic.publicPath,
+                section: "material",
+                title: topic.title,
+              });
+              expect(result).not.toHaveProperty("markdown_url");
+            }
+          })
+        );
       })
-    ).resolves.toBeNull();
-
-    await expect(
-      target.query(api.contentRelease.reference.read, {
-        input: {
-          contentId: "not-a-current-graph-asset",
-          kind: "content",
-        },
+  );
+  it.effect("resolves one active signed Quran identity", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const targetCtx = yield* MutationCtx;
+          const quran = makeQuranSearch("en", 1);
+          yield* Effect.promise(() =>
+            activateQuranSnapshot(targetCtx, [quran])
+          );
+          for (const input of [
+            {
+              contentId: quran.graph.assetId,
+              kind: "content" as const,
+            },
+            {
+              kind: "route" as const,
+              appLocale: quran.appLocale,
+              publicPath: quran.route,
+            },
+          ]) {
+            expect(
+              yield* (yield* QueryRunner)(
+                refs.public.contentRelease.reference.read,
+                {
+                  input,
+                }
+              )
+            ).toMatchObject({
+              content_id: quran.graph.assetId,
+              route: quran.route,
+              section: "quran",
+              title: quran.title,
+            });
+          }
+        })
+      );
+    })
+  );
+  it.effect("resolves one active signed try-out identity", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          const targetCtx = yield* MutationCtx;
+          const tryout = makeTryoutCatalogRow("en").record.row;
+          yield* Effect.promise(() =>
+            activateTryoutSnapshot(targetCtx, {
+              catalog: [tryout, makeTryoutCatalogRow("id").record.row],
+              placements: [
+                makeTryoutPlacementRow("en").record.row,
+                makeTryoutPlacementRow("id").record.row,
+              ],
+            })
+          );
+          for (const input of [
+            {
+              contentId: tryout.graph.assetId,
+              kind: "content" as const,
+            },
+            {
+              kind: "route" as const,
+              appLocale: "en" as const,
+              publicPath: "try-out/indonesia",
+            },
+          ]) {
+            expect(
+              yield* (yield* QueryRunner)(
+                refs.public.contentRelease.reference.read,
+                {
+                  input,
+                }
+              )
+            ).toMatchObject({
+              content_id: tryout.graph.assetId,
+              route: "try-out/indonesia",
+              section: "tryout",
+              title: tryout.title,
+            });
+          }
+        })
+      );
+    })
+  );
+  it.effect(
+    "rejects a Quran asset index that drifted from its signed row",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const targetCtx = yield* MutationCtx;
+            const quran = makeQuranSearch("en", 1);
+            const other = makeQuranSearch("en", 2);
+            yield* Effect.promise(() =>
+              activateQuranSnapshot(targetCtx, [quran])
+            );
+            yield* Effect.gen(function* () {
+              const search = yield* Effect.promise(() =>
+                targetCtx.db.query("quranSearch").unique()
+              );
+              if (!search) {
+                throw new Error("Expected one Quran search fixture.");
+              }
+              yield* Effect.promise(() =>
+                targetCtx.db.patch("quranSearch", search._id, {
+                  assetId: other.graph.assetId,
+                })
+              );
+            });
+            expect(
+              yield* (yield* QueryRunner)(
+                refs.public.contentRelease.reference.read,
+                {
+                  input: {
+                    contentId: other.graph.assetId,
+                    kind: "content",
+                  },
+                }
+              ).pipe(Effect.flip)
+            ).toMatchObject({
+              message: expect.stringContaining("changed its signed projection"),
+            });
+          })
+        );
       })
-    ).resolves.toBeNull();
-  });
-
-  it("returns null when an active locale has no matching signed identity", async () => {
-    const target = convexTest(schema, convexModules);
-    const material = makeMaterialProjection("de", 1);
-
-    await expect(
-      target.query(api.contentRelease.reference.read, {
-        input: {
-          kind: "route",
-          appLocale: "de",
-          publicPath: material.publicPath,
-        },
+  );
+  it.effect("returns null when no active signed family owns the identity", () =>
+    Effect.gen(function* () {
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* target.run(
+        Effect.gen(function* () {
+          expect(
+            yield* (yield* QueryRunner)(
+              refs.public.contentRelease.reference.read,
+              {
+                input: {
+                  kind: "route",
+                  appLocale: "en",
+                  publicPath: "articles/missing/item",
+                },
+              }
+            )
+          ).toBeNull();
+          expect(
+            yield* (yield* QueryRunner)(
+              refs.public.contentRelease.reference.read,
+              {
+                input: {
+                  contentId: "not-a-current-graph-asset",
+                  kind: "content",
+                },
+              }
+            )
+          ).toBeNull();
+        })
+      );
+    })
+  );
+  it.effect(
+    "returns null when an active locale has no matching signed identity",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const material = makeMaterialProjection("de", 1);
+            expect(
+              yield* (yield* QueryRunner)(
+                refs.public.contentRelease.reference.read,
+                {
+                  input: {
+                    kind: "route",
+                    appLocale: "de",
+                    publicPath: material.publicPath,
+                  },
+                }
+              )
+            ).toBeNull();
+            expect(
+              yield* (yield* QueryRunner)(
+                refs.public.contentRelease.reference.read,
+                {
+                  input: {
+                    contentId: material.graph.assetId,
+                    kind: "content",
+                  },
+                }
+              )
+            ).toBeNull();
+          })
+        );
       })
-    ).resolves.toBeNull();
-    await expect(
-      target.query(api.contentRelease.reference.read, {
-        input: {
-          contentId: material.graph.assetId,
-          kind: "content",
-        },
-      })
-    ).resolves.toBeNull();
-  });
+  );
 });

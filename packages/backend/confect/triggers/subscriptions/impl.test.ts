@@ -1,16 +1,15 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import posthogTest from "@posthog/convex/test";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { getStoredCreditResetTimestamp } from "@repo/backend/confect/credits/state";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
-import { convexModules } from "@repo/backend/confect/test.setup";
 import { syncCustomerPlan } from "@repo/backend/confect/triggers/subscriptions/impl";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
 import { products } from "@repo/backend/confect/utils/polar/products";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import schema from "@repo/backend/convex/schema";
-import { convexTest } from "convex-test";
+import { createWebhookTestConvex } from "@repo/backend/test/polar";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 interface SubscriptionInput {
@@ -18,13 +17,6 @@ interface SubscriptionInput {
   productId: string;
   status: string;
   subscriptionId: string;
-}
-
-/** Builds a Convex test instance with the PostHog component registered. */
-function createSubscriptionTestConvex() {
-  const t = convexTest(schema, convexModules);
-  posthogTest.register(t);
-  return t;
 }
 
 /** Inserts one minimal app user row for subscription-trigger tests. */
@@ -95,19 +87,25 @@ async function insertSubscription(ctx: MutationCtx, input: SubscriptionInput) {
 }
 
 /** Loads one subscription by Polar ID and runs the plan sync implementation. */
-async function runSyncCustomerPlanBySubscriptionId(
+function runSyncCustomerPlanBySubscriptionId(
   ctx: MutationCtx,
   subscriptionId: string
 ) {
-  const subscription = await ctx.db
-    .query("subscriptions")
-    .withIndex("by_subscriptionId", (q) => q.eq("id", subscriptionId))
-    .unique();
-  if (!subscription) {
-    return false;
-  }
-  await runConvexProgram(syncCustomerPlan(ctx, subscription));
-  return true;
+  return Effect.gen(function* () {
+    const subscription = yield* Effect.promise(() =>
+      ctx.db
+        .query("subscriptions")
+        .withIndex("by_subscriptionId", (q) => q.eq("id", subscriptionId))
+        .unique()
+    );
+    if (!subscription) {
+      return false;
+    }
+    yield* syncCustomerPlan(subscription).pipe(
+      Effect.provide(mutationLayer(confectSchema, ctx))
+    );
+    return true;
+  });
 }
 describe("triggers/subscriptions/impl", () => {
   afterEach(() => {
@@ -115,7 +113,7 @@ describe("triggers/subscriptions/impl", () => {
     vi.useRealTimers();
   });
   it("fails the plan sync transaction when its customer lookup fails", async () => {
-    const t = createSubscriptionTestConvex();
+    const t = createWebhookTestConvex();
     await expect(
       t.mutation(async (ctx) => {
         const id = await insertSubscription(ctx, {
@@ -131,18 +129,20 @@ describe("triggers/subscriptions/impl", () => {
         vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
           throw new Error("lookup unavailable");
         });
-        return runConvexProgram(syncCustomerPlan(ctx, subscription));
+        return Effect.runPromise(
+          syncCustomerPlan(subscription).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        );
       })
     ).rejects.toMatchObject({
-      data: {
-        code: "SUBSCRIPTION_PLAN_SYNC_IO_FAILED",
-        message: "lookup unavailable",
-      },
+      code: "SUBSCRIPTION_PLAN_SYNC_IO_FAILED",
+      message: "lookup unavailable",
     });
   });
   it("returns without side effects when the customer is missing", async () => {
     vi.setSystemTime(new Date(NOW));
-    const t = createSubscriptionTestConvex();
+    const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       await insertSubscription(ctx, {
         customerId: "missing-customer",
@@ -150,9 +150,8 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-missing-customer",
       });
-      const ran = await runSyncCustomerPlanBySubscriptionId(
-        ctx,
-        "sub-missing-customer"
+      const ran = await Effect.runPromise(
+        runSyncCustomerPlanBySubscriptionId(ctx, "sub-missing-customer")
       );
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
@@ -164,7 +163,7 @@ describe("triggers/subscriptions/impl", () => {
   });
   it("returns without side effects when the customer user is missing", async () => {
     vi.setSystemTime(new Date(NOW));
-    const t = createSubscriptionTestConvex();
+    const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "missing-user");
       await insertCustomer(ctx, userId, "polar-missing-user");
@@ -175,9 +174,8 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-missing-user",
       });
-      const ran = await runSyncCustomerPlanBySubscriptionId(
-        ctx,
-        "sub-missing-user"
+      const ran = await Effect.runPromise(
+        runSyncCustomerPlanBySubscriptionId(ctx, "sub-missing-user")
       );
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
@@ -189,7 +187,7 @@ describe("triggers/subscriptions/impl", () => {
   });
   it("returns early when the derived plan is unchanged", async () => {
     vi.setSystemTime(new Date(NOW));
-    const t = createSubscriptionTestConvex();
+    const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "no-op", {
         credits: 7,
@@ -203,11 +201,15 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-no-op",
       });
-      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-no-op");
+      await Effect.runPromise(
+        runSyncCustomerPlanBySubscriptionId(ctx, "sub-no-op")
+      );
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
-        storedResetAt: await runConvexProgram(
-          getStoredCreditResetTimestamp(ctx.db, "free")
+        storedResetAt: await Effect.runPromise(
+          getStoredCreditResetTimestamp("free").pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
         ),
         user: await ctx.db.get("users", userId),
       };
@@ -222,7 +224,7 @@ describe("triggers/subscriptions/impl", () => {
   });
   it("upgrades a free user to pro and records a purchase transaction", async () => {
     vi.setSystemTime(new Date(NOW));
-    const t = createSubscriptionTestConvex();
+    const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "upgrade", {
         credits: 4,
@@ -240,14 +242,18 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-upgrade",
       });
-      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-upgrade");
+      await Effect.runPromise(
+        runSyncCustomerPlanBySubscriptionId(ctx, "sub-upgrade")
+      );
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
         scheduledJobs: await ctx.db.system
           .query("_scheduled_functions")
           .collect(),
-        storedResetAt: await runConvexProgram(
-          getStoredCreditResetTimestamp(ctx.db, "pro")
+        storedResetAt: await Effect.runPromise(
+          getStoredCreditResetTimestamp("pro").pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
         ),
         user: await ctx.db.get("users", userId),
       };
@@ -300,7 +306,7 @@ describe("triggers/subscriptions/impl", () => {
   });
   it("downgrades a pro user without recording a cancellation for an active subscription", async () => {
     vi.setSystemTime(new Date(NOW));
-    const t = createSubscriptionTestConvex();
+    const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "downgrade", {
         credits: 120,
@@ -318,14 +324,18 @@ describe("triggers/subscriptions/impl", () => {
         status: "active",
         subscriptionId: "sub-downgrade",
       });
-      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-downgrade");
+      await Effect.runPromise(
+        runSyncCustomerPlanBySubscriptionId(ctx, "sub-downgrade")
+      );
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
         scheduledJobs: await ctx.db.system
           .query("_scheduled_functions")
           .collect(),
-        storedResetAt: await runConvexProgram(
-          getStoredCreditResetTimestamp(ctx.db, "free")
+        storedResetAt: await Effect.runPromise(
+          getStoredCreditResetTimestamp("free").pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
         ),
         user: await ctx.db.get("users", userId),
       };
@@ -366,7 +376,7 @@ describe("triggers/subscriptions/impl", () => {
   });
   it("records a cancellation only when a canceled subscription downgrades the user", async () => {
     vi.setSystemTime(new Date(NOW));
-    const t = createSubscriptionTestConvex();
+    const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "canceled-downgrade", {
         credits: 120,
@@ -384,7 +394,9 @@ describe("triggers/subscriptions/impl", () => {
         status: "canceled",
         subscriptionId: "sub-canceled-downgrade",
       });
-      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-canceled-downgrade");
+      await Effect.runPromise(
+        runSyncCustomerPlanBySubscriptionId(ctx, "sub-canceled-downgrade")
+      );
       return {
         scheduledJobs: await ctx.db.system
           .query("_scheduled_functions")
@@ -426,7 +438,7 @@ describe("triggers/subscriptions/impl", () => {
   });
   it("finds Pro beyond unrelated active subscriptions and attributes the earliest matching grant", async () => {
     vi.setSystemTime(new Date(NOW));
-    const t = createSubscriptionTestConvex();
+    const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "highest-plan", {
         credits: 10,
@@ -460,7 +472,9 @@ describe("triggers/subscriptions/impl", () => {
         status: "canceled",
         subscriptionId: "sub-highest-plan-canceled",
       });
-      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-unrelated-0");
+      await Effect.runPromise(
+        runSyncCustomerPlanBySubscriptionId(ctx, "sub-unrelated-0")
+      );
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
         user: await ctx.db.get("users", userId),

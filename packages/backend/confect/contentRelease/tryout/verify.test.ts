@@ -1,6 +1,5 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { verifyTryoutPlacement } from "@repo/backend/confect/contentRelease/tryout/verify";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -9,6 +8,7 @@ import {
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 
 /** Activates and returns one exact technical placement row. */
 async function activatePlacement() {
@@ -43,57 +43,57 @@ async function activatePlacement() {
       )
       .unique()
   );
-  if (!placement) {
-    throw new Error("Expected one technical placement.");
-  }
-  return { placement, snapshotId, t };
+  assert(placement, "Expected one technical placement.");
+  return {
+    placement,
+    snapshotId,
+    t,
+  };
 }
-
 describe("contentRelease/tryout/verify", () => {
-  it("authenticates one exact server-only placement", async () => {
-    const { placement, snapshotId, t } = await activatePlacement();
-
-    await expect(
-      t.query(() =>
-        runConvexProgram(verifyTryoutPlacement(placement, snapshotId))
-      )
-    ).resolves.toMatchObject({
-      countryKey: "indonesia",
-      questionOrder: 1,
-      sectionKey: "quantitative-knowledge",
-    });
-  });
-
-  it("rejects a placement with lost signed or indexed facts", async () => {
-    const lost = await activatePlacement();
-    await expect(
-      lost.t.query(() =>
-        runConvexProgram(
-          verifyTryoutPlacement(lost.placement, `sha256:${"0".repeat(64)}`)
+  it.effect("authenticates one exact server-only placement", () =>
+    Effect.gen(function* () {
+      const { placement, snapshotId } =
+        yield* Effect.promise(activatePlacement);
+      expect(yield* verifyTryoutPlacement(placement, snapshotId)).toMatchObject(
+        {
+          countryKey: "indonesia",
+          questionOrder: 1,
+          sectionKey: "quantitative-knowledge",
+        }
+      );
+    })
+  );
+  it.effect("rejects a placement with lost signed or indexed facts", () =>
+    Effect.gen(function* () {
+      const lost = yield* Effect.promise(activatePlacement);
+      expect(
+        yield* verifyTryoutPlacement(
+          lost.placement,
+          `sha256:${"0".repeat(64)}`
+        ).pipe(Effect.flip)
+      ).toMatchObject({
+        code: "CONTENT_RELEASE_INTEGRITY",
+      });
+      const changed = yield* Effect.promise(activatePlacement);
+      yield* Effect.promise(() =>
+        changed.t.mutation((ctx) =>
+          ctx.db.patch("tryoutPlacements", changed.placement._id, {
+            contentHash: "7".repeat(64),
+          })
         )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-
-    const changed = await activatePlacement();
-    await changed.t.mutation((ctx) =>
-      ctx.db.patch("tryoutPlacements", changed.placement._id, {
-        contentHash: "7".repeat(64),
-      })
-    );
-    const tampered = await changed.t.run((ctx) =>
-      ctx.db.get(changed.placement._id)
-    );
-    if (!tampered) {
-      throw new Error("Expected one tampered placement.");
-    }
-    await expect(
-      changed.t.query(() =>
-        runConvexProgram(verifyTryoutPlacement(tampered, changed.snapshotId))
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
+      );
+      const tampered = yield* Effect.promise(() =>
+        changed.t.run((ctx) => ctx.db.get(changed.placement._id))
+      );
+      assert(tampered, "Expected one tampered placement.");
+      expect(
+        yield* verifyTryoutPlacement(tampered, changed.snapshotId).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({
+        code: "CONTENT_RELEASE_INTEGRITY",
+      });
+    })
+  );
 });

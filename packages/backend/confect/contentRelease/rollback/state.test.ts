@@ -1,7 +1,8 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { rollbackRecord } from "@repo/backend/confect/contentRelease/rollback/state";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
@@ -12,7 +13,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertRollbackItem } from "@repo/backend/test/content/rollback";
 import { convexTest } from "convex-test";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Selects the exact transition that each corruption test deliberately damages. */
 async function item(ctx: QueryCtx) {
@@ -39,7 +40,6 @@ async function head(ctx: QueryCtx, sequence: number) {
   }
   return row;
 }
-
 describe("immutable rollback transition reconstruction", () => {
   it.each([
     "projection",
@@ -84,7 +84,9 @@ describe("immutable rollback transition reconstruction", () => {
           break;
         case "projection identity":
           await ctx.db.patch("contentItems", row._id, {
-            projectionJson: testProjectionJson({ contentKey: "test:other" }),
+            projectionJson: testProjectionJson({
+              contentKey: "test:other",
+            }),
           });
           break;
         case "snapshot digest": {
@@ -114,27 +116,46 @@ describe("immutable rollback transition reconstruction", () => {
     });
     await expect(
       t.query(async (ctx) =>
-        runConvexProgram(rollbackRecord(ctx, await item(ctx)))
+        Effect.runPromise(
+          rollbackRecord(await item(ctx)).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("reconstructs a deleted body from its exact immutable predecessor", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertRollbackItem(ctx, 0, true);
       const row = await item(ctx);
       await ctx.db.patch("contentItems", row._id, {
-        itemJson: testDeleteJson({ contentKey: row.contentKey }),
+        itemJson: testDeleteJson({
+          contentKey: row.contentKey,
+        }),
       });
     });
     await expect(
       t.query(async (ctx) =>
-        runConvexProgram(rollbackRecord(ctx, await item(ctx)))
+        Effect.runPromise(
+          rollbackRecord(await item(ctx)).pipe(
+            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+          )
+        )
       )
     ).resolves.toMatchObject({
-      current: { change: { operation: "delete" } },
-      prior: { change: { operation: "upsert" } },
+      current: {
+        change: {
+          operation: "delete",
+        },
+      },
+      prior: {
+        change: {
+          operation: "upsert",
+        },
+      },
     });
   });
 });

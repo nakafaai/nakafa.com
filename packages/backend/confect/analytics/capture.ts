@@ -1,6 +1,6 @@
-import { Scheduler } from "@confect/server";
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import refs from "@repo/backend/confect/_generated/refs";
+import { Scheduler } from "@repo/backend/confect/_generated/services";
 import {
   ProductAnalyticsCaptureError,
   productAnalyticsCaptureFailedCode,
@@ -9,10 +9,7 @@ import type { ProductAnalyticsEvent } from "@repo/backend/confect/analytics/even
 import { hasCurrentConsent } from "@repo/backend/confect/consents/impl";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Duration, Effect, flow, Result } from "effect";
 export type ProductAnalyticsCtx = Pick<MutationCtx, "db" | "scheduler">;
 export interface ProductAnalyticsCaptureArgs {
@@ -20,10 +17,14 @@ export interface ProductAnalyticsCaptureArgs {
   readonly event: ProductAnalyticsEvent;
   readonly timestamp?: Date;
 }
-export interface ProductAnalyticsDeliveryOperations {
-  readonly capture: Effect.Effect<void, ProductAnalyticsCaptureError>;
-  readonly isUserEligible: Effect.Effect<boolean, ProductAnalyticsCaptureError>;
-  readonly requestErasure: Effect.Effect<void, ProductAnalyticsCaptureError>;
+export interface ProductAnalyticsDeliveryOperations<R = never> {
+  readonly capture: Effect.Effect<void, ProductAnalyticsCaptureError, R>;
+  readonly isUserEligible: Effect.Effect<
+    boolean,
+    ProductAnalyticsCaptureError,
+    R
+  >;
+  readonly requestErasure: Effect.Effect<void, ProductAnalyticsCaptureError, R>;
 }
 /** Raised when an admitted backend product event cannot be queued. */
 /** Maps one Convex or PostHog failure into the analytics capture channel. */
@@ -36,11 +37,8 @@ export function toProductAnalyticsCaptureError(error: unknown) {
 /** Checks the exact current analytics grant before any event can be queued. */
 export const hasProductAnalyticsConsent = Effect.fn(
   "analytics.capture.hasProductAnalyticsConsent"
-)(function* (
-  ctx: Pick<QueryCtx, "db"> | Pick<MutationCtx, "db">,
-  userId: Id<"users">
-) {
-  return yield* hasCurrentConsent(ctx, userId, ANALYTICS_CONSENT_CATEGORY).pipe(
+)(function* (userId: Id<"users">) {
+  return yield* hasCurrentConsent(userId, ANALYTICS_CONSENT_CATEGORY).pipe(
     Effect.mapError(toProductAnalyticsCaptureError)
   );
 });
@@ -48,14 +46,9 @@ export const hasProductAnalyticsConsent = Effect.fn(
 export const captureProductEvent = Effect.fn(
   "analytics.capture.captureProductEvent"
 )(
-  function* (
-    ctx: ProductAnalyticsCtx,
-    { distinctId, event, timestamp }: ProductAnalyticsCaptureArgs
-  ) {
-    const scheduler = yield* Scheduler.Scheduler.pipe(
-      Effect.provide(Scheduler.layer(ctx.scheduler))
-    );
-    if (!(yield* hasProductAnalyticsConsent(ctx, distinctId))) {
+  function* ({ distinctId, event, timestamp }: ProductAnalyticsCaptureArgs) {
+    const scheduler = yield* Scheduler;
+    if (!(yield* hasProductAnalyticsConsent(distinctId))) {
       return;
     }
     yield* scheduler
@@ -89,7 +82,7 @@ export const captureProductEvent = Effect.fn(
 /** Delivers only for eligible users and erases writes overlapping withdrawal. */
 export const deliverProductAnalyticsProgram = Effect.fn(
   "analytics.capture.deliverProductAnalytics"
-)(function* (operations: ProductAnalyticsDeliveryOperations) {
+)(function* <R>(operations: ProductAnalyticsDeliveryOperations<R>) {
   const isEligibleBeforeSend = yield* operations.isUserEligible;
   if (!isEligibleBeforeSend) {
     return;

@@ -1,23 +1,23 @@
-import { DatabaseReader, FunctionImpl, GroupImpl } from "@confect/server";
+import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
-import { getCurrentUser as currentIdentity } from "@repo/backend/confect/auth/identity";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/auth/queries.spec";
+import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
+import session from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
 
 const getCurrentUser = FunctionImpl.make(
   databaseSchema,
   spec,
   "getCurrentUser",
-  currentIdentity
+  getOptionalAppUserForRead
 );
 const getUserById = FunctionImpl.make(
   databaseSchema,
   spec,
   "getUserById",
   Effect.fn("auth.queries.getUserById")(function* (args) {
-    const ctx = yield* QueryCtxService;
-    const database = DatabaseReader.make(databaseSchema, ctx.db);
+    const database = yield* DatabaseReader;
     const user = yield* database
       .table("users")
       .get(args.userId)
@@ -41,5 +41,6 @@ const getUserById = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getCurrentUser),
   Layer.provide(getUserById),
+  Layer.provide(session),
   GroupImpl.finalize
 );

@@ -1,4 +1,6 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { pruneLearningPopularity } from "@repo/backend/confect/contents/metrics/retention";
 import {
   learningPopularityFiniteWindowValues,
@@ -6,7 +8,6 @@ import {
   POPULARITY_DAY_MS,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
-import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -274,9 +275,17 @@ describe("contents/metrics/retention", () => {
         vi.spyOn(ctx.scheduler, "runAfter").mockRejectedValueOnce(
           new Error("Unavailable")
         );
-        await runConvexProgram(pruneLearningPopularity(ctx));
+        await Effect.runPromise(
+          pruneLearningPopularity().pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        );
       })
-    ).rejects.toThrow("CONTENT_ANALYTICS_IO_FAILED");
+    ).rejects.toMatchObject({
+      code: "CONTENT_ANALYTICS_IO_FAILED",
+    });
     expect(
       await target.query((ctx) =>
         ctx.db.query("learningPopularityViewerSignals").take(200)
@@ -290,14 +299,17 @@ describe("contents/metrics/retention", () => {
       vi.spyOn(ctx.db, "delete").mockRejectedValueOnce(
         new Error("Unavailable")
       );
-      return await runConvexProgram(
-        pruneLearningPopularity(ctx).pipe(
+      return await Effect.runPromise(
+        pruneLearningPopularity().pipe(
           Effect.match({
             onFailure: (failure) => ({
               ...failure,
             }),
             onSuccess: () => null,
-          })
+          }),
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
         )
       );
     });

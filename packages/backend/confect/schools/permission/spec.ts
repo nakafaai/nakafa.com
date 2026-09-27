@@ -1,4 +1,3 @@
-import { failureWire } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 /**
@@ -44,7 +43,7 @@ export class PermissionDenied extends Schema.TaggedError<PermissionDenied>()(
 ) {}
 
 /** The public code/message payload decodes to the domain's tagged failure. */
-export const PermissionDeniedWire = failureWire(PermissionDenied);
+
 export const ROLE_PERMISSIONS: Record<
   SchoolRole | ClassRole | TeacherRole,
   Permission[]

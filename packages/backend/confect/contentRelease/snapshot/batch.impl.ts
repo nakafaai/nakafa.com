@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationCtx as MutationCtxService } from "@repo/backend/confect/_generated/services";
 import { stageBatch } from "@repo/backend/confect/contentRelease/snapshot/batch";
 import spec from "@repo/backend/confect/contentRelease/snapshot/batch.spec";
 import { Effect, Layer } from "effect";
@@ -12,9 +11,7 @@ const stageSnapshotBatch = FunctionImpl.make(
   "stageSnapshotBatch",
   Effect.fn("contentRelease.snapshot.batch.stageSnapshotBatch")(
     function* (args) {
-      const ctx = yield* MutationCtxService;
       return yield* stageBatch(
-        ctx,
         args.releaseId,
         args.family,
         args.snapshotId,
