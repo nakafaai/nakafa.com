@@ -15,15 +15,33 @@ export class NinaContextLimitError extends Schema.TaggedError<NinaContextLimitEr
 export const boundHistory = Effect.fn("nina.history.bound")(function* (
   messages: ModelMessage[]
 ) {
-  const projected: ModelMessage[] = yield* Effect.forEach(
+  const unavailableTools = new Set<string>();
+  const projected = yield* Effect.forEach(
     messages,
     Effect.fn(function* (message) {
+      const retainedEvidence: ModelMessage[] = [];
+      if (message.role === "assistant" && Array.isArray(message.content)) {
+        for (const part of message.content) {
+          if (
+            part.type === "tool-call" &&
+            !Schema.is(LearningCapabilityNameSchema)(part.toolName)
+          ) {
+            unavailableTools.add(part.toolName);
+          }
+        }
+      }
       if (message.role !== "tool") {
-        return message;
+        return [message];
       }
       const content = yield* Effect.forEach(
         message.content,
         Effect.fn(function* (part) {
+          const unavailable =
+            part.type === "tool-result" &&
+            !Schema.is(LearningCapabilityNameSchema)(part.toolName);
+          if (unavailable) {
+            unavailableTools.add(part.toolName);
+          }
           if (
             part.type !== "tool-result" ||
             part.output.type !== "json" ||
@@ -45,18 +63,25 @@ export const boundHistory = Effect.fn("nina.history.bound")(function* (
                 })
             )
           );
+          if (unavailable) {
+            retainedEvidence.push({
+              role: "assistant",
+              content: evidence.text,
+            });
+          }
           return {
             ...part,
             output: { type: "text" as const, value: evidence.text },
           };
         })
       );
-      return { ...message, content };
+      return [{ ...message, content }, ...retainedEvidence];
     })
   );
   let retained = pruneMessages({
-    messages: projected,
+    messages: projected.flat(),
     reasoning: "all",
+    toolCalls: [{ type: "all", tools: [...unavailableTools] }],
     emptyMessages: "remove",
   });
   while (

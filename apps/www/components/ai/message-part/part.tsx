@@ -18,7 +18,7 @@ import {
 import { type DynamicToolUIPart, isToolUIPart, type ToolUIPart } from "ai";
 import { Match, Result, Schema } from "effect";
 import { NinaAttachment } from "@/components/ai/attachment";
-import { AiChatPersistedError } from "@/components/ai/chat-error";
+import { AiToolError } from "@/components/ai/chat-error";
 import { useMessage } from "@/components/ai/context/use-message";
 import { MathPart } from "@/components/ai/message-part/math";
 import { NakafaPart } from "@/components/ai/message-part/nakafa";
@@ -84,7 +84,7 @@ export function AiMessagePart({
 /** Decode the capability result only after the Agent has completed its tool. */
 function ToolOutput({ part }: { part: ToolUIPart | DynamicToolUIPart }) {
   if (part.state === "output-error") {
-    return <AiChatPersistedError />;
+    return <AiToolError />;
   }
   if (part.state !== "output-available") {
     return null;
@@ -93,7 +93,7 @@ function ToolOutput({ part }: { part: ToolUIPart | DynamicToolUIPart }) {
     part.output
   );
   if (Result.isFailure(output)) {
-    return <AiChatPersistedError />;
+    return <AiToolError />;
   }
   return output.success.artifacts.map((artifact) => (
     <Evidence artifact={artifact} key={`${artifact.type}:${artifact.id}`} />

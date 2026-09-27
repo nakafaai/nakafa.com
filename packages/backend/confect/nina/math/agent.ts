@@ -60,6 +60,9 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
 }: MathAgentParams & { readonly usageHandler: UsageHandler }) {
   const ctx = yield* ActionCtx;
   const model = yield* getGatewayModel(modelId);
+  const math = yield* MathService.make.pipe(
+    Effect.mapError(makeMathGenerationError)
+  );
   const agent = new Agent(components.nina, {
     name: "math",
     languageModel: model,
@@ -104,7 +107,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathAlgebraInput,
@@ -118,7 +121,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathArithmeticInput,
@@ -132,7 +135,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathCalculusInput,
@@ -146,7 +149,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathDiscreteInput,
@@ -160,7 +163,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathEquationInput,
@@ -174,7 +177,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathGeometryInput,
@@ -188,7 +191,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathMatrixInput,
@@ -202,7 +205,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathProbabilityInput,
@@ -216,7 +219,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathSeriesInput,
@@ -230,7 +233,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                     input,
                     toolCallId,
                     publish,
-                  }).pipe(Effect.provide(MathService.layer)),
+                  }).pipe(Effect.provideService(MathService, math)),
                   { signal: abortSignal }
                 ),
               inputSchema: mathStatisticsInput,

@@ -57,6 +57,28 @@ const cases = [
 ] as const;
 
 describe("math Agent execution", () => {
+  it("rejects missing CAS configuration before spending tokens on unexecutable tools", async () => {
+    const model = new MockLanguageModelV4();
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    const failure = await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({})
+        ),
+        Effect.flip,
+        Effect.map((error) => error._tag)
+      )
+    );
+    expect(failure).toBe("MathGenerationError");
+    expect(model.doGenerateCalls).toHaveLength(0);
+    expect(compute).not.toHaveBeenCalled();
+  });
   it.each(cases)(
     "validates and computes %s through the Agent tool boundary",
     async (toolName, input) => {
