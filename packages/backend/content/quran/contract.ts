@@ -2,6 +2,15 @@ import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { QuranSnapshotRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranAttributionRowSchema } from "@nakafa/aksara-contracts/quran/source";
 import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
+import {
+  quranAppLocaleValidator,
+  quranReadingSourcesValidator,
+  quranRevelationPlaceValidator,
+  quranSourceFields,
+  quranSurahMeaningValidator,
+  quranTafsirAccessValidator,
+  quranTranslationDocumentValidator,
+} from "@repo/backend/confect/contentRelease/quran/spec";
 import { Schema } from "effect";
 
 /** Current signed attribution contract served by the active Quran snapshot. */
@@ -30,7 +39,10 @@ export function selectQuranMeaning(
   meaning: PublishedQuranMeaning,
   appLocale: AppLocaleCode
 ) {
-  return { appLocale, text: meaning[appLocale] };
+  return {
+    appLocale,
+    text: meaning[appLocale],
+  };
 }
 
 /** Formats the reviewed meaning for one active application locale. */
@@ -40,3 +52,43 @@ export function formatQuranMeaning(
 ) {
   return meaning[appLocale];
 }
+/** Exact signed Bismillah presentation projected from Al-Fatihah verse 1. */
+export const quranBismillahValidator = Schema.Struct({
+  arabic: Schema.String,
+  translation: quranTranslationDocumentValidator,
+});
+
+/** Reads one locale's canonical Bismillah from authenticated source rows. */
+
+export const quranMarkdownSurahValidator = Schema.Struct({
+  name: Schema.Struct({
+    arabic: Schema.String,
+    sourceMeaning: quranSurahMeaningValidator,
+    transliteration: Schema.String,
+  }),
+  number: Schema.Finite,
+  numberOfVerses: Schema.Finite,
+  revelation: Schema.Struct({
+    place: quranRevelationPlaceValidator,
+  }),
+});
+export const quranMarkdownVerseValidator = Schema.Struct({
+  arabic: Schema.String,
+  number: Schema.Struct({
+    inSurah: Schema.Finite,
+  }),
+  translation: quranTranslationDocumentValidator,
+});
+
+/** Exact signed fields needed to render app-locale Quran markdown. */
+export const quranMarkdownValidator = Schema.Struct({
+  ...quranSourceFields,
+  appLocale: quranAppLocaleValidator,
+  preBismillah: Schema.Union([quranBismillahValidator, Schema.Null]),
+  sources: Schema.Union([quranReadingSourcesValidator, Schema.Null]),
+  surah: Schema.Union([quranMarkdownSurahValidator, Schema.Null]),
+  tafsirAccess: Schema.Union([quranTafsirAccessValidator, Schema.Null]),
+  toVerse: Schema.Finite,
+  verses: Schema.mutable(Schema.Array(quranMarkdownVerseValidator)),
+});
+export type QuranMarkdown = Schema.Schema.Type<typeof quranMarkdownValidator>;

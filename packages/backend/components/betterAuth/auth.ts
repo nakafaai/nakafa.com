@@ -1,6 +1,6 @@
 import type { GenericCtx } from "@convex-dev/better-auth";
+import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { createAuthOptions } from "@repo/backend/convex/auth/runtime";
 import { betterAuth } from "better-auth/minimal";
 
 /**

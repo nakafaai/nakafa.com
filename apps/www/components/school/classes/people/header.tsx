@@ -1,6 +1,6 @@
 "use client";
 
-import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { SchoolClassesPeopleInvite } from "@/components/school/classes/people/invite";
 import { SchoolClassesPeopleSearch } from "@/components/school/classes/people/search";
@@ -20,10 +20,8 @@ export function SchoolClassesPeopleHeader() {
 /** Render the roster action area using the shared class permission model. */
 function SchoolClassesPeopleHeaderAction() {
   const { can } = useClassPermissions();
-
   if (!can(PERMISSIONS.MEMBER_ADD)) {
     return null;
   }
-
   return <SchoolClassesPeopleInvite />;
 }

@@ -1,6 +1,6 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
-import { api } from "@repo/backend/convex/_generated/api";
-import { resolveReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
+import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -15,9 +15,10 @@ class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
     namespace: Schema.String,
   }
 ) {}
-
 interface SystemMetadata {
-  authors: { name: string }[];
+  authors: {
+    name: string;
+  }[];
   date: string;
   description?: string;
   title: string;
@@ -29,44 +30,58 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
     const [tCommon, tMetadata] = yield* Effect.all(
       [
         Effect.tryPromise({
-          try: () => getTranslations({ locale, namespace: "Common" }),
+          try: () =>
+            getTranslations({
+              locale,
+              namespace: "Common",
+            }),
           catch: () =>
-            new TranslationLoadError({ namespace: "Common", locale }),
+            new TranslationLoadError({
+              namespace: "Common",
+              locale,
+            }),
         }),
         Effect.tryPromise({
-          try: () => getTranslations({ locale, namespace: "Metadata" }),
+          try: () =>
+            getTranslations({
+              locale,
+              namespace: "Metadata",
+            }),
           catch: () =>
-            new TranslationLoadError({ namespace: "Metadata", locale }),
+            new TranslationLoadError({
+              namespace: "Metadata",
+              locale,
+            }),
         }),
       ],
-      { concurrency: "unbounded" }
+      {
+        concurrency: "unbounded",
+      }
     );
-
     const defaultTitle = tCommon("made-with-love");
     const shortDescription = tMetadata("short-description");
     const defaultMetadata: SystemMetadata = {
       title: defaultTitle,
       description: shortDescription,
-      authors: [{ name: "Nakafa" }],
+      authors: [
+        {
+          name: "Nakafa",
+        },
+      ],
       date: "",
     };
-
-    const reference = yield* readNakafaRuntimeQuery(
-      env.NEXT_PUBLIC_CONVEX_URL,
-      api.contentRelease.reference.read,
-      {
+    const reference = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.contentRelease.reference.read, {
         input: {
           appLocale: locale,
           kind: "route",
           publicPath: slug.join("/"),
         },
-      }
-    );
-
+      })
+    ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
     if (!reference) {
       return defaultMetadata;
     }
-
     return {
       ...defaultMetadata,
       description: reference.description ?? shortDescription,

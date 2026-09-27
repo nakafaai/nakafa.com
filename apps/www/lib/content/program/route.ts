@@ -1,4 +1,4 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
 import {
@@ -7,7 +7,7 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
@@ -48,14 +48,12 @@ export const readPublishedProgramRoute = Effect.fn(
   "NakafaProgram.readPublishedRoute"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.program.route,
-    {
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.program.route, {
       appLocale,
       publicPath,
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
     publicPath,
@@ -64,14 +62,24 @@ export const readPublishedProgramRoute = Effect.fn(
     Schema.NullOr(ReleaseIdSchema)
   )(result.activeReleaseId).pipe(
     Effect.mapError(
-      () => new PublishedProjectionError({ appLocale, publicPath })
+      () =>
+        new PublishedProjectionError({
+          appLocale,
+          publicPath,
+        })
     )
   );
   if (!result.managed) {
-    return yield* new PublishedProjectionError({ appLocale, publicPath });
+    return yield* new PublishedProjectionError({
+      appLocale,
+      publicPath,
+    });
   }
   if (activeReleaseId === null) {
-    return yield* new PublishedProjectionError({ appLocale, publicPath });
+    return yield* new PublishedProjectionError({
+      appLocale,
+      publicPath,
+    });
   }
   if (result.routeJson === null) {
     return {
@@ -88,7 +96,10 @@ export const readPublishedProgramRoute = Effect.fn(
     } satisfies PublishedProgramRoute;
   }
   if (result.programJson === null) {
-    return yield* new PublishedProjectionError({ appLocale, publicPath });
+    return yield* new PublishedProjectionError({
+      appLocale,
+      publicPath,
+    });
   }
   const [
     alternates,
@@ -106,7 +117,10 @@ export const readPublishedProgramRoute = Effect.fn(
     decodeRoutes(result.contextJson, locale, publicPath),
     decodeRoutes(result.groupJson, locale, publicPath),
     Effect.forEach(result.materialJson, (source) =>
-      decodeMaterialJson(source, { appLocale, publicPath })
+      decodeMaterialJson(source, {
+        appLocale,
+        publicPath,
+      })
     ),
     decodeProgramJson(result.programJson, locale, publicPath),
     decodeCurriculumJson(result.routeJson, locale, publicPath),
@@ -117,7 +131,10 @@ export const readPublishedProgramRoute = Effect.fn(
     program.key !== route.programKey ||
     materials.some((material) => material.appLocale !== appLocale)
   ) {
-    return yield* new PublishedProjectionError({ appLocale, publicPath });
+    return yield* new PublishedProjectionError({
+      appLocale,
+      publicPath,
+    });
   }
   return {
     activeReleaseId,
@@ -138,8 +155,11 @@ export async function getPublishedProgramRoute(
   publicPath: string
 ) {
   "use cache";
+
   const result = await Effect.runPromise(
-    readPublishedProgramRoute(locale, publicPath)
+    readPublishedProgramRoute(locale, publicPath).pipe(
+      Effect.withTracerTiming(false)
+    )
   );
   applyContentCache("program", "material");
   return result;

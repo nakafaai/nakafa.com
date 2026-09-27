@@ -1,13 +1,13 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 
 type PublicSectionPage = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.catalog.getSectionPage>
+  Ref.Returns<typeof refs.public.tryouts.queries.catalog.getSectionPage>
 >;
 
 type RetainedSectionAttemptPage = Extract<
   NonNullable<
-    FunctionReturnType<typeof api.tryouts.queries.attemptPage.getSection>
+    Ref.Returns<typeof refs.public.tryouts.queries.attemptPage.getSection>
   >,
   { kind: "retained" }
 >;

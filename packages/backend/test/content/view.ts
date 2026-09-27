@@ -1,13 +1,13 @@
 import { expect } from "@effect/vitest";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
-import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
-import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";
+import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
+import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/helpers/partitions";
+import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import {
   type createConvexTestWithBetterAuth,
   seedAnalyticsConsent,
   seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
+} from "@repo/backend/confect/test.helpers";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   insertRuntimeArticles,
   testArticleProjection,

@@ -1,4 +1,6 @@
 "use client";
+
+import { useMutation } from "@confect/react";
 import {
   Add01Icon,
   ArrowDown01Icon,
@@ -6,9 +8,9 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
-import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/convex/classes/forums/utils/constants";
-import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import refs from "@repo/backend/confect/_generated/refs";
+import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/confect/classes/forums/constants";
+import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -30,7 +32,6 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
-import { useMutation } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -85,7 +86,7 @@ function SchoolClassesForumNewContent() {
   const schoolMembership = useClass((c) => c.schoolMembership);
   const { can } = useClassPermissions();
   const createForum = useMutation(
-    api.classes.forums.mutations.forums.createForum
+    refs.public.classes.forums.mutations.forums.createForum
   );
   const canModerateForum = can(PERMISSIONS.FORUM_MODERATE);
   // Get available tags based on the same permission split enforced by Convex.
@@ -101,29 +102,39 @@ function SchoolClassesForumNewContent() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(async () => {
-          const forumId = await createForum({ ...value, classId });
-          const href = getSchoolClassesForumHref({
-            classRouteId: routeParams.id,
-            forumId,
-            queryString: searchParams.toString(),
-            slug: routeParams.slug,
-          });
-          dialog.close();
-          form.reset();
-          router.push(href);
-        }).pipe(
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            reportClientException(error, {
-              source: "school-forum-create",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  toast.error(t("create-forum-failed"));
-                })
-              )
-            )
-          )
+        Effect.tryPromise(() =>
+          createForum({
+            ...value,
+            classId,
+          })
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap((forumId) =>
+            Effect.sync(() => {
+              const href = getSchoolClassesForumHref({
+                classRouteId: routeParams.id,
+                forumId,
+                queryString: searchParams.toString(),
+                slug: routeParams.slug,
+              });
+              dialog.close();
+              form.reset();
+              router.push(href);
+            })
+          ),
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "school-forum-create",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(t("create-forum-failed"));
+                  })
+                )
+              ),
+            onSuccess: () => Effect.void,
+          })
         )
       );
     },

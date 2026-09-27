@@ -1,66 +1,22 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
+import { readQuranTranslationDocument } from "@repo/backend/confect/contentRelease/quran/translation";
 import { separateQuranBismillah } from "@repo/backend/content/quran/bismillah";
 import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import {
-  quranBismillahValidator,
   readQuranBismillah,
   verifyQuranBismillah,
 } from "@repo/backend/content/quran/preface";
+import type { QuranView } from "@repo/backend/content/quran/response";
 import { readQuranLocaleSources } from "@repo/backend/content/quran/sources";
 import {
   loadQuranSurah,
   readQuranSurahRow,
   readQuranSurahVerses,
 } from "@repo/backend/content/quran/surah";
-import {
-  quranAppLocaleValidator,
-  quranReadingSourcesValidator,
-  quranSourceFields,
-  quranSurahMeaningValidator,
-  quranTafsirAccessValidator,
-  quranTranslationDocumentValidator,
-} from "@repo/backend/convex/contentRelease/quran/spec";
-import { readQuranTranslationDocument } from "@repo/backend/convex/contentRelease/quran/translation";
-import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
-const quranViewNameValidator = v.object({
-  arabic: v.string(),
-  sourceMeaning: quranSurahMeaningValidator,
-  transliteration: v.string(),
-});
-
-const quranViewSurahValidator = v.object({
-  name: quranViewNameValidator,
-  number: v.number(),
-  numberOfVerses: v.number(),
-});
-
-const quranViewVerseValidator = v.object({
-  arabic: v.string(),
-  number: v.object({
-    inQuran: v.number(),
-    inSurah: v.number(),
-  }),
-  translation: quranTranslationDocumentValidator,
-});
-
-/** Exact app-locale Quran page projection returned to the web app. */
-export const quranViewValidator = v.object({
-  ...quranSourceFields,
-  appLocale: quranAppLocaleValidator,
-  nextSurah: v.union(quranViewSurahValidator, v.null()),
-  preBismillah: v.union(quranBismillahValidator, v.null()),
-  previousSurah: v.union(quranViewSurahValidator, v.null()),
-  sources: v.union(quranReadingSourcesValidator, v.null()),
-  surah: v.union(quranViewSurahValidator, v.null()),
-  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
-  verses: v.array(quranViewVerseValidator),
-});
-
-export type QuranView = Infer<typeof quranViewValidator>;
 type QuranViewSurah = NonNullable<QuranView["surah"]>;
 
 /** Reads one neighboring surah metadata row when that neighbor exists. */
@@ -121,7 +77,6 @@ export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
         verses: [],
       };
     }
-
     const { bismillah, localeSources, nextRow, previousRow, verses } =
       yield* Effect.all(
         {
@@ -149,12 +104,13 @@ export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
             loaded.surah.row.payload.numberOfVerses
           ),
         },
-        { concurrency: "unbounded" }
+        {
+          concurrency: "unbounded",
+        }
       );
     const loadedVerses = yield* Effect.forEach(verses, (verse) =>
       loadVerse(verse, appLocale)
     );
-
     return {
       ...loaded.owner,
       appLocale,

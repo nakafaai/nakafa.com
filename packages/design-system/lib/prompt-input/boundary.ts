@@ -11,13 +11,6 @@ export function runPromptInputProgram(
   return Effect.runFork(
     program.pipe(
       Effect.catchTags({
-        PromptInputAttachmentConversionError: (error) =>
-          Effect.sync(() => {
-            captureException(error.cause, {
-              operation: error.operation,
-              source: "prompt-input-blob-conversion",
-            });
-          }),
         PromptInputCompletionError: (error) =>
           Effect.sync(() => {
             captureException(error.cause, {

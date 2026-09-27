@@ -1,17 +1,11 @@
-import type { DataPart } from "@repo/ai/schema/data";
-import {
-  Conversation,
-  ConversationContent,
-} from "@repo/design-system/components/ai/conversation";
-import {
-  Message,
-  MessageContent,
-} from "@repo/design-system/components/ai/message";
+import type { DataPart } from "@repo/backend/confect/nina/contract/data";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { MessageContent } from "@repo/design-system/components/ui/message";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { MathEvidence } from "@/components/ai/message-part/math/evidence";
 import {
+  NinaExample,
   NinaMath,
   NinaPrompt,
   NinaReasoning,
@@ -83,34 +77,27 @@ export async function FeaturesNina() {
         })}
       </h3>
 
-      <Conversation className="min-h-0">
-        <ConversationContent className="mx-auto w-full max-w-3xl gap-6 px-8 pt-8 pb-14 lg:px-10 lg:pt-12">
-          <Message from="user">
-            <MessageContent>
-              <MarkdownContent id="features-nina-question">
-                {t.raw("nina-prompt")}
-              </MarkdownContent>
-            </MessageContent>
-          </Message>
-          <Message from="assistant">
-            <div className="flex size-full flex-col gap-6">
-              <NinaReasoning label={aiT("thought-for-a-few-seconds")}>
-                <MarkdownContent id="features-nina-reasoning">
-                  {t.raw("nina-reasoning")}
-                </MarkdownContent>
-              </NinaReasoning>
-              <NinaMath label={aiT("math-evaluate")}>
-                <MathEvidence message={featuresNinaMath} />
-              </NinaMath>
-              <MessageContent>
-                <MarkdownContent id="features-nina-answer">
-                  {t.raw("nina-answer")}
-                </MarkdownContent>
-              </MessageContent>
-            </div>
-          </Message>
-        </ConversationContent>
-      </Conversation>
+      <NinaExample
+        question={
+          <MarkdownContent id="features-nina-question">
+            {t.raw("nina-prompt")}
+          </MarkdownContent>
+        }
+      >
+        <NinaReasoning label={aiT("thought-for-a-few-seconds")}>
+          <MarkdownContent id="features-nina-reasoning">
+            {t.raw("nina-reasoning")}
+          </MarkdownContent>
+        </NinaReasoning>
+        <NinaMath label={aiT("math-evaluate")}>
+          <MathEvidence message={featuresNinaMath} />
+        </NinaMath>
+        <MessageContent>
+          <MarkdownContent id="features-nina-answer">
+            {t.raw("nina-answer")}
+          </MarkdownContent>
+        </MessageContent>
+      </NinaExample>
 
       <div className="mx-auto grid w-full max-w-3xl shrink-0 px-8 pb-8 lg:px-10 lg:pb-10">
         <NinaPrompt placeholder={aiT("text-placeholder")} />

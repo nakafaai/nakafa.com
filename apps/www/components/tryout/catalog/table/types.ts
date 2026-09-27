@@ -1,16 +1,16 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 
-type SetListQuery = typeof api.tryouts.queries.sets.list;
-type TrackPageQuery = typeof api.tryouts.queries.catalog.getTrackPage;
+type SetListQuery = typeof refs.public.tryouts.queries.sets.list;
+type TrackPageQuery = typeof refs.public.tryouts.queries.catalog.getTrackPage;
 
 /** Number of additional sets requested by each discovery window. */
 export const TRYOUT_SET_PAGE_SIZE = 25;
 
-export type TryoutSetListArgs = FunctionArgs<SetListQuery>;
-export type TryoutSetPage = FunctionReturnType<SetListQuery>;
+export type TryoutSetListArgs = Ref.Args<SetListQuery>;
+export type TryoutSetPage = Ref.Returns<SetListQuery>;
 export type TryoutSetRow = TryoutSetPage["page"][number];
-export type TryoutTrackPage = NonNullable<FunctionReturnType<TrackPageQuery>>;
+export type TryoutTrackPage = NonNullable<Ref.Returns<TrackPageQuery>>;
 export type TryoutSetAttemptStatus = NonNullable<TryoutSetRow["attemptStatus"]>;
 export type TryoutSetSort = TryoutSetListArgs["sort"];
 export type TryoutSetStatusFilter = TryoutSetListArgs["filter"];

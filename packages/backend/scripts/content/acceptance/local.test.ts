@@ -42,7 +42,7 @@ const initialize = (source = environment) => {
   mocks.command.mockImplementation(
     (spec: { args: readonly string[]; cwd: string }) =>
       Effect.gen(function* () {
-        if (spec.args[2] !== "init") {
+        if (spec.args[1] !== "init") {
           return;
         }
         const fs = yield* FileSystem.FileSystem;
@@ -94,7 +94,10 @@ describe("owned signed acceptance runtime", () => {
         );
         expect(localApplicationEnvironment(runtime)).toMatchObject({
           CONVEX_AGENT_MODE: "anonymous",
+          NEXT_PUBLIC_APP_URL: "http://localhost:3000",
           NEXT_PUBLIC_CONVEX_URL: runtime.query,
+          POSTHOG_PROXY_HOST: "https://localhost",
+          SITE_URL: "http://localhost:3000",
           AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
           AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
           AKSARA_PUBLICATION_TOKEN: runtime.publicationToken,

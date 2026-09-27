@@ -1,9 +1,9 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useMutation } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
+import { Option } from "effect";
 import type { TryoutCountrySelectorOption } from "@/components/tryout/catalog/options";
-
 export type TryoutPreferenceOption = Pick<
   TryoutCountrySelectorOption,
   "countryCode" | "countryKey" | "publicPath" | "title"
@@ -14,7 +14,7 @@ export function useSetPreferredTryoutMutation(
   countries: readonly TryoutPreferenceOption[]
 ) {
   return useMutation(
-    api.learningPreferences.mutations.setPreferredTryoutCountry
+    refs.public.learningPreferences.mutations.setPreferredTryoutCountry
   ).withOptimisticUpdate(
     (localStore, { locale, preferredTryoutCountryKey }) => {
       const country = countries.find(
@@ -23,19 +23,23 @@ export function useSetPreferredTryoutMutation(
       if (!country) {
         return;
       }
-
-      const current = localStore.getQuery(
-        api.learningPreferences.queries.getCurrentTryout,
-        { locale }
+      const current = Option.getOrUndefined(
+        localStore.getQuery(
+          refs.public.learningPreferences.queries.getCurrentTryout,
+          {
+            locale,
+          }
+        )
       );
       if (current === undefined) {
         return;
       }
-
       localStore.setQuery(
-        api.learningPreferences.queries.getCurrentTryout,
-        { locale },
+        refs.public.learningPreferences.queries.getCurrentTryout,
         {
+          locale,
+        },
+        Option.some({
           country: {
             countryCode: country.countryCode,
             key: country.countryKey,
@@ -43,7 +47,7 @@ export function useSetPreferredTryoutMutation(
             title: country.title,
           },
           preferredTryoutCountryKey,
-        }
+        })
       );
     }
   );

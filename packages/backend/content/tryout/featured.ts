@@ -12,6 +12,9 @@ import {
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
+import type { TryoutQuestionSelector } from "@repo/backend/confect/tryouts/runtime/spec";
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import {
@@ -19,23 +22,11 @@ import {
   readTryoutSectionRows,
 } from "@repo/backend/content/tryout/section";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
-import { tryoutResponseSpecValidator } from "@repo/backend/convex/tryouts/response/model";
-import {
-  type TryoutQuestionSelector,
-  tryoutQuestionSelectorValidator,
-} from "@repo/backend/convex/tryouts/runtime/content";
-import { v } from "convex/values";
 import { Effect, Option, Schema } from "effect";
 
 /**
  * Public model for the signed landing demo, including its visible answer feedback.
  */
-export const featuredTryoutValidator = v.object({
-  question: tryoutQuestionSelectorValidator,
-  response: tryoutResponseSpecValidator,
-});
 
 type FeaturedTryoutTarget = Pick<
   TryoutSection,
@@ -82,7 +73,6 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     if (!(placement && bundleHash)) {
       return yield* missingFeaturedTryout("question");
     }
-
     const question: TryoutQuestionSelector = {
       appLocale: locale,
       artifactHash: placement.questionArtifactHash,
@@ -97,7 +87,6 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       sourcePath: placement.questionSourcePath,
       sourceRevision: placement.sourceRevision,
     };
-
     return {
       question,
       response: canonicalQuestionResponse(placement.response),
@@ -177,7 +166,10 @@ const readLandingFeaturedSection = Effect.fn(
   );
   const sections = yield* Effect.forEach(storedSections, (stored) =>
     readTryoutSectionRow(snapshotId, stored).pipe(
-      Effect.map((verified) => ({ ...verified, stored }))
+      Effect.map((verified) => ({
+        ...verified,
+        stored,
+      }))
     )
   );
   const section = sections.find(
@@ -196,7 +188,6 @@ const readLandingFeaturedSection = Effect.fn(
   }
   return section.stored;
 });
-
 type FeaturedMissingKind =
   | "country"
   | "exam"

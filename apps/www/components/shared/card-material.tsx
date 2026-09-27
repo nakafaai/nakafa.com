@@ -21,7 +21,7 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { slugify } from "@repo/design-system/lib/routing/slug";
+import { slugify } from "@repo/utilities/slug";
 import { cn } from "cn";
 import { useLayoutEffect, useState } from "react";
 

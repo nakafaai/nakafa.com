@@ -1,136 +1,66 @@
 "use client";
 
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from "@repo/design-system/components/ai/conversation";
-import { Message } from "@repo/design-system/components/ai/message";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
 
-import { AiChatError } from "@/components/ai/chat-error";
-import { AiChatMessage } from "@/components/ai/chat-message";
-import { AiChatPending } from "@/components/ai/chat-pending";
-import { ChatSpacing } from "@/components/ai/chat-spacing";
-import { useAi } from "@/components/ai/context/use-ai";
-import { ChatProvider, useChat } from "@/components/ai/context/use-chat";
-import { useCurrentChat } from "@/components/ai/context/use-current-chat";
-import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
-import { SheetInput } from "@/components/ai/sheet-input";
+import { useChat } from "@/components/ai/context/use-chat";
+import { NinaInput } from "@/components/ai/input";
+import { NinaTranscript } from "@/components/ai/transcript";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
 
-/** Ignores submits while the active chat payload is loading. */
-function ignorePlaceholderSubmit() {
-  // The loading placeholder has no chat data to submit.
-}
-
-/** Connects the selected chat document to the sheet chat UI. */
-export function SheetMain() {
-  const chat = useCurrentChat((state) => state.chat);
-  const messages = useCurrentChat((state) => state.messages);
-
-  if (!(chat && messages)) {
-    return <SheetMainPlaceholder />;
-  }
-
-  return (
-    <ChatProvider chatId={chat._id} initialMessages={messages}>
-      <SheetConversation />
-    </ChatProvider>
-  );
-}
-
-/** Keeps the sheet stable while the active chat loads. */
-function SheetMainPlaceholder() {
-  return (
-    <div className="relative flex size-full flex-col overflow-hidden">
-      <Conversation>
-        <ConversationContent>
-          <div />
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
-
-      <SheetInput
-        disabled={true}
-        isPending={true}
-        key="ai-sheet-input"
-        onSubmit={ignorePlaceholderSubmit}
-      />
-    </div>
-  );
-}
-
 /** Renders messages and the active chat input inside Nina sheet. */
-function SheetConversation() {
+export function SheetMain() {
   const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
 
-  const messages = useChat((state) => state.chat.messages);
-  const setText = useAi((state) => state.setText);
-
   const isUserPending = useViewer((state) => state.isPending);
   const viewer = useViewer((state) => state.viewer);
-  const { sendMessage, status, stop } = useChat((state) => state.chat);
+  const { send, busy, isPending, cancel, isLoading } = useChat(
+    (state) => state
+  );
 
   /** Sends a message or stops the current stream from the sheet input. */
   function handleSubmit(message: PromptInputMessage) {
-    if (status === "streaming") {
-      stop();
-      return;
+    if (isLoading || isPending) {
+      return false;
+    }
+    if (busy) {
+      cancel();
+      return false;
     }
 
     if (!message.text?.trim()) {
-      return;
+      return false;
     }
 
     if (isUserPending) {
-      return;
+      return false;
     }
 
     if (viewer === null) {
       router.push(authNavigation.readHref());
-      return;
+      return false;
     }
 
-    sendMessage({
+    return send({
       ...(message.files === undefined ? {} : { files: message.files }),
       text: message.text,
     });
-    setText("");
   }
 
   return (
-    <div className="relative flex size-full flex-col overflow-hidden">
-      <Conversation>
-        <ConversationContent>
-          {messages.map((message, index) => (
-            <Message
-              from={message.role === "user" ? "user" : "assistant"}
-              key={message.id}
-            >
-              {index === 0 ? <AiChatPaginationTrigger /> : null}
-              <AiChatMessage message={message} />
-            </Message>
-          ))}
+    <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
+      <NinaTranscript />
 
-          <AiChatPending />
-
-          <AiChatError />
-
-          <ChatSpacing />
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
-
-      <SheetInput
-        disabled={status === "submitted" || isUserPending}
-        key="ai-sheet-input"
-        onSubmit={handleSubmit}
-        status={status}
-      />
+      <div className="grid shrink-0 px-2 pb-2">
+        <NinaInput
+          autoFocus
+          disabled={isPending || isLoading || isUserPending}
+          onSubmit={handleSubmit}
+          status={busy ? "streaming" : "ready"}
+        />
+      </div>
     </div>
   );
 }

@@ -36,7 +36,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Learning focus**: The onboarding choice between opening curriculum learning or try-out discovery first. It selects the first destination without restricting later access to either surface.
 - **Material placement**: A source-owned relation connecting one canonical material asset to the exact Learning program and curriculum card group that presented it. It is interaction context, not canonical URL identity or a learner preference.
 - **Learning context**: The verified page, Material placement, and tool policy facts available for one user interaction. A direct or SEO material visit has canonical context unless the request carries a valid Material placement.
-- **NinaContextPack**: The immutable learning context snapshot built before one Nina turn and stored on chat messages for replay.
+- **NinaContextPack**: The immutable learning context snapshot built during authenticated admission and stored with the Nina turn for replay.
 - **Continue Learning**: A signed-in user read model ranked from recent learning interactions. It must not be inferred for anonymous users.
 - **Popularity**: Aggregate learning interest derived from view events and durable counters. Product reads use bounded read models, not raw event scans.
 - **Lifetime counter**: A durable popularity count that continues after raw audit events expire.
@@ -44,11 +44,11 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 ## Nina
 
-- **NinaHarness**: The package-owned Effect service with the only app-facing `stream` Interface for Nina chat turns.
+- **Nina turn**: One admitted user prompt, credit reservation, immutable learning context, provider usage, and durable response lifecycle. Confect owns admission and settlement; the Convex Agent component owns messages and streaming.
 - **LearningCapability**: An internal education Module Nina can invoke for bounded evidence such as Nakafa retrieval, deterministic math, or external research.
 - **Evidence**: Schema-derived facts, calculations, citations, content references, and limitations that constrain Nina's answer.
 - **EvidenceEnvelope**: The schema-derived LearningCapability result that carries status, compact model-visible evidence, references, and limitations.
-- **CapabilityTrace**: A bounded operational summary of LearningCapability execution for support, integrity checks, and evals. It is not a raw transcript.
+- **Capability output**: A persisted Agent tool result with model-facing evidence and progressive UI cards. Agent stores the final result with the conversation so it survives reconnects.
 - **Capability policy**: The per-turn decision that returns Allowed, Denied, or NeedsConfirmation for a LearningCapability.
 - **Pinned context**: The latest stored NinaContextPack reused when a continued chat is opened away from a verified learning asset.
 - **Page fetch**: The one permitted current-page Nakafa content read for a verified learning page.
@@ -56,7 +56,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 ## Evaluation
 
 - **EvalCase**: A schema-derived test input with deterministic expected evidence, routing, or trace assertions.
-- **EvalSuite**: A named collection of EvalCases for one NinaHarness or LearningCapability behavior boundary.
+- **EvalSuite**: A named collection of EvalCases for one Nina turn or LearningCapability behavior boundary.
 - **EvalRun**: A recorded execution of an EvalSuite with bounded evidence and trace summaries.
 
 ## Privacy

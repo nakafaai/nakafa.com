@@ -1,12 +1,11 @@
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
-import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
-import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
-import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/status";
+} from "@repo/backend/confect/test.helpers";
+import { getTryoutStatusRank } from "@repo/backend/confect/tryouts/status";
+import { api } from "@repo/backend/convex/_generated/api";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
@@ -20,7 +19,6 @@ import {
 } from "@repo/backend/test/tryout/source";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema, Struct } from "effect";
-
 export const catalogListArgs: FunctionArgs<
   typeof api.tryouts.queries.sets.list
 > = {
@@ -28,11 +26,16 @@ export const catalogListArgs: FunctionArgs<
   examKey: TRYOUT_START_EXAM,
   filter: "all",
   locale: "id",
-  paginationOpts: { cursor: null, numItems: 10 },
-  sort: { direction: "asc", field: "order" },
+  paginationOpts: {
+    cursor: null,
+    numItems: 10,
+  },
+  sort: {
+    direction: "asc",
+    field: "order",
+  },
   trackKey: TRYOUT_START_TRACK,
 };
-
 const defaultSets = [
   {
     questionCount: 1,
@@ -127,23 +130,28 @@ export const activateTryoutSetCatalog = Effect.fn(
           }))
       );
       const placements = setDefinitions.flatMap((definition) =>
-        Array.from({ length: definition.questionCount }, (_, index) => {
-          const original = makeTryoutStartPlacement("id");
-          const questionKey = original.questionContentKey
-            .replace("set-1", definition.setKey)
-            .replace("question-1", `question-${index + 1}`);
-          const questionPath = questionKey.slice(0, -"/question".length);
-          return Schema.decodeSync(TryoutPlacementSchema)({
-            ...original,
-            answerArtifactHash: testTextHash(`${questionKey}:answer`),
-            answerContentKey: `${questionPath}/answer`,
-            questionArtifactHash: testTextHash(`${questionKey}:question`),
-            questionContentKey: questionKey,
-            questionOrder: index + 1,
-            questionSourcePath: `packages/corpus/${questionPath}`,
-            setKey: definition.setKey,
-          });
-        })
+        Array.from(
+          {
+            length: definition.questionCount,
+          },
+          (_, index) => {
+            const original = makeTryoutStartPlacement("id");
+            const questionKey = original.questionContentKey
+              .replace("set-1", definition.setKey)
+              .replace("question-1", `question-${index + 1}`);
+            const questionPath = questionKey.slice(0, -"/question".length);
+            return Schema.decodeSync(TryoutPlacementSchema)({
+              ...original,
+              answerArtifactHash: testTextHash(`${questionKey}:answer`),
+              answerContentKey: `${questionPath}/answer`,
+              questionArtifactHash: testTextHash(`${questionKey}:question`),
+              questionContentKey: questionKey,
+              questionOrder: index + 1,
+              questionSourcePath: `packages/corpus/${questionPath}`,
+              setKey: definition.setKey,
+            });
+          }
+        )
       );
       const snapshotId = await activateTryoutSnapshot(ctx, {
         catalog: Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))(
@@ -152,19 +160,10 @@ export const activateTryoutSetCatalog = Effect.fn(
         placements,
       });
       await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-      for (const { setKey } of setDefinitions) {
-        await ctx.db.insert("tryoutEntitlements", {
-          countryKey: TRYOUT_START_COUNTRY,
-          endsAt: TRYOUT_START_NOW + 86_400_000,
-          examKey: TRYOUT_START_EXAM,
-          setKey,
-          sourceKind: tryoutEntitlementSourceKindCompetition,
-          startsAt: TRYOUT_START_NOW,
-          trackKey: TRYOUT_START_TRACK,
-          userId: user.userId,
-        });
-      }
-      return { identity: user, snapshotId };
+      return {
+        identity: user,
+        snapshotId,
+      };
     })
   );
   const authed = t.withIdentity({
@@ -197,5 +196,10 @@ export const activateTryoutSetCatalog = Effect.fn(
       })
     );
   }
-  return { authed, identity, snapshotId, t };
+  return {
+    authed,
+    identity,
+    snapshotId,
+    t,
+  };
 });

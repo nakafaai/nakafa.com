@@ -4,17 +4,17 @@ import {
   type RoutedContentProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { hashText } from "@repo/backend/confect/contentRelease/digest";
+import {
+  ReleaseError,
+  releaseFail,
+} from "@repo/backend/confect/contentRelease/error";
+import { decodeProjectionJson } from "@repo/backend/confect/contentRelease/parse";
 import {
   type PublicationRow,
   PublicationSource,
 } from "@repo/backend/content/publication/source";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { hashText } from "@repo/backend/convex/contentRelease/digest";
-import {
-  ReleaseError,
-  releaseFail,
-} from "@repo/backend/convex/contentRelease/error";
-import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect, Option, Schema } from "effect";
 
 /** Converts one complete immutable upsert version into a compact head. */
@@ -44,7 +44,11 @@ const decodeContentHead = Effect.fn("contentRelease.decodeContentHead")(
       delivery: head.delivery,
       family: head.family,
       projectionHash: head.projectionHash,
-      ...(publicPath === undefined ? {} : { publicPath }),
+      ...(publicPath === undefined
+        ? {}
+        : {
+            publicPath,
+          }),
       rendererDomain: head.rendererDomain,
       sourceHash: head.sourceHash,
       sourcePath: head.sourcePath,
@@ -133,7 +137,7 @@ const selectPublicProjection = Effect.fn(
   "contentRelease.selectPublicProjection"
 )(function* (
   contentKey: string,
-  artifactLocale: Doc<"contentKeys">["artifactLocale"],
+  artifactLocale: Docs["contentKeys"]["artifactLocale"],
   sequence: number,
   binding: Option.Option<PublicationRow<"contentBindings">>
 ) {
@@ -205,7 +209,7 @@ export const resolvePublicProjection = Effect.fn(
 )(
   (
     contentKey: string,
-    artifactLocale: Doc<"contentKeys">["artifactLocale"],
+    artifactLocale: Docs["contentKeys"]["artifactLocale"],
     sequence: number
   ) =>
     selectPublicProjection(contentKey, artifactLocale, sequence, Option.none())
@@ -250,7 +254,7 @@ export const resolveContentHead = Effect.fn(
   "contentRelease.resolveContentHead"
 )(function* (
   contentKey: string,
-  artifactLocale: Doc<"contentKeys">["artifactLocale"],
+  artifactLocale: Docs["contentKeys"]["artifactLocale"],
   sequence: number
 ) {
   const head = Option.getOrNull(

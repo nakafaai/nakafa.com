@@ -1,9 +1,10 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useConvexAuth, useQuery } from "convex/react";
-import type { Locale } from "next-intl";
+import { useConvexAuth } from "convex/react";
+import { type Locale, useLocale } from "next-intl";
 import { type ReactNode, Suspense, use, useState } from "react";
 import { AppShell } from "@/components/sidebar/shell";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
@@ -141,31 +142,37 @@ function LiveTryoutSectionPage({
   binding: NonNullable<TryoutSectionRouteBinding>;
 }) {
   const { isLoading } = useConvexAuth();
+  const locale = useLocale();
   const [terminalState, setTerminalState] = useState<
     SectionState | undefined
   >();
   // An unauthenticated response during hydration is not a terminal attempt.
   const liveState = useQuery(
-    api.tryouts.queries.runtime.getSectionAttemptState,
+    refs.public.tryouts.queries.runtime.getSectionAttemptState,
     !isLoading && terminalState === undefined
       ? {
           attemptId: binding.attemptId,
           sectionKey: page.section.sectionKey,
+          locale,
         }
       : "skip"
   );
 
   if (
     terminalState === undefined &&
-    liveState !== undefined &&
-    !isTryoutStateLive(liveState)
+    QueryResult.isSuccess(liveState) &&
+    !isTryoutStateLive(liveState.value)
   ) {
-    setTerminalState(liveState);
+    setTerminalState(liveState.value);
+  }
+
+  if (QueryResult.isFailure(liveState)) {
+    throw liveState.error;
   }
 
   let state: SectionState = binding.initialState;
-  if (liveState !== undefined) {
-    state = liveState;
+  if (QueryResult.isSuccess(liveState)) {
+    state = liveState.value;
   }
   if (terminalState !== undefined) {
     state = terminalState;

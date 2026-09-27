@@ -1,19 +1,20 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
   TryoutTrackSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
+import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import {
   loadTryoutSnapshotCatalog,
   readTryoutCatalog,
 } from "@repo/backend/content/tryout/catalog";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
@@ -21,7 +22,7 @@ import {
 } from "@repo/backend/test/tryout/snapshot";
 import { makeTryoutStartHierarchy } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 
 /** Creates one technical track used to break localized count symmetry. */
 function makeTechnicalTrack() {
@@ -63,22 +64,33 @@ async function activateCatalog() {
     makeTryoutPlacementRow("id").record.row,
   ];
   const snapshotId = await t.mutation((ctx) =>
-    activateTryoutSnapshot(ctx, { catalog, placements })
+    activateTryoutSnapshot(ctx, {
+      catalog,
+      placements,
+    })
   );
-  return { snapshotId, t };
+  return {
+    snapshotId,
+    t,
+  };
 }
-
 describe("contentRelease/tryout/catalog", () => {
   it.effect(
     "reads a retained catalog by its immutable snapshot without an active release pin",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const { snapshotId, t } = yield* Effect.promise(activateCatalog);
         const retained = yield* Effect.promise(() =>
           t.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               loadTryoutSnapshotCatalog("id", snapshotId).pipe(
-                Effect.provide(convexTryoutLayer(ctx))
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
@@ -93,15 +105,17 @@ describe("contentRelease/tryout/catalog", () => {
         expect(retained.entries).toHaveLength(1);
       })
   );
-
   it.effect(
     "enforces the signed catalog read budget before loading a large hierarchy",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const country = makeTryoutCatalogRow("id").record.row;
         const catalog = Array.from(
-          { length: TRYOUT_CATALOG_LIMIT + 1 },
+          {
+            length: TRYOUT_CATALOG_LIMIT + 1,
+          },
           (_, index) =>
             Schema.decodeSync(TryoutCatalogRowSchema)({
               ...country,
@@ -121,21 +135,28 @@ describe("contentRelease/tryout/catalog", () => {
         yield* Effect.promise(() =>
           expect(
             t.query((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 readTryoutCatalog("id").pipe(
-                  Effect.provide(convexTryoutLayer(ctx))
+                  Effect.provide(
+                    Layer.provideMerge(
+                      tryoutLayer,
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
+                  )
                 )
               )
             )
-          ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } })
+          ).rejects.toMatchObject({
+            code: "CONTENT_RELEASE_LIMIT",
+          })
         );
       })
   );
-
   it.effect(
     "rejects per-locale kind counts that disagree with the signed global inventory",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const country = makeTryoutCatalogRow("en").record.row;
         const track = makeTechnicalTrack();
@@ -173,26 +194,29 @@ describe("contentRelease/tryout/catalog", () => {
         yield* Effect.promise(() =>
           expect(
             t.query((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 readTryoutCatalog("en").pipe(
-                  Effect.provide(convexTryoutLayer(ctx))
+                  Effect.provide(
+                    Layer.provideMerge(
+                      tryoutLayer,
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
+                  )
                 )
               )
             )
           ).rejects.toMatchObject({
-            data: {
-              code: "CONTENT_RELEASE_INTEGRITY",
-              message: expect.stringContaining("hierarchy counts"),
-            },
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: expect.stringContaining("hierarchy counts"),
           })
         );
       })
   );
-
   it.effect(
     "rejects unequal public-route inventory even when every localized kind count agrees",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const catalog: TryoutCatalogRow[] = [];
         for (const locale of ["en", "id"] as const) {
@@ -231,46 +255,61 @@ describe("contentRelease/tryout/catalog", () => {
         yield* Effect.promise(() =>
           expect(
             t.query((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 readTryoutCatalog("en").pipe(
-                  Effect.provide(convexTryoutLayer(ctx))
+                  Effect.provide(
+                    Layer.provideMerge(
+                      tryoutLayer,
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
+                  )
                 )
               )
             )
           ).rejects.toMatchObject({
-            data: {
-              code: "CONTENT_RELEASE_INTEGRITY",
-              message: expect.stringContaining("public route count"),
-            },
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: expect.stringContaining("public route count"),
           })
         );
       })
   );
-
   it("requires an active signed try-out publication", async () => {
     const t = convexTest(schema, convexModules);
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readTryoutCatalog("en").pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutCatalog("en").pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_MISSING",
+    });
   });
-
   it.live(
     "returns one verified localized hierarchy from the active snapshot",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const { snapshotId, t } = yield* Effect.promise(() =>
           activateCatalog()
         );
         const result = yield* Effect.promise(() =>
           t.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               readTryoutCatalog("id").pipe(
-                Effect.provide(convexTryoutLayer(ctx))
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
@@ -279,18 +318,23 @@ describe("contentRelease/tryout/catalog", () => {
           result.rowJson,
           decodeSnapshotRowJson
         );
-
-        expect(result).toMatchObject({ snapshotId });
+        expect(result).toMatchObject({
+          snapshotId,
+        });
         expect(rows).toMatchObject([
           {
             family: "tryout",
-            record: { row: { appLocale: "id", kind: "country" } },
+            record: {
+              row: {
+                appLocale: "id",
+                kind: "country",
+              },
+            },
             rowKind: "catalog",
           },
         ]);
       })
   );
-
   it("requires active signed question ownership", async () => {
     const { t } = await activateCatalog();
     await t.mutation(async (ctx) => {
@@ -302,16 +346,23 @@ describe("contentRelease/tryout/catalog", () => {
         resultFamilies: ["material"],
       });
     });
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readTryoutCatalog("en").pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutCatalog("en").pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("rejects asymmetric localized hierarchy counts", async () => {
     const asymmetric = convexTest(schema, convexModules);
     await asymmetric.mutation((ctx) =>
@@ -329,15 +380,21 @@ describe("contentRelease/tryout/catalog", () => {
     );
     await expect(
       asymmetric.query((ctx) =>
-        runConvexProgram(
-          readTryoutCatalog("en").pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutCatalog("en").pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
-
   it("fails closed when one signed row disappears or changes indexed facts", async () => {
     const missing = await activateCatalog();
     await missing.t.mutation(async (ctx) => {
@@ -354,14 +411,20 @@ describe("contentRelease/tryout/catalog", () => {
     });
     await expect(
       missing.t.query((ctx) =>
-        runConvexProgram(
-          readTryoutCatalog("en").pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutCatalog("en").pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
-
     const changed = await activateCatalog();
     await changed.t.mutation(async (ctx) => {
       const row = await ctx.db
@@ -373,16 +436,25 @@ describe("contentRelease/tryout/catalog", () => {
       if (!row) {
         throw new Error("Expected one English catalog row.");
       }
-      await ctx.db.patch("tryoutCatalog", row._id, { order: 10 });
+      await ctx.db.patch("tryoutCatalog", row._id, {
+        order: 10,
+      });
     });
     await expect(
       changed.t.query((ctx) =>
-        runConvexProgram(
-          readTryoutCatalog("en").pipe(Effect.provide(convexTryoutLayer(ctx)))
+        Effect.runPromise(
+          readTryoutCatalog("en").pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
+          )
         )
       )
     ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
 });

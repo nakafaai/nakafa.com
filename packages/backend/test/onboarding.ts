@@ -1,12 +1,14 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import {
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
+} from "@repo/backend/confect/test.helpers";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
@@ -24,7 +26,11 @@ export const createOnboardingTest = Effect.fn("test.onboarding.create")(
         seedAuthenticatedUser(ctx, {
           now,
           suffix,
-          ...(role === undefined ? {} : { role }),
+          ...(role === undefined
+            ? {}
+            : {
+                role,
+              }),
         })
       )
     );
@@ -43,6 +49,7 @@ export const createOnboardingTest = Effect.fn("test.onboarding.create")(
 export const activateOnboardingPrograms = Effect.fn(
   "test.onboarding.activatePrograms"
 )(function* (test: ReturnType<typeof createConvexTestWithBetterAuth>) {
+  const runtimeServices = yield* Effect.context<never>();
   const programs = [
     makeOnboardingProgram(1, "merdeka", "merdeka"),
     makeOnboardingProgram(2, "cambridge-international", "cambridge"),
@@ -50,7 +57,17 @@ export const activateOnboardingPrograms = Effect.fn(
     makeOnboardingProgram(4, "united-states", "united-states"),
   ];
   const data = yield* makeProgramSnapshotData(programs);
-  yield* Effect.promise(() => activateProgramSnapshot(test, data));
+  yield* Effect.promise(() =>
+    test.mutation((ctx) =>
+      Effect.runPromiseWith(runtimeServices)(
+        activateProgramSnapshot(data).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    )
+  );
 });
 
 /** Builds one signed school curriculum with a stable onboarding key and slug. */
@@ -61,7 +78,10 @@ function makeOnboardingProgram(index: number, key: string, publicSlug: string) {
     ...base,
     key: LearningProgramKeySchema.make(key),
     translations: [
-      { ...firstTranslation, publicSlug },
+      {
+        ...firstTranslation,
+        publicSlug,
+      },
       ...remainingTranslations.map((translation) => ({
         ...translation,
         publicSlug,

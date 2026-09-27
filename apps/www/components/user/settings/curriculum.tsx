@@ -1,5 +1,9 @@
 "use client";
-import type { api } from "@repo/backend/convex/_generated/api";
+
+import type { Ref } from "@confect/core";
+import type { InvokeReturn } from "@confect/react";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import {
@@ -12,8 +16,8 @@ import {
 } from "@repo/design-system/components/ui/select";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useForm } from "@tanstack/react-form";
-import { type Preloaded, usePreloadedQuery } from "convex/react";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { useConvexAuth } from "convex/react";
+
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
@@ -22,19 +26,17 @@ import { reportClientException } from "@/lib/analytics/client";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-type CurriculumPrograms = FunctionReturnType<
-  typeof api.learningPreferences.queries.listCurriculumPrograms
+type CurriculumPrograms = Ref.Returns<
+  typeof refs.public.learningPreferences.queries.listCurriculumPrograms
 >;
 type CurriculumProgramOption = CurriculumPrograms[number];
-type SavePreferredCurriculumArgs = FunctionArgs<
-  typeof api.learningPreferences.mutations.setPreferredCurriculum
+type SavePreferredCurriculumArgs = Ref.Args<
+  typeof refs.public.learningPreferences.mutations.setPreferredCurriculum
 >;
 type SavePreferredCurriculum = (
   args: SavePreferredCurriculumArgs
-) => Promise<
-  FunctionReturnType<
-    typeof api.learningPreferences.mutations.setPreferredCurriculum
-  >
+) => InvokeReturn<
+  typeof refs.public.learningPreferences.mutations.setPreferredCurriculum
 >;
 const formSchema = Schema.toStandardSchemaV1(
   Schema.Struct({
@@ -58,24 +60,44 @@ class CurriculumPreferenceMutationError extends Schema.TaggedError<CurriculumPre
   }
 ) {}
 interface UserSettingsCurriculumProps {
-  preloadedPreference: Preloaded<
-    typeof api.learningPreferences.queries.getCurrent
+  initialPreference: Ref.Returns<
+    typeof refs.public.learningPreferences.queries.getCurrent
   >;
-  preloadedPrograms: Preloaded<
-    typeof api.learningPreferences.queries.listCurriculumPrograms
+  initialPrograms: Ref.Returns<
+    typeof refs.public.learningPreferences.queries.listCurriculumPrograms
   >;
+  locale: PublicAppLocale;
 }
 /** Renders the settings form that saves the user's preferred curriculum. */
 export function UserSettingsCurriculum({
-  preloadedPreference,
-  preloadedPrograms,
+  locale,
+  initialPreference,
+  initialPrograms,
 }: UserSettingsCurriculumProps) {
-  const preference = usePreloadedQuery(preloadedPreference);
-  const programs = usePreloadedQuery(preloadedPrograms);
+  const { isAuthenticated } = useConvexAuth();
+  const preferenceQuery = useQuery(
+    refs.public.learningPreferences.queries.getCurrent,
+    isAuthenticated ? { locale } : "skip"
+  );
+  const programsQuery = useQuery(
+    refs.public.learningPreferences.queries.listCurriculumPrograms,
+    { locale }
+  );
+  if (QueryResult.isFailure(preferenceQuery)) {
+    throw preferenceQuery.error;
+  }
+  if (QueryResult.isFailure(programsQuery)) {
+    throw programsQuery.error;
+  }
+  const preference = QueryResult.isSuccess(preferenceQuery)
+    ? preferenceQuery.value
+    : initialPreference;
+  const programs = QueryResult.isSuccess(programsQuery)
+    ? programsQuery.value
+    : initialPrograms;
   return (
     <UserSettingsCurriculumForm
       initialProgramKey={preference?.preferredCurriculumProgramKey ?? ""}
-      key={preference?.preferredCurriculumProgramKey ?? "empty"}
       programs={programs}
     />
   );
@@ -251,7 +273,15 @@ function submitCurriculumPreference({
             formValue.preferredCurriculumProgramKey,
         }),
       catch: (cause) => new CurriculumPreferenceMutationError({ cause }),
-    });
+    }).pipe(
+      Effect.flatMap((result) =>
+        Effect.fromResult(result).pipe(
+          Effect.mapError(
+            (cause) => new CurriculumPreferenceMutationError({ cause })
+          )
+        )
+      )
+    );
     return null;
   });
 }

@@ -1,11 +1,11 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -21,7 +21,9 @@ export function StartSectionButton({
   attemptId,
   sectionKey,
 }: StartSectionButtonProps) {
-  const startSection = useMutation(api.tryouts.mutations.sections.start);
+  const startSection = useMutation(
+    refs.public.tryouts.mutations.sections.start
+  );
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
 
@@ -39,6 +41,7 @@ export function StartSectionButton({
             sectionKey,
           })
         ).pipe(
+          Effect.flatMap(Effect.fromResult),
           Effect.tap(() =>
             Effect.sync(() => {
               toast.success(tTryouts("start-part-success"), {

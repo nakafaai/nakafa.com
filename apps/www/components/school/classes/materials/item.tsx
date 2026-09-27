@@ -45,6 +45,7 @@ import {
 } from "@/components/school/classes/materials/mutation.client";
 import type { MaterialGroup } from "@/components/school/classes/materials/types";
 import { formatScheduledAt } from "@/components/school/classes/schedule";
+import { reportClientException } from "@/lib/analytics/client";
 import { getLocale } from "@/lib/utils/date";
 
 /** Return the badge variant used for one material-group status. */
@@ -72,10 +73,8 @@ export function MaterialGroupCard({
   const t = useTranslations("School.Classes");
   const locale = useLocale();
   const pathname = usePathname();
-
   const statusInfo = getMaterialStatus(group.status);
   const StatusIcon = statusInfo.icon;
-
   return (
     <div className="group relative">
       <NavigationLink
@@ -162,38 +161,90 @@ function MaterialGroupActions({
   className?: string;
   group: MaterialGroup;
 }) {
+  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
   const schoolT = useTranslations("School.Classes");
-
   const [isPending, startTransition] = useTransition();
   const [confirmDeleteOpen, confirmDeleteHandlers] = useDisclosure(false);
   const [editOpen, editHandlers] = useDisclosure(false);
-
   const reorderGroup = useReorderMaterialGroupMutation();
   const deleteGroup = useDeleteMaterialGroupMutation();
 
   /** Move this material group one loaded position upward. */
   function handleMoveUp() {
-    startTransition(async () => {
-      await reorderGroup({ groupId: group._id, direction: "up" });
-    });
+    startTransition(async () =>
+      Effect.runPromise(
+        Effect.asVoid(
+          Effect.tryPromise(() =>
+            reorderGroup({
+              groupId: group._id,
+              direction: "up",
+            })
+          ).pipe(Effect.flatMap(Effect.fromResult))
+        ).pipe(
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/school/classes/materials/item",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      )
+    );
   }
 
   /** Move this material group one loaded position downward. */
   function handleMoveDown() {
-    startTransition(async () => {
-      await reorderGroup({ groupId: group._id, direction: "down" });
-    });
+    startTransition(async () =>
+      Effect.runPromise(
+        Effect.asVoid(
+          Effect.tryPromise(() =>
+            reorderGroup({
+              groupId: group._id,
+              direction: "down",
+            })
+          ).pipe(Effect.flatMap(Effect.fromResult))
+        ).pipe(
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/school/classes/materials/item",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      )
+    );
   }
 
   /** Delete this material group and report an unexpected failure. */
   function handleDelete() {
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise(async () => {
-          await deleteGroup({ groupId: group._id });
-          toast.success(schoolT("material-deleted"));
-        }).pipe(
+        Effect.tryPromise(() =>
+          deleteGroup({
+            groupId: group._id,
+          })
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap(() =>
+            Effect.sync(() => {
+              toast.success(schoolT("material-deleted"));
+            })
+          ),
           Effect.catch(() =>
             Effect.sync(() => {
               toast.error(schoolT("delete-material-failed"));
@@ -203,7 +254,6 @@ function MaterialGroupActions({
       );
     });
   }
-
   return (
     <div className={className}>
       <DropdownMenu>

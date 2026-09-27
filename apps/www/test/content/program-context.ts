@@ -15,9 +15,9 @@ import {
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { compareCodeUnits } from "@nakafa/aksara-contracts/text/order";
+import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
+import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
-import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
 import {
   testEmptyManifest,
   testSignedRelease,

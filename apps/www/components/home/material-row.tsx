@@ -1,11 +1,13 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
+import type { Ref } from "@confect/core";
+
+import type refs from "@repo/backend/confect/_generated/refs";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import type { FunctionReturnType } from "convex/server";
+
 import type { ReactNode } from "react";
 
 /**
@@ -15,8 +17,8 @@ import type { ReactNode } from "react";
  * contract, so one projection of it covers both and excludes the fields only
  * one ranked query returns.
  */
-type RankedMaterial = FunctionReturnType<
-  typeof api.contents.queries.recent.getRecentlyViewed
+type RankedMaterial = Ref.Returns<
+  typeof refs.public.contents.queries.recent.getRecentlyViewed
 >[number];
 
 export type HomeMaterial = Pick<

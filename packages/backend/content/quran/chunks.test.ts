@@ -1,12 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { readQuranChunks } from "@repo/backend/content/quran/chunks";
-import { convexQuranLayer } from "@repo/backend/content/quran/convex";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
+import { quranLayer } from "@repo/backend/content/quran/confect";
 import { makeQuranChunk } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 const firstChunk = makeQuranChunk({
@@ -23,86 +21,86 @@ const secondChunk = makeQuranChunk({
 });
 
 describe("contentRelease/quran/chunks", () => {
-  it("reads only the coherent chunks covering one requested range", async () => {
-    const t = convexTest(schema, convexModules);
-    const snapshotId = await t.mutation((ctx) =>
-      activateQuranSnapshot(ctx, [firstChunk, secondChunk])
-    );
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readQuranChunks({
-            fromVerse: 2,
-            numberOfVerses: 7,
-            snapshotId,
-            surahNumber: 1,
-            toVerse: 7,
-          }).pipe(Effect.provide(convexQuranLayer(ctx)))
-        )
-      )
-    ).resolves.toMatchObject({
-      rowJson: [expect.any(String), expect.any(String)],
-      rows: [{ firstVerse: 1 }, { firstVerse: 7 }],
-    });
-  });
-
-  it("fails closed for missing, discontinuous, or excessive chunks", async () => {
-    const missing = convexTest(schema, convexModules);
-    const missingId = await missing.mutation((ctx) =>
-      activateQuranSnapshot(ctx, [firstChunk])
-    );
-    await expect(
-      missing.query((ctx) =>
-        runConvexProgram(
-          readQuranChunks({
-            fromVerse: 1,
-            numberOfVerses: 7,
-            snapshotId: missingId,
-            surahNumber: 1,
-            toVerse: 7,
-          }).pipe(Effect.provide(convexQuranLayer(ctx)))
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-
-    const discontinuous = convexTest(schema, convexModules);
-    const changedSecond = makeQuranChunk({
-      firstQuranNumber: 8,
-      firstVerse: 7,
-      surahNumber: 1,
-      verseCount: 1,
-    });
-    const changedId = await discontinuous.mutation((ctx) =>
-      activateQuranSnapshot(ctx, [firstChunk, changedSecond])
-    );
-    await expect(
-      discontinuous.query((ctx) =>
-        runConvexProgram(
-          readQuranChunks({
-            fromVerse: 1,
-            numberOfVerses: 7,
-            snapshotId: changedId,
-            surahNumber: 1,
-            toVerse: 7,
-          }).pipe(Effect.provide(convexQuranLayer(ctx)))
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-
-    const excessive = convexTest(schema, convexModules);
-    await expect(
-      excessive.query((ctx) =>
-        runConvexProgram(
-          readQuranChunks({
-            fromVerse: 1,
-            numberOfVerses: 301,
-            snapshotId: "technical-snapshot",
-            surahNumber: 1,
-            toVerse: 301,
-          }).pipe(Effect.provide(convexQuranLayer(ctx)))
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
-  });
+  it.effect("reads only the coherent chunks covering one requested range", () =>
+    Effect.gen(function* () {
+      const confect = yield* Confect;
+      yield* confect.run(
+        Effect.gen(function* () {
+          const ctx = yield* MutationCtx;
+          const snapshotId = yield* Effect.promise(() =>
+            activateQuranSnapshot(ctx, [firstChunk, secondChunk])
+          );
+          expect(
+            yield* readQuranChunks({
+              fromVerse: 2,
+              numberOfVerses: 7,
+              snapshotId,
+              surahNumber: 1,
+              toVerse: 7,
+            })
+          ).toMatchObject({
+            rowJson: [expect.any(String), expect.any(String)],
+            rows: [{ firstVerse: 1 }, { firstVerse: 7 }],
+          });
+        }).pipe(Effect.provide(quranLayer))
+      );
+    }).pipe(Effect.provide(confectLayer))
+  );
+  it.effect.each([
+    [firstChunk],
+    [
+      firstChunk,
+      makeQuranChunk({
+        firstQuranNumber: 8,
+        firstVerse: 7,
+        surahNumber: 1,
+        verseCount: 1,
+      }),
+    ],
+  ])("fails closed for missing or discontinuous chunks: %j", (chunks) =>
+    Effect.gen(function* () {
+      const confect = yield* Confect;
+      yield* confect.run(
+        Effect.gen(function* () {
+          const ctx = yield* MutationCtx;
+          const snapshotId = yield* Effect.promise(() =>
+            activateQuranSnapshot(ctx, chunks)
+          );
+          expect(
+            yield* readQuranChunks({
+              fromVerse: 1,
+              numberOfVerses: 7,
+              snapshotId,
+              surahNumber: 1,
+              toVerse: 7,
+            }).pipe(Effect.flip)
+          ).toMatchObject({
+            _tag: "ReleaseError",
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
+        }).pipe(Effect.provide(quranLayer))
+      );
+    }).pipe(Effect.provide(confectLayer))
+  );
+  it.effect("rejects excessive ranges before reading chunks", () =>
+    Effect.gen(function* () {
+      const confect = yield* Confect;
+      yield* confect.run(
+        Effect.gen(function* () {
+          expect(
+            yield* readQuranChunks({
+              fromVerse: 1,
+              numberOfVerses: 301,
+              snapshotId: "technical-snapshot",
+              surahNumber: 1,
+              toVerse: 301,
+            }).pipe(Effect.flip)
+          ).toMatchObject({
+            _tag: "ReleaseError",
+            code: "CONTENT_RELEASE_LIMIT",
+          });
+        }).pipe(Effect.provide(quranLayer))
+      );
+    }).pipe(Effect.provide(confectLayer))
+  );
 });

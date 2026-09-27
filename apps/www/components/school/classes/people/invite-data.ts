@@ -1,6 +1,6 @@
+import type { Ref } from "@confect/core";
 import { StudentIcon, TeacherIcon } from "@hugeicons/core-free-icons";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type refs from "@repo/backend/confect/_generated/refs";
 
 /** Role options available in the class invite menu. */
 export const inviteRoleList = [
@@ -10,12 +10,14 @@ export const inviteRoleList = [
 
 export type InviteRole = (typeof inviteRoleList)[number]["value"];
 
-type InviteCode = FunctionReturnType<
-  typeof api.classes.queries.getInviteCodes
+type InviteCode = Ref.Returns<
+  typeof refs.public.classes.queries.getInviteCodes
 >[number];
 
 /** Build an invite-code lookup table keyed by class role. */
-export function mapInviteCodesByRole(inviteCodes: InviteCode[] | undefined) {
+export function mapInviteCodesByRole(
+  inviteCodes: readonly InviteCode[] | undefined
+) {
   if (!inviteCodes) {
     return new Map<InviteRole, InviteCode>();
   }

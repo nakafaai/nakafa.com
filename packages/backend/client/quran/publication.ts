@@ -3,7 +3,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import type { QuranSourceEnvelope } from "@repo/backend/convex/contentRelease/quran/spec";
+import type { QuranSourceEnvelope } from "@repo/backend/confect/contentRelease/quran/spec";
 import { Effect, Schema } from "effect";
 
 const QuranPublicationOperationSchema = Schema.Literals([
@@ -15,7 +15,6 @@ const QuranPublicationOperationSchema = Schema.Literals([
   "reference",
   "view",
 ]);
-
 export type QuranPublicationOperation =
   typeof QuranPublicationOperationSchema.Type;
 
@@ -33,9 +32,11 @@ export function quranPublicationError(
   operation: QuranPublicationOperation,
   reason: string
 ) {
-  return new QuranPublicationError({ operation, reason });
+  return new QuranPublicationError({
+    operation,
+    reason,
+  });
 }
-
 const publishedQuranIdentityFields = {
   activeManifestHash: Sha256HashSchema,
   activeReleaseId: ReleaseIdSchema,
@@ -57,7 +58,9 @@ const PublishedQuranGitSourceSchema = Schema.Struct({
   Schema.check(
     Schema.makeFilter(
       ({ sourceOrigin, sourceRevision }) => sourceOrigin.sha === sourceRevision,
-      { message: "Expected the Quran Git revision to match its signed origin." }
+      {
+        message: "Expected the Quran Git revision to match its signed origin.",
+      }
     )
   )
 );
@@ -70,7 +73,6 @@ const PublishedQuranSourceSchema = Schema.Union([
   PublishedQuranGitSourceSchema,
   PublishedQuranRollbackSourceSchema,
 ]);
-
 export type PublishedQuranSource = typeof PublishedQuranSourceSchema.Type;
 
 /** Requires signed release and snapshot identity with truthful provenance. */

@@ -1,10 +1,10 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
+import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
-import type { ActiveContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
-import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import { Effect } from "effect";
 
 /** Reads one exact active article through its authenticated catalog row. */
@@ -31,7 +31,9 @@ export const readArticleReference = Effect.fn(
     contentHash: resolved.projectionHash,
     ...(projection.metadata.description === undefined
       ? {}
-      : { description: projection.metadata.description }),
+      : {
+          description: projection.metadata.description,
+        }),
     hasMarkdownSource: true,
     locale: input.publicLocale,
     route: projection.publicPath,
@@ -50,7 +52,10 @@ const readArticleRows = Effect.fn("contentRelease.readArticleReferenceRows")(
     const rows = yield* input.kind === "route"
       ? source.byPublicPath(slot, input.appLocale, input.publicPath)
       : source.byAssetId(slot, input.appLocale, input.contentId);
-    return rows.map((row) => ({ appLocale: input.appLocale, row }));
+    return rows.map((row) => ({
+      appLocale: input.appLocale,
+      row,
+    }));
   }
 );
 /** Rejects a semantic identity shared by multiple current catalog rows. */

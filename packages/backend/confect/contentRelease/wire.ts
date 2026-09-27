@@ -1,0 +1,81 @@
+import {
+  canonicalizeSignedContentArtifact,
+  type SignedContentArtifactSchema,
+} from "@nakafa/aksara-contracts/content";
+import {
+  type ContentProjection,
+  canonicalizeContentProjection,
+} from "@nakafa/aksara-contracts/projection/spec";
+import type {
+  ContentReleaseItemSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
+import { canonicalizeContentReleaseItem } from "@nakafa/aksara-contracts/release/canonical";
+import {
+  type ContentRouteItemSchema,
+  canonicalizeContentRouteItem,
+} from "@nakafa/aksara-contracts/release/route/spec";
+import {
+  type ContentSnapshotManifestSchema,
+  type ContentSnapshotRowSchema,
+  canonicalizeContentSnapshotRow,
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+/** Stores one signed release without introducing a second wire canonicalizer. */
+import type { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
+import type { SignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/spec";
+/** Stores one signed release without introducing a second wire canonicalizer. */
+export function encodeReleaseJson(
+  release: typeof SignedContentReleaseSchema.Type
+) {
+  return JSON.stringify(release);
+}
+
+/** Stores one item using the canonicalizer owned by Aksara contracts. */
+export function encodeItemJson(item: typeof ContentReleaseItemSchema.Type) {
+  return canonicalizeContentReleaseItem(item);
+}
+
+/** Stores one route item using the canonicalizer owned by Aksara contracts. */
+export function encodeRouteJson(item: typeof ContentRouteItemSchema.Type) {
+  return canonicalizeContentRouteItem(item);
+}
+
+/** Stores one artifact using the canonicalizer owned by Aksara contracts. */
+export function encodeArtifactJson(
+  artifact: typeof SignedContentArtifactSchema.Type
+) {
+  return canonicalizeSignedContentArtifact(artifact);
+}
+
+/** Stores one projection using the canonicalizer owned by Aksara contracts. */
+export function encodeProjectionJson(projection: ContentProjection) {
+  return canonicalizeContentProjection(projection);
+}
+
+/** Stores one schema-decoded family manifest without a duplicate wire format. */
+export function encodeSnapshotJson(
+  snapshot: typeof ContentSnapshotManifestSchema.Type
+) {
+  return JSON.stringify(snapshot);
+}
+
+/** Stores one structured row through the contract-owned canonicalizer. */
+export function encodeSnapshotRowJson(
+  row: typeof ContentSnapshotRowSchema.Type
+) {
+  return canonicalizeContentSnapshotRow(row);
+}
+
+/** Stores one already-canonical renderer envelope without a mirror schema. */
+export function encodeRendererJson(
+  renderer: typeof RendererManifestEnvelopeSchema.Type
+) {
+  return JSON.stringify(renderer);
+}
+
+/** Stores one schema-decoded signed runtime bundle without a mirror format. */
+export function encodeTryoutRuntimeBundleJson(
+  bundle: SignedTryoutRuntimeBundle
+) {
+  return JSON.stringify(bundle);
+}

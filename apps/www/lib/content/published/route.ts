@@ -1,4 +1,5 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
@@ -11,17 +12,16 @@ import {
   familyForProjection,
   RoutedContentProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/spec";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
-type ContentRouteArgs = FunctionArgs<
-  typeof api.contentRelease.ownership.resolve
+type ContentRouteArgs = Ref.Args<
+  typeof refs.public.contentRelease.ownership.resolve
 >;
-type ContentRouteResult = FunctionReturnType<
-  typeof api.contentRelease.ownership.resolve
+type ContentRouteResult = Ref.Returns<
+  typeof refs.public.contentRelease.ownership.resolve
 >;
 /** One active Aksara route selected without exposing executable code. */
 type ActiveContentRoute =
@@ -60,9 +60,9 @@ const decodeActiveProjection = Effect.fn(
   });
   const projection = yield* Schema.decodeUnknownEffect(
     RoutedContentProjectionSchema
-  )(parsed, { onExcessProperty: "error" }).pipe(
-    Effect.mapError(() => new PublishedProjectionError(identity))
-  );
+  )(parsed, {
+    onExcessProperty: "error",
+  }).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
   if (
     familyForProjection(projection) !== identity.family ||
     projection.appLocale !== identity.appLocale ||
@@ -82,22 +82,26 @@ export const readActiveContentRoute = Effect.fn(
     family: input.family,
     publicPath: input.publicPath,
   };
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.ownership.resolve,
-    args
-  );
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.ownership.resolve, args)
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   if (result.kind === "unmanaged") {
     const activeReleaseId = yield* Schema.decodeEffect(
       Schema.NullOr(ReleaseIdSchema)
     )(result.activeReleaseId);
-    return { activeReleaseId, kind: result.kind } satisfies ActiveContentRoute;
+    return {
+      activeReleaseId,
+      kind: result.kind,
+    } satisfies ActiveContentRoute;
   }
   const activeReleaseId = yield* Schema.decodeEffect(ReleaseIdSchema)(
     result.activeReleaseId
   );
   if (result.kind === "missing") {
-    return { activeReleaseId, kind: result.kind } satisfies ActiveContentRoute;
+    return {
+      activeReleaseId,
+      kind: result.kind,
+    } satisfies ActiveContentRoute;
   }
   const projection = yield* decodeActiveProjection(result, args);
   return {

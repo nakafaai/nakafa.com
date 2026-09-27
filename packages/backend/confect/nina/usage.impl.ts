@@ -1,0 +1,55 @@
+import { FunctionImpl, GroupImpl } from "@confect/server";
+import schema from "@repo/backend/confect/_generated/schema";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import spec from "@repo/backend/confect/nina/usage.spec";
+import { Effect, Layer } from "effect";
+
+/** Agent invokes this after every model response, including repair and synthesis. */
+const record = FunctionImpl.make(
+  schema,
+  spec,
+  "record",
+  Effect.fn("nina.usage.record")(function* ({ turnId, usage }) {
+    const turn = yield* (yield* DatabaseReader)
+      .table("ninaTurns")
+      .get(turnId)
+      .pipe(
+        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    if (!turn) {
+      return null;
+    }
+    const totals = [...turn.usage];
+    const index = totals.findIndex(
+      (row) =>
+        row.agent === usage.agent &&
+        row.model === usage.model &&
+        row.provider === usage.provider
+    );
+    const previous = totals[index];
+    if (previous) {
+      totals[index] = {
+        ...usage,
+        input: previous.input + usage.input,
+        output: previous.output + usage.output,
+        calls: previous.calls + 1,
+      };
+    } else {
+      totals.push({ ...usage, calls: 1 });
+    }
+    yield* (yield* DatabaseWriter)
+      .table("ninaTurns")
+      .patch(turnId, { usage: totals })
+      .pipe(Effect.orDie);
+    return null;
+  })
+);
+
+export default GroupImpl.make(schema, spec).pipe(
+  Layer.provide(record),
+  GroupImpl.finalize
+);

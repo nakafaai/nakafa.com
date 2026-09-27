@@ -7,13 +7,13 @@ import {
   TryoutSetSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { TRYOUT_SET_QUESTION_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { readTryoutSectionRows } from "@repo/backend/content/tryout/section";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { TRYOUT_SET_QUESTION_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
-import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { Effect, Option, Schema } from "effect";
 /** Stable authored keys that select one localized signed try-out set. */
 export interface TryoutSetIdentity {
@@ -91,7 +91,10 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
         `Try-out set ${setIdentity} lost one or more signed sections.`
       );
     }
-    const set = { row: setRow, rowHash: storedSet.rowHash };
+    const set = {
+      row: setRow,
+      rowHash: storedSet.rowHash,
+    };
     const entrySectionKey = setRow.internalEntrySectionKey;
     if (
       entrySectionKey &&
@@ -106,7 +109,12 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
         `Try-out set ${setIdentity} lost its internal entry section.`
       );
     }
-    return { sections, set, setIdentity, snapshotId };
+    return {
+      sections,
+      set,
+      setIdentity,
+      snapshotId,
+    };
   }
 );
 /** Complete authenticated set state frozen into one new attempt. */

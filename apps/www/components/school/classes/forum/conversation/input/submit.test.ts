@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { SessionRequired } from "@repo/backend/confect/auth/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import { Effect, Layer, Result } from "effect";
@@ -45,8 +46,8 @@ function makeMutations(
   overrides: Partial<SubmitForumPostInput["mutations"]> = {}
 ) {
   return {
-    createPost: vi.fn(() => Promise.resolve(postId)),
-    discardForumUploads: vi.fn(() => Promise.resolve(null)),
+    createPost: vi.fn(() => Promise.resolve(Result.succeed(postId))),
+    discardForumUploads: vi.fn(() => Promise.resolve(Result.succeed(null))),
     generateUploadUrl: vi.fn(),
     saveForumUpload: vi.fn(),
     ...overrides,
@@ -55,7 +56,9 @@ function makeMutations(
 /** Builds one browser attachment fixture. */
 function makeFile(id: string) {
   return {
-    file: new File([id], `${id}.txt`, { type: "text/plain" }),
+    file: new File([id], `${id}.txt`, {
+      type: "text/plain",
+    }),
     id,
   } satisfies FileWithPreview;
 }
@@ -68,6 +71,59 @@ describe("submitForumPost", () => {
       })
     );
   });
+  it.effect.each(["url", "save", "create", "cleanup"] as const)(
+    "keeps a declared %s failure in the upload cleanup protocol",
+    (stage) =>
+      Effect.gen(function* () {
+        const rejected = new SessionRequired({
+          code: "UNAUTHENTICATED",
+          message: "Unauthenticated",
+        });
+        const uploadId =
+          "upload_native" as Id<"schoolClassForumPendingUploads">;
+        const mutations = makeMutations({
+          generateUploadUrl: vi.fn(async () =>
+            stage === "url"
+              ? Result.fail(rejected)
+              : Result.succeed({ uploadId, uploadUrl })
+          ),
+          saveForumUpload: vi.fn(async () =>
+            stage === "save" ? Result.fail(rejected) : Result.succeed(uploadId)
+          ),
+          createPost: vi.fn(async () =>
+            stage === "create" ? Result.fail(rejected) : Result.succeed(postId)
+          ),
+          discardForumUploads: vi.fn(async () =>
+            stage === "cleanup" ? Result.fail(rejected) : Result.succeed(null)
+          ),
+        });
+        if (stage === "cleanup") {
+          mocks.response.mockReturnValue(new Response(null, { status: 503 }));
+        }
+        const result = yield* runSubmit({
+          files: [makeFile("native")],
+          mutations,
+          post: { body: "Keep the draft", forumId, parentId: undefined },
+        });
+        expect(Result.isFailure(result)).toBe(true);
+        if (stage !== "create") {
+          expect(mutations.createPost).not.toHaveBeenCalled();
+        }
+        if (stage === "url") {
+          expect(mutations.discardForumUploads).not.toHaveBeenCalled();
+        } else {
+          expect(mutations.discardForumUploads).toHaveBeenCalledWith({
+            uploadIds: [uploadId],
+          });
+        }
+        if (stage === "cleanup") {
+          expect(mocks.captureException).toHaveBeenCalledWith(
+            expect.objectContaining({ _tag: "ForumAttachmentCleanupError" }),
+            expect.anything()
+          );
+        }
+      })
+  );
   it.effect.each([undefined, postId])(
     "creates a text-only post with parent %s without uploads",
     (parentId) =>
@@ -88,7 +144,11 @@ describe("submitForumPost", () => {
             {
               body: "hello",
               forumId,
-              ...(parentId === undefined ? {} : { parentId }),
+              ...(parentId === undefined
+                ? {}
+                : {
+                    parentId,
+                  }),
             },
           ],
         ]);
@@ -135,9 +195,14 @@ describe("submitForumPost", () => {
       ] satisfies FileWithPreview[];
       const mutations = makeMutations({
         generateUploadUrl: vi.fn(() =>
-          Promise.resolve({ uploadId, uploadUrl })
+          Promise.resolve(
+            Result.succeed({
+              uploadId,
+              uploadUrl,
+            })
+          )
         ),
-        saveForumUpload: vi.fn(() => Promise.resolve(uploadId)),
+        saveForumUpload: vi.fn(() => Promise.resolve(Result.succeed(uploadId))),
       });
       const result = yield* runSubmit({
         files,
@@ -189,12 +254,16 @@ describe("submitForumPost", () => {
         const mutations = makeMutations({
           generateUploadUrl: vi
             .fn()
-            .mockResolvedValueOnce({
-              uploadId: successfulUploadId,
-              uploadUrl,
-            })
+            .mockResolvedValueOnce(
+              Result.succeed({
+                uploadId: successfulUploadId,
+                uploadUrl,
+              })
+            )
             .mockRejectedValueOnce(new Error("upload URL failed")),
-          saveForumUpload: vi.fn(() => Promise.resolve(successfulUploadId)),
+          saveForumUpload: vi.fn(() =>
+            Promise.resolve(Result.succeed(successfulUploadId))
+          ),
         });
         const result = yield* runSubmit({
           files,
@@ -220,14 +289,23 @@ describe("submitForumPost", () => {
           "upload_storage" as Id<"schoolClassForumPendingUploads">;
         const files = [makeFile("storage")];
         mocks.response.mockReturnValue(
-          new Response("storage failed", { status: 500 })
+          new Response("storage failed", {
+            status: 500,
+          })
         );
         const mutations = makeMutations({
           discardForumUploads: vi.fn(() => Promise.reject("cleanup failed")),
           generateUploadUrl: vi.fn(() =>
-            Promise.resolve({ uploadId, uploadUrl })
+            Promise.resolve(
+              Result.succeed({
+                uploadId,
+                uploadUrl,
+              })
+            )
           ),
-          saveForumUpload: vi.fn(() => Promise.resolve(uploadId)),
+          saveForumUpload: vi.fn(() =>
+            Promise.resolve(Result.succeed(uploadId))
+          ),
         });
         const result = yield* runSubmit({
           files,
@@ -252,7 +330,9 @@ describe("submitForumPost", () => {
             _tag: "ForumAttachmentCleanupError",
             cause: "cleanup failed",
           }),
-          { source: "forum-upload-discard-single" }
+          {
+            source: "forum-upload-discard-single",
+          }
         );
       })
   );
@@ -263,7 +343,12 @@ describe("submitForumPost", () => {
       const files = [makeFile("metadata")];
       const mutations = makeMutations({
         generateUploadUrl: vi.fn(() =>
-          Promise.resolve({ uploadId, uploadUrl })
+          Promise.resolve(
+            Result.succeed({
+              uploadId,
+              uploadUrl,
+            })
+          )
         ),
         saveForumUpload: vi.fn(() => Promise.reject(new Error("save failed"))),
       });
@@ -291,9 +376,14 @@ describe("submitForumPost", () => {
       const mutations = makeMutations({
         createPost: vi.fn(() => Promise.reject(new Error("post failed"))),
         generateUploadUrl: vi.fn(() =>
-          Promise.resolve({ uploadId, uploadUrl })
+          Promise.resolve(
+            Result.succeed({
+              uploadId,
+              uploadUrl,
+            })
+          )
         ),
-        saveForumUpload: vi.fn(() => Promise.resolve(uploadId)),
+        saveForumUpload: vi.fn(() => Promise.resolve(Result.succeed(uploadId))),
       });
       const result = yield* runSubmit({
         files,

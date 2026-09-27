@@ -1,11 +1,11 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { PROGRAM_RELATED_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
+import { requireExpectedActiveRelease } from "@repo/backend/confect/contentRelease/runtime/pin";
 import { loadProgramOwner } from "@repo/backend/content/program/owner";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { PROGRAM_RELATED_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
-import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
 import { Effect, Option } from "effect";
 
 interface ProgramContextInput {
@@ -47,7 +47,10 @@ export const readProgramContext = Effect.fn(
   );
   const owner = yield* loadProgramOwner(appLocale);
   if (!(owner.managed && owner.selected)) {
-    return { context: null, managed: false };
+    return {
+      context: null,
+      managed: false,
+    };
   }
   const { snapshotId } = owner.selected;
   const source = yield* ProgramSource;
@@ -55,11 +58,17 @@ export const readProgramContext = Effect.fn(
     .node(snapshotId, appLocale, input.programKey, input.nodeKey)
     .pipe(Effect.map(Option.getOrNull));
   if (!storedGroup) {
-    return { context: null, managed: true };
+    return {
+      context: null,
+      managed: true,
+    };
   }
   const group = yield* verifyCurriculum(storedGroup, snapshotId);
   if (!group.parentPath) {
-    return { context: null, managed: true };
+    return {
+      context: null,
+      managed: true,
+    };
   }
   const storedParent = yield* source
     .route(snapshotId, appLocale, group.parentPath)
@@ -72,7 +81,10 @@ export const readProgramContext = Effect.fn(
   }
   const parent = yield* verifyCurriculum(storedParent, snapshotId);
   if (!(parent.level === "subject" || parent.level === "course")) {
-    return { context: null, managed: true };
+    return {
+      context: null,
+      managed: true,
+    };
   }
   const storedContexts = yield* source.related(
     snapshotId,
@@ -89,7 +101,10 @@ export const readProgramContext = Effect.fn(
   }
   const contexts = yield* Effect.forEach(storedContexts, (row) =>
     verifyCurriculum(row, snapshotId).pipe(
-      Effect.map((context) => ({ context, row }))
+      Effect.map((context) => ({
+        context,
+        row,
+      }))
     )
   );
   const identityMatches = contexts.filter(({ context }) =>
@@ -108,10 +123,14 @@ export const readProgramContext = Effect.fn(
   }
   const match = directMatches[0];
   if (!match) {
-    return { context: null, managed: true };
+    return {
+      context: null,
+      managed: true,
+    };
   }
   return {
     context: {
+      group,
       groupJson: storedGroup.rowJson,
       mapping: {
         ...match.context,

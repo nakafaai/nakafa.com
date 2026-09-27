@@ -1,12 +1,12 @@
 // @vitest-environment node
 
+import { HttpClient } from "@confect/js";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import { api } from "@repo/backend/convex/_generated/api";
-import { getFunctionName } from "convex/server";
-import { ConvexError } from "convex/values";
-import { Effect } from "effect";
+import refs from "@repo/backend/confect/_generated/refs";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import { Effect, Layer } from "effect";
 import {
   getMaterialModel,
   getMaterialPublication,
@@ -51,14 +51,39 @@ const published = {
   projection,
   body: "rendered",
 };
-
-vi.mock("@/lib/content/published/body", () => ({ readRenderedBody: vi.fn() }));
-vi.mock("convex/nextjs", () => ({ fetchQuery: queryMock }));
-vi.mock("next/cache", () => ({ cacheLife: vi.fn() }));
-vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+vi.mock("@/lib/content/published/body", () => ({
+  readRenderedBody: vi.fn(),
 }));
-vi.mock("@/lib/content/cache", () => ({ applyContentCache: cacheMock }));
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: queryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
+vi.mock("next/cache", () => ({
+  cacheLife: vi.fn(),
+}));
+vi.mock("@/env", () => ({
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
+}));
+vi.mock("@/lib/content/cache", () => ({
+  applyContentCache: cacheMock,
+}));
 vi.mock("@/lib/content/published/exchange", () => ({
   decodePublishedDelivery: deliveryMock,
 }));
@@ -68,12 +93,11 @@ vi.mock("@/lib/content/published/material", async (importOriginal) => ({
   >()),
   renderMaterialArtifact: renderMock,
 }));
-
 beforeEach(() => {
   queryMock.mockReset().mockImplementation((reference) =>
-    Promise.resolve(
-      getFunctionName(reference) ===
-        getFunctionName(api.contentRelease.material.navigation)
+    Effect.succeed(
+      reference.convexFunctionName ===
+        refs.public.contentRelease.material.navigation.convexFunctionName
         ? {
             activeManifestHash: model.activeManifestHash,
             activeReleaseId,
@@ -90,90 +114,130 @@ beforeEach(() => {
   deliveryMock.mockReset().mockReturnValue(Effect.succeed(data));
   renderMock.mockReset().mockReturnValue(Effect.succeed(published));
 });
-
 describe("coherent material publication", () => {
   it("restarts a cold lesson read once when publication advances before navigation", async () => {
     const nextRelease = ReleaseIdSchema.make("release-next");
-    const nextModel = { ...model, activeReleaseId: nextRelease };
+    const nextModel = {
+      ...model,
+      activeReleaseId: nextRelease,
+    };
     queryMock
-      .mockResolvedValueOnce({
-        materialKey: projection.materialKey,
-        model,
-        runtimeJson: "old-envelope",
-      })
-      // Next cache boundaries serialize errors and do not preserve ConvexError.
-      .mockRejectedValueOnce(new Error("Cached navigation read failed"))
-      .mockResolvedValueOnce({
-        materialKey: projection.materialKey,
-        model: nextModel,
-        runtimeJson: "new-envelope",
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId: nextRelease,
-        activeManifestHash: model.activeManifestHash,
-        siblingJson: model.siblingJson,
-      });
+      .mockReturnValueOnce(
+        Effect.succeed({
+          materialKey: projection.materialKey,
+          model,
+          runtimeJson: "old-envelope",
+        })
+      )
+      // Native HTTP failures remain tagged across the content-read boundary.
+      .mockReturnValueOnce(
+        Effect.fail(
+          new HttpClient.HttpClientError({
+            cause: new Error("Cached navigation read failed"),
+          })
+        )
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          materialKey: projection.materialKey,
+          model: nextModel,
+          runtimeJson: "new-envelope",
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: nextRelease,
+          activeManifestHash: model.activeManifestHash,
+          siblingJson: model.siblingJson,
+        })
+      );
     deliveryMock.mockReturnValueOnce(
-      Effect.succeed({ ...data, activeReleaseId: nextRelease })
+      Effect.succeed({
+        ...data,
+        activeReleaseId: nextRelease,
+      })
     );
     await expect(
       getMaterialPublication("en", projection.publicPath)
-    ).resolves.toMatchObject({ model: { activeReleaseId: nextRelease } });
+    ).resolves.toMatchObject({
+      model: {
+        activeReleaseId: nextRelease,
+      },
+    });
     expect(queryMock).toHaveBeenCalledTimes(4);
     expect(queryMock).toHaveBeenNthCalledWith(
       4,
-      api.contentRelease.material.navigation,
+      refs.public.contentRelease.material.navigation,
       {
         appLocale: "en",
         expectedActiveReleaseId: nextRelease,
         materialKey: projection.materialKey,
-      },
-      { url: "https://test.convex.cloud" }
+      }
     );
     expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
-      { appLocale: "en", publicPath: projection.publicPath },
+      {
+        appLocale: "en",
+        publicPath: projection.publicPath,
+      },
       "new-envelope"
     );
   });
-
   it.each(["lesson", "navigation"])(
     "bounds the retry when the next %s read fails",
     async (stage) => {
-      const cause = new ConvexError({ code: "CONTENT_RELEASE_STATE" });
+      const cause = new ReleaseError({
+        code: "CONTENT_RELEASE_STATE",
+        message: "Read failed",
+      });
       const lesson = {
         materialKey: projection.materialKey,
         model,
         runtimeJson: "signed-envelope",
       };
-      queryMock.mockResolvedValueOnce(lesson).mockRejectedValueOnce(cause);
+      queryMock
+        .mockReturnValueOnce(Effect.succeed(lesson))
+        .mockReturnValueOnce(Effect.fail(cause));
       if (stage === "navigation") {
-        queryMock.mockResolvedValueOnce({
-          ...lesson,
-          model: { ...model, activeReleaseId: "release-next" },
-        });
+        queryMock.mockReturnValueOnce(
+          Effect.succeed({
+            ...lesson,
+            model: {
+              ...model,
+              activeReleaseId: "release-next",
+            },
+          })
+        );
       }
-      queryMock.mockRejectedValueOnce(cause);
+      queryMock.mockReturnValueOnce(Effect.fail(cause));
       await expect(
         getMaterialPublication("en", projection.publicPath)
-      ).rejects.toMatchObject({ _tag: "MaterialReadError", cause, stage });
+      ).rejects.toMatchObject({
+        _tag: "MaterialReadError",
+        cause,
+        stage,
+      });
       expect(queryMock).toHaveBeenCalledTimes(stage === "lesson" ? 3 : 4);
       expect(renderMock).not.toHaveBeenCalled();
     }
   );
-
   it.each([
     new Error("network failure"),
-    new ConvexError({ code: "CONTENT_RELEASE_INTEGRITY" }),
+    new ReleaseError({
+      code: "CONTENT_RELEASE_INTEGRITY",
+      message: "Invalid publication",
+    }),
   ])(
     "preserves navigation failures when publication has not advanced: %s",
     async (cause) => {
       queryMock
-        .mockResolvedValueOnce({
-          materialKey: projection.materialKey,
-          model,
-          runtimeJson: "signed-envelope",
-        })
-        .mockRejectedValueOnce(cause);
+        .mockReturnValueOnce(
+          Effect.succeed({
+            materialKey: projection.materialKey,
+            model,
+            runtimeJson: "signed-envelope",
+          })
+        )
+        .mockReturnValueOnce(Effect.fail(cause));
       await expect(
         getMaterialPublication("en", projection.publicPath)
       ).rejects.toMatchObject({
@@ -185,44 +249,55 @@ describe("coherent material publication", () => {
       expect(renderMock).not.toHaveBeenCalled();
     }
   );
-
   it("reads the shell and body once and verifies them before rendering", async () => {
     await expect(
       getMaterialPublication("en", projection.publicPath)
     ).resolves.toMatchObject({
-      model: { activeReleaseId, projection },
+      model: {
+        activeReleaseId,
+        projection,
+      },
       published,
     });
     expect(queryMock).toHaveBeenNthCalledWith(
       1,
-      api.contentRelease.material.lesson,
-      { appLocale: "en", publicPath: projection.publicPath },
-      { url: "https://test.convex.cloud" }
+      refs.public.contentRelease.material.lesson,
+      {
+        appLocale: "en",
+        publicPath: projection.publicPath,
+      }
     );
     expect(queryMock).toHaveBeenNthCalledWith(
       2,
-      api.contentRelease.material.navigation,
+      refs.public.contentRelease.material.navigation,
       {
         appLocale: "en",
         expectedActiveReleaseId: activeReleaseId,
         materialKey: projection.materialKey,
-      },
-      { url: "https://test.convex.cloud" }
+      }
     );
     expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
-      { appLocale: "en", publicPath: projection.publicPath },
+      {
+        appLocale: "en",
+        publicPath: projection.publicPath,
+      },
       "signed-envelope"
     );
     expect(cacheMock).toHaveBeenCalledWith("material");
     expect(renderMock).toHaveBeenCalledOnce();
   });
-
   it("caches an authenticated withdrawal without rendering", async () => {
-    queryMock.mockResolvedValueOnce({
-      materialKey: null,
-      model: { ...model, alternateJson: [], projectionJson: null },
-      runtimeJson: null,
-    });
+    queryMock.mockReturnValueOnce(
+      Effect.succeed({
+        materialKey: null,
+        model: {
+          ...model,
+          alternateJson: [],
+          projectionJson: null,
+        },
+        runtimeJson: null,
+      })
+    );
     await expect(
       getMaterialPublication("en", projection.publicPath)
     ).resolves.toBeNull();
@@ -230,18 +305,23 @@ describe("coherent material publication", () => {
     expect(deliveryMock).not.toHaveBeenCalled();
     expect(renderMock).not.toHaveBeenCalled();
   });
-
   it.each(["missing-body", "orphan-body"])(
     "rejects %s before rendering",
     async (kind) => {
-      queryMock.mockResolvedValueOnce({
-        materialKey: kind === "orphan-body" ? null : projection.materialKey,
-        model:
-          kind === "orphan-body"
-            ? { ...model, alternateJson: [], projectionJson: null }
-            : model,
-        runtimeJson: kind === "missing-body" ? null : "signed-envelope",
-      });
+      queryMock.mockReturnValueOnce(
+        Effect.succeed({
+          materialKey: kind === "orphan-body" ? null : projection.materialKey,
+          model:
+            kind === "orphan-body"
+              ? {
+                  ...model,
+                  alternateJson: [],
+                  projectionJson: null,
+                }
+              : model,
+          runtimeJson: kind === "missing-body" ? null : "signed-envelope",
+        })
+      );
       await expect(
         getMaterialPublication("en", projection.publicPath)
       ).rejects.toMatchObject({
@@ -250,54 +330,77 @@ describe("coherent material publication", () => {
       expect(renderMock).not.toHaveBeenCalled();
     }
   );
-
   it.each([
-    { activeReleaseId: "release-other" },
-    { activeManifestHash: `sha256:${"b".repeat(64)}` },
+    {
+      activeReleaseId: "release-other",
+    },
+    {
+      activeManifestHash: `sha256:${"b".repeat(64)}`,
+    },
   ])("rejects navigation from a different publication: %j", async (patch) => {
     queryMock
-      .mockResolvedValueOnce({
-        materialKey: projection.materialKey,
-        model,
-        runtimeJson: "signed-envelope",
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        activeManifestHash: model.activeManifestHash,
-        siblingJson: model.siblingJson,
-        ...patch,
-      });
+      .mockReturnValueOnce(
+        Effect.succeed({
+          materialKey: projection.materialKey,
+          model,
+          runtimeJson: "signed-envelope",
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId,
+          activeManifestHash: model.activeManifestHash,
+          siblingJson: model.siblingJson,
+          ...patch,
+        })
+      );
     await expect(
       getMaterialPublication("en", projection.publicPath)
-    ).rejects.toMatchObject({ _tag: "PublishedProjectionError" });
+    ).rejects.toMatchObject({
+      _tag: "PublishedProjectionError",
+    });
     expect(renderMock).not.toHaveBeenCalled();
   });
-
   it.each([
-    { materialKey: null, model },
     {
-      materialKey: projection.materialKey,
-      model: { ...model, projectionJson: null },
+      materialKey: null,
+      model,
     },
     {
       materialKey: projection.materialKey,
-      model: { ...model, activeReleaseId: null },
+      model: {
+        ...model,
+        projectionJson: null,
+      },
     },
-    { materialKey: "lesson.test.other", model },
+    {
+      materialKey: projection.materialKey,
+      model: {
+        ...model,
+        activeReleaseId: null,
+      },
+    },
+    {
+      materialKey: "lesson.test.other",
+      model,
+    },
   ])(
     "rejects a lesson with an incoherent navigation identity",
     async (source) => {
-      queryMock.mockResolvedValueOnce({
-        ...source,
-        runtimeJson: "signed-envelope",
-      });
+      queryMock.mockReturnValueOnce(
+        Effect.succeed({
+          ...source,
+          runtimeJson: "signed-envelope",
+        })
+      );
       await expect(
         getMaterialPublication("en", projection.publicPath)
-      ).rejects.toMatchObject({ _tag: "PublishedProjectionError" });
+      ).rejects.toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
       expect(renderMock).not.toHaveBeenCalled();
     }
   );
-
   it("rejects mismatched publication generations before rendering", async () => {
     deliveryMock.mockReturnValueOnce(
       Effect.succeed({
@@ -312,11 +415,12 @@ describe("coherent material publication", () => {
     });
     expect(renderMock).not.toHaveBeenCalled();
   });
-
   it("preserves signed verification failures and never evaluates their body", async () => {
     deliveryMock.mockReturnValueOnce(
       Effect.fail(
-        new ContentRuntimeVerificationError({ cause: "invalid-signature" })
+        new ContentRuntimeVerificationError({
+          cause: "invalid-signature",
+        })
       )
     );
     await expect(
@@ -327,24 +431,31 @@ describe("coherent material publication", () => {
     expect(renderMock).not.toHaveBeenCalled();
   });
 });
-
 describe("verified material metadata", () => {
   it("resolves the verified model without rendering the body", async () => {
     await expect(
       getMaterialModel("en", projection.publicPath)
     ).resolves.toMatchObject({
-      model: { activeReleaseId, projection },
+      model: {
+        activeReleaseId,
+        projection,
+      },
     });
     expect(renderMock).not.toHaveBeenCalled();
     expect(cacheMock).toHaveBeenCalledWith("material");
   });
-
   it("returns null for a withdrawn release without rendering", async () => {
-    queryMock.mockResolvedValueOnce({
-      materialKey: null,
-      model: { ...model, alternateJson: [], projectionJson: null },
-      runtimeJson: null,
-    });
+    queryMock.mockReturnValueOnce(
+      Effect.succeed({
+        materialKey: null,
+        model: {
+          ...model,
+          alternateJson: [],
+          projectionJson: null,
+        },
+        runtimeJson: null,
+      })
+    );
     await expect(
       getMaterialModel("en", projection.publicPath)
     ).resolves.toBeNull();

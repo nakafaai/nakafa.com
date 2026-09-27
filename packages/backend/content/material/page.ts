@@ -1,17 +1,17 @@
-import { loadMaterialOwner } from "@repo/backend/content/material/owner";
-import { MaterialSource } from "@repo/backend/content/material/source";
-import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
-import type { PublicationRow } from "@repo/backend/content/publication/source";
 import {
   decodePageCursor,
   encodePageCursor,
   hasPageCursorPrefix,
   hasStaleReleaseCursor,
-  validateReleaseCursor,
-} from "@repo/backend/convex/contentRelease/cursor";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
-import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
+  validateInitialPage,
+} from "@repo/backend/confect/contentRelease/cursor";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { validateProjectionPage } from "@repo/backend/confect/contentRelease/paging";
+import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
+import { loadMaterialOwner } from "@repo/backend/content/material/owner";
+import { MaterialSource } from "@repo/backend/content/material/source";
+import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
+import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { Effect } from "effect";
 
 /** Returns a stable empty material page before Aksara owns the family. */
@@ -60,11 +60,10 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
         stale: true,
       };
     }
-    yield* validateReleaseCursor(
+    yield* validateInitialPage(
       options.cursor,
       expectedManifestHash,
-      expectedReleaseId,
-      active
+      expectedReleaseId
     );
     if (!(owner.managed && owner.active && owner.slot)) {
       return {
@@ -90,7 +89,9 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
     const verified = yield* Effect.forEach(
       stored.page,
       (row) => verifyEffectiveMaterial(row, activePublication.sequence),
-      { concurrency: "unbounded" }
+      {
+        concurrency: "unbounded",
+      }
     );
     const page = verified.map(({ resolved }) => resolved.projectionJson);
     return {

@@ -4,48 +4,23 @@ import {
   type ProtectedContentRuntimeSelector,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
+import {
+  ReleaseError,
+  releaseFail,
+} from "@repo/backend/confect/contentRelease/error";
+import {
+  decodeArtifactJson,
+  decodeRendererJson,
+  decodeTryoutRuntimeBundleJson,
+} from "@repo/backend/confect/contentRelease/parse";
+import { verifyTryoutPlacement } from "@repo/backend/confect/contentRelease/tryout/verify";
 import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
 import {
   type PublicationRow,
   PublicationSource,
 } from "@repo/backend/content/publication/source";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import {
-  ReleaseError,
-  releaseFail,
-} from "@repo/backend/convex/contentRelease/error";
-import {
-  decodeArtifactJson,
-  decodeRendererJson,
-  decodeTryoutRuntimeBundleJson,
-} from "@repo/backend/convex/contentRelease/parse";
-import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
-import { tryoutBodyBatchValidator } from "@repo/backend/convex/tryouts/runtime/body";
-import type { Infer } from "convex/values";
-import { v } from "convex/values";
 import { Effect, Option, Schema } from "effect";
-
-const protectedDeliveryValidator = v.union(
-  v.literal("authenticated"),
-  v.literal("entitled")
-);
-const protectedSelectorValidator = v.object({
-  artifactHash: v.string(),
-  contentKey: v.string(),
-  delivery: protectedDeliveryValidator,
-});
-export const protectedArgsValidator = {
-  bundleHash: v.string(),
-  selectors: v.array(protectedSelectorValidator),
-  snapshotId: v.string(),
-};
-export const protectedResultValidator = v.union(
-  v.null(),
-  tryoutBodyBatchValidator
-);
-
-/** Stored protected batch returned only through one internal query. */
-export type ProtectedRuntimeBatchRow = Infer<typeof protectedResultValidator>;
 
 interface ProtectedBodyIdentity {
   readonly artifactHash: string;
@@ -53,7 +28,6 @@ interface ProtectedBodyIdentity {
   readonly contentKey: string;
   readonly kind: "answer" | "question";
 }
-
 interface ProtectedPlacementSelection {
   readonly placement: PublicationRow<"tryoutPlacements">;
   readonly selector: ProtectedContentRuntimeSelector;
@@ -182,7 +156,9 @@ export const readProtectedProgram = Effect.fn(
 )(function* (input: unknown) {
   const request = yield* Schema.decodeUnknownEffect(
     ProtectedContentRuntimeRequestSchema,
-    { onExcessProperty: "error" }
+    {
+      onExcessProperty: "error",
+    }
   )(input).pipe(
     Effect.mapError(
       () =>
@@ -200,9 +176,14 @@ export const readProtectedProgram = Effect.fn(
     request.selectors,
     (selector) =>
       loadPlacement(request, selector).pipe(
-        Effect.map((placement) => ({ placement, selector }))
+        Effect.map((placement) => ({
+          placement,
+          selector,
+        }))
       ),
-    { concurrency: "unbounded" }
+    {
+      concurrency: "unbounded",
+    }
   );
   if (selections.some(({ placement }) => placement === null)) {
     return null;
@@ -216,7 +197,9 @@ export const readProtectedProgram = Effect.fn(
     foundSelections,
     ({ placement, selector }) =>
       resolveProtectedItem(request, selector, placement),
-    { concurrency: "unbounded" }
+    {
+      concurrency: "unbounded",
+    }
   );
   return {
     bundleJson: bundle.bundleJson,

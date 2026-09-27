@@ -19,6 +19,7 @@ export const OperationalExceptionPropertiesSchema = Schema.Struct({
   error_digest: Schema.optional(identityTextSchema),
   error_location: Schema.optional(shortTextSchema),
   gateway_error_type: Schema.optional(shortTextSchema),
+  gateway_generation_id: Schema.optional(shortTextSchema),
   gateway_model_id: Schema.optional(identityTextSchema),
   gateway_retryable: Schema.optional(Schema.Boolean),
   gateway_status_code: Schema.optional(Schema.Finite),

@@ -34,18 +34,23 @@ import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
-import type schema from "@repo/backend/convex/schema";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx,
+  MutationRunner,
+} from "@repo/backend/confect/_generated/services";
+import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
+import type {
+  MutationCtx as ConvexMutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
-import {
-  TEST_STAGE_SNAPSHOT,
-  TEST_STAGE_SNAPSHOT_BATCH,
-} from "@repo/backend/test/snapshot/routes";
-import type { TestConvex } from "convex-test";
 import { Effect, Stream } from "effect";
 /** Builds one explicit technical program row for backend protocol tests. */
 export function makeTechnicalProgram(
@@ -210,67 +215,113 @@ export const makeProgramSnapshotData = Effect.fn(
 export type ProgramSnapshotData = Effect.Success<
   ReturnType<typeof makeProgramSnapshotData>
 >;
-/** Stages one complete technical program snapshot through public internals. */
-export async function stageProgramSnapshot(
-  t: TestConvex<typeof schema>,
-  data: ProgramSnapshotData,
-  batchSize = data.rowJson.length
-) {
-  await t.mutation((ctx) =>
-    insertTestRelease(ctx, {
-      activeAppLocales: data.snapshot.manifest.activeAppLocales,
-      snapshots: data.snapshots,
-    })
-  );
-  await t.mutation(TEST_STAGE_SNAPSHOT, {
-    releaseId: TEST_RELEASE_ID,
-    snapshotJson: data.manifestJson,
+/** Stages the signed technical program snapshot through registered Confect mutations. */
+export const stageProgramSnapshot = Effect.fn("TestProgram.stageSnapshot")(
+  function* (data: ProgramSnapshotData, batchSize = data.rowJson.length) {
+    const ctx = yield* MutationCtx;
+    const mutate = yield* MutationRunner;
+    yield* Effect.promise(() =>
+      insertTestRelease(ctx, {
+        activeAppLocales: data.snapshot.manifest.activeAppLocales,
+        snapshots: data.snapshots,
+      })
+    );
+    yield* mutate(
+      refs.internal.contentRelease.snapshot.manifest.stageSnapshot,
+      {
+        releaseId: TEST_RELEASE_ID,
+        snapshotJson: data.manifestJson,
+      }
+    );
+    for (
+      let firstIndex = 0, batchIndex = 0;
+      firstIndex < data.rowJson.length;
+      firstIndex += batchSize, batchIndex += 1
+    ) {
+      yield* mutate(
+        refs.internal.contentRelease.snapshot.batch.stageSnapshotBatch,
+        {
+          batchIndex,
+          family: "program",
+          releaseId: TEST_RELEASE_ID,
+          rowJson: data.rowJson.slice(firstIndex, firstIndex + batchSize),
+          snapshotId: data.snapshotId,
+        }
+      );
+    }
+  }
+);
+
+/** Selects one verified program snapshot with a coherent material owner. */
+export const activateProgramSnapshot = Effect.fn(
+  "TestProgram.activateSnapshot"
+)(function* (data: ProgramSnapshotData, batchSize = data.rowJson.length) {
+  yield* stageProgramSnapshot(data, batchSize);
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const release = yield* reader
+    .table("contentReleases")
+    .get("by_releaseId", TEST_RELEASE_ID);
+  const snapshot = yield* reader
+    .table("contentSnapshots")
+    .get("by_family_and_snapshotId", "program", data.snapshotId);
+  const state = yield* reader.table("contentState").get("by_key", "primary");
+  yield* writer
+    .table("contentReleases")
+    .patch(release._id, { completedAt: 1, status: "completed" });
+  yield* writer
+    .table("contentSnapshots")
+    .patch(snapshot._id, { verifiedAt: 1 });
+  yield* writer.table("contentState").patch(state._id, {
+    activeManifestHash: TEST_MANIFEST_HASH,
+    activeReleaseId: TEST_RELEASE_ID,
+    activeSequence: 1,
+    candidateManifestHash: undefined,
+    candidateReleaseId: undefined,
+    candidateSequence: undefined,
+    materialManifestHash: TEST_MANIFEST_HASH,
+    materialReleaseId: TEST_RELEASE_ID,
+    materialSequence: 1,
   });
-  for (
-    let firstIndex = 0, batchIndex = 0;
-    firstIndex < data.rowJson.length;
-    firstIndex += batchSize, batchIndex += 1
-  ) {
-    await t.mutation(TEST_STAGE_SNAPSHOT_BATCH, {
-      batchIndex,
-      family: "program",
-      releaseId: TEST_RELEASE_ID,
-      rowJson: data.rowJson.slice(firstIndex, firstIndex + batchSize),
-      snapshotId: data.snapshotId,
+});
+
+/** Inserts one expired manifest and a requested number of physical rows. */
+export async function insertExpiredProgram(
+  ctx: ConvexMutationCtx,
+  snapshotId: string,
+  rowCount: number,
+  cleanupAt?: number
+) {
+  await ctx.db.insert("contentSnapshots", {
+    ...(cleanupAt === undefined
+      ? {}
+      : {
+          cleanupAt,
+        }),
+    createdAt: 0,
+    family: "program",
+    retainUntil: 0,
+    snapshotId,
+    snapshotJson: "{}",
+  });
+  for (let index = 0; index < rowCount; index += 1) {
+    await ctx.db.insert("programCatalog", {
+      displayOrder: index,
+      index,
+      programKey: `program-${index}`,
+      rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
+      rowJson: "{}",
+      snapshotId,
     });
   }
 }
-/** Selects one verified program snapshot with a coherent material owner. */
-export async function activateProgramSnapshot(
-  t: TestConvex<typeof schema>,
-  data: ProgramSnapshotData,
-  batchSize = data.rowJson.length
-) {
-  await stageProgramSnapshot(t, data, batchSize);
-  await t.mutation(async (ctx) => {
-    const [release, snapshot, state] = await Promise.all([
-      ctx.db.query("contentReleases").unique(),
-      ctx.db.query("contentSnapshots").unique(),
-      ctx.db.query("contentState").unique(),
-    ]);
-    if (!(release && snapshot && state)) {
-      throw new Error("Expected one staged program snapshot.");
-    }
-    await ctx.db.patch("contentReleases", release._id, {
-      completedAt: 1,
-      status: "completed",
-    });
-    await ctx.db.patch("contentSnapshots", snapshot._id, { verifiedAt: 1 });
-    await ctx.db.patch("contentState", state._id, {
-      activeManifestHash: TEST_MANIFEST_HASH,
-      activeReleaseId: TEST_RELEASE_ID,
-      activeSequence: 1,
-      candidateManifestHash: undefined,
-      candidateReleaseId: undefined,
-      candidateSequence: undefined,
-      materialManifestHash: TEST_MANIFEST_HASH,
-      materialReleaseId: TEST_RELEASE_ID,
-      materialSequence: 1,
-    });
-  });
+
+/** Captures staged program rows and counters to prove failed batches are atomic. */
+export async function readProgramStage(ctx: QueryCtx) {
+  return {
+    release: await ctx.db.query("contentReleases").unique(),
+    batches: await ctx.db.query("snapshotBatches").collect(),
+    programs: await ctx.db.query("programCatalog").collect(),
+    routes: await ctx.db.query("curriculumRoutes").collect(),
+  };
 }

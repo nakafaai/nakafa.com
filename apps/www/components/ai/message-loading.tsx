@@ -6,8 +6,8 @@ import { useChat } from "@/components/ai/context/use-chat";
 import { useMessage } from "@/components/ai/context/use-message";
 
 export function AiChatMessageLoading() {
-  const status = useChat((state) => state.chat.status);
-  const messages = useChat((state) => state.chat.messages);
+  const busy = useChat((state) => state.busy);
+  const messages = useChat((state) => state.messages);
   const currentMessage = useMessage((state) => state.message);
 
   // Only show loading for assistant messages
@@ -23,12 +23,14 @@ export function AiChatMessageLoading() {
   }
 
   // Show loading when streaming but no text content yet
-  if (status === "streaming") {
-    const hasText = currentMessage.parts.some(
-      (p) => p.type === "text" && p.text.trim().length > 0
+  if (busy && currentMessage.status !== "failed") {
+    const hasContent = currentMessage.parts.some(
+      (p) =>
+        (p.type === "text" || p.type === "reasoning") &&
+        p.text.trim().length > 0
     );
 
-    if (!hasText) {
+    if (!hasContent) {
       return (
         <div className="flex flex-col gap-6">
           <TypingLoader />

@@ -1,4 +1,7 @@
 "use client";
+
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import { useDisclosure, useMounted } from "@mantine/hooks";
 import {
   decodePublishedQuranInterpretation,
@@ -7,7 +10,7 @@ import {
   toQuranInterpretationRequestError,
 } from "@repo/backend/client/quran/interpretation";
 import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   Drawer,
   DrawerHeader,
@@ -15,23 +18,25 @@ import {
   DrawerPopup,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
-import { useConvex } from "convex/react";
-import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 import {
   type MouseEvent,
   type ReactNode,
   useLayoutEffect,
+  useOptimistic,
   useRef,
   useState,
   useTransition,
 } from "react";
 import { toast } from "sonner";
 import { QuranInterpretationContext } from "@/components/shared/quran/interpretation/context";
+import { env } from "@/env";
 import { reportClientException } from "@/lib/analytics/client";
 
 interface Props {
-  appLocale: FunctionArgs<typeof api.contentRelease.quran.tafsir>["appLocale"];
+  appLocale: Ref.Args<
+    typeof refs.public.contentRelease.quran.tafsir
+  >["appLocale"];
   children: ReactNode;
   errorMessage: string;
   label: string;
@@ -59,12 +64,11 @@ export function QuranInterpretationControls({
   snapshotId,
   surahNumber,
 }: Props) {
-  const convex = useConvex();
   const [isOpen, { close, open, set }] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
-  const [pendingVerseNumber, setPendingVerseNumber] = useState<number | null>(
-    null
-  );
+  const [pendingVerseNumber, setPendingVerseNumber] = useOptimistic<
+    number | null
+  >(null);
   const isControllerActive = useMounted();
   const [isPending, startTransition] = useTransition();
   const requestSequence = useRef(0);
@@ -75,7 +79,6 @@ export function QuranInterpretationControls({
     () => () => {
       requestSequence.current += 1;
       pendingRequestId.current = null;
-      setPendingVerseNumber(null);
       close();
       setSelectedInterpretation("");
       toast.dismiss(toastId);
@@ -93,7 +96,6 @@ export function QuranInterpretationControls({
     requestSequence.current += 1;
     const requestId = requestSequence.current;
     pendingRequestId.current = requestId;
-    setPendingVerseNumber(verseNumber);
     close();
     setSelectedInterpretation("");
     const reportFailure = (
@@ -155,16 +157,16 @@ export function QuranInterpretationControls({
         )
       );
     };
-    const program = Effect.tryPromise({
-      catch: toQuranInterpretationRequestError,
-      try: () =>
-        convex.query(api.contentRelease.quran.tafsir, {
-          expectedSnapshotId: snapshotId,
-          appLocale,
-          surahNumber,
-          verseNumber,
-        }),
-    }).pipe(
+    const program = Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.contentRelease.quran.tafsir, {
+        expectedSnapshotId: snapshotId,
+        appLocale,
+        surahNumber,
+        verseNumber,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.mapError(toQuranInterpretationRequestError),
       Effect.flatMap((result) =>
         decodePublishedQuranInterpretation(result, {
           appLocale,
@@ -192,12 +194,14 @@ export function QuranInterpretationControls({
             return;
           }
           pendingRequestId.current = null;
-          setPendingVerseNumber(null);
         })
       ),
       Effect.asVoid
     );
-    startTransition(() => Effect.runPromise(program));
+    startTransition(async () => {
+      setPendingVerseNumber(verseNumber);
+      await Effect.runPromise(program);
+    });
   };
   const contextValue = {
     isActive: isControllerActive,

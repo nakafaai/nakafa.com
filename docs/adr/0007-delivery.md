@@ -36,19 +36,18 @@ contextual visit cannot first record a canonical view and then a placement view.
   CDN delivery remains global. The project default region must match the checked
   configuration so the durable ISR cache is created in the intended region.
 
-`preloadQuery` is appropriate when a page needs an initial server result plus
-reactivity. It still performs a server query and uses `no-store`; substituting
-it for `fetchQuery` does not remove a Vercel invocation. Public SEO content must
-not be moved behind client loading merely to avoid server queries.
+Confect's HTTP client reads signed public content at the server boundary.
+Confect React queries own reactive learner state. Stable reading surfaces remain
+visible while optional learner controls subscribe; there is no vanilla Convex
+preload adapter. Public SEO content stays server-rendered.
 
 ## Convex Clock
 
-Convex query and mutation execution provides a Date-backed Effect clock because
-the runtime does not provide the usual platform clock. Named Effect spans must
-not read that clock merely to collect timing. `runConvexProgram` disables tracer
-timing while retaining span names and explicit domain clock operations. This
-avoids making otherwise time-independent cached queries depend on `Date.now()`.
-Node actions keep their native clock and timing support.
+Confect's registered function runtime owns the deterministic Effect clock and
+tracing behavior in queries and mutations. Application handlers consume its
+services directly and do not install a second runtime or clock adapter. Read
+time only when domain behavior requires it, since a query's time dependency
+affects caching. Node actions use Confect's Node action boundary.
 
 The landing question reader passes its selected signed section to the existing
 section reader. It does not reload publication ownership or look up the same
@@ -75,8 +74,8 @@ step without reconciling the operator's current spending constraint.
 
 ## References
 
-- [Convex Next.js server rendering](https://docs.convex.dev/client/nextjs/app-router/server-rendering)
-- [Convex reactive queries and skip](https://docs.convex.dev/client/react/overview)
+- [Confect React clients](https://confect.dev/v10/clients/react)
+- [Confect determinism](https://confect.dev/v10/server/database/determinism)
 - [Convex query clock guidance](https://docs.convex.dev/understanding/best-practices#dont-use-datenow-in-queries)
 - [Next.js search parameters and static rendering](https://nextjs.org/docs/app/api-reference/functions/use-search-params#static-rendering)
 - [Next.js cache lifetimes](https://nextjs.org/docs/app/api-reference/functions/cacheLife)

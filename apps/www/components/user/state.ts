@@ -1,6 +1,6 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 
-type UserRole = NonNullable<Doc<"users">["role"]>;
+type UserRole = NonNullable<Docs["users"]["role"]>;
 
 /** Patch one immutable user projection with a display name. */
 export function updateUserName<T extends { name: string }>(

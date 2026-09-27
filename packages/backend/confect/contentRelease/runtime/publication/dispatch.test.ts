@@ -1,0 +1,316 @@
+import { RegisteredFunction } from "@confect/server";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+// @vitest-environment node
+
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import {
+  decodePublicContentRuntimeRequest,
+  MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
+} from "@nakafa/aksara-contracts/runtime/spec";
+import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { dispatchProgram } from "@repo/backend/confect/contentRelease/runtime/publication/dispatch";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { internal } from "@repo/backend/convex/_generated/api";
+import {
+  FUNCTION_MATERIAL_JSON,
+  FUNCTION_MATERIAL_KEY,
+  FUNCTION_MATERIAL_PATH,
+  FUNCTION_MATERIAL_SOURCE,
+} from "@repo/backend/test/content/material";
+import {
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+  TEST_PAGE_PROJECTION_JSON,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content/page";
+import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import { testTextHash } from "@repo/backend/test/content/release";
+import {
+  articleRuntimeRequest,
+  insertSignedRelease,
+  publicRuntimeRequest,
+  runtimeContentKey,
+  TEST_ARTICLE_KEY,
+  TEST_ARTICLE_PATH,
+  TEST_ARTICLE_PROJECTION_JSON,
+  TEST_ARTICLE_SOURCE,
+} from "@repo/backend/test/content/runtime";
+import { insertSignedHead } from "@repo/backend/test/runtime/head";
+import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
+import { Effect } from "effect";
+
+type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+type RuntimeAction = Pick<RuntimeTest, "action">;
+/** Executes the public runtime transport program. */
+function runDispatch(t: RuntimeAction, source: string) {
+  const byteLength = new TextEncoder().encode(source).byteLength;
+  return t.action((ctx) =>
+    Effect.runPromise(
+      dispatchProgram(source, byteLength).pipe(
+        Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+      )
+    )
+  );
+}
+/** Seeds one active route for the requested stored delivery class. */
+function seedSigned(
+  t: RuntimeTest,
+  delivery: "authenticated" | "entitled" | "public"
+) {
+  return t.mutation(async (ctx) => {
+    await insertSignedRelease(ctx);
+    await insertSignedHead(ctx, delivery, runtimeContentKey(delivery));
+  });
+}
+afterEach(() => vi.restoreAllMocks());
+describe("contentRelease/runtime/publication/dispatch", () => {
+  it.live(
+    "returns one fully authenticated public artifact and exact absence",
+    () =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        yield* Effect.promise(() => seedSigned(t, "public"));
+        const row = yield* Effect.promise(() =>
+          t.query(internal.contentRelease.runtime.publication.internal.read, {
+            appLocale: "en",
+            publicPath: TEST_RUNTIME_PATH,
+          })
+        );
+        if (!row) {
+          return expect.fail("Expected one signed runtime row.");
+        }
+        const request = yield* decodePublicContentRuntimeRequest(
+          JSON.parse(publicRuntimeRequest())
+        );
+        const verified = yield* verifyContentRuntimeExchange({
+          rendererManifest: JSON.parse(row.rendererJson),
+          request,
+          response: {
+            activeManifestHash: row.activeManifestHash,
+            activeReleaseId: row.activeReleaseId,
+            artifact: JSON.parse(row.artifactJson),
+            delivery: row.delivery,
+            kind: "found",
+            projection: JSON.parse(row.projectionJson),
+            projectionHash: row.projectionHash,
+            release: JSON.parse(row.releaseJson),
+            rendererManifest: JSON.parse(row.rendererJson),
+            sourcePath: row.sourcePath,
+          },
+        }).pipe(
+          Effect.provideService(
+            ContentVerificationKeyResolver,
+            TEST_KEY_RESOLVER
+          ),
+          Effect.result
+        );
+        expect(verified).toMatchObject({
+          _tag: "Success",
+        });
+        const found = yield* Effect.promise(() =>
+          runDispatch(t, publicRuntimeRequest())
+        );
+        const missing = yield* Effect.promise(() =>
+          runDispatch(
+            t,
+            JSON.stringify({
+              delivery: "public",
+              appLocale: "en",
+              publicPath: "subjects/test/missing",
+            })
+          )
+        );
+        expect(found.status).toBe(200);
+        expect(JSON.parse(found.body)).toMatchObject({
+          artifact: {
+            payload: {
+              contentKey: runtimeContentKey("public"),
+            },
+          },
+          delivery: "public",
+          kind: "found",
+          projection: {
+            publicPath: TEST_RUNTIME_PATH,
+          },
+          sourcePath: `packages/corpus/${runtimeContentKey("public")}/en.mdx`,
+        });
+        expect(missing).toEqual({
+          body: '{"kind":"missing"}',
+          status: 404,
+        });
+      })
+  );
+  it("authenticates the real pair-grouped article source end to end", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(async (ctx) => {
+      await insertSignedRelease(ctx);
+      await insertSignedHead(ctx, "public", TEST_ARTICLE_KEY, {
+        projectionJson: TEST_ARTICLE_PROJECTION_JSON,
+        publicPath: TEST_ARTICLE_PATH,
+        rendererDomain: "politics",
+        sourcePath: TEST_ARTICLE_SOURCE,
+      });
+    });
+    const found = await runDispatch(t, articleRuntimeRequest());
+    expect(found.status).toBe(200);
+    expect(JSON.parse(found.body)).toMatchObject({
+      artifact: {
+        payload: {
+          contentKey: TEST_ARTICLE_KEY,
+          rendererDomain: "politics",
+        },
+      },
+      delivery: "public",
+      kind: "found",
+      projection: {
+        contentKey: TEST_ARTICLE_KEY,
+        kind: "article",
+        publicPath: TEST_ARTICLE_PATH,
+      },
+      sourcePath: TEST_ARTICLE_SOURCE,
+    });
+  });
+  it("authenticates one signed public page end to end", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(async (ctx) => {
+      await insertSignedRelease(ctx);
+      await insertSignedHead(ctx, "public", TEST_PAGE_KEY, {
+        projectionJson: TEST_PAGE_PROJECTION_JSON,
+        publicPath: TEST_PAGE_PATH,
+        rendererDomain: "site",
+        sourcePath: TEST_PAGE_SOURCE,
+      });
+    });
+    const request = {
+      appLocale: "en",
+      delivery: "public",
+      publicPath: TEST_PAGE_PATH,
+    } as const;
+    const found = await runDispatch(t, JSON.stringify(request));
+    expect(found.status).toBe(200);
+    const foundBody = JSON.parse(found.body);
+    expect(foundBody).toMatchObject({
+      artifact: {
+        payload: {
+          contentKey: TEST_PAGE_KEY,
+          rendererDomain: "site",
+        },
+      },
+      delivery: "public",
+      kind: "found",
+      projection: {
+        contentKey: TEST_PAGE_KEY,
+        kind: "public-page",
+        publicPath: TEST_PAGE_PATH,
+      },
+      sourcePath: TEST_PAGE_SOURCE,
+    });
+  });
+  it("authenticates the exact active canonical material", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(async (ctx) => {
+      await insertSignedRelease(ctx);
+      await insertSignedHead(ctx, "public", FUNCTION_MATERIAL_KEY, {
+        projectionJson: FUNCTION_MATERIAL_JSON,
+        publicPath: FUNCTION_MATERIAL_PATH,
+        rendererDomain: "mathematics",
+        sourcePath: FUNCTION_MATERIAL_SOURCE,
+      });
+    });
+    const found = await runDispatch(
+      t,
+      JSON.stringify({
+        delivery: "public",
+        appLocale: "en",
+        publicPath: FUNCTION_MATERIAL_PATH,
+      })
+    );
+    expect(found.status).toBe(200);
+    const body = JSON.parse(found.body);
+    expect(body).toMatchObject({
+      artifact: {
+        payload: {
+          contentKey: FUNCTION_MATERIAL_KEY,
+        },
+      },
+      kind: "found",
+      projection: {
+        contentKey: FUNCTION_MATERIAL_KEY,
+        kind: "subject-lesson",
+      },
+      projectionHash: testTextHash(FUNCTION_MATERIAL_JSON),
+      sourcePath: FUNCTION_MATERIAL_SOURCE,
+    });
+    expect(body.projection).toHaveProperty(
+      "topicTitle",
+      "Function Composition and Inverse Function"
+    );
+  });
+  it("rejects malformed, mismatched, and oversized request bytes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const source = publicRuntimeRequest();
+    const mismatch = await t.action((ctx) =>
+      Effect.runPromise(
+        dispatchProgram(source, 1).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+        )
+      )
+    );
+    await expect(runDispatch(t, "{")).resolves.toMatchObject({
+      status: 400,
+    });
+    expect(mismatch.status).toBe(400);
+    await expect(
+      runDispatch(t, "x".repeat(MAX_PUBLIC_RUNTIME_REQUEST_BYTES + 1))
+    ).resolves.toMatchObject({
+      status: 400,
+    });
+  });
+  it("fails closed when authenticated stored evidence is tampered", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedSigned(t, "public");
+    await t.mutation(async (ctx) => {
+      const head = await ctx.db.query("contentHeads").unique();
+      if (!head) {
+        return expect.fail("Expected one runtime head.");
+      }
+      await ctx.db.patch("contentHeads", head._id, {
+        projectionHash: `sha256:${"f".repeat(64)}`,
+      });
+    });
+    await expect(runDispatch(t, publicRuntimeRequest())).resolves.toEqual({
+      body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+      status: 500,
+    });
+  });
+  it.each(["invalid", "rejected"])(
+    "sanitizes a %s query response at the action boundary",
+    async (failure) => {
+      const t = createConvexTestWithBetterAuth();
+      const source = publicRuntimeRequest();
+      const result = await t.action((ctx) => {
+        const query = vi.spyOn(ctx, "runQuery");
+        if (failure === "invalid") {
+          query.mockResolvedValueOnce({
+            private: "transport corruption",
+          });
+        } else {
+          query.mockRejectedValueOnce(new Error("private transport failure"));
+        }
+        return Effect.runPromise(
+          dispatchProgram(
+            source,
+            new TextEncoder().encode(source).byteLength
+          ).pipe(
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
+        );
+      });
+      expect(result).toEqual({
+        body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
+        status: 500,
+      });
+    }
+  );
+});

@@ -1,8 +1,8 @@
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { QuranSource } from "@repo/backend/content/quran/source";
 import { verifyQuranSurahRow } from "@repo/backend/content/quran/surah";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 
 /** Loads and authenticates the complete ordered Quran surah catalog. */
@@ -10,7 +10,10 @@ const loadQuranCatalog = Effect.fn("contentRelease.loadQuranCatalog")(
   function* () {
     const owner = yield* loadQuranOwner();
     if (owner.snapshotId === null) {
-      return { owner, stored: null };
+      return {
+        owner,
+        stored: null,
+      };
     }
     const source = yield* QuranSource;
     const stored = yield* source.metadata(
@@ -34,7 +37,11 @@ const loadQuranCatalog = Effect.fn("contentRelease.loadQuranCatalog")(
         "Active Quran catalog lost its canonical surah order."
       );
     }
-    return { owner, stored, surahs };
+    return {
+      owner,
+      stored,
+      surahs,
+    };
   }
 );
 

@@ -6,10 +6,10 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
-import { decodeSnapshotJson } from "@repo/backend/convex/contentRelease/parse";
-import { mergeManagedFamilies } from "@repo/backend/convex/contentRelease/scope/family";
+import { decodeSnapshotJson } from "@repo/backend/confect/contentRelease/parse";
+import { mergeManagedFamilies } from "@repo/backend/confect/contentRelease/scope/family";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,

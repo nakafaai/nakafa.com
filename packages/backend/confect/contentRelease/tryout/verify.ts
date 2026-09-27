@@ -1,0 +1,90 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
+import {
+  tryoutCatalogFacts,
+  tryoutPlacementFacts,
+} from "@repo/backend/confect/contentRelease/tryout/facts";
+import type { WithoutSystemFields } from "convex/server";
+import { Effect } from "effect";
+
+/** Authenticates one immutable catalog row and every indexed fact. */
+export const verifyTryoutCatalog = Effect.fn(
+  "contentRelease.verifyTryoutCatalog"
+)(function* (
+  row: WithoutSystemFields<Docs["tryoutCatalog"]>,
+  snapshotId: string
+) {
+  const decoded = yield* decodeSnapshotRowJson(row.rowJson);
+  if (
+    decoded.family !== "tryout" ||
+    decoded.rowKind !== "catalog" ||
+    decoded.record.rowHash !== row.rowHash ||
+    row.snapshotId !== snapshotId
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Try-out catalog row ${row.identity} lost its signed snapshot.`
+    );
+  }
+  const facts = tryoutCatalogFacts(decoded.record);
+  if (
+    facts.assetId !== row.assetId ||
+    facts.identity !== row.identity ||
+    facts.kind !== row.kind ||
+    facts.appLocale !== row.appLocale ||
+    facts.order !== row.order ||
+    facts.publicPath !== row.publicPath ||
+    facts.setIdentity !== row.setIdentity
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Try-out catalog row ${row.identity} changed its indexed facts.`
+    );
+  }
+  return decoded.record.row;
+});
+
+/** Authenticates one server-only placement and every indexed fact. */
+export const verifyTryoutPlacement = Effect.fn(
+  "contentRelease.verifyTryoutPlacement"
+)(function* (
+  row: WithoutSystemFields<Docs["tryoutPlacements"]>,
+  snapshotId: string
+) {
+  const decoded = yield* decodeSnapshotRowJson(row.rowJson);
+  if (
+    decoded.family !== "tryout" ||
+    decoded.rowKind !== "placement" ||
+    decoded.record.rowHash !== row.rowHash ||
+    row.snapshotId !== snapshotId
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Try-out placement ${row.identity} lost its signed snapshot.`
+    );
+  }
+  const facts = tryoutPlacementFacts(decoded.record);
+  if (
+    facts.answerArtifactHash !== row.answerArtifactHash ||
+    facts.answerArtifactLocale !== row.answerArtifactLocale ||
+    facts.appLocale !== row.appLocale ||
+    facts.contentHash !== row.contentHash ||
+    facts.countryKey !== row.countryKey ||
+    facts.deliveryLanguage !== row.deliveryLanguage ||
+    facts.examKey !== row.examKey ||
+    facts.identity !== row.identity ||
+    facts.questionArtifactHash !== row.questionArtifactHash ||
+    facts.questionArtifactLocale !== row.questionArtifactLocale ||
+    facts.questionOrder !== row.questionOrder ||
+    facts.sectionKey !== row.sectionKey ||
+    facts.setKey !== row.setKey ||
+    facts.trackKey !== row.trackKey
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Try-out placement ${row.identity} changed its indexed facts.`
+    );
+  }
+  return decoded.record.row;
+});

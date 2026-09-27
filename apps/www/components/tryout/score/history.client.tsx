@@ -1,12 +1,14 @@
 "use client";
 
+import type { Ref } from "@confect/core";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   ArrowDown01Icon,
   Search02Icon,
   Tick01Icon,
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -25,17 +27,18 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
-import { useConvexAuth, usePaginatedQuery } from "convex/react";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { useConvexAuth } from "convex/react";
+
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { DataFailure } from "@/components/shared/failure";
 import { TryoutScoreCard } from "@/components/tryout/score/card";
 import { getLocale } from "@/lib/utils/date";
 
-type HistoryQuery = typeof api.tryouts.queries.history.bySet;
-type HistoryIdentity = Omit<FunctionArgs<HistoryQuery>, "paginationOpts">;
-type HistoryRow = FunctionReturnType<HistoryQuery>["page"][number];
+type HistoryQuery = typeof refs.public.tryouts.queries.history.bySet;
+type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
+type HistoryRow = Ref.Returns<HistoryQuery>["page"][number];
 type ScoredHistoryRow = HistoryRow & {
   score: NonNullable<HistoryRow["score"]>;
 };
@@ -95,10 +98,9 @@ function TryoutAttemptHistory({
   value: {
     attempts: readonly ScoredHistoryRow[];
     locale: HistoryIdentity["locale"];
-    loadMore: (numItems: number) => void;
+    onLoadMore: (() => void) | undefined;
     onChoose: (attemptId: HistoryRow["attemptId"]) => void;
     selectedAttemptId: HistoryRow["attemptId"];
-    status: "CanLoadMore" | "Exhausted" | "LoadingFirstPage" | "LoadingMore";
   };
 }) {
   const tTryouts = useTranslations("Tryouts");
@@ -170,7 +172,7 @@ function TryoutAttemptHistory({
           <AutocompleteList
             className="max-h-64"
             onScroll={(event) => {
-              if (value.status !== "CanLoadMore") {
+              if (!value.onLoadMore) {
                 return;
               }
 
@@ -179,7 +181,7 @@ function TryoutAttemptHistory({
                 target.scrollHeight - target.scrollTop - target.clientHeight;
 
               if (remainingScroll <= 48) {
-                value.loadMore(25);
+                value.onLoadMore();
               }
             }}
             scrollArea={false}
@@ -220,7 +222,7 @@ export function TryoutAttemptResults({
     HistoryRow["attemptId"] | null
   >(null);
   const history = usePaginatedQuery(
-    api.tryouts.queries.history.bySet,
+    refs.public.tryouts.queries.history.bySet,
     isAuthenticated ? value.identity : "skip",
     { initialNumItems: 25 }
   );
@@ -234,14 +236,16 @@ export function TryoutAttemptResults({
     <TryoutScoreCard
       value={{ score: visibleAttempt.score, status: visibleAttempt.status }}
     >
+      {PaginatedQueryResult.isFailure(history) && <DataFailure />}
       <TryoutAttemptHistory
         value={{
           attempts,
           locale: value.identity.locale,
-          loadMore: history.loadMore,
+          onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
+            ? () => history.loadMore(25)
+            : undefined,
           onChoose: setSelectedAttemptId,
           selectedAttemptId: visibleAttempt.attemptId,
-          status: history.status,
         }}
       />
     </TryoutScoreCard>

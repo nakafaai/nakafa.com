@@ -1,6 +1,8 @@
 "use client";
+
+import { useMutation } from "@confect/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -11,7 +13,6 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ export function CreateSchoolClassDialog({
   const router = useRouter();
   const pathname = usePathname();
   const schoolId = useSchool((state) => state.school._id);
-  const createClass = useMutation(api.classes.mutations.createClass);
+  const createClass = useMutation(refs.public.classes.mutations.createClass);
   const form = useForm({
     defaultValues: classCreateDefaultValues,
     validators: {
@@ -45,26 +46,33 @@ export function CreateSchoolClassDialog({
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(async () => {
-          const classId = await createClass({
+        Effect.tryPromise(() =>
+          createClass({
             ...value,
             schoolId,
-          });
-          router.push(`${pathname}/${classId}`);
-          setOpenAction(false);
-          form.reset();
-        }).pipe(
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            reportClientException(error, {
-              source: "school-class-create",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  toast.error(t("create-class-failed"));
-                })
-              )
-            )
-          )
+          })
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap((classId) =>
+            Effect.sync(() => {
+              router.push(`${pathname}/${classId}`);
+              setOpenAction(false);
+              form.reset();
+            })
+          ),
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "school-class-create",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(t("create-class-failed"));
+                  })
+                )
+              ),
+            onSuccess: () => Effect.void,
+          })
         )
       );
     },

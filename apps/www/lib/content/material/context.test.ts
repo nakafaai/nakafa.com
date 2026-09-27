@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import { makeProgramContextRuntimeSource } from "@/test/content/program-context";
 import { previewProjection } from "@/test/content-preview";
@@ -14,7 +14,6 @@ import {
   testProgramGroups,
   testProgramSubject,
 } from "@/test/content-program";
-import { createTestNativeQuery } from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const [group] = Schema.decodeUnknownSync(Schema.Tuple([CurriculumRouteSchema]))(
@@ -34,15 +33,28 @@ const publishedContext = {
   parentJson: testCurriculumRowJson(testProgramSubject),
   resolvedCanonicalPath: mapping.canonicalPath ?? null,
 };
-
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: runtimeQueryMock,
-}));
-
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 beforeEach(() => {
   runtimeQueryMock.mockReset();
 });
-
 describe("published material context", () => {
   it.effect(
     "resolves signed curriculum context and preserves a missing optional hint",
@@ -50,8 +62,7 @@ describe("published material context", () => {
       Effect.gen(function* () {
         const fixture = yield* makeProgramContextRuntimeSource();
         const snapshot = yield* createTestPublication(fixture.source);
-        runtimeQueryMock.mockImplementation(createTestNativeQuery(snapshot));
-
+        runtimeQueryMock.mockImplementation(snapshot.query);
         expect(
           yield* readPublishedMaterialContext("en", previewProjection, context)
         ).toMatchObject({
@@ -69,30 +80,27 @@ describe("published material context", () => {
         ).toBeNull();
       })
   );
-
   it.effect("resolves a material identity without a global release pin", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
-
       expect(
         yield* readPublishedMaterialContext("en", previewProjection, context)
-      ).toMatchObject({ context, group, mapping });
-      expect(runtimeQueryMock).toHaveBeenCalledWith(
-        "https://test.convex.cloud",
-        expect.anything(),
-        {
-          appLocale: "en",
-          contentKey: previewProjection.contentKey,
-          materialKey: previewProjection.materialKey,
-          nodeKey: context.nodeKey,
-          parentPath: previewProjection.parentPath,
-          programKey: context.programKey,
-          publicPath: previewProjection.publicPath,
-        }
-      );
+      ).toMatchObject({
+        context,
+        group,
+        mapping,
+      });
+      expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+        appLocale: "en",
+        contentKey: previewProjection.contentKey,
+        materialKey: previewProjection.materialKey,
+        nodeKey: context.nodeKey,
+        parentPath: previewProjection.parentPath,
+        programKey: context.programKey,
+        publicPath: previewProjection.publicPath,
+      });
     })
   );
-
   it.effect(
     "pins sequential uncached context reads when their caller requires it",
     () =>
@@ -106,7 +114,6 @@ describe("published material context", () => {
           activeReleaseId
         );
         expect(runtimeQueryMock).toHaveBeenCalledWith(
-          "https://test.convex.cloud",
           expect.anything(),
           expect.objectContaining({
             contentKey: previewProjection.contentKey,
@@ -115,13 +122,15 @@ describe("published material context", () => {
         );
       })
   );
-
   it.effect(
     "preserves invalid projection failures at the server boundary",
     () =>
       Effect.gen(function* () {
         runtimeQueryMock.mockReturnValueOnce(
-          Effect.succeed({ ...publishedContext, managed: false })
+          Effect.succeed({
+            ...publishedContext,
+            managed: false,
+          })
         );
         expect(
           yield* readPublishedMaterialContext(
@@ -129,11 +138,14 @@ describe("published material context", () => {
             previewProjection,
             context
           ).pipe(Effect.flip)
-        ).toMatchObject({ _tag: "PublishedProjectionError" });
+        ).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
       })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

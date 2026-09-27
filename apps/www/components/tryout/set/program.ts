@@ -1,10 +1,12 @@
 "use client";
 
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { InvokeReturn } from "@confect/react";
+import type refs from "@repo/backend/confect/_generated/refs";
 import type {
   StartAttemptArgs,
   StartAttemptResult,
-} from "@repo/backend/convex/tryouts/start/spec";
+} from "@repo/backend/confect/tryouts/start/spec";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Data, Effect } from "effect";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
@@ -19,7 +21,9 @@ class TryoutClientRequestError extends Data.TaggedError(
 interface StartAttemptProgramInput {
   readonly args: StartAttemptArgs;
   readonly failureMessage: string;
-  readonly mutation: (args: StartAttemptArgs) => Promise<StartAttemptResult>;
+  readonly mutation: (
+    args: StartAttemptArgs
+  ) => InvokeReturn<typeof refs.public.tryouts.mutations.attempts.startAttempt>;
   readonly onSuccess: (result: StartAttemptResult) => Effect.Effect<void>;
 }
 
@@ -30,6 +34,11 @@ export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
       try: () => input.mutation(input.args),
       catch: (cause) => new TryoutClientRequestError({ cause }),
     }).pipe(
+      Effect.flatMap((result) =>
+        Effect.fromResult(result).pipe(
+          Effect.mapError((cause) => new TryoutClientRequestError({ cause }))
+        )
+      ),
       Effect.tap((result) => input.onSuccess(result)),
       Effect.catchTag("TryoutClientRequestError", (error) =>
         reportRequestFailure(error, "tryout-start", input.failureMessage)
@@ -46,7 +55,7 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
     readonly mutation: (args: {
       attemptId: Id<"tryoutAttempts">;
       sectionKey: string;
-    }) => Promise<unknown>;
+    }) => InvokeReturn<typeof refs.public.tryouts.mutations.sections.start>;
     readonly sectionKey: string;
     readonly successMessage: string;
   }) =>
@@ -58,6 +67,11 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
         }),
       catch: (cause) => new TryoutClientRequestError({ cause }),
     }).pipe(
+      Effect.flatMap((result) =>
+        Effect.fromResult(result).pipe(
+          Effect.mapError((cause) => new TryoutClientRequestError({ cause }))
+        )
+      ),
       Effect.tap(() => showSuccess(input.successMessage)),
       Effect.catchTag("TryoutClientRequestError", (error) =>
         reportRequestFailure(

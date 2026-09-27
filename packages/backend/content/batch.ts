@@ -40,7 +40,9 @@ const PublicContentRuntimeBatchItemSchema =
             kind: "failure";
           }
         > => response.kind !== "failure",
-        { message: "Batch items contain only found or missing responses." }
+        {
+          message: "Batch items contain only found or missing responses.",
+        }
       )
     ),
     Schema.check(
@@ -48,7 +50,9 @@ const PublicContentRuntimeBatchItemSchema =
         (response) =>
           publicRuntimeResponseBytes(response) <=
           MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
-        { message: "Batch item exceeded the Aksara response ceiling." }
+        {
+          message: "Batch item exceeded the Aksara response ceiling.",
+        }
       )
     )
   );

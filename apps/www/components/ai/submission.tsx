@@ -1,0 +1,293 @@
+"use client";
+
+import type { Ref } from "@confect/core";
+import { type OptimisticUpdate, useAction, useMutation } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  NinaFileType,
+  NinaUploadError,
+} from "@repo/backend/confect/nina/uploads.spec";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import type { FileUIPart } from "ai";
+import { Effect, Exit, Option, Result, Schema } from "effect";
+import { useTranslations } from "next-intl";
+import { useRef, useState } from "react";
+import { useAi } from "@/components/ai/context/use-ai";
+import {
+  NinaConnectionError,
+  type NinaFailure,
+  ninaFailureFeedback,
+  reportNinaFailure,
+} from "@/components/ai/feedback";
+import {
+  getLocale,
+  getMaterialContextHint,
+  getPathname,
+} from "@/lib/utils/browser";
+
+type Start = typeof refs.public.nina.turns.start;
+export type NinaDraft = PromptInputMessage & { text: string };
+
+/** Confect replays this callback until the authoritative message arrives. */
+function optimisticPrompt(
+  previews: ReadonlyMap<Id<"ninaUploads">, FileUIPart>,
+  createdAt: number
+): OptimisticUpdate<Start> {
+  return (store, args) => {
+    if (!args.chatId) {
+      return;
+    }
+    const conversation = store.getQuery(refs.public.nina.conversation.get, {
+      chatId: args.chatId,
+    });
+    if (Option.isNone(conversation)) {
+      return;
+    }
+    const threadId = conversation.value.chat.threadId;
+    const pages = store
+      .getAllQueries(refs.public.nina.messages.list)
+      .filter(
+        (page) =>
+          page.args.chatId === args.chatId &&
+          page.args.threadId === threadId &&
+          !page.args.streamArgs
+      );
+    const messages = pages.flatMap((page) =>
+      Option.isSome(page.value) ? page.value.value.page : []
+    );
+    const order = 1 + Math.max(-1, ...messages.map((message) => message.order));
+    const input = args.input;
+    const prompt =
+      input.kind === "message"
+        ? {
+            text: input.prompt.text,
+            parts: [
+              { type: "text", text: input.prompt.text },
+              ...(input.prompt.uploadIds ?? []).flatMap((id) => {
+                const file = previews.get(id);
+                return file ? [file] : [];
+              }),
+            ],
+          }
+        : messages.find(
+            (message) =>
+              message.order === input.order && message.role === "user"
+          );
+    if (!prompt) {
+      return;
+    }
+    const { text, parts } = prompt;
+    for (const page of pages) {
+      if (
+        page.args.paginationOpts.cursor !== null ||
+        Option.isNone(page.value)
+      ) {
+        continue;
+      }
+      store.setQuery(
+        refs.public.nina.messages.list,
+        page.args,
+        Option.some({
+          ...page.value.value,
+          page: [
+            {
+              id: args.requestId,
+              key: `${threadId}-${order}-0`,
+              order,
+              stepOrder: 0,
+              status: "pending",
+              role: "user",
+              text,
+              parts,
+              _creationTime: createdAt,
+            },
+            ...page.value.value.page,
+          ],
+        })
+      );
+    }
+  };
+}
+
+const uploadAttachment = Effect.fn("nina.upload")(function* (
+  attachment: NonNullable<NinaDraft["files"]>[number],
+  upload: ReturnType<typeof useAction<typeof refs.public.nina.uploads.save>>,
+  uploaded: WeakMap<File, Id<"ninaUploads">>,
+  previews: Map<Id<"ninaUploads">, FileUIPart>
+) {
+  const cached = uploaded.get(attachment.file);
+  if (cached) {
+    return cached;
+  }
+  const mediaType = yield* Schema.decodeUnknownEffect(NinaFileType)(
+    attachment.file.type
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new NinaUploadError({
+          code: "NINA_UPLOAD_INVALID",
+          message: "This attachment type is not supported.",
+        })
+    )
+  );
+  const bytes = yield* Effect.tryPromise({
+    try: () => attachment.file.arrayBuffer(),
+    catch: () =>
+      new NinaUploadError({
+        code: "NINA_UPLOAD_FAILED",
+        message: "Unable to read this attachment.",
+      }),
+  });
+  const id = yield* Effect.tryPromise({
+    try: () => upload({ bytes, mediaType, filename: attachment.file.name }),
+    catch: () =>
+      new NinaConnectionError({
+        code: "NINA_CONNECTION_FAILED",
+        message: "Nina upload could not be confirmed.",
+      }),
+  }).pipe(Effect.flatMap(Effect.fromResult));
+  uploaded.set(attachment.file, id);
+  previews.set(id, {
+    type: "file",
+    url: attachment.url,
+    mediaType,
+    filename: attachment.file.name,
+  });
+  return id;
+});
+
+/** Native admission with optimistic query updates and idempotent transport retry. */
+export function useNinaSubmission() {
+  const upload = useAction(refs.public.nina.uploads.save);
+  const uploaded = useRef(new WeakMap<File, Id<"ninaUploads">>());
+  const previews = useRef(new Map<Id<"ninaUploads">, FileUIPart>());
+  const start = useMutation(refs.public.nina.turns.start);
+  const getModel = useAi((state) => state.getModel);
+  const addChatDraft = useAi((state) => state.addChatDraft);
+  const removeChatDraft = useAi((state) => state.removeChatDraft);
+  const resolveChatDraft = useAi((state) => state.resolveChatDraft);
+  const [error, setError] = useState<NinaFailure | null>(null);
+  const inFlight = useRef(false);
+  const uncertain = useRef<Ref.Args<Start> | null>(null);
+  const t = useTranslations("Ai");
+
+  async function perform(
+    inputProgram: Effect.Effect<Ref.Args<Start>["input"], NinaFailure>,
+    chatId?: Id<"chats">
+  ) {
+    if (inFlight.current) {
+      return;
+    }
+    inFlight.current = true;
+    setError(null);
+    const draftKey = chatId ? null : crypto.randomUUID();
+    if (draftKey) {
+      addChatDraft(draftKey);
+    }
+    const result = await Effect.runPromise(
+      inputProgram.pipe(
+        Effect.flatMap((input) => {
+          const payload = {
+            ...(chatId ? { chatId } : {}),
+            input,
+            modelId: getModel(),
+          };
+          const previous = uncertain.current;
+          const same =
+            previous &&
+            JSON.stringify({ ...previous, requestId: undefined }) ===
+              JSON.stringify(payload);
+          const args = {
+            ...payload,
+            requestId: same ? previous.requestId : crypto.randomUUID(),
+          };
+          uncertain.current = args;
+          const submit = start.withOptimisticUpdate(
+            optimisticPrompt(new Map(previews.current), Date.now())
+          );
+          return Effect.tryPromise({
+            try: () => submit(args),
+            catch: () =>
+              new NinaConnectionError({
+                code: "NINA_CONNECTION_FAILED",
+                message: "Nina admission could not be confirmed.",
+              }),
+          }).pipe(Effect.flatMap(Effect.fromResult));
+        }),
+        Effect.onExit((exit) =>
+          Effect.sync(() => {
+            if (!draftKey) {
+              return;
+            }
+            if (Exit.isSuccess(exit)) {
+              resolveChatDraft(draftKey, exit.value);
+            } else {
+              removeChatDraft(draftKey);
+            }
+          })
+        ),
+        Effect.result,
+        Effect.ensuring(
+          Effect.sync(() => {
+            inFlight.current = false;
+          })
+        )
+      )
+    );
+    if (Result.isSuccess(result)) {
+      uncertain.current = null;
+      uploaded.current = new WeakMap();
+      previews.current.clear();
+      return result.success;
+    }
+    if (result.failure._tag !== "NinaConnectionError") {
+      uncertain.current = null;
+    }
+    if (
+      result.failure._tag === "NinaUploadError" &&
+      result.failure.code === "NINA_UPLOAD_INVALID"
+    ) {
+      uploaded.current = new WeakMap();
+      previews.current.clear();
+    }
+    setError(result.failure);
+    await Effect.runPromise(
+      reportNinaFailure(
+        result.failure,
+        t(`failures.${ninaFailureFeedback[result.failure.code].message}`)
+      )
+    );
+  }
+
+  function send(prompt: NinaDraft, chatId?: Id<"chats">) {
+    const hint = getMaterialContextHint();
+    return perform(
+      Effect.forEach(prompt.files ?? [], (attachment) =>
+        uploadAttachment(attachment, upload, uploaded.current, previews.current)
+      ).pipe(
+        Effect.map((uploadIds) => ({
+          kind: "message" as const,
+          prompt: { text: prompt.text, uploadIds },
+          page: {
+            locale: getLocale(),
+            slug: getPathname(),
+            ...(hint ? { materialContextHint: hint } : {}),
+          },
+        }))
+      ),
+      chatId
+    );
+  }
+  function retry(order: number, chatId: Id<"chats">) {
+    return perform(
+      Effect.succeed({
+        kind: "retry",
+        order,
+        page: { locale: getLocale(), slug: getPathname() },
+      }),
+      chatId
+    );
+  }
+  return { send, retry, error };
+}

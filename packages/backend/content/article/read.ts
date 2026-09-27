@@ -1,3 +1,16 @@
+import {
+  decodePageCursor,
+  encodePageCursor,
+  hasPageCursorPrefix,
+  hasStaleReleaseCursor,
+  validateInitialPage,
+} from "@repo/backend/confect/contentRelease/cursor";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import {
+  validateProjectionPage,
+  validatePublicationPage,
+} from "@repo/backend/confect/contentRelease/paging";
+import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import {
@@ -6,19 +19,6 @@ import {
   verifyCategory,
 } from "@repo/backend/content/article/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import {
-  decodePageCursor,
-  encodePageCursor,
-  hasPageCursorPrefix,
-  hasStaleReleaseCursor,
-  validateReleaseCursor,
-} from "@repo/backend/convex/contentRelease/cursor";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import {
-  validateProjectionPage,
-  validatePublicationPage,
-} from "@repo/backend/convex/contentRelease/paging";
-import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { hasArticlePublicationCursorPrefix } from "@repo/contents/publication";
 import { Effect } from "effect";
 
@@ -71,11 +71,10 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
         stale: true,
       };
     }
-    yield* validateReleaseCursor(
+    yield* validateInitialPage(
       options.cursor,
       expectedManifestHash,
-      expectedReleaseId,
-      active
+      expectedReleaseId
     );
     if (!(owner.managed && owner.active && owner.slot)) {
       return {
@@ -103,7 +102,10 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
       activeManifestHash: owner.active.manifestHash,
       activeReleaseId: owner.active.releaseId,
       managed: true,
-      result: { ...stored, page },
+      result: {
+        ...stored,
+        page,
+      },
       sourceRevision: readSourceRevision(owner.active),
       stale: false,
     };
@@ -148,11 +150,10 @@ export const readCategoryPage = Effect.fn(
       stale: true,
     };
   }
-  yield* validateReleaseCursor(
+  yield* validateInitialPage(
     options.cursor,
     expectedManifestHash,
-    expectedReleaseId,
-    active
+    expectedReleaseId
   );
   if (!(owner.managed && owner.active && owner.slot)) {
     return {

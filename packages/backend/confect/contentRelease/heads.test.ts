@@ -1,0 +1,421 @@
+import { describe, expect, it } from "@effect/vitest";
+import {
+  type ContentFamily,
+  ContentFamilySchema,
+} from "@nakafa/aksara-contracts/content";
+import {
+  type HeadPage,
+  HeadPageSchema,
+} from "@nakafa/aksara-contracts/release/head";
+import {
+  MAX_HEAD_PAGE_COUNT,
+  MAX_PUBLICATION_RESPONSE_BYTES,
+} from "@nakafa/aksara-contracts/transport/limits";
+import { publicationSuccess } from "@repo/backend/confect/contentRelease/ingress/response";
+import { convexModules } from "@repo/backend/confect/test.setup";
+import { internal } from "@repo/backend/convex/_generated/api";
+import schema from "@repo/backend/convex/schema";
+import {
+  insertAnchoredActiveRelease,
+  insertStoredAnchor,
+  retireStoredAnchorPayload,
+} from "@repo/backend/test/content/anchor";
+import {
+  insertQuestionHead,
+  insertTestHead,
+  maximumTestHead,
+} from "@repo/backend/test/content/head";
+import {
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content/page";
+import {
+  TEST_MANIFEST_HASH,
+  TEST_RELEASE_ID,
+} from "@repo/backend/test/content/release";
+import { activateRollbackFixture } from "@repo/backend/test/content/rollback";
+import {
+  TEST_ARTICLE_KEY,
+  TEST_ARTICLE_PATH,
+  TEST_ARTICLE_SOURCE,
+} from "@repo/backend/test/content/runtime";
+import {
+  insertTestState,
+  insertZeroRelease,
+  type TestIdentity,
+} from "@repo/backend/test/content/state";
+import {
+  beginFixture,
+  stageUpsertFixture,
+} from "@repo/backend/test/content/verify";
+import { getConvexSize } from "convex/values";
+import { convexTest, type TestConvex } from "convex-test";
+import { Effect, Result, Schema } from "effect";
+
+const headPage = internal.contentRelease.heads.page;
+const verifyItems = internal.contentRelease.verify.verifyItems;
+/** Requests one exact family directory page. */
+function readPage(
+  t: TestConvex<typeof schema>,
+  cursor: null | string,
+  identity: TestIdentity = {
+    manifestHash: TEST_MANIFEST_HASH,
+    releaseId: TEST_RELEASE_ID,
+    sequence: 1,
+  },
+  limit = 2,
+  family: ContentFamily = "material"
+): Promise<HeadPage> {
+  return t
+    .query(headPage, {
+      activeManifestHash: identity.manifestHash,
+      activeReleaseId: identity.releaseId,
+      cursor,
+      family,
+      limit,
+    })
+    .then(Schema.decodeUnknownSync(HeadPageSchema));
+}
+/** Selects the ordered content keys returned by one head page. */
+function headKeys(page: HeadPage) {
+  return page.heads.map(({ contentKey }) => contentKey);
+}
+
+describe("contentRelease/heads", () => {
+  it("reads one anchored page while its stored base keeps retired bytes", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertStoredAnchor(ctx, { releaseId: "release-anchor" });
+      await retireStoredAnchorPayload(ctx, "release-anchor");
+      await insertAnchoredActiveRelease(ctx, {
+        baseManifestHash: TEST_MANIFEST_HASH,
+        baseReleaseId: "release-anchor",
+      });
+    });
+    const page = await readPage(t, null);
+    expect(headKeys(page)).toEqual(["test:anchored"]);
+  });
+
+  it("fails closed when an anchored identity has no publication state", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      insertStoredAnchor(ctx, { releaseId: "release-orphan" })
+    );
+    await expect(
+      readPage(t, null, {
+        manifestHash: TEST_MANIFEST_HASH,
+        releaseId: "release-orphan",
+        sequence: 0,
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+  });
+
+  it("fails closed when the stored base is not a completed anchor", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertStoredAnchor(ctx, {
+        complete: false,
+        releaseId: "release-anchor",
+      });
+      await insertAnchoredActiveRelease(ctx, {
+        baseManifestHash: TEST_MANIFEST_HASH,
+        baseReleaseId: "release-anchor",
+      });
+    });
+    await expect(readPage(t, null)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("fails closed when the stored base identity disagrees with the signed base", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertStoredAnchor(ctx, {
+        manifestHash: `sha256:${"9".repeat(64)}`,
+        releaseId: "release-anchor",
+      });
+      await insertAnchoredActiveRelease(ctx, {
+        baseManifestHash: TEST_MANIFEST_HASH,
+        baseReleaseId: "release-anchor",
+      });
+    });
+    await expect(readPage(t, null)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects duplicate permanent identities instead of returning an ambiguous inventory", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 0, 0);
+      await insertTestHead(ctx, { contentKey: "test:duplicate" });
+      const key = await ctx.db.query("contentKeys").unique();
+      if (!key) {
+        return expect.fail("Expected one permanent material identity.");
+      }
+      await ctx.db.insert("contentKeys", {
+        contentKey: key.contentKey,
+        artifactLocale: key.artifactLocale,
+        family: key.family,
+        createdSequence: key.createdSequence,
+      });
+    });
+    await expect(readPage(t, null)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("pages structurally shared material heads in canonical order", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 0, 0);
+      await insertTestHead(ctx, {
+        contentKey: "test:zeta",
+        releaseId: "release-prior",
+        sequence: 0,
+      });
+      await insertTestHead(ctx, { contentKey: "test:beta" });
+      await insertTestHead(ctx, { contentKey: "test:alpha" });
+    });
+    const first = await readPage(t, null);
+    const second = await readPage(t, first.nextCursor);
+    expect(first).toMatchObject({ cursor: null, done: false });
+    expect(headKeys(first)).toEqual(["test:alpha", "test:beta"]);
+    expect(second).toMatchObject({ done: true, nextCursor: null });
+    expect(headKeys(second)).toEqual(["test:zeta"]);
+  });
+  it("pages one verified immutable article head", async () => {
+    const t = convexTest(schema, convexModules);
+    await stageUpsertFixture(t, "article");
+    await beginFixture(t);
+    await t.mutation(verifyItems, {
+      afterIndex: -1,
+      releaseId: TEST_RELEASE_ID,
+    });
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected verified article release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        proofAt: 1,
+        proofJson: "{}",
+        status: "verified",
+        verifiedAt: 1,
+      });
+    });
+    const page = await readPage(t, null, undefined, 2, "article");
+    expect(page).toMatchObject({
+      done: true,
+      family: "article",
+      heads: [
+        {
+          contentKey: TEST_ARTICLE_KEY,
+          family: "article",
+          publicPath: TEST_ARTICLE_PATH,
+          rendererDomain: "politics",
+          sourcePath: TEST_ARTICLE_SOURCE,
+        },
+      ],
+      nextCursor: null,
+    });
+  });
+  it("pages one verified immutable public page head", async () => {
+    const t = convexTest(schema, convexModules);
+    await stageUpsertFixture(t, "page");
+    await beginFixture(t);
+    await t.mutation(verifyItems, {
+      afterIndex: -1,
+      releaseId: TEST_RELEASE_ID,
+    });
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected verified page release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        proofAt: 1,
+        proofJson: "{}",
+        status: "verified",
+        verifiedAt: 1,
+      });
+    });
+    const page = await readPage(t, null, undefined, 2, "page");
+    expect(page).toMatchObject({
+      done: true,
+      family: "page",
+      heads: [
+        {
+          contentKey: TEST_PAGE_KEY,
+          family: "page",
+          publicPath: TEST_PAGE_PATH,
+          rendererDomain: "site",
+          sourcePath: TEST_PAGE_SOURCE,
+        },
+      ],
+      nextCursor: null,
+    });
+  });
+  it("reads an exact verified candidate against its completed base", async () => {
+    const t = convexTest(schema, convexModules);
+    const active = {
+      manifestHash: `sha256:${"6".repeat(64)}`,
+      releaseId: "release-base",
+      sequence: 1,
+    } satisfies TestIdentity;
+    const candidate = {
+      manifestHash: `sha256:${"7".repeat(64)}`,
+      releaseId: "release-candidate",
+      sequence: 2,
+    } satisfies TestIdentity;
+    await t.mutation(async (ctx) => {
+      await insertZeroRelease(ctx, {
+        ...active,
+        ownership: {
+          base: [],
+          result: ContentFamilySchema.literals,
+        },
+        role: "candidate",
+        status: "completed",
+      });
+      await insertZeroRelease(ctx, {
+        ...candidate,
+        base: active,
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: ContentFamilySchema.literals,
+        },
+        role: "candidate",
+        status: "verified",
+      });
+      await insertTestState(ctx, {
+        active,
+        candidate,
+        nextSequence: 3,
+      });
+      await insertTestHead(ctx, {
+        contentKey: "test:candidate",
+        releaseId: candidate.releaseId,
+        sequence: candidate.sequence,
+      });
+    });
+    await expect(readPage(t, null, candidate)).resolves.toMatchObject({
+      activeReleaseId: candidate.releaseId,
+      heads: [{ contentKey: "test:candidate" }],
+    });
+  });
+  it("returns empty nonterminal pages while advancing the opaque cursor", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 0, 0);
+      await insertTestHead(ctx, {
+        contentKey: "test:deleted",
+        operation: "delete",
+      });
+      await insertTestHead(ctx, { contentKey: "test:visible" });
+    });
+    const first = await readPage(t, null, undefined, 1);
+    const second = await readPage(t, first.nextCursor, undefined, 1);
+    const third = await readPage(t, second.nextCursor, undefined, 1);
+    expect(first).toMatchObject({ done: false, heads: [] });
+    expect(first.nextCursor).not.toBeNull();
+    expect(second).toMatchObject({ done: false });
+    expect(headKeys(second)).toEqual(["test:visible"]);
+    expect(second.nextCursor).not.toBeNull();
+    expect(third).toMatchObject({ done: true, heads: [], nextCursor: null });
+  });
+  it.live(
+    "keeps the exact maximum head page below Convex and HTTP ceilings",
+    () =>
+      Effect.gen(function* () {
+        const page = yield* Schema.decodeEffect(HeadPageSchema)({
+          activeManifestHash: `sha256:${"e".repeat(64)}`,
+          activeReleaseId: "a".repeat(128),
+          cursor: "c".repeat(4096),
+          done: false,
+          family: "material",
+          heads: Array.from({ length: MAX_HEAD_PAGE_COUNT }, (_, index) =>
+            maximumTestHead(index)
+          ),
+          nextCursor: "d".repeat(4096),
+        });
+        const encoded = yield* publicationSuccess({
+          ok: true,
+          operation: "headPage",
+          value: page,
+        });
+        const convexPage = {
+          ...page,
+          heads: page.heads.map((head) => ({ ...head })),
+        };
+        expect(getConvexSize(convexPage)).toBeLessThan(
+          MAX_PUBLICATION_RESPONSE_BYTES
+        );
+        expect(new TextEncoder().encode(encoded.body).byteLength).toBeLessThan(
+          MAX_PUBLICATION_RESPONSE_BYTES
+        );
+        const overflow = Schema.decodeUnknownResult(HeadPageSchema)({
+          ...page,
+          heads: [...page.heads, maximumTestHead(MAX_HEAD_PAGE_COUNT)],
+        });
+        expect(Result.isFailure(overflow)).toBe(true);
+      })
+  );
+  it("rejects invalid limits and unreadable snapshot identities", async () => {
+    const invalid = convexTest(schema, convexModules);
+    await expect(readPage(invalid, null, undefined, 0)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+    const stale = convexTest(schema, convexModules);
+    await stale.mutation((ctx) => activateRollbackFixture(ctx, 0, 0));
+    await expect(
+      readPage(stale, null, {
+        manifestHash: TEST_MANIFEST_HASH,
+        releaseId: "release-other",
+        sequence: 1,
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+  });
+  it("fails closed when a selected head loses canonical evidence", async () => {
+    const incomplete = convexTest(schema, convexModules);
+    await incomplete.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 0, 0);
+      await insertTestHead(ctx, { contentKey: "test:broken" });
+      const head = await ctx.db.query("contentHeads").unique();
+      if (!head) {
+        throw new Error("Expected material head.");
+      }
+      await ctx.db.patch("contentHeads", head._id, {
+        compilerConfigHash: undefined,
+      });
+    });
+    await expect(readPage(incomplete, null)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+    const route = convexTest(schema, convexModules);
+    await route.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 0, 0);
+      await insertTestHead(ctx, { contentKey: "test:route" });
+      const binding = await ctx.db.query("contentBindings").unique();
+      if (!binding) {
+        throw new Error("Expected route binding.");
+      }
+      await ctx.db.delete("contentBindings", binding._id);
+    });
+    await expect(readPage(route, null)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_ROUTE" },
+    });
+  });
+});
+
+it("returns question inventory without inventing a public route", async () => {
+  const t = convexTest(schema, convexModules);
+  await t.mutation(async (ctx) => {
+    await activateRollbackFixture(ctx, 0, 0);
+    await insertQuestionHead(ctx);
+  });
+  const page = await readPage(t, null, undefined, 2, "question");
+  expect(page.heads).toHaveLength(1);
+  expect(page.heads[0]).not.toHaveProperty("publicPath");
+});

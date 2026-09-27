@@ -1,4 +1,4 @@
-import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
+import type { SchoolClassImage } from "@repo/backend/confect/classes/schema";
 
 interface ClassImageState {
   class: {

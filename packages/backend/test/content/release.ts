@@ -30,7 +30,7 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
-import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
+import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { testMaterialPublicPath } from "@repo/backend/test/content/material";
 import { Effect, Schema } from "effect";
 

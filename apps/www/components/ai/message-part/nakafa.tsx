@@ -1,7 +1,7 @@
 "use client";
 
 import { Sad02Icon } from "@hugeicons/core-free-icons";
-import type { NakafaDataPart } from "@repo/ai/schema/data";
+import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";

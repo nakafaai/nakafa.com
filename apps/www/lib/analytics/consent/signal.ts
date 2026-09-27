@@ -1,3 +1,5 @@
+import type { Ref } from "@confect/core";
+import type { InvokeReturn } from "@confect/react";
 import {
   ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   ANALYTICS_CONSENT_CATEGORY,
@@ -5,19 +7,18 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   hasBrowserPrivacySignal,
 } from "@repo/analytics/consent";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { ConvexError } from "convex/values";
+import type refs from "@repo/backend/confect/_generated/refs";
+
 import { Effect, Option, Schedule, Schema } from "effect";
 
 const accountConsentPersistenceFailedCode =
   "ACCOUNT_CONSENT_PERSISTENCE_FAILED";
 const accountConsentRejectedCode = "ACCOUNT_CONSENT_REJECTED";
 const accountConsentRetrySchedule = Schedule.spaced("10 seconds");
-type SetAccountConsentArgs = FunctionArgs<typeof api.consents.current.set>;
+type SetAccountConsentArgs = Ref.Args<typeof refs.public.consents.current.set>;
 type SetAccountConsent = (
   args: SetAccountConsentArgs
-) => Promise<FunctionReturnType<typeof api.consents.current.set>>;
+) => InvokeReturn<typeof refs.public.consents.current.set>;
 
 export interface BrowserPrivacySignalSource {
   readonly read: () => {
@@ -65,14 +66,6 @@ export class AccountConsentRejectedError extends Schema.TaggedError<AccountConse
 ) {}
 
 function toAccountConsentWriteError(cause: unknown) {
-  if (cause instanceof ConvexError) {
-    return new AccountConsentRejectedError({
-      cause,
-      code: accountConsentRejectedCode,
-      message: "The analytics decision was rejected for this account.",
-    });
-  }
-
   return new AccountConsentPersistenceError({
     cause,
     code: accountConsentPersistenceFailedCode,
@@ -88,7 +81,20 @@ const persistAccountAnalyticsConsent = Effect.fnUntraced(function* (
   return yield* Effect.tryPromise({
     catch: toAccountConsentWriteError,
     try: () => setAccountConsent({ decision, expectedUserId }),
-  });
+  }).pipe(
+    Effect.flatMap((result) =>
+      Effect.fromResult(result).pipe(
+        Effect.mapError(
+          (cause) =>
+            new AccountConsentRejectedError({
+              cause,
+              code: accountConsentRejectedCode,
+              message: "The analytics decision was rejected for this account.",
+            })
+        )
+      )
+    )
+  );
 });
 
 const persistAccountAnalyticsChoice = Effect.fnUntraced(function* (
@@ -161,7 +167,7 @@ export const revokeAccountAnalyticsGrant = Effect.fn(
       const hasBrowserPrivacySignal = yield* currentBrowserPrivacySignal;
       if (!hasBrowserPrivacySignal) {
         return Option.none<
-          FunctionReturnType<typeof api.consents.current.set>
+          Ref.Returns<typeof refs.public.consents.current.set>
         >();
       }
 

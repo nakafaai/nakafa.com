@@ -1,6 +1,9 @@
 "use client";
+
+import type { Ref } from "@confect/core";
+import type { InvokeReturn } from "@confect/react";
 import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type refs from "@repo/backend/confect/_generated/refs";
 import {
   Select,
   SelectContent,
@@ -13,7 +16,7 @@ import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/h
 import { useRouter } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useConvexAuth } from "convex/react";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -29,15 +32,13 @@ export type CurriculumSelectorOption = Readonly<{
   title: string;
   value: string;
 }>;
-type SavePreferredCurriculumArgs = FunctionArgs<
-  typeof api.learningPreferences.mutations.setPreferredCurriculum
+type SavePreferredCurriculumArgs = Ref.Args<
+  typeof refs.public.learningPreferences.mutations.setPreferredCurriculum
 >;
 type SavePreferredCurriculum = (
   args: SavePreferredCurriculumArgs
-) => Promise<
-  FunctionReturnType<
-    typeof api.learningPreferences.mutations.setPreferredCurriculum
-  >
+) => InvokeReturn<
+  typeof refs.public.learningPreferences.mutations.setPreferredCurriculum
 >;
 /** Expected failure when a background curriculum preference save fails. */
 class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPreferenceSaveError>()(
@@ -165,7 +166,12 @@ function saveCurriculumPreference({
       }),
     catch: (cause) => new CurriculumPreferenceSaveError({ cause }),
   }).pipe(
-    Effect.catch((error) =>
+    Effect.flatMap((result) =>
+      Effect.fromResult(result).pipe(
+        Effect.mapError((cause) => new CurriculumPreferenceSaveError({ cause }))
+      )
+    ),
+    Effect.catchTag("CurriculumPreferenceSaveError", (error) =>
       reportClientException(error, {
         programKey,
         source: "curriculum-selector",

@@ -5,10 +5,10 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { LANDING_FEATURED_TRYOUT } from "@repo/backend/content/tryout/featured";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import {

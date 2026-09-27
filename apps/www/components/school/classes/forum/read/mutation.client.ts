@@ -1,34 +1,38 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import type { OptimisticLocalStore } from "convex/browser";
-import { useMutation } from "convex/react";
+import { useMutation } from "@confect/react";
+import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
+import refs from "@repo/backend/confect/_generated/refs";
+import { Option } from "effect";
 import { markTranscriptRead } from "@/components/school/classes/forum/read/state";
 
 /** Replace the unread count across every loaded forum-list page. */
 function updateForumLists(
-  localStore: OptimisticLocalStore,
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
   forumId: string,
   unreadCount: number
 ) {
   const queries = localStore.getAllQueries(
-    api.classes.forums.queries.forums.getForums
+    refs.public.classes.forums.queries.forums.getForums
   );
-
   for (const query of queries) {
-    if (!query.value) {
+    if (Option.isNone(query.value)) {
       continue;
     }
-
     localStore.setQuery(
-      api.classes.forums.queries.forums.getForums,
+      refs.public.classes.forums.queries.forums.getForums,
       query.args,
-      {
-        ...query.value,
-        page: query.value.page.map((forum) =>
-          forum._id === forumId ? { ...forum, unreadCount } : forum
+      Option.some({
+        ...query.value.value,
+        page: query.value.value.page.map((forum) =>
+          forum._id === forumId
+            ? {
+                ...forum,
+                unreadCount,
+              }
+            : forum
         ),
-      }
+      })
     );
   }
 }
@@ -36,27 +40,29 @@ function updateForumLists(
 /** Return a read-state mutation that updates the transcript and forum list. */
 export function useMarkForumReadMutation() {
   return useMutation(
-    api.classes.forums.mutations.readState.markForumRead
+    refs.public.classes.forums.mutations.readState.markForumRead
   ).withOptimisticUpdate((localStore, { forumId, lastReadPostId }) => {
-    const posts = localStore.getQuery(
-      api.classes.forums.queries.pages.getForumPosts,
-      { forumId }
+    const posts = Option.getOrUndefined(
+      localStore.getQuery(
+        refs.public.classes.forums.queries.pages.getForumPosts,
+        {
+          forumId,
+        }
+      )
     );
-
     if (!posts) {
       return;
     }
-
     const state = markTranscriptRead(posts, lastReadPostId);
-
     if (!state) {
       return;
     }
-
     localStore.setQuery(
-      api.classes.forums.queries.pages.getForumPosts,
-      { forumId },
-      state.posts
+      refs.public.classes.forums.queries.pages.getForumPosts,
+      {
+        forumId,
+      },
+      Option.some(state.posts)
     );
     updateForumLists(localStore, forumId, state.unreadCount);
   });

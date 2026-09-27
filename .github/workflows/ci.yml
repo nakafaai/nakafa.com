@@ -98,6 +98,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify generated backend contracts
+        run: |
+          pnpm --filter @repo/backend codegen
+          test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex)"
+
       - name: Audit dependencies
         run: bash scripts/osv
 
@@ -142,6 +147,9 @@ jobs:
 
       - name: Prepare signed acceptance publication
         run: pnpm acceptance:prepare
+
+      - name: Verify generated Convex bindings
+        run: test -z "$(git status --porcelain -- packages/backend/convex/_generated)"
 
       - name: Build production app
         id: production_build

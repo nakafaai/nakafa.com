@@ -1,7 +1,7 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 
 /** One material group row returned by the class materials paginated query. */
-export type MaterialGroup = FunctionReturnType<
-  typeof api.classes.materials.queries.getMaterialGroups
+export type MaterialGroup = Ref.Returns<
+  typeof refs.public.classes.materials.queries.getMaterialGroups
 >["page"][number];

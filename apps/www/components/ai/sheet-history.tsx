@@ -1,12 +1,13 @@
 "use client";
 
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   ChatSearch01Icon,
   Globe02Icon,
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -19,9 +20,8 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
-import { Authenticated, usePaginatedQuery } from "convex/react";
+import { Authenticated } from "convex/react";
 import { useTranslations } from "next-intl";
-
 import { useAi } from "@/components/ai/context/use-ai";
 import { useViewer } from "@/lib/identity/client";
 
@@ -29,11 +29,9 @@ import { useViewer } from "@/lib/identity/client";
 export function SheetHistory() {
   const isPending = useViewer((state) => state.isPending);
   const viewer = useViewer((state) => state.viewer);
-
   if (isPending || viewer === null) {
     return null;
   }
-
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
@@ -56,16 +54,22 @@ function SheetHistoryContent() {
   const t = useTranslations("Ai");
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
-  const { results, status } = usePaginatedQuery(
-    api.chats.queries.getOwnChats,
-    { type: "study" },
-    { initialNumItems: 50 }
+  const pagination = usePaginatedQuery(
+    refs.public.chats.queries.getOwnChats,
+    {
+      type: "study",
+    },
+    {
+      initialNumItems: 50,
+    }
   );
-
-  if (status === "LoadingFirstPage" || results.length === 0) {
+  const { results } = pagination;
+  if (
+    PaginatedQueryResult.isLoadingFirstPage(pagination) ||
+    results.length === 0
+  ) {
     return null;
   }
-
   return (
     <DropdownMenuContent align="end" className="max-h-64 w-72">
       <DropdownMenuGroup>

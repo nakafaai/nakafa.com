@@ -1,10 +1,9 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
-
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs } from "convex/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
@@ -18,15 +17,18 @@ export const readPublishedMaterialBuckets = Effect.fn(
   "www.materials.readSitemapBuckets"
 )(function* (locale: Locale, expectedActiveReleaseId?: ContentReleasePin) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.material.sitemapBuckets,
-    { appLocale }
-  );
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.material.sitemapBuckets, {
+      appLocale,
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,
-    { appLocale, publicPath: "materials" }
+    {
+      appLocale,
+      publicPath: "materials",
+    }
   );
   if (!result.managed || activeReleaseId === null) {
     return yield* new PublishedProjectionError({
@@ -46,15 +48,15 @@ export const readPublishedMaterialSitemap = Effect.fn(
   "www.materials.readSitemapPage"
 )(function* (
   locale: Locale,
-  bucket: FunctionArgs<typeof api.contentRelease.material.sitemapPage>["bucket"]
+  bucket: Ref.Args<
+    typeof refs.public.contentRelease.material.sitemapPage
+  >["bucket"]
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  return yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.material.sitemapPage,
-    {
+  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.material.sitemapPage, {
       appLocale,
       bucket,
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
 });

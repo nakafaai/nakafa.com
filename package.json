@@ -12,10 +12,10 @@
     "packages/*"
   ],
   "scripts": {
-    "acceptance:build": "pnpm --dir packages/backend acceptance build",
+    "acceptance:build": "pnpm --filter @repo/backend codegen && pnpm --dir packages/backend acceptance build",
     "acceptance:clean": "pnpm --dir packages/backend acceptance clean",
-    "acceptance:prepare": "pnpm --dir packages/backend acceptance prepare",
-    "acceptance:start": "pnpm --dir packages/backend acceptance start",
+    "acceptance:prepare": "pnpm --filter @repo/backend codegen && pnpm --dir packages/backend acceptance prepare",
+    "acceptance:start": "pnpm --filter @repo/backend codegen && pnpm --dir packages/backend acceptance start",
     "analyze": "turbo run analyze",
     "boundaries": "turbo boundaries",
     "build": "pnpm check:patches && pnpm check:tests && turbo run build",

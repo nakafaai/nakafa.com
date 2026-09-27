@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   ArrowDown02Icon,
   Delete02Icon,
@@ -7,8 +8,9 @@ import {
   MoreHorizontalIcon,
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -19,11 +21,13 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { type PaginationStatus, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { toast } from "sonner";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
+import { reportClientException } from "@/lib/analytics/client";
 import { useViewer } from "@/lib/identity/client";
 import { getLocale } from "@/lib/utils/date";
 
@@ -33,7 +37,6 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = user?.appUser._id === userId;
-
   return (
     <UserChatsList
       canDelete={isOwnProfile}
@@ -57,19 +60,31 @@ function UserChatsList({
   if (canDelete) {
     return <OwnChatsList />;
   }
-
   return <PublicChatsList userId={userId} visibility={visibility} />;
 }
 
 /** Subscribe to all study chats owned by the current viewer. */
 function OwnChatsList() {
-  const { results, status } = usePaginatedQuery(
-    api.chats.queries.getOwnChats,
-    { type: "study" },
-    { initialNumItems: 50 }
+  const pagination = usePaginatedQuery(
+    refs.public.chats.queries.getOwnChats,
+    {
+      type: "study",
+    },
+    {
+      initialNumItems: 50,
+    }
   );
-
-  return <ChatList canDelete={true} results={results} status={status} />;
+  const { results } = pagination;
+  if (PaginatedQueryResult.isFailure(pagination)) {
+    throw pagination.error;
+  }
+  return (
+    <ChatList
+      canDelete={true}
+      isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
+      results={results}
+    />
+  );
 }
 
 /** Subscribe to public study chats for the selected profile. */
@@ -82,34 +97,47 @@ function PublicChatsList({
 }) {
   const type = "study" as const;
   const queryArgs = visibility
-    ? { type, userId, visibility }
-    : { type, userId };
-  const { results, status } = usePaginatedQuery(
-    api.chats.queries.getChats,
+    ? {
+        type,
+        userId,
+        visibility,
+      }
+    : {
+        type,
+        userId,
+      };
+  const pagination = usePaginatedQuery(
+    refs.public.chats.queries.getChats,
     queryArgs,
-    { initialNumItems: 50 }
+    {
+      initialNumItems: 50,
+    }
   );
-
-  return <ChatList canDelete={false} results={results} status={status} />;
+  const { results } = pagination;
+  return (
+    <ChatList
+      canDelete={false}
+      isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
+      results={results}
+    />
+  );
 }
 
 /** Render a resolved chat page with optional owner controls. */
 function ChatList({
   canDelete,
   results,
-  status,
+  isLoading,
 }: {
   canDelete: boolean;
-  results: Doc<"chats">[];
-  status: PaginationStatus;
+  results: readonly Docs["chats"][];
+  isLoading: boolean;
 }) {
   const t = useTranslations("Common");
   const locale = useLocale();
-
-  if (status === "LoadingFirstPage") {
+  if (isLoading) {
     return <Skeleton className="h-12 w-full rounded-xl border shadow-sm" />;
   }
-
   if (results.length === 0) {
     return (
       <p className="text-center text-muted-foreground text-sm">
@@ -117,7 +145,6 @@ function ChatList({
       </p>
     );
   }
-
   return (
     <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
       {results.map((chat) => {
@@ -160,20 +187,40 @@ function ChatList({
 }
 
 /** Render owner actions for one profile chat row. */
-function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
+function UserChatsListActions({ chat }: { chat: Docs["chats"] }) {
+  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
-
   const deleteChat = useDeleteChatMutation();
-
   const [isPending, startTransition] = useTransition();
 
   /** Delete this chat through the optimistic list mutation. */
   function handleDelete() {
-    startTransition(async () => {
-      await deleteChat({ chatId: chat._id });
-    });
+    startTransition(async () =>
+      Effect.runPromise(
+        Effect.asVoid(
+          Effect.tryPromise(() =>
+            deleteChat({
+              chatId: chat._id,
+            })
+          ).pipe(Effect.flatMap(Effect.fromResult))
+        ).pipe(
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/user/chats",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      )
+    );
   }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

@@ -49,7 +49,7 @@ export declare const api: {
         "query",
         "public",
         {},
-        null | {
+        {
           appUser: {
             _creationTime: number;
             _id: Id<"users">;
@@ -68,3241 +68,28 @@ export declare const api: {
             role?: "teacher" | "student" | "parent" | "administrator";
           };
           authUser: {
-            _creationTime: number;
             _id: string;
-            createdAt: number;
-            displayUsername?: null | string;
             email: string;
-            emailVerified: boolean;
-            image?: null | string;
+            image?: string | null;
             name: string;
-            updatedAt: number;
-            userId?: null | string;
-            username?: null | string;
           };
-        }
+        } | null
       >;
       getUserById: FunctionReference<
         "query",
         "public",
         { userId: Id<"users"> },
-        null | { image?: string; name: string }
+        { image?: string; name: string } | null
       >;
     };
   };
   chats: {
-    actions: {
-      scheduleSaveAssistantFailure: FunctionReference<
-        "action",
-        "public",
-        {
-          message: {
-            chatId: Id<"chats">;
-            generationErrorCode: "CHAT_RESPONSE_FAILED";
-            identifier: string;
-            modelId: "nakafa-lite" | "nakafa-pro";
-          };
-          turnId: Id<"chatTurns">;
-        },
-        null
-      >;
-      scheduleSaveAssistantResponse: FunctionReference<
-        "action",
-        "public",
-        {
-          message: {
-            chatId: Id<"chats">;
-            credits?: number;
-            generationErrorCode?: "CHAT_RESPONSE_FAILED";
-            generationStatus?: "complete" | "failed";
-            identifier: string;
-            inputTokens?: number;
-            modelId?: "nakafa-lite" | "nakafa-pro";
-            ninaContextSnapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            ninaContextTransition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            outputTokens?: number;
-            role: "user" | "assistant" | "system";
-            totalTokens?: number;
-          };
-          parts: Array<{
-            dataMathData?:
-              | {
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  result: {
-                    conditions: Array<{ expression: string; latex: string }>;
-                    input: {
-                      distribution?: string;
-                      expression?: string;
-                      expressions?: Array<string>;
-                      inclusive?: boolean;
-                      k?: string;
-                      kind: "math";
-                      left?: string;
-                      lower?: string;
-                      lowerInclusive?: boolean;
-                      matrix?: Array<Array<string>>;
-                      modulus?: string;
-                      n?: string;
-                      operation:
-                        | "apart"
-                        | "cancel"
-                        | "circle"
-                        | "combination"
-                        | "compare"
-                        | "cumulative_probability"
-                        | "determinant"
-                        | "differentiate"
-                        | "distance"
-                        | "distribution"
-                        | "domain"
-                        | "eigen_analysis"
-                        | "eigenvalues"
-                        | "eigenvectors"
-                        | "evaluate"
-                        | "expected_value"
-                        | "expand"
-                        | "factor"
-                        | "gcd"
-                        | "integrate"
-                        | "intersection"
-                        | "inverse"
-                        | "interval_probability"
-                        | "is_prime"
-                        | "lcm"
-                        | "limit"
-                        | "line"
-                        | "linear_system"
-                        | "matrix_multiply"
-                        | "mean"
-                        | "median"
-                        | "midpoint"
-                        | "mode"
-                        | "modular"
-                        | "permutation"
-                        | "point_probability"
-                        | "prime_factorization"
-                        | "product"
-                        | "quartiles"
-                        | "rank"
-                        | "rationalize"
-                        | "roots"
-                        | "rref"
-                        | "series"
-                        | "simplify"
-                        | "slope"
-                        | "solve"
-                        | "standard_deviation"
-                        | "summation"
-                        | "tail_probability"
-                        | "together"
-                        | "variance"
-                        | "variance_probability"
-                        | "z_score";
-                      order?: number;
-                      parameters?: {
-                        lambda?: string;
-                        lower?: string;
-                        mean?: string;
-                        n?: string;
-                        p?: string;
-                        standard_deviation?: string;
-                        upper?: string;
-                      };
-                      point?: string;
-                      points?: Array<{ x: string; y: string }>;
-                      right?: string;
-                      right_matrix?: Array<Array<string>>;
-                      upper?: string;
-                      upperInclusive?: boolean;
-                      values?: Array<string>;
-                      variable?: string;
-                      variables?: Array<string>;
-                      vector?: Array<string>;
-                    };
-                    items: Array<{
-                      label: string;
-                      latex?: string;
-                      value: string;
-                    }>;
-                    kind:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    primary: { expression: string; latex: string };
-                    reason: string;
-                    secondary?: { expression: string; latex: string };
-                    status: "verified" | "contradicted" | "inconclusive";
-                    stepStatus: "complete" | "partial" | "unavailable";
-                    steps: Array<{
-                      action: string;
-                      items: Array<{
-                        label: string;
-                        latex?: string;
-                        value: string;
-                      }>;
-                      primary: { expression: string; latex: string };
-                      relation?: { expression: string; latex: string };
-                      secondary?: { expression: string; latex: string };
-                    }>;
-                  };
-                  status: "verified" | "contradicted" | "inconclusive";
-                  summary: string;
-                }
-              | {
-                  error: string;
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  status: "error";
-                };
-            dataMathId?: string;
-            dataNakafaData?:
-              | {
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  result: {
-                    count: number;
-                    has_more: boolean;
-                    items: Array<{
-                      alignmentId: string;
-                      assetId: string;
-                      conceptId: string;
-                      content_id: string;
-                      description: string;
-                      excerpt: string;
-                      learningObjectId: string;
-                      lensId: string;
-                      locale: "en" | "id" | "de";
-                      markdown_url?: string;
-                      route: string;
-                      section: "articles" | "material" | "tryout" | "quran";
-                      title: string;
-                      url: string;
-                    }>;
-                    limit: number;
-                    next_offset?: number;
-                    offset: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  status: "error";
-                }
-              | {
-                  input: { content_ref: string };
-                  kind: "content";
-                  status: "loading";
-                }
-              | {
-                  input: { content_ref: string };
-                  kind: "content";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    description?: string;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en" | "id" | "de";
-                    markdown_url?: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    title: string;
-                    url: string;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: { content_ref: string };
-                  kind: "content";
-                  status: "error";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en";
-                    markdown_url?: string;
-                    meaning: { locale: "en" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "id";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "id";
-                    markdown_url?: string;
-                    meaning: { locale: "id" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "de";
-                    markdown_url?: string;
-                    meaning: { locale: "de" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en" | "id" | "de";
-                    markdown_url?: string;
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    translation: string;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  status: "error";
-                }
-              | {
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  status: "loading";
-                }
-              | {
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  result: {
-                    content_counts: Array<{
-                      count: number;
-                      locale: "en" | "id" | "de";
-                    }>;
-                    locale: "en" | "id" | "de";
-                    sections: Array<
-                      "articles" | "material" | "tryout" | "quran"
-                    >;
-                    tools: Array<string>;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  status: "error";
-                };
-            dataNakafaId?: string;
-            dataScrapeUrlContent?: string;
-            dataScrapeUrlDescription?: string;
-            dataScrapeUrlError?: string;
-            dataScrapeUrlFavicon?: string;
-            dataScrapeUrlId?: string;
-            dataScrapeUrlStatus?: "loading" | "done" | "error";
-            dataScrapeUrlTitle?: string;
-            dataScrapeUrlUrl?: string;
-            dataSuggestionsData?: Array<string>;
-            dataSuggestionsId?: string;
-            dataWebSearchError?: string;
-            dataWebSearchId?: string;
-            dataWebSearchProvider?: "firecrawl" | "google";
-            dataWebSearchQueries?: Array<string>;
-            dataWebSearchSources?: Array<{
-              citation: string;
-              content: string;
-              description: string;
-              title: string;
-              url: string;
-            }>;
-            dataWebSearchStatus?: "loading" | "done" | "error";
-            fileFilename?: string;
-            fileMediaType?: string;
-            fileUrl?: string;
-            messageId?: Id<"messages">;
-            order: number;
-            providerMetadata?: Record<string, Record<string, string>>;
-            reasoningState?: "streaming" | "done";
-            reasoningText?: string;
-            textState?: "streaming" | "done";
-            textText?: string;
-            toolCallProviderMetadata?: Record<string, Record<string, string>>;
-            toolDeepResearchInput?: {
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-              sourceRequirements: Array<string>;
-            };
-            toolDeepResearchOutput?: string;
-            toolErrorText?: string;
-            toolMathInput?: {
-              given: Array<string>;
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-            };
-            toolMathOutput?: string;
-            toolNakafaInput?: {
-              deliverables: Array<string>;
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-            };
-            toolNakafaOutput?: string;
-            toolResultProviderMetadata?: Record<string, Record<string, string>>;
-            toolState?:
-              | "input-streaming"
-              | "input-available"
-              | "output-available"
-              | "output-error";
-            toolToolCallId?: string;
-            type:
-              | "text"
-              | "reasoning"
-              | "file"
-              | "step-start"
-              | "tool-nakafa"
-              | "tool-deepResearch"
-              | "tool-math"
-              | "data-suggestions"
-              | "data-nakafa"
-              | "data-math"
-              | "data-scrape-url"
-              | "data-web-search";
-          }>;
-          turnId: Id<"chatTurns">;
-        },
-        null
-      >;
-    };
     mutations: {
-      createChat: FunctionReference<
-        "mutation",
-        "public",
-        { title?: string; type: "study" },
-        Id<"chats">
-      >;
-      createChatWithMessage: FunctionReference<
-        "mutation",
-        "public",
-        {
-          message: {
-            chatId?: Id<"chats">;
-            credits?: number;
-            generationErrorCode?: "CHAT_RESPONSE_FAILED";
-            generationStatus?: "complete" | "failed";
-            identifier: string;
-            inputTokens?: number;
-            modelId?: "nakafa-lite" | "nakafa-pro";
-            ninaContextSnapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            ninaContextTransition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            outputTokens?: number;
-            role: "user" | "assistant" | "system";
-            totalTokens?: number;
-          };
-          parts: Array<{
-            dataMathData?:
-              | {
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  result: {
-                    conditions: Array<{ expression: string; latex: string }>;
-                    input: {
-                      distribution?: string;
-                      expression?: string;
-                      expressions?: Array<string>;
-                      inclusive?: boolean;
-                      k?: string;
-                      kind: "math";
-                      left?: string;
-                      lower?: string;
-                      lowerInclusive?: boolean;
-                      matrix?: Array<Array<string>>;
-                      modulus?: string;
-                      n?: string;
-                      operation:
-                        | "apart"
-                        | "cancel"
-                        | "circle"
-                        | "combination"
-                        | "compare"
-                        | "cumulative_probability"
-                        | "determinant"
-                        | "differentiate"
-                        | "distance"
-                        | "distribution"
-                        | "domain"
-                        | "eigen_analysis"
-                        | "eigenvalues"
-                        | "eigenvectors"
-                        | "evaluate"
-                        | "expected_value"
-                        | "expand"
-                        | "factor"
-                        | "gcd"
-                        | "integrate"
-                        | "intersection"
-                        | "inverse"
-                        | "interval_probability"
-                        | "is_prime"
-                        | "lcm"
-                        | "limit"
-                        | "line"
-                        | "linear_system"
-                        | "matrix_multiply"
-                        | "mean"
-                        | "median"
-                        | "midpoint"
-                        | "mode"
-                        | "modular"
-                        | "permutation"
-                        | "point_probability"
-                        | "prime_factorization"
-                        | "product"
-                        | "quartiles"
-                        | "rank"
-                        | "rationalize"
-                        | "roots"
-                        | "rref"
-                        | "series"
-                        | "simplify"
-                        | "slope"
-                        | "solve"
-                        | "standard_deviation"
-                        | "summation"
-                        | "tail_probability"
-                        | "together"
-                        | "variance"
-                        | "variance_probability"
-                        | "z_score";
-                      order?: number;
-                      parameters?: {
-                        lambda?: string;
-                        lower?: string;
-                        mean?: string;
-                        n?: string;
-                        p?: string;
-                        standard_deviation?: string;
-                        upper?: string;
-                      };
-                      point?: string;
-                      points?: Array<{ x: string; y: string }>;
-                      right?: string;
-                      right_matrix?: Array<Array<string>>;
-                      upper?: string;
-                      upperInclusive?: boolean;
-                      values?: Array<string>;
-                      variable?: string;
-                      variables?: Array<string>;
-                      vector?: Array<string>;
-                    };
-                    items: Array<{
-                      label: string;
-                      latex?: string;
-                      value: string;
-                    }>;
-                    kind:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    primary: { expression: string; latex: string };
-                    reason: string;
-                    secondary?: { expression: string; latex: string };
-                    status: "verified" | "contradicted" | "inconclusive";
-                    stepStatus: "complete" | "partial" | "unavailable";
-                    steps: Array<{
-                      action: string;
-                      items: Array<{
-                        label: string;
-                        latex?: string;
-                        value: string;
-                      }>;
-                      primary: { expression: string; latex: string };
-                      relation?: { expression: string; latex: string };
-                      secondary?: { expression: string; latex: string };
-                    }>;
-                  };
-                  status: "verified" | "contradicted" | "inconclusive";
-                  summary: string;
-                }
-              | {
-                  error: string;
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  status: "error";
-                };
-            dataMathId?: string;
-            dataNakafaData?:
-              | {
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  result: {
-                    count: number;
-                    has_more: boolean;
-                    items: Array<{
-                      alignmentId: string;
-                      assetId: string;
-                      conceptId: string;
-                      content_id: string;
-                      description: string;
-                      excerpt: string;
-                      learningObjectId: string;
-                      lensId: string;
-                      locale: "en" | "id" | "de";
-                      markdown_url?: string;
-                      route: string;
-                      section: "articles" | "material" | "tryout" | "quran";
-                      title: string;
-                      url: string;
-                    }>;
-                    limit: number;
-                    next_offset?: number;
-                    offset: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  status: "error";
-                }
-              | {
-                  input: { content_ref: string };
-                  kind: "content";
-                  status: "loading";
-                }
-              | {
-                  input: { content_ref: string };
-                  kind: "content";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    description?: string;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en" | "id" | "de";
-                    markdown_url?: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    title: string;
-                    url: string;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: { content_ref: string };
-                  kind: "content";
-                  status: "error";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en";
-                    markdown_url?: string;
-                    meaning: { locale: "en" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "id";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "id";
-                    markdown_url?: string;
-                    meaning: { locale: "id" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "de";
-                    markdown_url?: string;
-                    meaning: { locale: "de" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en" | "id" | "de";
-                    markdown_url?: string;
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    translation: string;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  status: "error";
-                }
-              | {
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  status: "loading";
-                }
-              | {
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  result: {
-                    content_counts: Array<{
-                      count: number;
-                      locale: "en" | "id" | "de";
-                    }>;
-                    locale: "en" | "id" | "de";
-                    sections: Array<
-                      "articles" | "material" | "tryout" | "quran"
-                    >;
-                    tools: Array<string>;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  status: "error";
-                };
-            dataNakafaId?: string;
-            dataScrapeUrlContent?: string;
-            dataScrapeUrlDescription?: string;
-            dataScrapeUrlError?: string;
-            dataScrapeUrlFavicon?: string;
-            dataScrapeUrlId?: string;
-            dataScrapeUrlStatus?: "loading" | "done" | "error";
-            dataScrapeUrlTitle?: string;
-            dataScrapeUrlUrl?: string;
-            dataSuggestionsData?: Array<string>;
-            dataSuggestionsId?: string;
-            dataWebSearchError?: string;
-            dataWebSearchId?: string;
-            dataWebSearchProvider?: "firecrawl" | "google";
-            dataWebSearchQueries?: Array<string>;
-            dataWebSearchSources?: Array<{
-              citation: string;
-              content: string;
-              description: string;
-              title: string;
-              url: string;
-            }>;
-            dataWebSearchStatus?: "loading" | "done" | "error";
-            fileFilename?: string;
-            fileMediaType?: string;
-            fileUrl?: string;
-            messageId?: Id<"messages">;
-            order: number;
-            providerMetadata?: Record<string, Record<string, string>>;
-            reasoningState?: "streaming" | "done";
-            reasoningText?: string;
-            textState?: "streaming" | "done";
-            textText?: string;
-            toolCallProviderMetadata?: Record<string, Record<string, string>>;
-            toolDeepResearchInput?: {
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-              sourceRequirements: Array<string>;
-            };
-            toolDeepResearchOutput?: string;
-            toolErrorText?: string;
-            toolMathInput?: {
-              given: Array<string>;
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-            };
-            toolMathOutput?: string;
-            toolNakafaInput?: {
-              deliverables: Array<string>;
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-            };
-            toolNakafaOutput?: string;
-            toolResultProviderMetadata?: Record<string, Record<string, string>>;
-            toolState?:
-              | "input-streaming"
-              | "input-available"
-              | "output-available"
-              | "output-error";
-            toolToolCallId?: string;
-            type:
-              | "text"
-              | "reasoning"
-              | "file"
-              | "step-start"
-              | "tool-nakafa"
-              | "tool-deepResearch"
-              | "tool-math"
-              | "data-suggestions"
-              | "data-nakafa"
-              | "data-math"
-              | "data-scrape-url"
-              | "data-web-search";
-          }>;
-          title?: string;
-          type: "study";
-        },
-        {
-          chatId: Id<"chats">;
-          messageId: Id<"messages">;
-          partIds: Array<Id<"messageParts">>;
-        }
-      >;
       deleteChat: FunctionReference<
         "mutation",
         "public",
         { chatId: Id<"chats"> },
         null
-      >;
-      saveMessage: FunctionReference<
-        "mutation",
-        "public",
-        {
-          message: {
-            chatId: Id<"chats">;
-            credits?: number;
-            generationErrorCode?: "CHAT_RESPONSE_FAILED";
-            generationStatus?: "complete" | "failed";
-            identifier: string;
-            inputTokens?: number;
-            modelId?: "nakafa-lite" | "nakafa-pro";
-            ninaContextSnapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            ninaContextTransition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            outputTokens?: number;
-            role: "user" | "assistant" | "system";
-            totalTokens?: number;
-          };
-          parts: Array<{
-            dataMathData?:
-              | {
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  result: {
-                    conditions: Array<{ expression: string; latex: string }>;
-                    input: {
-                      distribution?: string;
-                      expression?: string;
-                      expressions?: Array<string>;
-                      inclusive?: boolean;
-                      k?: string;
-                      kind: "math";
-                      left?: string;
-                      lower?: string;
-                      lowerInclusive?: boolean;
-                      matrix?: Array<Array<string>>;
-                      modulus?: string;
-                      n?: string;
-                      operation:
-                        | "apart"
-                        | "cancel"
-                        | "circle"
-                        | "combination"
-                        | "compare"
-                        | "cumulative_probability"
-                        | "determinant"
-                        | "differentiate"
-                        | "distance"
-                        | "distribution"
-                        | "domain"
-                        | "eigen_analysis"
-                        | "eigenvalues"
-                        | "eigenvectors"
-                        | "evaluate"
-                        | "expected_value"
-                        | "expand"
-                        | "factor"
-                        | "gcd"
-                        | "integrate"
-                        | "intersection"
-                        | "inverse"
-                        | "interval_probability"
-                        | "is_prime"
-                        | "lcm"
-                        | "limit"
-                        | "line"
-                        | "linear_system"
-                        | "matrix_multiply"
-                        | "mean"
-                        | "median"
-                        | "midpoint"
-                        | "mode"
-                        | "modular"
-                        | "permutation"
-                        | "point_probability"
-                        | "prime_factorization"
-                        | "product"
-                        | "quartiles"
-                        | "rank"
-                        | "rationalize"
-                        | "roots"
-                        | "rref"
-                        | "series"
-                        | "simplify"
-                        | "slope"
-                        | "solve"
-                        | "standard_deviation"
-                        | "summation"
-                        | "tail_probability"
-                        | "together"
-                        | "variance"
-                        | "variance_probability"
-                        | "z_score";
-                      order?: number;
-                      parameters?: {
-                        lambda?: string;
-                        lower?: string;
-                        mean?: string;
-                        n?: string;
-                        p?: string;
-                        standard_deviation?: string;
-                        upper?: string;
-                      };
-                      point?: string;
-                      points?: Array<{ x: string; y: string }>;
-                      right?: string;
-                      right_matrix?: Array<Array<string>>;
-                      upper?: string;
-                      upperInclusive?: boolean;
-                      values?: Array<string>;
-                      variable?: string;
-                      variables?: Array<string>;
-                      vector?: Array<string>;
-                    };
-                    items: Array<{
-                      label: string;
-                      latex?: string;
-                      value: string;
-                    }>;
-                    kind:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    primary: { expression: string; latex: string };
-                    reason: string;
-                    secondary?: { expression: string; latex: string };
-                    status: "verified" | "contradicted" | "inconclusive";
-                    stepStatus: "complete" | "partial" | "unavailable";
-                    steps: Array<{
-                      action: string;
-                      items: Array<{
-                        label: string;
-                        latex?: string;
-                        value: string;
-                      }>;
-                      primary: { expression: string; latex: string };
-                      relation?: { expression: string; latex: string };
-                      secondary?: { expression: string; latex: string };
-                    }>;
-                  };
-                  status: "verified" | "contradicted" | "inconclusive";
-                  summary: string;
-                }
-              | {
-                  error: string;
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  status: "error";
-                };
-            dataMathId?: string;
-            dataNakafaData?:
-              | {
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  result: {
-                    count: number;
-                    has_more: boolean;
-                    items: Array<{
-                      alignmentId: string;
-                      assetId: string;
-                      conceptId: string;
-                      content_id: string;
-                      description: string;
-                      excerpt: string;
-                      learningObjectId: string;
-                      lensId: string;
-                      locale: "en" | "id" | "de";
-                      markdown_url?: string;
-                      route: string;
-                      section: "articles" | "material" | "tryout" | "quran";
-                      title: string;
-                      url: string;
-                    }>;
-                    limit: number;
-                    next_offset?: number;
-                    offset: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  status: "error";
-                }
-              | {
-                  input: { content_ref: string };
-                  kind: "content";
-                  status: "loading";
-                }
-              | {
-                  input: { content_ref: string };
-                  kind: "content";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    description?: string;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en" | "id" | "de";
-                    markdown_url?: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    title: string;
-                    url: string;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: { content_ref: string };
-                  kind: "content";
-                  status: "error";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en";
-                    markdown_url?: string;
-                    meaning: { locale: "en" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "id";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "id";
-                    markdown_url?: string;
-                    meaning: { locale: "id" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "de";
-                    markdown_url?: string;
-                    meaning: { locale: "de" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en" | "id" | "de";
-                    markdown_url?: string;
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    translation: string;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  status: "error";
-                }
-              | {
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  status: "loading";
-                }
-              | {
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  result: {
-                    content_counts: Array<{
-                      count: number;
-                      locale: "en" | "id" | "de";
-                    }>;
-                    locale: "en" | "id" | "de";
-                    sections: Array<
-                      "articles" | "material" | "tryout" | "quran"
-                    >;
-                    tools: Array<string>;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  status: "error";
-                };
-            dataNakafaId?: string;
-            dataScrapeUrlContent?: string;
-            dataScrapeUrlDescription?: string;
-            dataScrapeUrlError?: string;
-            dataScrapeUrlFavicon?: string;
-            dataScrapeUrlId?: string;
-            dataScrapeUrlStatus?: "loading" | "done" | "error";
-            dataScrapeUrlTitle?: string;
-            dataScrapeUrlUrl?: string;
-            dataSuggestionsData?: Array<string>;
-            dataSuggestionsId?: string;
-            dataWebSearchError?: string;
-            dataWebSearchId?: string;
-            dataWebSearchProvider?: "firecrawl" | "google";
-            dataWebSearchQueries?: Array<string>;
-            dataWebSearchSources?: Array<{
-              citation: string;
-              content: string;
-              description: string;
-              title: string;
-              url: string;
-            }>;
-            dataWebSearchStatus?: "loading" | "done" | "error";
-            fileFilename?: string;
-            fileMediaType?: string;
-            fileUrl?: string;
-            messageId?: Id<"messages">;
-            order: number;
-            providerMetadata?: Record<string, Record<string, string>>;
-            reasoningState?: "streaming" | "done";
-            reasoningText?: string;
-            textState?: "streaming" | "done";
-            textText?: string;
-            toolCallProviderMetadata?: Record<string, Record<string, string>>;
-            toolDeepResearchInput?: {
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-              sourceRequirements: Array<string>;
-            };
-            toolDeepResearchOutput?: string;
-            toolErrorText?: string;
-            toolMathInput?: {
-              given: Array<string>;
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-            };
-            toolMathOutput?: string;
-            toolNakafaInput?: {
-              deliverables: Array<string>;
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-            };
-            toolNakafaOutput?: string;
-            toolResultProviderMetadata?: Record<string, Record<string, string>>;
-            toolState?:
-              | "input-streaming"
-              | "input-available"
-              | "output-available"
-              | "output-error";
-            toolToolCallId?: string;
-            type:
-              | "text"
-              | "reasoning"
-              | "file"
-              | "step-start"
-              | "tool-nakafa"
-              | "tool-deepResearch"
-              | "tool-math"
-              | "data-suggestions"
-              | "data-nakafa"
-              | "data-math"
-              | "data-scrape-url"
-              | "data-web-search";
-          }>;
-        },
-        { messageId: Id<"messages">; partIds: Array<Id<"messageParts">> }
       >;
       updateChatTitle: FunctionReference<
         "mutation",
@@ -3325,6 +112,8 @@ export declare const api: {
         {
           _creationTime: number;
           _id: Id<"chats">;
+          activeTurnId?: Id<"ninaTurns">;
+          threadId: string;
           title?: string;
           type: "study";
           updatedAt: number;
@@ -3355,6 +144,8 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"chats">;
+            activeTurnId?: Id<"ninaTurns">;
+            threadId: string;
             title?: string;
             type: "study";
             updatedAt: number;
@@ -3369,7 +160,7 @@ export declare const api: {
         "query",
         "public",
         { chatId: Id<"chats"> },
-        null | string
+        string | null
       >;
       getOwnChats: FunctionReference<
         "query",
@@ -3393,6 +184,8 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"chats">;
+            activeTurnId?: Id<"ninaTurns">;
+            threadId: string;
             title?: string;
             type: "study";
             updatedAt: number;
@@ -3403,1196 +196,6 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
-      getPinnedNinaContextForTurn: FunctionReference<
-        "query",
-        "public",
-        { chatId: Id<"chats">; messageIdentifier: string },
-        null | {
-          capturedAt: string;
-          learning: {
-            assetId?: string;
-            contentId?: string;
-            locale: "en" | "id" | "de";
-            materialKey?: string;
-            section?: string;
-            slug: string;
-            sourcePath?: string;
-            title?: string;
-            url: string;
-            verified: boolean;
-          };
-          placement?: {
-            mode: "placement";
-            nodeKey: string;
-            parentHref: string;
-            parentTitle: string;
-            programKey: string;
-          };
-          source: "current-page" | "pinned-chat" | "message";
-          tools: {
-            allowDeepResearch: boolean;
-            allowMath: boolean;
-            allowNakafa: boolean;
-            allowPageFetch: boolean;
-            evidenceScope: "verified-page" | "general-learning";
-          };
-        }
-      >;
-      loadMessagesPage: FunctionReference<
-        "query",
-        "public",
-        {
-          chatId: Id<"chats">;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            _creationTime: number;
-            _id: Id<"messages">;
-            chatId: Id<"chats">;
-            credits?: number;
-            generationErrorCode?: "CHAT_RESPONSE_FAILED";
-            generationStatus?: "complete" | "failed";
-            identifier: string;
-            inputTokens?: number;
-            modelId?: "nakafa-lite" | "nakafa-pro";
-            ninaContextSnapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            ninaContextTransition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            outputTokens?: number;
-            parts: Array<{
-              _creationTime: number;
-              _id: Id<"messageParts">;
-              dataMathData?:
-                | {
-                    input: {
-                      distribution?: string;
-                      expression?: string;
-                      expressions?: Array<string>;
-                      inclusive?: boolean;
-                      k?: string;
-                      kind: "math";
-                      left?: string;
-                      lower?: string;
-                      lowerInclusive?: boolean;
-                      matrix?: Array<Array<string>>;
-                      modulus?: string;
-                      n?: string;
-                      operation:
-                        | "apart"
-                        | "cancel"
-                        | "circle"
-                        | "combination"
-                        | "compare"
-                        | "cumulative_probability"
-                        | "determinant"
-                        | "differentiate"
-                        | "distance"
-                        | "distribution"
-                        | "domain"
-                        | "eigen_analysis"
-                        | "eigenvalues"
-                        | "eigenvectors"
-                        | "evaluate"
-                        | "expected_value"
-                        | "expand"
-                        | "factor"
-                        | "gcd"
-                        | "integrate"
-                        | "intersection"
-                        | "inverse"
-                        | "interval_probability"
-                        | "is_prime"
-                        | "lcm"
-                        | "limit"
-                        | "line"
-                        | "linear_system"
-                        | "matrix_multiply"
-                        | "mean"
-                        | "median"
-                        | "midpoint"
-                        | "mode"
-                        | "modular"
-                        | "permutation"
-                        | "point_probability"
-                        | "prime_factorization"
-                        | "product"
-                        | "quartiles"
-                        | "rank"
-                        | "rationalize"
-                        | "roots"
-                        | "rref"
-                        | "series"
-                        | "simplify"
-                        | "slope"
-                        | "solve"
-                        | "standard_deviation"
-                        | "summation"
-                        | "tail_probability"
-                        | "together"
-                        | "variance"
-                        | "variance_probability"
-                        | "z_score";
-                      order?: number;
-                      parameters?: {
-                        lambda?: string;
-                        lower?: string;
-                        mean?: string;
-                        n?: string;
-                        p?: string;
-                        standard_deviation?: string;
-                        upper?: string;
-                      };
-                      point?: string;
-                      points?: Array<{ x: string; y: string }>;
-                      right?: string;
-                      right_matrix?: Array<Array<string>>;
-                      upper?: string;
-                      upperInclusive?: boolean;
-                      values?: Array<string>;
-                      variable?: string;
-                      variables?: Array<string>;
-                      vector?: Array<string>;
-                    };
-                    kind:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    status: "loading";
-                  }
-                | {
-                    input: {
-                      distribution?: string;
-                      expression?: string;
-                      expressions?: Array<string>;
-                      inclusive?: boolean;
-                      k?: string;
-                      kind: "math";
-                      left?: string;
-                      lower?: string;
-                      lowerInclusive?: boolean;
-                      matrix?: Array<Array<string>>;
-                      modulus?: string;
-                      n?: string;
-                      operation:
-                        | "apart"
-                        | "cancel"
-                        | "circle"
-                        | "combination"
-                        | "compare"
-                        | "cumulative_probability"
-                        | "determinant"
-                        | "differentiate"
-                        | "distance"
-                        | "distribution"
-                        | "domain"
-                        | "eigen_analysis"
-                        | "eigenvalues"
-                        | "eigenvectors"
-                        | "evaluate"
-                        | "expected_value"
-                        | "expand"
-                        | "factor"
-                        | "gcd"
-                        | "integrate"
-                        | "intersection"
-                        | "inverse"
-                        | "interval_probability"
-                        | "is_prime"
-                        | "lcm"
-                        | "limit"
-                        | "line"
-                        | "linear_system"
-                        | "matrix_multiply"
-                        | "mean"
-                        | "median"
-                        | "midpoint"
-                        | "mode"
-                        | "modular"
-                        | "permutation"
-                        | "point_probability"
-                        | "prime_factorization"
-                        | "product"
-                        | "quartiles"
-                        | "rank"
-                        | "rationalize"
-                        | "roots"
-                        | "rref"
-                        | "series"
-                        | "simplify"
-                        | "slope"
-                        | "solve"
-                        | "standard_deviation"
-                        | "summation"
-                        | "tail_probability"
-                        | "together"
-                        | "variance"
-                        | "variance_probability"
-                        | "z_score";
-                      order?: number;
-                      parameters?: {
-                        lambda?: string;
-                        lower?: string;
-                        mean?: string;
-                        n?: string;
-                        p?: string;
-                        standard_deviation?: string;
-                        upper?: string;
-                      };
-                      point?: string;
-                      points?: Array<{ x: string; y: string }>;
-                      right?: string;
-                      right_matrix?: Array<Array<string>>;
-                      upper?: string;
-                      upperInclusive?: boolean;
-                      values?: Array<string>;
-                      variable?: string;
-                      variables?: Array<string>;
-                      vector?: Array<string>;
-                    };
-                    kind:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    result: {
-                      conditions: Array<{ expression: string; latex: string }>;
-                      input: {
-                        distribution?: string;
-                        expression?: string;
-                        expressions?: Array<string>;
-                        inclusive?: boolean;
-                        k?: string;
-                        kind: "math";
-                        left?: string;
-                        lower?: string;
-                        lowerInclusive?: boolean;
-                        matrix?: Array<Array<string>>;
-                        modulus?: string;
-                        n?: string;
-                        operation:
-                          | "apart"
-                          | "cancel"
-                          | "circle"
-                          | "combination"
-                          | "compare"
-                          | "cumulative_probability"
-                          | "determinant"
-                          | "differentiate"
-                          | "distance"
-                          | "distribution"
-                          | "domain"
-                          | "eigen_analysis"
-                          | "eigenvalues"
-                          | "eigenvectors"
-                          | "evaluate"
-                          | "expected_value"
-                          | "expand"
-                          | "factor"
-                          | "gcd"
-                          | "integrate"
-                          | "intersection"
-                          | "inverse"
-                          | "interval_probability"
-                          | "is_prime"
-                          | "lcm"
-                          | "limit"
-                          | "line"
-                          | "linear_system"
-                          | "matrix_multiply"
-                          | "mean"
-                          | "median"
-                          | "midpoint"
-                          | "mode"
-                          | "modular"
-                          | "permutation"
-                          | "point_probability"
-                          | "prime_factorization"
-                          | "product"
-                          | "quartiles"
-                          | "rank"
-                          | "rationalize"
-                          | "roots"
-                          | "rref"
-                          | "series"
-                          | "simplify"
-                          | "slope"
-                          | "solve"
-                          | "standard_deviation"
-                          | "summation"
-                          | "tail_probability"
-                          | "together"
-                          | "variance"
-                          | "variance_probability"
-                          | "z_score";
-                        order?: number;
-                        parameters?: {
-                          lambda?: string;
-                          lower?: string;
-                          mean?: string;
-                          n?: string;
-                          p?: string;
-                          standard_deviation?: string;
-                          upper?: string;
-                        };
-                        point?: string;
-                        points?: Array<{ x: string; y: string }>;
-                        right?: string;
-                        right_matrix?: Array<Array<string>>;
-                        upper?: string;
-                        upperInclusive?: boolean;
-                        values?: Array<string>;
-                        variable?: string;
-                        variables?: Array<string>;
-                        vector?: Array<string>;
-                      };
-                      items: Array<{
-                        label: string;
-                        latex?: string;
-                        value: string;
-                      }>;
-                      kind:
-                        | "apart"
-                        | "cancel"
-                        | "circle"
-                        | "combination"
-                        | "compare"
-                        | "cumulative_probability"
-                        | "determinant"
-                        | "differentiate"
-                        | "distance"
-                        | "distribution"
-                        | "domain"
-                        | "eigen_analysis"
-                        | "eigenvalues"
-                        | "eigenvectors"
-                        | "evaluate"
-                        | "expected_value"
-                        | "expand"
-                        | "factor"
-                        | "gcd"
-                        | "integrate"
-                        | "intersection"
-                        | "inverse"
-                        | "interval_probability"
-                        | "is_prime"
-                        | "lcm"
-                        | "limit"
-                        | "line"
-                        | "linear_system"
-                        | "matrix_multiply"
-                        | "mean"
-                        | "median"
-                        | "midpoint"
-                        | "mode"
-                        | "modular"
-                        | "permutation"
-                        | "point_probability"
-                        | "prime_factorization"
-                        | "product"
-                        | "quartiles"
-                        | "rank"
-                        | "rationalize"
-                        | "roots"
-                        | "rref"
-                        | "series"
-                        | "simplify"
-                        | "slope"
-                        | "solve"
-                        | "standard_deviation"
-                        | "summation"
-                        | "tail_probability"
-                        | "together"
-                        | "variance"
-                        | "variance_probability"
-                        | "z_score";
-                      operation:
-                        | "apart"
-                        | "cancel"
-                        | "circle"
-                        | "combination"
-                        | "compare"
-                        | "cumulative_probability"
-                        | "determinant"
-                        | "differentiate"
-                        | "distance"
-                        | "distribution"
-                        | "domain"
-                        | "eigen_analysis"
-                        | "eigenvalues"
-                        | "eigenvectors"
-                        | "evaluate"
-                        | "expected_value"
-                        | "expand"
-                        | "factor"
-                        | "gcd"
-                        | "integrate"
-                        | "intersection"
-                        | "inverse"
-                        | "interval_probability"
-                        | "is_prime"
-                        | "lcm"
-                        | "limit"
-                        | "line"
-                        | "linear_system"
-                        | "matrix_multiply"
-                        | "mean"
-                        | "median"
-                        | "midpoint"
-                        | "mode"
-                        | "modular"
-                        | "permutation"
-                        | "point_probability"
-                        | "prime_factorization"
-                        | "product"
-                        | "quartiles"
-                        | "rank"
-                        | "rationalize"
-                        | "roots"
-                        | "rref"
-                        | "series"
-                        | "simplify"
-                        | "slope"
-                        | "solve"
-                        | "standard_deviation"
-                        | "summation"
-                        | "tail_probability"
-                        | "together"
-                        | "variance"
-                        | "variance_probability"
-                        | "z_score";
-                      primary: { expression: string; latex: string };
-                      reason: string;
-                      secondary?: { expression: string; latex: string };
-                      status: "verified" | "contradicted" | "inconclusive";
-                      stepStatus: "complete" | "partial" | "unavailable";
-                      steps: Array<{
-                        action: string;
-                        items: Array<{
-                          label: string;
-                          latex?: string;
-                          value: string;
-                        }>;
-                        primary: { expression: string; latex: string };
-                        relation?: { expression: string; latex: string };
-                        secondary?: { expression: string; latex: string };
-                      }>;
-                    };
-                    status: "verified" | "contradicted" | "inconclusive";
-                    summary: string;
-                  }
-                | {
-                    error: string;
-                    input: {
-                      distribution?: string;
-                      expression?: string;
-                      expressions?: Array<string>;
-                      inclusive?: boolean;
-                      k?: string;
-                      kind: "math";
-                      left?: string;
-                      lower?: string;
-                      lowerInclusive?: boolean;
-                      matrix?: Array<Array<string>>;
-                      modulus?: string;
-                      n?: string;
-                      operation:
-                        | "apart"
-                        | "cancel"
-                        | "circle"
-                        | "combination"
-                        | "compare"
-                        | "cumulative_probability"
-                        | "determinant"
-                        | "differentiate"
-                        | "distance"
-                        | "distribution"
-                        | "domain"
-                        | "eigen_analysis"
-                        | "eigenvalues"
-                        | "eigenvectors"
-                        | "evaluate"
-                        | "expected_value"
-                        | "expand"
-                        | "factor"
-                        | "gcd"
-                        | "integrate"
-                        | "intersection"
-                        | "inverse"
-                        | "interval_probability"
-                        | "is_prime"
-                        | "lcm"
-                        | "limit"
-                        | "line"
-                        | "linear_system"
-                        | "matrix_multiply"
-                        | "mean"
-                        | "median"
-                        | "midpoint"
-                        | "mode"
-                        | "modular"
-                        | "permutation"
-                        | "point_probability"
-                        | "prime_factorization"
-                        | "product"
-                        | "quartiles"
-                        | "rank"
-                        | "rationalize"
-                        | "roots"
-                        | "rref"
-                        | "series"
-                        | "simplify"
-                        | "slope"
-                        | "solve"
-                        | "standard_deviation"
-                        | "summation"
-                        | "tail_probability"
-                        | "together"
-                        | "variance"
-                        | "variance_probability"
-                        | "z_score";
-                      order?: number;
-                      parameters?: {
-                        lambda?: string;
-                        lower?: string;
-                        mean?: string;
-                        n?: string;
-                        p?: string;
-                        standard_deviation?: string;
-                        upper?: string;
-                      };
-                      point?: string;
-                      points?: Array<{ x: string; y: string }>;
-                      right?: string;
-                      right_matrix?: Array<Array<string>>;
-                      upper?: string;
-                      upperInclusive?: boolean;
-                      values?: Array<string>;
-                      variable?: string;
-                      variables?: Array<string>;
-                      vector?: Array<string>;
-                    };
-                    kind:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    status: "error";
-                  };
-              dataMathId?: string;
-              dataNakafaData?:
-                | {
-                    input: {
-                      limit: number;
-                      locale: "en" | "id" | "de";
-                      offset: number;
-                      queries?: Array<string>;
-                      section?: "articles" | "material" | "tryout" | "quran";
-                    };
-                    kind: "search";
-                    status: "loading";
-                  }
-                | {
-                    input: {
-                      limit: number;
-                      locale: "en" | "id" | "de";
-                      offset: number;
-                      queries?: Array<string>;
-                      section?: "articles" | "material" | "tryout" | "quran";
-                    };
-                    kind: "search";
-                    result: {
-                      count: number;
-                      has_more: boolean;
-                      items: Array<{
-                        alignmentId: string;
-                        assetId: string;
-                        conceptId: string;
-                        content_id: string;
-                        description: string;
-                        excerpt: string;
-                        learningObjectId: string;
-                        lensId: string;
-                        locale: "en" | "id" | "de";
-                        markdown_url?: string;
-                        route: string;
-                        section: "articles" | "material" | "tryout" | "quran";
-                        title: string;
-                        url: string;
-                      }>;
-                      limit: number;
-                      next_offset?: number;
-                      offset: number;
-                    };
-                    status: "done";
-                  }
-                | {
-                    error: string;
-                    input: {
-                      limit: number;
-                      locale: "en" | "id" | "de";
-                      offset: number;
-                      queries?: Array<string>;
-                      section?: "articles" | "material" | "tryout" | "quran";
-                    };
-                    kind: "search";
-                    status: "error";
-                  }
-                | {
-                    input: { content_ref: string };
-                    kind: "content";
-                    status: "loading";
-                  }
-                | {
-                    input: { content_ref: string };
-                    kind: "content";
-                    result: {
-                      alignmentId: string;
-                      assetId: string;
-                      conceptId: string;
-                      content_id: string;
-                      description?: string;
-                      learningObjectId: string;
-                      lensId: string;
-                      locale: "en" | "id" | "de";
-                      markdown_url?: string;
-                      route: string;
-                      section: "articles" | "material" | "tryout" | "quran";
-                      title: string;
-                      url: string;
-                    };
-                    status: "done";
-                  }
-                | {
-                    error: string;
-                    input: { content_ref: string };
-                    kind: "content";
-                    status: "error";
-                  }
-                | {
-                    input: {
-                      from_verse: number;
-                      include_tafsir: boolean;
-                      locale: "en" | "id" | "de";
-                      surah: number;
-                      to_verse?: number;
-                    };
-                    kind: "quran";
-                    status: "loading";
-                  }
-                | {
-                    input: {
-                      from_verse: number;
-                      include_tafsir: boolean;
-                      locale: "en";
-                      surah: number;
-                      to_verse?: number;
-                    };
-                    kind: "quran";
-                    result: {
-                      alignmentId: string;
-                      assetId: string;
-                      conceptId: string;
-                      content_id: string;
-                      from_verse: number;
-                      learningObjectId: string;
-                      lensId: string;
-                      locale: "en";
-                      markdown_url?: string;
-                      meaning: { locale: "en" | "en"; text: string };
-                      name: string;
-                      revelation: string;
-                      route: string;
-                      section: "articles" | "material" | "tryout" | "quran";
-                      to_verse: number;
-                      url: string;
-                      verse_count: number;
-                    };
-                    status: "done";
-                  }
-                | {
-                    input: {
-                      from_verse: number;
-                      include_tafsir: boolean;
-                      locale: "id";
-                      surah: number;
-                      to_verse?: number;
-                    };
-                    kind: "quran";
-                    result: {
-                      alignmentId: string;
-                      assetId: string;
-                      conceptId: string;
-                      content_id: string;
-                      from_verse: number;
-                      learningObjectId: string;
-                      lensId: string;
-                      locale: "id";
-                      markdown_url?: string;
-                      meaning: { locale: "id" | "en"; text: string };
-                      name: string;
-                      revelation: string;
-                      route: string;
-                      section: "articles" | "material" | "tryout" | "quran";
-                      to_verse: number;
-                      url: string;
-                      verse_count: number;
-                    };
-                    status: "done";
-                  }
-                | {
-                    input: {
-                      from_verse: number;
-                      include_tafsir: boolean;
-                      locale: "de";
-                      surah: number;
-                      to_verse?: number;
-                    };
-                    kind: "quran";
-                    result: {
-                      alignmentId: string;
-                      assetId: string;
-                      conceptId: string;
-                      content_id: string;
-                      from_verse: number;
-                      learningObjectId: string;
-                      lensId: string;
-                      locale: "de";
-                      markdown_url?: string;
-                      meaning: { locale: "de" | "en"; text: string };
-                      name: string;
-                      revelation: string;
-                      route: string;
-                      section: "articles" | "material" | "tryout" | "quran";
-                      to_verse: number;
-                      url: string;
-                      verse_count: number;
-                    };
-                    status: "done";
-                  }
-                | {
-                    input: {
-                      from_verse: number;
-                      include_tafsir: boolean;
-                      locale: "en" | "id" | "de";
-                      surah: number;
-                      to_verse?: number;
-                    };
-                    kind: "quran";
-                    result: {
-                      alignmentId: string;
-                      assetId: string;
-                      conceptId: string;
-                      content_id: string;
-                      from_verse: number;
-                      learningObjectId: string;
-                      lensId: string;
-                      locale: "en" | "id" | "de";
-                      markdown_url?: string;
-                      name: string;
-                      revelation: string;
-                      route: string;
-                      section: "articles" | "material" | "tryout" | "quran";
-                      to_verse: number;
-                      translation: string;
-                      url: string;
-                      verse_count: number;
-                    };
-                    status: "done";
-                  }
-                | {
-                    error: string;
-                    input: {
-                      from_verse: number;
-                      include_tafsir: boolean;
-                      locale: "en" | "id" | "de";
-                      surah: number;
-                      to_verse?: number;
-                    };
-                    kind: "quran";
-                    status: "error";
-                  }
-                | {
-                    input: { locale: "en" | "id" | "de" };
-                    kind: "taxonomy";
-                    status: "loading";
-                  }
-                | {
-                    input: { locale: "en" | "id" | "de" };
-                    kind: "taxonomy";
-                    result: {
-                      content_counts: Array<{
-                        count: number;
-                        locale: "en" | "id" | "de";
-                      }>;
-                      locale: "en" | "id" | "de";
-                      sections: Array<
-                        "articles" | "material" | "tryout" | "quran"
-                      >;
-                      tools: Array<string>;
-                    };
-                    status: "done";
-                  }
-                | {
-                    error: string;
-                    input: { locale: "en" | "id" | "de" };
-                    kind: "taxonomy";
-                    status: "error";
-                  };
-              dataNakafaId?: string;
-              dataScrapeUrlContent?: string;
-              dataScrapeUrlDescription?: string;
-              dataScrapeUrlError?: string;
-              dataScrapeUrlFavicon?: string;
-              dataScrapeUrlId?: string;
-              dataScrapeUrlStatus?: "loading" | "done" | "error";
-              dataScrapeUrlTitle?: string;
-              dataScrapeUrlUrl?: string;
-              dataSuggestionsData?: Array<string>;
-              dataSuggestionsId?: string;
-              dataWebSearchError?: string;
-              dataWebSearchId?: string;
-              dataWebSearchProvider?: "firecrawl" | "google";
-              dataWebSearchQueries?: Array<string>;
-              dataWebSearchSources?: Array<{
-                citation: string;
-                content: string;
-                description: string;
-                title: string;
-                url: string;
-              }>;
-              dataWebSearchStatus?: "loading" | "done" | "error";
-              fileFilename?: string;
-              fileMediaType?: string;
-              fileUrl?: string;
-              messageId: Id<"messages">;
-              order: number;
-              providerMetadata?: Record<string, Record<string, string>>;
-              reasoningState?: "streaming" | "done";
-              reasoningText?: string;
-              textState?: "streaming" | "done";
-              textText?: string;
-              toolCallProviderMetadata?: Record<string, Record<string, string>>;
-              toolDeepResearchInput?: {
-                objective: string;
-                request: string;
-                requirements?: Array<string>;
-                sourceRequirements: Array<string>;
-              };
-              toolDeepResearchOutput?: string;
-              toolErrorText?: string;
-              toolMathInput?: {
-                given: Array<string>;
-                objective: string;
-                request: string;
-                requirements?: Array<string>;
-              };
-              toolMathOutput?: string;
-              toolNakafaInput?: {
-                deliverables: Array<string>;
-                objective: string;
-                request: string;
-                requirements?: Array<string>;
-              };
-              toolNakafaOutput?: string;
-              toolResultProviderMetadata?: Record<
-                string,
-                Record<string, string>
-              >;
-              toolState?:
-                | "input-streaming"
-                | "input-available"
-                | "output-available"
-                | "output-error";
-              toolToolCallId?: string;
-              type:
-                | "text"
-                | "reasoning"
-                | "file"
-                | "step-start"
-                | "tool-nakafa"
-                | "tool-deepResearch"
-                | "tool-math"
-                | "data-suggestions"
-                | "data-nakafa"
-                | "data-math"
-                | "data-scrape-url"
-                | "data-web-search";
-            }>;
-            role: "user" | "assistant" | "system";
-            totalTokens?: number;
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
-    };
-    traces: {
-      mutations: {
-        save: FunctionReference<
-          "mutation",
-          "public",
-          {
-            chatId: Id<"chats">;
-            trace: {
-              capability: "nakafa" | "deepResearch" | "math";
-              durationMs: number;
-              endedAt: number;
-              evidence: {
-                capability: "nakafa" | "deepResearch" | "math";
-                limitations?: Array<string>;
-                refs?: Array<string>;
-                status: "available" | "limited" | "failed" | "denied";
-                summary: string;
-              };
-              responseMessageIdentifier: string;
-              startedAt: number;
-              toolCallId?: string;
-            };
-          },
-          Id<"ninaCapabilityTraces">
-        >;
-      };
-      queries: {
-        list: FunctionReference<
-          "query",
-          "public",
-          {
-            chatId: Id<"chats">;
-            limit?: number;
-            responseMessageIdentifier?: string;
-          },
-          Array<{
-            _creationTime: number;
-            _id: Id<"ninaCapabilityTraces">;
-            capability: "nakafa" | "deepResearch" | "math";
-            chatId: Id<"chats">;
-            durationMs: number;
-            endedAt: number;
-            evidence: {
-              capability: "nakafa" | "deepResearch" | "math";
-              limitations?: Array<string>;
-              refs?: Array<string>;
-              status: "available" | "limited" | "failed" | "denied";
-              summary: string;
-            };
-            expiresAt: number;
-            responseMessageIdentifier: string;
-            startedAt: number;
-            status: "available" | "limited" | "failed" | "denied";
-            toolCallId?: string;
-            userId: Id<"users">;
-          }>
-        >;
-      };
-    };
-    turns: {
-      mutations: {
-        release: FunctionReference<
-          "mutation",
-          "public",
-          { turnId: Id<"chatTurns"> },
-          null
-        >;
-        reserve: FunctionReference<
-          "mutation",
-          "public",
-          { modelId: "nakafa-lite" | "nakafa-pro" },
-          Id<"chatTurns">
-        >;
-      };
     };
   };
   classes: {
@@ -4719,12 +322,12 @@ export declare const api: {
                 | "resource";
               title: string;
               updatedAt: number;
-              user: null | {
+              user: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
             }
           >;
           getForums: FunctionReference<
@@ -4769,12 +372,12 @@ export declare const api: {
                 title: string;
                 unreadCount: number;
                 updatedAt: number;
-                user: null | {
+                user: {
                   _id: Id<"users">;
                   email: string;
-                  image?: null | string;
+                  image?: string | null;
                   name: string;
-                };
+                } | null;
               }>;
               pageStatus?: "SplitRecommended" | "SplitRequired" | null;
               splitCursor?: string | null;
@@ -4794,7 +397,7 @@ export declare const api: {
                 mimeType: string;
                 name: string;
                 size: number;
-                url: null | string;
+                url: string | null;
               }>;
               body: string;
               classId: Id<"schoolClasses">;
@@ -4813,21 +416,21 @@ export declare const api: {
               }>;
               replyCount: number;
               replyToBody?: string;
-              replyToUser: null | {
+              replyToUser: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
               replyToUserId?: Id<"users">;
               sequence: number;
               updatedAt: number;
-              user: null | {
+              user: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
             }>
           >;
         };
@@ -4908,23 +511,23 @@ export declare const api: {
               parentId?: Id<"schoolClassMaterialGroups">;
               publishedAt?: number;
               publishedBy?: Id<"users">;
-              publishedByUser: null | {
+              publishedByUser: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
               scheduledAt?: number;
               scheduledJobId?: Id<"_scheduled_functions">;
               schoolId: Id<"schools">;
               status: "draft" | "published" | "scheduled" | "archived";
               updatedAt: number;
-              user: null | {
+              user: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
@@ -5120,7 +723,7 @@ export declare const api: {
               visibility: "private" | "public";
               year: string;
             };
-            classMembership: null | {
+            classMembership: {
               _creationTime: number;
               _id: Id<"schoolClassMembers">;
               addedBy?: Id<"users">;
@@ -5135,7 +738,7 @@ export declare const api: {
               teacherRole?: "primary" | "co-teacher" | "assistant";
               updatedAt: number;
               userId: Id<"users">;
-            };
+            } | null;
             kind: "accessible";
             schoolMembership: {
               _creationTime: number;
@@ -5265,7 +868,53 @@ export declare const api: {
             user: {
               _id: Id<"users">;
               email: string;
-              image?: null | string;
+              image?: string | null;
+              name: string;
+            };
+            userId: Id<"users">;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+    roster: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"schoolClasses">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          q?: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"schoolClassMembers">;
+            addedBy?: Id<"users">;
+            classId: Id<"schoolClasses">;
+            enrollMethod?:
+              "by_code" | "teacher" | "admin" | "invite" | "public";
+            inviteCodeId?: Id<"schoolClassInviteCodes">;
+            removedAt?: number;
+            removedBy?: Id<"users">;
+            role: "teacher" | "student";
+            schoolId: Id<"schools">;
+            teacherRole?: "primary" | "co-teacher" | "assistant";
+            updatedAt: number;
+            user: {
+              _id: Id<"users">;
+              email: string;
+              image?: string | null;
               name: string;
             };
             userId: Id<"users">;
@@ -5322,22 +971,22 @@ export declare const api: {
             parentId?: Id<"comments">;
             replyCount: number;
             replyToText?: string;
-            replyToUser: null | {
+            replyToUser: {
               _id: Id<"users">;
-              image?: null | string;
+              image?: string | null;
               name: string;
-            };
+            } | null;
             replyToUserId?: Id<"users">;
             slug: string;
             text: string;
             upvoteCount: number;
-            user: null | {
+            user: {
               _id: Id<"users">;
-              image?: null | string;
+              image?: string | null;
               name: string;
-            };
+            } | null;
             userId: Id<"users">;
-            viewerVote: null | -1 | 1;
+            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -5372,7 +1021,7 @@ export declare const api: {
             text: string;
             upvoteCount: number;
             userId: Id<"users">;
-            viewerVote: null | -1 | 1;
+            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -7452,20 +3101,6 @@ export declare const api: {
   };
   customers: {
     actions: {
-      public: {
-        generateCheckoutLink: FunctionReference<
-          "action",
-          "public",
-          { locale: "en" | "id" | "de"; successUrl: string },
-          { url: string }
-        >;
-        generateCustomerPortalUrl: FunctionReference<
-          "action",
-          "public",
-          {},
-          { url: string }
-        >;
-      };
       sessions: {
         generateCheckoutLink: FunctionReference<
           "action",
@@ -7555,97 +3190,87 @@ export declare const api: {
       >;
     };
   };
-  notifications: {
-    mutations: {
-      setDisabledNotificationTypes: FunctionReference<
-        "mutation",
+  nina: {
+    conversation: {
+      get: FunctionReference<
+        "query",
         "public",
+        { chatId: Id<"chats"> },
         {
-          disabledTypes: Array<
-            | "forum_mention"
-            | "forum_reply"
-            | "forum_reaction"
-            | "post_mention"
-            | "post_reply"
-            | "post_reaction"
-            | "comment_reply"
-            | "comment_mention"
-            | "comment_upvote"
-            | "class_joined"
-            | "class_announcement"
-            | "class_assignment"
-            | "class_removed"
-            | "school_invite"
-            | "school_joined"
-            | "school_role_changed"
-            | "school_removed"
-            | "system"
-          >;
-        },
-        null
+          chat: {
+            _creationTime: number;
+            _id: Id<"chats">;
+            activeTurnId?: Id<"ninaTurns">;
+            threadId: string;
+            title?: string;
+            type: "study";
+            updatedAt: number;
+            userId: Id<"users">;
+            visibility: "private" | "public";
+          };
+          turn: {
+            credits?: number;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            promptMessageId: string;
+            promptedAt?: number;
+            state:
+              | { status: "queued" }
+              | { startedAt: number; status: "running" }
+              | { finishedAt: number; status: "complete" }
+              | {
+                  finishedAt: number;
+                  reason?:
+                    | "provider-busy"
+                    | "provider-unavailable"
+                    | "service-configuration"
+                    | "request-rejected"
+                    | "input-too-large"
+                    | "response-timeout"
+                    | "content-blocked"
+                    | "response-limit"
+                    | "interrupted"
+                    | "unknown";
+                  status: "failed";
+                }
+              | { finishedAt: number; status: "cancelled" }
+              | { status: "unanswered" };
+            suggestions?: Array<string>;
+            tokens?: { input?: number; output?: number; total?: number };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+          } | null;
+        }
       >;
-      setNotificationEntityMute: FunctionReference<
+    };
+    lifecycle: {
+      cancel: FunctionReference<
         "mutation",
         "public",
-        {
-          entityId:
-            | Id<"schoolClassForums">
-            | Id<"schoolClassForumPosts">
-            | Id<"schoolClasses">
-            | Id<"schools">
-            | Id<"comments">;
-          entityType:
-            | "schoolClassForums"
-            | "schoolClassForumPosts"
-            | "schoolClasses"
-            | "schools"
-            | "comments"
-            | "system";
-          muted: boolean;
-        },
-        null
-      >;
-      updateNotificationPreferences: FunctionReference<
-        "mutation",
-        "public",
-        { emailDigest: "daily" | "weekly" | "never"; emailEnabled: boolean },
+        { chatId: Id<"chats"> },
         null
       >;
     };
-    queries: {
-      getNotificationPreferences: FunctionReference<
-        "query",
-        "public",
-        {},
-        {
-          disabledTypes: Array<
-            | "forum_mention"
-            | "forum_reply"
-            | "forum_reaction"
-            | "post_mention"
-            | "post_reply"
-            | "post_reaction"
-            | "comment_reply"
-            | "comment_mention"
-            | "comment_upvote"
-            | "class_joined"
-            | "class_announcement"
-            | "class_assignment"
-            | "class_removed"
-            | "school_invite"
-            | "school_joined"
-            | "school_role_changed"
-            | "school_removed"
-            | "system"
-          >;
-          emailDigest: "daily" | "weekly" | "never";
-          emailEnabled: boolean;
-        }
-      >;
-      listMutedNotificationEntities: FunctionReference<
+    messages: {
+      list: FunctionReference<
         "query",
         "public",
         {
+          chatId: Id<"chats">;
           paginationOpts: {
             cursor: string | null;
             endCursor?: string | null;
@@ -7654,29 +3279,168 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          streamArgs?:
+            | { kind: "list"; startOrder?: number }
+            | {
+                cursors: Array<{ cursor: number; streamId: string }>;
+                kind: "deltas";
+              };
+          threadId: string;
         },
         {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            entityId:
-              | Id<"schoolClassForums">
-              | Id<"schoolClassForumPosts">
-              | Id<"schoolClasses">
-              | Id<"schools">
-              | Id<"comments">;
-            entityType:
-              | "schoolClassForums"
-              | "schoolClassForumPosts"
-              | "schoolClasses"
-              | "schools"
-              | "comments"
-              | "system";
-            mutedAt: number;
+            _creationTime: number;
+            agentName?: string;
+            id: string;
+            key: string;
+            metadata?: {
+              credits?: number;
+              modelId?: "nakafa-lite" | "nakafa-pro";
+              order: number;
+              promptMessageId: string;
+              promptedAt?: number;
+              state:
+                | { status: "queued" }
+                | { startedAt: number; status: "running" }
+                | { finishedAt: number; status: "complete" }
+                | {
+                    finishedAt: number;
+                    reason?:
+                      | "provider-busy"
+                      | "provider-unavailable"
+                      | "service-configuration"
+                      | "request-rejected"
+                      | "input-too-large"
+                      | "response-timeout"
+                      | "content-blocked"
+                      | "response-limit"
+                      | "interrupted"
+                      | "unknown";
+                    status: "failed";
+                  }
+                | { finishedAt: number; status: "cancelled" }
+                | { status: "unanswered" };
+              suggestions?: Array<string>;
+              tokens?: { input?: number; output?: number; total?: number };
+              usage: Array<{
+                agent:
+                  | "nina"
+                  | "nakafa"
+                  | "research"
+                  | "math"
+                  | "math-repair"
+                  | "suggestions"
+                  | "title"
+                  | "nina-repair";
+                calls: number;
+                input: number;
+                model: string;
+                output: number;
+                provider: string;
+              }>;
+            };
+            order: number;
+            parts: Array<any>;
+            role: "user" | "assistant" | "system";
+            status: "streaming" | "pending" | "success" | "failed";
+            stepOrder: number;
+            text: string;
+            userId?: string;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
+          streams:
+            | {
+                kind: "list";
+                messages: Array<{
+                  agentName?: string;
+                  format?: "UIMessageChunk" | "TextStreamPart";
+                  model?: string;
+                  order: number;
+                  provider?: string;
+                  providerOptions?: Record<string, Record<string, any>>;
+                  status: "streaming" | "finished" | "aborted";
+                  stepOrder: number;
+                  streamId: string;
+                  userId?: string;
+                }>;
+              }
+            | {
+                deltas: Array<{
+                  end: number;
+                  parts: Array<any>;
+                  start: number;
+                  streamId: string;
+                }>;
+                kind: "deltas";
+              };
         }
+      >;
+    };
+    turns: {
+      start: FunctionReference<
+        "mutation",
+        "public",
+        {
+          chatId?: Id<"chats">;
+          input:
+            | {
+                kind: "message";
+                page: {
+                  locale: "en" | "id" | "de";
+                  materialContextHint?: string;
+                  slug: string;
+                };
+                prompt: { text: string; uploadIds?: Array<Id<"ninaUploads">> };
+              }
+            | {
+                kind: "retry";
+                order: number;
+                page?: {
+                  locale: "en" | "id" | "de";
+                  materialContextHint?: string;
+                  slug: string;
+                };
+              };
+          modelId: "nakafa-lite" | "nakafa-pro";
+          requestId: string;
+        },
+        {
+          chatId: Id<"chats">;
+          order: number;
+          prompt: {
+            files: Array<{
+              filename?: string;
+              mediaType: string;
+              type: "file";
+              url: string;
+            }>;
+            text: string;
+          };
+          promptMessageId: string;
+          threadId: string;
+          turnId: Id<"ninaTurns">;
+        }
+      >;
+    };
+    uploads: {
+      save: FunctionReference<
+        "action",
+        "public",
+        {
+          bytes: ArrayBuffer;
+          filename: string;
+          mediaType:
+            | "image/jpeg"
+            | "image/png"
+            | "image/webp"
+            | "image/gif"
+            | "application/pdf"
+            | "text/plain";
+        },
+        Id<"ninaUploads">
       >;
     };
   };
@@ -7723,7 +3487,6 @@ export declare const api: {
         },
         {
           destination:
-            | { kind: "curriculum-index" }
             | { kind: "curriculum-program"; publicSlug: string }
             | { kind: "tryout" };
           locale: "en" | "id" | "de";
@@ -9104,7 +4867,11 @@ export declare const api: {
         getSectionAttemptState: FunctionReference<
           "query",
           "public",
-          { attemptId: Id<"tryoutAttempts">; sectionKey: string },
+          {
+            attemptId: Id<"tryoutAttempts">;
+            locale: "en" | "id" | "de";
+            sectionKey: string;
+          },
           null | {
             attempt: {
               activeSectionKey: string | null;
@@ -9231,7 +4998,7 @@ export declare const api: {
         getSetAttemptState: FunctionReference<
           "query",
           "public",
-          { attemptId: Id<"tryoutAttempts"> },
+          { attemptId: Id<"tryoutAttempts">; locale: "en" | "id" | "de" },
           null | {
             attempt: {
               activeSectionKey: string | null;
@@ -9424,7 +5191,7 @@ export declare const api: {
         {
           credits: number;
           role:
-            null | null | "teacher" | "student" | "parent" | "administrator";
+            "teacher" | "student" | "parent" | "administrator" | null | null;
           userId: Id<"users">;
         }
       >;
@@ -9643,1117 +5410,6 @@ export declare const internal: {
       >;
     };
   };
-  chats: {
-    assistantResponses: {
-      saveAssistantFailure: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          message: {
-            chatId: Id<"chats">;
-            generationErrorCode: "CHAT_RESPONSE_FAILED";
-            identifier: string;
-            modelId: "nakafa-lite" | "nakafa-pro";
-          };
-          turnId: Id<"chatTurns">;
-          userId: Id<"users">;
-        },
-        null | { messageId: Id<"messages"> }
-      >;
-      saveAssistantResponse: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          message: {
-            chatId: Id<"chats">;
-            credits?: number;
-            generationErrorCode?: "CHAT_RESPONSE_FAILED";
-            generationStatus?: "complete" | "failed";
-            identifier: string;
-            inputTokens?: number;
-            modelId?: "nakafa-lite" | "nakafa-pro";
-            ninaContextSnapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            ninaContextTransition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            outputTokens?: number;
-            role: "user" | "assistant" | "system";
-            totalTokens?: number;
-          };
-          parts: Array<{
-            dataMathData?:
-              | {
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  result: {
-                    conditions: Array<{ expression: string; latex: string }>;
-                    input: {
-                      distribution?: string;
-                      expression?: string;
-                      expressions?: Array<string>;
-                      inclusive?: boolean;
-                      k?: string;
-                      kind: "math";
-                      left?: string;
-                      lower?: string;
-                      lowerInclusive?: boolean;
-                      matrix?: Array<Array<string>>;
-                      modulus?: string;
-                      n?: string;
-                      operation:
-                        | "apart"
-                        | "cancel"
-                        | "circle"
-                        | "combination"
-                        | "compare"
-                        | "cumulative_probability"
-                        | "determinant"
-                        | "differentiate"
-                        | "distance"
-                        | "distribution"
-                        | "domain"
-                        | "eigen_analysis"
-                        | "eigenvalues"
-                        | "eigenvectors"
-                        | "evaluate"
-                        | "expected_value"
-                        | "expand"
-                        | "factor"
-                        | "gcd"
-                        | "integrate"
-                        | "intersection"
-                        | "inverse"
-                        | "interval_probability"
-                        | "is_prime"
-                        | "lcm"
-                        | "limit"
-                        | "line"
-                        | "linear_system"
-                        | "matrix_multiply"
-                        | "mean"
-                        | "median"
-                        | "midpoint"
-                        | "mode"
-                        | "modular"
-                        | "permutation"
-                        | "point_probability"
-                        | "prime_factorization"
-                        | "product"
-                        | "quartiles"
-                        | "rank"
-                        | "rationalize"
-                        | "roots"
-                        | "rref"
-                        | "series"
-                        | "simplify"
-                        | "slope"
-                        | "solve"
-                        | "standard_deviation"
-                        | "summation"
-                        | "tail_probability"
-                        | "together"
-                        | "variance"
-                        | "variance_probability"
-                        | "z_score";
-                      order?: number;
-                      parameters?: {
-                        lambda?: string;
-                        lower?: string;
-                        mean?: string;
-                        n?: string;
-                        p?: string;
-                        standard_deviation?: string;
-                        upper?: string;
-                      };
-                      point?: string;
-                      points?: Array<{ x: string; y: string }>;
-                      right?: string;
-                      right_matrix?: Array<Array<string>>;
-                      upper?: string;
-                      upperInclusive?: boolean;
-                      values?: Array<string>;
-                      variable?: string;
-                      variables?: Array<string>;
-                      vector?: Array<string>;
-                    };
-                    items: Array<{
-                      label: string;
-                      latex?: string;
-                      value: string;
-                    }>;
-                    kind:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    primary: { expression: string; latex: string };
-                    reason: string;
-                    secondary?: { expression: string; latex: string };
-                    status: "verified" | "contradicted" | "inconclusive";
-                    stepStatus: "complete" | "partial" | "unavailable";
-                    steps: Array<{
-                      action: string;
-                      items: Array<{
-                        label: string;
-                        latex?: string;
-                        value: string;
-                      }>;
-                      primary: { expression: string; latex: string };
-                      relation?: { expression: string; latex: string };
-                      secondary?: { expression: string; latex: string };
-                    }>;
-                  };
-                  status: "verified" | "contradicted" | "inconclusive";
-                  summary: string;
-                }
-              | {
-                  error: string;
-                  input: {
-                    distribution?: string;
-                    expression?: string;
-                    expressions?: Array<string>;
-                    inclusive?: boolean;
-                    k?: string;
-                    kind: "math";
-                    left?: string;
-                    lower?: string;
-                    lowerInclusive?: boolean;
-                    matrix?: Array<Array<string>>;
-                    modulus?: string;
-                    n?: string;
-                    operation:
-                      | "apart"
-                      | "cancel"
-                      | "circle"
-                      | "combination"
-                      | "compare"
-                      | "cumulative_probability"
-                      | "determinant"
-                      | "differentiate"
-                      | "distance"
-                      | "distribution"
-                      | "domain"
-                      | "eigen_analysis"
-                      | "eigenvalues"
-                      | "eigenvectors"
-                      | "evaluate"
-                      | "expected_value"
-                      | "expand"
-                      | "factor"
-                      | "gcd"
-                      | "integrate"
-                      | "intersection"
-                      | "inverse"
-                      | "interval_probability"
-                      | "is_prime"
-                      | "lcm"
-                      | "limit"
-                      | "line"
-                      | "linear_system"
-                      | "matrix_multiply"
-                      | "mean"
-                      | "median"
-                      | "midpoint"
-                      | "mode"
-                      | "modular"
-                      | "permutation"
-                      | "point_probability"
-                      | "prime_factorization"
-                      | "product"
-                      | "quartiles"
-                      | "rank"
-                      | "rationalize"
-                      | "roots"
-                      | "rref"
-                      | "series"
-                      | "simplify"
-                      | "slope"
-                      | "solve"
-                      | "standard_deviation"
-                      | "summation"
-                      | "tail_probability"
-                      | "together"
-                      | "variance"
-                      | "variance_probability"
-                      | "z_score";
-                    order?: number;
-                    parameters?: {
-                      lambda?: string;
-                      lower?: string;
-                      mean?: string;
-                      n?: string;
-                      p?: string;
-                      standard_deviation?: string;
-                      upper?: string;
-                    };
-                    point?: string;
-                    points?: Array<{ x: string; y: string }>;
-                    right?: string;
-                    right_matrix?: Array<Array<string>>;
-                    upper?: string;
-                    upperInclusive?: boolean;
-                    values?: Array<string>;
-                    variable?: string;
-                    variables?: Array<string>;
-                    vector?: Array<string>;
-                  };
-                  kind:
-                    | "apart"
-                    | "cancel"
-                    | "circle"
-                    | "combination"
-                    | "compare"
-                    | "cumulative_probability"
-                    | "determinant"
-                    | "differentiate"
-                    | "distance"
-                    | "distribution"
-                    | "domain"
-                    | "eigen_analysis"
-                    | "eigenvalues"
-                    | "eigenvectors"
-                    | "evaluate"
-                    | "expected_value"
-                    | "expand"
-                    | "factor"
-                    | "gcd"
-                    | "integrate"
-                    | "intersection"
-                    | "inverse"
-                    | "interval_probability"
-                    | "is_prime"
-                    | "lcm"
-                    | "limit"
-                    | "line"
-                    | "linear_system"
-                    | "matrix_multiply"
-                    | "mean"
-                    | "median"
-                    | "midpoint"
-                    | "mode"
-                    | "modular"
-                    | "permutation"
-                    | "point_probability"
-                    | "prime_factorization"
-                    | "product"
-                    | "quartiles"
-                    | "rank"
-                    | "rationalize"
-                    | "roots"
-                    | "rref"
-                    | "series"
-                    | "simplify"
-                    | "slope"
-                    | "solve"
-                    | "standard_deviation"
-                    | "summation"
-                    | "tail_probability"
-                    | "together"
-                    | "variance"
-                    | "variance_probability"
-                    | "z_score";
-                  status: "error";
-                };
-            dataMathId?: string;
-            dataNakafaData?:
-              | {
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  result: {
-                    count: number;
-                    has_more: boolean;
-                    items: Array<{
-                      alignmentId: string;
-                      assetId: string;
-                      conceptId: string;
-                      content_id: string;
-                      description: string;
-                      excerpt: string;
-                      learningObjectId: string;
-                      lensId: string;
-                      locale: "en" | "id" | "de";
-                      markdown_url?: string;
-                      route: string;
-                      section: "articles" | "material" | "tryout" | "quran";
-                      title: string;
-                      url: string;
-                    }>;
-                    limit: number;
-                    next_offset?: number;
-                    offset: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: {
-                    limit: number;
-                    locale: "en" | "id" | "de";
-                    offset: number;
-                    queries?: Array<string>;
-                    section?: "articles" | "material" | "tryout" | "quran";
-                  };
-                  kind: "search";
-                  status: "error";
-                }
-              | {
-                  input: { content_ref: string };
-                  kind: "content";
-                  status: "loading";
-                }
-              | {
-                  input: { content_ref: string };
-                  kind: "content";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    description?: string;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en" | "id" | "de";
-                    markdown_url?: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    title: string;
-                    url: string;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: { content_ref: string };
-                  kind: "content";
-                  status: "error";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  status: "loading";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en";
-                    markdown_url?: string;
-                    meaning: { locale: "en" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "id";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "id";
-                    markdown_url?: string;
-                    meaning: { locale: "id" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "de";
-                    markdown_url?: string;
-                    meaning: { locale: "de" | "en"; text: string };
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  result: {
-                    alignmentId: string;
-                    assetId: string;
-                    conceptId: string;
-                    content_id: string;
-                    from_verse: number;
-                    learningObjectId: string;
-                    lensId: string;
-                    locale: "en" | "id" | "de";
-                    markdown_url?: string;
-                    name: string;
-                    revelation: string;
-                    route: string;
-                    section: "articles" | "material" | "tryout" | "quran";
-                    to_verse: number;
-                    translation: string;
-                    url: string;
-                    verse_count: number;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: {
-                    from_verse: number;
-                    include_tafsir: boolean;
-                    locale: "en" | "id" | "de";
-                    surah: number;
-                    to_verse?: number;
-                  };
-                  kind: "quran";
-                  status: "error";
-                }
-              | {
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  status: "loading";
-                }
-              | {
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  result: {
-                    content_counts: Array<{
-                      count: number;
-                      locale: "en" | "id" | "de";
-                    }>;
-                    locale: "en" | "id" | "de";
-                    sections: Array<
-                      "articles" | "material" | "tryout" | "quran"
-                    >;
-                    tools: Array<string>;
-                  };
-                  status: "done";
-                }
-              | {
-                  error: string;
-                  input: { locale: "en" | "id" | "de" };
-                  kind: "taxonomy";
-                  status: "error";
-                };
-            dataNakafaId?: string;
-            dataScrapeUrlContent?: string;
-            dataScrapeUrlDescription?: string;
-            dataScrapeUrlError?: string;
-            dataScrapeUrlFavicon?: string;
-            dataScrapeUrlId?: string;
-            dataScrapeUrlStatus?: "loading" | "done" | "error";
-            dataScrapeUrlTitle?: string;
-            dataScrapeUrlUrl?: string;
-            dataSuggestionsData?: Array<string>;
-            dataSuggestionsId?: string;
-            dataWebSearchError?: string;
-            dataWebSearchId?: string;
-            dataWebSearchProvider?: "firecrawl" | "google";
-            dataWebSearchQueries?: Array<string>;
-            dataWebSearchSources?: Array<{
-              citation: string;
-              content: string;
-              description: string;
-              title: string;
-              url: string;
-            }>;
-            dataWebSearchStatus?: "loading" | "done" | "error";
-            fileFilename?: string;
-            fileMediaType?: string;
-            fileUrl?: string;
-            messageId?: Id<"messages">;
-            order: number;
-            providerMetadata?: Record<string, Record<string, string>>;
-            reasoningState?: "streaming" | "done";
-            reasoningText?: string;
-            textState?: "streaming" | "done";
-            textText?: string;
-            toolCallProviderMetadata?: Record<string, Record<string, string>>;
-            toolDeepResearchInput?: {
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-              sourceRequirements: Array<string>;
-            };
-            toolDeepResearchOutput?: string;
-            toolErrorText?: string;
-            toolMathInput?: {
-              given: Array<string>;
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-            };
-            toolMathOutput?: string;
-            toolNakafaInput?: {
-              deliverables: Array<string>;
-              objective: string;
-              request: string;
-              requirements?: Array<string>;
-            };
-            toolNakafaOutput?: string;
-            toolResultProviderMetadata?: Record<string, Record<string, string>>;
-            toolState?:
-              | "input-streaming"
-              | "input-available"
-              | "output-available"
-              | "output-error";
-            toolToolCallId?: string;
-            type:
-              | "text"
-              | "reasoning"
-              | "file"
-              | "step-start"
-              | "tool-nakafa"
-              | "tool-deepResearch"
-              | "tool-math"
-              | "data-suggestions"
-              | "data-nakafa"
-              | "data-math"
-              | "data-scrape-url"
-              | "data-web-search";
-          }>;
-          turnId: Id<"chatTurns">;
-          userId: Id<"users">;
-        },
-        null | {
-          credits: number;
-          messageId: Id<"messages">;
-          newBalance: number;
-          partIds: Array<Id<"messageParts">>;
-        }
-      >;
-    };
-    traces: {
-      mutations: {
-        deleteExpiredBatch: FunctionReference<
-          "mutation",
-          "internal",
-          { now: number },
-          { deleted: number; hasMore: boolean }
-        >;
-        sweepExpired: FunctionReference<
-          "mutation",
-          "internal",
-          {},
-          { deleted: number; hasMore: boolean }
-        >;
-      };
-    };
-    turns: {
-      mutations: {
-        expire: FunctionReference<
-          "mutation",
-          "internal",
-          { turnId: Id<"chatTurns"> },
-          null
-        >;
-      };
-    };
-  };
   classes: {
     forums: {
       attachments: {
@@ -10763,6 +5419,12 @@ export declare const internal: {
             "internal",
             { leaseId: string; uploadId: string; uploadToken: string },
             boolean
+          >;
+          cleanup: FunctionReference<
+            "mutation",
+            "internal",
+            { storageId: Id<"_storage"> },
+            null
           >;
           release: FunctionReference<
             "mutation",
@@ -12011,41 +6673,7 @@ export declare const internal: {
       >;
     };
     runtime: {
-      protected: {
-        dispatch: {
-          dispatch: FunctionReference<
-            "action",
-            "internal",
-            { byteLength: number; source: string },
-            { body: string; status: number }
-          >;
-        };
-        internal: {
-          read: FunctionReference<
-            "query",
-            "internal",
-            {
-              bundleHash: string;
-              selectors: Array<{
-                artifactHash: string;
-                contentKey: string;
-                delivery: "authenticated" | "entitled";
-              }>;
-              snapshotId: string;
-            },
-            null | {
-              bundleJson: string;
-              items: Array<{
-                artifactJson: string;
-                delivery: "authenticated" | "entitled";
-                sourcePath: string;
-              }>;
-              rendererJson: string;
-            }
-          >;
-        };
-      };
-      public: {
+      publication: {
         internal: {
           read: FunctionReference<
             "query",
@@ -12083,6 +6711,40 @@ export declare const internal: {
               rendererJson: string;
               sourcePath: string;
             }>
+          >;
+        };
+      };
+      tryout: {
+        dispatch: {
+          dispatch: FunctionReference<
+            "action",
+            "internal",
+            { byteLength: number; source: string },
+            { body: string; status: number }
+          >;
+        };
+        internal: {
+          read: FunctionReference<
+            "query",
+            "internal",
+            {
+              bundleHash: string;
+              selectors: Array<{
+                artifactHash: string;
+                contentKey: string;
+                delivery: "authenticated" | "entitled";
+              }>;
+              snapshotId: string;
+            },
+            null | {
+              bundleJson: string;
+              items: Array<{
+                artifactJson: string;
+                delivery: "authenticated" | "entitled";
+                sourcePath: string;
+              }>;
+              rendererJson: string;
+            }
           >;
         };
       };
@@ -12432,8 +7094,7 @@ export declare const internal: {
               | {
                   name: "tryout attempt started";
                   properties: {
-                    access_source:
-                      "free" | "competition" | "access-pass" | "subscription";
+                    access_source: "free" | "subscription";
                     attempt_number: number;
                     country_key: string;
                     exam_key: string;
@@ -12482,7 +7143,17 @@ export declare const internal: {
                   name: "chat response failed";
                   properties: {
                     chat_type: "study";
-                    error_code: "CHAT_RESPONSE_FAILED";
+                    error_code:
+                      | "provider-busy"
+                      | "provider-unavailable"
+                      | "service-configuration"
+                      | "request-rejected"
+                      | "input-too-large"
+                      | "response-timeout"
+                      | "content-blocked"
+                      | "response-limit"
+                      | "interrupted"
+                      | "unknown";
                     model_id?: "nakafa-lite" | "nakafa-pro";
                   };
                 }
@@ -12723,7 +7394,7 @@ export declare const internal: {
           "internal",
           {
             customer: {
-              externalId: null | string;
+              externalId: string | null;
               id: string;
               metadata?: Record<string, string | number | boolean>;
               userId: Id<"users">;
@@ -12739,43 +7410,24 @@ export declare const internal: {
     queries: {
       internal: {
         customer: {
-          getCustomerByPolarId: FunctionReference<
-            "query",
-            "internal",
-            { polarCustomerId: string },
-            null | {
-              _creationTime: number;
-              _id: Id<"customers">;
-              externalId: null | string;
-              id: string;
-              metadata?: Record<string, string | number | boolean>;
-              userId: Id<"users">;
-            }
-          >;
           getCustomerByUserId: FunctionReference<
             "query",
             "internal",
             { userId: Id<"users"> },
-            null | {
+            {
               _creationTime: number;
               _id: Id<"customers">;
-              externalId: null | string;
+              externalId: string | null;
               id: string;
               metadata?: Record<string, string | number | boolean>;
               userId: Id<"users">;
-            }
+            } | null
           >;
           getCustomerDeletionCheckpoint: FunctionReference<
             "query",
             "internal",
             { userId: Id<"users"> },
-            null | string
-          >;
-          hasActiveSubscriptionByCustomerId: FunctionReference<
-            "query",
-            "internal",
-            { customerId: string },
-            boolean
+            string | null
           >;
           resolveWebhookTarget: FunctionReference<
             "query",
@@ -12870,6 +7522,553 @@ export declare const internal: {
       };
     };
   };
+  nina: {
+    lifecycle: {
+      claim: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        | {
+            _creationTime: number;
+            _id: Id<"ninaTurns">;
+            chatId: Id<"chats">;
+            credits: number;
+            creditsResetAt: number;
+            fingerprint: string;
+            modelId: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            page: {
+              locale: "en" | "id" | "de";
+              needsFetch: boolean;
+              nina: {
+                learning: {
+                  assetId?: string;
+                  contentId?: string;
+                  locale: "en" | "id" | "de";
+                  materialKey?: string;
+                  section?: string;
+                  slug: string;
+                  sourcePath?: string;
+                  title?: string;
+                  url: string;
+                  verified: boolean;
+                };
+                placement?: {
+                  mode: "placement";
+                  nodeKey: string;
+                  parentHref: string;
+                  parentTitle: string;
+                  programKey: string;
+                };
+                snapshot: {
+                  capturedAt: string;
+                  learning: {
+                    assetId?: string;
+                    contentId?: string;
+                    locale: "en" | "id" | "de";
+                    materialKey?: string;
+                    section?: string;
+                    slug: string;
+                    sourcePath?: string;
+                    title?: string;
+                    url: string;
+                    verified: boolean;
+                  };
+                  placement?: {
+                    mode: "placement";
+                    nodeKey: string;
+                    parentHref: string;
+                    parentTitle: string;
+                    programKey: string;
+                  };
+                  source: "current-page" | "pinned-chat" | "message";
+                  tools: {
+                    allowDeepResearch: boolean;
+                    allowMath: boolean;
+                    allowNakafa: boolean;
+                    allowPageFetch: boolean;
+                    evidenceScope: "verified-page" | "general-learning";
+                  };
+                };
+                tools: {
+                  allowDeepResearch: boolean;
+                  allowMath: boolean;
+                  allowNakafa: boolean;
+                  allowPageFetch: boolean;
+                  evidenceScope: "verified-page" | "general-learning";
+                };
+                transition: {
+                  fromContextKey?: string;
+                  reason: "same-context" | "page-context";
+                  toContextKey: string;
+                };
+              };
+              slug: string;
+              url: string;
+              verified: boolean;
+            };
+            phase: "active";
+            planCreditGrantId?: Id<"creditTransactions">;
+            promptMessageId: string;
+            promptedAt?: number;
+            requestId: string;
+            snapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            state:
+              { status: "queued" } | { startedAt: number; status: "running" };
+            suggestions?: Array<string>;
+            threadId: string;
+            tokens?: { input?: number; output?: number; total?: number };
+            transactionId: Id<"creditTransactions">;
+            transition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+            user: {
+              curriculumPreference?: {
+                program: { key: string; title: string };
+              };
+              role?: "teacher" | "student" | "parent" | "administrator";
+            };
+            userId: Id<"users">;
+          }
+        | {
+            _creationTime: number;
+            _id: Id<"ninaTurns">;
+            chatId: Id<"chats">;
+            credits?: number;
+            fingerprint?: string;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            page?: {
+              locale: "en" | "id" | "de";
+              needsFetch: boolean;
+              nina: {
+                learning: {
+                  assetId?: string;
+                  contentId?: string;
+                  locale: "en" | "id" | "de";
+                  materialKey?: string;
+                  section?: string;
+                  slug: string;
+                  sourcePath?: string;
+                  title?: string;
+                  url: string;
+                  verified: boolean;
+                };
+                placement?: {
+                  mode: "placement";
+                  nodeKey: string;
+                  parentHref: string;
+                  parentTitle: string;
+                  programKey: string;
+                };
+                snapshot: {
+                  capturedAt: string;
+                  learning: {
+                    assetId?: string;
+                    contentId?: string;
+                    locale: "en" | "id" | "de";
+                    materialKey?: string;
+                    section?: string;
+                    slug: string;
+                    sourcePath?: string;
+                    title?: string;
+                    url: string;
+                    verified: boolean;
+                  };
+                  placement?: {
+                    mode: "placement";
+                    nodeKey: string;
+                    parentHref: string;
+                    parentTitle: string;
+                    programKey: string;
+                  };
+                  source: "current-page" | "pinned-chat" | "message";
+                  tools: {
+                    allowDeepResearch: boolean;
+                    allowMath: boolean;
+                    allowNakafa: boolean;
+                    allowPageFetch: boolean;
+                    evidenceScope: "verified-page" | "general-learning";
+                  };
+                };
+                tools: {
+                  allowDeepResearch: boolean;
+                  allowMath: boolean;
+                  allowNakafa: boolean;
+                  allowPageFetch: boolean;
+                  evidenceScope: "verified-page" | "general-learning";
+                };
+                transition: {
+                  fromContextKey?: string;
+                  reason: "same-context" | "page-context";
+                  toContextKey: string;
+                };
+              };
+              slug: string;
+              url: string;
+              verified: boolean;
+            };
+            phase: "settled";
+            promptMessageId: string;
+            promptedAt?: number;
+            requestId?: string;
+            snapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            state:
+              | { finishedAt: number; status: "complete" }
+              | {
+                  finishedAt: number;
+                  reason?:
+                    | "provider-busy"
+                    | "provider-unavailable"
+                    | "service-configuration"
+                    | "request-rejected"
+                    | "input-too-large"
+                    | "response-timeout"
+                    | "content-blocked"
+                    | "response-limit"
+                    | "interrupted"
+                    | "unknown";
+                  status: "failed";
+                }
+              | { finishedAt: number; status: "cancelled" };
+            suggestions?: Array<string>;
+            threadId: string;
+            tokens?: { input?: number; output?: number; total?: number };
+            transactionId?: Id<"creditTransactions">;
+            transition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+            user?: {
+              curriculumPreference?: {
+                program: { key: string; title: string };
+              };
+              role?: "teacher" | "student" | "parent" | "administrator";
+            };
+            userId: Id<"users">;
+          }
+        | {
+            _creationTime: number;
+            _id: Id<"ninaTurns">;
+            chatId: Id<"chats">;
+            credits?: number;
+            fingerprint?: string;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            page?: {
+              locale: "en" | "id" | "de";
+              needsFetch: boolean;
+              nina: {
+                learning: {
+                  assetId?: string;
+                  contentId?: string;
+                  locale: "en" | "id" | "de";
+                  materialKey?: string;
+                  section?: string;
+                  slug: string;
+                  sourcePath?: string;
+                  title?: string;
+                  url: string;
+                  verified: boolean;
+                };
+                placement?: {
+                  mode: "placement";
+                  nodeKey: string;
+                  parentHref: string;
+                  parentTitle: string;
+                  programKey: string;
+                };
+                snapshot: {
+                  capturedAt: string;
+                  learning: {
+                    assetId?: string;
+                    contentId?: string;
+                    locale: "en" | "id" | "de";
+                    materialKey?: string;
+                    section?: string;
+                    slug: string;
+                    sourcePath?: string;
+                    title?: string;
+                    url: string;
+                    verified: boolean;
+                  };
+                  placement?: {
+                    mode: "placement";
+                    nodeKey: string;
+                    parentHref: string;
+                    parentTitle: string;
+                    programKey: string;
+                  };
+                  source: "current-page" | "pinned-chat" | "message";
+                  tools: {
+                    allowDeepResearch: boolean;
+                    allowMath: boolean;
+                    allowNakafa: boolean;
+                    allowPageFetch: boolean;
+                    evidenceScope: "verified-page" | "general-learning";
+                  };
+                };
+                tools: {
+                  allowDeepResearch: boolean;
+                  allowMath: boolean;
+                  allowNakafa: boolean;
+                  allowPageFetch: boolean;
+                  evidenceScope: "verified-page" | "general-learning";
+                };
+                transition: {
+                  fromContextKey?: string;
+                  reason: "same-context" | "page-context";
+                  toContextKey: string;
+                };
+              };
+              slug: string;
+              url: string;
+              verified: boolean;
+            };
+            phase: "unanswered";
+            promptMessageId: string;
+            promptedAt?: number;
+            requestId?: string;
+            snapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            state: { status: "unanswered" };
+            suggestions?: Array<string>;
+            threadId: string;
+            tokens?: { input?: number; output?: number; total?: number };
+            transactionId?: Id<"creditTransactions">;
+            transition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+            user?: {
+              curriculumPreference?: {
+                program: { key: string; title: string };
+              };
+              role?: "teacher" | "student" | "parent" | "administrator";
+            };
+            userId: Id<"users">;
+          }
+        | null
+      >;
+      recover: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          failure?:
+            | "provider-busy"
+            | "provider-unavailable"
+            | "service-configuration"
+            | "request-rejected"
+            | "input-too-large"
+            | "response-timeout"
+            | "content-blocked"
+            | "response-limit"
+            | "interrupted"
+            | "unknown";
+          turnId: Id<"ninaTurns">;
+        },
+        null
+      >;
+    };
+    presentation: {
+      save: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          suggestions?: Array<string>;
+          title?: string;
+          turnId: Id<"ninaTurns">;
+        },
+        null
+      >;
+    };
+    response: {
+      run: FunctionReference<
+        "action",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
+      >;
+    };
+    uploads: {
+      complete: FunctionReference<
+        "mutation",
+        "internal",
+        { fileId: string; uploadId: Id<"ninaUploads"> },
+        null
+      >;
+      discard: FunctionReference<
+        "mutation",
+        "internal",
+        { uploadId: Id<"ninaUploads"> },
+        null
+      >;
+      reserve: FunctionReference<"mutation", "internal", {}, Id<"ninaUploads">>;
+    };
+    usage: {
+      record: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          turnId: Id<"ninaTurns">;
+          usage: {
+            agent:
+              | "nina"
+              | "nakafa"
+              | "research"
+              | "math"
+              | "math-repair"
+              | "suggestions"
+              | "title"
+              | "nina-repair";
+            input: number;
+            model: string;
+            output: number;
+            provider: string;
+          };
+        },
+        null
+      >;
+    };
+  };
   privacy: {
     recovery: {
       cleanupWorkflowStorage: FunctionReference<
@@ -12899,6 +8098,26 @@ export declare const internal: {
       >;
     };
   };
+  routes: {
+    agent: {
+      quota: {
+        consume: FunctionReference<
+          "mutation",
+          "internal",
+          { key: string },
+          null
+        >;
+      };
+    };
+  };
+  storage: {
+    sweep: FunctionReference<
+      "mutation",
+      "internal",
+      {},
+      { deleted: number; done: boolean; scanned: number }
+    >;
+  };
   subscriptions: {
     mutations: {
       createSubscription: FunctionReference<
@@ -12906,25 +8125,25 @@ export declare const internal: {
         "internal",
         {
           subscription: {
-            amount: null | number;
+            amount: number | null;
             cancelAtPeriodEnd: boolean;
-            checkoutId: null | string;
+            checkoutId: string | null;
             createdAt: string;
-            currency: null | string;
-            currentPeriodEnd: null | string;
+            currency: string | null;
+            currentPeriodEnd: string | null;
             currentPeriodStart: string;
-            customerCancellationComment?: null | string;
-            customerCancellationReason?: null | string;
+            customerCancellationComment?: string | null;
+            customerCancellationReason?: string | null;
             customerId: string;
-            endedAt: null | string;
+            endedAt: string | null;
             id: string;
             metadata: Record<string, string | number | boolean>;
-            modifiedAt: null | string;
+            modifiedAt: string | null;
             priceId?: string;
             productId: string;
-            recurringInterval: null | "day" | "week" | "month" | "year";
+            recurringInterval: "day" | "week" | "month" | "year" | null;
             schoolId?: string;
-            startedAt: null | string;
+            startedAt: string | null;
             status: string;
           };
         },
@@ -12935,25 +8154,25 @@ export declare const internal: {
         "internal",
         {
           subscription: {
-            amount: null | number;
+            amount: number | null;
             cancelAtPeriodEnd: boolean;
-            checkoutId: null | string;
+            checkoutId: string | null;
             createdAt: string;
-            currency: null | string;
-            currentPeriodEnd: null | string;
+            currency: string | null;
+            currentPeriodEnd: string | null;
             currentPeriodStart: string;
-            customerCancellationComment?: null | string;
-            customerCancellationReason?: null | string;
+            customerCancellationComment?: string | null;
+            customerCancellationReason?: string | null;
             customerId: string;
-            endedAt: null | string;
+            endedAt: string | null;
             id: string;
             metadata: Record<string, string | number | boolean>;
-            modifiedAt: null | string;
+            modifiedAt: string | null;
             priceId?: string;
             productId: string;
-            recurringInterval: null | "day" | "week" | "month" | "year";
+            recurringInterval: "day" | "week" | "month" | "year" | null;
             schoolId?: string;
-            startedAt: null | string;
+            startedAt: string | null;
             status: string;
           };
         },
@@ -12991,12 +8210,6 @@ export declare const internal: {
             classId: Id<"schoolClasses">;
             groupId: Id<"schoolClassMaterialGroups">;
           },
-          null
-        >;
-        cleanupDeletedMaterial: FunctionReference<
-          "mutation",
-          "internal",
-          { materialId: Id<"schoolClassMaterials"> },
           null
         >;
       };
@@ -13071,7 +8284,7 @@ export declare const internal: {
         "query",
         "internal",
         { authId: string },
-        null | {
+        {
           _creationTime: number;
           _id: Id<"users">;
           authId: string;
@@ -13087,13 +8300,13 @@ export declare const internal: {
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
-        }
+        } | null
       >;
       getUserById: FunctionReference<
         "query",
         "internal",
         { userId: Id<"users"> },
-        null | {
+        {
           _creationTime: number;
           _id: Id<"users">;
           authId: string;
@@ -13109,7 +8322,7 @@ export declare const internal: {
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
-        }
+        } | null
       >;
     };
   };
@@ -13117,6 +8330,7 @@ export declare const internal: {
 
 export declare const components: {
   betterAuth: import("@repo/backend/components/betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
+  nina: import("@convex-dev/agent/_generated/component.js").ComponentApi<"nina">;
   agentRateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"agentRateLimiter">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;

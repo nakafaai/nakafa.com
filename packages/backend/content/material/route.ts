@@ -1,16 +1,16 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { requireMaterialState } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyMaterialProjection } from "@repo/backend/content/material/verify";
 import { resolveActiveRoute } from "@repo/backend/content/publication/route";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Option } from "effect";
 
 /** Resolves one active material route and its authenticated catalog row. */
 export const resolveMaterialRoute = Effect.fn(
   "contentRelease.resolveMaterialRoute"
 )(function* (
-  appLocale: Doc<"materialCatalog">["appLocale"],
+  appLocale: Docs["materialCatalog"]["appLocale"],
   publicPath: string
 ) {
   const route = yield* resolveActiveRoute("material", appLocale, publicPath);
@@ -46,6 +46,9 @@ export const resolveMaterialRoute = Effect.fn(
   return {
     ...route,
     managed: true,
-    material: { ...verified, row },
+    material: {
+      ...verified,
+      row,
+    },
   };
 });

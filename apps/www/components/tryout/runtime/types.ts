@@ -1,10 +1,10 @@
+import type { Ref } from "@confect/core";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type refs from "@repo/backend/confect/_generated/refs";
 
 /** Cohesive reactive state returned for one try-out section route. */
 export type TryoutSectionState = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.runtime.getSectionAttemptState>
+  Ref.Returns<typeof refs.public.tryouts.queries.runtime.getSectionAttemptState>
 >;
 
 /** Attempt state returned with one reactive try-out section. */

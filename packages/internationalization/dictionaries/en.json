@@ -8,6 +8,8 @@
     "classification": "Education"
   },
   "Common": {
+    "load-error": "We could not load this data. Please try again.",
+    "action-error": "We could not complete this action. Please try again.",
     "copyright": "Copyright © {year} {companyName}. All rights reserved.",
     "made-with-love": "Made with love",
     "version": "Version {version}",
@@ -500,12 +502,22 @@
     "delete": "Delete"
   },
   "Ai": {
+    "attachment": "Attachment",
+    "open-attachment": "Open {filename}",
+    "messages": "Messages",
+    "scroll-to-latest": "Jump to latest",
+    "chat-actions": "Chat actions",
+    "chat-history": "Chat history",
+    "send-message": "Send message",
+    "stop-response": "Stop response",
+    "attach-files": "Attach files",
+    "remove-attachment": "Remove {filename}",
+    "attachment-rejected": "Choose up to 10 PNG, JPEG, WebP, GIF, PDF, or text files, each no larger than 8 MiB.",
     "ask-nina": "Ask Nina",
     "text-placeholder": "Ask Nina anything...",
-    "error-message": "Oops, something went wrong. Try switching the AI model.",
-    "insufficient-credits": "You are out of AI credits. Wait for the next credit reset or upgrade to Pro for 3,000 monthly credits.",
+    "error-message": "Nina could not finish this response. Please try again. If this continues, contact Nakafa support.",
     "retry": "Retry",
-    "rate-limit-message": "Whoa, slow down! Please try again in a moment.",
+    "rate-limit-message": "You have reached the short-term message limit. Wait a moment, then send your message again.",
     "nakafa": "Nakafa",
     "nakafa-search": "Nakafa results",
     "nakafa-search-results": "Content found",
@@ -658,7 +670,37 @@
     "output-tokens": "Output",
     "total-tokens": "Total",
     "recent-chats": "Recent Chats",
-    "speed": "Playback speed"
+    "speed": "Playback speed",
+    "review-credits": "View credits",
+    "sign-in-again": "Sign in again",
+    "failures": {
+      "connection": "We could not confirm the request. Check your connection and try again.",
+      "credits": "You do not have enough credits for this response. Check your allowance and next reset in your subscription settings.",
+      "rate-limit": "You have reached the short-term message limit. Wait a moment, then send your message again.",
+      "session": "Your session has expired. Sign in again to continue.",
+      "account": "This account cannot use Nina right now. Sign in again or contact Nakafa support if the problem continues.",
+      "authentication": "We could not verify your session. Please try again.",
+      "missing-chat": "This chat is no longer available. You can start a new chat.",
+      "chat-access": "You do not have permission to send messages in this chat. Start your own chat to continue.",
+      "admission": "Nina could not save this request. Please try again.",
+      "busy": "Nina is still answering in this chat. Wait for the response or stop it before sending another message.",
+      "retry-unavailable": "This message can no longer be retried. Send your question as a new message.",
+      "request-conflict": "This submission has already been used for a different message. Send your question again as a new message.",
+      "context": "Nina could not load the learning material for this conversation. Please try again.",
+      "attachment-invalid": "An attachment is invalid or no longer available. Choose it again and check its file type and size.",
+      "attachment-limit": "You have reached the attachment limit. Send the files already uploaded or wait before uploading more.",
+      "attachment-failed": "Nina could not read or save the attachment. Please try uploading it again.",
+      "provider-busy": "The AI service is handling too many requests right now. Wait a moment, then try again.",
+      "provider-unavailable": "The AI service is temporarily unavailable. Please try again shortly.",
+      "service-configuration": "Nina cannot access the AI service right now. Please try again later. If this continues, contact Nakafa support.",
+      "request-rejected": "The AI service could not process this request. Try a shorter question or different attachments.",
+      "input-too-large": "This request is too large for the AI service. Shorten your question or reduce the attachments, then send it again.",
+      "response-timeout": "The AI service took too long to respond. Please try again.",
+      "content-blocked": "The AI service could not answer this request because of its content restrictions. Review your question and attachments before sending again.",
+      "response-limit": "Nina reached the response limit before finishing. Try a more focused question or split it into smaller parts.",
+      "interrupted": "The response was interrupted before it finished. Please try again.",
+      "unknown": "Nina could not finish this response. Please try again. If this continues, contact Nakafa support."
+    }
   },
   "Pricing": {
     "headline": "<mark>We were students too.</mark> We know what it is like to choose between learning and eating. Core access is free. Always.",
@@ -834,8 +876,7 @@
       "learning": "Learning",
       "classes": "Classes",
       "nakafa-materials": "Nakafa Materials",
-      "yours": "For you",
-      "notifications": "Notifications"
+      "yours": "For you"
     },
     "Classes": {
       "classes": "Classes",

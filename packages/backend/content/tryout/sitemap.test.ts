@@ -1,20 +1,18 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import {
   readTryoutSitemapCount,
   readTryoutSitemapPage,
 } from "@repo/backend/content/tryout/sitemap";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
-import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
 /** Creates one public country row with a deterministic technical identity. */
@@ -67,90 +65,88 @@ function makeInternalSection(locale: ActiveAppLocaleCode) {
     visibility: "internal-entry",
   });
 }
-
 describe("contentRelease/tryout/sitemap", () => {
-  it("requires an active signed try-out publication", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSitemapCount("en").pipe(
-            Effect.provide(convexTryoutLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSitemapPage("en", 0).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
-  });
-
-  it("returns only sorted public paths from the active signed catalog", async () => {
-    const t = convexTest(schema, convexModules);
-    const catalog = [
-      makeCountry("en", "zeta", "try-out/zeta", 2),
-      makeCountry("en", "alpha", "try-out/alpha", 1),
-      makeInternalSection("en"),
-      makeCountry("id", "zeta", "try-out/zeta", 2),
-      makeCountry("id", "alpha", "try-out/alpha", 1),
-      makeInternalSection("id"),
-      makeCountry("de", "zeta", "try-out/zeta", 2),
-      makeCountry("de", "alpha", "try-out/alpha", 1),
-      makeInternalSection("de"),
-    ];
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog,
-        placements: [
-          makeTryoutPlacementRow("en").record.row,
-          makeTryoutPlacementRow("id").record.row,
-          makeTryoutPlacementRow("de").record.row,
-        ],
+  it.effect("requires an active signed try-out publication", () =>
+    Effect.gen(function* () {
+      const t = yield* Confect.pipe(Effect.provide(confectLayer));
+      yield* t.run(
+        Effect.gen(function* () {
+          expect(
+            yield* readTryoutSitemapCount("en").pipe(
+              Effect.provide(tryoutLayer),
+              Effect.flip
+            )
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_MISSING",
+          });
+          expect(
+            yield* readTryoutSitemapPage("en", 0).pipe(
+              Effect.provide(tryoutLayer),
+              Effect.flip
+            )
+          ).toMatchObject({
+            code: "CONTENT_RELEASE_MISSING",
+          });
+        })
+      );
+    })
+  );
+  it.effect(
+    "returns only sorted public paths from the active signed catalog",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* t.run(
+          Effect.gen(function* () {
+            const tCtx = yield* MutationCtx;
+            const catalog = [
+              makeCountry("en", "zeta", "try-out/zeta", 2),
+              makeCountry("en", "alpha", "try-out/alpha", 1),
+              makeInternalSection("en"),
+              makeCountry("id", "zeta", "try-out/zeta", 2),
+              makeCountry("id", "alpha", "try-out/alpha", 1),
+              makeInternalSection("id"),
+              makeCountry("de", "zeta", "try-out/zeta", 2),
+              makeCountry("de", "alpha", "try-out/alpha", 1),
+              makeInternalSection("de"),
+            ];
+            yield* Effect.promise(() =>
+              activateTryoutSnapshot(tCtx, {
+                catalog,
+                placements: [
+                  makeTryoutPlacementRow("en").record.row,
+                  makeTryoutPlacementRow("id").record.row,
+                  makeTryoutPlacementRow("de").record.row,
+                ],
+              })
+            );
+            expect(
+              yield* readTryoutSitemapCount("en").pipe(
+                Effect.provide(tryoutLayer)
+              )
+            ).toEqual({
+              pageCount: 1,
+              routeCount: 2,
+            });
+            expect(
+              yield* readTryoutSitemapPage("en", 0).pipe(
+                Effect.provide(tryoutLayer)
+              )
+            ).toEqual({
+              paths: ["try-out/alpha", "try-out/zeta"],
+            });
+            expect(
+              yield* readTryoutSitemapPage("en", 1).pipe(
+                Effect.provide(tryoutLayer)
+              )
+            ).toBeNull();
+            expect(
+              yield* readTryoutSitemapPage("en", -1).pipe(
+                Effect.provide(tryoutLayer)
+              )
+            ).toBeNull();
+          })
+        );
       })
-    );
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSitemapCount("en").pipe(
-            Effect.provide(convexTryoutLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toEqual({ pageCount: 1, routeCount: 2 });
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSitemapPage("en", 0).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toEqual({ paths: ["try-out/alpha", "try-out/zeta"] });
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSitemapPage("en", 1).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toBeNull();
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSitemapPage("en", -1).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toBeNull();
-  });
+  );
 });

@@ -3,17 +3,22 @@ import {
   contentSnapshotId,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { decodeSnapshotJson } from "@repo/backend/confect/contentRelease/parse";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { PublicationSource } from "@repo/backend/content/publication/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { decodeSnapshotJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect, Option } from "effect";
 
 /** Narrows a decoded snapshot through its actual family discriminant. */
 function hasSnapshotFamily<Family extends ContentSnapshotKind>(
   snapshot: ContentSnapshotManifest,
   family: Family
-): snapshot is Extract<ContentSnapshotManifest, { readonly family: Family }> {
+): snapshot is Extract<
+  ContentSnapshotManifest,
+  {
+    readonly family: Family;
+  }
+> {
   return snapshot.family === family;
 }
 
@@ -53,7 +58,10 @@ export const loadVerifiedSnapshot = Effect.fn(
       "Verified Quran snapshot has blocked provenance."
     );
   }
-  return { snapshot, stored };
+  return {
+    snapshot,
+    stored,
+  };
 });
 
 /** Resolves active release ownership and its optional verified family snapshot. */
@@ -61,17 +69,29 @@ export const loadSnapshotOwner = Effect.fn("contentRelease.loadSnapshotOwner")(
   function* <const Family extends ContentSnapshotKind>(family: Family) {
     const active = yield* loadActiveIdentity();
     if (!active) {
-      return { active: null, snapshot: null, snapshotId: null };
+      return {
+        active: null,
+        snapshot: null,
+        snapshotId: null,
+      };
     }
     const state = active.signed.manifest.snapshots[family];
     if (state.resultSnapshotId === null) {
-      return { active, snapshot: null, snapshotId: null };
+      return {
+        active,
+        snapshot: null,
+        snapshotId: null,
+      };
     }
     const { snapshot } = yield* loadVerifiedSnapshot(
       family,
       state.resultSnapshotId
     );
-    return { active, snapshot, snapshotId: state.resultSnapshotId };
+    return {
+      active,
+      snapshot,
+      snapshotId: state.resultSnapshotId,
+    };
   }
 );
 

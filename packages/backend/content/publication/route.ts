@@ -1,20 +1,19 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { resolveBoundPublicProjection } from "@repo/backend/content/publication/projection";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { PublicationSource } from "@repo/backend/content/publication/source";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
-import type { Infer } from "convex/values";
-import { v } from "convex/values";
-import { Effect, Option } from "effect";
+import type { routeResultValidator } from "@repo/backend/content/publication/spec";
+import { Effect, Option, type Schema } from "effect";
 /** Resolves one public route from the exact active publication sequence. */
 export const resolveActiveRoute = Effect.fn(
   "contentRelease.resolveActiveRoute"
 )(function* (
   family: ContentFamily,
-  rawAppLocale: Doc<"contentPaths">["appLocale"],
+  rawAppLocale: Docs["contentPaths"]["appLocale"],
   publicPath: string
 ) {
   const appLocale = AppLocaleSchema.make(rawAppLocale);
@@ -36,10 +35,18 @@ export const resolveActiveRoute = Effect.fn(
   );
   const managed = families.result.includes(family);
   if (!managed) {
-    return { active, managed, projection: null };
+    return {
+      active,
+      managed,
+      projection: null,
+    };
   }
   if (!binding || binding.operation === "delete") {
-    return { active, managed, projection: null };
+    return {
+      active,
+      managed,
+      projection: null,
+    };
   }
   if (!binding.contentKey) {
     return yield* releaseFail(
@@ -61,31 +68,22 @@ export const resolveActiveRoute = Effect.fn(
       `Route ${appLocale}/${publicPath} lost its ${family} projection.`
     );
   }
-  return { active, managed, projection };
+  return {
+    active,
+    managed,
+    projection,
+  };
 });
-
-export const routeResultValidator = v.union(
-  v.object({
-    activeReleaseId: v.union(v.string(), v.null()),
-    kind: v.literal("unmanaged"),
-  }),
-  v.object({
-    activeReleaseId: v.string(),
-    kind: v.literal("missing"),
-  }),
-  v.object({
-    activeReleaseId: v.string(),
-    kind: v.literal("found"),
-    projectionJson: v.string(),
-  })
-);
-type RouteResult = Infer<typeof routeResultValidator>;
+type RouteResult = Schema.Schema.Type<typeof routeResultValidator>;
 /** Converts the internal route model into its public ownership contract. */
 function toRouteResult(
   resolved: Effect.Success<ReturnType<typeof resolveActiveRoute>>
 ): RouteResult {
   if (!resolved.active) {
-    return { activeReleaseId: null, kind: "unmanaged" };
+    return {
+      activeReleaseId: null,
+      kind: "unmanaged",
+    };
   }
   if (!resolved.managed) {
     return {
@@ -112,7 +110,7 @@ export const readRouteOwnership = Effect.fn(
 )(
   (
     family: ContentFamily,
-    appLocale: Doc<"contentPaths">["appLocale"],
+    appLocale: Docs["contentPaths"]["appLocale"],
     publicPath: string
   ) =>
     resolveActiveRoute(family, appLocale, publicPath).pipe(

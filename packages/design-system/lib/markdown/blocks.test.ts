@@ -23,6 +23,13 @@ afterEach(() => {
 });
 
 describe("markdown blocks", () => {
+  it("preserves the active block identity while streaming appends text", () => {
+    const before = readMarkdownBlocks("answer", "First\n\nSec");
+    const after = readMarkdownBlocks("answer", "First\n\nSecond");
+    expect(after.map(({ key }) => key)).toEqual(before.map(({ key }) => key));
+    expect(after.at(-1)?.content).toBe("Second");
+  });
+
   it("keeps empty input empty without inventing or dropping text blocks", () => {
     expect(parseMarkdownIntoBlocks("")).toEqual([]);
     for (const markdown of [

@@ -1,11 +1,11 @@
 import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
-import { ArticleSource } from "@repo/backend/content/article/source";
-import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
-import type { PublicationRow } from "@repo/backend/content/publication/source";
 import {
   ReleaseError,
   releaseFail,
-} from "@repo/backend/convex/contentRelease/error";
+} from "@repo/backend/confect/contentRelease/error";
+import { ArticleSource } from "@repo/backend/content/article/source";
+import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
+import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { Effect, Option, Schema } from "effect";
 
 type ArticleRow = PublicationRow<"articleCatalog">;

@@ -2,8 +2,8 @@ import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import {
   ARTICLE_PUBLICATION_CURSOR_PREFIX,
   encodeArticlePublicationCursor,
@@ -65,22 +65,6 @@ export function articlePublicationCursor(
     ])
   );
 }
-
-/** Converts a stream split position to the portable public identity. */
-export const portablePublicationCursor = Effect.fn(
-  "contentRelease.portablePublicationCursor"
-)(function* (nativeCursor: string) {
-  if (nativeCursor === "[]") {
-    return encodeArticlePublicationCursor(nativeCursor);
-  }
-  const key = yield* readPublicationPosition(
-    encodeArticlePublicationCursor(nativeCursor)
-  );
-  const [slot, appLocale, category, datePublished, contentKey] = key;
-  return encodeArticlePublicationCursor(
-    JSON.stringify([slot, appLocale, category, datePublished, contentKey])
-  );
-});
 
 /** Creates one typed publication cursor failure. */
 function invalidCursor(reason: string) {

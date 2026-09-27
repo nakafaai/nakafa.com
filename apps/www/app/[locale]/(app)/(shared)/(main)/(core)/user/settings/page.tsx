@@ -1,17 +1,15 @@
-import { api } from "@repo/backend/convex/_generated/api";
-import { Effect, Option } from "effect";
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
+import { Effect } from "effect";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile-page";
-import { preloadAuthQuery } from "@/lib/auth/server";
+import { env } from "@/env";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import {
-  admitUserSettingsRoute,
-  captureUserSettingsPreload,
-  preloadUserSettingsQuery,
-} from "@/lib/settings/server";
+import { admitUserSettingsRoute } from "@/lib/settings/server";
 
 export async function generateMetadata({
   params,
@@ -41,40 +39,43 @@ async function AuthenticatedSettings({
 }: {
   params: PageProps<"/[locale]/user/settings">["params"];
 }) {
-  const locale = await admitUserSettingsRoute((await params).locale);
-
-  const curriculum = await Effect.runPromise(
-    captureUserSettingsPreload(
-      Effect.all(
-        {
-          preloadedPreference: preloadUserSettingsQuery(() =>
-            preloadAuthQuery(api.learningPreferences.queries.getCurrent, {
-              locale,
-            })
-          ),
-          preloadedPrograms: preloadUserSettingsQuery(() =>
-            preloadAuthQuery(
-              api.learningPreferences.queries.listCurriculumPrograms,
+  const { locale, token } = await admitUserSettingsRoute((await params).locale);
+  const data = await Effect.runPromise(
+    HttpClient.HttpClient.pipe(
+      Effect.flatMap((client) =>
+        Effect.all(
+          {
+            account: client.query(refs.public.auth.queries.getCurrentUser, {}),
+            preference: client.query(
+              refs.public.learningPreferences.queries.getCurrent,
               { locale }
-            )
-          ),
-        },
-        { concurrency: "unbounded" }
+            ),
+            programs: client.query(
+              refs.public.learningPreferences.queries.listCurriculumPrograms,
+              { locale }
+            ),
+          },
+          { concurrency: "unbounded" }
+        )
+      ),
+      Effect.provide(
+        HttpClient.layer(
+          env.NEXT_PUBLIC_CONVEX_URL,
+          token ? { auth: token } : {}
+        )
       )
     )
   );
-
+  if (!data.account) {
+    notFound();
+  }
   return (
-    <UserSettingsProfilePage>
-      {Option.match(curriculum, {
-        onNone: () => null,
-        onSome: ({ preloadedPreference, preloadedPrograms }) => (
-          <UserSettingsCurriculum
-            preloadedPreference={preloadedPreference}
-            preloadedPrograms={preloadedPrograms}
-          />
-        ),
-      })}
+    <UserSettingsProfilePage initialAccount={data.account}>
+      <UserSettingsCurriculum
+        initialPreference={data.preference}
+        initialPrograms={data.programs}
+        locale={locale}
+      />
     </UserSettingsProfilePage>
   );
 }

@@ -1,19 +1,17 @@
 "use client";
 
 import { Add01Icon, QuoteDownIcon } from "@hugeicons/core-free-icons";
-import type { DataPart } from "@repo/ai/schema/data";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 import { useChat } from "@/components/ai/context/use-chat";
 
 interface Props {
-  message: DataPart["suggestions"];
+  suggestions: readonly string[];
 }
 
-export function SuggestionsPart({ message }: Props) {
+export function SuggestionsPart({ suggestions }: Props) {
   const t = useTranslations("Ai");
-  const suggestions = message.data;
 
   return (
     <div className="flex flex-col gap-4">
@@ -31,30 +29,19 @@ export function SuggestionsPart({ message }: Props) {
 }
 SuggestionsPart.displayName = "SuggestionsPart";
 
-function SuggestionsPartButton({
-  suggestion,
-}: {
-  suggestion: DataPart["suggestions"]["data"][number];
-}) {
-  const { sendMessage, status } = useChat((state) => state.chat);
-
-  const disabled = status === "submitted" || status === "streaming";
+function SuggestionsPartButton({ suggestion }: { suggestion: string }) {
+  const { send, busy } = useChat((state) => state);
 
   return (
     <button
       className="flex w-full cursor-pointer items-center justify-between gap-6 border-t py-2 text-start transition-colors ease-out hover:text-primary"
-      disabled={disabled}
-      onClick={() => sendMessage({ text: suggestion })}
+      disabled={busy}
+      onClick={() => send({ text: suggestion })}
       type="button"
     >
-      <SuggestionsPartContent content={suggestion} />
+      {suggestion}
       <HugeIcons className="size-4 text-primary" icon={Add01Icon} />
     </button>
   );
 }
 SuggestionsPartButton.displayName = "SuggestionsPartButton";
-
-function SuggestionsPartContent({ content }: { content: string }) {
-  return content;
-}
-SuggestionsPartContent.displayName = "SuggestionsPartContent";

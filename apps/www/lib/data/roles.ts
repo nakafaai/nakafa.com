@@ -6,7 +6,7 @@ import {
 import {
   type SelfSelectableUserRole,
   selfSelectableUserRoles,
-} from "@repo/backend/convex/users/roles";
+} from "@repo/backend/confect/users/roles";
 
 export const roleIconByValue: Record<
   SelfSelectableUserRole,

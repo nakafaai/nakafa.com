@@ -5,10 +5,10 @@ import type {
   TryoutSet,
   TryoutTrack,
 } from "@nakafa/aksara-contracts/tryout/catalog";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import type { TrackIdentity } from "@repo/backend/confect/tryouts/sets/spec";
 import type { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import type { TrackIdentity } from "@repo/backend/convex/tryouts/sets/spec";
 import { Effect } from "effect";
 /** Verified localized catalog selected by the active release owner. */
 export type PublishedCatalog = Effect.Success<
@@ -82,7 +82,10 @@ export const readPublishedTrackParents = Effect.fn(
   if (!(country && exam)) {
     return yield* catalogIntegrity("Signed try-out track lost its parents.");
   }
-  return { country, exam };
+  return {
+    country,
+    exam,
+  };
 });
 /** Resolves and validates the hierarchy parents of one set. */
 export const readPublishedSetParents = Effect.fn(
@@ -98,7 +101,10 @@ export const readPublishedSetParents = Effect.fn(
     return yield* catalogIntegrity("Signed try-out set lost its track.");
   }
   const parents = yield* readPublishedTrackParents(index, track);
-  return { ...parents, track };
+  return {
+    ...parents,
+    track,
+  };
 });
 /** Reads and validates every ordered section owned by one signed set. */
 export const readPublishedSetSections = Effect.fn(
@@ -149,7 +155,11 @@ export const readPublishedTrackSets = Effect.fn(
       "Signed try-out track lost one or more sets."
     );
   }
-  return { index, sets, track };
+  return {
+    index,
+    sets,
+    track,
+  };
 });
 /** Resolves the set that owns one signed section. */
 export function findPublishedSet(

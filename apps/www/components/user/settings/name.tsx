@@ -1,12 +1,15 @@
 "use client";
+
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { useForm } from "@tanstack/react-form";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { FormBlock } from "@/components/shared/form-block";
 import { useUpdateUserNameMutation } from "@/components/user/mutation.client";
+import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
 const MAX_NAME_LENGTH = 32;
@@ -21,6 +24,7 @@ const formSchema = Schema.toStandardSchemaV1(
 );
 /** Render the validated optimistic user-name settings form. */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
+  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const updateUserName = useUpdateUserNameMutation();
   const form = useForm({
@@ -30,12 +34,36 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value }) => {
-      await updateUserName({
-        name: value.name,
-      });
-      form.reset();
-    },
+    onSubmit: async ({ value }) =>
+      Effect.runPromise(
+        Effect.tryPromise(() =>
+          updateUserName({
+            name: value.name,
+          })
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap(() =>
+            Effect.sync(() => {
+              if (form.getFieldValue("name") === value.name) {
+                form.reset(value);
+              }
+            })
+          ),
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/user/settings/name",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      ),
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-name-form">

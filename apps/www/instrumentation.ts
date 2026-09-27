@@ -1,40 +1,7 @@
-import { isAiSdkDevToolsTelemetryEnabled } from "@repo/ai/config/devtools-runtime";
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
 import { Effect, Predicate } from "effect";
 import type { Instrumentation } from "next";
-
-/** Registers Node-only startup telemetry after the runtime gate. */
-const registerInstrumentation = Effect.fn("www.instrumentation.register")(
-  function* () {
-    const isEnabled = yield* Effect.sync(
-      () =>
-        process.env.NEXT_RUNTIME === "nodejs" &&
-        isAiSdkDevToolsTelemetryEnabled()
-    );
-    if (!isEnabled) {
-      return;
-    }
-
-    const { registerAiSdkDevToolsTelemetry } = yield* Effect.promise(
-      () => import("@repo/ai/config/devtools")
-    );
-    yield* Effect.sync(registerAiSdkDevToolsTelemetry);
-  }
-);
-
-/**
- * Registers local-only AI SDK DevTools telemetry when the Next.js server starts.
- *
- * The dynamic import keeps Node-only DevTools code out of Edge instrumentation.
- *
- * Docs:
- * https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation
- * https://ai-sdk.dev/v7/docs/ai-sdk-core/devtools
- */
-export function register() {
-  return Effect.runPromise(registerInstrumentation());
-}
 
 /**
  * Return the React/Next digest that identifies wrapped server render errors.

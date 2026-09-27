@@ -12,7 +12,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { usePathname } from "@repo/internationalization/src/navigation";
+import {
+  usePathname,
+  useRouter,
+} from "@repo/internationalization/src/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
   getForYouNavigationHref,
@@ -26,6 +29,7 @@ import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
  */
 export function NavForYou() {
   const pathname = usePathname();
+  const router = useRouter();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const locale = useLocale();
@@ -47,12 +51,23 @@ export function NavForYou() {
               preferredCurriculumHref,
               preferredTryoutHref,
             });
+            const prefetchChat =
+              item.id === "askNina" ? () => router.prefetch(href) : undefined;
 
             return (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
                   isActive={pathname.includes(href)}
-                  render={<NavigationLink href={href} title={label} />}
+                  render={
+                    <NavigationLink
+                      href={href}
+                      onFocus={prefetchChat}
+                      onPointerEnter={prefetchChat}
+                      onTouchStart={prefetchChat}
+                      prefetch={item.id === "askNina" ? false : undefined}
+                      title={label}
+                    />
+                  }
                   tooltip={label}
                 >
                   <HugeIcons icon={item.icon} />

@@ -1,0 +1,166 @@
+"use node";
+
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import {
+  type ContentSnapshotKind,
+  ContentSnapshotKindSchema,
+} from "@nakafa/aksara-contracts/release/snapshot/scope";
+import {
+  hasSameContentSnapshots,
+  invertContentSnapshots,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { verifyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/verify";
+import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import {
+  decodeReleaseJson,
+  decodeSnapshotJson,
+  parseStoredJson,
+} from "@repo/backend/confect/contentRelease/parse";
+import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
+import { Effect, Option, Stream } from "effect";
+
+/** Returns fixed replacement families in canonical signed order. */
+function replacementFamilies(release: SignedContentRelease) {
+  return ContentSnapshotKindSchema.literals.filter(
+    (family) => release.manifest.snapshots[family].mode === "replace"
+  );
+}
+
+/** Loads and rechecks one manifest before the shared proof consumes it. */
+const readManifest = Effect.fn("contentRelease.readProofSnapshotManifest")(
+  function* (releaseId: string, family: ContentSnapshotKind) {
+    const runQuery = yield* QueryRunner;
+    const source = yield* runQuery(
+      refs.internal.contentRelease.snapshot.read.manifest,
+      {
+        family,
+        releaseId,
+      }
+    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const snapshot = yield* decodeSnapshotJson(source);
+    if (
+      snapshot.family === "quran" &&
+      snapshot.manifest.provenanceStatus !== "approved"
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_UNSUPPORTED",
+        "Blocked Quran provenance cannot pass publication proof."
+      );
+    }
+    return snapshot;
+  }
+);
+
+/** Creates one replayable canonical replacement-manifest stream. */
+function manifestStream(release: SignedContentRelease) {
+  return Stream.fromIterable(replacementFamilies(release)).pipe(
+    Stream.mapEffect((family) =>
+      readManifest(release.manifest.releaseId, family)
+    )
+  );
+}
+
+/** Creates one replayable family row stream from exact release batch ledgers. */
+function familyRows(releaseId: string, family: ContentSnapshotKind) {
+  return Stream.paginate(-1, (afterBatchIndex) =>
+    QueryRunner.pipe(
+      Effect.flatMap((runQuery) =>
+        runQuery(refs.internal.contentRelease.snapshot.read.rows, {
+          afterBatchIndex,
+          family,
+          releaseId,
+        })
+      ),
+      Effect.catchTag("SchemaError", Effect.die),
+      Effect.map(
+        (page): readonly [readonly string[], Option.Option<number>] => [
+          page.rowJson,
+          page.done ? Option.none() : Option.some(page.nextBatchIndex),
+        ]
+      )
+    )
+  ).pipe(Stream.mapEffect(parseStoredJson));
+}
+
+/** Creates one replayable globally ordered structured-row stream. */
+function rowStream(release: SignedContentRelease) {
+  return Stream.fromIterable(replacementFamilies(release)).pipe(
+    Stream.flatMap((family) => familyRows(release.manifest.releaseId, family))
+  );
+}
+
+/** Loads the exact signed base snapshot set or the empty genesis identity. */
+const loadPrevious = Effect.fn("contentRelease.loadPreviousSnapshots")(
+  function* (release: SignedContentRelease) {
+    const runQuery = yield* QueryRunner;
+    const baseId = release.manifest.baseReleaseId;
+    if (baseId === null) {
+      return null;
+    }
+    const stored = yield* runQuery(
+      refs.internal.contentRelease.envelope.byRelease,
+      {
+        releaseId: baseId,
+      }
+    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const base = yield* decodeReleaseJson(stored.releaseJson);
+    if (base.manifestHash !== release.manifest.baseManifestHash) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_STALE_BASE",
+        `Release ${release.manifest.releaseId} lost its exact snapshot base.`
+      );
+    }
+    return base.manifest.snapshots;
+  }
+);
+
+/** Authenticates candidate replacements or one zero-copy recovery inverse. */
+export const verifyReleaseSnapshots = Effect.fn(
+  "contentRelease.verifyReleaseSnapshots"
+)(function* (
+  release: SignedContentRelease,
+  role: "candidate" | "recovery",
+  stagedSnapshotBatches: number,
+  stagedSnapshotRows: number
+) {
+  const previous = yield* loadPrevious(release);
+  const restoresPrevious =
+    role === "recovery" || release.manifest.origin.kind === "rollback";
+  if (restoresPrevious) {
+    if (
+      previous === null ||
+      stagedSnapshotBatches !== 0 ||
+      stagedSnapshotRows !== 0 ||
+      !hasSameContentSnapshots(
+        release.manifest.snapshots,
+        invertContentSnapshots(previous)
+      )
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Release ${release.manifest.releaseId} does not exactly invert structured snapshots.`
+      );
+    }
+    return {
+      snapshots: release.manifest.snapshots,
+      stagedRows: 0,
+    };
+  }
+  const verified = yield* verifyContentSnapshots({
+    manifests: manifestStream(release),
+    previousSnapshots: previous,
+    rows: rowStream(release),
+  }).pipe(Effect.mapError(contractFailure));
+  if (
+    stagedSnapshotRows !== verified.stagedRows ||
+    !hasSameContentSnapshots(verified.snapshots, release.manifest.snapshots)
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Release ${release.manifest.releaseId} snapshot proof does not match staged counters.`
+    );
+  }
+  return verified;
+});

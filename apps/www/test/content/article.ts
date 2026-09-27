@@ -1,12 +1,20 @@
-import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import type { Ref } from "@confect/core";
+import {
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALE_CODES,
   activeAppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
-import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
+import {
+  ArticleRouteSlugSchema,
+  canonicalizeArticleProjection,
+} from "@nakafa/aksara-contracts/projection/article";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
+import type refs from "@repo/backend/confect/_generated/refs";
+import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import {
   testEmptyManifest,
   testSignedArtifact,
@@ -20,6 +28,10 @@ import {
 } from "@repo/backend/test/content/release";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
 import { Array as Arr, Effect, Struct } from "effect";
+import {
+  testArticleProjection,
+  testArticleSourcePath,
+} from "@/test/content-article";
 
 /** Creates signed localized articles with their complete immutable discovery closure. */
 export const makeArticleRuntimeSource = Effect.fn(
@@ -151,3 +163,91 @@ export const makeArticleRuntimeSource = Effect.fn(
     return { ...fixture, projections };
   })
 );
+
+export const revision = "a".repeat(40);
+export const activeManifestHash = Sha256HashSchema.make(
+  `sha256:${"a".repeat(64)}`
+);
+export const activeReleaseId = ReleaseIdSchema.make("release-article");
+type ArticleRow = Ref.Returns<
+  typeof refs.public.contentRelease.article.publications
+>["result"]["page"][number];
+type CategoryRow = Ref.Returns<
+  typeof refs.public.contentRelease.article.categories
+>["result"]["page"][number];
+
+/** Builds one backend projection row from a reviewed article projection. */
+export function articleRow(selected = testArticleProjection): ArticleRow {
+  return {
+    appLocale: selected.appLocale,
+    artifactLocale: selected.artifactLocale,
+    contentKey: selected.contentKey,
+    family: "article",
+    projectionHash: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+    projectionJson: canonicalizeArticleProjection(selected),
+    publicPath: selected.publicPath,
+    releaseId: "release-article",
+    rendererDomain: "politics",
+    sequence: 2,
+    sourcePath: testArticleSourcePath,
+  };
+}
+
+/** Builds one successful article page from the active read model. */
+export function articlePage(overrides?: {
+  readonly isDone?: boolean;
+  readonly page?: readonly unknown[];
+  readonly sourceRevision?: null | string;
+  readonly stale?: boolean;
+}) {
+  return {
+    activeManifestHash,
+    activeReleaseId,
+    managed: true,
+    result: {
+      continueCursor: "next",
+      isDone: overrides?.isDone ?? true,
+      page: overrides?.page ?? [articleRow()],
+    },
+    sourceRevision:
+      overrides?.sourceRevision === undefined
+        ? revision
+        : overrides.sourceRevision,
+    stale: overrides?.stale ?? false,
+  };
+}
+
+/** Builds one backend category row from reviewed article metadata. */
+export function categoryRow(overrides?: {
+  readonly category?: string;
+  readonly route?: string;
+  readonly title?: string;
+}): CategoryRow {
+  return {
+    category: overrides?.category ?? "politics",
+    rendererDomain: "politics",
+    route: ArticleRouteSlugSchema.make(overrides?.route ?? "politics"),
+    title: overrides?.title ?? "Politics",
+  };
+}
+
+/** Builds one successful category page from the active read model. */
+export function categoryPage(overrides?: {
+  readonly category?: string;
+  readonly isDone?: boolean;
+  readonly stale?: boolean;
+  readonly title?: string;
+}) {
+  return {
+    activeManifestHash,
+    activeReleaseId,
+    managed: true,
+    result: {
+      continueCursor: "next",
+      isDone: overrides?.isDone ?? true,
+      page: [categoryRow(overrides)],
+    },
+    sourceRevision: revision,
+    stale: overrides?.stale ?? false,
+  };
+}

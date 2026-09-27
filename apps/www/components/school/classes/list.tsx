@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   BookOpen02Icon,
   Calendar03Icon,
@@ -8,12 +9,12 @@ import {
   UserMultipleIcon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   getClassImageUrl,
   getRandomClassImage,
-} from "@repo/backend/convex/lib/images";
+} from "@repo/backend/confect/lib/images";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -36,11 +37,11 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { usePaginatedQuery } from "convex/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
+import { DataFailure } from "@/components/shared/failure";
 import { useSchool } from "@/lib/context/use-school";
 import { searchParsers } from "@/lib/nuqs/search";
 
@@ -49,25 +50,29 @@ const DEBOUNCE_TIME = 300;
 /** Render the paginated class directory for the active school. */
 export function SchoolClassesList() {
   const t = useTranslations("School.Classes");
-
   const schoolId = useSchool((state) => state.school._id);
   const [{ q }] = useQueryStates(searchParsers);
-
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
-
-  const { results, status, loadMore } = usePaginatedQuery(
-    api.classes.queries.getClasses,
+  const pagination = usePaginatedQuery(
+    refs.public.classes.queries.getClasses,
     {
       schoolId,
       q: debouncedQ,
     },
-    { initialNumItems: 50 }
+    {
+      initialNumItems: 50,
+    }
   );
-
-  if (status === "LoadingFirstPage") {
+  const { results } = pagination;
+  if (
+    PaginatedQueryResult.isFailure(pagination) &&
+    pagination.results.length === 0
+  ) {
+    return <DataFailure />;
+  }
+  if (PaginatedQueryResult.isLoadingFirstPage(pagination)) {
     return null;
   }
-
   if (results.length === 0) {
     return (
       <div className="py-12">
@@ -77,29 +82,29 @@ export function SchoolClassesList() {
       </div>
     );
   }
-
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {results.map((c) => (
-        <ClassItem cls={c} key={c._id} />
-      ))}
-      {status === "CanLoadMore" && (
-        <Intersection onIntersect={() => loadMore(25)} />
-      )}
-    </section>
+    <>
+      {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {results.map((c) => (
+          <ClassItem cls={c} key={c._id} />
+        ))}
+        {PaginatedQueryResult.isCanLoadMore(pagination) && (
+          <Intersection onIntersect={() => pagination.loadMore(25)} />
+        )}
+      </section>
+    </>
   );
 }
 
 /** Render one class card within the school class directory. */
-function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
+function ClassItem({ cls }: { cls: Docs["schoolClasses"] }) {
   const pathname = usePathname();
   const [imageError, setImageError] = useState(false);
   const imageSrc = imageError
     ? getClassImageUrl(getRandomClassImage(`${cls._id}`))
     : getClassImageUrl(cls.image);
-
   const t = useTranslations("School.Classes");
-
   return (
     <Card className="relative gap-0 overflow-hidden p-0 transition-colors ease-out hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))] hover:ring-primary/50">
       <NavigationLink

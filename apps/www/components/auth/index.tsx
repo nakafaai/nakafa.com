@@ -1,6 +1,7 @@
 "use client";
 
 import { Authenticated, Unauthenticated } from "convex/react";
+
 import { AuthGoogle } from "@/components/auth/google";
 import { AuthLogout } from "@/components/auth/logout";
 

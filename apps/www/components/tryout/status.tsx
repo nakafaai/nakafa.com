@@ -6,13 +6,13 @@ import {
   ClockAlertIcon,
   PlayCircle02Icon,
 } from "@hugeicons/core-free-icons";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 
-export type TryoutStatusValue = Doc<"tryoutSetProgress">["status"];
+export type TryoutStatusValue = Docs["tryoutSetProgress"]["status"];
 type TryoutStatus = TryoutStatusValue | null;
 
 /** Resolve the shared icon for one try-out workflow status. */

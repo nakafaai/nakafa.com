@@ -22,7 +22,6 @@ type QuranCatalogResult = FunctionReturnType<
 export type PublishedQuranCatalog = PublishedQuranSource & {
   readonly surahs: readonly PublishedQuranSurah[];
 };
-
 interface QuranSurahTransportProjection {
   readonly name: {
     readonly arabic: string;
@@ -50,7 +49,13 @@ export const decodePublishedQuranSurah = Effect.fn(
       )
     )
   );
-  return { ...projection, name: { ...name, meaning } };
+  return {
+    ...projection,
+    name: {
+      ...name,
+      meaning,
+    },
+  };
 });
 
 /** Decodes the complete active signed Quran metadata catalog. */
@@ -68,5 +73,8 @@ export const decodePublishedQuranCatalog = Effect.fn(
       "Signed Quran catalog is incomplete or out of order."
     );
   }
-  return { ...source, surahs } satisfies PublishedQuranCatalog;
+  return {
+    ...source,
+    surahs,
+  } satisfies PublishedQuranCatalog;
 });

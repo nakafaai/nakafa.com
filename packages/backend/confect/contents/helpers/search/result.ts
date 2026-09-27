@@ -1,0 +1,56 @@
+import { buildContentSearchExcerpt } from "@repo/backend/confect/contents/helpers/search/excerpt";
+import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
+import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import { NAKAFA_AGENT_MAX_OFFSET } from "@repo/contents/agent/search";
+import type { Schema } from "effect";
+
+type ContentSearchInput = Schema.Schema.Type<
+  typeof contentSearchInputValidator
+>;
+
+/** Builds the stable paginated search response shape used by tools and UI. */
+export function buildContentSearchResult(
+  args: ContentSearchInput,
+  ranked: readonly ContentSearchDocument[],
+  queryTexts: readonly string[]
+) {
+  const items = ranked
+    .slice(args.offset, args.offset + args.limit)
+    .map((document) => ({
+      alignmentId: document.alignmentId,
+      assetId: document.assetId,
+      conceptId: document.conceptId,
+      content_id: document.content_id,
+      description: document.description,
+      excerpt: buildContentSearchExcerpt(document, queryTexts),
+      learningObjectId: document.learningObjectId,
+      lensId: document.lensId,
+      locale: document.locale,
+      ...(document.markdown_url === undefined
+        ? {}
+        : {
+            markdown_url: document.markdown_url,
+          }),
+      route: document.route,
+      section: document.section,
+      title: document.title,
+      url: document.url,
+    }));
+  const nextOffset = args.offset + items.length;
+  const hasMore =
+    ranked.length > nextOffset && nextOffset <= NAKAFA_AGENT_MAX_OFFSET;
+  const result = {
+    count: items.length,
+    has_more: hasMore,
+    items,
+    limit: args.limit,
+    offset: args.offset,
+  };
+  if (!hasMore) {
+    return result;
+  }
+  return {
+    ...result,
+    next_offset: nextOffset,
+  };
+}

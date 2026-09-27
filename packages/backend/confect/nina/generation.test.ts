@@ -1,0 +1,500 @@
+import { GatewayRateLimitError } from "@ai-sdk/gateway";
+import { Ref } from "@confect/core";
+import { Agent, listUIMessages } from "@convex-dev/agent";
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import { components } from "@repo/backend/confect/_generated/components";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  GatewayConfigurationError,
+  getGatewayModel,
+} from "@repo/backend/confect/nina/config/provider";
+import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
+import {
+  createNinaTest,
+  ninaModel,
+  ninaStream,
+  ninaUsage,
+} from "@repo/backend/test/nina";
+import {
+  AISDKError,
+  APICallError,
+  NoOutputGeneratedError,
+  RetryError,
+} from "ai";
+import { MockLanguageModelV4 } from "ai/test";
+import { Effect } from "effect";
+
+vi.mock("@repo/backend/confect/nina/config/provider", async (original) => ({
+  ...(await original<
+    typeof import("@repo/backend/confect/nina/config/provider")
+  >()),
+  getGatewayModel: vi.fn(),
+}));
+vi.mock("@repo/backend/confect/nina/nakafa/tools/read", () => ({
+  read: vi.fn(),
+}));
+
+async function fixture(withTool = false) {
+  const seeded = await createNinaTest({
+    prompt: "Explain a function limit.",
+    needsFetch: withTool,
+  });
+  const { t, identity, ...saved } = seeded;
+  const inspect = () =>
+    t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      turn: await ctx.db.get("ninaTurns", saved.turnId),
+      chat: await ctx.db.get("chats", saved.chatId),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+      messages: await listUIMessages(ctx, components.nina, {
+        threadId: saved.threadId,
+        paginationOpts: { cursor: null, numItems: 20 },
+      }),
+    }));
+  return { ...seeded, inspect };
+}
+
+const run = Ref.getFunctionReference(refs.internal.nina.response.run);
+
+afterEach(() => vi.restoreAllMocks());
+
+describe("Nina generation through the real Agent component", () => {
+  it.effect.each([
+    [429, "provider-busy"],
+    [503, "provider-unavailable"],
+    [408, "response-timeout"],
+    [504, "response-timeout"],
+    [413, "input-too-large"],
+    [400, "request-rejected"],
+    [422, "request-rejected"],
+    [401, "service-configuration"],
+    [402, "service-configuration"],
+    [403, "service-configuration"],
+    [404, "service-configuration"],
+    [424, "service-configuration"],
+    [409, "unknown"],
+    [undefined, "unknown"],
+  ] as const)(
+    "persists a safe reason for provider status %s",
+    ([statusCode, reason]) =>
+      Effect.gen(function* () {
+        const error = new APICallError({
+          message: "private provider diagnostic",
+          url: "https://provider.example.invalid",
+          requestBodyValues: {},
+          ...(statusCode === undefined ? {} : { statusCode }),
+        });
+        const languageModel = new MockLanguageModelV4({
+          doStream: ninaStream([{ type: "error", error }]),
+        });
+        vi.mocked(getGatewayModel).mockReturnValue(
+          Effect.succeed(languageModel)
+        );
+        const f = yield* Effect.promise(() => fixture());
+        yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+        const state = yield* Effect.promise(f.inspect);
+        expect(state.turn?.state).toMatchObject({ status: "failed", reason });
+        expect(state.user?.credits).toBe(10);
+        const page = yield* Effect.promise(() =>
+          f.owner.query(
+            Ref.getFunctionReference(refs.public.nina.messages.list),
+            {
+              chatId: f.chatId,
+              threadId: f.threadId,
+              paginationOpts: { cursor: null, numItems: 20 },
+            }
+          )
+        ).pipe(
+          Effect.flatMap((value) =>
+            Ref.decodeReturns(refs.public.nina.messages.list, value)
+          )
+        );
+        expect(
+          page.page.some(
+            (message) =>
+              message.metadata?.state.status === "failed" &&
+              message.metadata.state.reason === reason
+          )
+        ).toBe(true);
+        expect(JSON.stringify(page)).not.toContain(
+          "private provider diagnostic"
+        );
+      })
+  );
+
+  it.effect.each([
+    [
+      new RetryError({
+        message: "Retries exhausted",
+        reason: "maxRetriesExceeded",
+        errors: [new GatewayRateLimitError()],
+      }),
+      "provider-busy",
+    ],
+    [
+      new NoOutputGeneratedError({ cause: new GatewayRateLimitError() }),
+      "provider-busy",
+    ],
+    [new DOMException("Timed out", "TimeoutError"), "response-timeout"],
+    [new DOMException("Aborted", "AbortError"), "interrupted"],
+    [new NoOutputGeneratedError(), "unknown"],
+    ["unstructured provider failure", "unknown"],
+    [
+      new AISDKError({
+        name: "GatewayError",
+        message: "private authentication diagnostic",
+      }),
+      "service-configuration",
+    ],
+    [
+      Object.assign(new Error("private authentication diagnostic"), {
+        name: "GatewayAuthenticationError",
+      }),
+      "service-configuration",
+    ],
+  ] as const)(
+    "retains the expected reason through SDK error envelopes: %s",
+    ([error, reason]) =>
+      Effect.gen(function* () {
+        vi.mocked(getGatewayModel).mockReturnValue(
+          Effect.succeed(
+            new MockLanguageModelV4({
+              doStream: ninaStream([{ type: "error", error }]),
+            })
+          )
+        );
+        const f = yield* Effect.promise(() => fixture());
+        yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+        expect((yield* Effect.promise(f.inspect)).turn?.state).toMatchObject({
+          status: "failed",
+          reason,
+        });
+      })
+  );
+
+  it.effect.each([
+    ["content-filter", "content-blocked"],
+    ["length", "response-limit"],
+    ["tool-calls", "response-limit"],
+    ["stop", "unknown"],
+    ["error", "unknown"],
+    ["other", "unknown"],
+  ] as const)(
+    "classifies a %s response without final text",
+    ([finishReason, reason]) =>
+      Effect.gen(function* () {
+        vi.mocked(getGatewayModel).mockReturnValue(
+          Effect.succeed(
+            new MockLanguageModelV4({
+              doStream: ninaStream([
+                { type: "stream-start", warnings: [] },
+                {
+                  type: "finish",
+                  finishReason: { unified: finishReason, raw: finishReason },
+                  usage: ninaUsage,
+                },
+              ]),
+            })
+          )
+        );
+        const f = yield* Effect.promise(() => fixture());
+        yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+        const state = yield* Effect.promise(f.inspect);
+        expect(state.turn?.state).toMatchObject({ status: "failed", reason });
+        expect(state.user?.credits).toBe(10);
+      })
+  );
+
+  it("identifies missing Gateway configuration before a provider request", async () => {
+    vi.mocked(getGatewayModel).mockReturnValue(
+      Effect.fail(
+        new GatewayConfigurationError({
+          message: "AI Gateway is not configured.",
+        })
+      )
+    );
+    const f = await fixture();
+    await f.t.action(run, { turnId: f.turnId });
+    expect((await f.inspect()).turn?.state).toMatchObject({
+      status: "failed",
+      reason: "service-configuration",
+    });
+  });
+
+  it.effect("refunds a failure before the Agent stream starts", () =>
+    Effect.gen(function* () {
+      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(ninaModel()));
+      vi.spyOn(Agent.prototype, "streamText").mockRejectedValueOnce(
+        new GatewayRateLimitError()
+      );
+      const f = yield* Effect.promise(() => fixture());
+      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+      const state = yield* Effect.promise(f.inspect);
+      expect(state.turn?.state).toMatchObject({
+        status: "failed",
+        reason: "provider-busy",
+      });
+      expect(state.user?.credits).toBe(10);
+      expect(state.ledger.filter((row) => row.type === "refund")).toHaveLength(
+        1
+      );
+    })
+  );
+
+  it.effect("keeps an answer when the provider omits usage counters", () =>
+    Effect.gen(function* () {
+      const languageModel = ninaModel();
+      languageModel.doStream = async () =>
+        ninaStream([
+          { type: "stream-start", warnings: [] },
+          { type: "text-start", id: "answer" },
+          { type: "text-delta", id: "answer", delta: "A recorded answer." },
+          { type: "text-end", id: "answer" },
+          {
+            type: "finish",
+            finishReason: { unified: "stop", raw: "stop" },
+            usage: {
+              inputTokens: {
+                total: undefined,
+                noCache: undefined,
+                cacheRead: undefined,
+                cacheWrite: undefined,
+              },
+              outputTokens: {
+                total: undefined,
+                text: undefined,
+                reasoning: undefined,
+              },
+            },
+          },
+        ]);
+      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+      const f = yield* Effect.promise(() => fixture());
+      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+      const state = yield* Effect.promise(f.inspect);
+      expect(state.turn?.state.status).toBe("complete");
+      expect(
+        state.turn?.usage.find((row) => row.agent === "nina")
+      ).toMatchObject({ input: 0, output: 0 });
+    })
+  );
+
+  it.effect("retains the first stream failure through abort cleanup", () =>
+    Effect.gen(function* () {
+      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(ninaModel()));
+      vi.spyOn(Agent.prototype, "streamText").mockImplementationOnce(
+        async (_ctx, _thread, options) => {
+          await options.onError?.({ error: new GatewayRateLimitError() });
+          await options.onError?.({ error: new Error("cleanup failure") });
+          await options.onAbort?.({ callId: "cancelled", steps: [] });
+          return Promise.reject(new Error("stream cleanup failed"));
+        }
+      );
+      const f = yield* Effect.promise(() => fixture());
+      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+      expect((yield* Effect.promise(f.inspect)).turn?.state).toMatchObject({
+        status: "failed",
+        reason: "provider-busy",
+      });
+    })
+  );
+
+  it.effect("records an Agent abort without exposing its diagnostic", () =>
+    Effect.gen(function* () {
+      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(ninaModel()));
+      vi.spyOn(Agent.prototype, "streamText").mockImplementationOnce(
+        async (_ctx, _thread, options) => {
+          await options.onAbort?.({ callId: "cancelled", steps: [] });
+          return Promise.reject(new Error("private abort diagnostic"));
+        }
+      );
+      const f = yield* Effect.promise(() => fixture());
+      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+      const state = yield* Effect.promise(f.inspect);
+      expect(state.turn?.state).toMatchObject({
+        status: "failed",
+        reason: "interrupted",
+      });
+      expect(state.user?.credits).toBe(10);
+    })
+  );
+
+  it("persists reasoning, sources and the final answer, with presentation grounded in the saved prompt", async () => {
+    const languageModel = ninaModel();
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    const f = await fixture();
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("ninaTurns", f.turnId, {
+        user: {
+          role: "teacher",
+          curriculumPreference: {
+            program: {
+              key: "cambridge-lower-secondary",
+              title: "Cambridge Lower Secondary",
+            },
+          },
+        },
+      })
+    );
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.inspect();
+    expect(state.turn?.state.status).toBe("complete");
+    expect(state.turn?.suggestions).toEqual([
+      "How does this relate to continuity?",
+    ]);
+    expect(state.turn?.usage.map((row) => row.agent).sort()).toEqual([
+      "nina",
+      "suggestions",
+      "title",
+    ]);
+    expect(state.chat?.title).toBe("Understanding A Function Limit");
+    expect(state.user?.credits).toBe(8);
+    expect(state.messages.page).toHaveLength(2);
+    const answer = state.messages.page.find(
+      (message) => message.role === "assistant"
+    );
+    expect(answer?.parts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "reasoning",
+          text: "Check the evidence.",
+        }),
+        expect.objectContaining({
+          type: "text",
+          text: "A limit describes the value approached.",
+        }),
+        expect.objectContaining({
+          type: "source-url",
+          url: "https://example.com/limits",
+        }),
+      ])
+    );
+    expect(JSON.stringify(languageModel.doStreamCalls[0]?.prompt)).toContain(
+      "Cambridge Lower Secondary"
+    );
+    expect(JSON.stringify(languageModel.doStreamCalls[0]?.prompt)).toContain(
+      "teacher"
+    );
+    const [suggestionCall, titleCall] = languageModel.doGenerateCalls;
+    expect(JSON.stringify(suggestionCall?.prompt)).toContain(
+      "Explain a function limit."
+    );
+    expect(JSON.stringify(suggestionCall?.prompt)).toContain(
+      "A limit describes the value approached."
+    );
+    expect(JSON.stringify(titleCall?.prompt)).toContain(
+      "Explain a function limit."
+    );
+    expect(JSON.stringify(titleCall?.prompt)).not.toContain(
+      "A limit describes the value approached."
+    );
+  });
+
+  it("keeps progressive tool cards in permanent messages after the live stream ends", async () => {
+    const languageModel = ninaModel(true);
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    vi.mocked(read).mockImplementation(({ input, toolCallId, publish }) =>
+      Effect.gen(function* () {
+        yield* publish({
+          id: toolCallId,
+          type: "data-nakafa",
+          data: { kind: "content", status: "loading", input },
+        });
+        yield* publish({
+          id: toolCallId,
+          type: "data-nakafa",
+          data: {
+            kind: "content",
+            status: "error",
+            input,
+            error: "Fixture evidence unavailable",
+          },
+        });
+        return "Fixture evidence unavailable";
+      })
+    );
+    const f = await fixture(true);
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.inspect();
+    expect(state.turn?.state.status).toBe("complete");
+    expect(languageModel.doStreamCalls).toHaveLength(2);
+    expect(
+      languageModel.doStreamCalls[1]?.prompt.filter(
+        (message) => message.role === "tool"
+      )
+    ).toEqual([
+      {
+        role: "tool",
+        content: [
+          expect.objectContaining({
+            type: "tool-result",
+            toolCallId: "read-1",
+            output: { type: "text", value: "Fixture evidence unavailable" },
+          }),
+        ],
+      },
+    ]);
+    const answer = state.messages.page.find(
+      (message) => message.role === "assistant"
+    );
+    expect(answer?.parts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "tool-nakafa",
+          state: "output-available",
+          output: {
+            text: "Fixture evidence unavailable",
+            artifacts: [
+              {
+                id: "read-1",
+                type: "data-nakafa",
+                data: {
+                  kind: "content",
+                  status: "error",
+                  input: { content_ref: "https://nakafa.com/en/home" },
+                  error: "Fixture evidence unavailable",
+                },
+              },
+            ],
+          },
+        }),
+      ])
+    );
+    expect(state.turn?.usage.find((row) => row.agent === "nina")?.calls).toBe(
+      2
+    );
+  });
+
+  it("refunds an interrupted provider without generating a title or follow-up", async () => {
+    const languageModel = ninaModel(false, true);
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    const f = await fixture();
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.inspect();
+    expect(state.turn?.state.status).toBe("failed");
+    expect(state.user?.credits).toBe(10);
+    expect(state.ledger.filter((row) => row.type === "refund")).toHaveLength(1);
+    expect(languageModel.doGenerateCalls).toHaveLength(0);
+  });
+
+  it("repairs the first page fetch using verified context without another model request", async () => {
+    const languageModel = ninaModel(true, false, {});
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    vi.mocked(read).mockReturnValue(Effect.succeed("Verified page evidence"));
+    const f = await fixture(true);
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.inspect();
+    expect(state.turn?.state.status).toBe("complete");
+    expect(read).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: { content_ref: "https://nakafa.com/en/home" },
+      })
+    );
+    expect(state.turn?.usage.map((entry) => entry.agent).sort()).toEqual([
+      "nina",
+      "suggestions",
+      "title",
+    ]);
+    expect(languageModel.doGenerateCalls).toHaveLength(2);
+  });
+});

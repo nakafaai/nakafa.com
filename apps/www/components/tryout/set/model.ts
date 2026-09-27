@@ -1,14 +1,16 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
+
 import type { Locale } from "next-intl";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
 /** Convex query contract for the set discovery page. */
-export type SetPageQuery = typeof api.tryouts.queries.catalog.getSetPage;
+export type SetPageQuery =
+  typeof refs.public.tryouts.queries.catalog.getSetPage;
 
 type SetAttemptPageResult = Extract<
   NonNullable<
-    FunctionReturnType<typeof api.tryouts.queries.attemptPage.getSet>
+    Ref.Returns<typeof refs.public.tryouts.queries.attemptPage.getSet>
   >,
   { kind: "current" | "retained" }
 >;
@@ -18,7 +20,7 @@ export type TryoutSetInitialState = SetAttemptPageResult["initialState"];
 
 /** Loaded try-out set discovery payload. */
 export type SetPage =
-  | NonNullable<FunctionReturnType<SetPageQuery>>
+  | NonNullable<Ref.Returns<SetPageQuery>>
   | SetAttemptPageResult["page"];
 
 /** Internal section used by direct-entry sets. */
@@ -26,13 +28,13 @@ export type SetEntrySection = NonNullable<SetPage["entrySection"]>;
 
 /** Current attempt payload returned by Convex. */
 export type CurrentAttempt = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.runtime.getSetAttemptState>
+  Ref.Returns<typeof refs.public.tryouts.queries.runtime.getSetAttemptState>
 >["attempt"];
 
 /** Loaded section runtime payload after null checks. */
 export type LoadedRuntime = NonNullable<
   NonNullable<
-    FunctionReturnType<typeof api.tryouts.queries.runtime.getSetAttemptState>
+    Ref.Returns<typeof refs.public.tryouts.queries.runtime.getSetAttemptState>
   >["runtime"]
 >;
 

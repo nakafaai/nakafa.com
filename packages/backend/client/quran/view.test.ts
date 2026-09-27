@@ -137,6 +137,63 @@ describe("signed Quran view decoder", () => {
       expect(inconsistent._tag).toBe("Failure");
     })
   );
+  it.live(
+    "rejects an active publication with a missing locale projection",
+    () =>
+      Effect.gen(function* () {
+        for (const missing of [
+          { surah: null },
+          { sources: null },
+          { tafsirAccess: null },
+          { sources: makeQuranLocaleSources("de") },
+        ]) {
+          const failure = yield* Effect.flip(
+            decodePublishedQuranView(
+              { ...englishViewResult(), ...missing },
+              {
+                appLocale: "en",
+                surahNumber: 1,
+              }
+            )
+          );
+          expect(failure).toMatchObject({
+            _tag: "QuranPublicationError",
+            reason: "Signed Quran view is missing.",
+          });
+        }
+      })
+  );
+  it.live(
+    "preserves previous navigation at the end of the signed catalog",
+    () =>
+      Effect.gen(function* () {
+        const last = {
+          ...surah,
+          number: 114,
+          name: { ...surah.name, sourceMeaning: makeQuranMeaning(114) },
+        };
+        const previous = {
+          ...surah,
+          number: 113,
+          name: { ...surah.name, sourceMeaning: makeQuranMeaning(113) },
+        };
+        const view = yield* decodePublishedQuranView(
+          {
+            ...englishViewResult(),
+            nextSurah: null,
+            previousSurah: previous,
+            surah: last,
+          },
+          { appLocale: "en", surahNumber: 114 }
+        );
+        expect(view.nextSurah).toBeNull();
+        expect(view.previousSurah).toMatchObject({
+          number: 113,
+          name: { meaning: makeQuranMeaning(113) },
+        });
+        expect(view.surah.name.meaning).toEqual(makeQuranMeaning(114));
+      })
+  );
 });
 /** Builds source and metadata shared by app-locale view fixtures. */
 function viewBase() {

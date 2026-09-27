@@ -1,7 +1,6 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
-
 import {
   type ActiveAppLocaleCode,
   AppLocaleSchema,
@@ -10,7 +9,7 @@ import {
   canonicalizePublicPageProjection,
   type PublicPageProjection,
 } from "@nakafa/aksara-contracts/projection/page";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
@@ -25,16 +24,22 @@ export interface PublishedPageCatalog {
   readonly activeReleaseId: ActiveContentReleaseId;
   readonly projections: readonly PublicPageProjection[];
 }
-
 interface PublishedPageRead {
   readonly projection: PublicPageProjection;
 }
 
 /** Result of resolving one Page identity into another active locale. */
 export type PublishedPageLocalePath =
-  | { readonly kind: "found"; readonly publicPath: string }
-  | { readonly kind: "missing" }
-  | { readonly kind: "unmanaged" };
+  | {
+      readonly kind: "found";
+      readonly publicPath: string;
+    }
+  | {
+      readonly kind: "missing";
+    }
+  | {
+      readonly kind: "unmanaged";
+    };
 
 /** Reads and strictly decodes every locale-equivalent Page projection. */
 export const readPublishedPageCatalog = Effect.fn(
@@ -44,11 +49,9 @@ export const readPublishedPageCatalog = Effect.fn(
     appLocale: AppLocaleSchema.make(routing.defaultLocale),
     publicPath: "pages",
   };
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.page.catalog,
-    {}
-  );
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.page.catalog, {})
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     undefined,
@@ -69,14 +72,19 @@ export const readPublishedPageCatalog = Effect.fn(
       publicPath: collision.publicPath,
     });
   }
-  return { activeReleaseId, projections } satisfies PublishedPageCatalog;
+  return {
+    activeReleaseId,
+    projections,
+  } satisfies PublishedPageCatalog;
 });
 
 /** Caches the complete Page catalog under its signed family owner. */
 export async function getPublishedPageCatalog() {
   "use cache";
 
-  const catalog = await Effect.runPromise(readPublishedPageCatalog());
+  const catalog = await Effect.runPromise(
+    readPublishedPageCatalog().pipe(Effect.withTracerTiming(false))
+  );
   applyContentCache("page");
   return catalog;
 }
@@ -123,14 +131,18 @@ export const readPublishedPageLocalePath = Effect.fn(
       projection.publicPath === publicPath
   );
   if (!current) {
-    return { kind: "unmanaged" } satisfies PublishedPageLocalePath;
+    return {
+      kind: "unmanaged",
+    } satisfies PublishedPageLocalePath;
   }
   const target = catalog.projections.find(
     (projection) =>
       projection.appLocale === locale && projection.pageKey === current.pageKey
   );
   if (!target) {
-    return { kind: "missing" } satisfies PublishedPageLocalePath;
+    return {
+      kind: "missing",
+    } satisfies PublishedPageLocalePath;
   }
   return {
     kind: "found",

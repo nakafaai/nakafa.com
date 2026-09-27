@@ -1,3 +1,6 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { PROGRAM_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
+import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
 import { loadProgramOwner } from "@repo/backend/content/program/owner";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import {
@@ -5,9 +8,6 @@ import {
   verifyProgram,
 } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { PROGRAM_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
-import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
 
 /** Reads and authenticates the complete catalog with localized root closure. */
@@ -101,7 +101,6 @@ export const readProgramCatalog = Effect.fn(
   "contentRelease.readProgramCatalog"
 )(function* (appLocale: PublicationRow<"curriculumRoutes">["appLocale"]) {
   const catalog = yield* readVerifiedProgramCatalog(appLocale);
-
   return {
     activeManifestHash: catalog.activeManifestHash,
     activeReleaseId: catalog.activeReleaseId,

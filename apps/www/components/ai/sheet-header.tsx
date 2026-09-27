@@ -33,7 +33,7 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
     <SheetHeaderPrimitive className="border-b p-3">
       <SheetTitle className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 px-2">
-          <div className="flex items-center gap-2 text-base">
+          <div className="flex items-center gap-2 text-chat">
             <HugeIcons className="size-4" icon={StarsIcon} />
             <span>Nina</span>
           </div>

@@ -12,16 +12,25 @@ export const readProgramPath = Effect.fn("contentRelease.readProgramPath")(
   ) {
     const owner = yield* loadProgramOwner(appLocale);
     if (!(owner.managed && owner.selected)) {
-      return { managed: false, routeJson: null };
+      return {
+        managed: false,
+        routeJson: null,
+      };
     }
     const source = yield* ProgramSource;
     const route = yield* source
       .route(owner.selected.snapshotId, appLocale, publicPath)
       .pipe(Effect.map(Option.getOrNull));
     if (!route) {
-      return { managed: true, routeJson: null };
+      return {
+        managed: true,
+        routeJson: null,
+      };
     }
     yield* verifyCurriculum(route, owner.selected.snapshotId);
-    return { managed: true, routeJson: route.rowJson };
+    return {
+      managed: true,
+      routeJson: route.rowJson,
+    };
   }
 );

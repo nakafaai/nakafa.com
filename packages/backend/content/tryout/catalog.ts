@@ -2,13 +2,13 @@ import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
 import type { TryoutCatalogCounts } from "@nakafa/aksara-contracts/tryout/snapshot/spec";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
+import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
 import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
 import { findTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
-import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { Effect, Option } from "effect";
 
 /** Counts each hierarchy kind in one verified localized catalog. */
@@ -69,7 +69,6 @@ export const findTryoutCatalog = Effect.fn("contentRelease.findTryoutCatalog")(
     if (Option.isNone(owner)) {
       return Option.none();
     }
-
     const { active, snapshot, snapshotId } = owner.value;
     const catalog = yield* loadStoredTryoutCatalog(locale, {
       activeManifestHash: active.manifestHash,
@@ -90,7 +89,6 @@ export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
     if (Option.isSome(catalog)) {
       return catalog.value;
     }
-
     return yield* releaseFail(
       "CONTENT_RELEASE_MISSING",
       "The active signed try-out snapshot is unavailable."
@@ -124,7 +122,9 @@ const loadStoredTryoutCatalog = Effect.fn(
     readonly bundleHash: string | null;
     readonly snapshot: Extract<
       ContentSnapshotManifest,
-      { readonly family: "tryout" }
+      {
+        readonly family: "tryout";
+      }
     >;
     readonly snapshotId: string;
     readonly sourceRevision: string | null;

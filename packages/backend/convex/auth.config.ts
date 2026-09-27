@@ -1,10 +1,3 @@
-import { getAuthConfigProvider } from "@convex-dev/better-auth/auth-config";
-import type { AuthConfig } from "convex/server";
+import auth from "../confect/auth";
 
-export default {
-  providers: [
-    getAuthConfigProvider({
-      ...(process.env.JWKS === undefined ? {} : { jwks: process.env.JWKS }),
-    }),
-  ],
-} satisfies AuthConfig;
+export default auth;

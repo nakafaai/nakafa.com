@@ -1,12 +1,12 @@
-import { loadMaterialOwner } from "@repo/backend/content/material/owner";
-import { readMaterialPartition } from "@repo/backend/content/material/partition";
-import { MaterialSource } from "@repo/backend/content/material/source";
 import {
   CONTENT_BUCKET_LIMIT,
   CONTENT_BUCKET_SIZE,
   isProjectionBucket,
-} from "@repo/backend/convex/contentRelease/bucket";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+} from "@repo/backend/confect/contentRelease/bucket";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { loadMaterialOwner } from "@repo/backend/content/material/owner";
+import { readMaterialPartition } from "@repo/backend/content/material/partition";
+import { MaterialSource } from "@repo/backend/content/material/source";
 import { Effect } from "effect";
 
 /** Lists non-empty deterministic partitions for visible published materials. */

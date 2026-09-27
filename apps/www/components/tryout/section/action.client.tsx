@@ -7,7 +7,6 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import type { TryoutSectionAttempt } from "@/components/tryout/runtime/types";
 import { StartSectionButton } from "@/components/tryout/section/start";
@@ -20,7 +19,6 @@ import { isActiveLocale } from "@/lib/i18n/active";
 
 type CurrentAttempt = TryoutSectionAttempt | null;
 type CompletedAction = "restart" | "return";
-
 interface TryoutSummarySet {
   countryKey: string;
   examKey: string;
@@ -47,7 +45,6 @@ export interface TryoutSummaryActionValue {
   startAttemptSectionKey?: string;
   startDestination: TryoutStartDestination | null;
 }
-
 interface ResumeSectionValue {
   activeAttempt: NonNullable<CurrentAttempt>;
   returnHref: string;
@@ -63,13 +60,10 @@ export function TryoutSummaryAction({
   if (!isActiveLocale(value.locale)) {
     return null;
   }
-
   const startDestination = value.startDestination;
-
   if (value.sectionFinished && value.completedAction === "return") {
     return <TryoutReturnAction value={value} />;
   }
-
   if (value.activeAttempt && !value.activeAttempt.section) {
     return (
       <StartOrResumeSectionCta
@@ -81,15 +75,12 @@ export function TryoutSummaryAction({
       />
     );
   }
-
   if (value.activeAttempt) {
     return null;
   }
-
   if (!startDestination) {
     return <TryoutReturnAction value={value} />;
   }
-
   const request: StartTryoutRequest = {
     authRedirectHref: startDestination.href,
     countryKey: value.set.countryKey,
@@ -97,14 +88,15 @@ export function TryoutSummaryAction({
     destinationSectionKey: value.section.sectionKey,
     ...(value.startAttemptSectionKey === undefined
       ? {}
-      : { entrySectionKey: value.startAttemptSectionKey }),
+      : {
+          entrySectionKey: value.startAttemptSectionKey,
+        }),
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,
     successNavigation: startDestination.successNavigation,
     trackKey: value.set.trackKey,
   };
-
   return <StartTryoutButton attempt={value.attempt} request={request} />;
 }
 
@@ -115,21 +107,10 @@ function TryoutReturnAction({
   value: Pick<TryoutSummaryActionValue, "activeAttempt" | "returnHref">;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const prewarmData = useTryoutDataIntent();
-
   return (
     <IntentLink
       className={cn(buttonVariants(), "w-full sm:w-auto")}
       href={value.returnHref}
-      onIntent={() => {
-        if (!value.activeAttempt) {
-          return;
-        }
-        prewarmData({
-          attemptId: value.activeAttempt.attemptId,
-          kind: "set",
-        });
-      }}
     >
       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
       {tTryouts("back-to-set-cta")}
@@ -140,28 +121,18 @@ function TryoutReturnAction({
 /** Starts a ready section or links to the active section already in progress. */
 function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
   const tTryouts = useTranslations("Tryouts");
-  const prewarmData = useTryoutDataIntent();
   const resumeHref = getResumeHref(value);
   const resumeSectionKey = value.activeAttempt.resumeSectionKey;
-
   if (resumeHref && resumeSectionKey) {
     return (
       <IntentLink
         className={cn(buttonVariants(), "w-full sm:w-auto")}
         href={resumeHref}
-        onIntent={() =>
-          prewarmData({
-            attemptId: value.activeAttempt.attemptId,
-            kind: "section",
-            sectionKey: resumeSectionKey,
-          })
-        }
       >
         {tTryouts("continue-cta")}
       </IntentLink>
     );
   }
-
   return (
     <StartSectionButton
       attemptId={value.activeAttempt.attemptId}
@@ -173,21 +144,17 @@ function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
 /** Returns the active attempt target when it belongs to another section. */
 function getResumeHref(value: ResumeSectionValue) {
   const { activeAttempt, section } = value;
-
   if (!activeAttempt.resumeSectionKey) {
     return null;
   }
-
   if (activeAttempt.resumeSectionKey === section.sectionKey) {
     return null;
   }
-
   if (activeAttempt.resumeSectionPublicPath) {
     return getTryoutAttemptHref(
       activeAttempt.resumeSectionPublicPath,
       activeAttempt.attemptId
     );
   }
-
   return value.returnHref;
 }

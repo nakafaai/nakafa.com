@@ -1,3 +1,4 @@
+import type { Ref } from "@confect/core";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
@@ -7,11 +8,10 @@ import {
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type refs from "@repo/backend/confect/_generated/refs";
+import { ConsentAccountChanged } from "@repo/backend/confect/consents/current.spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { FunctionReturnType } from "convex/server";
-import { ConvexError } from "convex/values";
-import { Duration, Effect, Fiber, Option } from "effect";
+import { Duration, Effect, Fiber, Option, Result } from "effect";
 import { TestClock } from "effect/testing";
 import {
   AccountConsentPersistenceError,
@@ -28,7 +28,7 @@ const revokedDecision = {
   granted: false,
   mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-} satisfies FunctionReturnType<typeof api.consents.current.set>;
+} satisfies Ref.Returns<typeof refs.public.consents.current.set>;
 
 describe("browser analytics privacy signal", () => {
   it.effect("reads current browser values on every execution", () =>
@@ -58,10 +58,10 @@ describe("browser analytics privacy signal", () => {
   it.effect("succeeds after a bounded transient failure", () =>
     Effect.gen(function* () {
       const setAccountConsent = vi
-        .fn(() => Promise.resolve(revokedDecision))
+        .fn(() => Promise.resolve(Result.succeed(revokedDecision)))
         .mockRejectedValueOnce(new Error("offline"))
         .mockRejectedValueOnce(new Error("still offline"))
-        .mockResolvedValue(revokedDecision);
+        .mockResolvedValue(Result.succeed(revokedDecision));
       const fiber = yield* Effect.forkChild(
         revokeAccountAnalyticsGrant(
           setAccountConsent,
@@ -105,12 +105,14 @@ describe("browser analytics privacy signal", () => {
   it.effect("does not retry an authoritative account rejection", () =>
     Effect.gen(function* () {
       const setAccountConsent = vi.fn(() =>
-        Promise.reject(
-          new ConvexError({
-            code: "CONSENT_ACCOUNT_CHANGED",
-            message:
-              "The active account changed before consent could be saved.",
-          })
+        Promise.resolve(
+          Result.fail(
+            new ConsentAccountChanged({
+              code: "CONSENT_ACCOUNT_CHANGED",
+              message:
+                "The active account changed before consent could be saved.",
+            })
+          )
         )
       );
 
@@ -152,7 +154,9 @@ describe("browser analytics privacy signal", () => {
 
   it.effect("skips revocation after a stale signal clears", () =>
     Effect.gen(function* () {
-      const setAccountConsent = vi.fn(() => Promise.resolve(revokedDecision));
+      const setAccountConsent = vi.fn(() =>
+        Promise.resolve(Result.succeed(revokedDecision))
+      );
 
       const decision = yield* revokeAccountAnalyticsGrant(
         setAccountConsent,
@@ -200,7 +204,7 @@ describe("browser analytics privacy signal", () => {
         }),
       };
       const setAccountConsent = vi.fn((args) =>
-        Promise.resolve({ ...args.decision, decidedAt: 100 })
+        Promise.resolve(Result.succeed({ ...args.decision, decidedAt: 100 }))
       );
 
       yield* saveAccountAnalyticsChoice(
@@ -242,7 +246,7 @@ describe("browser analytics privacy signal", () => {
   it.effect("persists an explicit decline without changing its mechanism", () =>
     Effect.gen(function* () {
       const setAccountConsent = vi.fn((args) =>
-        Promise.resolve({ ...args.decision, decidedAt: 100 })
+        Promise.resolve(Result.succeed({ ...args.decision, decidedAt: 100 }))
       );
 
       yield* saveAccountAnalyticsChoice(

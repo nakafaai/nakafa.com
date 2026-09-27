@@ -3,30 +3,37 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import {
   readPublishedMaterialBuckets,
   readPublishedMaterialSitemap,
 } from "@/lib/content/material/sitemap";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
-import {
-  createTestNativeQuery,
-  createTestRuntimeQuery,
-} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const runtimeReadMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-material");
-
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: runtimeReadMock,
-}));
-
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 beforeEach(() => {
   runtimeQueryMock.mockReset();
-  runtimeReadMock.mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
 });
-
 describe("published material sitemap", () => {
   it.effect(
     "enumerates every localized route through authenticated bucket reads",
@@ -34,8 +41,7 @@ describe("published material sitemap", () => {
       Effect.gen(function* () {
         const fixture = yield* makeMaterialRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
-        runtimeReadMock.mockImplementation(createTestNativeQuery(context));
-
+        runtimeQueryMock.mockImplementation(context.query);
         const inventory = yield* readPublishedMaterialBuckets("de");
         const pages = yield* Effect.forEach(inventory.buckets, (bucket) =>
           readPublishedMaterialSitemap("de", [bucket]).pipe(
@@ -58,69 +64,82 @@ describe("published material sitemap", () => {
         );
       })
   );
-
   it.effect("decodes the release identity and reads one sitemap page", () =>
     Effect.gen(function* () {
       runtimeQueryMock
-        .mockResolvedValueOnce({
-          activeReleaseId,
-          buckets: ["abc"],
-          managed: true,
-          materialCount: 1,
-        })
-        .mockResolvedValueOnce({
-          routes: [
-            {
-              lastModified: "2025-04-27",
-              publicPath:
-                "subjects/mathematics/function-composition-inverse-function/function-concept",
-            },
-          ],
-        });
-
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId,
+            buckets: ["abc"],
+            managed: true,
+            materialCount: 1,
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeed({
+            routes: [
+              {
+                lastModified: "2025-04-27",
+                publicPath:
+                  "subjects/mathematics/function-composition-inverse-function/function-concept",
+              },
+            ],
+          })
+        );
       expect(yield* readPublishedMaterialBuckets("en")).toEqual({
         activeReleaseId,
         buckets: ["abc"],
         materialCount: 1,
       });
       expect(yield* readPublishedMaterialSitemap("en", ["abc"])).toMatchObject({
-        routes: [{ lastModified: "2025-04-27" }],
+        routes: [
+          {
+            lastModified: "2025-04-27",
+          },
+        ],
       });
     })
   );
-
   it.effect("rejects invalid and unmanaged material inventories", () =>
     Effect.gen(function* () {
       runtimeQueryMock
-        .mockResolvedValueOnce({
-          activeReleaseId: "",
-          buckets: [],
-          managed: false,
-          materialCount: 0,
-        })
-        .mockResolvedValueOnce({
-          activeReleaseId,
-          buckets: [],
-          managed: false,
-          materialCount: 0,
-        })
-        .mockResolvedValueOnce({
-          activeReleaseId: null,
-          buckets: [],
-          managed: true,
-          materialCount: 0,
-        });
-
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: "",
+            buckets: [],
+            managed: false,
+            materialCount: 0,
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId,
+            buckets: [],
+            managed: false,
+            materialCount: 0,
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: null,
+            buckets: [],
+            managed: true,
+            materialCount: 0,
+          })
+        );
       for (let attempt = 0; attempt < 3; attempt += 1) {
         const failure = yield* readPublishedMaterialBuckets("en").pipe(
           Effect.flip
         );
-        expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+        expect(failure).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
       }
     })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

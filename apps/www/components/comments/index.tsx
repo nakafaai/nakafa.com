@@ -3,7 +3,6 @@
 import { MessageMultiple01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { CommentsAdd } from "@/components/comments/add";
 import { CommentsList } from "@/components/comments/list";
 
 interface Props {
@@ -23,7 +22,6 @@ export function Comments({ slug }: Props) {
         {t("comments")}
       </h2>
       <div className="flex flex-col gap-6">
-        <CommentsAdd slug={slug} />
         <CommentsList slug={slug} />
       </div>
     </section>

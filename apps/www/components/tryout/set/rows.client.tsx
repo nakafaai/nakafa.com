@@ -2,7 +2,6 @@
 
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import { TryoutList } from "@/components/tryout/catalog/list";
-import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import {
   getTryoutAttemptHref,
   getTryoutPublicPathHref,
@@ -11,7 +10,6 @@ import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
 
 type SetSection = SetPage["sections"][number];
 type SectionStatus = CurrentAttempt["status"];
-
 export interface TryoutSectionRowsValue {
   attempt?: CurrentAttempt | null;
   emptyLabel: string;
@@ -25,7 +23,6 @@ export function TryoutSectionRows({
 }: {
   value: TryoutSectionRowsValue;
 }) {
-  const prewarmData = useTryoutDataIntent();
   const activeAttempt =
     value.attempt?.status === "in-progress" ? value.attempt : null;
   const boundAttempt = value.attempt ?? null;
@@ -33,7 +30,6 @@ export function TryoutSectionRows({
   const completedSections = new Set(value.attempt?.completedSectionKeys ?? []);
   const currentSectionKey = activeAttempt?.resumeSectionKey ?? null;
   const sections: readonly SectionRow[] = value.sections;
-
   return (
     <TryoutList
       emptyLabel={value.emptyLabel}
@@ -47,7 +43,6 @@ export function TryoutSectionRows({
           completedSections,
           sectionKey: section.sectionKey,
         });
-
         return [
           {
             current: section.sectionKey === currentSectionKey,
@@ -56,17 +51,11 @@ export function TryoutSectionRows({
               ? getTryoutAttemptHref(publicPath, boundAttempt.attemptId)
               : getTryoutPublicPathHref(publicPath),
             key: section.sectionKey,
-            onIntent: () => {
-              if (!activeAttempt) {
-                return;
-              }
-              prewarmData({
-                attemptId: activeAttempt.attemptId,
-                kind: "section",
-                sectionKey: section.sectionKey,
-              });
-            },
-            ...(status === undefined ? {} : { status }),
+            ...(status === undefined
+              ? {}
+              : {
+                  status,
+                }),
             title: section.title,
             visual: {
               icon: getMaterialIcon(section.sectionKey),
@@ -79,7 +68,6 @@ export function TryoutSectionRows({
     />
   );
 }
-
 type SectionRow = Pick<
   SetSection,
   "publicPath" | "questionCount" | "sectionKey" | "title"
@@ -98,7 +86,6 @@ function getSectionStatus({
   if (sectionKey === activeSectionKey) {
     return "in-progress";
   }
-
   if (completedSections.has(sectionKey)) {
     return "completed";
   }

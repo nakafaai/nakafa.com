@@ -1,3 +1,4 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   type AppLocale,
@@ -10,9 +11,9 @@ import {
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { writeSearchEntry } from "@repo/backend/confect/contentRelease/search/write";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { writeSearchEntry } from "@repo/backend/convex/contentRelease/search/write";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import { testSignedArtifact } from "@repo/backend/test/content/proof";
@@ -26,7 +27,7 @@ import {
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime/values";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Optional identities used to shape immutable runtime head fixtures. */
 export interface RuntimeHeadOptions {
@@ -75,11 +76,15 @@ export async function insertRuntimeArtifact(
       artifactHash,
       ...(options?.compiledCode === undefined
         ? {}
-        : { compiledCode: options?.compiledCode }),
+        : {
+            compiledCode: options?.compiledCode,
+          }),
       contentKey,
       ...(options?.plainText === undefined
         ? {}
-        : { plainText: options?.plainText }),
+        : {
+            plainText: options?.plainText,
+          }),
       rendererDomain: options?.rendererDomain,
     }),
     createdAt: TEST_RUNTIME_NOW,
@@ -176,13 +181,14 @@ export async function insertRuntimeIndex(
   const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
     JSON.parse(head.projectionJson)
   );
-  await runConvexProgram(
+  await Effect.runPromise(
     writeSearchEntry(
-      ctx,
       "blue",
       head,
       projection,
       options?.plainText ?? "Technical fixture"
+    ).pipe(
+      Effect.provide(RegisteredConvexFunction.mutationLayer(confectSchema, ctx))
     )
   );
 }
@@ -222,14 +228,22 @@ export async function insertRuntimeBinding(
   await ctx.db.insert("contentBindings", {
     batchHash: TEST_DIGEST,
     batchIndex: 0,
-    ...(ownerKey ? { contentKey: ownerKey } : {}),
+    ...(ownerKey
+      ? {
+          contentKey: ownerKey,
+        }
+      : {}),
     index: 0,
     appLocale,
     operation,
     publicPath,
     releaseId: bindingReleaseId,
     routeJson: testRouteJson({
-      ...(contentKey === null ? {} : { contentKey }),
+      ...(contentKey === null
+        ? {}
+        : {
+            contentKey,
+          }),
       operation,
       publicPath,
       releaseId: bindingReleaseId,
@@ -299,10 +313,14 @@ export async function insertSignedHead(
   const artifact = testSignedArtifact(rendererDomain, {
     ...(options?.artifactLocale === undefined
       ? {}
-      : { artifactLocale: options?.artifactLocale }),
+      : {
+          artifactLocale: options?.artifactLocale,
+        }),
     ...(options?.compiledCode === undefined
       ? {}
-      : { compiledCode: options?.compiledCode }),
+      : {
+          compiledCode: options?.compiledCode,
+        }),
     contentKey,
   });
   await insertRuntimeHead(ctx, delivery, contentKey, {

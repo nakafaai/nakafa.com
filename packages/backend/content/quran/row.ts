@@ -1,6 +1,7 @@
+/** Reads and authenticates one exact row from an active Quran snapshot. */
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { verifyQuranRow } from "@repo/backend/confect/contentRelease/quran/verify";
 import { QuranSource } from "@repo/backend/content/quran/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect, Option, type Schema } from "effect";
 /** Reads and authenticates one exact row from an active Quran snapshot. */
 export const readQuranRow = Effect.fn("contentRelease.readQuranRow")(function* <

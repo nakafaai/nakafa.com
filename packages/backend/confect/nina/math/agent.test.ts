@@ -1,0 +1,208 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
+import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
+import { compute } from "@repo/backend/confect/nina/math/tools/compute";
+import { ninaUsage } from "@repo/backend/test/nina";
+import {
+  runSpecialist,
+  specialistRequest,
+} from "@repo/backend/test/nina/specialist";
+import { MockLanguageModelV4 } from "ai/test";
+import { ConfigProvider, Effect } from "effect";
+
+vi.mock("@repo/backend/confect/nina/config/provider", () => ({
+  getGatewayModel: vi.fn(),
+}));
+vi.mock("@repo/backend/confect/nina/math/tools/compute", () => ({
+  compute: vi.fn(),
+}));
+afterEach(() => vi.restoreAllMocks());
+
+const cases = [
+  ["algebra", { operation: "simplify", expression: "x + x" }],
+  ["arithmetic", { operation: "evaluate", expression: "2 + 2" }],
+  ["calculus", { operation: "differentiate", expression: "x^2" }],
+  ["discrete", { operation: "gcd", values: ["84", "30"] }],
+  ["equation", { operation: "solve", expression: "x + 1 = 2" }],
+  [
+    "geometry",
+    {
+      operation: "distance",
+      points: [
+        { x: "0", y: "0" },
+        { x: "3", y: "4" },
+      ],
+    },
+  ],
+  [
+    "matrix",
+    {
+      operation: "determinant",
+      matrix: [
+        ["1", "0"],
+        ["0", "1"],
+      ],
+    },
+  ],
+  [
+    "probability",
+    {
+      operation: "distribution",
+      distribution: "bernoulli",
+      parameters: { p: "0.5" },
+    },
+  ],
+  ["series", { operation: "series", expression: "exp(x)" }],
+  ["statistics", { operation: "mean", values: ["1", "2", "3"] }],
+] as const;
+
+describe("math Agent execution", () => {
+  it.each(cases)(
+    "validates and computes %s through the Agent tool boundary",
+    async (toolName, input) => {
+      const usageHandler = vi.fn();
+      const model = new MockLanguageModelV4({
+        doGenerate: [
+          {
+            content: [
+              {
+                type: "tool-call",
+                toolCallId: "calculation",
+                toolName,
+                input: JSON.stringify(input),
+              },
+            ],
+            finishReason: { unified: "tool-calls", raw: "tool-calls" },
+            usage: ninaUsage,
+            warnings: [],
+          },
+          {
+            content: [{ type: "text", text: "Verified calculation." }],
+            finishReason: { unified: "stop", raw: "stop" },
+            usage: ninaUsage,
+            warnings: [],
+          },
+        ],
+      });
+      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      vi.mocked(compute).mockReturnValue(
+        Effect.succeed("Deterministic evidence.")
+      );
+      const result = await runSpecialist((userId) =>
+        runMathAgent({
+          ...specialistRequest,
+          userId,
+          publish: () => Effect.void,
+          usageHandler,
+        }).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({
+              NEXT_PUBLIC_CAS_URL: "https://math.example.invalid",
+              MATH_CAS_API_KEY: "test",
+            })
+          )
+        )
+      );
+      expect(result).toEqual({ text: "Verified calculation." });
+      expect(compute).toHaveBeenCalledWith(
+        expect.objectContaining({ input, toolCallId: "calculation" })
+      );
+      expect(usageHandler).toHaveBeenCalledTimes(2);
+      expect(model.doGenerateCalls).toHaveLength(2);
+      expect(JSON.stringify(model.doGenerateCalls[1]?.prompt)).toContain(
+        "Deterministic evidence."
+      );
+    }
+  );
+
+  it("keeps provider failure typed at the specialist boundary", async () => {
+    vi.mocked(getGatewayModel).mockReturnValue(
+      Effect.succeed(
+        new MockLanguageModelV4({
+          doGenerate: () => Promise.reject(new Error("provider rejected")),
+        })
+      )
+    );
+    const error = await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(
+        Effect.flip,
+        Effect.map(({ _tag, message }) => ({ _tag, message }))
+      )
+    );
+    expect(error).toMatchObject({
+      _tag: "MathGenerationError",
+      message: "Math generation failed.",
+    });
+  });
+
+  it("repairs missing arguments through Agent before executing the requested calculation", async () => {
+    const input = { operation: "simplify", expression: "x + x" };
+    const usageHandler = vi.fn();
+    const model = new MockLanguageModelV4({
+      doGenerate: [
+        {
+          content: [
+            {
+              type: "tool-call",
+              toolCallId: "repair",
+              toolName: "algebra",
+              input: '{"operation":"simplify"}',
+            },
+          ],
+          finishReason: { unified: "tool-calls", raw: "tool-calls" },
+          usage: ninaUsage,
+          warnings: [],
+        },
+        {
+          content: [{ type: "text", text: JSON.stringify(input) }],
+          finishReason: { unified: "stop", raw: "stop" },
+          usage: ninaUsage,
+          warnings: [],
+        },
+        {
+          content: [{ type: "text", text: "The checked result is 2x." }],
+          finishReason: { unified: "stop", raw: "stop" },
+          usage: ninaUsage,
+          warnings: [],
+        },
+      ],
+    });
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    vi.mocked(compute).mockReturnValue(Effect.succeed("2x"));
+    const result = await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        task: "Simplify x + x",
+        publish: () => Effect.void,
+        usageHandler,
+      }).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({
+            NEXT_PUBLIC_CAS_URL: "https://math.example.invalid",
+            MATH_CAS_API_KEY: "test",
+          })
+        )
+      )
+    );
+    expect(result.text).toBe("The checked result is 2x.");
+    expect(compute).toHaveBeenCalledWith(
+      expect.objectContaining({ input, toolCallId: "repair" })
+    );
+    expect(usageHandler).toHaveBeenCalledTimes(3);
+    expect(usageHandler).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        agentName: "math-repair",
+        userId: expect.any(String),
+      })
+    );
+  });
+});

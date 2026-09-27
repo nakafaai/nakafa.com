@@ -83,9 +83,11 @@ const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
   page: Page
 ) {
   const conversation = page
-    .locator('[role="log"]')
+    .locator('[data-slot="message-scroller"]')
     .filter({ hasText: NINA_ANSWER_TEXT });
-  const scroller = conversation.locator(":scope > div").first();
+  const scroller = conversation.locator(
+    '[data-slot="message-scroller-viewport"]'
+  );
   const reasoningTrigger = page.getByRole("button", {
     name: "Thought for a few seconds",
   });
@@ -99,7 +101,7 @@ const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
     expect(page.getByText(NINA_REASONING_TEXT, { exact: false })).toBeVisible()
   );
 
-  // A real upward wheel uses use-stick-to-bottom's owned escape path.
+  // A real upward wheel gives the reader control of the native scroller.
   yield* Effect.promise(() => scroller.hover({ scroll: "none" }));
   yield* Effect.promise(() => page.mouse.wheel(0, -1));
   yield* Effect.promise(() => mathTrigger.scrollIntoViewIfNeeded());

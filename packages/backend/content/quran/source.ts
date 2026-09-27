@@ -1,5 +1,5 @@
+import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import type { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Context, type Effect, type Option } from "effect";
 
 type QuranRow = PublicationRow<"quranRows">;

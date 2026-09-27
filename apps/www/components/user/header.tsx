@@ -1,9 +1,10 @@
 "use client";
 
+import type { Ref } from "@confect/core";
+import { QueryResult, useQuery } from "@confect/react";
 import { Settings01Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import {
   Avatar,
   AvatarFallback,
@@ -17,16 +18,33 @@ import { useTranslations } from "next-intl";
 import { useViewer } from "@/lib/identity/client";
 import { getInitialName } from "@/lib/utils/helper";
 
-export function UserHeader({ userId }: { userId: Id<"users"> }) {
+export function UserHeader({
+  userId,
+  initialProfile,
+  initialOwnerEmail,
+}: {
+  userId: Id<"users">;
+  initialProfile: Ref.Returns<typeof refs.public.auth.queries.getUserById>;
+  initialOwnerEmail: string | null;
+}) {
   const t = useTranslations("Auth");
   const tCommon = useTranslations("Common");
 
-  const { data: user } = useQueryWithStatus(api.auth.queries.getUserById, {
+  const userQuery = useQuery(refs.public.auth.queries.getUserById, {
     userId,
   });
+  const user = QueryResult.isSuccess(userQuery)
+    ? userQuery.value
+    : initialProfile;
   const currentUser = useViewer((state) => state.account);
-  const isCurrentUser = currentUser?.appUser._id === userId;
-  const userEmail = isCurrentUser ? currentUser.authUser.email : null;
+  const identityPending = useViewer((state) => state.isPending);
+  if (QueryResult.isFailure(userQuery)) {
+    throw userQuery.error;
+  }
+  const currentEmail =
+    currentUser?.appUser._id === userId ? currentUser.authUser.email : null;
+  const userEmail = identityPending ? initialOwnerEmail : currentEmail;
+  const isCurrentUser = userEmail !== null;
 
   if (!user) {
     return (

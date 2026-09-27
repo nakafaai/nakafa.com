@@ -1,6 +1,6 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { loadActiveSnapshot } from "@repo/backend/content/publication/snapshot";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import { Effect, Option } from "effect";
 
 /** Finds one active try-out snapshot whose question bodies are also active. */
@@ -28,7 +28,6 @@ export const loadTryoutOwner = Effect.fn("contentRelease.loadTryoutOwner")(
     if (Option.isSome(selected)) {
       return selected.value;
     }
-
     return yield* releaseFail(
       "CONTENT_RELEASE_MISSING",
       "The active signed try-out snapshot is unavailable."

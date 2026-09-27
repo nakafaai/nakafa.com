@@ -1,13 +1,14 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
   restoreContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { readTryoutRuntimeRetention } from "@repo/backend/confect/contentRelease/tryout/runtime";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { readTryoutRuntimeRetention } from "@repo/backend/convex/contentRelease/tryout/runtime";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { TEST_DIGEST } from "@repo/backend/test/content/release";
 import {
@@ -16,10 +17,9 @@ import {
 } from "@repo/backend/test/content/state";
 import type { TestConvex } from "convex-test";
 import type { Schema } from "effect";
-import { Struct } from "effect";
+import { Effect, Struct } from "effect";
 
 type SnapshotId = Schema.Schema.Type<typeof Sha256HashSchema>;
-
 export const RETENTION_RELEASE_ID = "release-runtime-retention";
 export const RETENTION_MANIFEST_HASH = Sha256HashSchema.make(
   `sha256:${"1".repeat(64)}`
@@ -36,7 +36,6 @@ export const RETENTION_OTHER_SNAPSHOT = Sha256HashSchema.make(
 export const RETENTION_NEWER_SNAPSHOT = Sha256HashSchema.make(
   `sha256:${"f".repeat(64)}`
 );
-
 export interface RuntimeRetentionSeed {
   readonly baseSnapshotId?: SnapshotId | null;
   readonly cleanupReleaseId?: string;
@@ -46,7 +45,6 @@ export interface RuntimeRetentionSeed {
   readonly snapshotId: string;
   readonly withState?: boolean;
 }
-
 const RETENTION_BASE_RELEASE_ID = "release-runtime-base";
 
 /** Seeds one retained runtime pair plus the release that may keep it. */
@@ -84,13 +82,20 @@ export async function seedRuntimeRetentionRow(
           }
         : undefined;
     await insertZeroRelease(ctx, {
-      ...(base ? { base } : {}),
+      ...(base
+        ? {
+            base,
+          }
+        : {}),
       manifestHash: RETENTION_MANIFEST_HASH,
       releaseId: RETENTION_RELEASE_ID,
       sequence: 1,
       originKind: facts.originKind,
       originReleaseId: rollback ? RETENTION_BASE_RELEASE_ID : undefined,
-      ownership: { base: [], result: [] },
+      ownership: {
+        base: [],
+        result: [],
+      },
       role: "candidate",
       snapshots,
       status: "completed",
@@ -172,6 +177,12 @@ export function readRuntimeRetention(
     if (!row) {
       throw new Error("Expected retained runtime pair.");
     }
-    return runConvexProgram(readTryoutRuntimeRetention(ctx, row));
+    return Effect.runPromise(
+      readTryoutRuntimeRetention(row).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
+    );
   });
 }

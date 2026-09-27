@@ -1,9 +1,8 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
-
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
@@ -13,14 +12,12 @@ export const readPublishedProgramPath = Effect.fn(
   "NakafaProgram.readPublishedPath"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.program.path,
-    {
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.program.path, {
       appLocale,
       publicPath,
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   if (!(result.managed && result.routeJson)) {
     return {
       managed: result.managed,
@@ -33,7 +30,13 @@ export const readPublishedProgramPath = Effect.fn(
     publicPath
   );
   if (route.appLocale !== appLocale || route.publicPath !== publicPath) {
-    return { managed: true, route: null };
+    return {
+      managed: true,
+      route: null,
+    };
   }
-  return { managed: true, route };
+  return {
+    managed: true,
+    route,
+  };
 });

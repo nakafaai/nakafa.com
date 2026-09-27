@@ -12,8 +12,8 @@ import {
   quranTafsirSourceId,
   quranTranslationSourceId,
 } from "@nakafa/aksara-contracts/quran/identity";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { readQuranAttributionRow } from "@repo/backend/content/quran/attribution";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 
 type QuranAttribution = Effect.Success<
@@ -36,7 +36,9 @@ const projectEmbeddedQuranSource = Effect.fn(
         candidate
       ): candidate is Extract<
         QuranAttributedSource,
-        { readonly kind: "embedded" }
+        {
+          readonly kind: "embedded";
+        }
       > => candidate.kind === "embedded" && candidate.id === sourceId
     )
   );
@@ -72,7 +74,9 @@ const projectExternalQuranSource = Effect.fn(
         candidate
       ): candidate is Extract<
         QuranAttributedSource,
-        { readonly kind: "external" }
+        {
+          readonly kind: "external";
+        }
       > => candidate.kind === "external" && candidate.id === sourceId
     )
   );
@@ -109,9 +113,14 @@ const projectQuranReadingSourcesFor = Effect.fn(
       projectEmbeddedQuranSource(attribution, appLocale, ARABIC_SOURCE_ID),
       projectEmbeddedQuranSource(attribution, appLocale, translationSourceId),
     ],
-    { concurrency: "unbounded" }
+    {
+      concurrency: "unbounded",
+    }
   );
-  return { arabic, translation };
+  return {
+    arabic,
+    translation,
+  };
 });
 
 /** Preserves the exact locale and translation-source union in the return type. */

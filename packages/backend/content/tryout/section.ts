@@ -7,18 +7,18 @@ import {
   TryoutSectionSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
-import { TryoutSource } from "@repo/backend/content/tryout/source";
 import {
   ReleaseError,
   releaseFail,
-} from "@repo/backend/convex/contentRelease/error";
-import { TRYOUT_SECTION_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
+} from "@repo/backend/confect/contentRelease/error";
+import { TRYOUT_SECTION_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import {
   verifyTryoutCatalog,
   verifyTryoutPlacement,
-} from "@repo/backend/convex/contentRelease/tryout/verify";
+} from "@repo/backend/confect/contentRelease/tryout/verify";
+import type { PublicationRow } from "@repo/backend/content/publication/source";
+import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
+import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { Effect, Option, Schema } from "effect";
 /** Stable authored keys that select one localized try-out section. */
 export interface TryoutSectionIdentity {
@@ -76,7 +76,10 @@ export const readTryoutSectionRow = Effect.fn(
         })
     )
   );
-  return { row: section, rowHash: storedSection.rowHash };
+  return {
+    row: section,
+    rowHash: storedSection.rowHash,
+  };
 });
 
 /** Reads one already-selected signed section without repeating owner reads. */
@@ -108,7 +111,10 @@ export const readTryoutSectionRows = Effect.fn(
   }
   const placements = yield* Effect.forEach(storedPlacements, (placement) =>
     verifyTryoutPlacement(placement, snapshotId).pipe(
-      Effect.map((row) => ({ row, rowHash: placement.rowHash }))
+      Effect.map((row) => ({
+        row,
+        rowHash: placement.rowHash,
+      }))
     )
   );
   const hasChangedOrder = placements.some(

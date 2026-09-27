@@ -1,7 +1,9 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
@@ -23,16 +25,29 @@ describe("material read-model ownership", () => {
             limit: 1,
           })
         );
-        expect(result).toMatchObject({ managed: false, materials: [] });
+        expect(result).toMatchObject({
+          managed: false,
+          materials: [],
+        });
       })
   );
-
   it.effect(
     "rejects both discovery and route reads until the selected model catches up",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
-        yield* Effect.promise(() => activateMaterialCatalog(t));
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateMaterialCatalog().pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const state = await ctx.db.query("contentState").unique();
@@ -48,7 +63,11 @@ describe("material read-model ownership", () => {
               appLocale: "en",
               limit: 1,
             })
-          ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } })
+          ).rejects.toMatchObject({
+            data: {
+              code: "CONTENT_RELEASE_STATE",
+            },
+          })
         );
         yield* Effect.promise(() =>
           expect(
@@ -56,7 +75,11 @@ describe("material read-model ownership", () => {
               appLocale: "en",
               publicPath: makeMaterialProjection("en", 1).publicPath,
             })
-          ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } })
+          ).rejects.toMatchObject({
+            data: {
+              code: "CONTENT_RELEASE_STATE",
+            },
+          })
         );
       })
   );

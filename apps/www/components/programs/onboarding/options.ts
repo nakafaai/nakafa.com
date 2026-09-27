@@ -1,20 +1,21 @@
+import type { Ref } from "@confect/core";
 import {
   BookOpen02Icon,
   Globe02Icon,
   Quiz03Icon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type refs from "@repo/backend/confect/_generated/refs";
 import {
   onboardingFocuses,
   onboardingRegions,
-} from "@repo/backend/convex/onboarding/values";
-import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
-import type { FunctionArgs } from "convex/server";
+} from "@repo/backend/confect/onboarding/values";
+import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
+
 import { roleIconByValue } from "@/lib/data/roles";
 
-export type OnboardingAnswer = FunctionArgs<
-  typeof api.onboarding.mutations.saveAnswer
+export type OnboardingAnswer = Ref.Args<
+  typeof refs.public.onboarding.mutations.saveAnswer
 >["answer"];
 export type OnboardingRole = Extract<
   OnboardingAnswer,

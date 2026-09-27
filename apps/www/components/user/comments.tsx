@@ -1,5 +1,12 @@
 "use client";
 
+import type { Ref } from "@confect/core";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import {
   ArrowTurnBackwardIcon,
   ArrowUpRight01Icon,
@@ -7,9 +14,8 @@ import {
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
   Avatar,
@@ -26,14 +32,16 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
-import { usePaginatedQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { toast } from "sonner";
 import {
   useDeleteCommentMutation,
   useVoteCommentMutation,
 } from "@/components/comments/mutation.client";
+import { DataFailure } from "@/components/shared/failure";
+import { reportClientException } from "@/lib/analytics/client";
 import { useViewer } from "@/lib/identity/client";
 import { getInitialName } from "@/lib/utils/helper";
 import { getCleanHref } from "@/lib/utils/link";
@@ -41,13 +49,34 @@ import { getCleanHref } from "@/lib/utils/link";
 /** Render the incrementally loaded comments for one user profile. */
 export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
-
-  const { results } = usePaginatedQuery(
-    api.comments.queries.getCommentsByUserId,
-    { userId },
-    { initialNumItems: 25 }
+  const userQuery = useQuery(refs.public.auth.queries.getUserById, {
+    userId,
+  });
+  const pagination = usePaginatedQuery(
+    refs.public.comments.queries.getCommentsByUserId,
+    {
+      userId,
+    },
+    {
+      initialNumItems: 25,
+    }
   );
-
+  const { results } = pagination;
+  if (QueryResult.isFailure(userQuery)) {
+    throw userQuery.error;
+  }
+  if (
+    PaginatedQueryResult.isLoadingFirstPage(pagination) ||
+    QueryResult.isLoading(userQuery)
+  ) {
+    return null;
+  }
+  if (
+    PaginatedQueryResult.isFailure(pagination) &&
+    pagination.results.length === 0
+  ) {
+    return <DataFailure />;
+  }
   if (results.length === 0) {
     return (
       <p className="text-center text-muted-foreground text-sm">
@@ -55,34 +84,39 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
       </p>
     );
   }
-
   return (
-    <div className="flex flex-col divide-y rounded-xl border bg-card text-card-foreground shadow-sm">
-      {results.map((comment) => (
-        <CommentThread comment={comment} key={comment._id} />
-      ))}
-    </div>
+    <>
+      {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
+      <div className="flex flex-col divide-y rounded-xl border bg-card text-card-foreground shadow-sm">
+        {results.map((comment) => (
+          <CommentThread
+            comment={comment}
+            key={comment._id}
+            user={userQuery.value}
+          />
+        ))}
+      </div>
+    </>
   );
 }
-
-type UserComment = FunctionReturnType<
-  typeof api.comments.queries.getCommentsByUserId
+type UserComment = Ref.Returns<
+  typeof refs.public.comments.queries.getCommentsByUserId
 >["page"][number];
 
 /** Render one profile comment with optimistic viewer actions. */
-function CommentThread({ comment }: { comment: UserComment }) {
+function CommentThread({
+  comment,
+  user,
+}: {
+  comment: UserComment;
+  user: Ref.Returns<typeof refs.public.auth.queries.getUserById>;
+}) {
+  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
-
-  const { data: user } = useQueryWithStatus(api.auth.queries.getUserById, {
-    userId: comment.userId,
-  });
   const currentUser = useViewer((state) => state.account);
-
   const userName = user?.name ?? t("anonymous");
   const userImage = user?.image ?? "";
-
   const [isPending, startTransition] = useTransition();
-
   const voteOnComment = useVoteCommentMutation();
   const deleteComment = useDeleteCommentMutation();
 
@@ -91,13 +125,32 @@ function CommentThread({ comment }: { comment: UserComment }) {
     if (!currentUser) {
       return;
     }
-
-    startTransition(async () => {
-      await voteOnComment({
-        commentId: comment._id,
-        vote: comment.viewerVote === vote ? 0 : vote,
-      });
-    });
+    startTransition(async () =>
+      Effect.runPromise(
+        Effect.asVoid(
+          Effect.tryPromise(() =>
+            voteOnComment({
+              commentId: comment._id,
+              vote: comment.viewerVote === vote ? 0 : vote,
+            })
+          ).pipe(Effect.flatMap(Effect.fromResult))
+        ).pipe(
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/user/comments",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      )
+    );
   }
 
   /** Delete this comment when the viewer owns it. */
@@ -105,14 +158,32 @@ function CommentThread({ comment }: { comment: UserComment }) {
     if (!currentUser) {
       return;
     }
-
-    startTransition(async () => {
-      await deleteComment({
-        commentId: comment._id,
-      });
-    });
+    startTransition(async () =>
+      Effect.runPromise(
+        Effect.asVoid(
+          Effect.tryPromise(() =>
+            deleteComment({
+              commentId: comment._id,
+            })
+          ).pipe(Effect.flatMap(Effect.fromResult))
+        ).pipe(
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/user/comments",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      )
+    );
   }
-
   return (
     <div className="flex items-start gap-3 p-4 text-left">
       <Avatar className="size-10">
@@ -130,19 +201,21 @@ function CommentThread({ comment }: { comment: UserComment }) {
             <TooltipTrigger
               render={
                 <Button
+                  aria-label={t("like")}
                   aria-pressed={comment.viewerVote === 1}
-                  className="group"
+                  className="group w-16"
                   disabled={isPending}
                   onClick={() => handleVote(1)}
-                  size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
+                  size="sm"
                   variant={comment.viewerVote === 1 ? "secondary" : "ghost"}
                 >
                   <HugeIcons icon={ThumbsUpIcon} />
                   <NumberFormat
                     className={cn(
-                      "text-xs tabular-nums tracking-tight",
-                      comment.upvoteCount === 0 && "hidden"
+                      "min-w-[3ch] text-xs tabular-nums tracking-tight",
+                      comment.upvoteCount === 0 && "invisible"
                     )}
+                    format={{ notation: "compact", maximumFractionDigits: 1 }}
                     isolate={true}
                     value={comment.upvoteCount}
                   />
@@ -156,19 +229,21 @@ function CommentThread({ comment }: { comment: UserComment }) {
             <TooltipTrigger
               render={
                 <Button
+                  aria-label={t("dislike")}
                   aria-pressed={comment.viewerVote === -1}
-                  className="group"
+                  className="group w-16"
                   disabled={isPending}
                   onClick={() => handleVote(-1)}
-                  size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
+                  size="sm"
                   variant={comment.viewerVote === -1 ? "secondary" : "ghost"}
                 >
                   <HugeIcons icon={ThumbsDownIcon} />
                   <NumberFormat
                     className={cn(
-                      "text-xs tabular-nums tracking-tight",
-                      comment.downvoteCount === 0 && "hidden"
+                      "min-w-[3ch] text-xs tabular-nums tracking-tight",
+                      comment.downvoteCount === 0 && "invisible"
                     )}
+                    format={{ notation: "compact", maximumFractionDigits: 1 }}
                     isolate={true}
                     value={comment.downvoteCount}
                   />
@@ -182,16 +257,18 @@ function CommentThread({ comment }: { comment: UserComment }) {
             <TooltipTrigger
               render={
                 <Button
-                  className="cursor-default"
-                  size={comment.replyCount === 0 ? "icon-sm" : "sm"}
+                  aria-label={t("reply")}
+                  className="w-16 cursor-default"
+                  size="sm"
                   variant="ghost"
                 >
                   <HugeIcons icon={ArrowTurnBackwardIcon} />
                   <NumberFormat
                     className={cn(
-                      "text-xs tabular-nums tracking-tight",
-                      comment.replyCount === 0 && "hidden"
+                      "min-w-[3ch] text-xs tabular-nums tracking-tight",
+                      comment.replyCount === 0 && "invisible"
                     )}
+                    format={{ notation: "compact", maximumFractionDigits: 1 }}
                     isolate={true}
                     value={comment.replyCount}
                   />
@@ -206,7 +283,10 @@ function CommentThread({ comment }: { comment: UserComment }) {
               render={
                 <a
                   className={cn(
-                    buttonVariants({ variant: "ghost", size: "icon-sm" })
+                    buttonVariants({
+                      variant: "ghost",
+                      size: "icon-sm",
+                    })
                   )}
                   href={getCleanHref(comment.slug)}
                   rel="noopener noreferrer"

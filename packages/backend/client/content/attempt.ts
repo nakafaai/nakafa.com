@@ -1,4 +1,3 @@
-import "server-only";
 import { CorpusSourcePathSchema } from "@nakafa/aksara-contracts/ids";
 import {
   MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
@@ -7,7 +6,6 @@ import {
 import type { ProtectedContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/protected/verify";
-
 import {
   ContentRuntimeMissingError,
   ContentRuntimeVerificationError,
@@ -16,8 +14,8 @@ import {
   decodeArtifactJson,
   decodeRendererJson,
   decodeTryoutRuntimeBundleJson,
-} from "@repo/backend/convex/contentRelease/parse";
-import type { TryoutBodyBatch } from "@repo/backend/convex/tryouts/runtime/body";
+} from "@repo/backend/confect/contentRelease/parse";
+import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
 import { Effect, Schema } from "effect";
 
 /** Authenticates original attempt bytes against their frozen selectors and renderer. */
@@ -28,10 +26,17 @@ export const verifyAttemptContent = Effect.fn("NakafaContent.verifyAttempt")(
     rendererManifest: unknown
   ) {
     const request = yield* decodeProtectedContentRuntimeRequest(input).pipe(
-      Effect.mapError((cause) => new ContentRuntimeVerificationError({ cause }))
+      Effect.mapError(
+        (cause) =>
+          new ContentRuntimeVerificationError({
+            cause,
+          })
+      )
     );
     if (!row) {
-      return yield* new ContentRuntimeMissingError({ request });
+      return yield* new ContentRuntimeMissingError({
+        request,
+      });
     }
     if (
       protectedRuntimeResponseBytes(row) > MAX_PROTECTED_RUNTIME_RESPONSE_BYTES
@@ -53,7 +58,12 @@ export const verifyAttemptContent = Effect.fn("NakafaContent.verifyAttempt")(
         })
       ),
     ]).pipe(
-      Effect.mapError((cause) => new ContentRuntimeVerificationError({ cause }))
+      Effect.mapError(
+        (cause) =>
+          new ContentRuntimeVerificationError({
+            cause,
+          })
+      )
     );
     const response: ProtectedContentRuntimeFound = {
       bundle,
@@ -66,7 +76,12 @@ export const verifyAttemptContent = Effect.fn("NakafaContent.verifyAttempt")(
       request,
       response,
     }).pipe(
-      Effect.mapError((cause) => new ContentRuntimeVerificationError({ cause }))
+      Effect.mapError(
+        (cause) =>
+          new ContentRuntimeVerificationError({
+            cause,
+          })
+      )
     );
     return response;
   }

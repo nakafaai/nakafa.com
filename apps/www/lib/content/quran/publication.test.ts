@@ -1,3 +1,4 @@
+import { HttpClient } from "@confect/js";
 // @vitest-environment node
 import { beforeEach, describe, expect, it, layer } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
@@ -15,7 +16,7 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { makeQuranRuntimeSource } from "@repo/backend/test/quran/runtime";
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Result } from "effect";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -23,76 +24,94 @@ import {
   readPublishedQuranIdentity,
   readPublishedQuranMarkdown,
 } from "@/lib/content/quran/publication";
-import {
-  createTestNativeQuery,
-  createTestRuntimeQuery,
-} from "@/test/runtime-query";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const readNakafaRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
 }));
-vi.mock("next/cache", () => ({ cacheTag: vi.fn() }));
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: readNakafaRuntimeQueryMock,
+vi.mock("next/cache", () => ({
+  cacheTag: vi.fn(),
 }));
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
   activeReleaseId: "quran-release",
   managed: true,
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
-  sourceOrigin: { kind: "git" as const, sha: "c".repeat(40) },
+  sourceOrigin: {
+    kind: "git" as const,
+    sha: "c".repeat(40),
+  },
   sourceRevision: "c".repeat(40),
 };
 beforeEach(() => {
   cacheMock.mockReset();
   runtimeQueryMock.mockReset();
-  readNakafaRuntimeQueryMock.mockReset();
-  readNakafaRuntimeQueryMock.mockImplementation(
-    createTestRuntimeQuery(runtimeQueryMock)
-  );
 });
 describe("published Quran content", () => {
   it.effect("reads the active identity through the attribution query", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValue({
-        ...source,
-        rowJson: "attribution-row",
-      });
-
+      runtimeQueryMock.mockReturnValue(
+        Effect.succeed({
+          ...source,
+          rowJson: "attribution-row",
+        })
+      );
       const identity = yield* readPublishedQuranIdentity();
-
-      expect(identity).toMatchObject({ snapshotId: source.snapshotId });
+      expect(identity).toMatchObject({
+        snapshotId: source.snapshotId,
+      });
       expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
     })
   );
-
   it.effect("reads and caches the signed catalog", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValue(catalogResult());
-
+      runtimeQueryMock.mockReturnValue(Effect.succeed(catalogResult()));
       const catalog = yield* readPublishedQuranCatalog();
       const cachedCatalog = yield* Effect.tryPromise(() =>
         getPublishedQuranCatalog()
       );
-
-      expect(catalog).toMatchObject({ surahs: expect.any(Array) });
-      expect(cachedCatalog).toMatchObject({ surahs: expect.any(Array) });
+      expect(catalog).toMatchObject({
+        surahs: expect.any(Array),
+      });
+      expect(cachedCatalog).toMatchObject({
+        surahs: expect.any(Array),
+      });
       expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
       expect(cacheMock).toHaveBeenCalledWith("quran");
     })
   );
-
   it.effect.each([
     ["empty", []],
     ["incomplete", catalogResult().rowJson.slice(0, 1)],
     ["out of order", catalogResult().rowJson.reverse()],
   ])("rejects an %s signed catalog", ([_label, rowJson]) =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce({ ...catalogResult(), rowJson });
-
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          ...catalogResult(),
+          rowJson,
+        })
+      );
       expect(
         yield* readPublishedQuranCatalog().pipe(Effect.flip)
       ).toMatchObject({
@@ -101,13 +120,10 @@ describe("published Quran content", () => {
       });
     })
   );
-
   it.effect("reads the locale-specific signed markdown", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValue(markdownResult());
-
+      runtimeQueryMock.mockReturnValue(Effect.succeed(markdownResult()));
       const markdown = yield* readPublishedQuranMarkdown("id", 1, 80);
-
       expect(markdown).toMatchObject({
         surah: {
           name: {
@@ -115,7 +131,11 @@ describe("published Quran content", () => {
           },
           number: 1,
         },
-        verses: [{ number: {} }],
+        verses: [
+          {
+            number: {},
+          },
+        ],
       });
       expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
         appLocale: "id",
@@ -125,16 +145,19 @@ describe("published Quran content", () => {
       expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
     })
   );
-
   it.effect("reads complete signed markdown without a verse limit", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValue(markdownResult());
-
+      runtimeQueryMock.mockReturnValue(Effect.succeed(markdownResult()));
       const markdown = yield* readPublishedQuranMarkdown("id", 1);
-
       expect(markdown).toMatchObject({
-        surah: { number: 1 },
-        verses: [{ number: {} }],
+        surah: {
+          number: 1,
+        },
+        verses: [
+          {
+            number: {},
+          },
+        ],
       });
       expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
         appLocale: "id",
@@ -142,31 +165,31 @@ describe("published Quran content", () => {
       });
     })
   );
-
   it.effect("keeps a failed Quran query in the Effect error channel", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockRejectedValueOnce(new Error("Quran unavailable"));
-
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.fail(
+          new HttpClient.HttpClientError({
+            cause: new Error("Quran unavailable"),
+          })
+        )
+      );
       const result = yield* readPublishedQuranCatalog().pipe(Effect.result);
-
-      expect(result).toMatchObject({
-        _tag: "Failure",
-        failure: {
-          _tag: "NakafaAgentDataReadError",
-          cause: "Error: Quran unavailable",
-        },
-      });
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toMatchObject({
+          _tag: "HttpClientError",
+          cause: expect.objectContaining({ message: "Quran unavailable" }),
+        });
+      }
     })
   );
-
   it.effect("caches the locale-specific Quran web projection", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValue(viewResult());
-
+      runtimeQueryMock.mockReturnValue(Effect.succeed(viewResult()));
       const view = yield* Effect.tryPromise(() =>
         getPublishedQuranView("id", 1)
       );
-
       expect(view).toMatchObject({
         appLocale: "id",
         nextSurah: {
@@ -192,8 +215,16 @@ describe("published Quran content", () => {
                 },
               ],
               segments: [
-                { kind: "text", offset: 0, value: "Terjemahan teknis 1." },
-                { kind: "note", number: 4, offset: 20 },
+                {
+                  kind: "text",
+                  offset: 0,
+                  value: "Terjemahan teknis 1.",
+                },
+                {
+                  kind: "note",
+                  number: 4,
+                  offset: 20,
+                },
               ],
             },
           },
@@ -207,15 +238,12 @@ describe("published Quran content", () => {
       expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
     })
   );
-
   it.effect("preserves the final surah and its previous neighbor", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValue(finalViewResult());
-
+      runtimeQueryMock.mockReturnValue(Effect.succeed(finalViewResult()));
       const view = yield* Effect.tryPromise(() =>
         getPublishedQuranView("id", 114)
       );
-
       expect(view).toMatchObject({
         nextSurah: null,
         previousSurah: {
@@ -234,27 +262,27 @@ describe("published Quran content", () => {
     })
   );
 });
-
 describe("immutable Quran application reads", () => {
   const prepareQuran = Effect.gen(function* () {
     const fixture = yield* makeQuranRuntimeSource();
     const context = yield* createTestPublication(fixture.source);
-    return { context, manifest: fixture.manifest, state: fixture.state };
+    return {
+      context,
+      manifest: fixture.manifest,
+      state: fixture.state,
+    };
   });
   class QuranFixture extends Context.Service<
     QuranFixture,
     Effect.Success<typeof prepareQuran>
   >()("TestContent.QuranFixture") {}
-
   layer(Layer.effect(QuranFixture, prepareQuran))((test) => {
     test.effect(
       "returns the authenticated identity and complete cached metadata catalog",
       () =>
         Effect.gen(function* () {
           const quran = yield* QuranFixture;
-          readNakafaRuntimeQueryMock.mockImplementation(
-            createTestNativeQuery(quran.context)
-          );
+          runtimeQueryMock.mockImplementation(quran.context.query);
           const identity = yield* readPublishedQuranIdentity();
           const catalog = yield* readPublishedQuranCatalog();
           const cached = yield* Effect.promise(getPublishedQuranCatalog);
@@ -264,21 +292,23 @@ describe("immutable Quran application reads", () => {
             snapshotId: quran.manifest.snapshotId,
           });
           expect(catalog.surahs.map((surah) => surah.number)).toEqual(
-            Array.from({ length: QURAN_SURAH_COUNT }, (_, index) => index + 1)
+            Array.from(
+              {
+                length: QURAN_SURAH_COUNT,
+              },
+              (_, index) => index + 1
+            )
           );
           expect(cached).toEqual(catalog);
           expect(cacheMock).toHaveBeenCalledWith("quran");
         })
     );
-
     test.effect.each(APP_LOCALE_CODES)(
       "preserves %s source attribution, verses, and web navigation",
       (appLocale) =>
         Effect.gen(function* () {
           const quran = yield* QuranFixture;
-          readNakafaRuntimeQueryMock.mockImplementation(
-            createTestNativeQuery(quran.context)
-          );
+          runtimeQueryMock.mockImplementation(quran.context.query);
           const prefix = yield* readPublishedQuranMarkdown(appLocale, 1, 3);
           const complete = yield* readPublishedQuranMarkdown(appLocale, 1);
           const view = yield* Effect.promise(() =>
@@ -298,14 +328,16 @@ describe("immutable Quran application reads", () => {
           expect(view.nextSurah?.number).toBe(2);
           expect(view.verses[0]).toMatchObject({
             arabic: "آية 1",
-            number: { inQuran: 1, inSurah: 1 },
+            number: {
+              inQuran: 1,
+              inSurah: 1,
+            },
             translation: prefix.verses[0]?.translation,
           });
           expect(view.verses).toHaveLength(complete.verses.length);
         })
     );
   });
-
   it.effect(
     "keeps an inactive Quran publication in the domain error channel",
     () =>
@@ -313,9 +345,7 @@ describe("immutable Quran application reads", () => {
         const inactive = yield* createTestPublication(
           makeRuntimeSource().source
         );
-        readNakafaRuntimeQueryMock.mockImplementation(
-          createTestNativeQuery(inactive)
-        );
+        runtimeQueryMock.mockImplementation(inactive.query);
         expect(
           yield* readPublishedQuranIdentity().pipe(Effect.flip)
         ).toMatchObject({
@@ -331,8 +361,11 @@ function catalogResult(snapshotId = source.snapshotId) {
   return {
     ...source,
     snapshotId,
-    rowJson: Array.from({ length: 114 }, (_, index) =>
-      encodeTestQuranRow(snapshotId, makeQuranSurah(index + 1))
+    rowJson: Array.from(
+      {
+        length: 114,
+      },
+      (_, index) => encodeTestQuranRow(snapshotId, makeQuranSurah(index + 1))
     ),
   };
 }
@@ -364,7 +397,10 @@ function viewResult() {
     verses: [
       {
         arabic: "آية 1",
-        number: { inQuran: 1, inSurah: 1 },
+        number: {
+          inQuran: 1,
+          inSurah: 1,
+        },
         translation: {
           notes: [
             {
@@ -374,8 +410,16 @@ function viewResult() {
             },
           ],
           segments: [
-            { kind: "text", offset: 0, value: "Terjemahan teknis 1." },
-            { kind: "note", number: 4, offset: 20 },
+            {
+              kind: "text",
+              offset: 0,
+              value: "Terjemahan teknis 1.",
+            },
+            {
+              kind: "note",
+              number: 4,
+              offset: 20,
+            },
           ],
         },
       },
@@ -422,23 +466,34 @@ function markdownResult() {
       },
       number: 1,
       numberOfVerses: 1,
-      revelation: { place: "Meccan" },
+      revelation: {
+        place: "Meccan",
+      },
     },
     tafsirAccess: makeQuranTafsirProjection("id"),
     toVerse: 1,
     verses: [
       {
         arabic: "آية 1",
-        number: { inSurah: 1 },
+        number: {
+          inSurah: 1,
+        },
         translation: {
           notes: [],
-          segments: [{ kind: "text", offset: 0, value: "Terjemahan teknis 1" }],
+          segments: [
+            {
+              kind: "text",
+              offset: 0,
+              value: "Terjemahan teknis 1",
+            },
+          ],
         },
       },
     ],
   };
 }
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

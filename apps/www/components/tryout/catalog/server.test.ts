@@ -1,3 +1,8 @@
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
+
+const layerMock = vi.hoisted(() => vi.fn());
+
 import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
@@ -6,7 +11,6 @@ import {
   PROTECTED_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
-import { api, internal } from "@repo/backend/convex/_generated/api";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 // @vitest-environment node
@@ -29,7 +33,7 @@ import {
 } from "@repo/backend/test/content/publication";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   readFeaturedTryout,
@@ -47,8 +51,27 @@ import {
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const transportMock = vi.hoisted(() => vi.fn<typeof fetch>());
-
-vi.mock("convex/nextjs", () => ({ fetchQuery: fetchQueryMock }));
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) => {
+        layerMock(...args);
+        return Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: fetchQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args)));
+      },
+    },
+  };
+});
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
   Link: vi.fn(),
@@ -59,7 +82,10 @@ vi.mock("@repo/internationalization/src/navigation", () => ({
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: vi.fn(),
 }));
-vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
+vi.mock("next/cache", () => ({
+  cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
+}));
 vi.mock("@/env", () => ({
   env: {
     NEXT_PUBLIC_CONVEX_SITE_URL: "https://runtime.example.test",
@@ -67,34 +93,37 @@ vi.mock("@/env", () => ({
   },
 }));
 vi.mock("@repo/next-config/keys", () => ({
-  contentRuntimeKeys: () => ({ CONTENT_RUNTIME_TOKEN: "technical-test-token" }),
+  contentRuntimeKeys: () => ({
+    CONTENT_RUNTIME_TOKEN: "technical-test-token",
+  }),
 }));
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(
     "@repo/backend/test/content/proof"
   );
-  return { contentKeyResolver: TEST_KEY_RESOLVER };
+  return {
+    contentKeyResolver: TEST_KEY_RESOLVER,
+  };
 });
 vi.mock("@/lib/content/renderer/manifest", async () => {
   const { TEST_PROOF_RENDERER } = await import(
     "@repo/backend/test/content/proof"
   );
   const { Effect } = await import("effect");
-  return { rendererManifest: Effect.succeed(TEST_PROOF_RENDERER) };
+  return {
+    rendererManifest: Effect.succeed(TEST_PROOF_RENDERER),
+  };
 });
-
 const COUNTRY = "try-out/indonesia";
 const EXAM = `${COUNTRY}/tka`;
 const TRACK = `${EXAM}/matematika-wajib`;
 const SET = `${TRACK}/set-1`;
 const SECTION = `${SET}/matematika-wajib`;
-
 beforeEach(() => {
   fetchQueryMock.mockReset();
   transportMock.mockReset();
   vi.stubGlobal("fetch", transportMock);
 });
-
 describe("immutable try-out application catalog", () => {
   it.effect.each(APP_LOCALE_CODES)(
     "serves the complete signed %s hierarchy and route metadata",
@@ -114,25 +143,55 @@ describe("immutable try-out application catalog", () => {
           ])
         );
         expect(pages[0]).toMatchObject({
-          countries: [{ title: "Indonesia" }],
+          countries: [
+            {
+              title: "Indonesia",
+            },
+          ],
           sourceRevision: "a".repeat(40),
         });
         expect(pages[1]).toMatchObject({
-          country: { publicPath: COUNTRY },
-          exams: [{ title: "TKA" }],
+          country: {
+            publicPath: COUNTRY,
+          },
+          exams: [
+            {
+              title: "TKA",
+            },
+          ],
         });
         expect(pages[2]).toMatchObject({
-          exam: { publicPath: EXAM },
-          tracks: [{ publicPath: TRACK }],
+          exam: {
+            publicPath: EXAM,
+          },
+          tracks: [
+            {
+              publicPath: TRACK,
+            },
+          ],
         });
-        expect(pages[3]).toMatchObject({ track: { publicPath: TRACK } });
+        expect(pages[3]).toMatchObject({
+          track: {
+            publicPath: TRACK,
+          },
+        });
         expect(pages[4]).toMatchObject({
-          set: { publicPath: SET },
-          sections: [{ publicPath: SECTION }],
+          set: {
+            publicPath: SET,
+          },
+          sections: [
+            {
+              publicPath: SECTION,
+            },
+          ],
         });
         expect(pages[5]).toMatchObject({
-          section: { publicPath: SECTION },
-          set: { publicPath: SET },
+          section: {
+            publicPath: SECTION,
+          },
+          set: {
+            publicPath: SET,
+          },
         });
         const metadata = yield* Effect.promise(() =>
           readTryoutMetadata({
@@ -160,7 +219,6 @@ describe("immutable try-out application catalog", () => {
         ).toBeNull();
       })
   );
-
   it.effect(
     "keeps personalized discovery uncached and preserves transport failures",
     () =>
@@ -171,8 +229,14 @@ describe("immutable try-out application catalog", () => {
           trackKey: "matematika-wajib",
           locale: "id",
           filter: "completed",
-          sort: { field: "durationSeconds", direction: "desc" },
-          paginationOpts: { cursor: null, numItems: 25 },
+          sort: {
+            field: "durationSeconds",
+            direction: "desc",
+          },
+          paginationOpts: {
+            cursor: null,
+            numItems: 25,
+          },
         } as const;
         const page = {
           page: [],
@@ -181,26 +245,33 @@ describe("immutable try-out application catalog", () => {
           snapshotId: "signed",
           viewerId: "viewer",
         };
-        fetchQueryMock.mockResolvedValue(page);
+        fetchQueryMock.mockReturnValue(Effect.succeed(page));
         expect(yield* readTryoutSetList("technical-token", args)).toBe(page);
         expect(fetchQueryMock).toHaveBeenCalledWith(
-          api.tryouts.queries.sets.list,
-          args,
-          {
-            token: "technical-token",
-            url: "https://test.convex.cloud",
-          }
+          refs.public.tryouts.queries.sets.list,
+          args
         );
-        fetchQueryMock.mockRejectedValue(new Error("Transport unavailable"));
+        expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud", {
+          auth: "technical-token",
+        });
+        fetchQueryMock.mockReturnValue(
+          Effect.fail(
+            new HttpClient.HttpClientError({
+              cause: new Error("Transport unavailable"),
+            })
+          )
+        );
         expect(
           yield* readTryoutSetList(undefined, args).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "TryoutCatalogReadError",
-          cause: { message: "Transport unavailable" },
+          cause: {
+            _tag: "HttpClientError",
+            cause: { message: "Transport unavailable" },
+          },
         });
       })
   );
-
   it.effect(
     "authenticates and renders the real featured question artifact",
     () =>
@@ -211,17 +282,16 @@ describe("immutable try-out application catalog", () => {
         );
         const context = yield* createTestPublication(fixture.source);
         fetchQueryMock.mockImplementation(context.query);
-        const selected = yield* Effect.promise(() =>
-          context.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+        const selected = yield* context.query(
+          refs.public.tryouts.queries.catalog.getFeaturedQuestion,
+          {
             appLocale: "id",
-          })
+          }
         );
         const request = yield* makeTryoutRuntimeRequest([selected.question]);
-        const row = yield* Effect.promise(() =>
-          context.query(
-            internal.contentRelease.runtime.protected.internal.read,
-            request
-          )
+        const row = yield* context.query(
+          refs.internal.contentRelease.runtime.tryout.internal.read,
+          request
         );
         const found = yield* decodeProtectedRuntimeRow(
           row,
@@ -249,11 +319,17 @@ describe("immutable try-out application catalog", () => {
         );
         expect(featured.response).toMatchObject({
           kind: "single-choice",
-          options: [{ optionKey: "option-1" }, { optionKey: "option-2" }],
+          options: [
+            {
+              optionKey: "option-1",
+            },
+            {
+              optionKey: "option-2",
+            },
+          ],
         });
       })
   );
-
   it.effect(
     "preserves unavailable publication failures at Promise page boundaries",
     () =>
@@ -274,7 +350,6 @@ describe("immutable try-out application catalog", () => {
         );
       })
   );
-
   it.effect(
     "keeps absent attempt overlays and transport failures distinct",
     () =>
@@ -285,7 +360,7 @@ describe("immutable try-out application catalog", () => {
           locale: "en",
           publicPath: SET,
         } as const;
-        fetchQueryMock.mockResolvedValue(null);
+        fetchQueryMock.mockReturnValue(Effect.succeed(null));
         expect(
           yield* readTryoutSetAttemptPage("technical-token", request)
         ).toBeNull();
@@ -295,14 +370,23 @@ describe("immutable try-out application catalog", () => {
             publicPath: SECTION,
           })
         ).toBeNull();
-        fetchQueryMock.mockRejectedValue(new Error("Transport unavailable"));
+        fetchQueryMock.mockReturnValue(
+          Effect.fail(
+            new HttpClient.HttpClientError({
+              cause: new Error("Transport unavailable"),
+            })
+          )
+        );
         expect(
           yield* readTryoutSetAttemptPage("technical-token", request).pipe(
             Effect.flip
           )
         ).toMatchObject({
           _tag: "TryoutCatalogReadError",
-          cause: { message: "Transport unavailable" },
+          cause: {
+            _tag: "HttpClientError",
+            cause: { message: "Transport unavailable" },
+          },
         });
         expect(
           yield* readTryoutSectionAttemptPage("technical-token", {
@@ -311,12 +395,14 @@ describe("immutable try-out application catalog", () => {
           }).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "TryoutCatalogReadError",
-          cause: { message: "Transport unavailable" },
+          cause: {
+            _tag: "HttpClientError",
+            cause: { message: "Transport unavailable" },
+          },
         });
       })
   );
 });
-
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();

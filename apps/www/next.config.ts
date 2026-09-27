@@ -161,6 +161,9 @@ function createAppHeaders() {
       headers: [
         ...createSecurityHeaders({
           additionalConnectSources: [...localConvexConnectSources],
+          additionalImageSources: localConvexConnectSources.filter((source) =>
+            source.startsWith("http:")
+          ),
         }),
         ...AGENT_DISCOVERY_HEADERS,
       ],

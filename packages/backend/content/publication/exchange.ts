@@ -4,19 +4,16 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
-
-import type {
-  PublicRuntimeRow,
-  readSelectedPublicRuntime,
-} from "@repo/backend/content/publication/public";
-import { hashText } from "@repo/backend/convex/contentRelease/digest";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { hashText } from "@repo/backend/confect/contentRelease/digest";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   decodeArtifactJson,
   decodeProjectionJson,
   decodeReleaseJson,
   decodeRendererJson,
-} from "@repo/backend/convex/contentRelease/parse";
+} from "@repo/backend/confect/contentRelease/parse";
+import type { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
+import type { PublicRuntimeRow } from "@repo/backend/content/publication/spec";
 import { Effect, Schema } from "effect";
 export class PublicRuntimeReadError extends Schema.TaggedError<PublicRuntimeReadError>()(
   "PublicRuntimeReadError",

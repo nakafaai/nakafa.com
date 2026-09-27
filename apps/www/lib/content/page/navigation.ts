@@ -105,7 +105,9 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
 export async function getPageNavigation(locale: Locale) {
   "use cache";
 
-  const navigation = await Effect.runPromise(readPageNavigation(locale));
+  const navigation = await Effect.runPromise(
+    readPageNavigation(locale).pipe(Effect.withTracerTiming(false))
+  );
   applyContentCache("page");
   return navigation;
 }

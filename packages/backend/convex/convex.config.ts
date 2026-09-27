@@ -1,4 +1,5 @@
 import aggregate from "@convex-dev/aggregate/convex.config";
+import agent from "@convex-dev/agent/convex.config";
 import rateLimiter from "@convex-dev/rate-limiter/convex.config";
 import resend from "@convex-dev/resend/convex.config";
 import workflow from "@convex-dev/workflow/convex.config";
@@ -33,6 +34,7 @@ const app = defineApp({
   },
 });
 app.use(betterAuth);
+app.use(agent, { name: "nina" });
 app.use(rateLimiter, { name: "agentRateLimiter" });
 app.use(workflow);
 app.use(resend);

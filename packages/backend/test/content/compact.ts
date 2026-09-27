@@ -1,5 +1,5 @@
+import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { ROLLBACK_RETENTION_MS } from "@repo/backend/convex/contentRelease/spec";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
@@ -198,6 +198,31 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
       artifactJson: testArtifactJson({ artifactHash: artifact.artifactHash }),
       createdAt: COMPACTION_OLD_TIME,
       retainUntil: artifact.retainUntil,
+    });
+  }
+}
+
+/** Seeds a snapshot backlog larger than one bounded compaction run. */
+export async function seedExpiredSnapshotBacklog(ctx: MutationCtx) {
+  await ctx.db.insert("contentState", {
+    articleSlot: "blue",
+    materialSlot: "blue",
+    searchSlot: "blue",
+    key: "primary",
+    nextSequence: 2,
+    updatedAt: 0,
+    compactFloor: 1,
+    compactFrom: 0,
+    compactPhase: "snapshots",
+    compactStartedAt: 1,
+  });
+  for (let index = 0; index < 70; index += 1) {
+    await ctx.db.insert("contentSnapshots", {
+      createdAt: 0,
+      family: "program",
+      retainUntil: 0,
+      snapshotId: `expired-${index}`,
+      snapshotJson: "{}",
     });
   }
 }

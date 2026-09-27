@@ -1,14 +1,14 @@
+import {
+  hasStaleReleaseCursor,
+  validateInitialPage,
+} from "@repo/backend/confect/contentRelease/cursor";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { validateProjectionPage } from "@repo/backend/confect/contentRelease/paging";
+import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
 import { loadProgramOwner } from "@repo/backend/content/program/owner";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import {
-  hasStaleReleaseCursor,
-  validateReleaseCursor,
-} from "@repo/backend/convex/contentRelease/cursor";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
-import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
 
 /** Returns a stable empty page before Aksara owns programs and materials. */
@@ -58,11 +58,10 @@ export const readProgramPage = Effect.fn("contentRelease.readProgramPage")(
         stale: true,
       };
     }
-    yield* validateReleaseCursor(
+    yield* validateInitialPage(
       options.cursor,
       expectedManifestHash,
-      expectedReleaseId,
-      active
+      expectedReleaseId
     );
     if (!(owner.managed && owner.selected)) {
       return {
@@ -88,7 +87,10 @@ export const readProgramPage = Effect.fn("contentRelease.readProgramPage")(
       activeManifestHash: owner.selected.active.manifestHash,
       activeReleaseId: owner.selected.active.releaseId,
       managed: true,
-      result: { ...stored, page: stored.page.map(({ rowJson }) => rowJson) },
+      result: {
+        ...stored,
+        page: stored.page.map(({ rowJson }) => rowJson),
+      },
       snapshotId: owner.selected.snapshotId,
       sourceRevision: readSourceRevision(owner.selected.active),
       stale: false,

@@ -1,7 +1,10 @@
 "use client";
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import { isModelId, type ModelId } from "@repo/ai/config/model";
+import {
+  isModelId,
+  type ModelId,
+} from "@repo/backend/confect/nina/config/model";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -53,14 +56,14 @@ export function AiChatModel() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost">
+          <Button size="sm" variant="ghost">
             <HugeIcons icon={selectedModel.icon} />
             {selectedModel.label}
             <HugeIcons icon={ArrowDown01Icon} />
           </Button>
         }
       />
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuGroup>
           <DropdownMenuRadioGroup
             onValueChange={handleValueChange}

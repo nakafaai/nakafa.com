@@ -180,7 +180,9 @@ export async function getPublishedMaterialCards(
 ) {
   "use cache";
 
-  const cards = await Effect.runPromise(readPublishedMaterialCards(input));
+  const cards = await Effect.runPromise(
+    readPublishedMaterialCards(input).pipe(Effect.withTracerTiming(false))
+  );
   applyContentCache("program", "material");
   return cards;
 }

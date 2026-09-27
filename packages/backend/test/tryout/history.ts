@@ -7,15 +7,15 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   decodeReleaseJson,
   decodeSnapshotRowJson,
   decodeTryoutRuntimeBundleJson,
-} from "@repo/backend/convex/contentRelease/parse";
-import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
-import type { TryoutHistoryRequest } from "@repo/backend/convex/tryouts/runtime/history/spec";
+} from "@repo/backend/confect/contentRelease/parse";
+import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
+import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_PROOF_RENDERER,
   testSignedRelease,

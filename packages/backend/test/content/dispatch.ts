@@ -1,7 +1,9 @@
+import { RegisteredFunction } from "@confect/server";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { PublicationResponseSchema } from "@nakafa/aksara-contracts/transport/response";
-import { dispatchPublication } from "@repo/backend/convex/contentRelease/ingress/dispatch";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { dispatchPublication } from "@repo/backend/confect/contentRelease/ingress/dispatch";
 import type schema from "@repo/backend/convex/schema";
 import {
   ingressArtifact,
@@ -22,7 +24,7 @@ import {
 } from "@repo/backend/test/content/proof";
 import { completeContentProof } from "@repo/backend/test/content/verify";
 import type { TestConvex } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 
 /** Executes one request through the real Node dispatcher and technical key. */
@@ -34,7 +36,6 @@ export async function sendPublication(
   const result = await target.action((ctx) =>
     Effect.runPromise(
       dispatchPublication(
-        ctx,
         {
           byteLength: new TextEncoder().encode(source).byteLength,
           source,
@@ -45,7 +46,12 @@ export async function sendPublication(
           ContentVerificationKeyResolver,
           TEST_KEY_RESOLVER
         ),
-        Effect.provide(FetchHttpClient.layer)
+        Effect.provide(
+          Layer.provideMerge(
+            FetchHttpClient.layer,
+            RegisteredFunction.actionLayer(confectSchema, ctx)
+          )
+        )
       )
     )
   );
@@ -64,7 +70,10 @@ async function verifyPublication(
     release.manifestHash,
     release.manifest.releaseId
   );
-  return sendPublication(target, { operation: "verify", release });
+  return sendPublication(target, {
+    operation: "verify",
+    release,
+  });
 }
 
 /** Stages and verifies the authenticated technical candidate end to end. */
@@ -103,7 +112,9 @@ export async function publishIngressCandidate(
       release: ingressRelease,
       rendererManifest: TEST_PROOF_RENDERER,
     },
-    { operation: "current" },
+    {
+      operation: "current",
+    },
     {
       operation: "stageGroup",
       releaseId: ingressReleaseId,
@@ -189,8 +200,13 @@ export async function publishIngressRecovery(
       recoveryId: ingressRecoveryId,
       releaseId: ingressReleaseId,
     },
-    { operation: "activate", release: ingressRelease },
-    { operation: "current" },
+    {
+      operation: "activate",
+      release: ingressRelease,
+    },
+    {
+      operation: "current",
+    },
     {
       activeManifestHash: ingressRelease.manifestHash,
       activeReleaseId: ingressReleaseId,
@@ -199,13 +215,18 @@ export async function publishIngressRecovery(
       limit: 10,
       operation: "headPage",
     },
-    { operation: "activateRecovery", release: ingressRecovery },
+    {
+      operation: "activateRecovery",
+      release: ingressRecovery,
+    },
     {
       operation: "recovery",
       recoveryId: ingressRecoveryId,
       releaseId: ingressReleaseId,
     },
-    { operation: "current" },
+    {
+      operation: "current",
+    },
     {
       activeManifestHash: ingressRecovery.manifestHash,
       activeReleaseId: ingressRecoveryId,

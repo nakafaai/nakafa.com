@@ -1,15 +1,15 @@
 import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
+import { hashText } from "@repo/backend/confect/contentRelease/digest";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { decodeProjectionJson } from "@repo/backend/confect/contentRelease/parse";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
-import { hashText } from "@repo/backend/convex/contentRelease/digest";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
-type MaterialRow = WithoutSystemFields<Doc<"materialCatalog">>;
+type MaterialRow = WithoutSystemFields<Docs["materialCatalog"]>;
 
 /** Checks all catalog fields against one authenticated material projection. */
 const verifyMaterialMetadata = Effect.fn(
@@ -18,7 +18,9 @@ const verifyMaterialMetadata = Effect.fn(
   row: MaterialRow,
   projection: Extract<
     Effect.Success<ReturnType<typeof decodeProjectionJson>>,
-    { kind: "subject-lesson" }
+    {
+      kind: "subject-lesson";
+    }
   >,
   projectionHash: string
 ) {
@@ -42,7 +44,10 @@ const verifyMaterialMetadata = Effect.fn(
       `Active material ${row.contentKey}/${row.appLocale} changed catalog metadata.`
     );
   }
-  return { projection, projectionJson };
+  return {
+    projection,
+    projectionJson,
+  };
 });
 
 /** Authenticates a standalone catalog row before comparing its metadata. */
@@ -90,7 +95,10 @@ export const verifyMaterialProjection = Effect.fn(
     resolved.projection,
     resolved.projectionHash
   );
-  return { ...verified, resolved };
+  return {
+    ...verified,
+    resolved,
+  };
 });
 
 /** Authenticates one material row against its effective active publication. */

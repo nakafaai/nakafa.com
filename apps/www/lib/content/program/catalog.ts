@@ -1,12 +1,11 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
-
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { ProgramTranslation } from "@nakafa/aksara-contracts/program/spec";
-import { api } from "@repo/backend/convex/_generated/api";
-import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
+import refs from "@repo/backend/confect/_generated/refs";
+import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
@@ -34,13 +33,11 @@ export const readPublishedProgramCatalog = Effect.fn(
   "NakafaProgram.readPublishedCatalog"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.program.catalog,
-    {
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.program.catalog, {
       appLocale,
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
     publicPath: "curricula",
@@ -77,7 +74,11 @@ export const readPublishedProgramCatalog = Effect.fn(
         })
       );
     }
-    return Effect.succeed({ program, route, translation });
+    return Effect.succeed({
+      program,
+      route,
+      translation,
+    });
   });
   return {
     entries,
@@ -105,11 +106,11 @@ export const readPublishedProgramSubjects = Effect.fn(
   "NakafaProgram.readPublishedSubjects"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.program.subjects,
-    { appLocale }
-  );
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.program.subjects, {
+      appLocale,
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   if (
     !result.managed ||
     result.routeJson.length > PROGRAM_FEATURED_SUBJECT_LIMIT
@@ -142,7 +143,7 @@ export async function getPublishedProgramSubjects(locale: Locale) {
   "use cache";
 
   const subjects = await Effect.runPromise(
-    readPublishedProgramSubjects(locale)
+    readPublishedProgramSubjects(locale).pipe(Effect.withTracerTiming(false))
   );
   applyContentCache("program");
   return subjects;
@@ -152,7 +153,9 @@ export async function getPublishedProgramSubjects(locale: Locale) {
 export async function getPublishedProgramCatalog(locale: Locale) {
   "use cache";
 
-  const result = await Effect.runPromise(readPublishedProgramCatalog(locale));
+  const result = await Effect.runPromise(
+    readPublishedProgramCatalog(locale).pipe(Effect.withTracerTiming(false))
+  );
   applyContentCache("program");
   return result;
 }

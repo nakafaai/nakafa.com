@@ -1,9 +1,6 @@
 "use client";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
-import type {
-  AttachmentsContext,
-  PromptInputController,
-} from "@repo/design-system/lib/prompt-input/context";
+import type { AttachmentsContext } from "@repo/design-system/lib/prompt-input/context";
 import {
   type PromptInputFile,
   type PromptInputFileConstraintError,
@@ -14,7 +11,6 @@ import { nanoid } from "nanoid";
 import {
   type RefObject,
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -23,16 +19,14 @@ import {
 
 interface PromptInputFilesOptions {
   accept?: string | undefined;
-  controller: PromptInputController | null;
   inputRef: RefObject<HTMLInputElement | null>;
   maxFileSize?: number | undefined;
   maxFiles?: number | undefined;
   onError?: ((error: PromptInputFileConstraintError) => void) | undefined;
 }
-/** Owns local prompt files while delegating to a provider when one is present. */
+/** Owns selected files and the lifetime of their browser preview URLs. */
 export function usePromptInputFiles({
   accept,
-  controller,
   inputRef,
   maxFiles,
   maxFileSize,
@@ -41,7 +35,7 @@ export function usePromptInputFiles({
   const [items, setItems] = useState<PromptInputFile[]>([]);
   const localItemsRef = useRef<PromptInputFile[]>([]);
   const localUrls = useStableMutableValue(() => new Map<string, string>());
-  const files = controller ? controller.attachments.files : items;
+  const files = items;
   const fileCountRef = useRef(files.length);
   const [fileIds] = useState(() => new Set(files.map((file) => file.id)));
   useLayoutEffect(() => {
@@ -62,6 +56,7 @@ export function usePromptInputFiles({
         localUrls.set(id, url);
         return {
           id,
+          file,
           type: "file",
           url,
           mediaType: file.type,
@@ -118,62 +113,53 @@ export function usePromptInputFiles({
       if (result.success.files.length === 0) {
         return;
       }
-      if (controller) {
-        controller.attachments.add(result.success.files);
-        fileCountRef.current += result.success.files.length;
-        return;
-      }
       addLocal(result.success.files);
       fileCountRef.current += result.success.files.length;
     },
-    [accept, addLocal, controller, maxFileSize, maxFiles, onError]
+    [accept, addLocal, maxFileSize, maxFiles, onError]
   );
   const remove = useCallback(
     (id: string) => {
       if (fileIds.delete(id)) {
         fileCountRef.current = Math.max(0, fileCountRef.current - 1);
       }
-      if (controller) {
-        controller.attachments.remove(id);
-        return;
-      }
       removeLocal(id);
     },
-    [controller, fileIds, removeLocal]
+    [fileIds, removeLocal]
   );
   const clear = useCallback(() => {
     fileCountRef.current = 0;
     fileIds.clear();
-    if (controller) {
-      controller.attachments.clear();
-      return;
-    }
     clearLocal();
-  }, [clearLocal, controller, fileIds]);
-  const openFileDialog = controller
-    ? controller.attachments.openFileDialog
-    : openFileDialogLocal;
-  useEffect(() => {
-    if (!controller) {
-      return;
-    }
-    controller.__registerFileInput(inputRef, () => inputRef.current?.click());
-  }, [controller, inputRef]);
-  useEffect(
-    () => () => {
-      if (controller) {
-        return;
+  }, [clearLocal, fileIds]);
+  const openFileDialog = openFileDialogLocal;
+  useLayoutEffect(() => {
+    // Activity preserves the draft while releasing effects. Restore preview
+    // resources before the preserved input becomes visible again.
+    let restored = false;
+    const next = localItemsRef.current.map((item) => {
+      if (localUrls.has(item.id)) {
+        return item;
       }
+      const url = URL.createObjectURL(item.file);
+      localUrls.set(item.id, url);
+      restored = true;
+      return { ...item, url };
+    });
+    if (restored) {
+      localItemsRef.current = next;
+      setItems(next);
+    }
+    return () => {
       for (const url of localUrls.values()) {
         URL.revokeObjectURL(url);
       }
       localUrls.clear();
-    },
-    [controller, localUrls]
-  );
+    };
+  }, [localUrls]);
   const attachments = useMemo<AttachmentsContext>(
     () => ({
-      files: files.map((item) => ({ ...item, id: item.id })),
+      files,
       add,
       remove,
       clear,

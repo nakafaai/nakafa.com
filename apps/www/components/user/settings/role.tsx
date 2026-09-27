@@ -1,5 +1,6 @@
 "use client";
-import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
+
+import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -12,10 +13,12 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { useForm } from "@tanstack/react-form";
-import { Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { FormBlock } from "@/components/shared/form-block";
 import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
+import { reportClientException } from "@/lib/analytics/client";
 import { roles } from "@/lib/data/roles";
 import type { CurrentUser } from "@/lib/identity/client";
 
@@ -27,6 +30,7 @@ const formSchema = Schema.toStandardSchemaV1(
 );
 /** Renders the settings form that validates and saves the user's app role. */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
+  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const roleItems = roles.map((role) => ({
     label: (
@@ -48,16 +52,35 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value }) => {
-      const role = Schema.decodeUnknownOption(roleSchema)(value.role);
-      if (Option.isNone(role)) {
-        return;
-      }
-      await updateUserRole({
-        role: role.value,
-      });
-      form.reset(value);
-    },
+    onSubmit: async ({ value }) =>
+      Effect.runPromise(
+        Schema.decodeUnknownEffect(roleSchema)(value.role).pipe(
+          Effect.flatMap((role) =>
+            Effect.tryPromise(() => updateUserRole({ role }))
+          ),
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap(() =>
+            Effect.sync(() => {
+              if (form.getFieldValue("role") === value.role) {
+                form.reset(value);
+              }
+            })
+          ),
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/user/settings/role",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(actionErrorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      ),
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-role-form">

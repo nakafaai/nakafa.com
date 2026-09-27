@@ -1,5 +1,5 @@
-import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/convex/auth/deletion/constants";
-import { accountDeletionRequestPhase } from "@repo/backend/convex/auth/deletion/spec";
+import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/confect/auth/deletion/constants";
+import { accountDeletionRequestPhase } from "@repo/backend/confect/auth/deletion/spec";
 import { Schema } from "effect";
 export const accountDeletionErrorCode = {
   failed: "ACCOUNT_DELETION_FAILED",

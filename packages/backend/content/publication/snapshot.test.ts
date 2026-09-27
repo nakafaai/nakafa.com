@@ -1,18 +1,22 @@
+import {
+  DatabaseReader as ConfectDatabaseReader,
+  RegisteredConvexFunction,
+} from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
+import { convexModules } from "@repo/backend/confect/test.setup";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import {
   loadActiveSnapshot,
   loadSnapshotOwner,
 } from "@repo/backend/content/publication/snapshot";
-import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -29,7 +33,7 @@ import {
 } from "@repo/backend/test/quran/snapshot";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 
 /** Promotes the staged technical release to the exact active identity. */
 async function activateProgram(
@@ -37,7 +41,15 @@ async function activateProgram(
   data: ProgramSnapshotData,
   verified: boolean
 ) {
-  await stageProgramSnapshot(t, data);
+  await t.mutation((ctx) =>
+    Effect.runPromise(
+      stageProgramSnapshot(data).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
+    )
+  );
   await t.mutation(async (ctx) => {
     const [release, state, snapshot] = await Promise.all([
       ctx.db.query("contentReleases").unique(),
@@ -64,85 +76,119 @@ async function activateProgram(
     });
   });
 }
-
 describe("contentRelease/runtime/snapshot", () => {
   it("returns empty ownership before any active release exists", async () => {
     const t = convexTest(schema, convexModules);
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           loadActiveSnapshot("program").pipe(
-            Effect.provide(convexPublicationLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                publicationLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
     ).resolves.toBeNull();
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           loadSnapshotOwner("program").pipe(
-            Effect.provide(convexPublicationLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                publicationLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
-    ).resolves.toEqual({ active: null, snapshot: null, snapshotId: null });
+    ).resolves.toEqual({
+      active: null,
+      snapshot: null,
+      snapshotId: null,
+    });
   });
-
   it("preserves an active release that does not own the requested snapshot", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(activateQuranSource);
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           loadSnapshotOwner("quran").pipe(
-            Effect.provide(convexPublicationLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                publicationLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
     ).resolves.toMatchObject({
-      active: { releaseId: TEST_RELEASE_ID },
+      active: {
+        releaseId: TEST_RELEASE_ID,
+      },
       snapshot: null,
       snapshotId: null,
     });
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           loadActiveSnapshot("quran").pipe(
-            Effect.provide(convexPublicationLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                publicationLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
     ).resolves.toBeNull();
   });
-
   it.live(
     "selects only the verified manifest signed by the active release",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
         const missing = convexTest(schema, convexModules);
         yield* Effect.promise(() => activateProgram(missing, data, false));
         yield* Effect.promise(() =>
           expect(
             missing.query((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 loadActiveSnapshot("program").pipe(
-                  Effect.provide(convexPublicationLayer(ctx))
+                  Effect.provide(
+                    Layer.provideMerge(
+                      publicationLayer,
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
+                  )
                 )
               )
             )
-          ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } })
+          ).rejects.toMatchObject({
+            code: "CONTENT_RELEASE_MISSING",
+          })
         );
-
         const active = convexTest(schema, convexModules);
         yield* Effect.promise(() => activateProgram(active, data, true));
         yield* Effect.promise(() =>
           expect(
             active.query((ctx) =>
-              runConvexProgram(
+              Effect.runPromiseWith(runtimeServices)(
                 loadActiveSnapshot("program").pipe(
-                  Effect.provide(convexPublicationLayer(ctx))
+                  Effect.provide(
+                    Layer.provideMerge(
+                      publicationLayer,
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
+                  )
                 )
               )
             )
@@ -153,9 +199,9 @@ describe("contentRelease/runtime/snapshot", () => {
         );
       })
   );
-
   it.live("rejects a verified manifest whose stored identity drifted", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() => activateProgram(t, data, true));
@@ -176,21 +222,26 @@ describe("contentRelease/runtime/snapshot", () => {
           });
         })
       );
-
       yield* Effect.promise(() =>
         expect(
           t.query((ctx) =>
-            runConvexProgram(
+            Effect.runPromiseWith(runtimeServices)(
               loadActiveSnapshot("program").pipe(
-                Effect.provide(convexPublicationLayer(ctx))
+                Effect.provide(
+                  Layer.provideMerge(
+                    publicationLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+        })
       );
     })
   );
-
   it("rejects blocked Quran provenance even if a stored row is marked verified", async () => {
     const snapshot = makeBlockedQuranSnapshot();
     const snapshots = {
@@ -203,7 +254,11 @@ describe("contentRelease/runtime/snapshot", () => {
       }),
     };
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertTestRelease(ctx, { snapshots }));
+    await t.mutation((ctx) =>
+      insertTestRelease(ctx, {
+        snapshots,
+      })
+    );
     await t.mutation(async (ctx) => {
       const [release, state] = await Promise.all([
         ctx.db.query("contentReleases").unique(),
@@ -233,15 +288,21 @@ describe("contentRelease/runtime/snapshot", () => {
         candidateSequence: undefined,
       });
     });
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           loadActiveSnapshot("quran").pipe(
-            Effect.provide(convexPublicationLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                publicationLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_UNSUPPORTED" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_UNSUPPORTED",
+    });
   });
 });

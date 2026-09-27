@@ -59,11 +59,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "1.46.0", dependency: "convex", minimumDeclarations: 1 },
   { approved: "7.0.109", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.112",
-    dependency: "@ai-sdk/react",
-    minimumDeclarations: 1,
-  },
-  {
     approved: "4.0.76",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
@@ -71,11 +66,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     approved: "4.0.88",
     dependency: "@ai-sdk/gateway",
-    minimumDeclarations: 1,
-  },
-  {
-    approved: "1.0.22",
-    dependency: "@ai-sdk/devtools",
     minimumDeclarations: 1,
   },
   {
@@ -93,7 +83,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     approved: CONTRACT_PACKAGE_VERSION,
     declarationPaths: [
       "apps/www/package.json",
-      "packages/ai/package.json",
       "packages/backend/package.json",
       "packages/contents/package.json",
       "packages/email/package.json",
@@ -196,11 +185,6 @@ export const REGISTRY_REVIEWS = [
   ],
   ["ai@latest", "7.0.109", "AI SDK packages move as one reviewed cohort."],
   [
-    "@ai-sdk/react@latest",
-    "4.0.112",
-    "AI SDK packages move as one reviewed cohort.",
-  ],
-  [
     "@ai-sdk/google@latest",
     "4.0.76",
     "AI SDK packages move as one reviewed cohort.",
@@ -208,11 +192,6 @@ export const REGISTRY_REVIEWS = [
   [
     "@ai-sdk/gateway@latest",
     "4.0.88",
-    "AI SDK packages move as one reviewed cohort.",
-  ],
-  [
-    "@ai-sdk/devtools@latest",
-    "1.0.22",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [

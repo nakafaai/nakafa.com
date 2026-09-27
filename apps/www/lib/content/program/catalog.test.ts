@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import {
   getPublishedProgramCatalog,
   getPublishedProgramSubjects,
@@ -19,14 +19,9 @@ import {
   testProgramRowJson,
   testProgramSubject,
 } from "@/test/content-program";
-import {
-  createTestNativeQuery,
-  createTestRuntimeQuery,
-} from "@/test/runtime-query";
 
 const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const readQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 
 /** Builds one successful bounded program catalog response. */
@@ -49,29 +44,38 @@ function catalogResponse(overrides?: {
         : overrides.sourceRevision,
   };
 }
-
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
 }));
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: readQueryMock,
-}));
-
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 describe("published program catalog", () => {
   beforeEach(() => {
     cacheMock.mockReset();
     runtimeQueryMock.mockReset();
-    readQueryMock
-      .mockReset()
-      .mockImplementation(createTestRuntimeQuery(runtimeQueryMock));
   });
-
   it.effect(
     "selects one renderable root without enumerating descendant routes",
     () =>
       Effect.gen(function* () {
-        runtimeQueryMock.mockResolvedValueOnce(catalogResponse());
-
+        runtimeQueryMock.mockReturnValueOnce(Effect.succeed(catalogResponse()));
         expect(yield* readPublishedProgramPrerenderRoute("en")).toEqual(
           testProgramRoot
         );
@@ -83,26 +87,39 @@ describe("published program catalog", () => {
         );
       })
   );
-
   it.effect.each([
-    ["empty inventory", catalogResponse({ routeJson: [] })],
+    [
+      "empty inventory",
+      catalogResponse({
+        routeJson: [],
+      }),
+    ],
     [
       "hidden roots",
       catalogResponse({
         routeJson: [
-          testCurriculumRowJson({ ...testProgramRoot, sitemap: false }),
+          testCurriculumRowJson({
+            ...testProgramRoot,
+            sitemap: false,
+          }),
         ],
       }),
     ],
-    ["unmanaged inventory", catalogResponse({ managed: false })],
+    [
+      "unmanaged inventory",
+      catalogResponse({
+        managed: false,
+      }),
+    ],
     [
       "non-root route",
-      catalogResponse({ routeJson: [testCurriculumRowJson(testProgramClass)] }),
+      catalogResponse({
+        routeJson: [testCurriculumRowJson(testProgramClass)],
+      }),
     ],
   ])("rejects a prerender seed from %s", ([_label, result]) =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(result);
-
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(result));
       expect(
         yield* readPublishedProgramPrerenderRoute("en").pipe(Effect.flip)
       ).toMatchObject({
@@ -111,15 +128,13 @@ describe("published program catalog", () => {
       });
     })
   );
-
   it.effect(
     "reads curriculum roots through the native Convex program query",
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeProgramRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
-        readQueryMock.mockImplementation(createTestNativeQuery(context));
-
+        runtimeQueryMock.mockImplementation(context.query);
         const catalog = yield* readPublishedProgramCatalog("en");
         expect(
           catalog.entries.map(({ translation }) => translation.title)
@@ -129,20 +144,21 @@ describe("published program catalog", () => {
         );
       })
   );
-
   it.effect("decodes real program roots and applies the runtime cache", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(catalogResponse());
-
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(catalogResponse()));
       const catalog = yield* Effect.tryPromise(() =>
         getPublishedProgramCatalog("en")
       );
-
       expect(catalog).toMatchObject({
         entries: [
           {
-            program: { key: "merdeka" },
-            route: { publicPath: "curriculum/merdeka" },
+            program: {
+              key: "merdeka",
+            },
+            route: {
+              publicPath: "curriculum/merdeka",
+            },
           },
         ],
         sourceRevision: revision,
@@ -150,25 +166,26 @@ describe("published program catalog", () => {
       expect(cacheMock).toHaveBeenCalledOnce();
     })
   );
-
   it.effect("rejects an unmanaged catalog", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(
-        catalogResponse({
-          managed: false,
-          programJson: [],
-          routeJson: [],
-          sourceRevision: null,
-        })
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed(
+          catalogResponse({
+            managed: false,
+            programJson: [],
+            routeJson: [],
+            sourceRevision: null,
+          })
+        )
       );
-
       const failure = yield* readPublishedProgramCatalog("id").pipe(
         Effect.flip
       );
-      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(failure).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
     })
   );
-
   it.effect.each([
     [
       "non-root route",
@@ -182,49 +199,66 @@ describe("published program catalog", () => {
         programJson: [],
       }),
     ],
-    ["invalid source revision", catalogResponse({ sourceRevision: "main" })],
+    [
+      "invalid source revision",
+      catalogResponse({
+        sourceRevision: "main",
+      }),
+    ],
   ] as const)("rejects a catalog with %s", ([_name, response]) =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce(response);
-
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(response));
       const failure = yield* readPublishedProgramCatalog("en").pipe(
         Effect.flip
       );
-      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(failure).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
     })
   );
-
   it.effect("reads the bounded subject query and caches the result", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce({
-        managed: true,
-        routeJson: [testCurriculumRowJson(testProgramSubject)],
-      });
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          managed: true,
+          routeJson: [testCurriculumRowJson(testProgramSubject)],
+        })
+      );
       expect(
         yield* Effect.promise(() => getPublishedProgramSubjects("en"))
       ).toEqual([testProgramSubject]);
       expect(runtimeQueryMock).toHaveBeenCalledExactlyOnceWith(
         expect.anything(),
-        { appLocale: "en" }
+        {
+          appLocale: "en",
+        }
       );
       expect(cacheMock).toHaveBeenCalledOnce();
     })
   );
-
   it.effect("rejects subject reads before Aksara owns the program family", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce({ managed: false, routeJson: [] });
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          managed: false,
+          routeJson: [],
+        })
+      );
       expect(
         yield* readPublishedProgramSubjects("en").pipe(Effect.flip)
-      ).toMatchObject({ _tag: "PublishedProjectionError" });
+      ).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
     })
   );
-
   it.effect.each([
     [
       "too many subjects",
-      Array.from({ length: 5 }, () =>
-        testCurriculumRowJson(testProgramSubject)
+      Array.from(
+        {
+          length: 5,
+        },
+        () => testCurriculumRowJson(testProgramSubject)
       ),
     ],
     [
@@ -239,19 +273,32 @@ describe("published program catalog", () => {
     ["a program root", [testCurriculumRowJson(testProgramRoot)]],
     [
       "a hidden subject",
-      [testCurriculumRowJson({ ...testProgramSubject, sitemap: false })],
+      [
+        testCurriculumRowJson({
+          ...testProgramSubject,
+          sitemap: false,
+        }),
+      ],
     ],
     ["malformed signed rows", ["{}"]],
   ])("rejects featured subjects containing %s", ([_name, routeJson]) =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockResolvedValueOnce({ managed: true, routeJson });
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          managed: true,
+          routeJson,
+        })
+      );
       expect(
         yield* readPublishedProgramSubjects("en").pipe(Effect.flip)
-      ).toMatchObject({ _tag: "PublishedProjectionError" });
+      ).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
     })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

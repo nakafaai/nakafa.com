@@ -10,7 +10,6 @@ interface AgentEdgePath {
   readonly source: string;
   readonly suffix: string;
 }
-
 interface AgentEdgeRouteOptions {
   readonly contract: AgentEdgeContract;
   readonly paths: readonly AgentEdgePath[];
@@ -38,7 +37,6 @@ export function createAgentEdgeRoutes({
   paths,
 }: AgentEdgeRouteOptions) {
   const routes = createRoutes();
-
   for (const path of paths) {
     routes.route({
       src: path.source,
@@ -49,35 +47,44 @@ export function createAgentEdgeRoutes({
         {
           type: "request.headers",
           op: "delete",
-          target: { key: "authorization" },
+          target: {
+            key: "authorization",
+          },
         },
         {
           type: "request.headers",
           op: "delete",
-          target: { key: "cookie" },
+          target: {
+            key: "cookie",
+          },
         },
         {
           type: "request.headers",
           op: "delete",
-          target: { key: contract.secretHeader },
+          target: {
+            key: contract.secretHeader,
+          },
         },
         {
           type: "request.headers",
           op: "set",
-          target: { key: contract.secretHeader },
+          target: {
+            key: contract.secretHeader,
+          },
           args: deploymentEnv(contract.secretEnvironment),
           env: [contract.secretEnvironment],
         },
         {
           type: "response.headers",
           op: "set",
-          target: { key: NAKAFA_EDGE_RELEASE_SHA_HEADER },
+          target: {
+            key: NAKAFA_EDGE_RELEASE_SHA_HEADER,
+          },
           args: deploymentEnv(VERCEL_GIT_COMMIT_SHA_ENVIRONMENT),
           env: [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT],
         },
       ],
     });
   }
-
   return routes.getConfig();
 }

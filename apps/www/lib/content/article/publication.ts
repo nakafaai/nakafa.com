@@ -1,9 +1,8 @@
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import "server-only";
-
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { api } from "@repo/backend/convex/_generated/api";
-import { fetchQuery } from "convex/nextjs";
-import type { FunctionReturnType } from "convex/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { cache } from "react";
@@ -26,11 +25,14 @@ import { decodePublishedDelivery } from "@/lib/content/published/exchange";
  * so their module graph never renders interactive renderers. */
 export const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(
   function* (
-    source: FunctionReturnType<typeof api.contentRelease.article.delivery>,
+    source: Ref.Returns<typeof refs.public.contentRelease.article.delivery>,
     locale: Locale,
     publicPath: string
   ) {
-    const input = { appLocale: AppLocaleSchema.make(locale), publicPath };
+    const input = {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    };
     const model = yield* decodePublishedArticleRoute(
       source.model,
       locale,
@@ -48,17 +50,23 @@ export const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(
     const data = yield* decodePublishedDelivery(input, source.runtimeJson);
     const narrowed = yield* decodeArticleData(data, input);
     yield* verifyArticlePublication(
-      { activeReleaseId: model.activeReleaseId, projection: model.projection },
+      {
+        activeReleaseId: model.activeReleaseId,
+        projection: model.projection,
+      },
       narrowed
     );
-    return { model, narrowed };
+    return {
+      model,
+      narrowed,
+    };
   }
 );
 
 /** Verifies the complete query result before evaluating its immutable body. */
 export const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
   function* (
-    source: FunctionReturnType<typeof api.contentRelease.article.delivery>,
+    source: Ref.Returns<typeof refs.public.contentRelease.article.delivery>,
     locale: Locale,
     publicPath: string
   ) {
@@ -67,19 +75,25 @@ export const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
       return null;
     }
     const published = yield* renderArticleArtifact(decoded.narrowed);
-    return { model: decoded.model, published };
+    return {
+      model: decoded.model,
+      published,
+    };
   }
 );
 
 /** Fetches one signed delivery row shared by body and metadata readers. */
 async function fetchArticleSource(locale: Locale, publicPath: string) {
-  return await fetchQuery(
-    api.contentRelease.article.delivery,
-    {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    },
-    { url: env.NEXT_PUBLIC_CONVEX_URL }
+  return await Effect.runPromise(
+    Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(refs.public.contentRelease.article.delivery, {
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath,
+      })
+    ).pipe(
+      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.withTracerTiming(false)
+    )
   );
 }
 
@@ -88,7 +102,7 @@ async function readArticleDelivery(locale: Locale, publicPath: string) {
   "use cache";
 
   applyContentCache("article");
-  // Start native IO before Effect during request-less static rendering.
+  // The Confect request disables trace timing before static rendering suspends.
   // https://nextjs.org/docs/messages/next-prerender-current-time
   const source = await fetchArticleSource(locale, publicPath);
   return await Effect.runPromise(
@@ -115,5 +129,4 @@ async function readArticleModel(locale: Locale, publicPath: string) {
     decodeArticleModel(source, locale, publicPath)
   );
 }
-
 export const getArticleModel = cache(readArticleModel);

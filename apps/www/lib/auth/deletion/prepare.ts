@@ -1,4 +1,6 @@
-import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/convex/auth/deletion/constants";
+import type { InvokeReturn } from "@confect/react";
+import type refs from "@repo/backend/confect/_generated/refs";
+import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/confect/auth/deletion/constants";
 import {
   type AccountDeletionBrowserAttempt,
   type AccountDeletionCancellationOutcome,
@@ -7,7 +9,7 @@ import {
   accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
-} from "@repo/backend/convex/auth/deletion/spec";
+} from "@repo/backend/confect/auth/deletion/spec";
 import { Effect, Result } from "effect";
 import type { AccountDeletionAttemptStorageFailed } from "@/lib/auth/deletion/attempt";
 import {
@@ -20,10 +22,14 @@ import {
 type AccountDeletionAttemptId = AccountDeletionBrowserAttempt["attemptId"];
 type CancelAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
-) => Promise<AccountDeletionCancellationOutcome>;
+) => InvokeReturn<
+  typeof refs.public.auth.deletion.cancelAccountDeletionAttempt
+>;
 type PrepareAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
-) => Promise<AccountDeletionPreparationOutcome>;
+) => InvokeReturn<
+  typeof refs.public.auth.deletion.prepareCurrentAccountDeletion
+>;
 type PersistAccountDeletionAttempt = (
   attempt: AccountDeletionBrowserAttempt
 ) => Effect.Effect<void, AccountDeletionAttemptStorageFailed>;
@@ -49,15 +55,17 @@ export const cancelPreparedAccountDeletion = Effect.fn(
   let outcome: AccountDeletionCancellationOutcome =
     accountDeletionCancellationOutcome.continue;
   while (outcome === accountDeletionCancellationOutcome.continue) {
-    outcome = yield* Effect.tryPromise({
-      try: () => cancelPreparation(attemptId),
-      catch: () =>
-        new AccountDeletionRequestUncertain({
-          attemptId,
-          code: accountDeletionErrorCode.requestUncertain,
-          phase: uncertainPhase,
-        }),
-    });
+    outcome = yield* Effect.tryPromise(() => cancelPreparation(attemptId)).pipe(
+      Effect.flatMap(Effect.fromResult),
+      Effect.mapError(
+        () =>
+          new AccountDeletionRequestUncertain({
+            attemptId,
+            code: accountDeletionErrorCode.requestUncertain,
+            phase: uncertainPhase,
+          })
+      )
+    );
   }
 });
 /** Persists one durable browser phase without leaking storage failures. */
@@ -104,15 +112,19 @@ export const prepareAccountDeletion = Effect.fn(
   let preparationOutcome: AccountDeletionPreparationOutcome =
     accountDeletionPreparationOutcome.continue;
   while (preparationOutcome === accountDeletionPreparationOutcome.continue) {
-    preparationOutcome = yield* Effect.tryPromise({
-      try: () => prepare(attemptId),
-      catch: () =>
-        new AccountDeletionRequestUncertain({
-          attemptId,
-          code: accountDeletionErrorCode.requestUncertain,
-          phase: accountDeletionRequestPhase.preparation,
-        }),
-    });
+    preparationOutcome = yield* Effect.tryPromise(() =>
+      prepare(attemptId)
+    ).pipe(
+      Effect.flatMap(Effect.fromResult),
+      Effect.mapError(
+        () =>
+          new AccountDeletionRequestUncertain({
+            attemptId,
+            code: accountDeletionErrorCode.requestUncertain,
+            phase: accountDeletionRequestPhase.preparation,
+          })
+      )
+    );
   }
   if (
     preparationOutcome ===

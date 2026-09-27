@@ -1,0 +1,16 @@
+import { describe, expect, it } from "@effect/vitest";
+import { extractDomain } from "@repo/backend/confect/nina/research/domain";
+
+describe("extractDomain", () => {
+  it("extracts the registrable domain label from full and partial URLs", () => {
+    expect(extractDomain("https://www.react.dev/reference/react")).toBe(
+      "react"
+    );
+    expect(extractDomain("nextjs.org/docs")).toBe("nextjs");
+  });
+
+  it("returns an empty label for invalid or public-suffix-only values", () => {
+    expect(extractDomain("not a url")).toBe("");
+    expect(extractDomain("gov.uk")).toBe("");
+  });
+});

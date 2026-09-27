@@ -14,7 +14,7 @@ import {
 } from "@nakafa/aksara-contracts/tryout/placement";
 import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
 import { TryoutContentHashSchema } from "@nakafa/aksara-contracts/tryout/spec";
-import type { TryoutSnapshotSource } from "@repo/backend/convex/tryouts/start/source";
+import type { TryoutSnapshotSource } from "@repo/backend/confect/tryouts/start/source";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { Schema } from "effect";
 

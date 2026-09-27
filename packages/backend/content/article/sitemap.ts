@@ -1,12 +1,12 @@
-import { loadArticleOwner } from "@repo/backend/content/article/owner";
-import { readArticlePartition } from "@repo/backend/content/article/partition";
-import { ArticleSource } from "@repo/backend/content/article/source";
 import {
   CONTENT_BUCKET_LIMIT,
   CONTENT_BUCKET_SIZE,
   isProjectionBucket,
-} from "@repo/backend/convex/contentRelease/bucket";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+} from "@repo/backend/confect/contentRelease/bucket";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { loadArticleOwner } from "@repo/backend/content/article/owner";
+import { readArticlePartition } from "@repo/backend/content/article/partition";
+import { ArticleSource } from "@repo/backend/content/article/source";
 import { Effect } from "effect";
 
 /** Lists non-empty deterministic sitemap partitions for managed articles. */
@@ -23,7 +23,6 @@ export const readArticleBuckets = Effect.fn(
       managed: false,
     };
   }
-
   const source = yield* ArticleSource;
   const rows = yield* source.buckets(
     owner.slot,
@@ -36,7 +35,6 @@ export const readArticleBuckets = Effect.fn(
       `Article sitemap buckets for ${appLocale} exceed their fixed partition space.`
     );
   }
-
   for (const row of rows) {
     if (
       !isProjectionBucket(row.bucket) ||
@@ -51,7 +49,6 @@ export const readArticleBuckets = Effect.fn(
       );
     }
   }
-
   return {
     activeReleaseId,
     articleCount: rows.reduce(
@@ -74,7 +71,6 @@ export const readArticleSitemap = Effect.fn(
   if (partition.kind !== "found") {
     return null;
   }
-
   return {
     routes: [
       ...partition.categories.map(({ route }) => ({

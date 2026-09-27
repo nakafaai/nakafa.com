@@ -45,7 +45,9 @@ function isNetworkRetryCode(code: string): code is NetworkRetryCode {
 export function createNetworkRequestError(cause: unknown) {
   const inspection = Result.try(() => inspectNetworkCodes(cause));
   if (Result.isFailure(inspection)) {
-    return new NetworkRequestError({ networkCodes: [] });
+    return new NetworkRequestError({
+      networkCodes: [],
+    });
   }
   const retryable =
     inspection.success.foundCode && !inspection.success.foundTerminalFailure;
@@ -54,7 +56,9 @@ export function createNetworkRequestError(cause: unknown) {
         inspection.success.retryCodes.has(code)
       )
     : [];
-  return new NetworkRequestError({ networkCodes });
+  return new NetworkRequestError({
+    networkCodes,
+  });
 }
 function inspectNetworkCodes(cause: unknown): NetworkCodeInspection {
   const pending = [cause];
@@ -99,7 +103,6 @@ function inspectNetworkNode(current: object, remainingCapacity: number) {
     hasNetworkCode && isNetworkRetryCode(code) ? code : undefined;
   const children: object[] = [];
   let foundTerminalFailure = hasCodeProperty && retryCode === undefined;
-
   if ("cause" in current) {
     const nestedCause = current.cause;
     if (Predicate.isObjectOrArray(nestedCause)) {

@@ -1,33 +1,36 @@
 "use client";
 
-import { PromptInputAttachmentsProvider } from "@repo/design-system/components/ai/input-context";
 import { usePromptInputFiles } from "@repo/design-system/components/ai/input-files";
-import { InputGroup } from "@repo/design-system/components/ui/input-group";
+import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
 import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
-import { useOptionalPromptInputController } from "@repo/design-system/lib/prompt-input/context";
+import {
+  LocalAttachmentsContext,
+  usePromptInputAttachments,
+} from "@repo/design-system/lib/prompt-input/context";
 import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
 import {
   type PromptInputMessage,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
 import { cn } from "cn";
-import { Effect, Fiber } from "effect";
 import {
   type ChangeEventHandler,
+  type ClipboardEventHandler,
+  type ComponentProps,
   type FormEvent,
   type FormEventHandler,
   type HTMLAttributes,
+  type KeyboardEventHandler,
   useEffect,
   useRef,
 } from "react";
 
-/** Props for the self-managed or provider-controlled prompt input form. */
+/** Props for a prompt form with locally owned attachments. */
 export type PromptInputProps = Omit<
   HTMLAttributes<HTMLFormElement>,
   "onSubmit"
 > & {
   accept?: string;
-  globalDrop?: boolean;
   maxFiles?: number;
   maxFileSize?: number;
   multiple?: boolean;
@@ -35,7 +38,7 @@ export type PromptInputProps = Omit<
   onSubmit: (
     message: PromptInputMessage,
     event: FormEvent<HTMLFormElement>
-  ) => void | Promise<void>;
+  ) => boolean | Promise<boolean>;
 };
 
 function readPromptInputText(form: HTMLFormElement) {
@@ -43,12 +46,11 @@ function readPromptInputText(form: HTMLFormElement) {
   return typeof value === "string" ? value : "";
 }
 
-/** Renders a prompt form with local attachments or its nearest provider state. */
+/** Owns attachment selection and commits the submitted files only after admission. */
 export function PromptInput({
   className,
   accept,
   multiple,
-  globalDrop,
   maxFiles,
   maxFileSize,
   onError,
@@ -56,28 +58,16 @@ export function PromptInput({
   children,
   ...props
 }: PromptInputProps) {
-  const controller = useOptionalPromptInputController();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
-  const submitFibersRef = useRef(new Set<Fiber.Fiber<void, never>>());
   const { attachments, files } = usePromptInputFiles({
     ...(accept === undefined ? {} : { accept }),
-    controller,
     inputRef,
     maxFiles,
     ...(maxFileSize === undefined ? {} : { maxFileSize }),
     onError,
   });
   const addFiles = attachments.add;
-
-  useEffect(
-    () => () => {
-      const fibers = [...submitFibersRef.current];
-      submitFibersRef.current.clear();
-      Effect.runFork(Fiber.interruptAll(fibers));
-    },
-    []
-  );
 
   useEffect(() => {
     const form = formRef.current;
@@ -111,36 +101,6 @@ export function PromptInput({
     };
   }, [addFiles]);
 
-  useEffect(() => {
-    if (!globalDrop) {
-      return;
-    }
-
-    const onDragOver = (event: DragEvent) => {
-      if (event.dataTransfer?.types?.includes("Files")) {
-        event.preventDefault();
-      }
-    };
-    const onDrop = (event: DragEvent) => {
-      if (event.defaultPrevented) {
-        return;
-      }
-      if (event.dataTransfer?.types?.includes("Files")) {
-        event.preventDefault();
-      }
-      if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-        addFiles(event.dataTransfer.files);
-      }
-    };
-
-    document.addEventListener("dragover", onDragOver);
-    document.addEventListener("drop", onDrop);
-    return () => {
-      document.removeEventListener("dragover", onDragOver);
-      document.removeEventListener("drop", onDrop);
-    };
-  }, [addFiles, globalDrop]);
-
   const addSelectedFiles: ChangeEventHandler<HTMLInputElement> = (event) => {
     const selectedFiles = event.currentTarget.files;
     if (selectedFiles) {
@@ -153,35 +113,31 @@ export function PromptInput({
     event.preventDefault();
 
     const form = event.currentTarget;
-    const text = controller
-      ? controller.textInput.value
-      : readPromptInputText(form);
+    const text = readPromptInputText(form);
     const submittedFiles = [...files];
 
-    if (!controller) {
-      form.reset();
-    }
-
-    const fiber = runPromptInputProgram(
+    // Admission may commit after Activity hides this form. Let settlement clear
+    // accepted files so returning to the draft cannot resend old attachments.
+    runPromptInputProgram(
       submitPromptInput({
         event,
         files: submittedFiles,
         onSubmit,
         onSuccess: () => {
+          if (readPromptInputText(form) === text) {
+            form.reset();
+          }
           for (const file of submittedFiles) {
             attachments.remove(file.id);
           }
-          controller?.textInput.clearIfUnchanged(text);
         },
         text,
       })
     );
-    submitFibersRef.current.add(fiber);
-    fiber.addObserver(() => submitFibersRef.current.delete(fiber));
   };
 
   return (
-    <PromptInputAttachmentsProvider attachments={attachments}>
+    <LocalAttachmentsContext value={attachments}>
       <input
         accept={accept}
         aria-label="Upload files"
@@ -192,9 +148,84 @@ export function PromptInput({
         title="Upload files"
         type="file"
       />
-      <form className="w-full" onSubmit={handleSubmit} ref={formRef} {...props}>
-        <InputGroup className={cn("bg-card", className)}>{children}</InputGroup>
+      <form
+        className={cn("w-full", className)}
+        onSubmit={handleSubmit}
+        ref={formRef}
+        {...props}
+      >
+        {children}
       </form>
-    </PromptInputAttachmentsProvider>
+    </LocalAttachmentsContext>
+  );
+}
+
+const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
+  event
+) => {
+  if (event.key !== "Enter") {
+    return;
+  }
+  if (event.nativeEvent.isComposing) {
+    return;
+  }
+  if (event.shiftKey) {
+    return;
+  }
+
+  event.preventDefault();
+  event.currentTarget.form?.requestSubmit();
+};
+
+/** Props for the prompt input textarea. */
+export type PromptInputTextareaProps = ComponentProps<
+  typeof InputGroupTextarea
+>;
+
+/** Renders prompt text with submit-on-enter and pasted-file support. */
+export function PromptInputTextarea({
+  onChange,
+  className,
+  placeholder = "What would you like to know?",
+  ...props
+}: PromptInputTextareaProps) {
+  const attachments = usePromptInputAttachments();
+
+  const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {
+    const items = event.clipboardData?.items;
+    if (!items) {
+      return;
+    }
+
+    const files: File[] = [];
+    for (const item of items) {
+      if (item.kind !== "file") {
+        continue;
+      }
+
+      const file = item.getAsFile();
+      if (file) {
+        files.push(file);
+      }
+    }
+
+    if (files.length === 0) {
+      return;
+    }
+
+    event.preventDefault();
+    attachments.add(files);
+  };
+
+  return (
+    <InputGroupTextarea
+      className={cn("field-sizing-content max-h-48 min-h-16", className)}
+      name="message"
+      onKeyDown={submitTextareaOnEnter}
+      onPaste={handlePaste}
+      placeholder={placeholder}
+      {...props}
+      onChange={onChange}
+    />
   );
 }

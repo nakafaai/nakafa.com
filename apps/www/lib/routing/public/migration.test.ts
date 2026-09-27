@@ -1,34 +1,46 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
-import { createTestNativeQuery } from "@/test/runtime-query";
 
 const readNakafaRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const articleMocks = vi.hoisted(() => ({
   hasCategory: vi.fn(),
   readActiveRoute: vi.fn(),
 }));
-
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: readNakafaRuntimeQueryMock,
-}));
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: readNakafaRuntimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
 vi.mock("@/lib/content/article/category", () => ({
   hasPublishedArticleCategory: articleMocks.hasCategory,
 }));
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: articleMocks.readActiveRoute,
 }));
-
 describe("public URL migration redirects", () => {
   beforeEach(() => {
     readNakafaRuntimeQueryMock.mockReset();
     articleMocks.hasCategory.mockReset();
     articleMocks.readActiveRoute.mockReset();
   });
-
   it.effect("redirects a retired URL to its authenticated current route", () =>
     Effect.gen(function* () {
       readNakafaRuntimeQueryMock.mockReturnValueOnce(
@@ -39,7 +51,6 @@ describe("public URL migration redirects", () => {
             "materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling",
         })
       );
-
       const redirect = yield* readPublicUrlMigrationRedirect({
         method: "GET",
         pathname:
@@ -49,7 +60,6 @@ describe("public URL migration redirects", () => {
         "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
       );
       expect(readNakafaRuntimeQueryMock).toHaveBeenCalledWith(
-        "https://test.convex.cloud",
         expect.anything(),
         {
           appLocale: "id",
@@ -61,17 +71,13 @@ describe("public URL migration redirects", () => {
       );
     })
   );
-
   it.effect(
     "resolves historical material URLs against authenticated snapshot ownership",
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeMaterialRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
-        readNakafaRuntimeQueryMock.mockImplementation(
-          createTestNativeQuery(context)
-        );
-
+        readNakafaRuntimeQueryMock.mockImplementation(context.query);
         expect(
           yield* readPublicUrlMigrationRedirect({
             method: "GET",
@@ -88,7 +94,6 @@ describe("public URL migration redirects", () => {
         ).toBeNull();
       })
   );
-
   it.effect.each([
     {
       expectedIdentity: {
@@ -124,20 +129,17 @@ describe("public URL migration redirects", () => {
             publicPath,
           })
         );
-
         const redirect = yield* readPublicUrlMigrationRedirect({
           method: "GET",
           pathname,
         });
         expect(redirect).toBe(`/${expectedIdentity.appLocale}/${publicPath}`);
         expect(readNakafaRuntimeQueryMock).toHaveBeenCalledWith(
-          "https://test.convex.cloud",
           expect.anything(),
           expectedIdentity
         );
       })
   );
-
   it.effect.each([
     ["/de/articles/politics", "/de/articles/politik"],
     [
@@ -186,7 +188,6 @@ describe("public URL migration redirects", () => {
             kind: "found",
           })
         );
-
       const redirect = yield* readPublicUrlMigrationRedirect({
         method: "GET",
         pathname,
@@ -195,13 +196,11 @@ describe("public URL migration redirects", () => {
       expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
     })
   );
-
   it.effect("redirects HEAD requests for an exposed article category", () =>
     Effect.gen(function* () {
       articleMocks.hasCategory
         .mockReturnValueOnce(Effect.succeed(false))
         .mockReturnValueOnce(Effect.succeed(true));
-
       const redirect = yield* readPublicUrlMigrationRedirect({
         method: "HEAD",
         pathname: "/de/articles/politics",
@@ -209,7 +208,6 @@ describe("public URL migration redirects", () => {
       expect(redirect).toBe("/de/articles/politik");
     })
   );
-
   it.effect("keeps article routes owned by a recovered signed release", () =>
     Effect.gen(function* () {
       articleMocks.readActiveRoute
@@ -225,7 +223,6 @@ describe("public URL migration redirects", () => {
             kind: "missing",
           })
         );
-
       const redirect = yield* readPublicUrlMigrationRedirect({
         method: "GET",
         pathname: "/de/articles/politics/regional-elections-turmoil",
@@ -233,13 +230,11 @@ describe("public URL migration redirects", () => {
       expect(redirect).toBeNull();
     })
   );
-
   it.effect("keeps category routes owned by a recovered signed release", () =>
     Effect.gen(function* () {
       articleMocks.hasCategory
         .mockReturnValueOnce(Effect.succeed(true))
         .mockReturnValueOnce(Effect.succeed(false));
-
       const redirect = yield* readPublicUrlMigrationRedirect({
         method: "HEAD",
         pathname: "/de/articles/politics",
@@ -247,13 +242,15 @@ describe("public URL migration redirects", () => {
       expect(redirect).toBeNull();
     })
   );
-
   it.effect(
     "does not redirect an article without active signed ownership",
     () =>
       Effect.gen(function* () {
         articleMocks.readActiveRoute.mockReturnValue(
-          Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
+          Effect.succeed({
+            activeReleaseId: null,
+            kind: "unmanaged",
+          })
         );
         const redirect = yield* readPublicUrlMigrationRedirect({
           method: "GET",
@@ -263,7 +260,6 @@ describe("public URL migration redirects", () => {
         expect(articleMocks.readActiveRoute).toHaveBeenCalledTimes(2);
       })
   );
-
   it.effect.each([
     {
       previousId: "release-previous",
@@ -298,7 +294,6 @@ describe("public URL migration redirects", () => {
             kind: state.successorKind,
           })
         );
-
       expect(
         yield* readPublicUrlMigrationRedirect({
           method: "GET",
@@ -312,10 +307,17 @@ describe("public URL migration redirects", () => {
       expect(articleMocks.readActiveRoute).toHaveBeenCalledTimes(2);
     })
   );
-
   it.effect.each([
-    { activeReleaseId: "release-test", managed: true, publicPath: null },
-    { activeReleaseId: null, managed: false, publicPath: null },
+    {
+      activeReleaseId: "release-test",
+      managed: true,
+      publicPath: null,
+    },
+    {
+      activeReleaseId: null,
+      managed: false,
+      publicPath: null,
+    },
     {
       activeReleaseId: null,
       managed: true,
@@ -324,7 +326,6 @@ describe("public URL migration redirects", () => {
   ])("does not redirect an absent signed identity", (decision) =>
     Effect.gen(function* () {
       readNakafaRuntimeQueryMock.mockReturnValueOnce(Effect.succeed(decision));
-
       const redirect = yield* readPublicUrlMigrationRedirect({
         method: "HEAD",
         pathname:
@@ -333,7 +334,6 @@ describe("public URL migration redirects", () => {
       expect(redirect).toBeNull();
     })
   );
-
   it.effect.each([
     {
       method: "POST",
@@ -375,14 +375,14 @@ describe("public URL migration redirects", () => {
   ])("ignores a non-migration request", (request) =>
     Effect.gen(function* () {
       const redirect = yield* readPublicUrlMigrationRedirect(request);
-
       expect(redirect).toBeNull();
       expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
       expect(articleMocks.hasCategory).not.toHaveBeenCalled();
     })
   );
 });
-
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  env: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
 }));

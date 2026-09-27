@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
-import type { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 
 export const API_SECRET = "technical-api-edge-secret";
 

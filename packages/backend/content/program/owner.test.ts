@@ -1,7 +1,9 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
@@ -14,9 +16,20 @@ describe("program and material owner coherence", () => {
     "keeps a retained program snapshot unmanaged without material ownership",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const data = yield* makeProgramSnapshotData();
-        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const release = await ctx.db.query("contentReleases").unique();
@@ -28,12 +41,17 @@ describe("program and material owner coherence", () => {
         );
         const [catalog, page] = yield* Effect.promise(() =>
           Promise.all([
-            t.query(api.contentRelease.program.catalog, { appLocale: "en" }),
+            t.query(api.contentRelease.program.catalog, {
+              appLocale: "en",
+            }),
             t.query(api.contentRelease.program.page, {
               appLocale: "en",
               expectedManifestHash: "old",
               expectedReleaseId: "old",
-              paginationOpts: { cursor: "old", numItems: 2 },
+              paginationOpts: {
+                cursor: "old",
+                numItems: 2,
+              },
             }),
           ])
         );
@@ -50,14 +68,24 @@ describe("program and material owner coherence", () => {
         });
       })
   );
-
   it.effect(
     "rejects program reads while the active material buffer is behind",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const data = yield* makeProgramSnapshotData();
-        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const state = await ctx.db.query("contentState").unique();
@@ -69,8 +97,14 @@ describe("program and material owner coherence", () => {
         );
         yield* Effect.promise(() =>
           expect(
-            t.query(api.contentRelease.program.catalog, { appLocale: "en" })
-          ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } })
+            t.query(api.contentRelease.program.catalog, {
+              appLocale: "en",
+            })
+          ).rejects.toMatchObject({
+            data: {
+              code: "CONTENT_RELEASE_STATE",
+            },
+          })
         );
       })
   );

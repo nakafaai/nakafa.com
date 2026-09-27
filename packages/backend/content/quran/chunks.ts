@@ -1,13 +1,12 @@
 import { QuranChunkRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QURAN_CHUNK_SIZE } from "@nakafa/aksara-contracts/quran/spec";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { QURAN_PAGE_CHUNK_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
+import { verifyQuranRow } from "@repo/backend/confect/contentRelease/quran/verify";
 import { QuranSource } from "@repo/backend/content/quran/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { QURAN_PAGE_CHUNK_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
-import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect } from "effect";
 
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
-
 interface QuranChunkInput {
   readonly fromVerse: number;
   readonly numberOfVerses: number;

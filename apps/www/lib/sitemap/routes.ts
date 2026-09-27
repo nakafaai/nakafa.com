@@ -1,6 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
-import { compareSitemapPaths } from "@repo/backend/convex/contentRelease/sitemap";
+import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
+import { compareSitemapPaths } from "@repo/backend/confect/contentRelease/sitemap";
 import { Array as Arr, Data, Effect } from "effect";
 import type { Locale } from "next-intl";
 import {

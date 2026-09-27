@@ -13,21 +13,18 @@ import {
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Unauthenticated } from "convex/react";
+
 import { useTranslations } from "next-intl";
 import { AiChat } from "@/components/ai/chat";
-import { ChatProvider } from "@/components/ai/context/use-chat";
-import {
-  CurrentChatProvider,
-  useCurrentChat,
-} from "@/components/ai/context/use-current-chat";
+import { ChatProvider, useChat } from "@/components/ai/context/use-chat";
 import { AuthGoogle } from "@/components/auth/google";
 
 export function AiChatPage({ chatId }: { chatId: Id<"chats"> }) {
   return (
     <ErrorBoundary fallback={<AiChatPageError chatId={chatId} />}>
-      <CurrentChatProvider chatId={chatId}>
+      <ChatProvider chatId={chatId}>
         <AiChatMain />
-      </CurrentChatProvider>
+      </ChatProvider>
     </ErrorBoundary>
   );
 }
@@ -58,22 +55,9 @@ function AiChatPageError({ chatId }: { chatId: Id<"chats"> }) {
 }
 
 function AiChatMain() {
-  const chat = useCurrentChat((s) => s.chat);
-  const messages = useCurrentChat((s) => s.messages);
+  const chat = useChat((s) => s.chat);
 
   useDocumentTitle(chat?.title ?? "");
 
-  if (!(chat && messages)) {
-    return <div className="relative flex size-full flex-col overflow-hidden" />;
-  }
-
-  return (
-    <ChatProvider chatId={chat._id} initialMessages={messages}>
-      <AiChatPageContent />
-    </ChatProvider>
-  );
-}
-
-function AiChatPageContent() {
   return <AiChat />;
 }

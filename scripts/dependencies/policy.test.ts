@@ -16,7 +16,6 @@ import {
 
 const CONTRACT_MANIFEST_PATHS = [
   "apps/www/package.json",
-  "packages/ai/package.json",
   "packages/backend/package.json",
   "packages/contents/package.json",
   "packages/email/package.json",

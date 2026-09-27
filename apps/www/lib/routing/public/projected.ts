@@ -1,10 +1,10 @@
+import { HttpClient } from "@confect/js";
 import {
   APP_LOCALE_CODES,
   type AppLocale,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
@@ -35,7 +35,6 @@ const readProjectedMaterialRouteRejection = Effect.fn(
   if (ownership.kind === "found") {
     return null;
   }
-
   return locale;
 });
 
@@ -54,34 +53,32 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   const [rawLocale, namespace, ...pathSegments] = pathname
     .split("/")
     .filter(Boolean);
-
   if (!(namespace && hasLocale(APP_LOCALE_CODES, rawLocale))) {
     return null;
   }
-
   const locale = rawLocale;
-
   const surface = PUBLIC_ROUTE_SURFACES.find(
     (item) => item.routeSlugs[locale] === namespace
   );
-
   if (!surface) {
     return null;
   }
-
   if (
     pathSegments.length === 0 &&
     (surface.key === "curriculum" || surface.key === "tryout")
   ) {
     return null;
   }
-
   const publicPath = [namespace, ...pathSegments].join("/");
   const appLocale = AppLocaleSchema.make(locale);
-  if (yield* matchesPreviewRoute({ appLocale, publicPath })) {
+  if (
+    yield* matchesPreviewRoute({
+      appLocale,
+      publicPath,
+    })
+  ) {
     return null;
   }
-
   if (surface.key === "subject") {
     return yield* readProjectedMaterialRouteRejection(
       locale,
@@ -94,7 +91,6 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     if (!ownership.managed) {
       return locale;
     }
-
     return ownership.route?.sitemap ? null : locale;
   }
   if (
@@ -103,16 +99,14 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   ) {
     return null;
   }
-  const reference = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.reference.read,
-    {
+  const reference = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.reference.read, {
       input: {
         appLocale,
         kind: "route",
         publicPath,
       },
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   return reference ? null : locale;
 });

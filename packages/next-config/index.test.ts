@@ -52,6 +52,24 @@ describe("createSecurityHeaders", () => {
     expect(csp?.value).toContain("https://raw.githubusercontent.com");
   });
 
+  it("allows local storage images only for the app's selected loopback origin", () => {
+    const sources = createLoopbackConnectSources(
+      new URL("http://127.0.0.1:3212")
+    );
+    const csp = createSecurityHeaders({
+      additionalImageSources: sources.filter((source) =>
+        source.startsWith("http:")
+      ),
+    }).find((header) => header.key === "Content-Security-Policy");
+
+    expect(csp?.value).toContain(
+      "img-src 'self' blob: data: https: https://*.googleusercontent.com http://127.0.0.1:3212;"
+    );
+    expect(csp?.value).not.toContain("ws://127.0.0.1:3212");
+    expect(createSecurityHeaders()).toEqual(securityHeaders);
+    expect(securityHeaders[0]?.value).not.toContain("127.0.0.1");
+  });
+
   it("exposes shared headers through the Next config", () => {
     const headers = config.headers;
 

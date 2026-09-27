@@ -1,6 +1,8 @@
-import type { api } from "@repo/backend/convex/_generated/api";
+import type { Ref } from "@confect/core";
+import type { InvokeReturn } from "@confect/react";
+import type refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+
 import { Duration, Effect } from "effect";
 import type { VirtualizerHandle } from "virtua";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
@@ -15,13 +17,11 @@ import type { ConversationScrollSnapshot } from "@/components/school/classes/for
 export type BrowserViewportScroller = ReturnType<typeof createViewportScroller>;
 
 type MarkForumReadMutation = (
-  args: FunctionArgs<
-    typeof api.classes.forums.mutations.readState.markForumRead
+  args: Ref.Args<
+    typeof refs.public.classes.forums.mutations.readState.markForumRead
   >
-) => Promise<
-  FunctionReturnType<
-    typeof api.classes.forums.mutations.readState.markForumRead
-  >
+) => InvokeReturn<
+  typeof refs.public.classes.forums.mutations.readState.markForumRead
 >;
 
 interface BrowserViewportAdaptersInput {
@@ -64,7 +64,20 @@ export function createBrowserViewportAdapters({
               cause,
               message: "Failed to mark forum post as read.",
             }),
-        }).pipe(Effect.asVoid),
+        }).pipe(
+          Effect.flatMap((result) =>
+            Effect.fromResult(result).pipe(
+              Effect.mapError(
+                (cause) =>
+                  new ViewportReadError({
+                    cause,
+                    message: "Failed to mark forum post as read.",
+                  })
+              )
+            )
+          ),
+          Effect.asVoid
+        ),
     },
     scroller,
     session: {

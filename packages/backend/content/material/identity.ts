@@ -3,18 +3,18 @@ import {
   MaterialKeySchema,
   MaterialSectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
-import { loadMaterialOwner } from "@repo/backend/content/material/owner";
-import { MaterialSource } from "@repo/backend/content/material/source";
-import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   ReleaseError,
   releaseFail,
-} from "@repo/backend/convex/contentRelease/error";
+} from "@repo/backend/confect/contentRelease/error";
+import { loadMaterialOwner } from "@repo/backend/content/material/owner";
+import { MaterialSource } from "@repo/backend/content/material/source";
+import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
 import { Effect, Option, Schema } from "effect";
 /** Stable signed material identity requested by an application surface. */
 export interface MaterialIdentityInput {
-  readonly appLocale: Doc<"materialCatalog">["appLocale"];
+  readonly appLocale: Docs["materialCatalog"]["appLocale"];
   readonly contentKey: string;
   readonly expectedMaterialKey: string;
   readonly expectedSectionKey: string;

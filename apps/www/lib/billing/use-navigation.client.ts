@@ -1,8 +1,8 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
+import { useAction } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { useAction } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -23,14 +23,14 @@ export function useBillingNavigation() {
   const t = useTranslations("Auth");
   const [isPending, startTransition] = useTransition();
   const createCheckout = useAction(
-    api.customers.actions.sessions.generateCheckoutLink
+    refs.public.customers.actions.sessions.generateCheckoutLink
   );
   const createPortal = useAction(
-    api.customers.actions.sessions.generateCustomerPortalUrl
+    refs.public.customers.actions.sessions.generateCustomerPortalUrl
   );
 
-  function runBillingRequest(
-    request: () => Promise<{ url: string }>,
+  function runBillingRequest<E>(
+    request: Effect.Effect<{ readonly url: string }, E>,
     failure: BillingSource & { readonly message: string }
   ) {
     startTransition(() =>
@@ -57,13 +57,20 @@ export function useBillingNavigation() {
     isPending,
     openCheckout: ({ locale, ...failure }: CheckoutNavigation) =>
       runBillingRequest(
-        () => createCheckout({ locale, successUrl: window.location.href }),
+        Effect.tryPromise(() =>
+          createCheckout({ locale, successUrl: window.location.href })
+        ).pipe(Effect.flatMap(Effect.fromResult)),
         { ...failure, message: t("checkout-error") }
       ),
     openPortal: (source: BillingSource) =>
-      runBillingRequest(() => createPortal({}), {
-        ...source,
-        message: t("portal-error"),
-      }),
+      runBillingRequest(
+        Effect.tryPromise(() => createPortal({})).pipe(
+          Effect.flatMap(Effect.fromResult)
+        ),
+        {
+          ...source,
+          message: t("portal-error"),
+        }
+      ),
   };
 }

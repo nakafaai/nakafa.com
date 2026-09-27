@@ -1,14 +1,9 @@
-import {
-  convertPromptInputFiles,
-  type PromptInputAttachmentConversionError,
-  type PromptInputFile,
-} from "@repo/design-system/lib/prompt-input/files";
-import type { FileUIPart } from "ai";
+import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
 import { Effect, Schema } from "effect";
 
 /** A submitted prompt and its browser-ready attachments. */
 export interface PromptInputMessage {
-  files?: FileUIPart[];
+  files?: PromptInputFile[];
   text?: string;
 }
 
@@ -26,7 +21,6 @@ export class PromptInputCompletionError extends Schema.TaggedError<PromptInputCo
 
 /** Every expected failure produced by a prompt submission. */
 export type PromptInputError =
-  | PromptInputAttachmentConversionError
   | PromptInputCompletionError
   | PromptInputSubmitError;
 
@@ -36,12 +30,12 @@ interface SubmitPromptInputOptions<TEvent> {
   onSubmit: (
     message: PromptInputMessage,
     event: TEvent
-  ) => void | Promise<void>;
+  ) => boolean | Promise<boolean>;
   onSuccess: () => void;
   text: string;
 }
 
-/** Converts attachments, invokes the consumer, and applies success state once. */
+/** Passes original files to the consumer and applies success state once. */
 export const submitPromptInput = Effect.fn("designSystem.promptInput.submit")(
   function* <TEvent>({
     event,
@@ -50,13 +44,14 @@ export const submitPromptInput = Effect.fn("designSystem.promptInput.submit")(
     onSuccess,
     text,
   }: SubmitPromptInputOptions<TEvent>) {
-    const convertedFiles = yield* convertPromptInputFiles(files);
-    yield* Effect.tryPromise({
-      try: () =>
-        Promise.resolve(onSubmit({ text, files: convertedFiles }, event)),
+    const accepted = yield* Effect.tryPromise({
+      try: () => Promise.resolve(onSubmit({ text, files: [...files] }, event)),
       catch: (cause) => new PromptInputSubmitError({ cause }),
     });
 
+    if (accepted === false) {
+      return;
+    }
     yield* Effect.try({
       try: onSuccess,
       catch: (cause) => new PromptInputCompletionError({ cause }),

@@ -1,13 +1,13 @@
 "use client";
 
+import { usePaginatedQuery } from "@confect/react";
 import {
   Globe02Icon,
-  MessageMultiple02Icon,
   Search02Icon,
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -28,46 +28,20 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
-import {
-  Sidebar,
-  SidebarTrigger,
-} from "@repo/design-system/components/ui/sidebar-shell";
-import { usePaginatedQuery } from "convex/react";
+import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
+import { useAi } from "@/components/ai/context/use-ai";
 import { useViewer } from "@/lib/identity/client";
 
-type Props = ComponentProps<typeof Sidebar>;
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
-
-export function AiChatSidebar({ ...props }: Props) {
-  return (
-    <div>
-      <SidebarProvider
-        cookieName="sidebar_state:ai-chat"
-        keyboardShortcut="h"
-        sidebarDesktop={1280}
-      >
-        <SidebarTrigger
-          className="fixed top-32 left-2 size-9 bg-card/80 backdrop-blur-xs sm:left-6 lg:hidden"
-          icon={MessageMultiple02Icon}
-          size="icon"
-          variant="outline"
-        />
-
-        <AiChatSidebarContent {...props} />
-      </SidebarProvider>
-    </div>
-  );
-}
-
-function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
+export function AiChatSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Ai");
+  const { setOpenMobile } = useSidebar();
   const [q, setQ] = useState("");
   const [debouncedQ] = useDebouncedValue(q, CHAT_SEARCH_DEBOUNCE_MS);
-
   return (
     <Sidebar containerClassName="lg:hidden xl:block" side="right" {...props}>
       <SidebarHeader className="border-b">
@@ -77,7 +51,11 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
               className="w-full border border-sidebar-border shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/50"
               nativeButton={false}
               render={
-                <NavigationLink href="/chat" title={t("new-chat")}>
+                <NavigationLink
+                  href="/chat"
+                  onNavigate={() => setOpenMobile(false)}
+                  title={t("new-chat")}
+                >
                   {t("new-chat")}
                 </NavigationLink>
               }
@@ -110,15 +88,12 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
     </Sidebar>
   );
 }
-
 function AiChatSidebarHistory({ q }: { q?: string }) {
   const isPending = useViewer((state) => state.isPending);
   const viewer = useViewer((state) => state.viewer);
-
   if (isPending || viewer === null) {
     return null;
   }
-
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -127,25 +102,43 @@ function AiChatSidebarHistory({ q }: { q?: string }) {
     </SidebarGroup>
   );
 }
-
 function AiChatSidebarChats({ q }: { q?: string | undefined }) {
-  const params = useParams<{ id: Id<"chats"> }>();
+  const t = useTranslations("Ai");
+  const drafts = useAi((state) => state.chatDrafts);
+  const { setOpenMobile } = useSidebar();
+  const params = useParams<{
+    id: Id<"chats">;
+  }>();
   const id = params.id;
   const searchQuery = q?.trim();
   const type = "study" as const;
-  const queryArgs = searchQuery ? { q: searchQuery, type } : { type };
-  const { results, status } = usePaginatedQuery(
-    api.chats.queries.getOwnChats,
+  const queryArgs = searchQuery
+    ? {
+        q: searchQuery,
+        type,
+      }
+    : {
+        type,
+      };
+  const pagination = usePaginatedQuery(
+    refs.public.chats.queries.getOwnChats,
     queryArgs,
-    { initialNumItems: 50 }
+    {
+      initialNumItems: 50,
+    }
   );
-
-  if (status === "LoadingFirstPage") {
-    return null;
-  }
-
+  const { results } = pagination;
   return (
     <SidebarMenu>
+      {!searchQuery &&
+        drafts.map((key) => (
+          <SidebarMenuItem key={key}>
+            <SidebarMenuButton disabled isActive={!id}>
+              <HugeIcons icon={SquareLock01Icon} />
+              <span className="truncate">{t("new-chat")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
       {results.map((chat) => {
         const isPrivate = chat.visibility === "private";
         return (
@@ -153,7 +146,11 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
             <SidebarMenuButton
               isActive={id === chat._id}
               render={
-                <NavigationLink href={`/chat/${chat._id}`} title={chat.title} />
+                <NavigationLink
+                  href={`/chat/${chat._id}`}
+                  onNavigate={() => setOpenMobile(false)}
+                  title={chat.title}
+                />
               }
             >
               <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />

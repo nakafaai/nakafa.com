@@ -7,7 +7,7 @@ import {
   Search02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import type { NakafaDataPart } from "@repo/ai/schema/data";
+import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

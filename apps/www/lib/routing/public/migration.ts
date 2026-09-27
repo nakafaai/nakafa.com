@@ -1,6 +1,6 @@
+import { HttpClient } from "@confect/js";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Option, Schema } from "effect";
 import { env } from "@/env";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
@@ -15,19 +15,16 @@ const PREVIOUS_MATERIAL_LEVELS = new Set([
   "university/bachelor",
 ]);
 const REDIRECTABLE_METHODS = new Set(["GET", "HEAD"]);
-
 interface ArticleCategoryMigration {
   readonly kind: "category";
   readonly previousRoute: string;
   readonly successorRoute: string;
 }
-
 interface ArticlePageMigration {
   readonly kind: "article";
   readonly previousPath: string;
   readonly successorPath: string;
 }
-
 type ArticleMigration = ArticleCategoryMigration | ArticlePageMigration;
 
 /** Resolves the German article URLs exposed before localized routes shipped. */
@@ -103,13 +100,13 @@ const readArticleCategoryRedirect = Effect.fn(
       hasPublishedArticleCategory(migration.previousRoute, "de"),
       hasPublishedArticleCategory(migration.successorRoute, "de"),
     ],
-    { concurrency: 2 }
+    {
+      concurrency: 2,
+    }
   );
-
   if (previousExists || !successorExists) {
     return null;
   }
-
   return `/de/articles/${migration.successorRoute}`;
 });
 
@@ -130,20 +127,19 @@ const readArticlePageRedirect = Effect.fn(
         publicPath: migration.successorPath,
       }),
     ],
-    { concurrency: 2 }
+    {
+      concurrency: 2,
+    }
   );
-
   if (previous.activeReleaseId !== successor.activeReleaseId) {
     return yield* new PublishedReleaseMismatchError({
       actualReleaseId: successor.activeReleaseId,
       expectedReleaseId: previous.activeReleaseId,
     });
   }
-
   if (previous.kind !== "missing" || successor.kind !== "found") {
     return null;
   }
-
   return `/de/${migration.successorPath}`;
 });
 
@@ -152,7 +148,6 @@ function readArticleMigrationRedirect(migration: ArticleMigration) {
   if (migration.kind === "category") {
     return readArticleCategoryRedirect(migration);
   }
-
   return readArticlePageRedirect(migration);
 }
 
@@ -163,26 +158,20 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   if (!REDIRECTABLE_METHODS.has(method)) {
     return null;
   }
-
   const articleMigration = readPreviousArticleMigration(pathname);
   if (articleMigration) {
     return yield* readArticleMigrationRedirect(articleMigration);
   }
-
   const identity = readPreviousMaterialIdentity(pathname);
   if (Option.isNone(identity)) {
     return null;
   }
-
-  const redirect = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.material.identity,
-    identity.value
-  );
+  const redirect = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.material.identity, identity.value)
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   if (!(redirect.activeReleaseId && redirect.managed && redirect.publicPath)) {
     return null;
   }
-
   return `/${identity.value.appLocale}/${redirect.publicPath}`;
 });
 
@@ -198,7 +187,6 @@ function readPreviousMaterialIdentity(pathname: string) {
     section,
     ...extraSegments
   ] = pathname.split("/").filter(Boolean);
-
   if (
     !(
       namespace === PREVIOUS_SUBJECT_NAMESPACE &&
@@ -214,7 +202,6 @@ function readPreviousMaterialIdentity(pathname: string) {
   ) {
     return Option.none();
   }
-
   const currentTopic = readCurrentMaterialTopic({
     category,
     domain,
@@ -227,7 +214,6 @@ function readPreviousMaterialIdentity(pathname: string) {
   if (Option.isNone(contentKey)) {
     return Option.none();
   }
-
   return Option.some({
     appLocale: locale,
     contentKey: contentKey.value,

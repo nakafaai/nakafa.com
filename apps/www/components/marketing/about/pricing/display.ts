@@ -1,4 +1,4 @@
-import { products } from "@repo/backend/convex/utils/polar/products";
+import { products } from "@repo/backend/confect/utils/polar/products";
 
 export const pricingCountryHeaderName = "x-vercel-ip-country";
 

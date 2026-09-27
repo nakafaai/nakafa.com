@@ -33,7 +33,9 @@ export class ContentTransportError extends Schema.TaggedError<ContentTransportEr
 /** One exact runtime request has no active or retained signed artifact. */
 export class ContentRuntimeMissingError extends Schema.TaggedError<ContentRuntimeMissingError>()(
   "ContentRuntimeMissingError",
-  { request: ContentRuntimeRequestSchema }
+  {
+    request: ContentRuntimeRequestSchema,
+  }
 ) {}
 /** Convex rejected a signed runtime request with a sanitized code. */
 export class ContentRuntimeFailureError extends Schema.TaggedError<ContentRuntimeFailureError>()(
@@ -46,5 +48,7 @@ export class ContentRuntimeFailureError extends Schema.TaggedError<ContentRuntim
 /** A signed envelope failed cryptographic or identity verification. */
 export class ContentRuntimeVerificationError extends Schema.TaggedError<ContentRuntimeVerificationError>()(
   "ContentRuntimeVerificationError",
-  { cause: Schema.Unknown }
+  {
+    cause: Schema.Unknown,
+  }
 ) {}

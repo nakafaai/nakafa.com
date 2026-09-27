@@ -1,7 +1,8 @@
 import { assert, describe, expect, it } from "@effect/vitest";
+import { encodePageCursor } from "@repo/backend/confect/contentRelease/cursor";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { categorizedArticle } from "@repo/backend/test/article/release";
 import {
   insertRuntimeArticles,
@@ -19,6 +20,51 @@ const firstPage = {
 } as const;
 
 describe("article publication pages", () => {
+  it("rejects forged category cursor positions and cross-locale reuse", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => insertRuntimeArticles(ctx, 2));
+    const first = await t.query(article.categories, {
+      ...firstPage,
+      paginationOpts: { cursor: null, numItems: 1 },
+    });
+    const identity = {
+      expectedManifestHash: first.activeManifestHash,
+      expectedReleaseId: first.activeReleaseId,
+    };
+    for (const cursor of [
+      "publication-page:{",
+      encodePageCursor("material", "blue", "unused"),
+      encodePageCursor("category", "green", "unused"),
+      encodePageCursor("category", "blue", "article-category|{"),
+      encodePageCursor(
+        "category",
+        "blue",
+        'article-category|["green","en","politics"]'
+      ),
+    ]) {
+      await expect(
+        t.query(article.categories, {
+          ...firstPage,
+          ...identity,
+          paginationOpts: { cursor, numItems: 1 },
+        })
+      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    }
+    await expect(
+      t.query(article.categories, {
+        ...identity,
+        appLocale: "de",
+        paginationOpts: { cursor: first.result.continueCursor, numItems: 1 },
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    await expect(
+      t.query(article.categories, {
+        ...firstPage,
+        ...identity,
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
+  });
+
   it.effect(
     "keeps inactive article pages empty and restarts stale cursors",
     () =>
@@ -165,6 +211,30 @@ describe("article publication pages", () => {
           })
         );
         expect(split.result.page).toEqual(first.result.page.slice(1));
+        const native = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            ctx.db
+              .query("articleCategories")
+              .withIndex("by_slot_and_appLocale_and_category", (index) =>
+                index.eq("slot", "blue").eq("appLocale", "en")
+              )
+              .paginate({ cursor: null, numItems: 1 })
+          )
+        );
+        const resumed = yield* Effect.promise(() =>
+          t.query(article.categories, {
+            ...identity,
+            paginationOpts: {
+              cursor: encodePageCursor(
+                "category",
+                "blue",
+                native.continueCursor
+              ),
+              numItems: 2,
+            },
+          })
+        );
+        expect(resumed.result.page).toEqual(first.result.page.slice(1));
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             for (const row of await ctx.db
@@ -180,4 +250,33 @@ describe("article publication pages", () => {
         expect(empty.result).toMatchObject({ page: [], isDone: true });
       })
   );
+  it("keeps empty and exhausted managed article pages stable", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
+    const empty = await t.query(article.publications, {
+      ...firstPage,
+      category: "missing-category",
+    });
+    expect(empty).toMatchObject({
+      managed: true,
+      result: { isDone: true, page: [], continueCursor: expect.any(String) },
+    });
+    const first = await t.query(article.publications, {
+      ...firstPage,
+      category: "politics",
+    });
+    expect(first.result.page).toHaveLength(1);
+    const next = await t.query(article.publications, {
+      ...firstPage,
+      category: "politics",
+      expectedManifestHash: first.activeManifestHash,
+      expectedReleaseId: first.activeReleaseId,
+      paginationOpts: { cursor: first.result.continueCursor, numItems: 2 },
+    });
+    expect(next.result).toMatchObject({
+      isDone: true,
+      page: [],
+      continueCursor: first.result.continueCursor,
+    });
+  });
 });

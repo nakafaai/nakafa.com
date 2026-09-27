@@ -14,14 +14,14 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import type {
   TryoutAnswerSelector,
   TryoutQuestionSelector,
-} from "@repo/backend/convex/tryouts/runtime/content";
-import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
+} from "@repo/backend/confect/tryouts/runtime/spec";
+import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_RELEASE_ID,
   testTextHash,
@@ -52,11 +52,9 @@ function getEndReason(
   if (status === "in-progress") {
     return null;
   }
-
   if (status === "expired") {
     return "time-expired";
   }
-
   return "submitted";
 }
 
@@ -86,7 +84,9 @@ export async function seedTryoutContentAccessState(
     now: TRYOUT_TEST_NOW,
     suffix: args.suffix,
   });
-  await ctx.db.patch("users", identity.userId, { plan: "pro" });
+  await ctx.db.patch("users", identity.userId, {
+    plan: "pro",
+  });
   const set = makeTryoutSet();
   const section = makeTryoutSection({
     publicPath: TRYOUT_SECTION_PATH,
@@ -172,7 +172,6 @@ export async function seedTryoutContentAccessState(
     tryoutBundleId: runtime.bundleId,
     tryoutSnapshotId: snapshotId,
   });
-
   const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
     answeredCount: 0,
     completedAt: sectionTerminal ? TRYOUT_TEST_NOW : null,
@@ -188,7 +187,6 @@ export async function seedTryoutContentAccessState(
     totalQuestions: 1,
     tryoutAttemptId: attemptId,
   });
-
   const { row: placementRow, rowHash: placementRowHash } = signedPlacement;
   const responseSpec = canonicalQuestionResponse(placementRow.response);
   if (responseSpec.kind !== "single-choice") {
@@ -211,7 +209,6 @@ export async function seedTryoutContentAccessState(
     sourceRevision: placementRow.sourceRevision,
     tryoutAttemptId: attemptId,
   });
-
   const answer: TryoutAnswerSelector = {
     appLocale: fixtureLocale,
     artifactHash: placementRow.answerArtifactHash,
@@ -240,13 +237,15 @@ export async function seedTryoutContentAccessState(
     sourcePath: placementRow.questionSourcePath,
     sourceRevision: placementRow.sourceRevision,
   };
-
   return {
     attemptId,
     identity,
     placementId,
     sectionAttemptId,
-    signedContent: { answer, question },
+    signedContent: {
+      answer,
+      question,
+    },
   };
 }
 
@@ -255,9 +254,12 @@ export function tryoutSectionSnapshot(args: {
   signed: SignedTryoutSectionFixture["signed"];
 }) {
   const { row, rowHash } = args.signed.section;
-
   return {
-    ...(row.publicPath === undefined ? {} : { publicPath: row.publicPath }),
+    ...(row.publicPath === undefined
+      ? {}
+      : {
+          publicPath: row.publicPath,
+        }),
     questionCount: row.questionCount,
     questionSourcePath: row.questionSourcePath,
     sectionIdentity: tryoutCatalogIdentity(row),
@@ -294,7 +296,6 @@ export async function insertTryoutAttempt(
     snapshotId,
     snapshotReleaseId
   );
-
   return await ctx.db.insert("tryoutAttempts", {
     accessEndsAt,
     accessSourceKind: "free",
@@ -376,7 +377,6 @@ export function insertTryoutAttemptPlacement(
   }
 ) {
   const { placement } = args;
-
   return ctx.db.insert("tryoutAttemptPlacements", {
     answerArtifactHash: placement.answerArtifactHash,
     answerContentKey: placement.answerContentKey,
@@ -424,7 +424,6 @@ export async function insertIrtScaleItem(
   if (existingRuns.length > 1) {
     throw new Error("Expected at most one IRT calibration run fixture.");
   }
-
   const existingRun = existingRuns[0];
   const calibrationRunId = existingRun
     ? existingRun._id
@@ -443,8 +442,9 @@ export async function insertIrtScaleItem(
         updatedAt: TRYOUT_TEST_NOW,
       });
   const questionCount = (existingRun?.questionCount ?? 0) + 1;
-  await ctx.db.patch(calibrationRunId, { questionCount });
-
+  await ctx.db.patch(calibrationRunId, {
+    questionCount,
+  });
   return await ctx.db.insert("irtScaleItems", {
     calibrationRunId,
     calibrationStatus: "provisional",

@@ -8,7 +8,9 @@ Aksara signed publication the only authored try-out source. Amended on
 2026-08-10 to define transactional response and scoring integrity. Amended on
 2026-08-14 to record the completed physical retirement of superseded storage,
 on 2026-09-01 to define the structured response rollout, and on 2026-09-19
-to make attempts and scores free with Pro access to worked solutions.
+to make attempts and scores free with Pro access to worked solutions. Amended on
+2026-09-27 to separate exam language from the application locale and retire the
+unused access-campaign storage.
 
 ## Context
 
@@ -48,11 +50,29 @@ Use these Convex table families:
 - `contentReleases`, `contentSnapshots`, `tryoutCatalog`, and
   `tryoutPlacements` for verified signed publication state.
 - `tryoutAttempts`, `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`, `tryoutScores` for realtime runtime state.
-- `tryoutAccessCampaigns`, `tryoutAccessTargets`, `tryoutAccessLinks`, `tryoutAccessGrants`, `tryoutEntitlements` for premium access.
+- Billing-owned user plans and subscriptions for current Pro solution access.
 - `irtCalibration*` and `irtScale*` for scoring calibration and immutable scale versions.
 
 Do not reconstruct authored catalog or question data from Nakafa filesystem
 copies. Do not add a second authored table family beside the signed snapshot.
+
+### Language And Identity
+
+The application locale selects navigation and explanations. It does not identify
+an attempt or select the language of an exam question. Progress and history use
+the learner, country, exam, track, and set, so changing the interface language
+keeps the same attempt and result.
+
+Aksara owns each section's real exam language. SNBT and TKA questions follow
+their Indonesian exam contract; a section assessing English keeps its English
+source. Germany's future exams use their German source regardless of interface
+language. Explanations remain localized independently. A retained attempt keeps
+the signed questions and scoring specification with which it started.
+
+The current `de` locale denotes German for Germany, as identified by the
+application's `DE` country metadata. Future Austrian and Swiss editions need
+their own reviewed locale and corpus identities; they must not alias Germany's
+content or automatically inherit its exam questions.
 
 ### Runtime Integrity
 
@@ -165,12 +185,13 @@ access state, entitlements, calibration runs, and IRT scales.
 Attempts and scales retain the exact signed snapshot needed for historical
 review and scoring.
 
-Removing a retired deployment table requires three separate proofs: its row
-count is zero, no schema or code reference remains, and the replacement runtime
-passes acceptance. Drain rows through one temporary bounded internal operation,
-prove every retired table empty, then remove both the operation and schemas in
-the final deployment. Do not retain permanent cleanup functions for retired
-table names.
+Removing a retired deployment table requires proof that no active schema or
+code reference remains and that the replacement runtime passes acceptance.
+Its data must be empty, independently verified in the replacement store, or
+explicitly approved for disposal by the operator. Preserve a recoverable export
+through cutover acceptance. Use bounded conversion when needed, then remove the
+converter, predecessor schemas, and physical tables. Do not retain permanent
+cleanup functions for retired table names.
 
 ### Completed Physical Retirement
 

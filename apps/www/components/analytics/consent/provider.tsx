@@ -1,10 +1,10 @@
 "use client";
 
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { useNetwork } from "@mantine/hooks";
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
-import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import { useConvexAuth, useMutation } from "convex/react";
+import refs from "@repo/backend/confect/_generated/refs";
+import { useConvexAuth } from "convex/react";
 import { Option } from "effect";
 import { type ReactNode, useEffect, useState } from "react";
 import { useAnonymousAnalyticsConsent } from "@/lib/analytics/consent/browser";
@@ -46,15 +46,15 @@ export function AnalyticsConsentProvider({
     useState<AnalyticsConsentSessionOverrides>(() => new Map());
   const [preferences, setPreferences] = useState(initialConsentPreferences);
   const { online: isOnline } = useNetwork();
-  const setAccountConsent = useMutation(api.consents.current.set);
+  const setAccountConsent = useMutation(refs.public.consents.current.set);
   const shouldLoadAccountConsent =
     !isPreviewChild && isAuthenticated && !isAuthLoading && !!user;
-  const accountConsentQuery = useQueryWithStatus(
-    api.consents.current.get,
+  const accountConsentQuery = useQuery(
+    refs.public.consents.current.get,
     shouldLoadAccountConsent ? { category: ANALYTICS_CONSENT_CATEGORY } : "skip"
   );
-  const accountConsent = accountConsentQuery.isSuccess
-    ? accountConsentQuery.data.decision
+  const accountConsent = QueryResult.isSuccess(accountConsentQuery)
+    ? accountConsentQuery.value.decision
     : null;
   const {
     browserConsent,
@@ -76,14 +76,14 @@ export function AnalyticsConsentProvider({
   const shouldRevokeAccountGrant = shouldRevokeAccountAnalyticsGrant({
     accountConsent,
     browserConsent,
-    isAccountConsentResolved: accountConsentQuery.isSuccess,
+    isAccountConsentResolved: QueryResult.isSuccess(accountConsentQuery),
     isAuthenticated,
   });
 
   const state = resolveBrowserAnalyticsConsentState({
     accountConsent,
     browserConsent,
-    isAccountConsentResolved: accountConsentQuery.isSuccess,
+    isAccountConsentResolved: QueryResult.isSuccess(accountConsentQuery),
     isAuthenticated,
     isAuthLoading,
     isPreviewChild,
@@ -91,7 +91,8 @@ export function AnalyticsConsentProvider({
     user,
   });
   const hasLoadError =
-    accountConsentQuery.isError || (!isAuthenticated && hasStorageError);
+    QueryResult.isFailure(accountConsentQuery) ||
+    (!isAuthenticated && hasStorageError);
   const sessionPolicy = resolveAnalyticsConsentSessionPolicy({
     durableConsent,
     hasLoadError,
@@ -112,7 +113,9 @@ export function AnalyticsConsentProvider({
   const { canDecline, canGrant } = resolveConsentAffordances({
     hasBrowserPrivacySignal: browserConsent.hasBrowserPrivacySignal,
     isAccountResolved:
-      !!user && (accountConsentQuery.isSuccess || accountConsentQuery.isError),
+      !!user &&
+      (QueryResult.isSuccess(accountConsentQuery) ||
+        QueryResult.isFailure(accountConsentQuery)),
     isAnonymousResolved: browserConsent.isResolved,
     isAuthenticated,
     isBlocked: isPreviewChild || isAuthLoading || isUserPending,

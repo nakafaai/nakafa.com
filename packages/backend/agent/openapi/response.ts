@@ -9,7 +9,6 @@ const OPENAPI_VARY = "Accept, Accept-Encoding";
 const ENTITY_TAG_CHARACTERS = /^[\x21\x23-\x7e\u0080-\u00ff]*$/u;
 const MAX_IF_NONE_MATCH_ELEMENTS = 32;
 const OPENAPI_OPAQUE_ENTITY_TAG = NAKAFA_OPENAPI_ETAG.replace(/^W\//, "");
-
 function skipOptionalWhitespace(value: string, start: number) {
   let index = start;
   while (value[index] === " " || value[index] === "\t") {
@@ -42,7 +41,6 @@ function hasWeakEntityTagMatch(ifNoneMatch: string | undefined) {
   if (ifNoneMatch === undefined) {
     return false;
   }
-
   const firstIndex = skipOptionalWhitespace(ifNoneMatch, 0);
   if (
     ifNoneMatch[firstIndex] === "*" &&
@@ -50,7 +48,6 @@ function hasWeakEntityTagMatch(ifNoneMatch: string | undefined) {
   ) {
     return true;
   }
-
   let elementCount = 0;
   let hasMatch = false;
   let index = 0;
@@ -94,7 +91,10 @@ export function createOpenApiResponse(ifNoneMatch?: string) {
     Vary: OPENAPI_VARY,
   };
   if (hasWeakEntityTagMatch(ifNoneMatch)) {
-    return new Response(null, { headers, status: 304 });
+    return new Response(null, {
+      headers,
+      status: 304,
+    });
   }
   return new Response(NAKAFA_OPENAPI_JSON, {
     headers: {

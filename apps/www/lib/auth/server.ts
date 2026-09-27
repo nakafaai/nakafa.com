@@ -6,7 +6,7 @@ const authServer = convexBetterAuthNextJs({
   convexSiteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
 });
 
-export const { handler, preloadAuthQuery, fetchAuthQuery } = authServer;
+export const { handler } = authServer;
 
 /**
  * Returns the current request's Better Auth token.

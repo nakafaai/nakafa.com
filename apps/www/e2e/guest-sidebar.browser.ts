@@ -111,7 +111,10 @@ for (const viewport of targetViewports) {
           yield* Effect.promise(() => languageButton.hover());
           yield* Effect.promise(() =>
             expect(
-              page.getByRole("menuitem", { exact: true, name: "Deutsch" })
+              page.getByRole("menuitem", {
+                exact: true,
+                name: "Deutsch (Deutschland)",
+              })
             ).toBeVisible()
           );
         })

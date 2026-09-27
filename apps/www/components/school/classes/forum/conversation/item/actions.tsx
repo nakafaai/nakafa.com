@@ -44,11 +44,9 @@ export function PostItemActions({ post }: { post: ForumPost }) {
   const [isPending, startTransition] = useTransition();
   const toggleReaction = usePostReactionMutation();
   const userName = post.user?.name ?? t("anonymous");
-
   if (isOptimisticForumPost(post)) {
     return null;
   }
-
   return (
     <ButtonGroup
       className={cn(
@@ -62,7 +60,6 @@ export function PostItemActions({ post }: { post: ForumPost }) {
             reactionPicker.open();
             return;
           }
-
           reactionPicker.close();
         }}
         open={isReactionPickerOpen}
@@ -89,16 +86,22 @@ export function PostItemActions({ post }: { post: ForumPost }) {
               startTransition(() =>
                 Effect.runPromise(
                   Effect.tryPromise(() =>
-                    toggleReaction({ postId: post._id, emoji })
+                    toggleReaction({
+                      postId: post._id,
+                      emoji,
+                    })
                   ).pipe(
+                    Effect.flatMap(Effect.fromResult),
                     Effect.asVoid,
-                    Effect.catchTag("UnknownError", ({ cause: error }) =>
-                      Effect.sync(() => {
-                        captureException(error, {
-                          source: "post-reaction-picker",
-                        });
-                      })
-                    )
+                    Effect.matchEffect({
+                      onFailure: (error) =>
+                        Effect.sync(() => {
+                          captureException(error, {
+                            source: "post-reaction-picker",
+                          });
+                        }),
+                      onSuccess: () => Effect.void,
+                    })
                   )
                 )
               );

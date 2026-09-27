@@ -1,4 +1,3 @@
-import "server-only";
 import {
   MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
   MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
@@ -10,7 +9,6 @@ import {
   type ProtectedContentRuntimeResponse,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/protected/verify";
-
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   ContentRuntimeFailureError,
@@ -56,7 +54,12 @@ export const readProtectedContent = Effect.fn(
   rendererManifest: unknown
 ) {
   const request = yield* decodeProtectedContentRuntimeRequest(input).pipe(
-    Effect.mapError(() => new ContentTransportError({ reason: "request" }))
+    Effect.mapError(
+      () =>
+        new ContentTransportError({
+          reason: "request",
+        })
+    )
   );
   const source = yield* encodeContentRequest(
     request,
@@ -67,7 +70,11 @@ export const readProtectedContent = Effect.fn(
     PROTECTED_CONTENT_RUNTIME_PATH
   );
   const { response, value: decoded } = yield* requestContentResponse(
-    { endpoint, source, target },
+    {
+      endpoint,
+      source,
+      target,
+    },
     readProtectedRuntimeResponse
   );
   return yield* verifyProtectedResponse(
@@ -93,10 +100,17 @@ const verifyProtectedResponse = Effect.fn(
     response: decoded,
   }).pipe(
     Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
-    Effect.mapError((cause) => new ContentRuntimeVerificationError({ cause }))
+    Effect.mapError(
+      (cause) =>
+        new ContentRuntimeVerificationError({
+          cause,
+        })
+    )
   );
   if (verified.kind === "missing") {
-    return yield* new ContentRuntimeMissingError({ request });
+    return yield* new ContentRuntimeMissingError({
+      request,
+    });
   }
   if (verified.kind === "failure") {
     return yield* new ContentRuntimeFailureError({

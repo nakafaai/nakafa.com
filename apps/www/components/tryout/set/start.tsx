@@ -1,20 +1,20 @@
 "use client";
 
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
@@ -28,7 +28,6 @@ type StartAttempt = Pick<
   CurrentAttempt,
   "attemptId" | "resumeSectionKey" | "status"
 > | null;
-
 export interface StartTryoutRequest {
   authRedirectHref: string;
   countryKey: string;
@@ -41,7 +40,6 @@ export interface StartTryoutRequest {
   successNavigation: "destination" | "stay";
   trackKey: string;
 }
-
 interface StartTryoutButtonProps {
   attempt?: StartAttempt | undefined;
   request: StartTryoutRequest;
@@ -53,7 +51,7 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
     props.attempt?.status === "in-progress" &&
     !props.request.entrySectionKey
   ) {
-    return <ResumeTryoutLink attempt={props.attempt} request={props.request} />;
+    return <ResumeTryoutLink request={props.request} />;
   }
   return <TryoutStartAction {...props} />;
 }
@@ -62,8 +60,12 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
 function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const startAttempt = useMutation(api.tryouts.mutations.attempts.startAttempt);
-  const startSection = useMutation(api.tryouts.mutations.sections.start);
+  const startAttempt = useMutation(
+    refs.public.tryouts.mutations.attempts.startAttempt
+  );
+  const startSection = useMutation(
+    refs.public.tryouts.mutations.sections.start
+  );
   const t = useTranslations("Tryouts");
   const now = useTryoutClock(false);
   const [isPending, startTransition] = useTransition();
@@ -72,7 +74,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const finishedAttempt = Boolean(attempt && !activeAttempt);
   const directEntry = Boolean(request.entrySectionKey);
   const access = useQuery(
-    api.tryouts.queries.access.getStartAccess,
+    refs.public.tryouts.queries.access.getStartAccess,
     isAuthenticated && !activeAttempt
       ? {
           countryKey: request.countryKey,
@@ -84,11 +86,17 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         }
       : "skip"
   );
-  const accessLoading = isAuthenticated && !activeAttempt && !access;
+  if (QueryResult.isFailure(access)) {
+    throw access.error;
+  }
+  const accessLoading =
+    isAuthenticated && !activeAttempt && !QueryResult.isSuccess(access);
   const attemptLoading = isAuthenticated && attempt === undefined;
   const resolvingAccess = isLoading || accessLoading || attemptLoading;
   const busy = isPending || resolvingAccess;
-  const dialogKind = access?.kind ?? "free-attempt";
+  const dialogKind = QueryResult.isSuccess(access)
+    ? access.value.kind
+    : "free-attempt";
   const buttonLabel = activeAttempt
     ? t("continue-cta")
     : t(finishedAttempt ? "restart-cta" : "start-cta");
@@ -99,12 +107,10 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     if (busy) {
       return;
     }
-
     if (!isAuthenticated) {
       router.push(`/auth?redirect=${encodeURIComponent(authRedirect)}`);
       return;
     }
-
     if (attempt?.status === "in-progress" && request.entrySectionKey) {
       const sectionKey = attempt.resumeSectionKey ?? request.entrySectionKey;
       startTransition(() =>
@@ -120,7 +126,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       );
       return;
     }
-
     dialog.open();
   }
 
@@ -129,16 +134,19 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     if (busy) {
       return;
     }
-
     const program = startAttemptProgram({
       args: {
         countryKey: request.countryKey,
         ...(directEntry
           ? {}
-          : { destinationSectionKey: request.destinationSectionKey }),
+          : {
+              destinationSectionKey: request.destinationSectionKey,
+            }),
         ...(request.entrySectionKey === undefined
           ? {}
-          : { entrySectionKey: request.entrySectionKey }),
+          : {
+              entrySectionKey: request.entrySectionKey,
+            }),
         examKey: request.examKey,
         locale: request.locale,
         setKey: request.setKey,
@@ -151,7 +159,9 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
           dialog.close();
           toast.success(
             directEntry ? t("start-entry-success") : t("start-success"),
-            { position: "bottom-center" }
+            {
+              position: "bottom-center",
+            }
           );
           const href = getTryoutAttemptHref(
             result.navigation.publicPath,
@@ -164,10 +174,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
           router.push(href);
         }),
     });
-
     startTransition(() => Effect.runPromise(program));
   }
-
   return (
     <>
       <Button disabled={busy} onClick={onStart}>
@@ -194,28 +202,15 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   );
 }
 
-/** Reuses an active attempt and warms its next section on navigation intent. */
+/** Links to the next section of the active attempt. */
 function ResumeTryoutLink({
-  attempt,
   request,
 }: {
-  readonly attempt: NonNullable<StartAttempt>;
   readonly request: StartTryoutRequest;
 }) {
-  const prewarmData = useTryoutDataIntent();
   const t = useTranslations("Tryouts");
   return (
-    <IntentLink
-      className={buttonVariants()}
-      href={request.destinationHref}
-      onIntent={() =>
-        prewarmData({
-          attemptId: attempt.attemptId,
-          kind: "section",
-          sectionKey: request.destinationSectionKey,
-        })
-      }
-    >
+    <IntentLink className={buttonVariants()} href={request.destinationHref}>
       <Spinner icon={Rocket01Icon} isLoading={false} />
       {t("continue-cta")}
     </IntentLink>

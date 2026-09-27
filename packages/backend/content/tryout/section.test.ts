@@ -1,3 +1,4 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import {
   ACTIVE_APP_LOCALE_CODES,
@@ -5,22 +6,22 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
-import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { convexModules } from "@repo/backend/confect/test.setup";
+import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import {
   readTryoutSection,
   readTryoutSectionRows,
   type TryoutSectionIdentity,
 } from "@repo/backend/content/tryout/section";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 
 const identity: TryoutSectionIdentity = {
   countryKey: "indonesia",
@@ -91,14 +92,17 @@ async function activateSection(questionCount = 1) {
       ),
     })
   );
-  return { snapshotId, t };
+  return {
+    snapshotId,
+    t,
+  };
 }
-
 describe("contentRelease/tryout/section", () => {
   it.effect(
     "rejects an authenticated country row at the section-only boundary",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const { snapshotId, t } = yield* Effect.promise(() =>
           activateSection()
         );
@@ -117,30 +121,36 @@ describe("contentRelease/tryout/section", () => {
               if (row === null) {
                 return null;
               }
-              return runConvexProgram(
+              return Effect.runPromiseWith(runtimeServices)(
                 readTryoutSectionRows(snapshotId, row).pipe(
-                  Effect.provide(convexTryoutLayer(ctx))
+                  Effect.provide(
+                    Layer.provideMerge(
+                      tryoutLayer,
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
+                  )
                 )
               );
             })
           ).rejects.toMatchObject({
-            data: {
-              code: "CONTENT_RELEASE_INTEGRITY",
-              message: expect.stringContaining("changed its row kind"),
-            },
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: expect.stringContaining("changed its row kind"),
           })
         );
       })
   );
-
   it("returns one verified server-only section with signed placements", async () => {
     const { snapshotId, t } = await activateSection();
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutSection(identity).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
@@ -154,37 +164,55 @@ describe("contentRelease/tryout/section", () => {
           },
         },
       ],
-      section: { row: { kind: "section", questionCount: 1 } },
+      section: {
+        row: {
+          kind: "section",
+          questionCount: 1,
+        },
+      },
       snapshotId,
     });
   });
-
   it("fails closed until try-out ownership becomes active", async () => {
     const t = convexTest(schema, convexModules);
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutSection(identity).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_MISSING",
+    });
   });
-
   it("fails closed for a missing section or placement", async () => {
     const missingSection = await activateSection();
     await expect(
       missingSection.t.query((ctx) =>
-        runConvexProgram(
-          readTryoutSection({ ...identity, sectionKey: "missing" }).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
+        Effect.runPromise(
+          readTryoutSection({
+            ...identity,
+            sectionKey: "missing",
+          }).pipe(
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
-
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_MISSING",
+    });
     const missingPlacement = await activateSection();
     await missingPlacement.t.mutation(async (ctx) => {
       const placements = await ctx.db.query("tryoutPlacements").collect();
@@ -196,29 +224,40 @@ describe("contentRelease/tryout/section", () => {
     });
     await expect(
       missingPlacement.t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutSection(identity).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
-
   it("rejects a section above the bounded placement limit", async () => {
     const { t } = await activateSection(257);
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutSection(identity).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_LIMIT",
+    });
   });
-
   it("rejects a signed placement that breaks contiguous section order", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
@@ -234,15 +273,21 @@ describe("contentRelease/tryout/section", () => {
         ),
       })
     );
-
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
+        Effect.runPromise(
           readTryoutSection(identity).pipe(
-            Effect.provide(convexTryoutLayer(ctx))
+            Effect.provide(
+              Layer.provideMerge(
+                tryoutLayer,
+                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+              )
+            )
           )
         )
       )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    ).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
   });
 });

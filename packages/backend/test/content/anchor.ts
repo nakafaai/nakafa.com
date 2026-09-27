@@ -1,6 +1,7 @@
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
+import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { makePublicationReceipt } from "@repo/backend/convex/contentRelease/receipt";
 import { insertTestHead } from "@repo/backend/test/content/head";
 import {
   TEST_MANIFEST_HASH,
@@ -136,7 +137,7 @@ export async function insertAnchoredActiveRelease(
   await ctx.db.patch("contentReleases", activeId, {
     receiptJson: JSON.stringify(
       makePublicationReceipt(
-        active,
+        Schema.decodeSync(contentReleases.Doc)(active),
         Schema.decodeUnknownSync(SignedContentReleaseSchema)(
           JSON.parse(activeJson)
         )

@@ -1,88 +1,112 @@
 import { describe, expect, it } from "@effect/vitest";
-import { convexArticleLayer } from "@repo/backend/content/article/convex";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { articleLayer } from "@repo/backend/content/article/confect";
 import {
   verifyArticle,
   verifyCategory,
 } from "@repo/backend/content/article/verify";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { insertRuntimeArticles } from "@repo/backend/test/content/runtime";
-import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("contentRelease/article/verify", () => {
-  it("accepts the signed asset identity and rejects a stored mismatch", async () => {
-    const target = convexTest(schema, convexModules);
-    await target.mutation((ctx) => insertRuntimeArticles(ctx, 1));
-
-    await expect(
-      target.query(async (ctx) => {
-        const row = await ctx.db.query("articleCatalog").unique();
-        if (!row) {
-          throw new Error("Expected one active article row.");
-        }
-        return runConvexProgram(
-          verifyArticle(row, row.sequence).pipe(
-            Effect.provide(convexArticleLayer(ctx))
-          )
+  it.effect(
+    "accepts the signed asset identity and rejects a stored mismatch",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const targetCtx = yield* MutationCtx;
+            yield* Effect.promise(() => insertRuntimeArticles(targetCtx, 1));
+            expect(
+              yield* Effect.gen(function* () {
+                const row = yield* Effect.promise(() =>
+                  targetCtx.db.query("articleCatalog").unique()
+                );
+                if (!row) {
+                  throw new Error("Expected one active article row.");
+                }
+                return yield* verifyArticle(row, row.sequence).pipe(
+                  Effect.provide(articleLayer)
+                );
+              })
+            ).toMatchObject({
+              projection: {
+                kind: "article",
+              },
+            });
+            yield* Effect.gen(function* () {
+              const row = yield* Effect.promise(() =>
+                targetCtx.db.query("articleCatalog").unique()
+              );
+              if (!row) {
+                throw new Error("Expected one active article row.");
+              }
+              yield* Effect.promise(() =>
+                targetCtx.db.patch("articleCatalog", row._id, {
+                  assetId: "asset:en:article:politics:article:politics:wrong",
+                })
+              );
+            });
+            expect(
+              yield* Effect.gen(function* () {
+                const row = yield* Effect.promise(() =>
+                  targetCtx.db.query("articleCatalog").unique()
+                );
+                if (!row) {
+                  throw new Error("Expected one active article row.");
+                }
+                return yield* verifyArticle(row, row.sequence).pipe(
+                  Effect.provide(articleLayer)
+                );
+              }).pipe(Effect.flip)
+            ).toMatchObject({
+              code: "CONTENT_RELEASE_INTEGRITY",
+            });
+          })
         );
       })
-    ).resolves.toMatchObject({ projection: { kind: "article" } });
-
-    await target.mutation(async (ctx) => {
-      const row = await ctx.db.query("articleCatalog").unique();
-      if (!row) {
-        throw new Error("Expected one active article row.");
-      }
-      await ctx.db.patch("articleCatalog", row._id, {
-        assetId: "asset:en:article:politics:article:politics:wrong",
-      });
-    });
-    await expect(
-      target.query(async (ctx) => {
-        const row = await ctx.db.query("articleCatalog").unique();
-        if (!row) {
-          throw new Error("Expected one active article row.");
-        }
-        return runConvexProgram(
-          verifyArticle(row, row.sequence).pipe(
-            Effect.provide(convexArticleLayer(ctx))
-          )
+  );
+  it.effect(
+    "rejects a category route that contradicts its signed representative",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* target.run(
+          Effect.gen(function* () {
+            const targetCtx = yield* MutationCtx;
+            yield* Effect.promise(() => insertRuntimeArticles(targetCtx, 1));
+            yield* Effect.gen(function* () {
+              const category = yield* Effect.promise(() =>
+                targetCtx.db.query("articleCategories").unique()
+              );
+              if (!category) {
+                throw new Error("Expected one active article category.");
+              }
+              yield* Effect.promise(() =>
+                targetCtx.db.patch("articleCategories", category._id, {
+                  route: "government",
+                })
+              );
+            });
+            expect(
+              yield* Effect.gen(function* () {
+                const category = yield* Effect.promise(() =>
+                  targetCtx.db.query("articleCategories").unique()
+                );
+                if (!category) {
+                  throw new Error("Expected one active article category.");
+                }
+                return yield* verifyCategory(category, category.sequence).pipe(
+                  Effect.provide(articleLayer)
+                );
+              }).pipe(Effect.flip)
+            ).toMatchObject({
+              code: "CONTENT_RELEASE_INTEGRITY",
+            });
+          })
         );
       })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
-
-  it("rejects a category route that contradicts its signed representative", async () => {
-    const target = convexTest(schema, convexModules);
-    await target.mutation((ctx) => insertRuntimeArticles(ctx, 1));
-    await target.mutation(async (ctx) => {
-      const category = await ctx.db.query("articleCategories").unique();
-      if (!category) {
-        throw new Error("Expected one active article category.");
-      }
-      await ctx.db.patch("articleCategories", category._id, {
-        route: "government",
-      });
-    });
-
-    await expect(
-      target.query(async (ctx) => {
-        const category = await ctx.db.query("articleCategories").unique();
-        if (!category) {
-          throw new Error("Expected one active article category.");
-        }
-        return runConvexProgram(
-          verifyCategory(category, category.sequence).pipe(
-            Effect.provide(convexArticleLayer(ctx))
-          )
-        );
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
+  );
 });

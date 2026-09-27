@@ -1,8 +1,9 @@
+import type { Ref } from "@confect/core";
+import type { InvokeReturn } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog/browser";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Result, Schema } from "effect";
 import {
   HttpBody,
@@ -15,42 +16,40 @@ const STORAGE_UPLOAD_TIMEOUT = "10 seconds";
 const StorageIdSchema = Schema.declare(
   (input): input is Id<"_storage"> =>
     typeof input === "string" && input.length > 0,
-  { identifier: "ConvexStorageId" }
+  {
+    identifier: "ConvexStorageId",
+  }
 );
 const StorageUploadResponseSchema = Schema.Struct({
   storageId: StorageIdSchema,
 });
 type GenerateUploadUrlMutation = (
-  args: FunctionArgs<
-    typeof api.classes.forums.mutations.uploads.generateUploadUrl
+  args: Ref.Args<
+    typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
   >
-) => Promise<
-  FunctionReturnType<
-    typeof api.classes.forums.mutations.uploads.generateUploadUrl
-  >
+) => InvokeReturn<
+  typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
 >;
 type DiscardForumUploadsMutation = (
-  args: FunctionArgs<
-    typeof api.classes.forums.mutations.uploads.discardForumUploads
+  args: Ref.Args<
+    typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
   >
-) => Promise<
-  FunctionReturnType<
-    typeof api.classes.forums.mutations.uploads.discardForumUploads
-  >
+) => InvokeReturn<
+  typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
 >;
 type SaveForumUploadMutation = (
-  args: FunctionArgs<
-    typeof api.classes.forums.mutations.uploads.saveForumUpload
+  args: Ref.Args<
+    typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
   >
-) => Promise<
-  FunctionReturnType<
-    typeof api.classes.forums.mutations.uploads.saveForumUpload
-  >
+) => InvokeReturn<
+  typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
 >;
 type CreateForumPostMutation = (
-  args: FunctionArgs<typeof api.classes.forums.mutations.posts.createForumPost>
-) => Promise<
-  FunctionReturnType<typeof api.classes.forums.mutations.posts.createForumPost>
+  args: Ref.Args<
+    typeof refs.public.classes.forums.mutations.posts.createForumPost
+  >
+) => InvokeReturn<
+  typeof refs.public.classes.forums.mutations.posts.createForumPost
 >;
 interface ForumPostSubmitMutations {
   createPost: CreateForumPostMutation;
@@ -124,13 +123,28 @@ const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
     }
     const result = yield* Effect.result(
       Effect.tryPromise({
-        try: () => mutations.discardForumUploads({ uploadIds }),
+        try: () =>
+          mutations.discardForumUploads({
+            uploadIds,
+          }),
         catch: (cause) =>
           new ForumAttachmentCleanupError({
             message: "Forum attachment cleanup failed.",
             cause: getErrorCause(cause),
           }),
-      })
+      }).pipe(
+        Effect.flatMap((result) =>
+          Effect.fromResult(result).pipe(
+            Effect.mapError(
+              (cause) =>
+                new ForumAttachmentCleanupError({
+                  message: "Forum attachment cleanup failed.",
+                  cause: getErrorCause(cause),
+                })
+            )
+          )
+        )
+      )
     );
     if (Result.isFailure(result)) {
       yield* Effect.sync(() =>
@@ -145,13 +159,28 @@ const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
 const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
   function* ({ file, forumId, mutations }: UploadAttachmentFileInput) {
     const { uploadId, uploadUrl } = yield* Effect.tryPromise({
-      try: () => mutations.generateUploadUrl({ forumId }),
+      try: () =>
+        mutations.generateUploadUrl({
+          forumId,
+        }),
       catch: (cause) =>
         new ForumAttachmentUploadError({
           message: "Forum attachment upload URL generation failed.",
           cause: getErrorCause(cause),
         }),
-    });
+    }).pipe(
+      Effect.flatMap((result) =>
+        Effect.fromResult(result).pipe(
+          Effect.mapError(
+            (cause) =>
+              new ForumAttachmentUploadError({
+                message: "Forum attachment upload URL generation failed.",
+                cause: getErrorCause(cause),
+              })
+          )
+        )
+      )
+    );
     const client = yield* HttpClient.HttpClient;
     const { storageId } = yield* HttpClientRequest.post(uploadUrl).pipe(
       HttpClientRequest.setBody(
@@ -195,6 +224,17 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
           cause: getErrorCause(cause),
         }),
     }).pipe(
+      Effect.flatMap((result) =>
+        Effect.fromResult(result).pipe(
+          Effect.mapError(
+            (cause) =>
+              new ForumAttachmentUploadError({
+                message: "Forum attachment metadata save failed.",
+                cause: getErrorCause(cause),
+              })
+          )
+        )
+      ),
       Effect.tapError(() =>
         discardPendingUploads({
           mutations,
@@ -221,7 +261,9 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
         mutations,
       })
     ),
-    { mode: "result" }
+    {
+      mode: "result",
+    }
   );
   for (const result of uploadResults) {
     if (Result.isSuccess(result)) {
@@ -240,10 +282,18 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
   yield* Effect.tryPromise({
     try: () =>
       mutations.createPost({
-        ...(attachmentUploadIds.length > 0 ? { attachmentUploadIds } : {}),
+        ...(attachmentUploadIds.length > 0
+          ? {
+              attachmentUploadIds,
+            }
+          : {}),
         forumId: post.forumId,
         body: post.body,
-        ...(post.parentId === undefined ? {} : { parentId: post.parentId }),
+        ...(post.parentId === undefined
+          ? {}
+          : {
+              parentId: post.parentId,
+            }),
       }),
     catch: (cause) =>
       new ForumPostCreateError({
@@ -251,6 +301,17 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
         cause: getErrorCause(cause),
       }),
   }).pipe(
+    Effect.flatMap((result) =>
+      Effect.fromResult(result).pipe(
+        Effect.mapError(
+          (cause) =>
+            new ForumPostCreateError({
+              message: "Forum post creation failed.",
+              cause: getErrorCause(cause),
+            })
+        )
+      )
+    ),
     Effect.tapError(() =>
       discardPendingUploads({
         mutations,

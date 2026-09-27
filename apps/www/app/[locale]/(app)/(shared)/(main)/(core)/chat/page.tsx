@@ -1,4 +1,3 @@
-import { Particles } from "@repo/design-system/components/ui/particles";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { ChatNew } from "@/components/ai/chat-new";
@@ -40,20 +39,11 @@ export async function generateMetadata({
 
 export default function Page() {
   return (
-    <div className="relative flex size-full min-h-[calc(100svh-4rem)] items-center justify-center lg:min-h-svh">
-      <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-      <div className="mx-auto w-full max-w-xl px-6">
-        <div className="relative flex h-full flex-col gap-y-4">
-          <HomeTitle />
-
-          <ChatNew />
-
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <Videos />
-            <Weather />
-          </div>
-        </div>
+    <ChatNew title={<HomeTitle />}>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <Videos />
+        <Weather />
       </div>
-    </div>
+    </ChatNew>
   );
 }

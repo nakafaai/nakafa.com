@@ -40,7 +40,12 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
   openapi: "3.1.1",
   paths: OPENAPI_PATHS,
   security: [],
-  servers: [{ description: "Production", url: NAKAFA_API_BASE_URL }],
+  servers: [
+    {
+      description: "Production",
+      url: NAKAFA_API_BASE_URL,
+    },
+  ],
   tags: [
     {
       description: "Public read-only endpoints that require no user account.",

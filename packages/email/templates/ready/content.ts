@@ -6,36 +6,30 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Schema } from "effect";
 
 const loopbackHostnames = new Set(["127.0.0.1", "[::1]", "localhost"]);
-
 function isEmailUrl(value: string) {
   if (!URL.canParse(value)) {
     return false;
   }
-
   const url = new URL(value);
   return (
     url.protocol === "https:" ||
     (url.protocol === "http:" && loopbackHostnames.has(url.hostname))
   );
 }
-
 const EmailUrlSchema = Schema.String.check(
   Schema.makeFilter(isEmailUrl, {
     message: "Expected HTTPS or a loopback HTTP URL.",
   })
 );
-
 export const AccountReadyEmailInputSchema = Schema.Struct({
   continueUrl: EmailUrlSchema,
   locale: ActiveAppLocaleCodeSchema,
   privacyPolicyUrl: EmailUrlSchema,
   termsOfServiceUrl: EmailUrlSchema,
 });
-
 export type AccountReadyEmailInput = Schema.Schema.Type<
   typeof AccountReadyEmailInputSchema
 >;
-
 export interface AccountReadyEmailCopy {
   readonly body: string;
   readonly cta: string;
@@ -44,7 +38,6 @@ export interface AccountReadyEmailCopy {
   readonly subject: string;
   readonly termsOfService: string;
 }
-
 const accountReadyEmailCopy = {
   de: {
     body: "Dein Konto ist eingerichtet. Wähle ein Fach oder starte einen Probetest, wenn du bereit bist.",
@@ -72,7 +65,6 @@ const accountReadyEmailCopy = {
     termsOfService: "Syarat dan Ketentuan",
   },
 } satisfies Record<ActiveAppLocaleCode, AccountReadyEmailCopy>;
-
 const canonicalSiteUrl = new URL(COMPANY_IDENTITY.url);
 
 /** Returns the reviewed product copy for one active app locale. */
@@ -84,3 +76,20 @@ export function getAccountReadyEmailCopy(locale: ActiveAppLocaleCode) {
 export function getPublicEmailUrl(pathname: string) {
   return new URL(pathname, canonicalSiteUrl).href;
 }
+/** Expected invalid input at the account-ready email boundary. */
+export class AccountReadyEmailInputError extends Schema.TaggedError<AccountReadyEmailInputError>()(
+  "AccountReadyEmailInputError",
+  {
+    code: Schema.Literal("ACCOUNT_READY_EMAIL_INPUT_INVALID"),
+    message: Schema.String,
+  }
+) {}
+
+/** Expected failure while rendering an account-ready email. */
+export class AccountReadyEmailRenderError extends Schema.TaggedError<AccountReadyEmailRenderError>()(
+  "AccountReadyEmailRenderError",
+  {
+    code: Schema.Literal("ACCOUNT_READY_EMAIL_RENDER_FAILED"),
+    message: Schema.String,
+  }
+) {}

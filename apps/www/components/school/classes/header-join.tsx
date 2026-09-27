@@ -1,7 +1,9 @@
 "use client";
+
+import { useMutation } from "@confect/react";
 import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -17,7 +19,6 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -35,7 +36,7 @@ export function SchoolClassesHeaderJoin() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, openHandlers] = useDisclosure(false);
-  const joinClass = useMutation(api.classes.mutations.joinClass);
+  const joinClass = useMutation(refs.public.classes.mutations.joinClass);
   const form = useForm({
     defaultValues,
     validators: {
@@ -43,23 +44,28 @@ export function SchoolClassesHeaderJoin() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(async () => {
-          const { classId } = await joinClass(value);
-          router.push(`${pathname}/${classId}`);
-          openHandlers.close();
-          form.reset();
-        }).pipe(
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            reportClientException(error, {
-              source: "school-class-join-header",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  toast.error(t("join-class-failed"));
-                })
-              )
-            )
-          )
+        Effect.tryPromise(() => joinClass(value)).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap(({ classId }) =>
+            Effect.sync(() => {
+              router.push(`${pathname}/${classId}`);
+              openHandlers.close();
+              form.reset();
+            })
+          ),
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "school-class-join-header",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(t("join-class-failed"));
+                  })
+                )
+              ),
+            onSuccess: () => Effect.void,
+          })
         )
       );
     },

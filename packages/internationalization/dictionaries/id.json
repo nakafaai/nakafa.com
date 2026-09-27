@@ -8,6 +8,8 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "load-error": "Data ini belum dapat dimuat. Silakan coba lagi.",
+    "action-error": "Tindakan ini belum berhasil. Silakan coba lagi.",
     "copyright": "Hak Cipta © {year} {companyName}. Seluruh hak dilindungi.",
     "made-with-love": "Dibuat dengan cinta",
     "version": "Versi {version}",
@@ -500,12 +502,22 @@
     "delete": "Hapus"
   },
   "Ai": {
+    "attachment": "Lampiran",
+    "open-attachment": "Buka {filename}",
+    "messages": "Pesan",
+    "scroll-to-latest": "Ke pesan terbaru",
+    "chat-actions": "Aksi percakapan",
+    "chat-history": "Riwayat percakapan",
+    "send-message": "Kirim pesan",
+    "stop-response": "Hentikan respons",
+    "attach-files": "Lampirkan file",
+    "remove-attachment": "Hapus {filename}",
+    "attachment-rejected": "Pilih hingga 10 file PNG, JPEG, WebP, GIF, PDF, atau teks, masing-masing maksimal 8 MiB.",
     "ask-nina": "Tanya Nina",
     "text-placeholder": "Tanya Nina apa saja...",
-    "error-message": "Waduh, ada masalah nih. Coba ganti model AI-nya ya.",
-    "insufficient-credits": "Kredit AI kamu habis. Tunggu reset kredit berikutnya atau upgrade ke Pro untuk 3.000 kredit bulanan.",
+    "error-message": "Nina belum berhasil menyelesaikan jawaban ini. Silakan coba lagi. Jika masalah berlanjut, hubungi dukungan Nakafa.",
     "retry": "Coba lagi",
-    "rate-limit-message": "Kamu terlalu cepat! Coba lagi nanti ya.",
+    "rate-limit-message": "Batas pengiriman pesan sementara sudah tercapai. Tunggu sebentar, lalu kirim lagi.",
     "nakafa": "Nakafa",
     "nakafa-search": "hasil Nakafa",
     "nakafa-search-results": "Konten ditemukan",
@@ -658,7 +670,37 @@
     "output-tokens": "Output",
     "total-tokens": "Total",
     "recent-chats": "Obrolan Terbaru",
-    "speed": "Kecepatan pemutaran"
+    "speed": "Kecepatan pemutaran",
+    "review-credits": "Lihat kredit",
+    "sign-in-again": "Masuk kembali",
+    "failures": {
+      "connection": "Permintaan belum bisa dikonfirmasi. Periksa koneksimu, lalu coba lagi.",
+      "credits": "Kreditmu belum cukup untuk jawaban ini. Lihat sisa kredit dan jadwal reset di pengaturan langganan.",
+      "rate-limit": "Batas pengiriman pesan sementara sudah tercapai. Tunggu sebentar, lalu kirim lagi.",
+      "session": "Sesi masukmu sudah berakhir. Masuk kembali untuk melanjutkan.",
+      "account": "Akun ini belum bisa menggunakan Nina. Masuk kembali atau hubungi dukungan Nakafa jika masalah berlanjut.",
+      "authentication": "Sesi masukmu belum bisa diverifikasi. Silakan coba lagi.",
+      "missing-chat": "Chat ini sudah tidak tersedia. Kamu bisa memulai chat baru.",
+      "chat-access": "Kamu tidak punya akses untuk mengirim pesan di chat ini. Mulai chat milikmu sendiri untuk melanjutkan.",
+      "admission": "Nina belum bisa menyimpan permintaan ini. Silakan coba lagi.",
+      "busy": "Nina masih menjawab di chat ini. Tunggu jawabannya selesai atau hentikan sebelum mengirim pesan berikutnya.",
+      "retry-unavailable": "Pesan ini sudah tidak bisa dicoba ulang. Kirim pertanyaanmu sebagai pesan baru.",
+      "request-conflict": "Pengiriman ini sudah digunakan untuk pesan lain. Kirim pertanyaanmu lagi sebagai pesan baru.",
+      "context": "Nina belum bisa memuat materi belajar untuk percakapan ini. Silakan coba lagi.",
+      "attachment-invalid": "Ada lampiran yang tidak valid atau sudah tidak tersedia. Pilih ulang berkasnya dan periksa jenis serta ukurannya.",
+      "attachment-limit": "Batas lampiran sudah tercapai. Kirim berkas yang sudah diunggah atau tunggu sebelum mengunggah lagi.",
+      "attachment-failed": "Nina belum bisa membaca atau menyimpan lampiran. Coba unggah lagi.",
+      "provider-busy": "Layanan AI sedang menerima terlalu banyak permintaan. Tunggu sebentar, lalu coba lagi.",
+      "provider-unavailable": "Layanan AI sedang mengalami gangguan sementara. Coba lagi sebentar lagi.",
+      "service-configuration": "Nina belum bisa mengakses layanan AI. Coba lagi nanti. Jika masalah berlanjut, hubungi dukungan Nakafa.",
+      "request-rejected": "Layanan AI belum bisa memproses permintaan ini. Coba pertanyaan yang lebih singkat atau lampiran lain.",
+      "input-too-large": "Permintaan ini terlalu besar untuk layanan AI. Ringkas pertanyaan atau kurangi lampirannya, lalu kirim lagi.",
+      "response-timeout": "Layanan AI terlalu lama merespons. Silakan coba lagi.",
+      "content-blocked": "Layanan AI tidak bisa menjawab permintaan ini karena pembatasan konten. Periksa pertanyaan dan lampiranmu sebelum mengirim lagi.",
+      "response-limit": "Nina mencapai batas respons sebelum jawaban selesai. Coba pertanyaan yang lebih terarah atau pecah menjadi beberapa bagian.",
+      "interrupted": "Jawaban terhenti sebelum selesai. Silakan coba lagi.",
+      "unknown": "Nina belum berhasil menyelesaikan jawaban ini. Silakan coba lagi. Jika masalah berlanjut, hubungi dukungan Nakafa."
+    }
   },
   "Pricing": {
     "headline": "<mark>Kita juga pernah jadi pelajar.</mark> Ngerti rasanya milih antara belajar atau makan. Akses dasar gratis. Selamanya.",
@@ -834,8 +876,7 @@
       "learning": "Belajar",
       "classes": "Kelas",
       "nakafa-materials": "Materi Nakafa",
-      "yours": "Untukmu",
-      "notifications": "Notifikasi"
+      "yours": "Untukmu"
     },
     "Classes": {
       "classes": "Kelas",

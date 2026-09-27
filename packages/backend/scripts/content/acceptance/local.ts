@@ -75,8 +75,13 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
     CONVEX_SITE_URL: runtime.site,
     CONVEX_URL: runtime.query,
     NAKAFA_CONVEX_SITE_URL: runtime.site,
+    NEXT_PUBLIC_APP_URL: localEnvironment.SITE_URL,
     NEXT_PUBLIC_CONVEX_SITE_URL: runtime.site,
     NEXT_PUBLIC_CONVEX_URL: runtime.query,
+    NEXT_PUBLIC_POSTHOG_KEY: "phc_local_acceptance",
+    NEXT_PUBLIC_POSTHOG_UI_HOST: "http://localhost:3000",
+    POSTHOG_PROXY_HOST: "https://localhost",
+    SITE_URL: localEnvironment.SITE_URL,
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
       localEnvironment[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],
     [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]:
@@ -177,8 +182,8 @@ export const initializeLocalRuntime = Effect.fn(
     stdin?: string
   ) {
     yield* runAcceptanceCommand({
-      args: ["exec", "convex", ...args],
-      command: "pnpm",
+      args: ["node_modules/convex/bin/main.js", ...args],
+      command: process.execPath,
       cwd: backend,
       env: localConvexEnvironment,
       operation: `Anonymous Convex ${args[0]}`,

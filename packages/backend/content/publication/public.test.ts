@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
+import { publicationLayer } from "@repo/backend/content/publication/confect";
 import {
   readSelectedPublicRuntime,
   resolvePublicRoute,
@@ -7,14 +7,10 @@ import {
 } from "@repo/backend/content/publication/public";
 import { resolveActiveRoute } from "@repo/backend/content/publication/route";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   createTestPublication,
   makePageRuntimeSource,
 } from "@repo/backend/test/content/publication";
-import { convexTest } from "convex-test";
 import { Effect, Struct } from "effect";
 
 describe("active public body selection", () => {
@@ -24,18 +20,30 @@ describe("active public body selection", () => {
       Effect.gen(function* () {
         const fixture = makePageRuntimeSource();
         const published = new Map(fixture.source).set("contentReleases", [
-          { ...fixture.release, resultFamilies: ["page"] },
+          {
+            ...fixture.release,
+            resultFamilies: ["page"],
+          },
         ]);
         const sources = [
           new Map(published).set("contentHeads", [
-            { ...fixture.head, compilerConfigHash: `sha256:${"f".repeat(64)}` },
+            {
+              ...fixture.head,
+              compilerConfigHash: `sha256:${"f".repeat(64)}`,
+            },
           ]),
           new Map(published).set("contentHeads", [
-            { ...fixture.head, sourcePath: "outside-corpus.mdx" },
+            {
+              ...fixture.head,
+              sourcePath: "outside-corpus.mdx",
+            },
           ]),
           new Map(published)
             .set("contentState", [
-              { ...fixture.state, activeReleaseId: "different-release" },
+              {
+                ...fixture.state,
+                activeReleaseId: "different-release",
+              },
             ])
             .set("contentReleases", [
               {
@@ -47,60 +55,57 @@ describe("active public body selection", () => {
         ];
         for (const source of sources) {
           const runtime = yield* createTestPublication(source);
-          yield* Effect.promise(() =>
-            runtime.query((ctx) =>
-              runConvexProgram(
-                Effect.gen(function* () {
-                  const route = yield* resolveActiveRoute(
-                    "page",
-                    fixture.projection.appLocale,
-                    fixture.projection.publicPath
-                  );
-                  expect(
-                    yield* readSelectedPublicRuntime(route).pipe(
-                      Effect.flip,
-                      Effect.orDie
-                    )
-                  ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-                }).pipe(Effect.provide(convexPublicationLayer(ctx)))
-              )
-            )
+          yield* runtime.run(
+            Effect.gen(function* () {
+              const route = yield* resolveActiveRoute(
+                "page",
+                fixture.projection.appLocale,
+                fixture.projection.publicPath
+              );
+              expect(
+                yield* readSelectedPublicRuntime(route).pipe(
+                  Effect.flip,
+                  Effect.orDie
+                )
+              ).toMatchObject({
+                code: "CONTENT_RELEASE_INTEGRITY",
+              });
+            }).pipe(Effect.provide(publicationLayer))
           );
         }
         const empty = yield* createTestPublication(new Map());
-        yield* Effect.promise(() =>
-          empty.query((ctx) =>
-            runConvexProgram(
-              resolveActiveRoute("page", "en", "missing").pipe(
-                Effect.flatMap(readSelectedPublicRuntime),
-                Effect.tap((runtime) =>
-                  Effect.sync(() => expect(runtime).toBeNull())
-                ),
-                Effect.provide(convexPublicationLayer(ctx))
-              )
-            )
+        yield* empty.run(
+          resolveActiveRoute("page", "en", "missing").pipe(
+            Effect.flatMap(readSelectedPublicRuntime),
+            Effect.tap((runtime) =>
+              Effect.sync(() => expect(runtime).toBeNull())
+            ),
+            Effect.asVoid,
+            Effect.provide(publicationLayer)
           )
         );
       })
   );
-
-  it("preserves exact request order when no publication is active", async () => {
-    const target = convexTest(schema, convexModules);
-    const requests = [
-      { appLocale: "en", publicPath: "about" },
-      { appLocale: "id", publicPath: "about" },
-    ] as const;
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          resolvePublicRoutes(requests).pipe(
-            Effect.provide(convexPublicationLayer(ctx))
-          )
-        )
-      )
-    ).resolves.toEqual([null, null]);
-  });
-
+  it.effect("preserves exact request order when no publication is active", () =>
+    Effect.gen(function* () {
+      const target = yield* createTestPublication(new Map());
+      const requests = [
+        {
+          appLocale: "en",
+          publicPath: "about",
+        },
+        {
+          appLocale: "id",
+          publicPath: "about",
+        },
+      ] as const;
+      yield* target.run(
+        Effect.gen(function* () {
+          expect(yield* resolvePublicRoutes(requests)).toEqual([null, null]);
+        }).pipe(Effect.provide(publicationLayer))
+      );
+    })
+  );
   it.effect(
     "rejects a route whose stored binding or active body is incomplete",
     () =>
@@ -126,19 +131,17 @@ describe("active public body selection", () => {
         ];
         for (const source of sources) {
           const runtime = yield* createTestPublication(source);
-          yield* Effect.promise(() =>
-            runtime.query((ctx) =>
-              runConvexProgram(
-                Effect.gen(function* () {
-                  expect(
-                    yield* resolvePublicRoute(
-                      fixture.projection.appLocale,
-                      fixture.projection.publicPath
-                    ).pipe(Effect.flip, Effect.orDie)
-                  ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-                }).pipe(Effect.provide(convexPublicationLayer(ctx)))
-              )
-            )
+          yield* runtime.run(
+            Effect.gen(function* () {
+              expect(
+                yield* resolvePublicRoute(
+                  fixture.projection.appLocale,
+                  fixture.projection.publicPath
+                ).pipe(Effect.flip, Effect.orDie)
+              ).toMatchObject({
+                code: "CONTENT_RELEASE_INTEGRITY",
+              });
+            }).pipe(Effect.provide(publicationLayer))
           );
         }
       })

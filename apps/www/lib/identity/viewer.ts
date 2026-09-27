@@ -1,9 +1,9 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 
 /** The stored account row the identity module resolves. */
 export type AccountRecord = NonNullable<
-  FunctionReturnType<typeof api.auth.queries.getCurrentUser>
+  Ref.Returns<typeof refs.public.auth.queries.getCurrentUser>
 >;
 
 /**

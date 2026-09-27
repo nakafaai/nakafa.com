@@ -1,11 +1,11 @@
-import { loadProgramOwner } from "@repo/backend/content/program/owner";
-import { ProgramSource } from "@repo/backend/content/program/source";
-import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import {
   CONTENT_BUCKET_SIZE,
   isProjectionBucket,
-} from "@repo/backend/convex/contentRelease/bucket";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+} from "@repo/backend/confect/contentRelease/bucket";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { loadProgramOwner } from "@repo/backend/content/program/owner";
+import { ProgramSource } from "@repo/backend/content/program/source";
+import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import { Effect, Option } from "effect";
 
 /** Reads one complete verified curriculum sitemap partition. */
@@ -23,7 +23,9 @@ export const readProgramPartition = Effect.fn(
   }
   const owner = yield* loadProgramOwner(appLocale);
   if (!(owner.managed && owner.selected)) {
-    return { kind: "unmanaged" as const };
+    return {
+      kind: "unmanaged" as const,
+    };
   }
   const { snapshotId } = owner.selected;
   const source = yield* ProgramSource;
@@ -35,9 +37,10 @@ export const readProgramPartition = Effect.fn(
   );
   const count = Option.getOrNull(selectedCount);
   if (!count) {
-    return { kind: "missing" as const };
+    return {
+      kind: "missing" as const,
+    };
   }
-
   if (
     rows.length !== count.routeCount ||
     rows.length === 0 ||
@@ -51,5 +54,8 @@ export const readProgramPartition = Effect.fn(
   const routes = yield* Effect.forEach(rows, (row) =>
     verifyCurriculum(row, snapshotId)
   );
-  return { kind: "found" as const, routes };
+  return {
+    kind: "found" as const,
+    routes,
+  };
 });

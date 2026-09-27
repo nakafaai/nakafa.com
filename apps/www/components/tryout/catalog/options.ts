@@ -1,12 +1,13 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
+
 import type { Locale } from "next-intl";
 
-type TryoutHubPage = FunctionReturnType<
-  typeof api.tryouts.queries.catalog.getHubPage
+type TryoutHubPage = Ref.Returns<
+  typeof refs.public.tryouts.queries.catalog.getHubPage
 >;
 type TryoutCountryPage = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.catalog.getCountryPage>
+  Ref.Returns<typeof refs.public.tryouts.queries.catalog.getCountryPage>
 >;
 type TryoutCountry = TryoutHubPage["countries"][number];
 type TryoutExam = TryoutCountryPage["exams"][number];

@@ -1,15 +1,19 @@
+import type { Ref } from "@confect/core";
+import type { HttpClient } from "@confect/js";
+import type refs from "@repo/backend/confect/_generated/refs";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
   ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
   ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-} from "@repo/backend/convex/auth/deletion/constants";
+} from "@repo/backend/confect/auth/deletion/constants";
 import {
   type AccountDeletionAttemptStatus,
   type AccountDeletionBrowserAttempt,
   accountDeletionAttemptStatus,
   accountDeletionRequestPhase,
-} from "@repo/backend/convex/auth/deletion/spec";
+} from "@repo/backend/confect/auth/deletion/spec";
+import type { Schema } from "effect";
 import { Effect, Result } from "effect";
 import { authClient } from "@/lib/auth/client";
 import {
@@ -35,7 +39,12 @@ type DeleteUserRequest = (
 ) => Promise<DeleteUserResult>;
 type ReconcileAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
-) => Promise<AccountDeletionAttemptStatus>;
+) => Effect.Effect<
+  AccountDeletionAttemptStatus,
+  | Ref.Error<typeof refs.public.auth.deletion.getAccountDeletionAttemptStatus>
+  | HttpClient.HttpClientError
+  | Schema.SchemaError
+>;
 interface AccountDeletionOperations
   extends AccountDeletionPreparationOperations {
   readonly reconcile: ReconcileAccountDeletionRequest;
@@ -61,15 +70,15 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
   }: AccountDeletionOperations) {
     const { attemptId, phase: startPhase } = attempt;
     const proveCommittedDeletion = () =>
-      Effect.tryPromise({
-        try: () => reconcile(attemptId),
-        catch: () =>
-          new AccountDeletionRequestUncertain({
-            attemptId,
-            code: accountDeletionErrorCode.requestUncertain,
-            phase: accountDeletionRequestPhase.deletion,
-          }),
-      }).pipe(
+      reconcile(attemptId).pipe(
+        Effect.mapError(
+          () =>
+            new AccountDeletionRequestUncertain({
+              attemptId,
+              code: accountDeletionErrorCode.requestUncertain,
+              phase: accountDeletionRequestPhase.deletion,
+            })
+        ),
         Effect.map(
           (status) => status === accountDeletionAttemptStatus.committed
         )

@@ -23,10 +23,14 @@ schema as `main`, verified signed content only, no throwaway experiments left
 behind. The normal loop is the repository's pnpm CLI:
 
 ```sh
-pnpm --dir packages/backend exec convex dev --once
+pnpm --dir packages/backend setup
 ```
 
-Use `convex codegen` for binding-only refreshes. Use the repository's pnpm CLI
+Run `pnpm --dir packages/backend codegen` before a Convex binding refresh. Confect
+owns the authored contract generation; Convex owns `convex/_generated`, including
+the static client API. `pnpm acceptance:prepare` and `pnpm acceptance:build`
+refresh these bindings against the owned local backend. CI verifies the result
+before building consumers. Use the repository's pnpm CLI
 and never print secrets. Never copy `CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`,
 or generated Convex URL values out of this checkout. Production deploys through
 Vercel's Git integration after a protected merge to `main`; the configured
@@ -44,29 +48,50 @@ touches a real dataset.
 
 ## Nakafa Convex Architecture Rules
 
-Keep Convex route files focused on registered Convex functions. Move shared
-domain implementation into capability folders using plain filenames like
-`impl.ts`, `spec.ts`, or `internal.ts`; do not create prefix-suffixed files such
-as `public.impl.ts` or `mutations.impl.ts`.
+Confect v10 owns the backend contract, registration, schema, middleware, and
+cron generation. Author application code in `confect/`. `confect/_generated/`
+and `convex/` are generated, except the Convex-managed `convex.config.ts`,
+`tsconfig.json`, and generated AI guidance. Never edit generated functions,
+IDs, document registries, validators, or references by hand.
 
-Use the Confect spec/impl split as structural inspiration, adapted to Convex
-routing with folder-owned `spec.ts`, `impl.ts`, and `internal.ts` files instead
-of prefix-suffixed filenames:
+- `confect/tables/<table>.ts` owns each `Table.make` definition and its indexes.
+- `<capability>.spec.ts` declares `GroupSpec` and `FunctionSpec`. Keep value
+  imports limited to contracts, schema definitions, and pure domain constants.
+  A client contract must not initialize SDK clients, read secrets, import a
+  database implementation, or start an Effect runtime.
+- `<capability>.impl.ts` provides named `Effect.fn` handlers through
+  `FunctionImpl` and `GroupImpl`. Compose effects inside domain capabilities;
+  the Confect registration owns execution at the Convex boundary.
+- Use generated IDs, document types, references, and context services from
+  `confect/_generated/`. Use `DatabaseReader` and `DatabaseWriter` for decoded
+  domain values. SDK component factories may use Confect's plain Convex
+  provenance when the SDK owns the registration or callback contract.
+- Apply the atomic middleware to mutations that require the application
+  triggers. It provides the same wrapped database to the Convex context and
+  both Confect database services. Keep dependent writes in one transaction.
+- Keep schemas lossless. Confect patching decodes and replaces a whole
+  document, so overlapping object unions may discard valid fields. Give
+  alternatives exclusive domain discriminants and verify retained data
+  round trips before changing a stored contract.
 
-- https://confect.dev/concepts/spec-impl-model
-- https://confect.dev/concepts/file-naming-conventions
+Use the installed Confect v10 source and matching documentation:
 
-Prefer one clear capability token per Convex folder or filename. CamelCase
-domain terms such as `assistantResponses` are acceptable when they name one
-established concept; ambiguous generic names or compound prefix/suffix
-filenames are not.
+- https://confect.dev/v10/concepts/project-structure
+- https://confect.dev/v10/concepts/file-naming-conventions
+- https://confect.dev/v10/server/plain-convex-functions
 
-Prefer direct imports from the owning module. Do not add barrel re-exports or
-compatibility routes when callers can import the concrete capability directly.
+Prefer one clear capability token per folder or filename. CamelCase domain
+terms such as `contentRelease` are acceptable when they name an
+established concept. `.spec.ts` and `.impl.ts` are Confect-owned conventions.
+Import the owning module directly; do not add facade modules or re-exports.
 
-Use shared validators and helpers from `convex/lib/`. Start authentication and
-app-user resolution from `convex/lib/helpers/auth.ts`; do not reach for raw
-`ctx.auth` patterns first.
+Start authentication and app-user resolution from
+`confect/auth/session.ts`; do not add a second identity policy.
+
+The root development command runs Confect generation and Convex watching
+through Turborepo. Setup, deployment, typechecking, tests, and production
+acceptance generate contracts before consuming them. CI rejects generated
+output that differs from the committed source.
 
 Do not leave one-off migration, backfill, repair, maintenance, dead, redundant,
 or legacy code/data paths behind. After verifying dev and prod data, delete the
@@ -96,10 +121,11 @@ scope. `packages/contents` contains no authored source and is never a Convex
 publication input. Do not make the Aksara corpus path layout the app-state
 identity.
 
-Domain validators and schema modules own backend value sets. Derive types from
-Convex `Infer<typeof validator>`, generated `Doc<>` and `Id<>` types, or
-generated function argument/return types; do not duplicate unions for locales,
-route kinds, content kinds, or graph identity fields.
+Domain Effect schemas own backend value sets. Derive types from those schemas
+and Confect generated documents and references. Convex generated types describe
+the encoded wire and component boundary; Confect types describe decoded domain
+values. Do not duplicate unions for locales, route kinds, content kinds, or
+graph identity fields, and do not cast stored strings into SDK-branded IDs.
 
 Every Convex function needs validators and the narrowest public/internal
 visibility that fits. Use indexed, paginated, or `.take()` bounded reads for

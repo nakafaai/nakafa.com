@@ -1,4 +1,5 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import type { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
 import {
@@ -16,8 +17,7 @@ import {
   type RendererDomain,
   RendererDomainSchema,
 } from "@nakafa/aksara-contracts/renderer/domain";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
@@ -65,7 +65,10 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
     const releaseId = yield* decodeContentReleasePin(
       activeReleaseId,
       expectedActiveReleaseId,
-      { appLocale: AppLocaleSchema.make(locale), publicPath }
+      {
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath,
+      }
     );
     if (activeManifestHash === null || releaseId === null) {
       return yield* makeMaterialProjectionError({
@@ -98,17 +101,17 @@ export const readPublishedMaterialRoute = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.material.publication,
-    {
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.material.publication, {
       ...(expectedActiveReleaseId === undefined
         ? {}
-        : { expectedActiveReleaseId }),
+        : {
+            expectedActiveReleaseId,
+          }),
       appLocale,
       publicPath,
-    }
-  );
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   return yield* decodePublishedMaterialRoute(
     result,
     locale,
@@ -121,7 +124,7 @@ export const readPublishedMaterialRoute = Effect.fn(
 export const decodePublishedMaterialRoute = Effect.fn(
   "NakafaMaterial.decodePublishedRoute"
 )(function* (
-  result: FunctionReturnType<typeof api.contentRelease.material.publication>,
+  result: Ref.Returns<typeof refs.public.contentRelease.material.publication>,
   locale: Locale,
   publicPath: string,
   expectedActiveReleaseId?: ContentReleasePin
@@ -131,7 +134,10 @@ export const decodePublishedMaterialRoute = Effect.fn(
     ActiveAppLocaleListSchema
   )(result.activeAppLocales).pipe(
     Effect.mapError(() =>
-      makeMaterialProjectionError({ appLocale, publicPath })
+      makeMaterialProjectionError({
+        appLocale,
+        publicPath,
+      })
     )
   );
   const [active, activeAppLocales, sourceRevision] = yield* Effect.all([
@@ -143,7 +149,10 @@ export const decodePublishedMaterialRoute = Effect.fn(
       publicPath
     ),
     decodedActiveAppLocales,
-    decodeSourceRevision(result.sourceRevision, { appLocale, publicPath }),
+    decodeSourceRevision(result.sourceRevision, {
+      appLocale,
+      publicPath,
+    }),
   ]);
   if (result.projectionJson === null) {
     return {
@@ -157,7 +166,10 @@ export const decodePublishedMaterialRoute = Effect.fn(
     } satisfies PublishedMaterialRoute;
   }
   if (result.rendererDomain === null || result.sourcePath === null) {
-    return yield* makeMaterialProjectionError({ appLocale, publicPath });
+    return yield* makeMaterialProjectionError({
+      appLocale,
+      publicPath,
+    });
   }
   const projection = yield* decodeMaterialJson(result.projectionJson, {
     appLocale,
@@ -165,16 +177,25 @@ export const decodePublishedMaterialRoute = Effect.fn(
   });
   const [alternates, rendererDomain, siblings, sourcePath] = yield* Effect.all([
     Effect.forEach(result.alternateJson, (source) =>
-      decodeMaterialJson(source, { appLocale, publicPath })
+      decodeMaterialJson(source, {
+        appLocale,
+        publicPath,
+      })
     ),
     Schema.decodeEffect(RendererDomainSchema)(result.rendererDomain),
     Effect.forEach(result.siblingJson, (source) =>
-      decodeMaterialJson(source, { appLocale, publicPath })
+      decodeMaterialJson(source, {
+        appLocale,
+        publicPath,
+      })
     ),
     Schema.decodeEffect(CorpusSourcePathSchema)(result.sourcePath),
   ]).pipe(
     Effect.mapError(() =>
-      makeMaterialProjectionError({ appLocale, publicPath })
+      makeMaterialProjectionError({
+        appLocale,
+        publicPath,
+      })
     )
   );
   const alternateLocales = new Set(
@@ -201,7 +222,10 @@ export const decodePublishedMaterialRoute = Effect.fn(
     siblings.some((sibling) => !isMaterialSibling(projection, sibling)) ||
     !siblings.some((sibling) => sibling.publicPath === projection.publicPath)
   ) {
-    return yield* makeMaterialProjectionError({ appLocale, publicPath });
+    return yield* makeMaterialProjectionError({
+      appLocale,
+      publicPath,
+    });
   }
   return {
     ...active,

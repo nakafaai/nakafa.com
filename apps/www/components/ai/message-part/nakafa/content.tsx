@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown01Icon, BookOpen02Icon } from "@hugeicons/core-free-icons";
-import type { NakafaDataPart } from "@repo/ai/schema/data";
+import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import {
   Collapsible,
   CollapsibleContent,

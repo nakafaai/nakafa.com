@@ -1,9 +1,9 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import {
   CONTENT_SITEMAP_ROUTE_PAGE_SIZE,
   compareSitemapPaths,
-} from "@repo/backend/convex/contentRelease/sitemap";
+} from "@repo/backend/confect/contentRelease/sitemap";
+import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { Effect } from "effect";
 
 type TryoutCatalog = Effect.Success<ReturnType<typeof loadTryoutCatalog>>;

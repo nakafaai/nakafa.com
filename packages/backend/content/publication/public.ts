@@ -5,51 +5,29 @@ import {
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
-
+import { hashText } from "@repo/backend/confect/contentRelease/digest";
+import {
+  ReleaseError,
+  releaseFail,
+} from "@repo/backend/confect/contentRelease/error";
+import {
+  decodeArtifactJson,
+  decodeProjectionJson,
+} from "@repo/backend/confect/contentRelease/parse";
+import type { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { PUBLIC_CONTENT_RUNTIME_BATCH_SIZE } from "@repo/backend/content/batch";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { resolveActiveRoute } from "@repo/backend/content/publication/route";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { PublicationSource } from "@repo/backend/content/publication/source";
-import { hashText } from "@repo/backend/convex/contentRelease/digest";
-import {
-  ReleaseError,
-  releaseFail,
-} from "@repo/backend/convex/contentRelease/error";
-import {
-  decodeArtifactJson,
-  decodeProjectionJson,
-} from "@repo/backend/convex/contentRelease/parse";
-import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
-import type { Infer } from "convex/values";
-import { v } from "convex/values";
 import { Effect, Option, Schema } from "effect";
 
-export const publicResultValidator = v.union(
-  v.null(),
-  v.object({
-    activeManifestHash: v.string(),
-    activeReleaseId: v.string(),
-    artifactJson: v.string(),
-    delivery: v.literal("public"),
-    projectionHash: v.string(),
-    projectionJson: v.string(),
-    releaseJson: v.string(),
-    rendererJson: v.string(),
-    sourcePath: v.string(),
-  })
-);
-export const publicRequestValidator = v.object({
-  appLocale: appLocaleValidator,
-  publicPath: v.string(),
-});
-export const publicBatchResultValidator = v.array(publicResultValidator);
-type AppLocale = Infer<typeof appLocaleValidator>;
+type AppLocale = Schema.Schema.Type<typeof appLocaleValidator>;
 type ActiveIdentity = NonNullable<
   Effect.Success<ReturnType<typeof loadActiveIdentity>>
 >;
 /** Stored active public row returned only to the authenticated HTTP adapter. */
-export type PublicRuntimeRow = Infer<typeof publicResultValidator>;
+
 /** Requires complete runtime provenance and authenticates the selected artifact. */
 const readPublicArtifact = Effect.fn("contentRelease.readPublicArtifact")(
   function* (head: PublicationRow<"contentHeads">) {
@@ -149,7 +127,10 @@ export const readSelectedPublicRuntime = Effect.fn(
     rendererManifest: active.renderer,
     sourcePath,
   };
-  return { projectionJson: selected.projectionJson, response };
+  return {
+    projectionJson: selected.projectionJson,
+    response,
+  };
 });
 
 /** Resolves an active route and enforces its public delivery class. */

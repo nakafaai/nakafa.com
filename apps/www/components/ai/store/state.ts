@@ -1,14 +1,15 @@
 "use client";
 
-import { defaultModel } from "@repo/ai/config/model";
+import { defaultModel } from "@repo/backend/confect/nina/config/model";
 import type { AiState } from "@/components/ai/store/types";
 
 export const initialState = {
   activeChatId: null,
-  chatSession: null,
+  chatDrafts: [],
   contextTitle: null,
   model: defaultModel,
   open: false,
+  openingChat: null,
   sheetActivated: false,
   text: "",
 } satisfies AiState;

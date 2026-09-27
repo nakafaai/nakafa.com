@@ -1,14 +1,14 @@
+import {
+  CONTENT_BUCKET_SIZE,
+  isProjectionBucket,
+} from "@repo/backend/confect/contentRelease/bucket";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import {
   verifyArticle,
   verifyCategory,
 } from "@repo/backend/content/article/verify";
-import {
-  CONTENT_BUCKET_SIZE,
-  isProjectionBucket,
-} from "@repo/backend/convex/contentRelease/bucket";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Option } from "effect";
 
 /** Loads and verifies one complete bounded article hash partition. */
@@ -24,13 +24,14 @@ export const readArticlePartition = Effect.fn(
       "Article partition must be three lowercase hexadecimal characters."
     );
   }
-
   const owner = yield* loadArticleOwner(appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.managed && owner.active && owner.slot)) {
-    return { activeReleaseId, kind: "unmanaged" as const };
+    return {
+      activeReleaseId,
+      kind: "unmanaged" as const,
+    };
   }
-
   const source = yield* ArticleSource;
   const {
     count: selectedCount,
@@ -44,7 +45,10 @@ export const readArticlePartition = Effect.fn(
   );
   const count = Option.getOrNull(selectedCount);
   if (!count) {
-    return { activeReleaseId, kind: "missing" as const };
+    return {
+      activeReleaseId,
+      kind: "missing" as const,
+    };
   }
   if (
     articles.length !== count.articleCount ||
@@ -56,7 +60,6 @@ export const readArticlePartition = Effect.fn(
       `Article partition ${appLocale}/${bucket} does not match its committed count.`
     );
   }
-
   const [verifiedArticles, verifiedCategories] = yield* Effect.all([
     Effect.forEach(articles, (article) =>
       verifyArticle(article, owner.active.sequence)
@@ -65,7 +68,6 @@ export const readArticlePartition = Effect.fn(
       verifyCategory(category, owner.active.sequence)
     ),
   ]);
-
   return {
     activeReleaseId,
     articles: verifiedArticles,

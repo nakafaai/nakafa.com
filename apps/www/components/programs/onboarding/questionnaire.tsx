@@ -1,11 +1,12 @@
 "use client";
 
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   ArrowLeft02Icon,
   ArrowRight02Icon,
   PartyIcon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Questionnaire,
@@ -24,7 +25,6 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { redirect, useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { useMutation, useQuery } from "convex/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -71,15 +71,14 @@ export function OnboardingQuestionnaire({
   const t = useTranslations("LearningPrograms");
   const locale = useLocale();
   const router = useRouter();
-  const reactiveStatus = useQuery(api.onboarding.queries.getStatus, {});
-  const profile =
-    reactiveStatus === undefined ? initialProfile : reactiveStatus.profile;
-  const [pendingAnswer, setPendingAnswer] = useState<OnboardingAnswer | null>(
-    null
-  );
+  const reactiveStatus = useQuery(refs.public.onboarding.queries.getStatus, {});
+  const profile = QueryResult.isSuccess(reactiveStatus)
+    ? reactiveStatus.value.profile
+    : initialProfile;
+  const [draftAnswer, setDraftAnswer] = useState<OnboardingAnswer | null>(null);
   const answers = getOnboardingAnswers(
-    pendingAnswer
-      ? applyOnboardingAnswer(profile, pendingAnswer, profile?.updatedAt ?? 0)
+    draftAnswer
+      ? applyOnboardingAnswer(profile, draftAnswer, profile?.updatedAt ?? 0)
       : profile
   );
   const [activeItem, setActiveItem] = useState<OnboardingItemName>(() =>
@@ -87,14 +86,23 @@ export function OnboardingQuestionnaire({
   );
   const [isFinishing, startFinishTransition] = useTransition();
   const saveAnswer = useSaveOnboardingAnswerMutation(initialProfile);
-  const finish = useMutation(api.onboarding.mutations.finish);
+  const finish = useMutation(refs.public.onboarding.mutations.finish);
 
-  if (reactiveStatus?.isAuthenticated === false && !isFinishing) {
+  if (QueryResult.isFailure(reactiveStatus)) {
+    throw reactiveStatus.error;
+  }
+
+  if (
+    QueryResult.isSuccess(reactiveStatus) &&
+    reactiveStatus.value.isAuthenticated === false &&
+    !isFinishing
+  ) {
     redirect({ href: getPostAuthSignInHref(intent), locale });
   }
   if (
-    reactiveStatus?.isAuthenticated === true &&
-    reactiveStatus.isRequired === false &&
+    QueryResult.isSuccess(reactiveStatus) &&
+    reactiveStatus.value.isAuthenticated === true &&
+    reactiveStatus.value.isRequired === false &&
     !isFinishing
   ) {
     redirect(getPostAuthDestination(intent, locale));
@@ -126,7 +134,7 @@ export function OnboardingQuestionnaire({
       return;
     }
     persistDraft(activeItem);
-    setPendingAnswer(null);
+    setDraftAnswer(null);
     setActiveItem(nextItem);
   }
 
@@ -206,7 +214,7 @@ export function OnboardingQuestionnaire({
               key={option.value}
               onChange={(event) => {
                 if (event.target.checked) {
-                  setPendingAnswer({ kind: "role", value: option.value });
+                  setDraftAnswer({ kind: "role", value: option.value });
                 }
               }}
               value={option.value}
@@ -232,7 +240,7 @@ export function OnboardingQuestionnaire({
               key={option.value}
               onChange={(event) => {
                 if (event.target.checked) {
-                  setPendingAnswer({ kind: "region", value: option.value });
+                  setDraftAnswer({ kind: "region", value: option.value });
                 }
               }}
               value={option.value}
@@ -255,7 +263,7 @@ export function OnboardingQuestionnaire({
               key={option.value}
               onChange={(event) => {
                 if (event.target.checked) {
-                  setPendingAnswer({ kind: "focus", value: option.value });
+                  setDraftAnswer({ kind: "focus", value: option.value });
                 }
               }}
               value={option.value}

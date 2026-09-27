@@ -1,6 +1,8 @@
 "use client";
+
+import { useMutation } from "@confect/react";
 import { InLoveIcon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -11,7 +13,6 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -24,7 +25,7 @@ import { reportClientException } from "@/lib/analytics/client";
 export function SchoolOnboardingJoinForm() {
   const t = useTranslations("School.Onboarding");
   const router = useRouter();
-  const joinSchool = useMutation(api.schools.mutations.joinSchool);
+  const joinSchool = useMutation(refs.public.schools.mutations.joinSchool);
   const form = useForm({
     defaultValues: schoolJoinDefaultValues,
     validators: {
@@ -32,21 +33,26 @@ export function SchoolOnboardingJoinForm() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(async () => {
-          const { slug } = await joinSchool(value);
-          router.push(`/school/${slug}`);
-        }).pipe(
-          Effect.catchTag("UnknownError", ({ cause: error }) =>
-            reportClientException(error, {
-              source: "school-onboarding-join",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  toast.error(t("school-joining-failed"));
-                })
-              )
-            )
-          )
+        Effect.tryPromise(() => joinSchool(value)).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.tap(({ slug }) =>
+            Effect.sync(() => {
+              router.push(`/school/${slug}`);
+            })
+          ),
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "school-onboarding-join",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(t("school-joining-failed"));
+                  })
+                )
+              ),
+            onSuccess: () => Effect.void,
+          })
         )
       );
     },

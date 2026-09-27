@@ -18,8 +18,8 @@ import {
 import {
   quranRowFacts,
   quranSearchFacts,
-} from "@repo/backend/convex/contentRelease/quran/facts";
-import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
+} from "@repo/backend/confect/contentRelease/quran/facts";
+import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
 import {
   testEmptyManifest,
   testSignedRelease,

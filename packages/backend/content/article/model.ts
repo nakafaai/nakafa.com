@@ -1,12 +1,12 @@
 import type { ActiveAppLocaleList } from "@nakafa/aksara-contracts/locale";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { requireExpectedActiveRelease } from "@repo/backend/confect/contentRelease/runtime/pin";
 import { resolveArticleRoute } from "@repo/backend/content/article/route";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";
 import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
 import { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
 import { Effect, Option } from "effect";
 
 /** Reads every locale-specific counterpart for one stable article identity. */
@@ -110,5 +110,8 @@ export const readArticleDelivery = Effect.fn(
   const model = yield* assembleArticleModel(appLocale, route);
   const runtime = yield* readSelectedPublicRuntime(route);
   const runtimeJson = yield* encodePublicDelivery(runtime, model);
-  return { model, runtimeJson };
+  return {
+    model,
+    runtimeJson,
+  };
 });

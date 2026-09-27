@@ -32,7 +32,7 @@ import {
 import { Link } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
 import { toast } from "sonner";
 import { copyOpenContent } from "@/components/shared/open-content/copy";
 
@@ -63,14 +63,13 @@ export function OpenContent({
 }) {
   const t = useTranslations("Common");
   const [open, { close, set }] = useDisclosure(false);
-  const [isCopying, setIsCopying] = useState(false);
+  const [isCopying, startTransition] = useTransition();
   const copyAbortController = useRef<AbortController | null>(null);
 
   useLayoutEffect(
     () => () => {
       copyAbortController.current?.abort();
       copyAbortController.current = null;
-      setIsCopying(false);
       close();
     },
     [close]
@@ -81,7 +80,6 @@ export function OpenContent({
     copyAbortController.current?.abort();
     const abortController = new AbortController();
     copyAbortController.current = abortController;
-    setIsCopying(true);
 
     const copyProgram = copyOpenContent({
       ...(content === undefined ? {} : { content }),
@@ -104,13 +102,14 @@ export function OpenContent({
             return;
           }
           copyAbortController.current = null;
-          setIsCopying(false);
         })
       )
     );
 
-    Effect.runPromiseExit(copyProgram, {
-      signal: abortController.signal,
+    startTransition(async () => {
+      await Effect.runPromiseExit(copyProgram, {
+        signal: abortController.signal,
+      });
     });
   };
 

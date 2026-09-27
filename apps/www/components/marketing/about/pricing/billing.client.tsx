@@ -1,9 +1,9 @@
 "use client";
 
+import { QueryResult, useQuery } from "@confect/react";
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import refs from "@repo/backend/confect/_generated/refs";
+import { products } from "@repo/backend/confect/utils/polar/products";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Effect } from "effect";
@@ -32,11 +32,15 @@ export function BillingButton() {
   const billing = useBillingNavigation();
   const [isAuthPending, startAuthTransition] = useTransition();
 
-  const { data: hasSubscription, isSuccess: subscriptionResolved } =
-    useQueryWithStatus(
-      api.subscriptions.queries.hasActiveSubscription,
-      currentUser ? { productId: products.pro.id } : "skip"
-    );
+  const subscription = useQuery(
+    refs.public.subscriptions.queries.hasActiveSubscription,
+    currentUser ? { productId: products.pro.id } : "skip"
+  );
+  if (QueryResult.isFailure(subscription)) {
+    throw subscription.error;
+  }
+  const subscriptionResolved = QueryResult.isSuccess(subscription);
+  const hasSubscription = subscriptionResolved && subscription.value;
   const billingReady = !currentUser || subscriptionResolved;
 
   const handleBilling = () => {

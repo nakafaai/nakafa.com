@@ -1,4 +1,4 @@
-import { slugify } from "@repo/design-system/lib/routing/slug";
+import { slugify } from "@repo/utilities/slug";
 import { cva } from "class-variance-authority";
 
 /**

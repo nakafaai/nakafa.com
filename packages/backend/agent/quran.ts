@@ -1,5 +1,4 @@
 import { decodeAgentInput } from "@repo/backend/agent/decode";
-import { readAgentQuery } from "@repo/backend/agent/query";
 import { projectNakafaQuranReference } from "@repo/backend/agent/quran/projection";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
@@ -7,12 +6,12 @@ import {
   decodePublishedQuranReference,
   type PublishedQuranReference,
 } from "@repo/backend/client/quran/reference";
-import type { readQuranSurahs } from "@repo/backend/content/quran/catalog";
-import type { readQuranPassage } from "@repo/backend/content/quran/reference";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { QuranReferenceArgs } from "@repo/backend/convex/contentRelease/quran/spec";
+import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
+import type { QuranReferenceArgs } from "@repo/backend/confect/contentRelease/quran/spec";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/agent/constants";
 import {
+  getUnknownErrorMessage,
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
@@ -21,56 +20,41 @@ import {
   type NakafaAgentQuranReferenceInput,
   NakafaAgentQuranReferenceOptionsSchema,
 } from "@repo/contents/agent/schema/quran/input";
-import { type FunctionReference, makeFunctionReference } from "convex/server";
 import { Effect, Option, Struct } from "effect";
 
-type QuranCatalogReference = FunctionReference<
-  "query",
-  "public" | "internal",
-  Record<string, never>,
-  Effect.Success<ReturnType<typeof readQuranSurahs>>
->;
-
-const quranCatalogReference: QuranCatalogReference = makeFunctionReference(
-  "contentRelease/quran:surahs"
-);
-
-const quranPassage = makeFunctionReference<
-  "query",
-  QuranReferenceArgs,
-  Effect.Success<ReturnType<typeof readQuranPassage>>
->("contentRelease/quran:passage");
+const quranCatalogReference = refs.public.contentRelease.quran.surahs;
+const quranPassage = refs.public.contentRelease.quran.passage;
 
 /** Returns one bounded signed Quran reference with semantic source provenance. */
 export const getNakafaQuranReference = Effect.fn(
   "agent.getNakafaQuranReference"
-)(function* (ctx: ActionCtx, input: unknown) {
-  const request = yield* readNakafaQuranRequest(
-    ctx,
-    input,
-    quranCatalogReference
-  );
-  const result = yield* readAgentQuery(
-    ctx,
-    quranPassage,
-    referenceArgs(request),
-    "Unable to read the signed Nakafa Quran reference."
+)(function* (input: unknown) {
+  const runQuery = yield* QueryRunner;
+  const request = yield* readNakafaQuranRequest(input);
+  const result = yield* runQuery(quranPassage, referenceArgs(request)).pipe(
+    Effect.mapError(
+      (cause) =>
+        new NakafaAgentDataReadError({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to read the signed Nakafa Quran reference.",
+        })
+    )
   );
   const reference = yield* decodePublishedQuranReference(result, {
     appLocale: request.locale,
     surahNumber: request.surah,
   }).pipe(Effect.mapError(quranReadError));
   const identity = yield* projectReferenceIdentity(reference.search, request);
-  return yield* projectNakafaQuranReference({ ...identity, reference });
+  return yield* projectNakafaQuranReference({
+    ...identity,
+    reference,
+  });
 });
 
 /** Decodes and bounds one request against its signed catalog. */
 const readNakafaQuranRequest = Effect.fn("agent.readNakafaQuranRequest")(
-  function* (
-    ctx: ActionCtx,
-    input: unknown,
-    catalogReference: QuranCatalogReference
-  ) {
+  function* (input: unknown) {
+    const runQuery = yield* QueryRunner;
     const parsed = yield* decodeAgentInput(
       NakafaAgentQuranReferenceOptionsSchema,
       input,
@@ -78,11 +62,14 @@ const readNakafaQuranRequest = Effect.fn("agent.readNakafaQuranRequest")(
     );
     const lastVerse = parsed.to_verse ?? parsed.from_verse;
     yield* validateRequestedRange(parsed.from_verse, lastVerse);
-    const catalogResult = yield* readAgentQuery(
-      ctx,
-      catalogReference,
-      {},
-      "Unable to read the signed Nakafa Quran catalog."
+    const catalogResult = yield* runQuery(quranCatalogReference, {}).pipe(
+      Effect.mapError(
+        (cause) =>
+          new NakafaAgentDataReadError({
+            cause: getUnknownErrorMessage(cause),
+            message: "Unable to read the signed Nakafa Quran catalog.",
+          })
+      )
     );
     const catalog = yield* decodePublishedQuranCatalog(catalogResult).pipe(
       Effect.mapError(quranReadError)

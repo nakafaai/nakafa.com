@@ -9,7 +9,7 @@ import { toMcpObjectSchema } from "@repo/backend/agent/mcp/schema";
 import { getNakafaQuranReference } from "@repo/backend/agent/quran";
 import { searchNakafaContent } from "@repo/backend/agent/search";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { NakafaAgentInputError } from "@repo/contents/agent/errors";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
@@ -35,11 +35,10 @@ const READ_ONLY_TOOL = {
 };
 
 /** Registers the public read-only tools over shared Convex programs. */
-export function registerNakafaMcpTools(
-  server: McpServer,
-  ctx: ActionCtx,
-  requestId: string
-) {
+export const registerNakafaMcpTools = Effect.fn(
+  "agent.mcp.registerNakafaMcpTools"
+)(function* (server: McpServer, requestId: string) {
+  const runQuery = yield* QueryRunner;
   server.registerTool(
     "nakafa_search_content",
     {
@@ -52,9 +51,14 @@ export function registerNakafaMcpTools(
       ),
       title: "Search Nakafa content",
     },
-    (input) => runMcpTool(searchNakafaContent(ctx, input), requestId)
+    (input) =>
+      runMcpTool(
+        searchNakafaContent(input).pipe(
+          Effect.provideService(QueryRunner, runQuery)
+        ),
+        requestId
+      )
   );
-
   server.registerTool(
     "nakafa_get_content",
     {
@@ -75,7 +79,7 @@ export function registerNakafaMcpTools(
           "Invalid Nakafa content read options."
         ).pipe(
           Effect.flatMap(({ content_ref: contentRef }) =>
-            getNakafaContent(ctx, contentRef)
+            getNakafaContent(contentRef)
           ),
           Effect.flatMap(
             Option.match({
@@ -87,12 +91,12 @@ export function registerNakafaMcpTools(
                 }),
               onSome: Effect.succeed,
             })
-          )
+          ),
+          Effect.provideService(QueryRunner, runQuery)
         ),
         requestId
       )
   );
-
   server.registerTool(
     "nakafa_get_taxonomy",
     {
@@ -111,11 +115,13 @@ export function registerNakafaMcpTools(
           NakafaAgentTaxonomyOptionsSchema,
           input,
           "Invalid Nakafa taxonomy options."
-        ).pipe(Effect.flatMap(({ locale }) => getNakafaTaxonomy(ctx, locale))),
+        ).pipe(
+          Effect.flatMap(({ locale }) => getNakafaTaxonomy(locale)),
+          Effect.provideService(QueryRunner, runQuery)
+        ),
         requestId
       )
   );
-
   server.registerTool(
     "nakafa_get_quran_reference",
     {
@@ -128,6 +134,12 @@ export function registerNakafaMcpTools(
       ),
       title: "Read a Quran reference",
     },
-    (input) => runMcpTool(getNakafaQuranReference(ctx, input), requestId)
+    (input) =>
+      runMcpTool(
+        getNakafaQuranReference(input).pipe(
+          Effect.provideService(QueryRunner, runQuery)
+        ),
+        requestId
+      )
   );
-}
+});

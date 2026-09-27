@@ -1,0 +1,48 @@
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { loadReleaseItems } from "@repo/backend/confect/contentRelease/model";
+import { Effect } from "effect";
+export interface ModelItemPage {
+  readonly done: boolean;
+  readonly nextIndex: number;
+  readonly rows: readonly Docs["contentItems"][];
+}
+
+/** Loads one bounded, contiguous page inside the signed release item count. */
+export const loadModelItems = Effect.fn("contentRelease.loadModelItems")(
+  function* (
+    release: Docs["contentReleases"],
+    signed: SignedContentRelease,
+    afterIndex: number
+  ) {
+    const completedIndex = signed.manifest.itemCount - 1;
+    if (afterIndex > completedIndex) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Model build ${release.releaseId} advanced beyond item ${completedIndex}.`
+      );
+    }
+    const page = yield* loadReleaseItems(release.releaseId, afterIndex);
+    for (const [offset, row] of page.page.entries()) {
+      if (row.index !== afterIndex + offset + 1) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Model build ${release.releaseId} lost contiguous item ${afterIndex + offset + 1}.`
+        );
+      }
+    }
+    const nextIndex = page.page.at(-1)?.index ?? afterIndex;
+    if (page.isDone && nextIndex !== completedIndex) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Model build ${release.releaseId} stopped at item ${nextIndex}.`
+      );
+    }
+    return {
+      done: page.isDone,
+      nextIndex,
+      rows: page.page,
+    } satisfies ModelItemPage;
+  }
+);

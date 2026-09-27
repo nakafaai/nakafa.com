@@ -61,6 +61,9 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
     const ownerChanged =
       previousOwnerId !== undefined && previousOwnerId !== ownerId;
     const mustResetDraft = ownerChanged && previousOwnerId !== null;
+    if (ownerChanged) {
+      store.setState({ activeChatId: null, chatDrafts: [], openingChat: null });
+    }
     if (mustResetDraft) {
       activeDraftOwnerIdRef.current = undefined;
       pendingDraftRef.current = {

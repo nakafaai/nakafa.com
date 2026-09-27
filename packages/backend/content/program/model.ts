@@ -1,16 +1,16 @@
 import type { ActiveAppLocaleList } from "@nakafa/aksara-contracts/locale";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
+import {
+  PROGRAM_ANCESTOR_LIMIT,
+  PROGRAM_MATERIAL_LIMIT,
+  PROGRAM_RELATED_LIMIT,
+} from "@repo/backend/confect/contentRelease/program/limits";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
-import {
-  PROGRAM_ANCESTOR_LIMIT,
-  PROGRAM_MATERIAL_LIMIT,
-  PROGRAM_RELATED_LIMIT,
-} from "@repo/backend/convex/contentRelease/program/limits";
 import { Effect, Option } from "effect";
 
 type CurriculumRoute = Effect.Success<ReturnType<typeof verifyCurriculum>>;

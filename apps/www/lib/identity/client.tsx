@@ -1,8 +1,8 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import { type Preloaded, usePreloadedQuery } from "convex/react";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
+
 import type { ReactNode } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useAuthSession } from "@/components/auth/session";
@@ -55,8 +55,7 @@ function toIdentityState(account: AccountRecord): IdentityState {
  * Resolves identity from the session and its account query.
  *
  * A visitor with no session settles as signed out instead of waiting on a
- * query that will never run, and a seeded account settles as ready even while
- * the session is still resolving.
+ * query that will never run.
  */
 function resolveIdentityState({
   account,
@@ -104,44 +103,22 @@ function IdentityValueProvider({
 export function IdentityProvider({ children }: { children: ReactNode }) {
   const { data: session, isPending: isSessionPending } = useAuthSession();
   const hasSession = session?.session !== undefined;
-  const query = useQueryWithStatus(
-    api.auth.queries.getCurrentUser,
+  const query = useQuery(
+    refs.public.auth.queries.getCurrentUser,
     hasSession ? {} : "skip"
   );
+  if (QueryResult.isFailure(query)) {
+    throw query.error;
+  }
   const value = resolveIdentityState({
-    account: query.isSuccess ? query.data : null,
+    account: QueryResult.isSuccess(query) ? query.value : null,
     hasSession,
     isSessionPending,
-    isQueryPending: query.isPending,
+    isQueryPending: QueryResult.isLoading(query),
   });
 
   return (
     <IdentityValueProvider value={value}>{children}</IdentityValueProvider>
-  );
-}
-
-/**
- * Resolves the account from a protected route's own request credential.
- *
- * A route that already validated its token seeds this, so the first client
- * paint carries the real account. `usePreloadedQuery` then keeps the seeded
- * value reactive, so the route never resolves the same account twice.
- */
-export function SeededIdentityProvider({
-  children,
-  seed,
-}: {
-  children: ReactNode;
-  seed: Preloaded<typeof api.auth.queries.getCurrentUser>;
-}) {
-  const account = usePreloadedQuery(seed);
-
-  return (
-    <IdentityValueProvider
-      value={account === null ? signedOutState : toIdentityState(account)}
-    >
-      {children}
-    </IdentityValueProvider>
   );
 }
 

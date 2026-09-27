@@ -1,11 +1,13 @@
 "use client";
 
-import type { MyUIMessage } from "@repo/ai/types/message";
+import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
+import { useChat } from "@/components/ai/context/use-chat";
 
 interface MessageContextValue {
-  message: MyUIMessage;
+  message: NinaMessage;
+  turn: NinaMessage["metadata"];
 }
 
 const MessageContext = createContext<MessageContextValue | null>(null);
@@ -14,8 +16,10 @@ const MessageContext = createContext<MessageContextValue | null>(null);
 export function MessageProvider({
   message,
   children,
-}: PropsWithChildren<{ message: MyUIMessage }>) {
-  const value = { message };
+}: PropsWithChildren<{ message: NinaMessage }>) {
+  const latest = useChat((state) => state.turn);
+  const turn = latest?.order === message.order ? latest : message.metadata;
+  const value = { message, turn };
 
   return (
     <MessageContext.Provider value={value}>{children}</MessageContext.Provider>

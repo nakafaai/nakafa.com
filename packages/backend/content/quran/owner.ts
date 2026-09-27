@@ -1,5 +1,5 @@
+import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
 import { loadSnapshotOwner } from "@repo/backend/content/publication/snapshot";
-import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
 
 /** Resolves Quran ownership while preserving the exact active release pin. */
@@ -31,7 +31,10 @@ export const loadQuranOwner = Effect.fn("contentRelease.loadQuranOwner")(
       snapshotId: String(owner.snapshotId),
       sourceOrigin:
         sourceOrigin.kind === "git"
-          ? { kind: sourceOrigin.kind, sha: String(sourceOrigin.sha) }
+          ? {
+              kind: sourceOrigin.kind,
+              sha: String(sourceOrigin.sha),
+            }
           : {
               kind: sourceOrigin.kind,
               releaseId: String(sourceOrigin.releaseId),

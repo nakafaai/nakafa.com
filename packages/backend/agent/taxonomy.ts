@@ -3,21 +3,18 @@ import {
   type ActiveAppLocaleCode as Locale,
 } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
-import { readAgentQuery } from "@repo/backend/agent/query";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
-import type { readArticleBuckets } from "@repo/backend/content/article/sitemap";
-import type { readMaterialBuckets } from "@repo/backend/content/material/sitemap";
-import type { readQuranSurahs } from "@repo/backend/content/quran/catalog";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { readAgentArticleTaxonomy } from "@repo/backend/convex/contentRelease/article/agent";
-import type { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
+import refs from "@repo/backend/confect/_generated/refs";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_MCP_GUIDANCE,
 } from "@repo/contents/agent/constants";
-import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
+import {
+  getUnknownErrorMessage,
+  NakafaAgentDataReadError,
+} from "@repo/contents/agent/errors";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";
-import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 
 type ReleasePin = {
@@ -25,50 +22,32 @@ type ReleasePin = {
   readonly releaseId: string;
   readonly sequence: number;
 } | null;
-
-const articleCategoriesReference = makeFunctionReference<
-  "query",
-  { readonly appLocale: Locale },
-  Effect.Success<ReturnType<typeof readAgentArticleTaxonomy>>
->("contentRelease/article/internal:readAgentTaxonomy");
-const articleBucketsReference = makeFunctionReference<
-  "query",
-  { readonly appLocale: Locale },
-  Effect.Success<ReturnType<typeof readArticleBuckets>>
->("contentRelease/article:sitemapBuckets");
-const materialBucketsReference = makeFunctionReference<
-  "query",
-  { readonly appLocale: Locale },
-  Effect.Success<ReturnType<typeof readMaterialBuckets>>
->("contentRelease/material:sitemapBuckets");
-const tryoutTaxonomyReference = makeFunctionReference<
-  "query",
-  { readonly appLocale: Locale },
-  Effect.Success<ReturnType<typeof readTryoutTaxonomy>>
->("contentRelease/tryout:taxonomy");
-const quranCatalogReference = makeFunctionReference<
-  "query",
-  Record<string, never>,
-  Effect.Success<ReturnType<typeof readQuranSurahs>>
->("contentRelease/quran:surahs");
-const activeReleaseReference = makeFunctionReference<
-  "query",
-  Record<string, never>,
-  ReleasePin
->("contentRelease/runtime/active:read");
+const articleCategoriesReference =
+  refs.internal.contentRelease.article.internal.readAgentTaxonomy;
+const articleBucketsReference =
+  refs.public.contentRelease.article.sitemapBuckets;
+const materialBucketsReference =
+  refs.public.contentRelease.material.sitemapBuckets;
+const tryoutTaxonomyReference = refs.public.contentRelease.tryout.taxonomy;
+const quranCatalogReference = refs.public.contentRelease.quran.surahs;
+const activeReleaseReference = refs.public.contentRelease.runtime.active.read;
 
 /** Reads public taxonomy from one release-pinned signed publication. */
 export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
-  function* (ctx: ActionCtx, locale: Locale = ACTIVE_APP_LOCALE_CODES[0]) {
-    const before = yield* readReleasePin(ctx);
+  function* (locale: Locale = ACTIVE_APP_LOCALE_CODES[0]) {
+    const runQuery = yield* QueryRunner;
+    const before = yield* readReleasePin();
     const [articleCategories, inventories, quranResult] = yield* Effect.all([
-      readArticleCategories(ctx, locale),
-      readInventories(ctx, locale),
-      readAgentQuery(
-        ctx,
-        quranCatalogReference,
-        {},
-        "Unable to read the signed Nakafa Quran catalog."
+      readArticleCategories(locale),
+      readInventories(locale),
+      runQuery(quranCatalogReference, {}).pipe(
+        Effect.mapError(
+          (cause) =>
+            new NakafaAgentDataReadError({
+              cause: getUnknownErrorMessage(cause),
+              message: "Unable to read the signed Nakafa Quran catalog.",
+            })
+        )
       ),
     ]);
     const quran = yield* decodePublishedQuranCatalog(quranResult).pipe(
@@ -80,11 +59,13 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
           })
       )
     );
-    yield* verifyReleasePin(ctx, before);
+    yield* verifyReleasePin(before);
     return yield* decodeAgentOutput(
       NakafaAgentTaxonomySchema,
       {
-        articles: { categories: articleCategories },
+        articles: {
+          categories: articleCategories,
+        },
         content_counts: inventories.contentCounts.map((item) => ({
           ...item,
           count: item.count + quran.surahs.length,
@@ -93,7 +74,9 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
         endpoints: NAKAFA_MCP_GUIDANCE,
         locale,
         locales: ACTIVE_APP_LOCALE_CODES,
-        quran: { surah_count: quran.surahs.length },
+        quran: {
+          surah_count: quran.surahs.length,
+        },
         sections: NAKAFA_AGENT_SECTIONS,
         tools: [
           "nakafa_search_content",
@@ -110,12 +93,18 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
 
 /** Reads every authenticated article category in one stable generation. */
 const readArticleCategories = Effect.fn("agent.readArticleCategories")(
-  function* (ctx: ActionCtx, locale: Locale) {
-    const taxonomy = yield* readAgentQuery(
-      ctx,
-      articleCategoriesReference,
-      { appLocale: locale },
-      "Unable to read signed Nakafa article taxonomy."
+  function* (locale: Locale) {
+    const runQuery = yield* QueryRunner;
+    const taxonomy = yield* runQuery(articleCategoriesReference, {
+      appLocale: locale,
+    }).pipe(
+      Effect.mapError(
+        (cause) =>
+          new NakafaAgentDataReadError({
+            cause: getUnknownErrorMessage(cause),
+            message: "Unable to read signed Nakafa article taxonomy.",
+          })
+      )
     );
     if (!taxonomy.managed) {
       return yield* missingInventory("article taxonomy", locale);
@@ -126,15 +115,16 @@ const readArticleCategories = Effect.fn("agent.readArticleCategories")(
 
 /** Reads every locale inventory and the selected try-out taxonomy. */
 const readInventories = Effect.fn("agent.readInventories")(function* (
-  ctx: ActionCtx,
   selectedLocale: Locale
 ) {
   const [selected, remaining] = yield* Effect.all([
-    readLocaleInventory(ctx, selectedLocale),
+    readLocaleInventory(selectedLocale),
     Effect.forEach(
       ACTIVE_APP_LOCALE_CODES.filter((locale) => locale !== selectedLocale),
-      (locale) => readLocaleInventory(ctx, locale),
-      { concurrency: ACTIVE_APP_LOCALE_CODES.length }
+      (locale) => readLocaleInventory(locale),
+      {
+        concurrency: ACTIVE_APP_LOCALE_CODES.length,
+      }
     ),
   ]);
   const inventories = [selected, ...remaining].sort(
@@ -143,34 +133,52 @@ const readInventories = Effect.fn("agent.readInventories")(function* (
       ACTIVE_APP_LOCALE_CODES.indexOf(right.locale)
   );
   return {
-    contentCounts: inventories.map(({ count, locale }) => ({ count, locale })),
+    contentCounts: inventories.map(({ count, locale }) => ({
+      count,
+      locale,
+    })),
     tryout: selected.tryout,
   };
 });
 
 /** Reads one locale's article, material, and try-out inventory. */
 const readLocaleInventory = Effect.fn("agent.readLocaleInventory")(function* (
-  ctx: ActionCtx,
   locale: Locale
 ) {
+  const runQuery = yield* QueryRunner;
   const [articles, materials, tryout] = yield* Effect.all([
-    readAgentQuery(
-      ctx,
-      articleBucketsReference,
-      { appLocale: locale },
-      "Unable to read signed Nakafa article inventory."
+    runQuery(articleBucketsReference, {
+      appLocale: locale,
+    }).pipe(
+      Effect.mapError(
+        (cause) =>
+          new NakafaAgentDataReadError({
+            cause: getUnknownErrorMessage(cause),
+            message: "Unable to read signed Nakafa article inventory.",
+          })
+      )
     ),
-    readAgentQuery(
-      ctx,
-      materialBucketsReference,
-      { appLocale: locale },
-      "Unable to read signed Nakafa material inventory."
+    runQuery(materialBucketsReference, {
+      appLocale: locale,
+    }).pipe(
+      Effect.mapError(
+        (cause) =>
+          new NakafaAgentDataReadError({
+            cause: getUnknownErrorMessage(cause),
+            message: "Unable to read signed Nakafa material inventory.",
+          })
+      )
     ),
-    readAgentQuery(
-      ctx,
-      tryoutTaxonomyReference,
-      { appLocale: locale },
-      "Unable to read signed Nakafa try-out taxonomy."
+    runQuery(tryoutTaxonomyReference, {
+      appLocale: locale,
+    }).pipe(
+      Effect.mapError(
+        (cause) =>
+          new NakafaAgentDataReadError({
+            cause: getUnknownErrorMessage(cause),
+            message: "Unable to read signed Nakafa try-out taxonomy.",
+          })
+      )
     ),
   ]);
   if (!articles.managed) {
@@ -182,26 +190,32 @@ const readLocaleInventory = Effect.fn("agent.readLocaleInventory")(function* (
   return {
     count: articles.articleCount + materials.materialCount + tryout.routeCount,
     locale,
-    tryout: { countries: tryout.countries, exams: tryout.exams },
+    tryout: {
+      countries: tryout.countries,
+      exams: tryout.exams,
+    },
   };
 });
 
 /** Reads the immutable active publication identity for pinning. */
-function readReleasePin(ctx: ActionCtx) {
-  return readAgentQuery(
-    ctx,
-    activeReleaseReference,
-    {},
-    "Unable to read the active Nakafa content release."
+const readReleasePin = Effect.fn("agent.readReleasePin")(function* () {
+  const runQuery = yield* QueryRunner;
+  return yield* runQuery(activeReleaseReference, {}).pipe(
+    Effect.mapError(
+      (cause) =>
+        new NakafaAgentDataReadError({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to read the active Nakafa content release.",
+        })
+    )
   );
-}
+});
 
 /** Rejects a response assembled across different active releases. */
 const verifyReleasePin = Effect.fn("agent.verifyReleasePin")(function* (
-  ctx: ActionCtx,
   expected: ReleasePin
 ) {
-  const actual = yield* readReleasePin(ctx);
+  const actual = yield* readReleasePin();
   if (!isSameReleasePin(actual, expected)) {
     return yield* new NakafaAgentDataReadError({
       cause: "The active Nakafa content release changed during the read.",

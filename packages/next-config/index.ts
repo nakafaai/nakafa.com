@@ -59,8 +59,10 @@ export function createLoopbackConnectSources(source: URL) {
  */
 export function createSecurityHeaders({
   additionalConnectSources = [],
+  additionalImageSources = [],
 }: {
   readonly additionalConnectSources?: readonly string[];
+  readonly additionalImageSources?: readonly string[];
 } = {}) {
   return [
     {
@@ -69,7 +71,10 @@ export function createSecurityHeaders({
         "default-src 'self'",
         `script-src ${BASE_CONTENT_SECURITY_POLICY.scriptSrc.join(" ")}`,
         "style-src 'self' 'unsafe-inline' https://accounts.google.com https://cdn.jsdelivr.net",
-        "img-src 'self' blob: data: https: https://*.googleusercontent.com",
+        [
+          "img-src 'self' blob: data: https: https://*.googleusercontent.com",
+          ...additionalImageSources,
+        ].join(" "),
         "font-src 'self'",
         `connect-src ${[
           ...BASE_CONTENT_SECURITY_POLICY.connectSrc,

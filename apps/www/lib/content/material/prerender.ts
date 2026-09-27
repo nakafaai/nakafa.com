@@ -1,13 +1,12 @@
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { HttpClient } from "@confect/js";
 import { env } from "@/env";
 import "server-only";
-
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
@@ -19,17 +18,21 @@ export const readPublishedMaterialPrerenderRoute = Effect.fn(
   "NakafaMaterial.readPrerenderRoute"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const identity = { appLocale, publicPath: "materials" };
-  const result = yield* readNakafaRuntimeQuery(
-    env.NEXT_PUBLIC_CONVEX_URL,
-    api.contentRelease.material.publications,
-    {
+  const identity = {
+    appLocale,
+    publicPath: "materials",
+  };
+  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(refs.public.contentRelease.material.publications, {
       appLocale,
       expectedManifestHash: null,
       expectedReleaseId: null,
-      paginationOpts: { cursor: null, numItems: 1 },
-    }
-  );
+      paginationOpts: {
+        cursor: null,
+        numItems: 1,
+      },
+    })
+  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
   const source = result.result.page[0];
   if (
     !result.managed ||
