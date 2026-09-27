@@ -1,12 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ActiveAppLocaleListSchema } from "@nakafa/aksara-contracts/locale";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { readQuranAttribution } from "@repo/backend/content/quran/attribution";
 import { convexQuranLayer } from "@repo/backend/content/quran/convex";
 import { readQuranLocaleSources } from "@repo/backend/content/quran/sources";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   makeQuranAttribution,
   makeQuranSurah,

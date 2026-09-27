@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexProgramLayer } from "@repo/backend/content/program/convex";
 import { readProgramPage } from "@repo/backend/content/program/page";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -17,6 +17,59 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("contentRelease/program/page", () => {
+  it.live(
+    "rejects malformed, foreign-snapshot, and cross-locale curriculum cursors",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        const first = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            runConvexProgram(
+              readProgramPage("en", null, null, {
+                cursor: null,
+                numItems: 1,
+              }).pipe(Effect.provide(convexProgramLayer(ctx)))
+            )
+          )
+        );
+        for (const cursor of [
+          "program-route|{",
+          'program-route|["foreign-snapshot","en","/en/programs/technical-program-0"]',
+        ]) {
+          yield* Effect.promise(() =>
+            expect(
+              t.query((ctx) =>
+                runConvexProgram(
+                  readProgramPage("en", TEST_MANIFEST_HASH, TEST_RELEASE_ID, {
+                    cursor,
+                    numItems: 1,
+                  }).pipe(Effect.provide(convexProgramLayer(ctx)))
+                )
+              )
+            ).rejects.toMatchObject({
+              data: { code: "CONTENT_RELEASE_INTEGRITY" },
+            })
+          );
+        }
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              runConvexProgram(
+                readProgramPage("de", TEST_MANIFEST_HASH, TEST_RELEASE_ID, {
+                  cursor: first.result.continueCursor,
+                  numItems: 1,
+                }).pipe(Effect.provide(convexProgramLayer(ctx)))
+              )
+            )
+          ).rejects.toMatchObject({
+            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          })
+        );
+      })
+  );
+
   it("returns an empty unmanaged page before program publication", async () => {
     const t = convexTest(schema, convexModules);
     await expect(

@@ -5,12 +5,12 @@ import {
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
+import type { readAgentArticleTaxonomy } from "@repo/backend/confect/contentRelease/article/agent";
+import type { readTryoutTaxonomy } from "@repo/backend/confect/contentRelease/tryout/taxonomy";
 import type { readArticleBuckets } from "@repo/backend/content/article/sitemap";
 import type { readMaterialBuckets } from "@repo/backend/content/material/sitemap";
 import type { readQuranSurahs } from "@repo/backend/content/quran/catalog";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { readAgentArticleTaxonomy } from "@repo/backend/convex/contentRelease/article/agent";
-import type { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_MCP_GUIDANCE,
@@ -25,25 +25,32 @@ type ReleasePin = {
   readonly releaseId: string;
   readonly sequence: number;
 } | null;
-
 const articleCategoriesReference = makeFunctionReference<
   "query",
-  { readonly appLocale: Locale },
+  {
+    readonly appLocale: Locale;
+  },
   Effect.Success<ReturnType<typeof readAgentArticleTaxonomy>>
 >("contentRelease/article/internal:readAgentTaxonomy");
 const articleBucketsReference = makeFunctionReference<
   "query",
-  { readonly appLocale: Locale },
+  {
+    readonly appLocale: Locale;
+  },
   Effect.Success<ReturnType<typeof readArticleBuckets>>
 >("contentRelease/article:sitemapBuckets");
 const materialBucketsReference = makeFunctionReference<
   "query",
-  { readonly appLocale: Locale },
+  {
+    readonly appLocale: Locale;
+  },
   Effect.Success<ReturnType<typeof readMaterialBuckets>>
 >("contentRelease/material:sitemapBuckets");
 const tryoutTaxonomyReference = makeFunctionReference<
   "query",
-  { readonly appLocale: Locale },
+  {
+    readonly appLocale: Locale;
+  },
   Effect.Success<ReturnType<typeof readTryoutTaxonomy>>
 >("contentRelease/tryout:taxonomy");
 const quranCatalogReference = makeFunctionReference<
@@ -84,7 +91,9 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
     return yield* decodeAgentOutput(
       NakafaAgentTaxonomySchema,
       {
-        articles: { categories: articleCategories },
+        articles: {
+          categories: articleCategories,
+        },
         content_counts: inventories.contentCounts.map((item) => ({
           ...item,
           count: item.count + quran.surahs.length,
@@ -93,7 +102,9 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
         endpoints: NAKAFA_MCP_GUIDANCE,
         locale,
         locales: ACTIVE_APP_LOCALE_CODES,
-        quran: { surah_count: quran.surahs.length },
+        quran: {
+          surah_count: quran.surahs.length,
+        },
         sections: NAKAFA_AGENT_SECTIONS,
         tools: [
           "nakafa_search_content",
@@ -114,7 +125,9 @@ const readArticleCategories = Effect.fn("agent.readArticleCategories")(
     const taxonomy = yield* readAgentQuery(
       ctx,
       articleCategoriesReference,
-      { appLocale: locale },
+      {
+        appLocale: locale,
+      },
       "Unable to read signed Nakafa article taxonomy."
     );
     if (!taxonomy.managed) {
@@ -134,7 +147,9 @@ const readInventories = Effect.fn("agent.readInventories")(function* (
     Effect.forEach(
       ACTIVE_APP_LOCALE_CODES.filter((locale) => locale !== selectedLocale),
       (locale) => readLocaleInventory(ctx, locale),
-      { concurrency: ACTIVE_APP_LOCALE_CODES.length }
+      {
+        concurrency: ACTIVE_APP_LOCALE_CODES.length,
+      }
     ),
   ]);
   const inventories = [selected, ...remaining].sort(
@@ -143,7 +158,10 @@ const readInventories = Effect.fn("agent.readInventories")(function* (
       ACTIVE_APP_LOCALE_CODES.indexOf(right.locale)
   );
   return {
-    contentCounts: inventories.map(({ count, locale }) => ({ count, locale })),
+    contentCounts: inventories.map(({ count, locale }) => ({
+      count,
+      locale,
+    })),
     tryout: selected.tryout,
   };
 });
@@ -157,19 +175,25 @@ const readLocaleInventory = Effect.fn("agent.readLocaleInventory")(function* (
     readAgentQuery(
       ctx,
       articleBucketsReference,
-      { appLocale: locale },
+      {
+        appLocale: locale,
+      },
       "Unable to read signed Nakafa article inventory."
     ),
     readAgentQuery(
       ctx,
       materialBucketsReference,
-      { appLocale: locale },
+      {
+        appLocale: locale,
+      },
       "Unable to read signed Nakafa material inventory."
     ),
     readAgentQuery(
       ctx,
       tryoutTaxonomyReference,
-      { appLocale: locale },
+      {
+        appLocale: locale,
+      },
       "Unable to read signed Nakafa try-out taxonomy."
     ),
   ]);
@@ -182,7 +206,10 @@ const readLocaleInventory = Effect.fn("agent.readLocaleInventory")(function* (
   return {
     count: articles.articleCount + materials.materialCount + tryout.routeCount,
     locale,
-    tryout: { countries: tryout.countries, exams: tryout.exams },
+    tryout: {
+      countries: tryout.countries,
+      exams: tryout.exams,
+    },
   };
 });
 

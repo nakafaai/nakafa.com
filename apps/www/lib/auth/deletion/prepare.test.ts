@@ -3,7 +3,7 @@ import {
   accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
-} from "@repo/backend/convex/auth/deletion/spec";
+} from "@repo/backend/confect/auth/deletion/spec";
 import { Effect } from "effect";
 import { AccountDeletionAttemptStorageFailed } from "@/lib/auth/deletion/attempt";
 import {

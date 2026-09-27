@@ -1,10 +1,10 @@
 import { assert, describe, expect, it } from "@effect/vitest";
+import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import { readTryoutReference } from "@repo/backend/content/tryout/reference";
-import { resolveReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   makeTryoutStartHierarchy,

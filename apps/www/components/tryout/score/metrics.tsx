@@ -1,6 +1,6 @@
 "use client";
 
-import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/score";
+import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { useTranslations } from "next-intl";
 import {
   TryoutPartStat,

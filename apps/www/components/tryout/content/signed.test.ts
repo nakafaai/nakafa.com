@@ -23,6 +23,9 @@ import { compile } from "@mdx-js/mdx";
 import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
+import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
@@ -30,9 +33,6 @@ import {
 } from "@repo/backend/content/endpoint";
 import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import type { TryoutBodyBatch } from "@repo/backend/convex/tryouts/runtime/body";
-import type { TryoutHistoryRequest } from "@repo/backend/convex/tryouts/runtime/history/spec";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
@@ -240,7 +240,7 @@ describe("signed try-out execution", () => {
         const request = yield* makeTryoutRuntimeRequest([fixture.question]);
         const row = yield* Effect.promise(() =>
           fixture.runtime.query(
-            internal.contentRelease.runtime.protected.internal.read,
+            internal.contentRelease.runtime.tryout.internal.read,
             request
           )
         );

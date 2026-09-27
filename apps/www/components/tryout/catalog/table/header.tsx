@@ -5,7 +5,7 @@ import {
   FilterIcon,
   Menu01Icon,
 } from "@hugeicons/core-free-icons";
-import { setFilterValidator } from "@repo/backend/convex/tryouts/sets/spec";
+import { setFilterValidator } from "@repo/backend/confect/tryouts/sets/spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -195,7 +195,7 @@ function TryoutStatusHeading({
               }}
               value={filter}
             >
-              {setFilterValidator.members.map(({ value }) => (
+              {setFilterValidator.literals.map((value) => (
                 <DropdownMenuRadioItem
                   className="whitespace-normal"
                   key={value}

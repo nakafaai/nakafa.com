@@ -2,9 +2,11 @@ import { createNetworkRequestError } from "@repo/backend/client/network";
 import { Effect, Schema } from "effect";
 
 const CONVEX_UDF_FAILED_STATUS = 560;
-
 export const ConvexTransientStatusSchema = Schema.Int.check(
-  Schema.isBetween({ maximum: 599, minimum: 500 }),
+  Schema.isBetween({
+    maximum: 599,
+    minimum: 500,
+  }),
   Schema.makeFilter((status) => status !== CONVEX_UDF_FAILED_STATUS, {
     expected: "a transient Convex HTTP status",
   })
@@ -32,7 +34,6 @@ class ConvexResponseCancelError extends Schema.TaggedError<ConvexResponseCancelE
     status: Schema.Int,
   }
 ) {}
-
 function isTransientConvexResponse(response: Response) {
   return (
     response.status >= 500 &&
@@ -40,28 +41,30 @@ function isTransientConvexResponse(response: Response) {
     response.status !== CONVEX_UDF_FAILED_STATUS
   );
 }
-
 const cancelFailedResponse = Effect.fn("ConvexRuntime.cancelFailedResponse")(
   function* (response: Response) {
     const body = response.body;
     if (!body) {
       return;
     }
-
     yield* Effect.tryPromise({
       try: () => body.cancel(),
       catch: (cause) =>
-        new ConvexResponseCancelError({ cause, status: response.status }),
+        new ConvexResponseCancelError({
+          cause,
+          status: response.status,
+        }),
     }).pipe(
       Effect.catchTag("ConvexResponseCancelError", (error) =>
         Effect.logWarning("Unable to cancel failed Convex response body.").pipe(
-          Effect.annotateLogs({ status: error.status })
+          Effect.annotateLogs({
+            status: error.status,
+          })
         )
       )
     );
   }
 );
-
 const readConvexResponse = Effect.fn("ConvexRuntime.response")(function* (
   input: RequestInfo | URL,
   init?: RequestInit
@@ -84,7 +87,6 @@ const readConvexResponse = Effect.fn("ConvexRuntime.response")(function* (
     yield* cancelFailedResponse(response);
     return yield* new ConvexTerminalResponseError({});
   }
-
   return response;
 });
 

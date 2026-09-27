@@ -182,8 +182,8 @@
       }
     },
     {
-      // Existing Convex module filenames are deployed function-path contracts.
-      "includes": ["packages/backend/convex/**/*.ts"],
+      // Confect module filenames preserve deployed function-path contracts.
+      "includes": ["packages/backend/confect/**/*.ts"],
       "linter": {
         "rules": {
           "style": {
@@ -217,7 +217,8 @@
   "files": {
     "includes": [
       "**/*",
-      "!packages/backend/convex/_generated/**/*",
+      "!packages/backend/convex/**/*",
+      "!packages/backend/confect/_generated/**/*",
       "!packages/backend/components/betterAuth/_generated/**/*",
       "!repos/**/*"
     ]

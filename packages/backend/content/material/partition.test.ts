@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexMaterialLayer } from "@repo/backend/content/material/convex";
 import { readMaterialPartition } from "@repo/backend/content/material/partition";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,

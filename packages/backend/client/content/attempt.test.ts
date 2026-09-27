@@ -9,10 +9,10 @@ import {
 import {
   decodeArtifactJson,
   decodeTryoutRuntimeBundleJson,
-} from "@repo/backend/convex/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { readTryoutHistory } from "@repo/backend/convex/tryouts/runtime/history/read";
+} from "@repo/backend/confect/contentRelease/parse";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { readTryoutHistory } from "@repo/backend/confect/tryouts/runtime/history/read";
 import {
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,

@@ -11,7 +11,7 @@ import { getNakafaContent } from "@repo/backend/agent/content";
 import { createNakafaMcpServer } from "@repo/backend/agent/mcp/server";
 import { OPENAPI_RESPONSE_EXAMPLES } from "@repo/backend/agent/openapi/examples";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import { NakafaAgentMarkdownSchema } from "@repo/contents/agent/schema/read";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";

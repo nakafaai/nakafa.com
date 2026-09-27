@@ -1,10 +1,10 @@
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { quranSearchFacts } from "@repo/backend/confect/contentRelease/quran/facts";
+import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { readQuranRow } from "@repo/backend/content/quran/row";
-import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { quranSearchFacts } from "@repo/backend/convex/contentRelease/quran/facts";
-import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { Effect } from "effect";
 
 /** Resolves one search hit back to its exact authenticated Quran row. */

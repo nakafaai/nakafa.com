@@ -3,23 +3,22 @@ import {
   decodeAgentOutput,
 } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type {
   contentSearchInputValidator,
   contentSearchResultValidator,
-} from "@repo/backend/convex/contents/helpers/search/schema";
+} from "@repo/backend/confect/contents/helpers/search/schema";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   NakafaAgentSearchOptionsSchema,
   NakafaAgentSearchResultSchema,
 } from "@repo/contents/agent/schema/search";
 import { makeFunctionReference } from "convex/server";
-import type { Infer } from "convex/values";
-import { Effect } from "effect";
+import { Effect, type Schema } from "effect";
 
 const searchReference = makeFunctionReference<
   "query",
-  Infer<typeof contentSearchInputValidator>,
-  Infer<typeof contentSearchResultValidator>
+  Schema.Schema.Type<typeof contentSearchInputValidator>,
+  Schema.Schema.Type<typeof contentSearchResultValidator>
 >("contents/queries/search:search");
 
 /** Searches the signed Nakafa read model without a network hop. */

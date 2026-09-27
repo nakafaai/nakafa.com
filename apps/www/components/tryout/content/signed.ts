@@ -5,10 +5,10 @@ import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signatu
 import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
+import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
+import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { TryoutBodyBatch } from "@repo/backend/convex/tryouts/runtime/body";
-import type { TryoutHistoryRequest } from "@repo/backend/convex/tryouts/runtime/history/spec";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { fetchQuery } from "convex/nextjs";
 import { makeFunctionReference } from "convex/server";

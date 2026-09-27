@@ -16,7 +16,7 @@ const readFixture = Effect.fn("test.publicationExchange")(function* () {
   const fixture = makePageRuntimeSource();
   const runtime = yield* createTestPublication(fixture.source);
   const row = yield* Effect.promise(() =>
-    runtime.query(internal.contentRelease.runtime.public.internal.read, {
+    runtime.query(internal.contentRelease.runtime.publication.internal.read, {
       appLocale: fixture.projection.appLocale,
       publicPath: fixture.projection.publicPath,
     })

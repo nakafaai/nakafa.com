@@ -1,4 +1,4 @@
-import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/score";
+import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { useTranslations } from "next-intl";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
 import { TryoutScoreStatus } from "@/components/tryout/score/status";

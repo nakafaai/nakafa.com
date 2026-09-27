@@ -12,8 +12,8 @@ import {
   verifyNakafaReleasePin,
 } from "@repo/backend/client/nakafa/release";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
+import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
 import { api } from "@repo/backend/convex/_generated/api";
-import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_MCP_GUIDANCE,
@@ -162,10 +162,14 @@ const readSignedInventory = Effect.fn("nakafa.taxonomy.readSignedInventory")(
         Effect.forEach(
           ACTIVE_APP_LOCALE_CODES.filter((locale) => locale !== selectedLocale),
           (locale) => readLocaleSignedInventory(convexUrl, locale),
-          { concurrency: "unbounded" }
+          {
+            concurrency: "unbounded",
+          }
         ),
       ],
-      { concurrency: "unbounded" }
+      {
+        concurrency: "unbounded",
+      }
     );
     const inventories = [selectedInventory, ...otherInventories].sort(
       (left, right) =>
@@ -189,12 +193,16 @@ const readLocaleSignedInventory = Effect.fn(
     readNakafaRuntimeQuery(
       convexUrl,
       api.contentRelease.article.sitemapBuckets,
-      { appLocale: locale }
+      {
+        appLocale: locale,
+      }
     ),
     readNakafaRuntimeQuery(
       convexUrl,
       api.contentRelease.material.sitemapBuckets,
-      { appLocale: locale }
+      {
+        appLocale: locale,
+      }
     ),
     readNakafaRuntimeQuery(convexUrl, api.contentRelease.tryout.taxonomy, {
       appLocale: locale,

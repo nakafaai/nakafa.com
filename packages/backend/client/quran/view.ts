@@ -51,7 +51,6 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
     }
     if (
       result.appLocale !== expected.appLocale ||
-      result.tafsirAccess.appLocale !== expected.appLocale ||
       result.surah.number !== expected.surahNumber ||
       !hasExactQuranVerseRange(result.verses, 1, result.surah.numberOfVerses) ||
       !hasExpectedQuranNeighbors(

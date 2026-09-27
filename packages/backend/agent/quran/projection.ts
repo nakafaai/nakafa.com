@@ -12,15 +12,15 @@ type QuranEmbeddedProjection =
   | NonNullable<QuranReferenceResult["sources"]>["arabic" | "translation"]
   | Extract<
       NonNullable<QuranReferenceResult["tafsirAccess"]>,
-      { readonly kind: "embedded" }
+      {
+        readonly kind: "embedded";
+      }
     >["source"];
-
 interface QuranProjectionInput {
   readonly appLocale: AppLocaleCode;
   readonly includeTafsir: boolean;
   readonly ref: NakafaAgentContentRef;
 }
-
 interface QuranReferenceProjectionInput extends QuranProjectionInput {
   readonly reference: PublishedQuranReference;
 }
@@ -88,7 +88,9 @@ function projectEmbeddedSource<const Source extends QuranEmbeddedProjection>(
 function projectExternalSource(
   source: Extract<
     NonNullable<QuranReferenceResult["tafsirAccess"]>,
-    { readonly kind: "external" }
+    {
+      readonly kind: "external";
+    }
   >["source"]
 ) {
   return {

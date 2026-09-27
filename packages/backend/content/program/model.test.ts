@@ -11,16 +11,16 @@ import {
 import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
-import { api } from "@repo/backend/convex/_generated/api";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
 import {
   PROGRAM_ANCESTOR_LIMIT,
   PROGRAM_RELATED_LIMIT,
-} from "@repo/backend/convex/contentRelease/program/limits";
-import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/program";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+} from "@repo/backend/confect/contentRelease/program/limits";
+import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
+import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   activateProgramSnapshot,

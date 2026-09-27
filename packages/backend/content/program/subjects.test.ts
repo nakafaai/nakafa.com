@@ -9,11 +9,11 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
+import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
-import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,

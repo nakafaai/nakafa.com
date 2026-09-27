@@ -1,10 +1,10 @@
 import { assert, describe, expect, it } from "@effect/vitest";
+import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexMaterialLayer } from "@repo/backend/content/material/convex";
 import { readMaterialReference } from "@repo/backend/content/material/reference";
-import { resolveReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";

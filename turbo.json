@@ -81,6 +81,21 @@
     },
     "//#clean": {
       "cache": false
+    },
+    "@repo/backend#dev": {
+      "cache": false,
+      "persistent": true,
+      "with": ["@repo/backend#confect:dev"],
+      "dependsOn": ["codegen"]
+    },
+    "confect:dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["codegen"]
+    },
+    "codegen": {
+      "cache": false,
+      "outputs": []
     }
   }
 }

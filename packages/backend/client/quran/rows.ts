@@ -38,7 +38,9 @@ const decodeSignedQuranRow = Effect.fn("NakafaQuran.decodeSignedRow")(
   ) {
     const row = yield* Schema.decodeUnknownEffect(PublishedQuranRowSchema)(
       input,
-      { onExcessProperty: "error" }
+      {
+        onExcessProperty: "error",
+      }
     ).pipe(
       Effect.mapError(() =>
         quranPublicationError(
@@ -135,21 +137,20 @@ function hasContiguousChunks(
   if (chunks.length === 0) {
     return false;
   }
-  return chunks.every((chunk, index) => {
+  let previous: QuranChunkRow | undefined;
+  for (const chunk of chunks) {
     if (chunk.surahNumber !== surahNumber) {
       return false;
     }
-    if (index === 0) {
-      return true;
-    }
-    const previous = chunks[index - 1];
-    const previousVerse = previous?.verses.at(-1);
-    if (!(previous && previousVerse)) {
+    if (
+      previous !== undefined &&
+      (chunk.firstVerse !== previous.lastVerse + 1 ||
+        chunk.firstQuranNumber !==
+          previous.firstQuranNumber + previous.verses.length)
+    ) {
       return false;
     }
-    return (
-      chunk.firstVerse === previous.lastVerse + 1 &&
-      chunk.firstQuranNumber === previousVerse.number.inQuran + 1
-    );
-  });
+    previous = chunk;
+  }
+  return true;
 }

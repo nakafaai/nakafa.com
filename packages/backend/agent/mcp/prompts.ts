@@ -18,7 +18,9 @@ const NonEmptyPromptStringSchema = Schema.Trim.pipe(
 const FindLessonPromptArgsSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema.pipe(
     Schema.withDecodingDefaultType(Effect.succeed(ACTIVE_APP_LOCALE_CODES[0]))
-  ).annotate({ description: "Preferred content locale." }),
+  ).annotate({
+    description: "Preferred content locale.",
+  }),
   topic: NonEmptyPromptStringSchema.annotate({
     description: "Learning topic or question to search.",
   }),
@@ -32,10 +34,14 @@ const AnswerFromContentPromptArgsSchema = Schema.Struct({
 const QuranReferencePromptArgsSchema = Schema.Struct({
   from_verse: NonEmptyPromptStringSchema.pipe(
     Schema.withDecodingDefaultType(Effect.succeed("1"))
-  ).annotate({ description: "First verse number to include." }),
+  ).annotate({
+    description: "First verse number to include.",
+  }),
   locale: ActiveAppLocaleCodeSchema.pipe(
     Schema.withDecodingDefaultType(Effect.succeed(ACTIVE_APP_LOCALE_CODES[0]))
-  ).annotate({ description: "Translation locale." }),
+  ).annotate({
+    description: "Translation locale.",
+  }),
   question: Schema.optional(
     NonEmptyPromptStringSchema.annotate({
       description: "Optional question about the Quran reference.",
@@ -84,7 +90,6 @@ export function registerNakafaMcpPrompts(server: McpServer) {
     (input) => Effect.runPromise(getQuranReferencePrompt(input))
   );
 }
-
 const getFindLessonPrompt = Effect.fn("agent.mcp.getFindLessonPrompt")(
   function* (input: unknown) {
     const { locale, topic } = yield* decodePromptArguments(
@@ -99,7 +104,6 @@ const getFindLessonPrompt = Effect.fn("agent.mcp.getFindLessonPrompt")(
     ]);
   }
 );
-
 const getAnswerFromContentPrompt = Effect.fn(
   "agent.mcp.getAnswerFromContentPrompt"
 )(function* (input: unknown) {
@@ -114,7 +118,6 @@ const getAnswerFromContentPrompt = Effect.fn(
     "Use `nakafa_get_content`, answer only from the returned Markdown, and cite the canonical URL.",
   ]);
 });
-
 const getQuranReferencePrompt = Effect.fn("agent.mcp.getQuranReferencePrompt")(
   function* (input: unknown) {
     const { from_verse, locale, question, surah, to_verse } =
@@ -133,24 +136,25 @@ const getQuranReferencePrompt = Effect.fn("agent.mcp.getQuranReferencePrompt")(
     ]);
   }
 );
-
 function promptResult(lines: readonly string[]): GetPromptResult {
   return {
     messages: [
       {
-        content: { text: lines.join("\n"), type: "text" },
+        content: {
+          text: lines.join("\n"),
+          type: "text",
+        },
         role: "user",
       },
     ],
   };
 }
-
 function decodePromptArguments<
   TSchema extends Schema.ConstraintDecoder<unknown, never>,
 >(schema: TSchema, input: unknown, promptName: string) {
-  return Schema.decodeUnknownEffect(schema, { onExcessProperty: "error" })(
-    input
-  ).pipe(
+  return Schema.decodeUnknownEffect(schema, {
+    onExcessProperty: "error",
+  })(input).pipe(
     Effect.mapError(
       (cause) =>
         new ProtocolError(

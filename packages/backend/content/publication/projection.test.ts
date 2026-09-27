@@ -1,5 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
 import {
   contentHead,
@@ -8,9 +10,7 @@ import {
   resolvePublicProjection,
 } from "@repo/backend/content/publication/projection";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeTestPageProjection } from "@repo/backend/test/content/page";
 import {
   createTestPublication,

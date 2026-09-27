@@ -4,15 +4,15 @@ import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
 import {
   loadActiveSnapshot,
   loadSnapshotOwner,
 } from "@repo/backend/content/publication/snapshot";
-import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,

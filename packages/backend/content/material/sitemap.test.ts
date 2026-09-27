@@ -1,16 +1,16 @@
 import { assert, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { CONTENT_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/bucket";
+import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexMaterialLayer } from "@repo/backend/content/material/convex";
 import {
   readMaterialBuckets,
   readMaterialSitemap,
 } from "@repo/backend/content/material/sitemap";
 import { api } from "@repo/backend/convex/_generated/api";
-import { CONTENT_BUCKET_LIMIT } from "@repo/backend/convex/contentRelease/bucket";
-import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   activateMaterialCatalog,

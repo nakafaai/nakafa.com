@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRuntimeArticles,
   testLocalizedArticleProjection,

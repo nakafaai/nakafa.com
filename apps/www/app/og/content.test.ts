@@ -42,7 +42,7 @@ vi.mock("@/env", () => ({
 vi.mock("@repo/backend/client/nakafa/query", () => ({
   readNakafaRuntimeQuery: mocks.readNakafaRuntimeQuery,
 }));
-vi.mock("@repo/backend/convex/contentRelease/reference/input", () => ({
+vi.mock("@repo/backend/confect/contentRelease/reference/input", () => ({
   resolveReferenceInput: mocks.resolveReferenceInput,
 }));
 

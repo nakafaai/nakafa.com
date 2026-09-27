@@ -13,10 +13,8 @@ import {
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/agent/constants";
 import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/agent/search";
-
 export const OPENAPI_CONTENT_ID_EXAMPLE =
   "asset:example:material:linear-equations";
-
 const CONTENT_REFERENCE_EXAMPLE = {
   alignmentId: "alignment:example:mathematics",
   assetId: OPENAPI_CONTENT_ID_EXAMPLE,
@@ -31,7 +29,6 @@ const CONTENT_REFERENCE_EXAMPLE = {
   section: "material",
   url: "https://nakafa.com/en/subjects/mathematics/algebra/linear-equations",
 };
-
 const EXAMPLE_LOCALE = "en" as const;
 const EXAMPLE_DIGEST = `sha256:${"1".repeat(64)}`;
 const EXAMPLE_ARTIFACT = {
@@ -81,20 +78,17 @@ function externalSource(id: QuranExternalSourceId) {
     version: "example-version",
   };
 }
-
 const ARABIC_SOURCE_EXAMPLE = embeddedSource(ARABIC_SOURCE_ID);
 const TRANSLATION_SOURCE_EXAMPLE = {
   ...embeddedSource(TRANSLATION_SOURCE_ID),
   locale: EXAMPLE_LOCALE,
 };
-
 const TAFSIR_ACCESS_EXAMPLE = {
   kind: "external",
   locale: EXAMPLE_LOCALE,
   notice: "Example signed link-only Tafsir access.",
   source: externalSource(TAFSIR_SOURCE_ID),
 };
-
 const QURAN_REFERENCE_EXAMPLE = {
   alignmentId: "alignment:example:quran:1",
   assetId: "asset:example:quran:1",
@@ -104,7 +98,10 @@ const QURAN_REFERENCE_EXAMPLE = {
   lensId: "lens:example:quran",
   locale: EXAMPLE_LOCALE,
   markdown_url: `https://nakafa.com/${EXAMPLE_LOCALE}/quran/1.md`,
-  meaning: { locale: EXAMPLE_LOCALE, text: "The Opening" },
+  meaning: {
+    locale: EXAMPLE_LOCALE,
+    text: "The Opening",
+  },
   name: "Al-Faatiha",
   pre_bismillah: null,
   revelation: "Meccan",
@@ -134,7 +131,11 @@ const QURAN_REFERENCE_EXAMPLE = {
             offset: 0,
             value: "In the name of Allah, the Most Compassionate. ",
           },
-          { kind: "note", number: 1, offset: 47 },
+          {
+            kind: "note",
+            number: 1,
+            offset: 47,
+          },
         ],
       },
     },
@@ -190,17 +191,30 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
     offset: 0,
   },
   Taxonomy: {
-    articles: { categories: ["education"] },
+    articles: {
+      categories: ["education"],
+    },
     content_counts: [
-      { count: 120, locale: "en" },
-      { count: 120, locale: "id" },
-      { count: 120, locale: "de" },
+      {
+        count: 120,
+        locale: "en",
+      },
+      {
+        count: 120,
+        locale: "id",
+      },
+      {
+        count: 120,
+        locale: "de",
+      },
     ],
     default_locale: "en",
     endpoints: NAKAFA_MCP_GUIDANCE,
     locale: "en",
     locales: ["en", "id", "de"],
-    quran: { surah_count: QURAN_SURAH_COUNT },
+    quran: {
+      surah_count: QURAN_SURAH_COUNT,
+    },
     sections: ["articles", "material", "tryout", "quran"],
     tools: [
       "nakafa_search_content",
@@ -208,6 +222,9 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
       "nakafa_get_taxonomy",
       "nakafa_get_quran_reference",
     ],
-    tryout: { countries: [], exams: [] },
+    tryout: {
+      countries: [],
+      exams: [],
+    },
   },
 };

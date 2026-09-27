@@ -4,17 +4,17 @@ import {
   type RoutedContentProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
+import { hashText } from "@repo/backend/confect/contentRelease/digest";
+import {
+  ReleaseError,
+  releaseFail,
+} from "@repo/backend/confect/contentRelease/error";
+import { decodeProjectionJson } from "@repo/backend/confect/contentRelease/parse";
 import {
   type PublicationRow,
   PublicationSource,
 } from "@repo/backend/content/publication/source";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { hashText } from "@repo/backend/convex/contentRelease/digest";
-import {
-  ReleaseError,
-  releaseFail,
-} from "@repo/backend/convex/contentRelease/error";
-import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect, Option, Schema } from "effect";
 
 /** Converts one complete immutable upsert version into a compact head. */
@@ -44,7 +44,11 @@ const decodeContentHead = Effect.fn("contentRelease.decodeContentHead")(
       delivery: head.delivery,
       family: head.family,
       projectionHash: head.projectionHash,
-      ...(publicPath === undefined ? {} : { publicPath }),
+      ...(publicPath === undefined
+        ? {}
+        : {
+            publicPath,
+          }),
       rendererDomain: head.rendererDomain,
       sourceHash: head.sourceHash,
       sourcePath: head.sourcePath,

@@ -9,7 +9,6 @@ import { Schema } from "effect";
 
 const TRAILING_DOT = /\.$/;
 const CLOUD_HOST = /^[a-z0-9-]+\.convex\.cloud$/;
-
 const AgentTrustSchema = Schema.Struct({
   key: TrustedKeySchema,
   target: Schema.URLFromString,
@@ -34,7 +33,6 @@ const AgentTrustSchema = Schema.Struct({
     );
   })
 );
-
 const agentKeyId = process.env.AKSARA_AGENT_SIGNING_KEY_ID;
 const agentPublicKeyPem = process.env.AKSARA_AGENT_SIGNING_PUBLIC_KEY;
 const hasAgentKey = agentKeyId !== undefined || agentPublicKeyPem !== undefined;
@@ -42,7 +40,10 @@ const agentKey = hasAgentKey
   ? // Convex and Next load this immutable trust configuration at module startup.
     // Synchronous schema validation fails before any publication or artifact read.
     Schema.decodeUnknownSync(AgentTrustSchema)({
-      key: { keyId: agentKeyId, publicKeyPem: agentPublicKeyPem },
+      key: {
+        keyId: agentKeyId,
+        publicKeyPem: agentPublicKeyPem,
+      },
       target:
         process.env.CONVEX_CLOUD_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL,
       vercel: process.env.VERCEL_ENV,

@@ -1,12 +1,12 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { validateQuranSurah } from "@repo/backend/confect/contentRelease/quran/input";
+import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
+import { verifyQuranRow } from "@repo/backend/confect/contentRelease/quran/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { readQuranChunks } from "@repo/backend/content/quran/chunks";
 import { PublishedQuranSurahSchema } from "@repo/backend/content/quran/contract";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { QuranSource } from "@repo/backend/content/quran/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { validateQuranSurah } from "@repo/backend/convex/contentRelease/quran/input";
-import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
-import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect, Option } from "effect";
 
 /** Authenticates one signed surah contract. */
@@ -44,7 +44,10 @@ export const loadQuranSurah = Effect.fn("contentRelease.loadQuranSurah")(
     const surahNumber = yield* validateQuranSurah(sourceSurah);
     const owner = yield* loadQuranOwner();
     if (owner.snapshotId === null) {
-      return { owner, surah: null };
+      return {
+        owner,
+        surah: null,
+      };
     }
     const surah = yield* readQuranSurahRow(owner.snapshotId, surahNumber);
     if (surah.payload.numberOfVerses > QURAN_PAGE_VERSE_LIMIT) {
@@ -53,8 +56,13 @@ export const loadQuranSurah = Effect.fn("contentRelease.loadQuranSurah")(
         `Quran surah ${surahNumber} exceeds ${QURAN_PAGE_VERSE_LIMIT} verses.`
       );
     }
-
-    return { owner, surah: { row: surah, surahNumber } };
+    return {
+      owner,
+      surah: {
+        row: surah,
+        surahNumber,
+      },
+    };
   }
 );
 

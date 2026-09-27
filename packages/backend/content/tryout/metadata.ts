@@ -9,56 +9,14 @@ import {
   readTryoutCatalogRowByIdentity,
   readTryoutCatalogRowByPath,
 } from "@repo/backend/content/tryout/row";
-import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
-import { v } from "convex/values";
-import { literals } from "convex-helpers/validators";
 import { Effect } from "effect";
 
-export const tryoutMetadataArgsValidator = {
-  appLocale: appLocaleValidator,
-  kind: literals("country", "exam", "track", "set", "section"),
-  publicPath: v.string(),
-};
-
-export const tryoutLocalizedPathArgsValidator = {
-  currentAppLocale: appLocaleValidator,
-  publicPath: v.string(),
-  targetAppLocale: appLocaleValidator,
-};
-
-const tryoutAlternateValidator = v.object({
-  appLocale: appLocaleValidator,
-  publicPath: v.string(),
-});
-const tryoutSocialImageIdentityValidator = v.object({
-  countryKey: v.string(),
-  examKey: v.string(),
-});
-
-export const tryoutMetadataReturnValidator = v.object({
-  route: v.union(
-    v.null(),
-    v.object({
-      alternates: v.array(tryoutAlternateValidator),
-      description: v.optional(v.string()),
-      publicPath: v.string(),
-      socialImageIdentity: v.union(
-        v.null(),
-        tryoutSocialImageIdentityValidator
-      ),
-      title: v.string(),
-    })
-  ),
-});
-
 type TryoutRouteKind = TryoutCatalogRow["kind"];
-
 interface TryoutMetadataInput {
   readonly appLocale: AppLocaleCode;
   readonly kind: TryoutRouteKind;
   readonly publicPath: string;
 }
-
 interface TryoutLocalizedPathInput {
   readonly currentAppLocale: AppLocaleCode;
   readonly publicPath: string;
@@ -76,13 +34,16 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
       snapshotId,
     });
     if (!current) {
-      return { route: null };
+      return {
+        route: null,
+      };
     }
     if (current.kind !== input.kind || !current.publicPath) {
-      return { route: null };
+      return {
+        route: null,
+      };
     }
     const currentPublicPath = current.publicPath;
-
     const activeAppLocales = snapshot.manifest.activeAppLocales;
     const alternateRows = yield* Effect.forEach(activeAppLocales, (locale) =>
       readAlternate({
@@ -94,13 +55,14 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
     const alternates = alternateRows.flatMap((alternate) =>
       alternate ? [alternate] : []
     );
-
     return {
       route: {
         alternates,
         ...(current.description === undefined
           ? {}
-          : { description: current.description }),
+          : {
+              description: current.description,
+            }),
         publicPath: currentPublicPath,
         socialImageIdentity:
           current.kind === "exam"
@@ -128,7 +90,6 @@ export const readTryoutLocalizedPath = Effect.fn(
   if (!current) {
     return null;
   }
-
   const alternate = yield* readAlternate({
     appLocale: input.targetAppLocale,
     current,

@@ -6,12 +6,12 @@ import type {
 } from "@repo/ai/nina/memory/pack";
 import { NinaContextSnapshotSchema } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/chats/constants";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/confect/chats/messageParts/uiToDb";
+import { mapDBMessagesToUIMessages } from "@repo/backend/confect/chats/utils";
+import { readConvexErrorData } from "@repo/backend/confect/failure";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
-import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
-import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
-import { readConvexErrorData } from "@repo/backend/convex/lib/effect";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect, Option, Schema } from "effect";
 import {
@@ -56,7 +56,9 @@ export const createChatWithMessage = Effect.fn("chat.createChatWithMessage")(
     readonly ninaContextTransition: NinaContextTransition;
     readonly token: string;
   }) {
-    const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
+    const dbParts = mapUIMessagePartsToDBParts({
+      messageParts: message.parts,
+    });
     const result = yield* Effect.tryPromise({
       try: () =>
         fetchMutation(
@@ -71,7 +73,9 @@ export const createChatWithMessage = Effect.fn("chat.createChatWithMessage")(
             }),
             parts: dbParts,
           },
-          { token }
+          {
+            token,
+          }
         ),
       catch: (cause) =>
         new ChatMutationError({
@@ -80,7 +84,6 @@ export const createChatWithMessage = Effect.fn("chat.createChatWithMessage")(
           operation: "create-chat",
         }),
     });
-
     return result.chatId;
   }
 );
@@ -106,8 +109,9 @@ export const saveChatMessage = Effect.fn("chat.saveChatMessage")(function* ({
   readonly ninaContextTransition: NinaContextTransition;
   readonly token: string;
 }) {
-  const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
-
+  const dbParts = mapUIMessagePartsToDBParts({
+    messageParts: message.parts,
+  });
   yield* Effect.tryPromise({
     try: () =>
       fetchMutation(
@@ -124,7 +128,9 @@ export const saveChatMessage = Effect.fn("chat.saveChatMessage")(function* ({
           },
           parts: dbParts,
         },
-        { token }
+        {
+          token,
+        }
       ),
     catch: (cause) =>
       new ChatMutationError({
@@ -133,7 +139,6 @@ export const saveChatMessage = Effect.fn("chat.saveChatMessage")(function* ({
         operation: "save-message",
       }),
   });
-
   return chatId;
 });
 
@@ -158,8 +163,13 @@ export const loadPinnedNinaContext = Effect.fn("chat.loadPinnedNinaContext")(
       try: () =>
         fetchQuery(
           convexApi.chats.queries.getPinnedNinaContextForTurn,
-          { chatId, messageIdentifier },
-          { token }
+          {
+            chatId,
+            messageIdentifier,
+          },
+          {
+            token,
+          }
         ),
       catch: (cause) =>
         new ChatQueryError({
@@ -168,15 +178,12 @@ export const loadPinnedNinaContext = Effect.fn("chat.loadPinnedNinaContext")(
           operation: "load-context",
         }),
     });
-
     const decoded = Schema.decodeUnknownOption(NinaContextSnapshotSchema)(
       storedContext
     );
-
     if (Option.isNone(decoded)) {
       return;
     }
-
     return decoded.value;
   }
 );
@@ -199,9 +206,14 @@ export const loadMessages = Effect.fn("chat.loadMessages")(function* ({
         convexApi.chats.queries.loadMessagesPage,
         {
           chatId,
-          paginationOpts: { cursor: null, numItems: CHAT_MESSAGES_PAGE_SIZE },
+          paginationOpts: {
+            cursor: null,
+            numItems: CHAT_MESSAGES_PAGE_SIZE,
+          },
         },
-        { token }
+        {
+          token,
+        }
       ),
     catch: (cause) =>
       new ChatQueryError({
@@ -223,8 +235,12 @@ export const reserveChatTurn = Effect.fn("chat.reserveChatTurn")(function* (
     try: () =>
       fetchMutation(
         convexApi.chats.turns.mutations.reserve,
-        { modelId },
-        { token }
+        {
+          modelId,
+        },
+        {
+          token,
+        }
       ),
     catch: (cause) => {
       const failure = readConvexErrorData(cause);
@@ -255,8 +271,12 @@ export const releaseChatTurn = Effect.fn("chat.releaseChatTurn")(function* (
     try: () =>
       fetchMutation(
         convexApi.chats.turns.mutations.release,
-        { turnId },
-        { token }
+        {
+          turnId,
+        },
+        {
+          token,
+        }
       ),
     catch: (cause) =>
       new ChatMutationError({

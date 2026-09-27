@@ -1,13 +1,13 @@
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription";
 import posthogTest from "@posthog/convex/test";
+import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
-import type { SubscriptionRecord } from "@repo/backend/convex/subscriptions/records/spec";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

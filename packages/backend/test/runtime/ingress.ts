@@ -9,8 +9,8 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
-import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/stage";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { stagePublication } from "@repo/backend/confect/contentRelease/ingress/stage";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
 import type schema from "@repo/backend/convex/schema";
 import {
   TEST_KEY_ID,

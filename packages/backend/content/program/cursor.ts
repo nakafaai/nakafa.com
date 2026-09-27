@@ -1,7 +1,7 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
 
 const PROGRAM_POSITION_PREFIX = "program-route|";
@@ -37,17 +37,11 @@ export const decodeProgramPosition = Effect.fn("program.decodeProgramPosition")(
         code: "CONTENT_RELEASE_INTEGRITY",
         message: "Program cursor has an invalid query position.",
       });
-    if (!isProgramPosition(cursor)) {
-      return yield* invalid();
-    }
-    const parsed = yield* Effect.try({
-      try: (): unknown =>
-        JSON.parse(cursor.slice(PROGRAM_POSITION_PREFIX.length)),
-      catch: invalid,
-    });
-    const position = yield* Schema.decodeUnknownEffect(ProgramPositionSchema)(
-      parsed
-    ).pipe(Effect.mapError(invalid));
+    const position = yield* Schema.decodeEffect(
+      Schema.fromJsonString(ProgramPositionSchema)
+    )(cursor.slice(PROGRAM_POSITION_PREFIX.length)).pipe(
+      Effect.mapError(invalid)
+    );
     if (position[0] !== snapshotId || position[1] !== appLocale) {
       return yield* invalid();
     }

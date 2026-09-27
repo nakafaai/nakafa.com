@@ -1,8 +1,8 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { readMaterialPartition } from "@repo/backend/content/material/partition";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Struct } from "effect";
 
 const MATERIAL_DISCOVERY_LIMIT = 100;
@@ -13,12 +13,16 @@ function summarizeMaterial(
 ) {
   const { projection } = verified;
   return {
-    authors: projection.metadata.authors.map(({ name }) => ({ name })),
+    authors: projection.metadata.authors.map(({ name }) => ({
+      name,
+    })),
     ...Struct.pick(projection.metadata, ["dateModified"]),
     datePublished: projection.metadata.datePublished,
     ...(projection.metadata.description === undefined
       ? {}
-      : { description: projection.metadata.description }),
+      : {
+          description: projection.metadata.description,
+        }),
     publicPath: projection.publicPath,
     sourcePath,
     title: projection.metadata.title,

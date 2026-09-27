@@ -1,4 +1,3 @@
-import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type ContentRuntimeTarget,
@@ -63,7 +62,11 @@ export const readPublishedMarkdown = Effect.fn(
     ("subject" in metadata ? metadata.subject : undefined);
   const markdown = yield* decodeNakafaMarkdown({
     ...ref,
-    ...(description === undefined ? {} : { description }),
+    ...(description === undefined
+      ? {}
+      : {
+          description,
+        }),
     text: [`# ${metadata.title}`, "", body.trim()].join("\n"),
     title: metadata.title,
   });

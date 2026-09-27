@@ -501,6 +501,9 @@ importers:
       '@confect/core':
         specifier: 10.0.0-next.24
         version: 10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)
+      '@confect/server':
+        specifier: 10.0.0-next.24
+        version: 10.0.0-next.24(@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(@effect/platform-node@4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)
       '@convex-dev/aggregate':
         specifier: ^0.3.1
         version: 0.3.1(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.8)(react@19.2.8)(typescript@7.0.2)(zod@4.5.4)
@@ -534,6 +537,9 @@ importers:
       '@posthog/convex':
         specifier: 2.1.5
         version: 2.1.5(convex@1.46.0(react@19.2.8))
+      '@react-email/render':
+        specifier: 2.1.0
+        version: 2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@repo/ai':
         specifier: workspace:*
         version: link:../ai
@@ -582,6 +588,15 @@ importers:
       nanoid:
         specifier: ^6.0.1
         version: 6.0.1
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
+      react-email:
+        specifier: 6.9.5
+        version: 6.9.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@7.2.0)
       server-only:
         specifier: 0.0.1
         version: 0.0.1
@@ -589,6 +604,9 @@ importers:
         specifier: ^7.2.0
         version: 7.2.0
     devDependencies:
+      '@confect/cli':
+        specifier: 10.0.0-next.24
+        version: 10.0.0-next.24(@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(@confect/server@10.0.0-next.24(@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(@effect/platform-node@4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(effect@4.0.0-rc.117)(redis@6.2.1)
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
@@ -1685,12 +1703,33 @@ packages:
     resolution: {integrity: sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==}
     engines: {node: '>= 20.12.0'}
 
+  '@confect/cli@10.0.0-next.24':
+    resolution: {integrity: sha512-ef13AUJYiwX8Eb7HssqOVXl/mgHu5uRLVDsBJWY/AJGIuChivdS6ziKFxaBY/A63wHPHayt2jpaxNfONMoiGVg==}
+    engines: {node: '>=24'}
+    hasBin: true
+    peerDependencies:
+      '@confect/core': ^10.0.0-next.24
+      '@confect/server': ^10.0.0-next.24
+      effect: ^4.0.0-rc.117
+
   '@confect/core@10.0.0-next.24':
     resolution: {integrity: sha512-0uinz21sJrekRbSjqanqDbqDdOGd4RdLoeasfnp+HsvyETOAOi1smqtEBCHo2LTb6nuwSyxDnAuqcTSXg0qiOQ==}
     engines: {node: '>=24'}
     peerDependencies:
       convex: ^1.32.0
       effect: ^4.0.0-rc.117
+
+  '@confect/server@10.0.0-next.24':
+    resolution: {integrity: sha512-yM27Ynm2+0jhuvnz1g1tCZHceukvwMnuq9Jpi7CZU+BcWUbCWDmLRzahX/hNNTj/MtTQJ7/Mds4jyzLpKrwNlw==}
+    engines: {node: '>=24'}
+    peerDependencies:
+      '@confect/core': ^10.0.0-next.24
+      '@effect/platform-node': ^4.0.0-rc.117
+      convex: ^1.45.0
+      effect: ^4.0.0-rc.117
+    peerDependenciesMeta:
+      '@effect/platform-node':
+        optional: true
 
   '@convex-dev/aggregate@0.3.1':
     resolution: {integrity: sha512-BYjgZjsAm+rHc3OxyZwUn+A4cl/dRbMSsHSNsdTZuwP4EXd6NV3AAIKa+tI9C4LD++I8N4fXscmiTz+manFnQA==}
@@ -1816,6 +1855,11 @@ packages:
   '@edge-runtime/vm@5.0.0':
     resolution: {integrity: sha512-NKBGBSIKUG584qrS1tyxVpX/AKJKQw5HgjYEnPLC0QsTw79JrGn+qUr8CXFb955Iy7GUdiiUv1rJ6JBGvaKb6w==}
     engines: {node: '>=18'}
+
+  '@effect/ai-openai-compat@4.0.0-rc.117':
+    resolution: {integrity: sha512-TJFO5CGOks+y9d6Fbj3/lfWO4FHWMIS0h+8MOMEcNyDau/BTZYIYP/Ab9OID0Rwsbvq3Wi7kxJKpA88QgaVqkw==}
+    peerDependencies:
+      effect: ^4.0.0-rc.117
 
   '@effect/platform-node-shared@4.0.0-rc.117':
     resolution: {integrity: sha512-GyRkEfLBG49MwJe+/XDPiXYcQ44RA9p2z0AurlsWhR1cd1PqOUMEZU1pORL+/R5hR8aH6ZuqoJYD8lAc6h+wlA==}
@@ -4499,6 +4543,12 @@ packages:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
     engines: {node: '>=18'}
 
+  bundle-require@5.1.0:
+    resolution: {integrity: sha512-3WrrOuZiyaaZPWiEt4G3+IffISVC9HYlWueJEBWED4ZH4aIAC2PnkdnuRrR94M+w6yGWn4AglWtJtBI8YqvgoA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    peerDependencies:
+      esbuild: '>=0.18'
+
   c12@3.3.4:
     resolution: {integrity: sha512-cM0ApFQSBXuourJejzwv/AuPRvAxordTyParRVcHjjtXirtkzM0uK2L9TTn9s0cXZbG7E55jCivRQzoxYmRAlA==}
     peerDependencies:
@@ -4608,6 +4658,9 @@ packages:
     resolution: {integrity: sha512-qOAeUhPwPzBxx6jaeQdo646XIKliKHc2j1ZF7Ngb1o0pJZKH5gq8FkA0aVdUdPFUDXNXyUCXpCtoJISo6dhizg==}
     engines: {node: '>=20'}
     hasBin: true
+
+  code-block-writer@13.0.3:
+    resolution: {integrity: sha512-Oofo0pq3IKnsFtuHqSF7TqBfr71aeyZDVJ0HpmqB7FBM2qEigL0iPONSCZSO9pE9dZTAxANe5XHG9Uy0YMv8cg==}
 
   collapse-white-space@2.1.0:
     resolution: {integrity: sha512-loKTxY1zCOuG4j9f6EPnuyyYkf58RnhhWTvRoZEokgB+WbdXehfjFviyOVYkqzEWz1Q5kRiZdBYS5SwxbQYwzw==}
@@ -5873,6 +5926,10 @@ packages:
   lilconfig@2.1.0:
     resolution: {integrity: sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ==}
     engines: {node: '>=10'}
+
+  load-tsconfig@0.2.5:
+    resolution: {integrity: sha512-IXO6OCs9yg8tMKzfPZ1YmheJbZCiEsnBdcB03l0OcfK9prKnJb96siuHCr5Fl37/yo9DnKU+TLpxzTUspw9shg==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   lodash-es@4.18.1:
     resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
@@ -8238,7 +8295,7 @@ snapshots:
       '@babel/code-frame': 7.29.7
       '@babel/generator': 7.29.8
       '@babel/helper-globals': 7.29.7
-      '@babel/parser': 7.29.8
+      '@babel/parser': 7.29.9
       '@babel/template': 7.29.7
       '@babel/types': 7.29.8
       debug: 4.4.3(supports-color@7.2.0)
@@ -8585,10 +8642,34 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
+  '@confect/cli@10.0.0-next.24(@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(@confect/server@10.0.0-next.24(@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(@effect/platform-node@4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(effect@4.0.0-rc.117)(redis@6.2.1)':
+    dependencies:
+      '@confect/core': 10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)
+      '@confect/server': 10.0.0-next.24(@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(@effect/platform-node@4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)
+      '@effect/platform-node': 4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1)
+      bundle-require: 5.1.0(esbuild@0.28.2)
+      code-block-writer: 13.0.3
+      effect: 4.0.0-rc.117
+      esbuild: 0.28.2
+      exsolve: 1.1.1
+    transitivePeerDependencies:
+      - bufferutil
+      - redis
+      - utf-8-validate
+
   '@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)':
     dependencies:
       convex: 1.46.0(react@19.2.8)
       effect: 4.0.0-rc.117
+
+  '@confect/server@10.0.0-next.24(@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(@effect/platform-node@4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)':
+    dependencies:
+      '@confect/core': 10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)
+      '@effect/ai-openai-compat': 4.0.0-rc.117(effect@4.0.0-rc.117)
+      convex: 1.46.0(react@19.2.8)
+      effect: 4.0.0-rc.117
+    optionalDependencies:
+      '@effect/platform-node': 4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1)
 
   '@convex-dev/aggregate@0.3.1(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.8)(react@19.2.8)(typescript@7.0.2)(zod@4.5.4)':
     dependencies:
@@ -8753,6 +8834,10 @@ snapshots:
   '@edge-runtime/vm@5.0.0':
     dependencies:
       '@edge-runtime/primitives': 6.0.0
+
+  '@effect/ai-openai-compat@4.0.0-rc.117(effect@4.0.0-rc.117)':
+    dependencies:
+      effect: 4.0.0-rc.117
 
   '@effect/platform-node-shared@4.0.0-rc.117(effect@4.0.0-rc.117)':
     dependencies:
@@ -11045,6 +11130,11 @@ snapshots:
     dependencies:
       run-applescript: 7.1.0
 
+  bundle-require@5.1.0(esbuild@0.28.2):
+    dependencies:
+      esbuild: 0.28.2
+      load-tsconfig: 0.2.5
+
   c12@3.3.4(magicast@0.5.4):
     dependencies:
       chokidar: 5.0.0
@@ -11153,6 +11243,8 @@ snapshots:
   cluster-key-slot@1.1.2: {}
 
   cn@0.4.0: {}
+
+  code-block-writer@13.0.3: {}
 
   collapse-white-space@2.1.0: {}
 
@@ -12448,6 +12540,8 @@ snapshots:
       lightningcss-win32-x64-msvc: 1.33.0
 
   lilconfig@2.1.0: {}
+
+  load-tsconfig@0.2.5: {}
 
   lodash-es@4.18.1: {}
 

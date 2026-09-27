@@ -1,5 +1,5 @@
-import type { LearningContextInput } from "@repo/backend/convex/contents/context";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { LearningContextInput } from "@repo/backend/confect/contents/context";
+import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 
 /** Builds the local dedupe key for an engaged content-view attempt. */
 export function createContentViewKey({

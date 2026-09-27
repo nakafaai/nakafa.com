@@ -2,7 +2,7 @@ import {
   type AccountDeletionBrowserAttempt,
   accountDeletionBrowserAttemptSchema,
   accountDeletionRequestPhase,
-} from "@repo/backend/convex/auth/deletion/spec";
+} from "@repo/backend/confect/auth/deletion/spec";
 import { Effect, Schema } from "effect";
 
 const accountDeletionAttemptStorageFailedCode =

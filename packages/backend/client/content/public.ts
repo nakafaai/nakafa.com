@@ -1,4 +1,3 @@
-import "server-only";
 import {
   decodePublicContentRuntimeRequest,
   decodePublicContentRuntimeResponse,
@@ -8,7 +7,6 @@ import {
   type PublicContentRuntimeResponse,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
-
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   ContentRuntimeFailureError,
@@ -95,10 +93,17 @@ const verifyPublicContentResponse = Effect.fn(
     response,
   }).pipe(
     Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
-    Effect.mapError((cause) => new ContentRuntimeVerificationError({ cause }))
+    Effect.mapError(
+      (cause) =>
+        new ContentRuntimeVerificationError({
+          cause,
+        })
+    )
   );
   if (verified.kind === "missing") {
-    return yield* new ContentRuntimeMissingError({ request });
+    return yield* new ContentRuntimeMissingError({
+      request,
+    });
   }
   if (verified.kind === "failure") {
     return yield* new ContentRuntimeFailureError({
@@ -120,7 +125,12 @@ const readPublicContentProgram = Effect.fn(
     delivery: "public",
     ...input,
   }).pipe(
-    Effect.mapError(() => new ContentTransportError({ reason: "request" }))
+    Effect.mapError(
+      () =>
+        new ContentTransportError({
+          reason: "request",
+        })
+    )
   );
   const source = yield* encodeContentRequest(
     request,
@@ -131,7 +141,11 @@ const readPublicContentProgram = Effect.fn(
     PUBLIC_CONTENT_RUNTIME_PATH
   );
   const { response, value: decoded } = yield* requestContentResponse(
-    { endpoint, source, target },
+    {
+      endpoint,
+      source,
+      target,
+    },
     readPublicRuntimeResponse
   );
   return yield* verifyPublicContentResponse(
@@ -165,15 +179,17 @@ const readPublicRuntimeBatchResponse = Effect.fn(
   }
   return yield* Schema.decodeUnknownEffect(
     PublicContentRuntimeBatchResponseSchema
-  )(input, { onExcessProperty: "error" }).pipe(
-    Effect.mapError(() => createContentContractError(response))
-  );
+  )(input, {
+    onExcessProperty: "error",
+  }).pipe(Effect.mapError(() => createContentContractError(response)));
 });
 /** Reads signed public evidence without claiming compatibility for execution. */
 export const readPublicContentEvidence = Effect.fn(
   "NakafaContent.readPublicContentEvidence"
 )(function* (target: ContentRuntimeTarget, input: PublicContentRuntimeInput) {
-  return yield* readPublicContentProgram(target, input, { kind: "frozen" });
+  return yield* readPublicContentProgram(target, input, {
+    kind: "frozen",
+  });
 });
 /** Reads and independently verifies one bounded batch of public artifacts. */
 export const readPublicContentEvidenceBatch = Effect.fn(
@@ -183,14 +199,34 @@ export const readPublicContentEvidenceBatch = Effect.fn(
   inputs: readonly PublicContentRuntimeInput[]
 ) {
   const requests = yield* Effect.forEach(inputs, (input) =>
-    decodePublicContentRuntimeRequest({ delivery: "public", ...input }).pipe(
-      Effect.mapError(() => new ContentTransportError({ reason: "request" }))
+    decodePublicContentRuntimeRequest({
+      delivery: "public",
+      ...input,
+    }).pipe(
+      Effect.mapError(
+        () =>
+          new ContentTransportError({
+            reason: "request",
+          })
+      )
     )
   );
   const batch = yield* Schema.decodeEffect(
     PublicContentRuntimeBatchRequestSchema
-  )({ requests }, { onExcessProperty: "error" }).pipe(
-    Effect.mapError(() => new ContentTransportError({ reason: "request" }))
+  )(
+    {
+      requests,
+    },
+    {
+      onExcessProperty: "error",
+    }
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new ContentTransportError({
+          reason: "request",
+        })
+    )
   );
   const source = yield* encodeContentRequest(
     batch,
@@ -201,7 +237,11 @@ export const readPublicContentEvidenceBatch = Effect.fn(
     PUBLIC_CONTENT_RUNTIME_BATCH_PATH
   );
   const { response, value: decoded } = yield* requestContentResponse(
-    { endpoint, source, target },
+    {
+      endpoint,
+      source,
+      target,
+    },
     readPublicRuntimeBatchResponse
   );
   if (decoded.responses.length !== requests.length) {
@@ -213,7 +253,9 @@ export const readPublicContentEvidenceBatch = Effect.fn(
       verifyPublicContentResponse(
         request,
         batchResponse,
-        { kind: "frozen" },
+        {
+          kind: "frozen",
+        },
         response.status
       )
   );
@@ -244,27 +286,43 @@ export const verifyPublicContentDelivery = Effect.fn(
     delivery: "public",
     ...input,
   }).pipe(
-    Effect.mapError(() => new ContentTransportError({ reason: "request" }))
+    Effect.mapError(
+      () =>
+        new ContentTransportError({
+          reason: "request",
+        })
+    )
   );
   if (
     new TextEncoder().encode(source).byteLength >
     MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
   ) {
-    return yield* new ContentTransportError({ reason: "response-size" });
+    return yield* new ContentTransportError({
+      reason: "response-size",
+    });
   }
   const value = yield* Effect.try({
-    catch: () => new ContentTransportError({ reason: "json-syntax" }),
+    catch: () =>
+      new ContentTransportError({
+        reason: "json-syntax",
+      }),
     try: (): unknown => JSON.parse(source),
   });
   const response = yield* decodePublicContentRuntimeResponse(value).pipe(
     Effect.mapError(
-      () => new ContentTransportError({ reason: "response-contract" })
+      () =>
+        new ContentTransportError({
+          reason: "response-contract",
+        })
     )
   );
   return yield* verifyPublicContentResponse(
     request,
     response,
-    { kind: "live", rendererManifest },
+    {
+      kind: "live",
+      rendererManifest,
+    },
     200
   );
 });

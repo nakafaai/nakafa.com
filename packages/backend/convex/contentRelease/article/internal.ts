@@ -1,15 +1,3 @@
-import { internalQuery } from "@repo/backend/convex/_generated/server";
-import {
-  agentArticleTaxonomyValidator,
-  readAgentArticleTaxonomy,
-} from "@repo/backend/convex/contentRelease/article/agent";
-import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import registeredFunctions from "../../../confect/_generated/registeredFunctions/contentRelease/article/internal";
 
-/** Reads agent taxonomy through one bounded, consistent query transaction. */
-export const readAgentTaxonomy = internalQuery({
-  args: { appLocale: appLocaleValidator },
-  returns: agentArticleTaxonomyValidator,
-  handler: (ctx, { appLocale }) =>
-    runConvexProgram(readAgentArticleTaxonomy(ctx, appLocale)),
-});
+export const readAgentTaxonomy = registeredFunctions.readAgentTaxonomy;

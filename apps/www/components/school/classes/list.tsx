@@ -8,12 +8,12 @@ import {
   UserMultipleIcon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   getClassImageUrl,
   getRandomClassImage,
-} from "@repo/backend/convex/lib/images";
+} from "@repo/backend/confect/lib/images";
+import { api } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {

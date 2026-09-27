@@ -4,10 +4,10 @@ import {
   replaceContentSnapshot,
   restoreContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { readTryoutRuntimeRetention } from "@repo/backend/confect/contentRelease/tryout/runtime";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { readTryoutRuntimeRetention } from "@repo/backend/convex/contentRelease/tryout/runtime";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { TEST_DIGEST } from "@repo/backend/test/content/release";
 import {

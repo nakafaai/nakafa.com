@@ -1,0 +1,117 @@
+import {
+  ANALYTICS_ERASURE_RETRY,
+  LATE_ANALYTICS_RECONCILIATION_DELAY_MS,
+} from "@repo/backend/confect/analytics/erasure/policy";
+import { ACCOUNT_DELETION_RECONCILIATION_DELAY_MS } from "@repo/backend/confect/auth/deletion/constants";
+import { workflow } from "@repo/backend/confect/workflow";
+import { internal } from "@repo/backend/convex/_generated/api";
+import { v } from "convex/values";
+
+const DELETED_USER_CLEANUP_RETRY = {
+  base: 2,
+  initialBackoffMs: 1000,
+  maxAttempts: 10,
+};
+
+/** Erases auth verification state and reconciles any already-running request. */
+export const cleanupDeletedUserAuth = workflow.define({
+  args: {
+    authId: v.string(),
+    userId: v.id("users"),
+  },
+  returns: v.null(),
+  handler: async (step, args) => {
+    await step.runAction(
+      internal.auth.deletion.verification.drainDeletedUserVerifications,
+      args,
+      { retry: DELETED_USER_CLEANUP_RETRY }
+    );
+    await step.runAction(
+      internal.auth.deletion.verification.drainDeletedUserVerifications,
+      args,
+      {
+        name: "reconcile late auth verification writes",
+        retry: DELETED_USER_CLEANUP_RETRY,
+        runAfter: ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
+      }
+    );
+
+    return null;
+  },
+});
+
+/** Erases analytics independently from every local and external data drain. */
+export const cleanupDeletedUserAnalytics = workflow.define({
+  args: {
+    userId: v.id("users"),
+  },
+  returns: v.null(),
+  handler: async (step, args) => {
+    await step.runAction(
+      internal.analytics.erasure.action.eraseUserAnalytics,
+      { userId: args.userId },
+      { retry: ANALYTICS_ERASURE_RETRY }
+    );
+    await step.runAction(
+      internal.analytics.erasure.action.eraseUserAnalytics,
+      { userId: args.userId },
+      {
+        name: "reconcile late analytics writes",
+        retry: ANALYTICS_ERASURE_RETRY,
+        runAfter: LATE_ANALYTICS_RECONCILIATION_DELAY_MS,
+      }
+    );
+
+    return null;
+  },
+});
+
+/** Erases the external billing customer without gating Nakafa data cleanup. */
+export const cleanupDeletedUserCustomer = workflow.define({
+  args: {
+    authId: v.string(),
+    userId: v.id("users"),
+  },
+  returns: v.null(),
+  handler: async (step, args) => {
+    await step.runAction(
+      internal.customers.actions.internal.cleanupDeletedUserCustomerData,
+      {
+        authId: args.authId,
+        userId: args.userId,
+      },
+      { retry: DELETED_USER_CLEANUP_RETRY }
+    );
+    await step.runAction(
+      internal.customers.actions.internal.cleanupDeletedUserCustomerData,
+      {
+        authId: args.authId,
+        userId: args.userId,
+      },
+      {
+        name: "reconcile late customer writes",
+        retry: DELETED_USER_CLEANUP_RETRY,
+        runAfter: ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
+      }
+    );
+
+    return null;
+  },
+});
+
+/** Erases Nakafa-owned personal data without an external dependency. */
+export const cleanupDeletedUserData = workflow.define({
+  args: {
+    userId: v.id("users"),
+  },
+  returns: v.null(),
+  handler: async (step, args) => {
+    await step.runAction(
+      internal.auth.cleanup.drainDeletedUserData,
+      { userId: args.userId },
+      { retry: DELETED_USER_CLEANUP_RETRY }
+    );
+
+    return null;
+  },
+});

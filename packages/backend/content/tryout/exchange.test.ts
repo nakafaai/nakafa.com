@@ -1,16 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { decodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/parse";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import {
   decodeProtectedRuntimeRow,
   ProtectedRuntimeReadError,
 } from "@repo/backend/content/tryout/exchange";
 import { readProtectedProgram } from "@repo/backend/content/tryout/protected";
-import { decodeTryoutRuntimeBundleJson } from "@repo/backend/convex/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_KEY_RESOLVER,
   testSignedArtifact,

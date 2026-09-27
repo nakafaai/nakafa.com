@@ -1,8 +1,8 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { readArticlePartition } from "@repo/backend/content/article/partition";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Struct } from "effect";
 
 const ARTICLE_DISCOVERY_LIMIT = 100;
@@ -28,14 +28,18 @@ function summarizeArticle(
   const { projection } = verified;
   return {
     articleSlug: projection.articleSlug,
-    authors: projection.metadata.authors.map(({ name }) => ({ name })),
+    authors: projection.metadata.authors.map(({ name }) => ({
+      name,
+    })),
     category: projection.category,
     categoryTitle: projection.categoryTitle,
     ...Struct.pick(projection.metadata, ["dateModified"]),
     datePublished: projection.metadata.datePublished,
     ...(projection.metadata.description === undefined
       ? {}
-      : { description: projection.metadata.description }),
+      : {
+          description: projection.metadata.description,
+        }),
     official: projection.official,
     publicPath: projection.publicPath,
     route: {
@@ -82,7 +86,11 @@ export const readLatestArticles = Effect.fn(
   const owner = yield* loadArticleOwner(appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.managed && owner.active && owner.slot)) {
-    return { activeReleaseId, articles: [], managed: false };
+    return {
+      activeReleaseId,
+      articles: [],
+      managed: false,
+    };
   }
   const source = yield* ArticleSource;
   const rows = yield* source.ordered(owner.slot, appLocale, null, limit);
@@ -107,7 +115,11 @@ export const readCategoryArticles = Effect.fn(
   const owner = yield* loadArticleOwner(appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.managed && owner.active && owner.slot)) {
-    return { activeReleaseId, articles: [], managed: false };
+    return {
+      activeReleaseId,
+      articles: [],
+      managed: false,
+    };
   }
   const source = yield* ArticleSource;
   const rows = yield* source.ordered(owner.slot, appLocale, category, limit);

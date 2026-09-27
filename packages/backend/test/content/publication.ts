@@ -2,11 +2,11 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
-import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeTestPageProjection } from "@repo/backend/test/content/page";
 import {
   TEST_PROOF_RENDERER,

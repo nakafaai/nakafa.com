@@ -16,8 +16,8 @@ import {
   type ArticleRouteSlug,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
+import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
 import { api } from "@repo/backend/convex/_generated/api";
-import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";

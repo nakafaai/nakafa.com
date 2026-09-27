@@ -1,8 +1,8 @@
 "use client";
 import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
+import type { SchoolClassVisibility } from "@repo/backend/confect/classes/schema";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { SchoolClassVisibility } from "@repo/backend/convex/classes/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,

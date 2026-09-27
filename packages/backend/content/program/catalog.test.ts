@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { readProgramCatalog } from "@repo/backend/content/program/catalog";
 import { convexProgramLayer } from "@repo/backend/content/program/convex";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,

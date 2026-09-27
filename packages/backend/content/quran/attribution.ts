@@ -1,8 +1,8 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { verifyQuranRow } from "@repo/backend/confect/contentRelease/quran/verify";
 import { PublishedQuranAttributionSchema } from "@repo/backend/content/quran/contract";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { QuranSource } from "@repo/backend/content/quran/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect } from "effect";
 
 /** Reads and verifies the unique attribution row for one active snapshot. */
@@ -23,7 +23,10 @@ export const readQuranAttributionRow = Effect.fn(
     snapshotId,
     PublishedQuranAttributionSchema
   );
-  return { payload, rowJson: row.rowJson };
+  return {
+    payload,
+    rowJson: row.rowJson,
+  };
 });
 
 /** Returns the visible signed source attribution for active Quran content. */

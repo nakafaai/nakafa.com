@@ -1,5 +1,5 @@
+import { validateTryoutResponseSelection } from "@repo/backend/confect/tryouts/response/selection";
 import type { api } from "@repo/backend/convex/_generated/api";
-import { validateTryoutResponseSelection } from "@repo/backend/convex/tryouts/response/selection";
 import type { FunctionArgs } from "convex/server";
 import type {
   TryoutRenderableResponseSpec,

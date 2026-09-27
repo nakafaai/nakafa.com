@@ -8,9 +8,9 @@ import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
+import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
+import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
-import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   testEmptyManifest,

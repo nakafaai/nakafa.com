@@ -1,12 +1,12 @@
-import { loadProgramOwner } from "@repo/backend/content/program/owner";
-import { readProgramPartition } from "@repo/backend/content/program/partition";
-import { ProgramSource } from "@repo/backend/content/program/source";
 import {
   CONTENT_BUCKET_LIMIT,
   CONTENT_BUCKET_SIZE,
   isProjectionBucket,
-} from "@repo/backend/convex/contentRelease/bucket";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+} from "@repo/backend/confect/contentRelease/bucket";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { loadProgramOwner } from "@repo/backend/content/program/owner";
+import { readProgramPartition } from "@repo/backend/content/program/partition";
+import { ProgramSource } from "@repo/backend/content/program/source";
 import { Effect } from "effect";
 
 /** Lists non-empty curriculum sitemap partitions for one active snapshot. */
@@ -15,7 +15,11 @@ export const readProgramBuckets = Effect.fn(
 )(function* (appLocale: Parameters<typeof loadProgramOwner>[0]) {
   const owner = yield* loadProgramOwner(appLocale);
   if (!(owner.managed && owner.selected)) {
-    return { buckets: [], managed: false, routeCount: 0 };
+    return {
+      buckets: [],
+      managed: false,
+      routeCount: 0,
+    };
   }
   const source = yield* ProgramSource;
   const rows = yield* source.buckets(
@@ -60,6 +64,8 @@ export const readProgramSitemap = Effect.fn(
     return null;
   }
   return {
-    routes: partition.routes.map(({ publicPath }) => ({ publicPath })),
+    routes: partition.routes.map(({ publicPath }) => ({
+      publicPath,
+    })),
   };
 });

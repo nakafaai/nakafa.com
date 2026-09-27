@@ -2,7 +2,9 @@ import { render } from "@react-email/render";
 import { Tailwind } from "@repo/email/tailwind";
 import {
   type AccountReadyEmailInput,
+  AccountReadyEmailInputError,
   AccountReadyEmailInputSchema,
+  AccountReadyEmailRenderError,
   getAccountReadyEmailCopy,
   getPublicEmailUrl,
 } from "@repo/email/templates/ready/content";
@@ -26,28 +28,7 @@ import {
   Text,
 } from "react-email";
 
-export type { AccountReadyEmailInput } from "@repo/email/templates/ready/content";
-
-/** Expected invalid input at the account-ready email boundary. */
-export class AccountReadyEmailInputError extends Schema.TaggedError<AccountReadyEmailInputError>()(
-  "AccountReadyEmailInputError",
-  {
-    code: Schema.Literal("ACCOUNT_READY_EMAIL_INPUT_INVALID"),
-    message: Schema.String,
-  }
-) {}
-
-/** Expected failure while rendering an account-ready email. */
-export class AccountReadyEmailRenderError extends Schema.TaggedError<AccountReadyEmailRenderError>()(
-  "AccountReadyEmailRenderError",
-  {
-    code: Schema.Literal("ACCOUNT_READY_EMAIL_RENDER_FAILED"),
-    message: Schema.String,
-  }
-) {}
-
 const EMAIL_LOGO_URL = getPublicEmailUrl("/logo.png");
-
 const accountReadyEmailPreviewInput = {
   continueUrl: getPublicEmailUrl("/en/home"),
   locale: "en",
@@ -64,7 +45,6 @@ function AccountReadyEmail(
     ...input,
   };
   const copy = getAccountReadyEmailCopy(locale);
-
   return (
     <Html dir="ltr" lang={locale}>
       <Tailwind>
@@ -185,16 +165,22 @@ export const renderAccountReadyEmail = Effect.fn("email.accountReady.render")(
         }),
         Effect.tryPromise({
           catch: renderFailure,
-          try: () => render(email, { plainText: true }),
+          try: () =>
+            render(email, {
+              plainText: true,
+            }),
         }),
       ],
-      { concurrency: "unbounded" }
+      {
+        concurrency: "unbounded",
+      }
     );
-
-    return { html, subject: copy.subject, text };
+    return {
+      html,
+      subject: copy.subject,
+      text,
+    };
   }
 );
-
 AccountReadyEmail.PreviewProps = accountReadyEmailPreviewInput;
-
 export default AccountReadyEmail;

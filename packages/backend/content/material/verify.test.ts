@@ -1,7 +1,7 @@
 import { assert, describe, expect, it } from "@effect/vitest";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content/runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";

@@ -27,12 +27,10 @@ export function getContentReferenceInput(input: string) {
       kind: "content",
     });
   }
-
   const route = parseNakafaUrlRoute(input);
   if (Option.isNone(route)) {
     return Option.none<ContentReferenceInput>();
   }
-
   return Option.some<ContentReferenceInput>({
     appLocale: route.value.locale,
     kind: "route",
@@ -50,7 +48,9 @@ export function resolveNakafaContentRef(convexUrl: string, input: string) {
     const reference = yield* readNakafaRuntimeQuery(
       convexUrl,
       api.contentRelease.reference.read,
-      { input: lookup.value }
+      {
+        input: lookup.value,
+      }
     );
     if (!reference) {
       return Option.none<NakafaAgentContentRef>();

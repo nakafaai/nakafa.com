@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
-import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
+import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Data, Effect } from "effect";

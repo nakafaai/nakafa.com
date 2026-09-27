@@ -5,7 +5,7 @@ import {
   Certificate02Icon,
   Compass01Icon,
 } from "@hugeicons/core-free-icons";
-import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/score";
+import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";

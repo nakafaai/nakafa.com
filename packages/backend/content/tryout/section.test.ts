@@ -5,15 +5,15 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import {
   readTryoutSection,
   readTryoutSectionRows,
   type TryoutSectionIdentity,
 } from "@repo/backend/content/tryout/section";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,

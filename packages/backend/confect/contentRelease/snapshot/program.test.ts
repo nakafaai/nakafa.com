@@ -1,0 +1,310 @@
+import { assert, describe, expect, it } from "@effect/vitest";
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
+import {
+  makeCurriculumSnapshotRow,
+  makeProgramSnapshotRow,
+} from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
+import {
+  type ContentSnapshotRow,
+  canonicalizeContentSnapshotRow,
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
+import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
+import schema from "@repo/backend/convex/schema";
+import {
+  makeProgramSnapshotData,
+  type ProgramSnapshotData,
+} from "@repo/backend/test/program/snapshot";
+import { convexTest } from "convex-test";
+import { Effect } from "effect";
+
+/** Selects one concrete curriculum row from the shared program fixture. */
+function findCurriculum(data: ProgramSnapshotData) {
+  for (const source of data.rows) {
+    if (source.record.kind === "curriculum") {
+      return {
+        family: "program",
+        record: source.record,
+      } satisfies ContentSnapshotRow;
+    }
+  }
+  throw new Error("Expected one curriculum snapshot row.");
+}
+
+describe("contentRelease/snapshot/program", () => {
+  it.live(
+    "replays one exact row and rejects a cross-table index collision",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const [program] = data.rows;
+        const curriculum = findCurriculum(data);
+        if (program?.record.kind !== "program") {
+          throw new Error("Expected one program snapshot row.");
+        }
+        const target = convexTest(schema, convexModules);
+        const programJson = canonicalizeContentSnapshotRow(program);
+
+        yield* Effect.promise(() =>
+          expect(
+            target.mutation((ctx) =>
+              runConvexProgram(
+                stageProgramRow(ctx, data.snapshotId, 0, program, programJson)
+              )
+            )
+          ).resolves.toBe(false)
+        );
+        yield* Effect.promise(() =>
+          expect(
+            target.mutation((ctx) =>
+              runConvexProgram(
+                stageProgramRow(ctx, data.snapshotId, 0, program, programJson)
+              )
+            )
+          ).resolves.toBe(true)
+        );
+        yield* Effect.promise(() =>
+          expect(
+            target.mutation((ctx) =>
+              runConvexProgram(
+                stageProgramRow(
+                  ctx,
+                  data.snapshotId,
+                  0,
+                  curriculum,
+                  canonicalizeContentSnapshotRow(curriculum)
+                )
+              )
+            )
+          ).rejects.toMatchObject({
+            data: { code: "CONTENT_RELEASE_CONFLICT" },
+          })
+        );
+      })
+  );
+
+  it.live("rejects duplicate localized node identity across public paths", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const source = findCurriculum(data);
+      const target = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          runConvexProgram(
+            stageProgramRow(
+              ctx,
+              data.snapshotId,
+              2,
+              source,
+              canonicalizeContentSnapshotRow(source)
+            )
+          )
+        )
+      );
+      const route = CurriculumRouteSchema.make({
+        ...source.record.row,
+        publicPath: PublicPathSchema.make(
+          `${source.record.row.publicPath}-copy`
+        ),
+      });
+      const record = yield* makeCurriculumSnapshotRow(route);
+      const duplicate = {
+        family: "program",
+        record,
+      } satisfies ContentSnapshotRow;
+
+      yield* Effect.promise(() =>
+        expect(
+          target.mutation((ctx) =>
+            runConvexProgram(
+              stageProgramRow(
+                ctx,
+                data.snapshotId,
+                3,
+                duplicate,
+                canonicalizeContentSnapshotRow(duplicate)
+              )
+            )
+          )
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_CONFLICT" },
+        })
+      );
+    })
+  );
+
+  it.live("rejects oversized program and curriculum read-model rows", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const [program] = data.rows;
+      const curriculum = findCurriculum(data);
+      if (program?.record.kind !== "program") {
+        throw new Error("Expected one program snapshot row.");
+      }
+      const source = program.record.row.sources[0];
+      const oversizedProgram = LearningProgramSchema.make({
+        ...program.record.row,
+        sources: [
+          source,
+          ...Array.from({ length: 64 }, (_, index) => ({
+            ...source,
+            label: `Technical source ${index} ${"x".repeat(256)}`,
+            url: `https://example.test/oversized-source-${index}`,
+          })),
+        ],
+      });
+      const oversizedProgramRecord =
+        yield* makeProgramSnapshotRow(oversizedProgram);
+      const oversizedProgramRow = {
+        family: "program",
+        record: oversizedProgramRecord,
+      } satisfies ContentSnapshotRow;
+      const oversizedCurriculum = CurriculumRouteSchema.make({
+        ...curriculum.record.row,
+        title: "x".repeat(READ_MODEL_DOCUMENT_LIMIT),
+      });
+      const oversizedCurriculumRecord =
+        yield* makeCurriculumSnapshotRow(oversizedCurriculum);
+      const oversizedCurriculumRow = {
+        family: "program",
+        record: oversizedCurriculumRecord,
+      } satisfies ContentSnapshotRow;
+      const target = convexTest(schema, convexModules);
+
+      yield* Effect.promise(() =>
+        expect(
+          target.mutation((ctx) =>
+            runConvexProgram(
+              stageProgramRow(
+                ctx,
+                data.snapshotId,
+                0,
+                oversizedProgramRow,
+                canonicalizeContentSnapshotRow(oversizedProgramRow)
+              )
+            )
+          )
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_SIZE" },
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          target.mutation((ctx) =>
+            runConvexProgram(
+              stageProgramRow(
+                ctx,
+                data.snapshotId,
+                1,
+                oversizedCurriculumRow,
+                canonicalizeContentSnapshotRow(oversizedCurriculumRow)
+              )
+            )
+          )
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_SIZE" },
+        })
+      );
+    })
+  );
+});
+
+it.live.each(["cross-table", "index", "identity", "json", "hash"] as const)(
+  "rejects changed immutable program identity: %s",
+  (condition) =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      yield* Effect.promise(async () => {
+        const program = data.rows[0];
+        assert(program?.record.kind === "program");
+        const t = convexTest(schema, convexModules);
+        const json = canonicalizeContentSnapshotRow(program);
+        await t.mutation((ctx) =>
+          runConvexProgram(
+            stageProgramRow(
+              ctx,
+              data.snapshotId,
+              0,
+              condition === "cross-table" ? findCurriculum(data) : program,
+              json
+            )
+          )
+        );
+        if (condition !== "cross-table") {
+          await t.mutation(async (ctx) => {
+            const row = await ctx.db.query("programCatalog").unique();
+            assert(row);
+            await ctx.db.patch(
+              "programCatalog",
+              row._id,
+              {
+                index: { index: 1 },
+                identity: { programKey: "different" },
+                json: { rowJson: "{}" },
+                hash: { rowHash: "changed" },
+              }[condition]
+            );
+          });
+        }
+        await expect(
+          t.mutation((ctx) =>
+            runConvexProgram(
+              stageProgramRow(ctx, data.snapshotId, 0, program, json)
+            )
+          )
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+      });
+    })
+);
+
+it.live.each(["index", "path", "node", "json", "hash", "bucket"] as const)(
+  "rejects changed immutable curriculum identity: %s",
+  (condition) =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      yield* Effect.promise(async () => {
+        const curriculum = findCurriculum(data);
+        const t = convexTest(schema, convexModules);
+        const json = canonicalizeContentSnapshotRow(curriculum);
+        await t.mutation((ctx) =>
+          runConvexProgram(
+            stageProgramRow(ctx, data.snapshotId, 0, curriculum, json)
+          )
+        );
+        expect(
+          await t.mutation((ctx) =>
+            runConvexProgram(
+              stageProgramRow(ctx, data.snapshotId, 0, curriculum, json)
+            )
+          )
+        ).toBe(true);
+        await t.mutation(async (ctx) => {
+          const row = await ctx.db.query("curriculumRoutes").unique();
+          assert(row);
+          await ctx.db.patch(
+            "curriculumRoutes",
+            row._id,
+            {
+              index: { index: 1 },
+              path: { path: "curriculum/different" },
+              node: { nodeKey: "different" },
+              json: { rowJson: "{}" },
+              hash: { rowHash: "changed" },
+              bucket: { bucket: row.bucket === "fff" ? "000" : "fff" },
+            }[condition]
+          );
+        });
+        await expect(
+          t.mutation((ctx) =>
+            runConvexProgram(
+              stageProgramRow(ctx, data.snapshotId, 0, curriculum, json)
+            )
+          )
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+      });
+    })
+);

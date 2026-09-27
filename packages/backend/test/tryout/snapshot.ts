@@ -34,12 +34,12 @@ import {
 } from "@nakafa/aksara-contracts/tryout/placement-hash";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import { TryoutContentHashSchema } from "@nakafa/aksara-contracts/tryout/spec";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   tryoutCatalogFacts,
   tryoutPlacementFacts,
-} from "@repo/backend/convex/contentRelease/tryout/facts";
-import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
+} from "@repo/backend/confect/contentRelease/tryout/facts";
+import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,

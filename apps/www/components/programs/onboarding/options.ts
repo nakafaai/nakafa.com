@@ -4,12 +4,12 @@ import {
   Quiz03Icon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import type { api } from "@repo/backend/convex/_generated/api";
 import {
   onboardingFocuses,
   onboardingRegions,
-} from "@repo/backend/convex/onboarding/values";
-import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
+} from "@repo/backend/confect/onboarding/values";
+import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
+import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs } from "convex/server";
 import { roleIconByValue } from "@/lib/data/roles";
 

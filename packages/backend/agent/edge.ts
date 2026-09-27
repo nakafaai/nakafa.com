@@ -11,7 +11,6 @@ const AGENT_ORIGIN_ENVIRONMENT = "NAKAFA_CONVEX_SITE_URL";
 const MCP_EDGE_SECRET_ENVIRONMENT = "NAKAFA_MCP_EDGE_SECRET";
 const MCP_EDGE_SECRET_HEADER = "x-nakafa-mcp-edge-secret";
 const MCP_ORIGIN_PATH = "/internal/mcp";
-
 const ApiEdgeContractSchema = Schema.Struct({
   discoveryPath: Schema.Literal(API_DISCOVERY_PATH),
   documentPath: Schema.Literal(API_DOCUMENT_PATH),
@@ -28,7 +27,6 @@ const McpEdgeContractSchema = Schema.Struct({
   secretEnvironment: Schema.Literal(MCP_EDGE_SECRET_ENVIRONMENT),
   secretHeader: Schema.Literal(MCP_EDGE_SECRET_HEADER),
 });
-
 export type AgentEdgeContract =
   | typeof ApiEdgeContractSchema.Type
   | typeof McpEdgeContractSchema.Type;

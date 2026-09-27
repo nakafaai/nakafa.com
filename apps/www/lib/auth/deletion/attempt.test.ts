@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { accountDeletionRequestPhase } from "@repo/backend/convex/auth/deletion/spec";
+import { accountDeletionRequestPhase } from "@repo/backend/confect/auth/deletion/spec";
 import { Effect } from "effect";
 import {
   AccountDeletionAttemptStorageFailed,

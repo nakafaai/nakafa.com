@@ -219,7 +219,7 @@ describe("immutable try-out application catalog", () => {
         const request = yield* makeTryoutRuntimeRequest([selected.question]);
         const row = yield* Effect.promise(() =>
           context.query(
-            internal.contentRelease.runtime.protected.internal.read,
+            internal.contentRelease.runtime.tryout.internal.read,
             request
           )
         );

@@ -1,0 +1,47 @@
+import { FunctionSpec, GroupSpec } from "@confect/core";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { CreditStateFailure } from "@repo/backend/confect/credits/spec";
+import Atomic from "@repo/backend/confect/middleware/atomic.spec";
+import {
+  selfSelectableUserRoleValidator,
+  userRoleValidator,
+} from "@repo/backend/confect/users/schema";
+import { Schema } from "effect";
+/**
+ * Update the app user's role.
+ */
+export default GroupSpec.make()
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "updateUserRole",
+      args: () => ({
+        role: selfSelectableUserRoleValidator,
+      }),
+      returns: () => Schema.Null,
+      error: () => AuthFailure,
+    }).middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "updateUserName",
+      args: () => ({
+        name: Schema.String,
+      }),
+      returns: () => Schema.Null,
+      error: () => AuthFailure,
+    }).middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "syncUserInfoForChat",
+      args: () => ({}),
+      returns: () =>
+        Schema.Struct({
+          role: Schema.NullOr(userRoleValidator),
+          credits: Schema.Finite,
+          userId: IdSchema("users"),
+        }),
+      error: () => Schema.Union([AuthFailure, CreditStateFailure]),
+    }).middleware(Atomic)
+  );

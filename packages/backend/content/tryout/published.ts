@@ -5,6 +5,7 @@ import type {
   TryoutSet,
   TryoutTrack,
 } from "@nakafa/aksara-contracts/tryout/catalog";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   findPublishedSet,
   indexPublishedCatalog,
@@ -15,7 +16,6 @@ import {
   readPublishedTrackParents,
   sortCatalogRows,
 } from "@repo/backend/content/tryout/hierarchy";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 
 /** Projects one signed country into the existing public catalog contract. */
@@ -25,7 +25,9 @@ function toPublicCountry(country: TryoutCountry) {
     countryKey: country.countryKey,
     ...(country.description === undefined
       ? {}
-      : { description: country.description }),
+      : {
+          description: country.description,
+        }),
     publicPath: country.publicPath,
     title: country.title,
   };
@@ -36,7 +38,9 @@ function toPublicExam(exam: TryoutExam) {
   return {
     ...(exam.description === undefined
       ? {}
-      : { description: exam.description }),
+      : {
+          description: exam.description,
+        }),
     examKey: exam.examKey,
     publicPath: exam.publicPath,
     scoringStrategy: exam.scoringStrategy,
@@ -49,7 +53,9 @@ function toPublicTrack(track: TryoutTrack) {
   return {
     ...(track.description === undefined
       ? {}
-      : { description: track.description }),
+      : {
+          description: track.description,
+        }),
     publicPath: track.publicPath,
     readyQuestionCount: track.questionCount,
     readySetCount: track.setCount,
@@ -64,7 +70,11 @@ function toPublicTrack(track: TryoutTrack) {
 export function toPublicPublishedSet(set: TryoutSet) {
   return {
     countryKey: set.countryKey,
-    ...(set.description === undefined ? {} : { description: set.description }),
+    ...(set.description === undefined
+      ? {}
+      : {
+          description: set.description,
+        }),
     examKey: set.examKey,
     publicPath: set.publicPath,
     readyQuestionCount: set.questionCount,
@@ -84,10 +94,14 @@ export function toPublicPublishedSection(section: TryoutSection) {
   return {
     ...(section.description === undefined
       ? {}
-      : { description: section.description }),
+      : {
+          description: section.description,
+        }),
     ...(section.publicPath === undefined
       ? {}
-      : { publicPath: section.publicPath }),
+      : {
+          publicPath: section.publicPath,
+        }),
     questionCount: section.questionCount,
     sectionKey: section.sectionKey,
     timeLimitSeconds: section.timeLimitSeconds,
@@ -107,7 +121,9 @@ export const readPublishedHubPage = Effect.fn(
       (exam) => exam.countryKey === country.countryKey
     ).length,
   }));
-  return { countries };
+  return {
+    countries,
+  };
 });
 
 /** Reads one country page from one verified signed catalog. */
@@ -243,7 +259,6 @@ export const readPublishedEntrySection = Effect.fn(
   if (!set.internalEntrySectionKey) {
     return visibleSections.at(0) ?? null;
   }
-
   const entrySection = sections.find(
     (section) => section.sectionKey === set.internalEntrySectionKey
   );

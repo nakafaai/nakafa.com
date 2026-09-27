@@ -1,7 +1,5 @@
-import "server-only";
 import type { ProtectedContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import type { PublicContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/spec";
-
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {
   createNetworkRequestError,
@@ -19,17 +17,37 @@ import { Data, Effect, Schedule } from "effect";
 
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
-
 type ContentRuntimeResponse =
   | ProtectedContentRuntimeResponse
   | PublicContentRuntimeResponse;
 type ContentRuntimeStatus =
   | Pick<
-      Extract<ContentRuntimeResponse, { readonly kind: "failure" }>,
+      Extract<
+        ContentRuntimeResponse,
+        {
+          readonly kind: "failure";
+        }
+      >,
       "code" | "kind"
     >
-  | Pick<Extract<ContentRuntimeResponse, { readonly kind: "found" }>, "kind">
-  | Pick<Extract<ContentRuntimeResponse, { readonly kind: "missing" }>, "kind">;
+  | Pick<
+      Extract<
+        ContentRuntimeResponse,
+        {
+          readonly kind: "found";
+        }
+      >,
+      "kind"
+    >
+  | Pick<
+      Extract<
+        ContentRuntimeResponse,
+        {
+          readonly kind: "missing";
+        }
+      >,
+      "kind"
+    >;
 
 /** Server-owned connection values for private Convex content endpoints. */
 export interface ContentHttpTarget {
@@ -48,7 +66,6 @@ class RetryableContentResponse extends Data.TaggedError(
 class RetryableContentBody extends Data.TaggedError("RetryableContentBody")<{
   readonly cause: ContentTransportError;
 }> {}
-
 type ContentRequestFailure =
   | NetworkRequestError
   | RetryableContentBody
@@ -88,7 +105,6 @@ const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
     if (body === null) {
       return;
     }
-
     yield* Effect.tryPromise({
       catch: () => undefined,
       try: () => body.cancel(),
@@ -101,7 +117,6 @@ const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
     );
   }
 );
-
 const CONTENT_RETRY_SCHEDULE: Schedule.Schedule<number, unknown> =
   Schedule.recurs(2).pipe(
     Schedule.addDelay(({ attempt }) =>
@@ -124,7 +139,9 @@ const CONTENT_RETRY_SCHEDULE: Schedule.Schedule<number, unknown> =
 /** Preserves terminal reader failures and marks only interrupted bodies retryable. */
 function classifyContentBodyFailure<Failure>(failure: Failure) {
   if (failure instanceof ContentTransportError && failure.reason === "body") {
-    return new RetryableContentBody({ cause: failure });
+    return new RetryableContentBody({
+      cause: failure,
+    });
   }
   return failure;
 }
@@ -140,17 +157,25 @@ function hasContentRuntimeMarker(response: Response) {
 /** Classifies an out-of-contract JSON body without exposing its contents. */
 export function createContentContractError(response: Response) {
   if (hasContentRuntimeMarker(response)) {
-    return new ContentTransportError({ reason: "response-contract" });
+    return new ContentTransportError({
+      reason: "response-contract",
+    });
   }
-  return new ContentTransportError({ reason: "response-unmarked" });
+  return new ContentTransportError({
+    reason: "response-unmarked",
+  });
 }
 
 /** Classifies malformed JSON without exposing its response body. */
 function createContentSyntaxError(response: Response) {
   if (hasContentRuntimeMarker(response)) {
-    return new ContentTransportError({ reason: "json-syntax" });
+    return new ContentTransportError({
+      reason: "json-syntax",
+    });
   }
-  return new ContentTransportError({ reason: "response-unmarked" });
+  return new ContentTransportError({
+    reason: "response-unmarked",
+  });
 }
 
 /** Enforces the runtime endpoints' shared response and HTTP status pairs. */
@@ -164,7 +189,9 @@ export const validateContentRuntimeStatus = Effect.fn(
     return;
   }
   if (response.kind !== "failure") {
-    return yield* new ContentTransportError({ reason: "status" });
+    return yield* new ContentTransportError({
+      reason: "status",
+    });
   }
   if (response.code === "CONTENT_RUNTIME_UNAUTHORIZED" && status === 401) {
     return;
@@ -182,7 +209,9 @@ export const validateContentRuntimeStatus = Effect.fn(
   ) {
     return;
   }
-  return yield* new ContentTransportError({ reason: "status" });
+  return yield* new ContentTransportError({
+    reason: "status",
+  });
 });
 
 /** Builds one fixed private endpoint without inheriting paths or credentials. */
@@ -190,7 +219,10 @@ export const createContentEndpoint = Effect.fn(
   "NakafaContent.createContentEndpoint"
 )(function* (baseUrl: string, path: string) {
   const base = yield* Effect.try({
-    catch: () => new ContentTransportError({ reason: "url" }),
+    catch: () =>
+      new ContentTransportError({
+        reason: "url",
+      }),
     try: () => new URL(baseUrl),
   });
   const isLocalHttp =
@@ -199,9 +231,10 @@ export const createContentEndpoint = Effect.fn(
     (base.protocol !== "https:" && !isLocalHttp) ||
     base.username.length + base.password.length > 0
   ) {
-    return yield* new ContentTransportError({ reason: "url" });
+    return yield* new ContentTransportError({
+      reason: "url",
+    });
   }
-
   return new URL(path, base.origin).href;
 });
 
@@ -210,16 +243,22 @@ export const encodeContentRequest = Effect.fn(
   "NakafaContent.encodeContentRequest"
 )(function* (input: unknown, maxBytes: number) {
   const source = yield* Effect.try({
-    catch: () => new ContentTransportError({ reason: "request" }),
+    catch: () =>
+      new ContentTransportError({
+        reason: "request",
+      }),
     try: () => JSON.stringify(input),
   });
   if (source === undefined) {
-    return yield* new ContentTransportError({ reason: "request" });
+    return yield* new ContentTransportError({
+      reason: "request",
+    });
   }
   if (new TextEncoder().encode(source).byteLength > maxBytes) {
-    return yield* new ContentTransportError({ reason: "request-size" });
+    return yield* new ContentTransportError({
+      reason: "request-size",
+    });
   }
-
   return source;
 });
 
@@ -268,15 +307,20 @@ export const requestContentResponse = Effect.fn(
     }).pipe(
       Effect.filterOrFail(
         (response) => !isRetryableContentResponse(response, input.endpoint),
-        (response) => new RetryableContentResponse({ response })
+        (response) =>
+          new RetryableContentResponse({
+            response,
+          })
       )
     );
     const value = yield* read(response, input.endpoint).pipe(
       Effect.mapError(classifyContentBodyFailure)
     );
-    return { response, value };
+    return {
+      response,
+      value,
+    };
   });
-
   return yield* attempt.pipe(
     Effect.retry(CONTENT_RETRY_SCHEDULE),
     Effect.catchIf(
@@ -284,7 +328,10 @@ export const requestContentResponse = Effect.fn(
         failure instanceof RetryableContentResponse,
       (failure) =>
         read(failure.response, input.endpoint).pipe(
-          Effect.map((value) => ({ response: failure.response, value }))
+          Effect.map((value) => ({
+            response: failure.response,
+            value,
+          }))
         )
     ),
     Effect.catchIf(
@@ -311,17 +358,24 @@ export const readContentResponse = Effect.fn(
   "NakafaContent.readContentResponse"
 )(function* (response: Response, endpoint: string, maxBytes: number) {
   if (response.url !== endpoint) {
-    return yield* new ContentTransportError({ reason: "response-url" });
+    return yield* new ContentTransportError({
+      reason: "response-url",
+    });
   }
   if (!isJsonContentType(response.headers.get("content-type"))) {
-    return yield* new ContentTransportError({ reason: "content-type" });
+    return yield* new ContentTransportError({
+      reason: "content-type",
+    });
   }
   yield* parseContentLength(
     response.headers.get("content-length"),
     maxBytes
   ).pipe(
     Effect.mapError(
-      () => new ContentTransportError({ reason: "content-length" })
+      () =>
+        new ContentTransportError({
+          reason: "content-length",
+        })
     )
   );
   const bytes = yield* readBoundedBody(response.body, maxBytes).pipe(
@@ -333,8 +387,14 @@ export const readContentResponse = Effect.fn(
     )
   );
   const source = yield* Effect.try({
-    catch: () => new ContentTransportError({ reason: "body" }),
-    try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+    catch: () =>
+      new ContentTransportError({
+        reason: "body",
+      }),
+    try: () =>
+      new TextDecoder("utf-8", {
+        fatal: true,
+      }).decode(bytes),
   });
   return yield* Effect.try({
     catch: () => createContentSyntaxError(response),

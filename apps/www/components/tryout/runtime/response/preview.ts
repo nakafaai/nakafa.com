@@ -2,7 +2,7 @@ import type { QuestionResponse } from "@nakafa/aksara-contracts/question/respons
 import {
   evaluateTryoutResponseSelection,
   validateTryoutResponseSelection,
-} from "@repo/backend/convex/tryouts/response/selection";
+} from "@repo/backend/confect/tryouts/response/selection";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
 
 /** Reports whether one authored preview selection is complete and valid. */

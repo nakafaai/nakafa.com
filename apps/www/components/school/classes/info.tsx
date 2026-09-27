@@ -2,12 +2,12 @@
 
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
-import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import type { SchoolClassImage } from "@repo/backend/confect/classes/schema";
 import {
   CLASS_IMAGES,
   getClassImageUrl,
-} from "@repo/backend/convex/lib/images";
+} from "@repo/backend/confect/lib/images";
+import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -29,7 +29,6 @@ import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 /** Render the active class hero using the resolved class route snapshot. */
 export function SchoolClassesHeaderInfo() {
   const classInfo = useClass((state) => state.class);
-
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-3">
       <div className="relative h-40 overflow-hidden rounded-md sm:h-48">
@@ -65,12 +64,9 @@ export function SchoolClassesHeaderInfo() {
 function InfoCustomizeButton() {
   const t = useTranslations("Common");
   const [open, openHandlers] = useDisclosure(false);
-
   const [isPending, startTransition] = useTransition();
   const { can } = useClassPermissions();
-
   const classId = useClass((state) => state.class._id);
-
   const updateClassImage = useClassImageMutation();
 
   /** Select a class image with optimistic cache rollback on failure. */
@@ -92,11 +88,9 @@ function InfoCustomizeButton() {
       );
     });
   };
-
   if (!can(PERMISSIONS.CLASS_WRITE)) {
     return null;
   }
-
   return (
     <Sheet modal={false} onOpenChange={openHandlers.set} open={open}>
       <SheetTrigger

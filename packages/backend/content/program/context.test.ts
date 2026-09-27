@@ -16,13 +16,13 @@ import {
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { readProgramContext } from "@repo/backend/content/program/context";
 import { convexProgramLayer } from "@repo/backend/content/program/convex";
 import { api } from "@repo/backend/convex/_generated/api";
-import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/program";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
 import {

@@ -1,5 +1,5 @@
 "use client";
-import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
+import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

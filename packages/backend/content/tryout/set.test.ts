@@ -8,15 +8,15 @@ import {
   TryoutCatalogRowSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { TRYOUT_SET_QUESTION_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import {
   readTryoutSet,
   type TryoutSetIdentity,
 } from "@repo/backend/content/tryout/set";
-import { TRYOUT_SET_QUESTION_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   makeTryoutStartCatalog,

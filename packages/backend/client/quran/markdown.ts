@@ -5,7 +5,7 @@ import {
   QuranPublicationError,
 } from "@repo/backend/client/quran/publication";
 import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
-import type { QuranMarkdown } from "@repo/backend/content/quran/markdown";
+import type { QuranMarkdown } from "@repo/backend/content/quran/contract";
 import { Effect } from "effect";
 
 type QuranReadingSources = NonNullable<QuranMarkdown["sources"]>;
@@ -91,7 +91,6 @@ export const decodePublishedQuranMarkdown = Effect.fn(
   );
   if (
     result.appLocale !== expected.appLocale ||
-    result.tafsirAccess.appLocale !== expected.appLocale ||
     result.surah.number !== expected.surahNumber ||
     result.toVerse !== expectedToVerse ||
     !hasExactQuranVerseRange(result.verses, 1, expectedToVerse)

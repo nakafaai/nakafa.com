@@ -1,10 +1,10 @@
 "use client";
 
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   StartAttemptArgs,
   StartAttemptResult,
-} from "@repo/backend/convex/tryouts/start/spec";
+} from "@repo/backend/confect/tryouts/start/spec";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Data, Effect } from "effect";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";

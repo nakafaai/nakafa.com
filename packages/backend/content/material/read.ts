@@ -1,4 +1,7 @@
 import type { ActiveAppLocaleList } from "@nakafa/aksara-contracts/locale";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
+import { requireExpectedActiveRelease } from "@repo/backend/confect/contentRelease/runtime/pin";
 import { readMaterialGroup } from "@repo/backend/content/material/navigation";
 import { resolveMaterialRoute } from "@repo/backend/content/material/route";
 import { MaterialSource } from "@repo/backend/content/material/source";
@@ -6,9 +9,6 @@ import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
 import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
 import { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
-import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
 import { Effect, Option } from "effect";
 
 type AuthenticatedMaterial = NonNullable<
@@ -128,7 +128,10 @@ const assembleMaterialModel = Effect.fn("contentRelease.assembleMaterialModel")(
             route.material
           )
         : [];
-    return { ...model, siblingJson };
+    return {
+      ...model,
+      siblingJson,
+    };
   }
 );
 

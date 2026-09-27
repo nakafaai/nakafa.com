@@ -1,8 +1,8 @@
 "use client";
 
 import { useDebouncedValue } from "@mantine/hooks";
+import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { api } from "@repo/backend/convex/_generated/api";
-import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
@@ -17,29 +17,24 @@ const DEBOUNCE_TIME = 500;
 /** Render the paginated material-group list for the active class. */
 export function SchoolClassesMaterialsList() {
   const t = useTranslations("School.Classes");
-
   const [{ q }] = useQueryStates(searchParsers);
-
   const classId = useClass((state) => state.class._id);
   const { can } = useClassPermissions();
-
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
-
   const { results, status, loadMore } = usePaginatedQuery(
     api.classes.materials.queries.getMaterialGroups,
     {
       classId,
       q: debouncedQ,
     },
-    { initialNumItems: 50 }
+    {
+      initialNumItems: 50,
+    }
   );
-
   const canManage = can(PERMISSIONS.CONTENT_EDIT);
-
   if (status === "LoadingFirstPage") {
     return null;
   }
-
   if (results.length === 0) {
     return (
       <div className="py-12">
@@ -49,7 +44,6 @@ export function SchoolClassesMaterialsList() {
       </div>
     );
   }
-
   return (
     <div className="flex flex-col">
       <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">

@@ -1,0 +1,233 @@
+"use node";
+
+import { MutationRunner, QueryRunner } from "@confect/server";
+import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
+import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
+import type { StageOperation } from "@nakafa/aksara-contracts/transport/group";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  loadStageEnvelope,
+  validateReleaseRenderer,
+} from "@repo/backend/confect/contentRelease/ingress/envelope";
+import { requireActiveContentKey } from "@repo/backend/confect/contentRelease/ingress/key";
+import { stageTryoutRuntimeBundle } from "@repo/backend/confect/contentRelease/ingress/runtime/bundle";
+import {
+  stageSnapshot,
+  stageSnapshotBatch,
+} from "@repo/backend/confect/contentRelease/ingress/snapshot";
+import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
+import {
+  encodeArtifactJson,
+  encodeItemJson,
+  encodeProjectionJson,
+  encodeReleaseJson,
+  encodeRendererJson,
+  encodeRouteJson,
+} from "@repo/backend/confect/contentRelease/wire";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { Effect } from "effect";
+
+type StageRequest =
+  | StageOperation
+  | Extract<
+      PublicationRequest,
+      {
+        readonly operation: "stageRecovery" | "stageRelease";
+      }
+    >;
+type ReleaseRequest = Extract<
+  StageRequest,
+  {
+    readonly operation: "stageRecovery" | "stageRelease";
+  }
+>;
+/** Authenticates candidate and recovery artifacts against their keys. */
+const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
+  function* (
+    ctx: ActionCtx,
+    request: Extract<
+      StageRequest,
+      {
+        operation: "stageArtifactBatch";
+      }
+    >,
+    activeKeyId: string
+  ) {
+    const verified = yield* loadStageEnvelope(ctx, request.releaseId);
+    yield* Effect.forEach(
+      request.artifacts,
+      (artifact) => {
+        const keyGate =
+          verified.role === "candidate"
+            ? requireActiveContentKey(
+                artifact.keyId,
+                activeKeyId,
+                `Artifact ${artifact.artifactHash}`
+              )
+            : Effect.void;
+        return keyGate.pipe(
+          Effect.andThen(
+            verifySignedContentArtifact({
+              artifact,
+              rendererManifest: verified.renderer,
+            }).pipe(Effect.mapError(contractFailure))
+          )
+        );
+      },
+      {
+        concurrency: "unbounded",
+        discard: true,
+      }
+    );
+  }
+);
+
+/** Stages one authenticated candidate or its pre-staged recovery release. */
+const stageRelease = Effect.fn("contentRelease.stageSignedRelease")(function* (
+  ctx: ActionCtx,
+  request: ReleaseRequest,
+  activeKeyId: string
+) {
+  const runMutation = yield* MutationRunner.MutationRunner.pipe(
+    Effect.provide(MutationRunner.layer(ctx.runMutation))
+  );
+  const runQuery = yield* QueryRunner.QueryRunner.pipe(
+    Effect.provide(QueryRunner.layer(ctx.runQuery))
+  );
+  const { renderer, signed } = yield* validateReleaseRenderer(
+    request.release,
+    request.rendererManifest
+  );
+  yield* requireActiveContentKey(
+    signed.keyId,
+    activeKeyId,
+    `Release ${signed.manifest.releaseId}`
+  );
+  const args = {
+    releaseJson: encodeReleaseJson(signed),
+    rendererJson: encodeRendererJson(renderer),
+  };
+  if (request.operation === "stageRelease") {
+    yield* runMutation(
+      refs.internal.contentRelease.manifest.stageRelease,
+      args
+    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+  } else {
+    yield* runMutation(
+      refs.internal.contentRelease.manifest.stageRecovery,
+      args
+    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+  }
+  return yield* runQuery(refs.internal.contentRelease.status.getStatus, {
+    manifestHash: signed.manifestHash,
+    releaseId: signed.manifest.releaseId,
+  }).pipe(Effect.catchTag("SchemaError", Effect.die));
+});
+
+/** Executes one authenticated bounded idempotent staging operation. */
+export const stagePublication = Effect.fn("contentRelease.stagePublication")(
+  function* (
+    ctx: ActionCtx,
+    request: StageRequest,
+    activeKeyId = ACTIVE_SIGNING_KEY_ID
+  ) {
+    const runMutation = yield* MutationRunner.MutationRunner.pipe(
+      Effect.provide(MutationRunner.layer(ctx.runMutation))
+    );
+    if (
+      request.operation === "stageRelease" ||
+      request.operation === "stageRecovery"
+    ) {
+      const value = yield* stageRelease(ctx, request, activeKeyId);
+      return {
+        ok: true,
+        operation: request.operation,
+        value,
+      };
+    }
+    if (request.operation === "stageSnapshot") {
+      const value = yield* stageSnapshot(ctx, request);
+      return {
+        ok: true,
+        operation: request.operation,
+        value,
+      };
+    }
+    if (request.operation === "stageSnapshotBatch") {
+      const value = yield* stageSnapshotBatch(ctx, request);
+      return {
+        ok: true,
+        operation: request.operation,
+        value,
+      };
+    }
+    if (request.operation === "stageTryoutRuntimeBundle") {
+      const value = yield* stageTryoutRuntimeBundle(ctx, request, activeKeyId);
+      return {
+        ok: true,
+        operation: request.operation,
+        value,
+      };
+    }
+    if (request.operation === "stageItemBatch") {
+      const value = yield* runMutation(
+        refs.internal.contentRelease.items.stageItemBatch,
+        {
+          batchIndex: request.batchIndex,
+          itemJson: request.items.map(encodeItemJson),
+          releaseId: request.releaseId,
+        }
+      ).pipe(Effect.catchTag("SchemaError", Effect.die));
+      return {
+        ok: true,
+        operation: request.operation,
+        value,
+      };
+    }
+    if (request.operation === "stageRouteBatch") {
+      const value = yield* runMutation(
+        refs.internal.contentRelease.routes.stageRouteBatch,
+        {
+          batchIndex: request.batchIndex,
+          releaseId: request.releaseId,
+          routeJson: request.routes.map(encodeRouteJson),
+        }
+      ).pipe(Effect.catchTag("SchemaError", Effect.die));
+      return {
+        ok: true,
+        operation: request.operation,
+        value,
+      };
+    }
+    if (request.operation === "stageProjectionBatch") {
+      const value = yield* runMutation(
+        refs.internal.contentRelease.items.stageProjectionBatch,
+        {
+          batchIndex: request.batchIndex,
+          projectionJson: request.projections.map(encodeProjectionJson),
+          releaseId: request.releaseId,
+        }
+      ).pipe(Effect.catchTag("SchemaError", Effect.die));
+      return {
+        ok: true,
+        operation: request.operation,
+        value,
+      };
+    }
+    yield* verifyArtifactBatch(ctx, request, activeKeyId);
+    const value = yield* runMutation(
+      refs.internal.contentRelease.artifacts.stageArtifactBatch,
+      {
+        artifactJson: request.artifacts.map(encodeArtifactJson),
+        batchIndex: request.batchIndex,
+        releaseId: request.releaseId,
+      }
+    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    return {
+      ok: true,
+      operation: request.operation,
+      value,
+    };
+  }
+);

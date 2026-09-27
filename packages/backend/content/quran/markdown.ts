@@ -1,9 +1,13 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { readQuranTranslationDocument } from "@repo/backend/confect/contentRelease/quran/translation";
 import { separateQuranBismillah } from "@repo/backend/content/quran/bismillah";
-import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
+import type {
+  PublishedQuranSurah,
+  QuranMarkdown,
+} from "@repo/backend/content/quran/contract";
 import {
-  quranBismillahValidator,
   readQuranBismillah,
   verifyQuranBismillah,
 } from "@repo/backend/content/quran/preface";
@@ -12,50 +16,8 @@ import {
   loadQuranSurah,
   readQuranSurahVersePrefix,
 } from "@repo/backend/content/quran/surah";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import {
-  quranAppLocaleValidator,
-  quranReadingSourcesValidator,
-  quranRevelationPlaceValidator,
-  quranSourceFields,
-  quranSurahMeaningValidator,
-  quranTafsirAccessValidator,
-  quranTranslationDocumentValidator,
-} from "@repo/backend/convex/contentRelease/quran/spec";
-import { readQuranTranslationDocument } from "@repo/backend/convex/contentRelease/quran/translation";
-import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
-const quranMarkdownSurahValidator = v.object({
-  name: v.object({
-    arabic: v.string(),
-    sourceMeaning: quranSurahMeaningValidator,
-    transliteration: v.string(),
-  }),
-  number: v.number(),
-  numberOfVerses: v.number(),
-  revelation: v.object({ place: quranRevelationPlaceValidator }),
-});
-
-const quranMarkdownVerseValidator = v.object({
-  arabic: v.string(),
-  number: v.object({ inSurah: v.number() }),
-  translation: quranTranslationDocumentValidator,
-});
-
-/** Exact signed fields needed to render app-locale Quran markdown. */
-export const quranMarkdownValidator = v.object({
-  ...quranSourceFields,
-  appLocale: quranAppLocaleValidator,
-  preBismillah: v.union(quranBismillahValidator, v.null()),
-  sources: v.union(quranReadingSourcesValidator, v.null()),
-  surah: v.union(quranMarkdownSurahValidator, v.null()),
-  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
-  toVerse: v.number(),
-  verses: v.array(quranMarkdownVerseValidator),
-});
-
-export type QuranMarkdown = Infer<typeof quranMarkdownValidator>;
 type QuranMarkdownSurah = NonNullable<QuranMarkdown["surah"]>;
 
 /** Projects only metadata rendered by Quran markdown consumers. */
@@ -68,7 +30,9 @@ function projectSurah(surah: PublishedQuranSurah): QuranMarkdownSurah {
     },
     number: surah.number,
     numberOfVerses: surah.numberOfVerses,
-    revelation: { place: surah.revelation.place },
+    revelation: {
+      place: surah.revelation.place,
+    },
   };
 }
 
@@ -84,7 +48,9 @@ const loadVerse = Effect.fn("contentRelease.loadQuranMarkdownVerse")(function* (
   return {
     arabic: verse.text.arabic,
     document,
-    number: { inSurah: verse.number.inSurah },
+    number: {
+      inSurah: verse.number.inSurah,
+    },
     translation,
   };
 });
@@ -147,9 +113,10 @@ export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
           toVerse
         ),
       },
-      { concurrency: "unbounded" }
+      {
+        concurrency: "unbounded",
+      }
     );
-
     const loadedVerses = yield* Effect.forEach(verses, (verse) =>
       loadVerse(verse, appLocale)
     );

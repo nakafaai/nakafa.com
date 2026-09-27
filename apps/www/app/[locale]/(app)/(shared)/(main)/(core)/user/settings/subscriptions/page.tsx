@@ -1,5 +1,5 @@
+import { products } from "@repo/backend/confect/utils/polar/products";
 import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexQuranLayer } from "@repo/backend/content/quran/convex";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,

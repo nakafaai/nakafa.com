@@ -11,8 +11,8 @@ import {
   ArticleRouteSlugSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
+import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
 import type { api } from "@repo/backend/convex/_generated/api";
-import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";

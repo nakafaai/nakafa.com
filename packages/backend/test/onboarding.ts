@@ -2,11 +2,11 @@ import {
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
+} from "@repo/backend/confect/test.helpers";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,

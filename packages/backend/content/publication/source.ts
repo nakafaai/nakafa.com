@@ -1,8 +1,8 @@
+import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type {
   Doc,
   TableNames,
 } from "@repo/backend/convex/_generated/dataModel";
-import type { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import type { WithoutSystemFields } from "convex/server";
 import { Context, type Effect, type Option } from "effect";
 
@@ -10,7 +10,6 @@ import { Context, type Effect, type Option } from "effect";
 export type PublicationRow<Table extends TableNames> = WithoutSystemFields<
   Doc<Table>
 >;
-
 type OptionalRow<Table extends TableNames> = Effect.Effect<
   Option.Option<PublicationRow<Table>>,
   ReleaseError

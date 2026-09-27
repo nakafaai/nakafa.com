@@ -1,7 +1,6 @@
 interface NumberedSurah {
   readonly number: number;
 }
-
 interface NumberedVerse {
   readonly number: {
     readonly inSurah: number;
@@ -22,7 +21,6 @@ export function hasExactQuranVerseRange(
   ) {
     return false;
   }
-
   return verses.every(
     (verse, index) => verse.number.inSurah === fromVerse + index
   );
@@ -42,10 +40,8 @@ export function hasExpectedQuranNeighbors(
   ) {
     return false;
   }
-
   const expectedPrevious = surahNumber === 1 ? null : surahNumber - 1;
   const expectedNext = surahNumber === surahCount ? null : surahNumber + 1;
-
   return (
     (previousSurah?.number ?? null) === expectedPrevious &&
     (nextSurah?.number ?? null) === expectedNext

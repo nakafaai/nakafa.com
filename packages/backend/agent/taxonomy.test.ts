@@ -2,10 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   encodeTestQuranRow,
   makeQuranSurah,

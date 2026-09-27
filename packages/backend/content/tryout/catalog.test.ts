@@ -4,16 +4,16 @@ import {
   TryoutCatalogRowSchema,
   TryoutTrackSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
+import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import {
   loadTryoutSnapshotCatalog,
   readTryoutCatalog,
 } from "@repo/backend/content/tryout/catalog";
 import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,

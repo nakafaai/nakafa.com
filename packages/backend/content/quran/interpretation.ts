@@ -1,25 +1,14 @@
+import { readQuranTafsir } from "@repo/backend/confect/contentRelease/quran/translation";
 import { loadQuranPassage } from "@repo/backend/content/quran/reference";
+import type { quranInterpretationValidator } from "@repo/backend/content/quran/response";
 import { readQuranLocaleSources } from "@repo/backend/content/quran/sources";
-import {
-  quranSourceFields,
-  quranTafsirAccessValidator,
-  quranTafsirAppLocaleValidator,
-} from "@repo/backend/convex/contentRelease/quran/spec";
-import { readQuranTafsir } from "@repo/backend/convex/contentRelease/quran/translation";
-import { type Infer, v } from "convex/values";
-import { Effect } from "effect";
+import { Effect, type Schema } from "effect";
 
 /** Exact signed tafsir response returned only after one verse is requested. */
-export const quranInterpretationValidator = v.object({
-  ...quranSourceFields,
-  appLocale: quranTafsirAppLocaleValidator,
-  interpretation: v.union(v.string(), v.null()),
-  surahNumber: v.number(),
-  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
-  verseNumber: v.number(),
-});
 
-type QuranInterpretation = Infer<typeof quranInterpretationValidator>;
+type QuranInterpretation = Schema.Schema.Type<
+  typeof quranInterpretationValidator
+>;
 
 /** Reads one exact Indonesian tafsir from its verified immutable chunk. */
 export const readQuranInterpretation = Effect.fn(
@@ -45,7 +34,6 @@ export const readQuranInterpretation = Effect.fn(
       .flatMap((chunk) => chunk.verses)
       .find(({ number }) => number.inSurah === loaded.input.fromVerse)
   ).pipe(Effect.orDie);
-
   const { tafsirAccess } = yield* readQuranLocaleSources(
     expectedSnapshotId,
     appLocale

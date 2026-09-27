@@ -7,6 +7,5 @@ export function parseQuranSurahNumber(value: unknown) {
   if (Option.isNone(decoded) || decoded.value.toString() !== value) {
     return null;
   }
-
   return decoded.value;
 }

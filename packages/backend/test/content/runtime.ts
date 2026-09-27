@@ -18,10 +18,10 @@ import {
   ArticleSlugSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
+import { writeArticle } from "@repo/backend/confect/contentRelease/article/write";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
 import type { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { writeArticle } from "@repo/backend/convex/contentRelease/article/write";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import { TEST_PROOF_RENDERER } from "@repo/backend/test/content/proof";
@@ -48,7 +48,7 @@ import type { FunctionReturnType } from "convex/server";
 
 type RuntimeRow = Exclude<
   FunctionReturnType<
-    typeof internal.contentRelease.runtime.public.internal.read
+    typeof internal.contentRelease.runtime.publication.internal.read
   >,
   null
 >;

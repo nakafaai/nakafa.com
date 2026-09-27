@@ -1,6 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { Effect, Option } from "effect";
 
 /** Reads and verifies one catalog row by its signed identity. */

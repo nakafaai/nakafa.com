@@ -2,13 +2,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexProgramLayer } from "@repo/backend/content/program/convex";
 import { readProgramRoute } from "@repo/backend/content/program/route";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   TEST_MANIFEST_HASH,

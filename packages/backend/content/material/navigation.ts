@@ -1,11 +1,11 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { MATERIAL_GROUP_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
+import { requireExpectedActiveRelease } from "@repo/backend/confect/contentRelease/runtime/pin";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import type { resolveMaterialRoute } from "@repo/backend/content/material/route";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { MATERIAL_GROUP_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
-import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
 import { Effect } from "effect";
 
 type AuthenticatedMaterial = NonNullable<
@@ -76,7 +76,11 @@ export const readMaterialNavigation = Effect.fn(
     );
   }
   const siblingJson = yield* readMaterialGroup(
-    { appLocale, materialKey, slot: owner.slot },
+    {
+      appLocale,
+      materialKey,
+      slot: owner.slot,
+    },
     owner.active.sequence
   );
   if (siblingJson.length === 0) {

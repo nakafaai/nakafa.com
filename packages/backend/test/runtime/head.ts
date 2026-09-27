@@ -10,9 +10,9 @@ import {
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import { writeSearchEntry } from "@repo/backend/confect/contentRelease/search/write";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { writeSearchEntry } from "@repo/backend/convex/contentRelease/search/write";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import { testSignedArtifact } from "@repo/backend/test/content/proof";

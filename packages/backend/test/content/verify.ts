@@ -1,19 +1,19 @@
 import { vWorkflowId, type WorkflowStatus } from "@convex-dev/workflow";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { internal } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   ProofPollCoordinator,
   type ProofPollCoordinatorService,
   pollProgram,
-} from "@repo/backend/convex/contentRelease/proof/poll";
+} from "@repo/backend/confect/contentRelease/proof/poll";
 import {
   recomputeProgram,
   verifyArtifactBatchProgram,
-} from "@repo/backend/convex/contentRelease/proof/verify";
-import { beginVerification } from "@repo/backend/convex/contentRelease/verify";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+} from "@repo/backend/confect/contentRelease/proof/verify";
+import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { internal } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type schema from "@repo/backend/convex/schema";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
@@ -24,6 +24,11 @@ import {
   TEST_PAGE_SOURCE,
 } from "@repo/backend/test/content/page";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import {
+  TEST_QUESTION_CONTENT_KEY,
+  TEST_QUESTION_PROJECTION_JSON,
+  TEST_QUESTION_SOURCE,
+} from "@repo/backend/test/content/question";
 import {
   TEST_RELEASE_ID,
   testDeleteJson,
@@ -110,8 +115,17 @@ function upsertFixture(family: RoutedContentFamily) {
     routeJson: testRouteJson(),
   };
 }
-/** Selects one complete prior routed state for a deletion fixture. */
-function deleteFixture(family: RoutedContentFamily) {
+/** Selects one complete prior state for a deletion fixture. */
+function deleteFixture(family: ContentFamily) {
+  if (family === "question") {
+    return {
+      contentKey: TEST_QUESTION_CONTENT_KEY,
+      projectionJson: TEST_QUESTION_PROJECTION_JSON,
+      publicPath: undefined,
+      rendererDomain: "snbt-general" as const,
+      sourcePath: TEST_QUESTION_SOURCE,
+    };
+  }
   if (family === "article") {
     return {
       contentKey: TEST_ARTICLE_KEY,
@@ -169,33 +183,40 @@ export async function stageUpsertFixture(
     routeJson: [fixture.routeJson],
   });
 }
-/** Stages one complete delete plus its required route tombstone. */
+/** Stages one complete delete plus a route tombstone for routed content. */
 export async function stageDeleteFixture(
   t: TestConvex<typeof schema>,
-  family: RoutedContentFamily = "material"
+  family: ContentFamily = "material"
 ) {
   const fixture = deleteFixture(family);
   await t.mutation(async (ctx) => {
     await insertTestRelease(ctx, {
       deleteCount: 1,
       projectionCount: 0,
-      routeCount: 1,
+      routeCount: family === "question" ? 0 : 1,
       sequence: 2,
       upsertCount: 0,
     });
-    await insertRuntimeVersion(ctx, "public", fixture.contentKey, {
-      headReleaseId: "release-base",
-      headSequence: 1,
-      projectionJson: fixture.projectionJson,
-      publicPath: fixture.publicPath,
-      rendererDomain: fixture.rendererDomain,
-      sourcePath: fixture.sourcePath,
-    });
-    await insertRuntimeBinding(ctx, fixture.contentKey, {
-      bindingReleaseId: "release-base",
-      bindingSequence: 1,
-      publicPath: fixture.publicPath,
-    });
+    await insertRuntimeVersion(
+      ctx,
+      family === "question" ? "authenticated" : "public",
+      fixture.contentKey,
+      {
+        headReleaseId: "release-base",
+        headSequence: 1,
+        projectionJson: fixture.projectionJson,
+        publicPath: fixture.publicPath,
+        rendererDomain: fixture.rendererDomain,
+        sourcePath: fixture.sourcePath,
+      }
+    );
+    if (fixture.publicPath !== undefined) {
+      await insertRuntimeBinding(ctx, fixture.contentKey, {
+        bindingReleaseId: "release-base",
+        bindingSequence: 1,
+        publicPath: fixture.publicPath,
+      });
+    }
     const state = await ctx.db.query("contentState").unique();
     if (!state) {
       throw new Error("Expected publication state.");
@@ -211,6 +232,9 @@ export async function stageDeleteFixture(
     itemJson: [testDeleteJson({ contentKey: fixture.contentKey, family })],
     releaseId: TEST_RELEASE_ID,
   });
+  if (fixture.publicPath === undefined) {
+    return;
+  }
   await t.mutation(stageRoutes, {
     batchIndex: 0,
     releaseId: TEST_RELEASE_ID,

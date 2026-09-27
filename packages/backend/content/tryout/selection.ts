@@ -8,6 +8,9 @@ import {
   tryoutCatalogIdentity,
   tryoutCatalogNodeIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
 import type { PublishedCatalogIndex } from "@repo/backend/content/tryout/hierarchy";
 import {
   readTryoutCatalogRowByIdentity,
@@ -15,9 +18,6 @@ import {
 } from "@repo/backend/content/tryout/row";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
-import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { Effect, Schema } from "effect";
 
 /** One authenticated section row with its signed immutable digest. */
@@ -43,7 +43,6 @@ export const readTryoutSetSelection = Effect.fn(
   if (selected?.kind !== "set" && selected?.kind !== "section") {
     return null;
   }
-
   let set: TryoutSet | null = selected.kind === "set" ? selected : null;
   if (!set) {
     const setIdentity = tryoutCatalogNodeIdentity({
@@ -63,7 +62,6 @@ export const readTryoutSetSelection = Effect.fn(
     }
     set = setRow;
   }
-
   const parentIdentities = {
     country: tryoutCatalogNodeIdentity({
       appLocale: set.appLocale,
@@ -100,7 +98,9 @@ export const readTryoutSetSelection = Effect.fn(
         parentIdentities.track
       ),
     },
-    { concurrency: "unbounded" }
+    {
+      concurrency: "unbounded",
+    }
   );
   if (selectedRows.country?.kind !== "country") {
     return yield* selectionIntegrity("Signed try-out set lost its country.");
@@ -111,7 +111,6 @@ export const readTryoutSetSelection = Effect.fn(
   if (selectedRows.track?.kind !== "track") {
     return yield* selectionIntegrity("Signed try-out set lost its track.");
   }
-
   const index: TryoutSetSelection = {
     countries: [selectedRows.country],
     exams: [selectedRows.exam],
@@ -153,7 +152,10 @@ export const readTryoutSetSections = Effect.fn(
     const row = yield* Schema.decodeUnknownEffect(TryoutSectionSchema)(
       catalogRow
     ).pipe(Effect.orDie);
-    sections.push({ row, rowHash: storedSection.rowHash });
+    sections.push({
+      row,
+      rowHash: storedSection.rowHash,
+    });
   }
   return sections;
 });

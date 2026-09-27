@@ -4,9 +4,9 @@ import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { INITIAL_MODEL_SLOT } from "@repo/backend/confect/contentRelease/models/slot";
+import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { INITIAL_MODEL_SLOT } from "@repo/backend/convex/contentRelease/models/slot";
-import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,

@@ -1,8 +1,8 @@
-import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
+} from "@repo/backend/confect/test.helpers";
+import { api } from "@repo/backend/convex/_generated/api";
 
 /** Creates an authenticated class owner, school member, and unrelated user. */
 export async function createClassFixture() {

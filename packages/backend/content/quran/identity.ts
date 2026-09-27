@@ -1,13 +1,13 @@
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { quranSearchIdentity } from "@repo/backend/confect/contentRelease/quran/facts";
+import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { readQuranRow } from "@repo/backend/content/quran/row";
 import { authenticateQuranSearchHit } from "@repo/backend/content/quran/search";
 import { QuranSource } from "@repo/backend/content/quran/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
-import type { ActiveContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
-import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import { Effect, Option, Schema } from "effect";
 
 /** Resolves one Quran route or graph asset through its active signed row. */

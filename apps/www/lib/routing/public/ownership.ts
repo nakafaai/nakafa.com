@@ -1,4 +1,4 @@
-import { SCHOOL_ROUTE_SLUGS } from "@repo/backend/convex/schools/slug";
+import { SCHOOL_ROUTE_SLUGS } from "@repo/backend/confect/schools/slug";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 
@@ -83,7 +83,7 @@ function isSchoolPath(segments: readonly string[]) {
     return true;
   }
 
-  if (["home", "notifications"].includes(section)) {
+  if (section === "home") {
     return segments.length === 2;
   }
 

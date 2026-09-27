@@ -10,12 +10,12 @@ import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
+import { writeMaterial } from "@repo/backend/confect/contentRelease/material/write";
+import { INITIAL_MODEL_SLOT } from "@repo/backend/confect/contentRelease/models/slot";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
 import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { writeMaterial } from "@repo/backend/convex/contentRelease/material/write";
-import { INITIAL_MODEL_SLOT } from "@repo/backend/convex/contentRelease/models/slot";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {

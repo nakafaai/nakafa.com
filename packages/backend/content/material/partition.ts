@@ -1,13 +1,13 @@
+import {
+  CONTENT_BUCKET_SIZE,
+  isProjectionBucket,
+} from "@repo/backend/confect/contentRelease/bucket";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import {
-  CONTENT_BUCKET_SIZE,
-  isProjectionBucket,
-} from "@repo/backend/convex/contentRelease/bucket";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
 import { Effect, Option } from "effect";
 
 /** Reads a transaction-bounded group of complete material discovery buckets. */
@@ -58,9 +58,11 @@ export const readMaterialPartition = Effect.fn(
           `Material discovery batch lost bucket ${appLocale}/${bucket}.`
         );
       }
-      return { activeReleaseId, kind: "missing" as const };
+      return {
+        activeReleaseId,
+        kind: "missing" as const,
+      };
     }
-
     if (
       rows.length !== count.count ||
       rows.length === 0 ||
@@ -72,7 +74,12 @@ export const readMaterialPartition = Effect.fn(
       );
     }
     const verified = yield* Effect.forEach(rows, (row) =>
-      verifyMaterial(row).pipe(Effect.map((material) => ({ ...material, row })))
+      verifyMaterial(row).pipe(
+        Effect.map((material) => ({
+          ...material,
+          row,
+        }))
+      )
     );
     materials.push(...verified);
   }

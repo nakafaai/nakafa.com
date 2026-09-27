@@ -8,12 +8,12 @@ import {
   ArticleProjectionSchema,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexArticleLayer } from "@repo/backend/content/article/convex";
 import { readArticleModel } from "@repo/backend/content/article/model";
 import { api } from "@repo/backend/convex/_generated/api";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRuntimeArticles,
   testArticleProjection,

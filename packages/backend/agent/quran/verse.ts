@@ -46,7 +46,12 @@ export const projectQuranVerse = Effect.fn("agent.quran.projectVerse")(
       translation,
     };
     const tafsir = yield* readRequestedTafsir(verse, appLocale, includeTafsir);
-    return tafsir === undefined ? row : { ...row, tafsir };
+    return tafsir === undefined
+      ? row
+      : {
+          ...row,
+          tafsir,
+        };
   }
 );
 

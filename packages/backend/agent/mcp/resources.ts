@@ -29,7 +29,6 @@ export function registerNakafaMcpResources(server: McpServer, ctx: ActionCtx) {
       ],
     })
   );
-
   server.registerResource(
     "nakafa_taxonomy",
     "nakafa://taxonomy",
@@ -53,10 +52,11 @@ export function registerNakafaMcpResources(server: McpServer, ctx: ActionCtx) {
         )
       )
   );
-
   server.registerResource(
     "nakafa_content",
-    new ResourceTemplate("nakafa://content/{contentId}", { list: undefined }),
+    new ResourceTemplate("nakafa://content/{contentId}", {
+      list: undefined,
+    }),
     {
       description: "Full Markdown for a readable Nakafa content ID.",
       mimeType: "text/markdown",

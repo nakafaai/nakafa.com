@@ -1,3 +1,5 @@
+import { DatabaseReader } from "@confect/server";
+import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { convexPublicationLayer } from "@repo/backend/content/publication/convex";
 import { QuranSource } from "@repo/backend/content/quran/source";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
@@ -9,57 +11,62 @@ export const convexQuranLayer = (ctx: QueryCtx) =>
     convexPublicationLayer(ctx),
     Layer.succeed(QuranSource, {
       search: Effect.fn("quran.convex.search")(
-        (snapshotId, appLocale, assetId) =>
-          Effect.promise(() =>
-            ctx.db
-              .query("quranSearch")
-              .withIndex("by_snapshotId_and_appLocale_and_assetId", (index) =>
-                index
-                  .eq("snapshotId", snapshotId)
-                  .eq("appLocale", appLocale)
-                  .eq("assetId", assetId)
-              )
-              .take(2)
-          )
-      ),
-      row: Effect.fn("quran.convex.row")((snapshotId, identity) =>
-        Effect.promise(() =>
-          ctx.db
-            .query("quranRows")
-            .withIndex("by_snapshotId_and_identity", (index) =>
-              index.eq("snapshotId", snapshotId).eq("identity", identity)
+        function* (snapshotId, appLocale, assetId) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
+          return yield* database
+            .table("quranSearch")
+            .index("by_snapshotId_and_appLocale_and_assetId", (index) =>
+              index
+                .eq("snapshotId", snapshotId)
+                .eq("appLocale", appLocale)
+                .eq("assetId", assetId)
             )
-            .unique()
-        ).pipe(Effect.map(Option.fromNullishOr))
+            .take(2)
+            .pipe(Effect.orDie);
+        }
       ),
-      metadata: Effect.fn("quran.convex.metadata")((snapshotId, kind, limit) =>
-        Effect.promise(() =>
-          ctx.db
-            .query("quranRows")
-            .withIndex(
+      row: Effect.fn("quran.convex.row")(function* (snapshotId, identity) {
+        const database = DatabaseReader.make(databaseSchema, ctx.db);
+        return yield* database
+          .table("quranRows")
+          .get("by_snapshotId_and_identity", snapshotId, identity)
+          .pipe(
+            Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+            Effect.orDie,
+            Effect.map(Option.fromNullishOr)
+          );
+      }),
+      metadata: Effect.fn("quran.convex.metadata")(
+        function* (snapshotId, kind, limit) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
+          return yield* database
+            .table("quranRows")
+            .index(
               "by_snapshotId_and_kind_and_surahNumber_and_firstVerse",
               (index) => index.eq("snapshotId", snapshotId).eq("kind", kind)
             )
             .take(limit)
-        )
+            .pipe(Effect.orDie);
+        }
       ),
       chunks: Effect.fn("quran.convex.chunks")(
-        (snapshotId, surahNumber, firstVerse, lastVerse, limit) =>
-          Effect.promise(() =>
-            ctx.db
-              .query("quranRows")
-              .withIndex(
-                "by_snapshotId_and_kind_and_surahNumber_and_firstVerse",
-                (index) =>
-                  index
-                    .eq("snapshotId", snapshotId)
-                    .eq("kind", "quran-chunk")
-                    .eq("surahNumber", surahNumber)
-                    .gte("firstVerse", firstVerse)
-                    .lte("firstVerse", lastVerse)
-              )
-              .take(limit)
-          )
+        function* (snapshotId, surahNumber, firstVerse, lastVerse, limit) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
+          return yield* database
+            .table("quranRows")
+            .index(
+              "by_snapshotId_and_kind_and_surahNumber_and_firstVerse",
+              (index) =>
+                index
+                  .eq("snapshotId", snapshotId)
+                  .eq("kind", "quran-chunk")
+                  .eq("surahNumber", surahNumber)
+                  .gte("firstVerse", firstVerse)
+                  .lte("firstVerse", lastVerse)
+            )
+            .take(limit)
+            .pipe(Effect.orDie);
+        }
       ),
     })
   );

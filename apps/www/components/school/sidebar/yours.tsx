@@ -1,6 +1,6 @@
 "use client";
 
-import { Home07Icon, Notification01Icon } from "@hugeicons/core-free-icons";
+import { Home07Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
@@ -40,20 +40,6 @@ export function SchoolSidebarNavYours() {
             >
               <HugeIcons icon={Home07Icon} />
               {t("home")}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              isActive={pathname.includes("/notifications")}
-              render={
-                <NavigationLink
-                  href={`/school/${slug}/notifications`}
-                  title={t("notifications")}
-                />
-              }
-            >
-              <HugeIcons icon={Notification01Icon} />
-              {t("notifications")}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

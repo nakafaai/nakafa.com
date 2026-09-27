@@ -54,7 +54,6 @@ export function registerNakafaMcpTools(
     },
     (input) => runMcpTool(searchNakafaContent(ctx, input), requestId)
   );
-
   server.registerTool(
     "nakafa_get_content",
     {
@@ -92,7 +91,6 @@ export function registerNakafaMcpTools(
         requestId
       )
   );
-
   server.registerTool(
     "nakafa_get_taxonomy",
     {
@@ -115,7 +113,6 @@ export function registerNakafaMcpTools(
         requestId
       )
   );
-
   server.registerTool(
     "nakafa_get_quran_reference",
     {

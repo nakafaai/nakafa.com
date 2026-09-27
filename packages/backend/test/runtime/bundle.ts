@@ -1,10 +1,10 @@
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentSnapshotManifestSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { storeAuthenticatedTryoutRuntimeBundle } from "@repo/backend/confect/tryouts/runtime/signed";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
-import { storeAuthenticatedTryoutRuntimeBundle } from "@repo/backend/convex/tryouts/runtime/signed";
 import { testSignedTryoutRuntimeBundle } from "@repo/backend/test/content/proof";
 import {
   TEST_RELEASE_ID,

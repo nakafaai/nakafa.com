@@ -3,13 +3,13 @@ import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
   ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-} from "@repo/backend/convex/auth/deletion/constants";
+} from "@repo/backend/confect/auth/deletion/constants";
 import {
   accountDeletionAttemptStatus,
   accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
-} from "@repo/backend/convex/auth/deletion/spec";
+} from "@repo/backend/confect/auth/deletion/spec";
 import { Effect } from "effect";
 import { authClient } from "@/lib/auth/client";
 import { deleteCurrentAccount } from "@/lib/auth/deletion/delete";

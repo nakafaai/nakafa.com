@@ -1,7 +1,7 @@
 "use client";
 
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
-import type { TryoutStartAccess } from "@repo/backend/convex/tryouts/start/spec";
+import type { TryoutStartAccess } from "@repo/backend/confect/tryouts/start/spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";

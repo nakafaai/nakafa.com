@@ -1,7 +1,7 @@
 "use client";
 
-import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/score";
-import type { TryoutStatus as TryoutStatusValue } from "@repo/backend/convex/tryouts/status";
+import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
+import type { TryoutStatus as TryoutStatusValue } from "@repo/backend/confect/tryouts/status";
 import type { ReactNode } from "react";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
 import { TryoutScoreStatus } from "@/components/tryout/score/status";

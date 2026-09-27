@@ -19,7 +19,9 @@ function successResponse(
     content: {
       [JSON_CONTENT]: {
         example: OPENAPI_RESPONSE_EXAMPLES[schemaName],
-        schema: { $ref: `#/components/schemas/${schemaName}` },
+        schema: {
+          $ref: `#/components/schemas/${schemaName}`,
+        },
       },
     },
     description,
@@ -31,13 +33,14 @@ function problemResponse(description: string) {
   return {
     content: {
       [PROBLEM_CONTENT]: {
-        schema: { $ref: "#/components/schemas/Problem" },
+        schema: {
+          $ref: "#/components/schemas/Problem",
+        },
       },
     },
     description,
   };
 }
-
 const COMMON_ERRORS = {
   "400": problemResponse("Malformed request parameters."),
   "403": problemResponse("The request did not pass the public edge guard."),
@@ -48,7 +51,6 @@ const COMMON_ERRORS = {
   "500": problemResponse("An unexpected server failure occurred."),
   "503": problemResponse("The signed content service is unavailable."),
 };
-
 const RATE_LIMIT_RESPONSE = {
   ...problemResponse(
     "The client exceeded the bounded application quota. Honor Retry-After and retry with backoff."
@@ -56,12 +58,16 @@ const RATE_LIMIT_RESPONSE = {
   headers: {
     "Retry-After": {
       description: "Required retry delay in seconds.",
-      schema: { type: "string" },
+      schema: {
+        type: "string",
+      },
     },
   },
 };
-
-const METERED_RESPONSES = { ...COMMON_ERRORS, "429": RATE_LIMIT_RESPONSE };
+const METERED_RESPONSES = {
+  ...COMMON_ERRORS,
+  "429": RATE_LIMIT_RESPONSE,
+};
 
 /** Adds the contract shared by read-only API operations. */
 function readOperation(input: {
@@ -81,7 +87,6 @@ function readOperation(input: {
     "x-nakafa-read-only": true,
   };
 }
-
 export const OPENAPI_PATHS = {
   "/openapi.json": {
     get: readOperation({
@@ -96,9 +101,15 @@ export const OPENAPI_PATHS = {
               schema: {
                 additionalProperties: true,
                 properties: {
-                  info: { type: "object" },
-                  openapi: { type: "string" },
-                  paths: { type: "object" },
+                  info: {
+                    type: "object",
+                  },
+                  openapi: {
+                    type: "string",
+                  },
+                  paths: {
+                    type: "object",
+                  },
                 },
                 required: ["openapi", "info", "paths"],
                 type: "object",
@@ -112,7 +123,9 @@ export const OPENAPI_PATHS = {
           headers: {
             ETag: {
               description: "Validator for the exact serialized contract.",
-              schema: { type: "string" },
+              schema: {
+                type: "string",
+              },
             },
           },
         },

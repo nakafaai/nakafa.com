@@ -1,9 +1,9 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
+import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
 import { findTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import type { ActiveContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
-import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
-import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import { Effect, Option } from "effect";
 
 /** Resolves one exact public try-out entry from its active signed hierarchy. */
@@ -30,7 +30,11 @@ export const readTryoutReference = Effect.fn(
   return buildContentSearchDocument({
     ...row.graph,
     contentHash: stored.rowHash,
-    ...(row.description === undefined ? {} : { description: row.description }),
+    ...(row.description === undefined
+      ? {}
+      : {
+          description: row.description,
+        }),
     hasMarkdownSource: false,
     locale: input.publicLocale,
     route: row.publicPath,

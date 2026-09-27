@@ -19,9 +19,10 @@ export function createNakafaMcpServer(ctx: ActionCtx, requestId: string) {
       title: "Nakafa",
       version: NAKAFA_MCP_SERVER_VERSION,
     },
-    { instructions: SERVER_INSTRUCTIONS }
+    {
+      instructions: SERVER_INSTRUCTIONS,
+    }
   );
-
   registerNakafaMcpTools(server, ctx, requestId);
   registerNakafaMcpResources(server, ctx);
   registerNakafaMcpPrompts(server);

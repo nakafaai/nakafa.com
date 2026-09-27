@@ -5,8 +5,8 @@ import {
   PartyIcon,
   Settings01Icon,
 } from "@hugeicons/core-free-icons";
+import { products } from "@repo/backend/confect/utils/polar/products";
 import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import {

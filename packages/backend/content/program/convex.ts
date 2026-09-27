@@ -1,3 +1,5 @@
+import { DatabaseReader } from "@confect/server";
+import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { convexMaterialLayer } from "@repo/backend/content/material/convex";
 import {
   decodeProgramPosition,
@@ -13,134 +15,145 @@ export const convexProgramLayer = (ctx: QueryCtx) =>
   Layer.merge(
     convexMaterialLayer(ctx),
     Layer.succeed(ProgramSource, {
-      program: Effect.fn("program.convex.identity")((snapshotId, programKey) =>
-        Effect.promise(() =>
-          ctx.db
-            .query("programCatalog")
-            .withIndex("by_snapshotId_and_programKey", (index) =>
-              index.eq("snapshotId", snapshotId).eq("programKey", programKey)
-            )
-            .unique()
-        ).pipe(Effect.map(Option.fromNullishOr))
+      program: Effect.fn("program.convex.identity")(
+        function* (snapshotId, programKey) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
+          return yield* database
+            .table("programCatalog")
+            .get("by_snapshotId_and_programKey", snapshotId, programKey)
+            .pipe(
+              Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+              Effect.orDie,
+              Effect.map(Option.fromNullishOr)
+            );
+        }
       ),
-      programs: Effect.fn("program.convex.catalog")((snapshotId, limit) =>
-        Effect.promise(() =>
-          ctx.db
-            .query("programCatalog")
-            .withIndex(
-              "by_snapshotId_and_displayOrder_and_programKey",
-              (index) => index.eq("snapshotId", snapshotId)
+      programs: Effect.fn("program.convex.catalog")(
+        function* (snapshotId, limit) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
+          return yield* database
+            .table("programCatalog")
+            .index("by_snapshotId_and_displayOrder_and_programKey", (index) =>
+              index.eq("snapshotId", snapshotId)
             )
             .take(limit)
-        )
+            .pipe(Effect.orDie);
+        }
       ),
       subjects: Effect.fn("program.convex.subjects")(
-        (snapshotId, appLocale, limit) =>
-          Effect.promise(() =>
-            ctx.db
-              .query("curriculumRoutes")
-              .withIndex(
-                "by_snapshotId_and_appLocale_and_level_and_bucket_and_path",
-                (index) =>
-                  index
-                    .eq("snapshotId", snapshotId)
-                    .eq("appLocale", appLocale)
-                    .eq("level", "subject")
-                    // Signed sitemap routes have a bucket; hidden routes omit it.
-                    .gte("bucket", "")
-              )
-              .take(limit)
-          )
-      ),
-      route: Effect.fn("program.convex.route")(
-        (snapshotId, appLocale, publicPath) =>
-          Effect.promise(() =>
-            ctx.db
-              .query("curriculumRoutes")
-              .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
+        function* (snapshotId, appLocale, limit) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
+          return yield* database
+            .table("curriculumRoutes")
+            .index(
+              "by_snapshotId_and_appLocale_and_level_and_bucket_and_path",
+              (index) =>
                 index
                   .eq("snapshotId", snapshotId)
                   .eq("appLocale", appLocale)
-                  .eq("path", publicPath)
-              )
-              .unique()
-          ).pipe(Effect.map(Option.fromNullishOr))
+                  .eq("level", "subject")
+                  // Signed sitemap routes have a bucket; hidden routes omit it.
+                  .gte("bucket", "")
+            )
+            .take(limit)
+            .pipe(Effect.orDie);
+        }
+      ),
+      route: Effect.fn("program.convex.route")(
+        function* (snapshotId, appLocale, publicPath) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
+          return yield* database
+            .table("curriculumRoutes")
+            .get(
+              "by_snapshotId_and_appLocale_and_path",
+              snapshotId,
+              appLocale,
+              publicPath
+            )
+            .pipe(
+              Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+              Effect.orDie,
+              Effect.map(Option.fromNullishOr)
+            );
+        }
       ),
       node: Effect.fn("program.convex.node")(
-        (snapshotId, appLocale, programKey, nodeKey) =>
-          Effect.promise(() =>
-            ctx.db
-              .query("curriculumRoutes")
-              .withIndex(
-                "by_snapshotId_and_appLocale_and_programKey_and_nodeKey",
-                (index) =>
-                  index
-                    .eq("snapshotId", snapshotId)
-                    .eq("appLocale", appLocale)
-                    .eq("programKey", programKey)
-                    .eq("nodeKey", nodeKey)
-              )
-              .unique()
-          ).pipe(Effect.map(Option.fromNullishOr))
+        function* (snapshotId, appLocale, programKey, nodeKey) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
+          return yield* database
+            .table("curriculumRoutes")
+            .get(
+              "by_snapshotId_and_appLocale_and_programKey_and_nodeKey",
+              snapshotId,
+              appLocale,
+              programKey,
+              nodeKey
+            )
+            .pipe(
+              Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+              Effect.orDie,
+              Effect.map(Option.fromNullishOr)
+            );
+        }
       ),
       related: Effect.fn("program.convex.related")(
-        (snapshotId, appLocale, relation, publicPath, limit) =>
-          Effect.promise(() =>
+        function* (snapshotId, appLocale, relation, publicPath, limit) {
+          const routes = DatabaseReader.make(databaseSchema, ctx.db).table(
+            "curriculumRoutes"
+          );
+          const query =
             relation === "children"
-              ? ctx.db
-                  .query("curriculumRoutes")
-                  .withIndex(
-                    "by_snapshotId_and_appLocale_and_parentPath_and_order_and_path",
-                    (index) =>
-                      index
-                        .eq("snapshotId", snapshotId)
-                        .eq("appLocale", appLocale)
-                        .eq("parentPath", publicPath)
-                  )
-                  .take(limit)
-              : ctx.db
-                  .query("curriculumRoutes")
-                  .withIndex(
-                    "by_snapshotId_and_appLocale_and_contextPath_and_order_and_path",
-                    (index) =>
-                      index
-                        .eq("snapshotId", snapshotId)
-                        .eq("appLocale", appLocale)
-                        .eq("contextPath", publicPath)
-                  )
-                  .take(limit)
-          )
+              ? routes.index(
+                  "by_snapshotId_and_appLocale_and_parentPath_and_order_and_path",
+                  (index) =>
+                    index
+                      .eq("snapshotId", snapshotId)
+                      .eq("appLocale", appLocale)
+                      .eq("parentPath", publicPath)
+                )
+              : routes.index(
+                  "by_snapshotId_and_appLocale_and_contextPath_and_order_and_path",
+                  (index) =>
+                    index
+                      .eq("snapshotId", snapshotId)
+                      .eq("appLocale", appLocale)
+                      .eq("contextPath", publicPath)
+                );
+          return yield* query.take(limit).pipe(Effect.orDie);
+        }
       ),
       page: Effect.fn("program.convex.page")(
         function* (snapshotId, appLocale, options) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
           if (options.cursor !== null && !isProgramPosition(options.cursor)) {
-            return yield* Effect.promise(() =>
-              ctx.db
-                .query("curriculumRoutes")
-                .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
-                  index.eq("snapshotId", snapshotId).eq("appLocale", appLocale)
-                )
-                .paginate(options)
-            );
+            return yield* database
+              .table("curriculumRoutes")
+              .index("by_snapshotId_and_appLocale_and_path", (index) =>
+                index.eq("snapshotId", snapshotId).eq("appLocale", appLocale)
+              )
+              .paginate(options)
+              .pipe(Effect.orDie);
           }
           const position = yield* decodeProgramPosition(
             options.cursor,
             snapshotId,
             appLocale
           );
-          const stored = yield* Effect.promise(() =>
-            ctx.db
-              .query("curriculumRoutes")
-              .withIndex("by_snapshotId_and_appLocale_and_path", (index) => {
-                const scoped = index
-                  .eq("snapshotId", snapshotId)
-                  .eq("appLocale", appLocale);
-                return position === null
-                  ? scoped
-                  : scoped.gt("path", position[2]);
-              })
-              .paginate({ ...options, cursor: null })
-          );
+          const stored = yield* database
+            .table("curriculumRoutes")
+            .index("by_snapshotId_and_appLocale_and_path", (index) => {
+              const scoped = index
+                .eq("snapshotId", snapshotId)
+                .eq("appLocale", appLocale);
+              return position === null
+                ? scoped
+                : scoped.gt("path", position[2]);
+            })
+            .paginate({
+              ...options,
+              cursor: null,
+            })
+            .pipe(Effect.orDie);
           const last = stored.page.at(-1);
           const split = Predicate.isNullish(stored.splitCursor)
             ? undefined
@@ -150,51 +163,62 @@ export const convexProgramLayer = (ctx: QueryCtx) =>
             continueCursor: last
               ? programPosition(last)
               : (options.cursor ?? ""),
-            ...(split ? { splitCursor: programPosition(split) } : {}),
+            ...(split
+              ? {
+                  splitCursor: programPosition(split),
+                }
+              : {}),
           };
         }
       ),
       partition: Effect.fn("program.convex.partition")(
         function* (snapshotId, appLocale, bucket, limit) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
           const [count, routes] = yield* Effect.all([
-            Effect.promise(() =>
-              ctx.db
-                .query("programBuckets")
-                .withIndex("by_snapshotId_and_appLocale_and_bucket", (index) =>
+            database
+              .table("programBuckets")
+              .get(
+                "by_snapshotId_and_appLocale_and_bucket",
+                snapshotId,
+                appLocale,
+                bucket
+              )
+              .pipe(
+                Effect.catchTag("GetByIndexFailure", () =>
+                  Effect.succeed(null)
+                ),
+                Effect.orDie
+              ),
+            database
+              .table("curriculumRoutes")
+              .index(
+                "by_snapshotId_and_appLocale_and_bucket_and_path",
+                (index) =>
                   index
                     .eq("snapshotId", snapshotId)
                     .eq("appLocale", appLocale)
                     .eq("bucket", bucket)
-                )
-                .unique()
-            ),
-            Effect.promise(() =>
-              ctx.db
-                .query("curriculumRoutes")
-                .withIndex(
-                  "by_snapshotId_and_appLocale_and_bucket_and_path",
-                  (index) =>
-                    index
-                      .eq("snapshotId", snapshotId)
-                      .eq("appLocale", appLocale)
-                      .eq("bucket", bucket)
-                )
-                .take(limit)
-            ),
+              )
+              .take(limit)
+              .pipe(Effect.orDie),
           ]);
-          return { count: Option.fromNullishOr(count), routes };
+          return {
+            count: Option.fromNullishOr(count),
+            routes,
+          };
         }
       ),
       buckets: Effect.fn("program.convex.buckets")(
-        (snapshotId, appLocale, limit) =>
-          Effect.promise(() =>
-            ctx.db
-              .query("programBuckets")
-              .withIndex("by_snapshotId_and_appLocale_and_bucket", (index) =>
-                index.eq("snapshotId", snapshotId).eq("appLocale", appLocale)
-              )
-              .take(limit)
-          )
+        function* (snapshotId, appLocale, limit) {
+          const database = DatabaseReader.make(databaseSchema, ctx.db);
+          return yield* database
+            .table("programBuckets")
+            .index("by_snapshotId_and_appLocale_and_bucket", (index) =>
+              index.eq("snapshotId", snapshotId).eq("appLocale", appLocale)
+            )
+            .take(limit)
+            .pipe(Effect.orDie);
+        }
       ),
     })
   );

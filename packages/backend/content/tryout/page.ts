@@ -9,19 +9,14 @@ import {
   readPublishedTrackPage,
 } from "@repo/backend/content/tryout/published";
 import { readTryoutSetSelection } from "@repo/backend/content/tryout/selection";
-import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
-import { type Infer, v } from "convex/values";
-import { Effect } from "effect";
+import type {
+  tryoutHubArgsValidator,
+  tryoutPageArgsValidator,
+} from "@repo/backend/content/tryout/spec";
+import { Effect, type Schema } from "effect";
 
-export const tryoutHubArgsValidator = v.object({
-  appLocale: appLocaleValidator,
-});
-export const tryoutPageArgsValidator = v.object({
-  ...tryoutHubArgsValidator.fields,
-  publicPath: v.string(),
-});
-type HubInput = Infer<typeof tryoutHubArgsValidator>;
-type PageInput = Infer<typeof tryoutPageArgsValidator>;
+type HubInput = Schema.Schema.Type<typeof tryoutHubArgsValidator>;
+type PageInput = Schema.Schema.Type<typeof tryoutPageArgsValidator>;
 
 /** Reads the complete verified localized country-first hub. */
 export const readTryoutHubPage = Effect.fn("tryouts.readHubPage")(function* (
@@ -29,7 +24,10 @@ export const readTryoutHubPage = Effect.fn("tryouts.readHubPage")(function* (
 ) {
   const catalog = yield* loadTryoutCatalog(input.appLocale);
   const page = yield* readPublishedHubPage(catalog);
-  return { ...page, sourceRevision: catalog.sourceRevision };
+  return {
+    ...page,
+    sourceRevision: catalog.sourceRevision,
+  };
 });
 
 /** Reads one country's exams with the exact publication source revision. */
@@ -37,7 +35,12 @@ export const readTryoutCountryPage = Effect.fn("tryouts.readCountryPage")(
   function* (input: PageInput) {
     const catalog = yield* loadTryoutCatalog(input.appLocale);
     const page = yield* readPublishedCountryPage(catalog, input.publicPath);
-    return page ? { ...page, sourceRevision: catalog.sourceRevision } : null;
+    return page
+      ? {
+          ...page,
+          sourceRevision: catalog.sourceRevision,
+        }
+      : null;
   }
 );
 

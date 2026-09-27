@@ -1,7 +1,7 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
 
 const CATEGORY_POSITION_PREFIX = "article-category|";
@@ -38,17 +38,11 @@ export const decodeCategoryPosition = Effect.fn(
       code: "CONTENT_RELEASE_INTEGRITY",
       message: "Article category cursor has an invalid query position.",
     });
-  if (!isCategoryPosition(cursor)) {
-    return yield* invalid();
-  }
-  const parsed = yield* Effect.try({
-    try: (): unknown =>
-      JSON.parse(cursor.slice(CATEGORY_POSITION_PREFIX.length)),
-    catch: invalid,
-  });
-  const position = yield* Schema.decodeUnknownEffect(CategoryPositionSchema)(
-    parsed
-  ).pipe(Effect.mapError(invalid));
+  const position = yield* Schema.decodeEffect(
+    Schema.fromJsonString(CategoryPositionSchema)
+  )(cursor.slice(CATEGORY_POSITION_PREFIX.length)).pipe(
+    Effect.mapError(invalid)
+  );
   if (position[0] !== slot || position[1] !== appLocale) {
     return yield* invalid();
   }

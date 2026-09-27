@@ -1,0 +1,152 @@
+import { assert, describe, expect, it } from "@effect/vitest";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import {
+  createConvexTestWithBetterAuth,
+  seedAuthenticatedUser,
+} from "@repo/backend/confect/test.helpers";
+import { commentVotesHandler } from "@repo/backend/confect/triggers/comments/commentVotes";
+import { api } from "@repo/backend/convex/_generated/api";
+
+const NOW = Date.UTC(2026, 4, 29, 18, 0, 0);
+describe("triggers/comments/commentVotes", () => {
+  it("ignores in-place updates and missing comments while clamping deleted votes at zero", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(async (ctx) => {
+      const { userId } = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+      });
+      const commentId = await ctx.db.insert("comments", {
+        slug: "/en/articles/politics/votes",
+        userId,
+        text: "Comment without counted votes",
+        upvoteCount: 0,
+        downvoteCount: 0,
+        replyCount: 0,
+      });
+      const id = await ctx.db.insert("commentVotes", {
+        commentId,
+        userId,
+        vote: 1,
+      });
+      const vote = await ctx.db.get("commentVotes", id);
+      assert(vote);
+      await runConvexProgram(
+        commentVotesHandler(ctx, {
+          id,
+          operation: "update",
+          oldDoc: vote,
+          newDoc: {
+            ...vote,
+            vote: -1,
+          },
+        })
+      );
+      await runConvexProgram(
+        commentVotesHandler(ctx, {
+          id,
+          operation: "delete",
+          oldDoc: vote,
+          newDoc: null,
+        })
+      );
+      expect(await ctx.db.get("comments", commentId)).toMatchObject({
+        upvoteCount: 0,
+        downvoteCount: 0,
+      });
+      await ctx.db.delete("comments", commentId);
+      await runConvexProgram(
+        commentVotesHandler(ctx, {
+          id,
+          operation: "insert",
+          oldDoc: null,
+          newDoc: vote,
+        })
+      );
+    });
+  });
+  it("keeps denormalized vote counts in sync through comment mutations", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const users = await t.mutation(async (ctx) => ({
+      author: await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "vote-author",
+      }),
+      voter: await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        sessionToken: "session-vote-voter",
+        suffix: "vote-voter",
+      }),
+    }));
+    const author = t.withIdentity({
+      sessionId: users.author.sessionId,
+      subject: users.author.authUserId,
+    });
+    const voter = t.withIdentity({
+      sessionId: users.voter.sessionId,
+      subject: users.voter.authUserId,
+    });
+    const commentId = await author.mutation(api.comments.mutations.addComment, {
+      slug: "/en/articles/politics/votes",
+      text: "Comment with votes",
+    });
+    await voter.mutation(api.comments.mutations.voteOnComment, {
+      commentId,
+      vote: 1,
+    });
+    const [slugComments, userComments, guestComments] = await Promise.all([
+      voter.query(api.comments.queries.getCommentsBySlug, {
+        paginationOpts: {
+          cursor: null,
+          numItems: 10,
+        },
+        slug: "/en/articles/politics/votes",
+      }),
+      voter.query(api.comments.queries.getCommentsByUserId, {
+        paginationOpts: {
+          cursor: null,
+          numItems: 10,
+        },
+        userId: users.author.userId,
+      }),
+      t.query(api.comments.queries.getCommentsBySlug, {
+        paginationOpts: {
+          cursor: null,
+          numItems: 10,
+        },
+        slug: "/en/articles/politics/votes",
+      }),
+    ]);
+    expect(slugComments.page[0].viewerVote).toBe(1);
+    expect(userComments.page[0].viewerVote).toBe(1);
+    expect(guestComments.page[0].viewerVote).toBeNull();
+    const upvoted = await t.query(async (ctx) =>
+      ctx.db.get("comments", commentId)
+    );
+    expect(upvoted).toMatchObject({
+      downvoteCount: 0,
+      upvoteCount: 1,
+    });
+    await voter.mutation(api.comments.mutations.voteOnComment, {
+      commentId,
+      vote: -1,
+    });
+    const downvoted = await t.query(async (ctx) =>
+      ctx.db.get("comments", commentId)
+    );
+    expect(downvoted).toMatchObject({
+      downvoteCount: 1,
+      upvoteCount: 0,
+    });
+    await voter.mutation(api.comments.mutations.voteOnComment, {
+      commentId,
+      vote: 0,
+    });
+    const removed = await t.query(async (ctx) =>
+      ctx.db.get("comments", commentId)
+    );
+    expect(removed).toMatchObject({
+      downvoteCount: 0,
+      upvoteCount: 0,
+    });
+  });
+});

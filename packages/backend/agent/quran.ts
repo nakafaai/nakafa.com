@@ -7,10 +7,10 @@ import {
   decodePublishedQuranReference,
   type PublishedQuranReference,
 } from "@repo/backend/client/quran/reference";
+import type { QuranReferenceArgs } from "@repo/backend/confect/contentRelease/quran/spec";
 import type { readQuranSurahs } from "@repo/backend/content/quran/catalog";
 import type { readQuranPassage } from "@repo/backend/content/quran/reference";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { QuranReferenceArgs } from "@repo/backend/convex/contentRelease/quran/spec";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/agent/constants";
 import {
   NakafaAgentDataReadError,
@@ -30,11 +30,9 @@ type QuranCatalogReference = FunctionReference<
   Record<string, never>,
   Effect.Success<ReturnType<typeof readQuranSurahs>>
 >;
-
 const quranCatalogReference: QuranCatalogReference = makeFunctionReference(
   "contentRelease/quran:surahs"
 );
-
 const quranPassage = makeFunctionReference<
   "query",
   QuranReferenceArgs,
@@ -61,7 +59,10 @@ export const getNakafaQuranReference = Effect.fn(
     surahNumber: request.surah,
   }).pipe(Effect.mapError(quranReadError));
   const identity = yield* projectReferenceIdentity(reference.search, request);
-  return yield* projectNakafaQuranReference({ ...identity, reference });
+  return yield* projectNakafaQuranReference({
+    ...identity,
+    reference,
+  });
 });
 
 /** Decodes and bounds one request against its signed catalog. */

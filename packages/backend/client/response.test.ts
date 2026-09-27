@@ -160,6 +160,7 @@ describe("Convex runtime responses", () => {
           reason: "transport",
         })
       );
+      expect(result.message).toContain("HTTP statuses: 503.");
       expect(clientState.query).toHaveBeenCalledTimes(3);
       expect(fetchMock).toHaveBeenCalledTimes(3);
       expect(JSON.stringify(result)).not.toContain("private overload");

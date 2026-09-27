@@ -1,0 +1,327 @@
+import { describe, expect, it } from "@effect/vitest";
+import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
+import {
+  ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
+  ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE,
+} from "@repo/backend/confect/auth/deletion/constants";
+import {
+  recoverAccountDeletionProgram,
+  sweepAccountDeletionRecoveryProgram,
+} from "@repo/backend/confect/auth/deletion/recovery";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
+import schema from "@repo/backend/convex/schema";
+import { convexTest } from "convex-test";
+import { Effect } from "effect";
+
+const NOW = Date.UTC(2026, 6, 28, 11, 0, 0);
+const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
+
+describe("auth/deletion/recovery", () => {
+  it.effect("cancels preparation while the auth user still exists", () =>
+    Effect.gen(function* () {
+      const cancel = vi.fn(() => Effect.succeed(false));
+      const finalize = vi.fn(() => Effect.void);
+
+      yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.succeed(true),
+        cancel: Effect.suspend(cancel),
+        continueCommit: Effect.succeed(false),
+        finalize: Effect.suspend(finalize),
+      });
+
+      expect(cancel).toHaveBeenCalledOnce();
+      expect(finalize).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("finalizes preparation after the auth user is gone", () =>
+    Effect.gen(function* () {
+      const cancel = vi.fn(() => Effect.succeed(false));
+      const finalize = vi.fn(() => Effect.void);
+
+      yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.succeed(false),
+        cancel: Effect.suspend(cancel),
+        continueCommit: Effect.succeed(false),
+        finalize: Effect.suspend(finalize),
+      });
+
+      expect(cancel).not.toHaveBeenCalled();
+      expect(finalize).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect("keeps failed recovery typed for the durable sweep to retry", () =>
+    Effect.gen(function* () {
+      const failure = yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.fail(
+          toUserCleanupError(new Error("auth unavailable"))
+        ),
+        cancel: Effect.succeed(false),
+        continueCommit: Effect.succeed(false),
+        finalize: Effect.void,
+      }).pipe(Effect.flip);
+
+      expect(failure).toMatchObject({
+        _tag: "UserCleanupError",
+        code: "USER_CLEANUP_FAILED",
+        message: "Unable to complete account cleanup.",
+        cause: expect.any(Error),
+      });
+    })
+  );
+
+  it.effect("delegates exactly one bounded cancellation batch", () =>
+    Effect.gen(function* () {
+      const cancel = vi.fn(() => Effect.succeed(true));
+
+      yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.succeed(true),
+        cancel: Effect.suspend(cancel),
+        continueCommit: Effect.succeed(false),
+        finalize: Effect.void,
+      });
+
+      expect(cancel).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect("continues a claimed deletion without reopening cancellation", () =>
+    Effect.gen(function* () {
+      const authUserExists = vi.fn(() => Effect.succeed(true));
+      const cancel = vi.fn(() => Effect.succeed(false));
+      const continueCommit = vi.fn(() => Effect.succeed(true));
+      const finalize = vi.fn(() => Effect.void);
+
+      yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.suspend(authUserExists),
+        cancel: Effect.suspend(cancel),
+        continueCommit: Effect.suspend(continueCommit),
+        finalize: Effect.suspend(finalize),
+      });
+
+      expect(continueCommit).toHaveBeenCalledOnce();
+      expect(authUserExists).not.toHaveBeenCalled();
+      expect(cancel).not.toHaveBeenCalled();
+      expect(finalize).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("claims only due preparations before scheduling recovery", () =>
+    Effect.gen(function* () {
+      vi.setSystemTime(NOW);
+      const t = convexTest(schema, convexModules);
+      const seeded = yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const userId = await ctx.db.insert("users", {
+            authId: "due-recovery-owner",
+            credits: 0,
+            creditsResetAt: 0,
+            email: "due-recovery-owner@example.com",
+            name: "Due Recovery Owner",
+            plan: "free",
+          });
+          const dueId = await ctx.db.insert("accountDeletionPreparations", {
+            attemptId: ATTEMPT_ID,
+            authId: "due-recovery-owner",
+            recoveryAt: NOW - 1,
+            recoveryGeneration: 2,
+            userId,
+          });
+          const futureId = await ctx.db.insert("accountDeletionPreparations", {
+            attemptId: "019fa44c-02be-7cd0-a4ed-61a7af8e0621",
+            authId: "future-recovery-owner",
+            recoveryAt: NOW + 1,
+            recoveryGeneration: 0,
+            userId,
+          });
+
+          return { dueId, futureId };
+        })
+      );
+      const scheduleRecovery = vi.fn(() => Effect.void);
+
+      const hasMore = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          runConvexProgram(
+            sweepAccountDeletionRecoveryProgram(ctx, scheduleRecovery)
+          )
+        )
+      );
+      const state = yield* Effect.promise(() =>
+        t.query(async (ctx) => ({
+          due: await ctx.db.get("accountDeletionPreparations", seeded.dueId),
+          future: await ctx.db.get(
+            "accountDeletionPreparations",
+            seeded.futureId
+          ),
+        }))
+      );
+
+      expect(hasMore).toBe(false);
+      expect(state.due).toMatchObject({
+        recoveryAt: NOW + ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
+        recoveryGeneration: 3,
+      });
+      expect(state.future).toMatchObject({
+        recoveryAt: NOW + 1,
+        recoveryGeneration: 0,
+      });
+      expect(scheduleRecovery).toHaveBeenCalledExactlyOnceWith(
+        expect.any(Object),
+        "due-recovery-owner",
+        {
+          attemptId: ATTEMPT_ID,
+          preparationId: seeded.dueId,
+          recoveryGeneration: 3,
+        }
+      );
+    })
+  );
+
+  it.effect("clears an invalid recovery lease without scheduling it", () =>
+    Effect.gen(function* () {
+      vi.setSystemTime(NOW);
+      const t = convexTest(schema, convexModules);
+      const preparationId = yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const userId = await ctx.db.insert("users", {
+            authId: "finalized-recovery-owner",
+            credits: 0,
+            creditsResetAt: 0,
+            email: "finalized-recovery-owner@example.com",
+            name: "Finalized Recovery Owner",
+            plan: "free",
+          });
+
+          return ctx.db.insert("accountDeletionPreparations", {
+            authId: "finalized-recovery-owner",
+            finalizedAt: NOW - 10,
+            recoveryAt: NOW - 1,
+            recoveryGeneration: 0,
+            userId,
+          });
+        })
+      );
+      const scheduleRecovery = vi.fn(() => Effect.void);
+
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          runConvexProgram(
+            sweepAccountDeletionRecoveryProgram(ctx, scheduleRecovery)
+          )
+        )
+      );
+      const preparation = yield* Effect.promise(() =>
+        t.query((ctx) =>
+          ctx.db.get("accountDeletionPreparations", preparationId)
+        )
+      );
+
+      expect(preparation).not.toHaveProperty("recoveryAt");
+      expect(scheduleRecovery).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("rolls back the lease when scheduling fails", () =>
+    Effect.gen(function* () {
+      vi.setSystemTime(NOW);
+      const t = convexTest(schema, convexModules);
+      const preparationId = yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const userId = await ctx.db.insert("users", {
+            authId: "failed-schedule-owner",
+            credits: 0,
+            creditsResetAt: 0,
+            email: "failed-schedule-owner@example.com",
+            name: "Failed Schedule Owner",
+            plan: "free",
+          });
+
+          return ctx.db.insert("accountDeletionPreparations", {
+            attemptId: ATTEMPT_ID,
+            authId: "failed-schedule-owner",
+            recoveryAt: NOW - 1,
+            recoveryGeneration: 0,
+            userId,
+          });
+        })
+      );
+
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation((ctx) =>
+            runConvexProgram(
+              sweepAccountDeletionRecoveryProgram(ctx, () =>
+                Effect.fail(
+                  toUserCleanupError(new Error("scheduler unavailable"))
+                )
+              )
+            )
+          )
+        ).rejects.toHaveProperty("data", {
+          code: "USER_CLEANUP_FAILED",
+          message: "Unable to complete account cleanup.",
+        })
+      );
+
+      const preparation = yield* Effect.promise(() =>
+        t.query((ctx) =>
+          ctx.db.get("accountDeletionPreparations", preparationId)
+        )
+      );
+
+      expect(preparation).toMatchObject({
+        recoveryAt: NOW - 1,
+        recoveryGeneration: 0,
+      });
+    })
+  );
+
+  it.effect("requests another page after one full recovery batch", () =>
+    Effect.gen(function* () {
+      vi.setSystemTime(NOW);
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          for (
+            let index = 0;
+            index < ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE;
+            index += 1
+          ) {
+            const userId = await ctx.db.insert("users", {
+              authId: `batch-recovery-owner-${index}`,
+              credits: 0,
+              creditsResetAt: 0,
+              email: `batch-recovery-owner-${index}@example.com`,
+              name: `Batch Recovery Owner ${index}`,
+              plan: "free",
+            });
+            await ctx.db.insert("accountDeletionPreparations", {
+              attemptId: ATTEMPT_ID,
+              authId: `batch-recovery-owner-${index}`,
+              recoveryAt: NOW - 1,
+              recoveryGeneration: 0,
+              userId,
+            });
+          }
+        })
+      );
+      const scheduleRecovery = vi.fn(() => Effect.void);
+
+      const hasMore = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          runConvexProgram(
+            sweepAccountDeletionRecoveryProgram(ctx, scheduleRecovery)
+          )
+        )
+      );
+
+      expect(hasMore).toBe(true);
+      expect(scheduleRecovery).toHaveBeenCalledTimes(
+        ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE
+      );
+    })
+  );
+});

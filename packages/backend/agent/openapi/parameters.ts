@@ -21,15 +21,22 @@ function queryParameter(input: ParameterInput) {
   return {
     description: input.description,
     example: input.example,
-    ...(input.explode === undefined ? {} : { explode: input.explode }),
+    ...(input.explode === undefined
+      ? {}
+      : {
+          explode: input.explode,
+        }),
     in: "query",
     name: input.name,
     required: input.required ?? false,
     schema: input.schema,
-    ...(input.style === undefined ? {} : { style: input.style }),
+    ...(input.style === undefined
+      ? {}
+      : {
+          style: input.style,
+        }),
   };
 }
-
 export const SEARCH_PARAMETERS = [
   queryParameter({
     description: "One or more alternate search phrases.",
@@ -64,7 +71,6 @@ export const SEARCH_PARAMETERS = [
     schema: OPENAPI_PARAMETER_SCHEMAS.searchOffset,
   }),
 ];
-
 export const CONTENT_PARAMETERS = [
   queryParameter({
     description:
@@ -75,7 +81,6 @@ export const CONTENT_PARAMETERS = [
     schema: OPENAPI_PARAMETER_SCHEMAS.contentRef,
   }),
 ];
-
 export const TAXONOMY_PARAMETERS = [
   queryParameter({
     description: "Locale for localized taxonomy values.",
@@ -84,7 +89,6 @@ export const TAXONOMY_PARAMETERS = [
     schema: OPENAPI_PARAMETER_SCHEMAS.taxonomyLocale,
   }),
 ];
-
 export const QURAN_PARAMETERS = [
   {
     description: `Surah number from 1 through ${QURAN_SURAH_COUNT}.`,

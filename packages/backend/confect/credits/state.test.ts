@@ -1,0 +1,284 @@
+import { describe, expect, it } from "@effect/vitest";
+import {
+  getCreditResetGrantTransaction,
+  getCurrentCreditResetTimestamp,
+  getEffectiveCreditStateForResetTimestamp,
+  getStoredCreditResetTimestamp,
+  resolveCurrentCreditResetTimestamp,
+  resolveEffectiveCreditState,
+  upsertStoredCreditResetTimestamp,
+} from "@repo/backend/confect/credits/state";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
+import schema from "@repo/backend/convex/schema";
+import { convexTest } from "convex-test";
+
+describe("credit period and balance", () => {
+  it("preserves the previous reset boundary when storage rejects an update", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      runConvexProgram(upsertStoredCreditResetTimestamp(ctx.db, "free", 100))
+    );
+    await expect(
+      t.mutation((ctx) => {
+        vi.spyOn(ctx.db, "replace").mockRejectedValueOnce(
+          new Error("private storage details")
+        );
+        return runConvexProgram(
+          upsertStoredCreditResetTimestamp(ctx.db, "free", 200)
+        );
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "CREDIT_STATE_FAILED",
+        message: "Unable to read or update the credit reset period.",
+      },
+    });
+    expect(
+      await t.query((ctx) =>
+        runConvexProgram(getStoredCreditResetTimestamp(ctx.db, "free"))
+      )
+    ).toBe(100);
+  });
+  it("resolves the current UTC day boundary for free users", () => {
+    const now = Date.UTC(2026, 3, 18, 18, 45, 12);
+    expect(getCurrentCreditResetTimestamp("free", now)).toBe(
+      Date.UTC(2026, 3, 18, 0, 0, 0)
+    );
+  });
+  it("resolves the current UTC month boundary for pro users", () => {
+    const now = Date.UTC(2026, 3, 18, 18, 45, 12);
+    expect(getCurrentCreditResetTimestamp("pro", now)).toBe(
+      Date.UTC(2026, 3, 1, 0, 0, 0)
+    );
+  });
+  it("keeps a balance already inside the current reset window", () => {
+    const resetAt = Date.UTC(2026, 3, 1, 0, 0, 0);
+    expect(
+      getEffectiveCreditStateForResetTimestamp(
+        {
+          credits: 7,
+          creditsResetAt: resetAt,
+          plan: "free",
+        },
+        resetAt
+      )
+    ).toEqual({
+      credits: 7,
+      creditsResetAt: resetAt,
+    });
+  });
+  it("replaces a stale positive balance with the plan grant", () => {
+    expect(
+      getEffectiveCreditStateForResetTimestamp(
+        {
+          credits: 99,
+          creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+          plan: "free",
+        },
+        Date.UTC(2026, 3, 2, 0, 0, 0)
+      )
+    ).toEqual({
+      credits: 10,
+      creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+    });
+  });
+  it("returns null when no stored reset period exists", async () => {
+    const t = convexTest(schema, convexModules);
+    const resetTimestamp = await t.query(
+      async (ctx) =>
+        await runConvexProgram(getStoredCreditResetTimestamp(ctx.db, "free"))
+    );
+    expect(resetTimestamp).toBeNull();
+  });
+  it("inserts a stored reset period when one does not exist", async () => {
+    const t = convexTest(schema, convexModules);
+    const resetAt = Date.UTC(2026, 3, 1, 0, 0, 0);
+    await t.mutation(async (ctx) => {
+      await runConvexProgram(
+        upsertStoredCreditResetTimestamp(ctx.db, "free", resetAt)
+      );
+    });
+    const storedPeriod = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("creditResetPeriods")
+          .withIndex("by_plan", (q) => q.eq("plan", "free"))
+          .unique()
+    );
+    expect(storedPeriod).toMatchObject({
+      plan: "free",
+      resetAt,
+    });
+  });
+  it("does not duplicate a stored reset period when the value is unchanged", async () => {
+    const t = convexTest(schema, convexModules);
+    const resetAt = Date.UTC(2026, 3, 1, 0, 0, 0);
+    await t.mutation(async (ctx) => {
+      await runConvexProgram(
+        upsertStoredCreditResetTimestamp(ctx.db, "free", resetAt)
+      );
+      await runConvexProgram(
+        upsertStoredCreditResetTimestamp(ctx.db, "free", resetAt)
+      );
+    });
+    const periods = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("creditResetPeriods")
+          .withIndex("by_plan", (q) => q.eq("plan", "free"))
+          .collect()
+    );
+    expect(periods).toHaveLength(1);
+    expect(periods[0]?.resetAt).toBe(resetAt);
+  });
+  it("patches a stored reset period when the boundary changes", async () => {
+    const t = convexTest(schema, convexModules);
+    const firstResetAt = Date.UTC(2026, 3, 1, 0, 0, 0);
+    const secondResetAt = Date.UTC(2026, 3, 2, 0, 0, 0);
+    await t.mutation(async (ctx) => {
+      await runConvexProgram(
+        upsertStoredCreditResetTimestamp(ctx.db, "free", firstResetAt)
+      );
+      await runConvexProgram(
+        upsertStoredCreditResetTimestamp(ctx.db, "free", secondResetAt)
+      );
+    });
+    const storedResetAt = await t.query(
+      async (ctx) =>
+        await runConvexProgram(getStoredCreditResetTimestamp(ctx.db, "free"))
+    );
+    expect(storedResetAt).toBe(secondResetAt);
+  });
+  it("returns the stored boundary when it is already current", async () => {
+    const t = convexTest(schema, convexModules);
+    const now = Date.UTC(2026, 3, 2, 10, 0, 0);
+    const resetAt = getCurrentCreditResetTimestamp("free", now);
+    await t.mutation(async (ctx) => {
+      await runConvexProgram(
+        upsertStoredCreditResetTimestamp(ctx.db, "free", resetAt)
+      );
+    });
+    const resolvedResetAt = await t.mutation(
+      async (ctx) =>
+        await runConvexProgram(
+          resolveCurrentCreditResetTimestamp(ctx.db, "free", now)
+        )
+    );
+    expect(resolvedResetAt).toBe(resetAt);
+  });
+  it("reconciles a stale stored boundary and returns the current one", async () => {
+    const t = convexTest(schema, convexModules);
+    const staleResetAt = Date.UTC(2026, 3, 1, 0, 0, 0);
+    const now = Date.UTC(2026, 3, 2, 10, 0, 0);
+    const currentResetAt = getCurrentCreditResetTimestamp("free", now);
+    await t.mutation(async (ctx) => {
+      await runConvexProgram(
+        upsertStoredCreditResetTimestamp(ctx.db, "free", staleResetAt)
+      );
+    });
+    const resolvedResetAt = await t.mutation(
+      async (ctx) =>
+        await runConvexProgram(
+          resolveCurrentCreditResetTimestamp(ctx.db, "free", now)
+        )
+    );
+    const storedResetAt = await t.query(
+      async (ctx) =>
+        await runConvexProgram(getStoredCreditResetTimestamp(ctx.db, "free"))
+    );
+    expect(resolvedResetAt).toBe(currentResetAt);
+    expect(storedResetAt).toBe(currentResetAt);
+  });
+  it("resolves effective credits from the reconciled current reset period", async () => {
+    const t = convexTest(schema, convexModules);
+    const staleResetAt = Date.UTC(2026, 3, 1, 0, 0, 0);
+    const now = Date.UTC(2026, 3, 2, 10, 0, 0);
+    const effectiveState = await t.mutation(async (ctx) => {
+      await runConvexProgram(
+        upsertStoredCreditResetTimestamp(ctx.db, "free", staleResetAt)
+      );
+      return await runConvexProgram(
+        resolveEffectiveCreditState(
+          ctx.db,
+          {
+            credits: -3,
+            creditsResetAt: staleResetAt,
+            plan: "free",
+          },
+          now
+        )
+      );
+    });
+    expect(effectiveState).toEqual({
+      credits: 7,
+      creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+    });
+  });
+  it("seeds a missing reset period before resolving effective credits", async () => {
+    const t = convexTest(schema, convexModules);
+    const now = Date.UTC(2026, 3, 2, 10, 0, 0);
+    const effectiveState = await t.mutation(
+      async (ctx) =>
+        await runConvexProgram(
+          resolveEffectiveCreditState(
+            ctx.db,
+            {
+              credits: -3,
+              creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+              plan: "free",
+            },
+            now
+          )
+        )
+    );
+    const storedResetAt = await t.query(
+      async (ctx) =>
+        await runConvexProgram(getStoredCreditResetTimestamp(ctx.db, "free"))
+    );
+    expect(effectiveState).toEqual({
+      credits: 7,
+      creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+    });
+    expect(storedResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
+  });
+  it("returns a grant transaction when a reset window advances", () => {
+    expect(
+      getCreditResetGrantTransaction(
+        {
+          credits: -3,
+          creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+          plan: "free",
+        },
+        {
+          credits: 7,
+          creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+        }
+      )
+    ).toEqual({
+      amount: 10,
+      type: "daily-grant",
+      balanceAfter: 7,
+      metadata: {
+        "previous-balance": -3,
+        "previous-reset-at": Date.UTC(2026, 3, 1, 0, 0, 0),
+        "reset-at": Date.UTC(2026, 3, 2, 0, 0, 0),
+      },
+    });
+  });
+  it("returns null when credits are already in the current reset window", () => {
+    expect(
+      getCreditResetGrantTransaction(
+        {
+          credits: 7,
+          creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+          plan: "free",
+        },
+        {
+          credits: 7,
+          creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+        }
+      )
+    ).toBeNull();
+  });
+});

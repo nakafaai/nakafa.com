@@ -1,29 +1,3 @@
-import { deleteForumPendingUpload } from "@repo/backend/convex/classes/forums/attachments/impl";
-import { internalMutation } from "@repo/backend/convex/functions";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { v } from "convex/values";
+import registeredFunctions from "../../../confect/_generated/registeredFunctions/classes/forums/internalMutations";
 
-/**
- * Delete one pending upload if it is still present when its scheduled expiry
- * window elapses.
- */
-export const deleteExpiredPendingUpload = internalMutation({
-  args: {
-    uploadId: vv.id("schoolClassForumPendingUploads"),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const upload = await ctx.db.get(
-      "schoolClassForumPendingUploads",
-      args.uploadId
-    );
-
-    if (!upload) {
-      return null;
-    }
-
-    await runConvexProgram(deleteForumPendingUpload(ctx, upload));
-    return null;
-  },
-});
+export const deleteExpiredPendingUpload = registeredFunctions.deleteExpiredPendingUpload;

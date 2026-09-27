@@ -2,7 +2,6 @@ import { Schema } from "effect";
 
 /** Production deployment identity shared by trusted content boundaries. */
 export const CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT = "dapper-antelope-269";
-
 const ProtectedVercelIdentity = Schema.Struct({
   deployment: Schema.String.check(Schema.isPattern(/^dpl_[A-Za-z0-9]+$/)),
   environment: Schema.Literal("production"),

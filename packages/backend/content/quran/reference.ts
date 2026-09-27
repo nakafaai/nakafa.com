@@ -1,44 +1,20 @@
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { quranSearchIdentity } from "@repo/backend/confect/contentRelease/quran/facts";
+import { validateQuranReference } from "@repo/backend/confect/contentRelease/quran/input";
+import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
+import type { QuranReferenceArgs } from "@repo/backend/confect/contentRelease/quran/spec";
 import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";
 import { readQuranChunks } from "@repo/backend/content/quran/chunks";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import {
-  quranBismillahValidator,
   readQuranBismillah,
   verifyQuranBismillah,
 } from "@repo/backend/content/quran/preface";
 import { readQuranRow } from "@repo/backend/content/quran/row";
 import { readQuranLocaleSources } from "@repo/backend/content/quran/sources";
 import { readQuranSurahRow } from "@repo/backend/content/quran/surah";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
-import { validateQuranReference } from "@repo/backend/convex/contentRelease/quran/input";
-import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
-import {
-  type QuranReferenceArgs,
-  quranReadingSourcesValidator,
-  quranSourceFields,
-  quranTafsirAccessValidator,
-} from "@repo/backend/convex/contentRelease/quran/spec";
-import { v } from "convex/values";
 import { Effect, Struct } from "effect";
-
-const quranPassageFields = {
-  ...quranSourceFields,
-  chunkJson: v.array(v.string()),
-  fromVerse: v.number(),
-  searchJson: v.union(v.string(), v.null()),
-  sources: v.union(quranReadingSourcesValidator, v.null()),
-  surahJson: v.union(v.string(), v.null()),
-  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
-  toVerse: v.number(),
-};
-
-/** Exact bounded Quran passage returned to product and agent readers. */
-export const quranPassageValidator = v.object({
-  ...quranPassageFields,
-  preBismillah: v.union(quranBismillahValidator, v.null()),
-});
 
 type QuranPassageSourceRequest = Omit<QuranReferenceArgs, "appLocale"> & {
   readonly expectedSnapshotId: null | string;
@@ -60,7 +36,11 @@ const loadQuranPassageSource = Effect.fn(
     );
   }
   if (owner.snapshotId === null) {
-    return { input, owner, source: null };
+    return {
+      input,
+      owner,
+      source: null,
+    };
   }
   const surah = yield* readQuranSurahRow(owner.snapshotId, input.surahNumber);
   if (surah.payload.numberOfVerses > QURAN_PAGE_VERSE_LIMIT) {
@@ -75,7 +55,13 @@ const loadQuranPassageSource = Effect.fn(
       `Quran surah ${input.surahNumber} ends at verse ${surah.payload.numberOfVerses}.`
     );
   }
-  return { input, owner, source: { surah } };
+  return {
+    input,
+    owner,
+    source: {
+      surah,
+    },
+  };
 });
 
 /** Reads only the immutable chunks covering one validated Quran range. */
@@ -104,7 +90,11 @@ export const loadQuranPassage = Effect.fn("contentRelease.loadQuranPassage")(
   function* (request: QuranPassageSourceRequest) {
     const loaded = yield* loadQuranPassageSource(request);
     if (loaded.source === null || loaded.owner.snapshotId === null) {
-      return { input: loaded.input, owner: loaded.owner, passage: null };
+      return {
+        input: loaded.input,
+        owner: loaded.owner,
+        passage: null,
+      };
     }
     const chunks = yield* readQuranPassageChunks(
       loaded.owner.snapshotId,
@@ -114,7 +104,10 @@ export const loadQuranPassage = Effect.fn("contentRelease.loadQuranPassage")(
     return {
       input: loaded.input,
       owner: loaded.owner,
-      passage: { chunks, surah: loaded.source.surah },
+      passage: {
+        chunks,
+        surah: loaded.source.surah,
+      },
     };
   }
 );
@@ -159,7 +152,9 @@ export const readQuranPassage = Effect.fn("contentRelease.readQuranPassage")(
           QuranSearchRowSchema
         ),
       },
-      { concurrency: "unbounded" }
+      {
+        concurrency: "unbounded",
+      }
     );
     const selectedVerses = loaded.passage.chunks.rows
       .flatMap((chunk) => chunk.verses)
@@ -170,7 +165,6 @@ export const readQuranPassage = Effect.fn("contentRelease.readQuranPassage")(
       );
     const projected = separateQuranRuntimeBismillah(bismillah, selectedVerses);
     yield* verifyQuranBismillah(bismillah, projected.preBismillah);
-
     return {
       ...loaded.owner,
       chunkJson: loaded.passage.chunks.rowJson,

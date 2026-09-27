@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
+import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexQuranLayer } from "@repo/backend/content/quran/convex";
 import { readQuranReference } from "@repo/backend/content/quran/identity";
-import { resolveReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";

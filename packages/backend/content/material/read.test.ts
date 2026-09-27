@@ -3,12 +3,12 @@ import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexMaterialLayer } from "@repo/backend/content/material/convex";
 import { readMaterialModel } from "@repo/backend/content/material/read";
 import { api } from "@repo/backend/convex/_generated/api";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content/runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";

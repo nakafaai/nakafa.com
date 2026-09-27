@@ -1,4 +1,4 @@
-import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/convex/auth/deletion/constants";
+import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/confect/auth/deletion/constants";
 import {
   type AccountDeletionBrowserAttempt,
   type AccountDeletionCancellationOutcome,
@@ -7,7 +7,7 @@ import {
   accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
-} from "@repo/backend/convex/auth/deletion/spec";
+} from "@repo/backend/confect/auth/deletion/spec";
 import { Effect, Result } from "effect";
 import type { AccountDeletionAttemptStorageFailed } from "@/lib/auth/deletion/attempt";
 import {

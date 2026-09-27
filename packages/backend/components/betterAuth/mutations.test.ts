@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { components } from "@repo/backend/convex/_generated/api";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { components } from "@repo/backend/confect/_generated/components";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { Effect } from "effect";
 
 describe("Better Auth component write boundaries", () => {

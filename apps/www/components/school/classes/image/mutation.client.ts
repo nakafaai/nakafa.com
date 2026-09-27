@@ -1,7 +1,7 @@
 "use client";
 
+import type { SchoolClassImage } from "@repo/backend/confect/classes/schema";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
 import type { OptimisticLocalStore } from "convex/browser";
 import { useMutation } from "convex/react";
 import { updateClassImageState } from "@/components/school/classes/image/state";

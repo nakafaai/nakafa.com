@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
+import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
-import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,

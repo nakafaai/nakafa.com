@@ -8,12 +8,14 @@ import {
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
+import type {
+  agentContentSourceValidator,
+  ContentReferenceInput,
+} from "@repo/backend/confect/contentRelease/reference/spec";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
-import type { PublicRuntimeRow } from "@repo/backend/content/publication/public";
+import type { PublicRuntimeRow } from "@repo/backend/content/publication/spec";
 import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { agentContentSourceValidator } from "@repo/backend/convex/contentRelease/reference/agent";
-import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
@@ -29,25 +31,27 @@ import type {
 } from "@repo/contents/agent/schema/ref";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { makeFunctionReference } from "convex/server";
-import type { Infer } from "convex/values";
 import { Effect, Option, Schema } from "effect";
 
 type PublishedRef = NakafaAgentReadableContentRef & {
   readonly section: "articles" | "material";
 };
-
-type AgentContentSource = Infer<typeof agentContentSourceValidator>;
+type AgentContentSource = Schema.Schema.Type<
+  typeof agentContentSourceValidator
+>;
 type QuranContentSource = Extract<
   NonNullable<AgentContentSource>,
-  { readonly kind: "quran" }
+  {
+    readonly kind: "quran";
+  }
 >;
-
 const contentSourceReference = makeFunctionReference<
   "query",
-  { readonly input: ContentReferenceInput },
+  {
+    readonly input: ContentReferenceInput;
+  },
   AgentContentSource
 >("contentRelease/reference/internal:readAgentContent");
-
 const publicRuntimeReference = makeFunctionReference<
   "query",
   {
@@ -55,7 +59,7 @@ const publicRuntimeReference = makeFunctionReference<
     readonly publicPath: string;
   },
   PublicRuntimeRow
->("contentRelease/runtime/public/internal:read");
+>("contentRelease/runtime/publication/internal:read");
 
 /** Resolves and reads one public reference entirely inside Convex. */
 export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
@@ -69,7 +73,9 @@ export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
   const source = yield* readAgentQuery(
     ctx,
     contentSourceReference,
-    { input: lookup.value },
+    {
+      input: lookup.value,
+    },
     "Unable to resolve the Nakafa content reference."
   );
   if (!source) {
@@ -99,7 +105,10 @@ const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
     const row = yield* readAgentQuery(
       ctx,
       publicRuntimeReference,
-      { appLocale, publicPath: ref.route },
+      {
+        appLocale,
+        publicPath: ref.route,
+      },
       "Unable to read signed Nakafa public content."
     );
     const found = yield* decodePublicRuntimeRow(row).pipe(
@@ -130,7 +139,11 @@ const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
       {
         ...ref,
         ...found.projection.graph,
-        ...(description === undefined ? {} : { description }),
+        ...(description === undefined
+          ? {}
+          : {
+              description,
+            }),
         text: [`# ${metadata.title}`, "", body.trim()].join("\n"),
         title: metadata.title,
       },

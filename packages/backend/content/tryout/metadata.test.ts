@@ -1,14 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import {
   readTryoutLocalizedPath,
   readTryoutMetadata,
 } from "@repo/backend/content/tryout/metadata";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,

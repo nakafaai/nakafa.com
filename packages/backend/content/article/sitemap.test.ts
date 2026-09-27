@@ -1,12 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexArticleLayer } from "@repo/backend/content/article/convex";
 import {
   readArticleBuckets,
   readArticleSitemap,
 } from "@repo/backend/content/article/sitemap";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRuntimeArticles,
   testArticleProjection,

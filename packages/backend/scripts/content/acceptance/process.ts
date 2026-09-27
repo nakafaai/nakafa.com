@@ -126,7 +126,7 @@ export const assertLocalPortsFree = Effect.fn(
   yield* reservePort(runtime.site);
 }, Effect.scoped);
 
-/** Owns one local backend until the supplied program finishes, fails, or is interrupted. */
+/** Refreshes Convex bindings and owns the local backend through application acceptance. */
 export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
   function* <A, E, R>(runtime: LocalRuntime, program: Effect.Effect<A, E, R>) {
     // Refuse occupied ports before Convex can reuse or stop any existing backend.
@@ -141,7 +141,7 @@ export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
         "convex",
         "dev",
         "--codegen",
-        "disable",
+        "enable",
         "--typecheck",
         "disable",
         "--tail-logs",

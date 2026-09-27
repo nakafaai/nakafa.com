@@ -52,7 +52,6 @@ export class ConvexRuntimeQueryError extends Schema.TaggedError<ConvexRuntimeQue
     );
   }
 }
-
 function createQueryMessage(
   query: string,
   reason: ConvexRuntimeQueryError["reason"],
@@ -67,7 +66,6 @@ function createQueryMessage(
       : "";
   return `Convex runtime query ${query} failed at the ${reason} boundary.${codeSuffix}${statusSuffix}`;
 }
-
 function createRuntimeQueryError(
   query: string,
   reason: ConvexRuntimeQueryError["reason"],
@@ -81,20 +79,16 @@ function createRuntimeQueryError(
     reason,
   });
 }
-
 function mapQueryFailure(query: string, cause: unknown) {
   if (cause instanceof ConvexTransientResponseError) {
     return createRuntimeQueryError(query, "transport", [], [cause.status]);
   }
-
   if (cause instanceof ConvexTerminalResponseError) {
     return createRuntimeQueryError(query, "client");
   }
-
   if (cause instanceof NetworkRequestError) {
     return createRuntimeQueryError(query, "transport", cause.networkCodes);
   }
-
   const responseNetworkError = createNetworkRequestError(cause);
   if (responseNetworkError.networkCodes.length > 0) {
     return createRuntimeQueryError(
@@ -103,13 +97,11 @@ function mapQueryFailure(query: string, cause: unknown) {
       responseNetworkError.networkCodes
     );
   }
-
   return createRuntimeQueryError(
     query,
     cause instanceof ConvexError ? "query" : "runtime"
   );
 }
-
 function isRetryableQueryError(error: ConvexRuntimeQueryError) {
   return (
     error.reason === "runtime" ||
@@ -138,10 +130,7 @@ export const readConvexRuntimeQuery = Effect.fn("ConvexRuntime.query")(
     query: Query,
     args: FunctionArgs<Query>
   ) {
-    const queryName = yield* Effect.try({
-      catch: () => createRuntimeQueryError("unknown", "client"),
-      try: () => getFunctionName(query),
-    });
+    const queryName = yield* Effect.sync(() => getFunctionName(query));
     const client = yield* Effect.try({
       catch: () => createRuntimeQueryError(queryName, "client"),
       try: () =>

@@ -5,7 +5,6 @@ import type {
 import { Cause, Effect, Schema } from "effect";
 
 type AgentToolError = NakafaAgentDataReadError | NakafaAgentInputError;
-
 const McpToolErrorStructuredContentSchema = Schema.Struct({
   error: Schema.Struct({
     message: Schema.String,
@@ -39,7 +38,9 @@ export function runMcpTool<Output extends Readonly<Record<string, unknown>>>(
             "Unexpected Nakafa MCP tool failure.",
             cause
           ).pipe(
-            Effect.annotateLogs({ requestId }),
+            Effect.annotateLogs({
+              requestId,
+            }),
             Effect.as(
               toMcpToolError("Nakafa MCP could not complete this request.", [
                 `Retry later and include request ID ${requestId} with support.`,
@@ -49,7 +50,12 @@ export function runMcpTool<Output extends Readonly<Record<string, unknown>>>(
         },
         onSuccess: (output) =>
           Effect.succeed({
-            content: [{ text: JSON.stringify(output), type: "text" as const }],
+            content: [
+              {
+                text: JSON.stringify(output),
+                type: "text" as const,
+              },
+            ],
             structuredContent: output,
           }),
       })

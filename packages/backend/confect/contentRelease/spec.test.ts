@@ -1,0 +1,142 @@
+import { describe, expect, it } from "@effect/vitest";
+import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import {
+  ARTICLE_VALIDATION_CLAIM_READ_LIMIT,
+  ARTICLE_VALIDATION_SCAN_LIMIT,
+} from "@repo/backend/confect/contentRelease/article/limits";
+import { CONTENT_BUCKET_SIZE } from "@repo/backend/confect/contentRelease/bucket";
+import {
+  CONTENT_DOCUMENT_LIMIT,
+  READ_MODEL_DOCUMENT_LIMIT,
+  SEARCH_DOCUMENT_LIMIT,
+} from "@repo/backend/confect/contentRelease/document";
+import {
+  PAGE_CATALOG_LIMIT,
+  PAGE_IDENTITY_READ_LIMIT,
+  PAGE_OWNER_READ_LIMIT,
+} from "@repo/backend/confect/contentRelease/page/limits";
+import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
+import {
+  PROGRAM_ANCESTOR_LIMIT,
+  PROGRAM_CATALOG_LIMIT,
+  PROGRAM_MATERIAL_LIMIT,
+  PROGRAM_RELATED_LIMIT,
+} from "@repo/backend/confect/contentRelease/program/limits";
+import {
+  ARTIFACT_PAGE_BYTES,
+  ARTIFACT_PAGE_COUNT,
+  COMPACTION_HEAD_COUNT,
+  COMPACTION_ITEM_COUNT,
+  COMPACTION_PAGE_BYTES,
+  RELEASE_PAGE_LIMIT,
+  TRANSACTION_READ_HEADROOM,
+  TRANSACTION_READ_LIMIT,
+} from "@repo/backend/confect/contentRelease/spec";
+
+describe("contentRelease/spec", () => {
+  it("preserves four MiB around worst-case lifecycle pages", () => {
+    const maximumPageBytes =
+      RELEASE_PAGE_LIMIT *
+      (2 * CONTENT_DOCUMENT_LIMIT + 5 * READ_MODEL_DOCUMENT_LIMIT);
+
+    expect(maximumPageBytes).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("bounds maintenance pages below the transaction read budget", () => {
+    const referenceBytes =
+      3 * CONTENT_DOCUMENT_LIMIT + READ_MODEL_DOCUMENT_LIMIT;
+    const maximumArtifactWork =
+      ARTIFACT_PAGE_BYTES + ARTIFACT_PAGE_COUNT * referenceBytes;
+    const maximumHeadWork =
+      COMPACTION_PAGE_BYTES + COMPACTION_HEAD_COUNT * 2 * referenceBytes;
+    const maximumItemWork =
+      COMPACTION_PAGE_BYTES + COMPACTION_ITEM_COUNT * referenceBytes;
+    const maximumSearchWork =
+      CONTENT_DOCUMENT_LIMIT +
+      PROJECTION_PAGE_LIMIT *
+        (SEARCH_DOCUMENT_LIMIT + 4 * READ_MODEL_DOCUMENT_LIMIT);
+
+    expect(ARTIFACT_PAGE_COUNT * MAX_SIGNED_ARTIFACT_BYTES).toBeLessThan(
+      ARTIFACT_PAGE_BYTES
+    );
+    expect(maximumArtifactWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(maximumHeadWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(maximumItemWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(maximumSearchWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("bounds article partitions by their worst-case verified reads", () => {
+    const maximumArticleWork =
+      CONTENT_BUCKET_SIZE * 6 * READ_MODEL_DOCUMENT_LIMIT;
+
+    expect(maximumArticleWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("bounds final article validation by its page and category reads", () => {
+    const maximumWork =
+      CONTENT_DOCUMENT_LIMIT +
+      (ARTICLE_VALIDATION_SCAN_LIMIT +
+        ARTICLE_VALIDATION_CLAIM_READ_LIMIT +
+        2) *
+        READ_MODEL_DOCUMENT_LIMIT;
+    expect(maximumWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("bounds the complete locale-equivalent Page catalog", () => {
+    const ownerBytes = PAGE_OWNER_READ_LIMIT * CONTENT_DOCUMENT_LIMIT;
+    const localeCount = ACTIVE_APP_LOCALE_CODES.length;
+    const sentinelRows = localeCount;
+    const identityRows =
+      localeCount * PAGE_CATALOG_LIMIT * PAGE_IDENTITY_READ_LIMIT;
+    const maximumPageWork =
+      ownerBytes + (sentinelRows + identityRows) * READ_MODEL_DOCUMENT_LIMIT;
+
+    expect(PAGE_CATALOG_LIMIT).toBeGreaterThan(0);
+    expect(maximumPageWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("bounds complete program reads by document size and row count", () => {
+    const ownerBytes = 3 * CONTENT_DOCUMENT_LIMIT;
+    const maximumCatalogRows = 2 * (PROGRAM_CATALOG_LIMIT + 1);
+    const routeAndProgramRows = 2;
+    const alternateRows = 2;
+    const relationshipRows = 2 * (PROGRAM_RELATED_LIMIT + 1);
+    const groupRows = PROGRAM_RELATED_LIMIT;
+    const materialRows = PROGRAM_MATERIAL_LIMIT + 1;
+    const maximumRouteRows =
+      routeAndProgramRows +
+      alternateRows +
+      PROGRAM_ANCESTOR_LIMIT +
+      relationshipRows +
+      groupRows +
+      materialRows;
+    const maximumCatalogWork =
+      ownerBytes + maximumCatalogRows * READ_MODEL_DOCUMENT_LIMIT;
+    const maximumRouteWork =
+      ownerBytes + maximumRouteRows * READ_MODEL_DOCUMENT_LIMIT;
+
+    expect(maximumCatalogWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(maximumRouteWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+});

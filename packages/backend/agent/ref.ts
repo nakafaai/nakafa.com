@@ -1,4 +1,4 @@
-import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
+import type { ContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/spec";
 import {
   normalizeNakafaContentInput,
   parseNakafaUrlRoute,
@@ -17,12 +17,10 @@ export function getAgentContentReferenceInput(input: string) {
       kind: "content",
     });
   }
-
   const route = parseNakafaUrlRoute(input);
   if (Option.isNone(route)) {
     return Option.none<ContentReferenceInput>();
   }
-
   return Option.some<ContentReferenceInput>({
     appLocale: route.value.locale,
     kind: "route",

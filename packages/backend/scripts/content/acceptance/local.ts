@@ -75,8 +75,11 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
     CONVEX_SITE_URL: runtime.site,
     CONVEX_URL: runtime.query,
     NAKAFA_CONVEX_SITE_URL: runtime.site,
+    NEXT_PUBLIC_APP_URL: localEnvironment.SITE_URL,
     NEXT_PUBLIC_CONVEX_SITE_URL: runtime.site,
     NEXT_PUBLIC_CONVEX_URL: runtime.query,
+    POSTHOG_PROXY_HOST: "https://localhost",
+    SITE_URL: localEnvironment.SITE_URL,
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
       localEnvironment[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],
     [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]:

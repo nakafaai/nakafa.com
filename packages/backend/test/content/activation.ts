@@ -5,8 +5,8 @@ import {
   type SignedContentRelease,
 } from "@nakafa/aksara-contracts/release";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import { encodeRendererJson } from "@repo/backend/confect/contentRelease/wire";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { encodeRendererJson } from "@repo/backend/convex/contentRelease/wire";
 import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,

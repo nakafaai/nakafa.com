@@ -21,7 +21,9 @@ export class QuranInterpretationRequestError extends Data.TaggedError(
 }> {}
 /** Maps an unknown Convex rejection into the Quran client error channel. */
 export function toQuranInterpretationRequestError(cause: unknown) {
-  return new QuranInterpretationRequestError({ cause });
+  return new QuranInterpretationRequestError({
+    cause,
+  });
 }
 /** Returns whether the active signed Quran snapshot superseded this request. */
 export function isQuranSnapshotConflict(error: unknown) {

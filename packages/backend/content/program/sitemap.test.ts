@@ -1,13 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
+import { CONTENT_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/bucket";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexProgramLayer } from "@repo/backend/content/program/convex";
 import {
   readProgramBuckets,
   readProgramSitemap,
 } from "@repo/backend/content/program/sitemap";
-import { CONTENT_BUCKET_LIMIT } from "@repo/backend/convex/contentRelease/bucket";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,

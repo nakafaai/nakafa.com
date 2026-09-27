@@ -23,12 +23,12 @@ import {
   replaceContentSnapshot,
   restoreContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   quranRowFacts,
   quranSearchFacts,
-} from "@repo/backend/convex/contentRelease/quran/facts";
-import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
+} from "@repo/backend/confect/contentRelease/quran/facts";
+import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,

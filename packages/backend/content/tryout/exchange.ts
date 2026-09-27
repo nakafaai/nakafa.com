@@ -4,13 +4,12 @@ import type {
   ProtectedContentRuntimeRequest,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
-
-import type { ProtectedRuntimeBatchRow } from "@repo/backend/content/tryout/protected";
 import {
   decodeArtifactJson,
   decodeRendererJson,
   decodeTryoutRuntimeBundleJson,
-} from "@repo/backend/convex/contentRelease/parse";
+} from "@repo/backend/confect/contentRelease/parse";
+import type { ProtectedRuntimeBatchRow } from "@repo/backend/content/tryout/spec";
 import { Effect, Schema } from "effect";
 export class ProtectedRuntimeReadError extends Schema.TaggedError<ProtectedRuntimeReadError>()(
   "ProtectedRuntimeReadError",
@@ -37,7 +36,9 @@ export const decodeProtectedRuntimeRow = Effect.fn(
             item.sourcePath
           ),
         }),
-      { concurrency: "unbounded" }
+      {
+        concurrency: "unbounded",
+      }
     ),
     decodeTryoutRuntimeBundleJson(row.bundleJson),
     decodeRendererJson(row.rendererJson),

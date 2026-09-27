@@ -7,7 +7,10 @@ export function projectQuranTranslation(
     `[translation note ${number}]`
 ) {
   return {
-    notes: translation.notes.map(({ number, text }) => ({ number, text })),
+    notes: translation.notes.map(({ number, text }) => ({
+      number,
+      text,
+    })),
     text: translation.segments
       .map((segment) =>
         segment.kind === "text"

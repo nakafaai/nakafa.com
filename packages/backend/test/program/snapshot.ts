@@ -34,7 +34,7 @@ import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
+import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
 import type schema from "@repo/backend/convex/schema";
 import {
   TEST_MANIFEST_HASH,

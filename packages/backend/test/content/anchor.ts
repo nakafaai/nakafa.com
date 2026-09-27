@@ -1,6 +1,6 @@
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { makePublicationReceipt } from "@repo/backend/convex/contentRelease/receipt";
 import { insertTestHead } from "@repo/backend/test/content/head";
 import {
   TEST_MANIFEST_HASH,

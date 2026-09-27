@@ -5,8 +5,8 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
+import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import {
   testEmptyManifest,
   testSignedArtifact,

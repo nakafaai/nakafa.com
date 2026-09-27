@@ -1,7 +1,7 @@
 "use client";
 
+import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { api } from "@repo/backend/convex/_generated/api";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth, useConvexConnectionState } from "convex/react";
 import { useState } from "react";

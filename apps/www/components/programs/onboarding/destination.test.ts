@@ -20,18 +20,6 @@ describe("onboarding destination", () => {
     ).toEqual({ href: "/curriculum/singapore-moe", locale: "en" });
   });
 
-  it("opens the localized curriculum index when no default exists", () => {
-    expect(
-      getOnboardingDestination(
-        {
-          destination: { kind: "curriculum-index" },
-          locale: "de",
-        },
-        NO_INTENT
-      )
-    ).toEqual({ href: "/lehrplaene", locale: "de" });
-  });
-
   it("opens the tryout hub for every region", () => {
     expect(
       getOnboardingDestination(

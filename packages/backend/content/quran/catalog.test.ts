@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
+import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { readQuranSurahs } from "@repo/backend/content/quran/catalog";
 import { convexQuranLayer } from "@repo/backend/content/quran/convex";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeQuranSurah } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";

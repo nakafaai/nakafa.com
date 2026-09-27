@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { getNakafaContent } from "@repo/backend/agent/content";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
@@ -117,7 +117,7 @@ describe("agent/content", () => {
       }
     );
     const row = await test.query(
-      internal.contentRelease.runtime.public.internal.read,
+      internal.contentRelease.runtime.publication.internal.read,
       { appLocale: "en", publicPath: second.publicPath }
     );
     await test.action(async (ctx) => {
@@ -155,7 +155,7 @@ describe("agent/content", () => {
     const material = makeMaterialProjection("en", 1);
     await activateMaterialCatalog(materials, [material], ["en"]);
     const row = await materials.query(
-      internal.contentRelease.runtime.public.internal.read,
+      internal.contentRelease.runtime.publication.internal.read,
       { appLocale: "en", publicPath: material.publicPath }
     );
     await test.action(async (ctx) => {

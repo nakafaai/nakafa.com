@@ -1,0 +1,136 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import {
+  loadRelease,
+  loadState,
+} from "@repo/backend/confect/contentRelease/model";
+import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
+import {
+  completedAnchor,
+  completedReceipt,
+  stagedEvidence,
+} from "@repo/backend/confect/contentRelease/receipt";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { Effect } from "effect";
+
+/**
+ * Loads one completed base anchor and returns its immutable sequence.
+ *
+ * The base is published history that a later release only extends, so it is
+ * proven from the identity, sequence, and completion facts the release row
+ * already stores. Decoding its signed payload here would make every read depend
+ * on the contract generation that produced the base, which strands an
+ * environment as soon as that generation retires an encoding.
+ *
+ * The signed manifest binds the base release identity to its manifest hash, so
+ * an absent base release is the only genesis shape this anchor can receive.
+ */
+const loadBase = Effect.fn("contentRelease.loadSnapshotBase")(function* (
+  ctx: QueryCtx,
+  releaseId: null | string,
+  manifestHash: null | string,
+  expectedSequence?: number
+) {
+  if (releaseId === null) {
+    return 0;
+  }
+  const release = yield* loadRelease(ctx, releaseId);
+  if (
+    release.status !== "completed" ||
+    release.manifestHash !== manifestHash ||
+    (expectedSequence !== undefined && release.sequence !== expectedSequence)
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Content snapshot base ${releaseId} is not exact and completed.`
+    );
+  }
+  yield* completedAnchor(release);
+  return release.sequence;
+});
+
+/** Checks whether a candidate extends the exact current active identity. */
+function hasExactBase(
+  active: {
+    readonly manifestHash: string | undefined;
+    readonly releaseId: string | undefined;
+    readonly sequence: number | undefined;
+  },
+  base: {
+    readonly manifestHash: null | string;
+    readonly releaseId: null | string;
+  }
+) {
+  if (base.releaseId === null) {
+    return (
+      base.manifestHash === null &&
+      active.releaseId === undefined &&
+      active.manifestHash === undefined &&
+      active.sequence === undefined
+    );
+  }
+  return (
+    base.manifestHash !== null &&
+    active.releaseId === base.releaseId &&
+    active.manifestHash === base.manifestHash &&
+    active.sequence !== undefined
+  );
+}
+
+/** Loads one exact active or verified-candidate immutable snapshot. */
+export const loadReadableSnapshot = Effect.fn(
+  "contentRelease.loadReadableSnapshot"
+)(function* (ctx: QueryCtx, releaseId: string, manifestHash: string) {
+  const state = yield* loadState(ctx);
+  if (!state) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      `Release ${releaseId} has no publication snapshot.`
+    );
+  }
+  const release = yield* loadRelease(ctx, releaseId);
+  const signed = yield* decodeReleaseJson(release.releaseJson);
+  const isActive =
+    state.activeReleaseId === releaseId &&
+    state.activeManifestHash === manifestHash &&
+    state.activeSequence === release.sequence &&
+    release.status === "completed";
+  const isCandidate =
+    state.candidateReleaseId === releaseId &&
+    state.candidateManifestHash === manifestHash &&
+    state.candidateSequence === release.sequence &&
+    release.role === "candidate" &&
+    release.status === "verified" &&
+    hasExactBase(
+      {
+        manifestHash: state.activeManifestHash,
+        releaseId: state.activeReleaseId,
+        sequence: state.activeSequence,
+      },
+      {
+        manifestHash: signed.manifest.baseManifestHash,
+        releaseId: signed.manifest.baseReleaseId,
+      }
+    );
+  if (signed.manifestHash !== manifestHash || !(isActive || isCandidate)) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      `Release ${releaseId} is not an exact readable snapshot.`
+    );
+  }
+  if (isActive) {
+    yield* completedReceipt(release, signed);
+  } else {
+    yield* stagedEvidence(release, signed);
+  }
+  const baseSequence = yield* loadBase(
+    ctx,
+    signed.manifest.baseReleaseId,
+    signed.manifest.baseManifestHash,
+    isCandidate ? state.activeSequence : undefined
+  );
+  return {
+    baseSequence,
+    release,
+    signed,
+  };
+});

@@ -1,11 +1,11 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
+import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
+import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
-import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
-import type { ActiveContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/input";
-import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import { Effect, Option } from "effect";
 
 /** Reads one exact active material through its authenticated catalog row. */
@@ -52,7 +52,9 @@ export const readMaterialReference = Effect.fn(
     contentHash: resolved.projectionHash,
     ...(projection.metadata.description === undefined
       ? {}
-      : { description: projection.metadata.description }),
+      : {
+          description: projection.metadata.description,
+        }),
     hasMarkdownSource: true,
     locale: input.publicLocale,
     route: projection.publicPath,

@@ -3,6 +3,8 @@ import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { convexTryoutLayer } from "@repo/backend/content/tryout/convex";
 import {
@@ -15,9 +17,7 @@ import {
   readPublishedSectionPageFromIndex,
   readPublishedSetPageFromIndex,
 } from "@repo/backend/content/tryout/published";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   makeTryoutStartHierarchy,

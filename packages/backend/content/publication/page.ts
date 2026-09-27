@@ -1,11 +1,11 @@
 import type { ActiveAppLocale } from "@nakafa/aksara-contracts/locale";
 import { compareCodeUnits } from "@nakafa/aksara-contracts/text/order";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { PAGE_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/page/limits";
+import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { PublicationSource } from "@repo/backend/content/publication/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { PAGE_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/page/limits";
-import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import { Array as Arr, Effect } from "effect";
 
 interface PageCatalogRow {
@@ -29,7 +29,6 @@ const readLocalePages = Effect.fn("contentRelease.readLocalePages")(function* (
       `Public page catalog for ${appLocale} exceeds ${PAGE_CATALOG_LIMIT} stable identities.`
     );
   }
-
   const projections = yield* Effect.forEach(keys, ({ contentKey }) =>
     resolvePublicProjection(contentKey, appLocale, activeSequence)
   );
@@ -80,7 +79,6 @@ export const readPageCatalog = Effect.fn("contentRelease.readPageCatalog")(
         projectionJson: [],
       };
     }
-
     const catalogs = yield* Effect.forEach(
       active.signed.manifest.activeAppLocales,
       (appLocale) => readLocalePages(active.sequence, appLocale)
@@ -97,7 +95,6 @@ export const readPageCatalog = Effect.fn("contentRelease.readPageCatalog")(
         `Public pages in active release ${active.releaseId} do not have complete locale parity.`
       );
     }
-
     return {
       activeReleaseId: active.releaseId,
       managed: true,

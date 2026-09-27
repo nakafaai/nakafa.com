@@ -5,9 +5,9 @@ import {
   InternetIcon,
   NewsIcon,
 } from "@hugeicons/core-free-icons";
-import { STUDENT_FORUM_TAGS } from "@repo/backend/convex/classes/forums/utils/constants";
-import type { SchoolClassMemberRole } from "@repo/backend/convex/classes/schema";
-import type { SchoolMemberRole } from "@repo/backend/convex/schools/schema";
+import { STUDENT_FORUM_TAGS } from "@repo/backend/confect/classes/forums/constants";
+import type { SchoolClassMemberRole } from "@repo/backend/confect/classes/role";
+import type { SchoolMemberRole } from "@repo/backend/confect/schools/schema";
 
 const tagList = [
   {
@@ -31,7 +31,6 @@ const tagList = [
     value: "resource",
   },
 ] as const;
-
 export type TagValue = (typeof tagList)[number]["value"];
 
 /**

@@ -11,12 +11,12 @@ import {
   inheritContentSnapshots,
   snapshotRowCount,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   INITIAL_MODEL_SLOT,
   type ModelSlot,
-} from "@repo/backend/convex/contentRelease/models/slot";
-import { releaseReachability } from "@repo/backend/convex/contentRelease/reachability";
+} from "@repo/backend/confect/contentRelease/models/slot";
+import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,

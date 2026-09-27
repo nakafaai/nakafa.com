@@ -86,7 +86,7 @@ export declare const api: {
         "query",
         "public",
         { userId: Id<"users"> },
-        null | { image?: string; name: string }
+        { image?: string; name: string } | null
       >;
     };
   };
@@ -3369,7 +3369,7 @@ export declare const api: {
         "query",
         "public",
         { chatId: Id<"chats"> },
-        null | string
+        string | null
       >;
       getOwnChats: FunctionReference<
         "query",
@@ -3407,7 +3407,7 @@ export declare const api: {
         "query",
         "public",
         { chatId: Id<"chats">; messageIdentifier: string },
-        null | {
+        {
           capturedAt: string;
           learning: {
             assetId?: string;
@@ -3436,7 +3436,7 @@ export declare const api: {
             allowPageFetch: boolean;
             evidenceScope: "verified-page" | "general-learning";
           };
-        }
+        } | null
       >;
       loadMessagesPage: FunctionReference<
         "query",
@@ -4719,12 +4719,12 @@ export declare const api: {
                 | "resource";
               title: string;
               updatedAt: number;
-              user: null | {
+              user: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
             }
           >;
           getForums: FunctionReference<
@@ -4769,12 +4769,12 @@ export declare const api: {
                 title: string;
                 unreadCount: number;
                 updatedAt: number;
-                user: null | {
+                user: {
                   _id: Id<"users">;
                   email: string;
-                  image?: null | string;
+                  image?: string | null;
                   name: string;
-                };
+                } | null;
               }>;
               pageStatus?: "SplitRecommended" | "SplitRequired" | null;
               splitCursor?: string | null;
@@ -4794,7 +4794,7 @@ export declare const api: {
                 mimeType: string;
                 name: string;
                 size: number;
-                url: null | string;
+                url: string | null;
               }>;
               body: string;
               classId: Id<"schoolClasses">;
@@ -4813,21 +4813,21 @@ export declare const api: {
               }>;
               replyCount: number;
               replyToBody?: string;
-              replyToUser: null | {
+              replyToUser: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
               replyToUserId?: Id<"users">;
               sequence: number;
               updatedAt: number;
-              user: null | {
+              user: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
             }>
           >;
         };
@@ -4908,23 +4908,23 @@ export declare const api: {
               parentId?: Id<"schoolClassMaterialGroups">;
               publishedAt?: number;
               publishedBy?: Id<"users">;
-              publishedByUser: null | {
+              publishedByUser: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
               scheduledAt?: number;
               scheduledJobId?: Id<"_scheduled_functions">;
               schoolId: Id<"schools">;
               status: "draft" | "published" | "scheduled" | "archived";
               updatedAt: number;
-              user: null | {
+              user: {
                 _id: Id<"users">;
                 email: string;
-                image?: null | string;
+                image?: string | null;
                 name: string;
-              };
+              } | null;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
@@ -5120,7 +5120,7 @@ export declare const api: {
               visibility: "private" | "public";
               year: string;
             };
-            classMembership: null | {
+            classMembership: {
               _creationTime: number;
               _id: Id<"schoolClassMembers">;
               addedBy?: Id<"users">;
@@ -5135,7 +5135,7 @@ export declare const api: {
               teacherRole?: "primary" | "co-teacher" | "assistant";
               updatedAt: number;
               userId: Id<"users">;
-            };
+            } | null;
             kind: "accessible";
             schoolMembership: {
               _creationTime: number;
@@ -5265,7 +5265,7 @@ export declare const api: {
             user: {
               _id: Id<"users">;
               email: string;
-              image?: null | string;
+              image?: string | null;
               name: string;
             };
             userId: Id<"users">;
@@ -5322,22 +5322,22 @@ export declare const api: {
             parentId?: Id<"comments">;
             replyCount: number;
             replyToText?: string;
-            replyToUser: null | {
+            replyToUser: {
               _id: Id<"users">;
-              image?: null | string;
+              image?: string | null;
               name: string;
-            };
+            } | null;
             replyToUserId?: Id<"users">;
             slug: string;
             text: string;
             upvoteCount: number;
-            user: null | {
+            user: {
               _id: Id<"users">;
-              image?: null | string;
+              image?: string | null;
               name: string;
-            };
+            } | null;
             userId: Id<"users">;
-            viewerVote: null | -1 | 1;
+            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -5372,7 +5372,7 @@ export declare const api: {
             text: string;
             upvoteCount: number;
             userId: Id<"users">;
-            viewerVote: null | -1 | 1;
+            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -7452,20 +7452,6 @@ export declare const api: {
   };
   customers: {
     actions: {
-      public: {
-        generateCheckoutLink: FunctionReference<
-          "action",
-          "public",
-          { locale: "en" | "id" | "de"; successUrl: string },
-          { url: string }
-        >;
-        generateCustomerPortalUrl: FunctionReference<
-          "action",
-          "public",
-          {},
-          { url: string }
-        >;
-      };
       sessions: {
         generateCheckoutLink: FunctionReference<
           "action",
@@ -7555,131 +7541,6 @@ export declare const api: {
       >;
     };
   };
-  notifications: {
-    mutations: {
-      setDisabledNotificationTypes: FunctionReference<
-        "mutation",
-        "public",
-        {
-          disabledTypes: Array<
-            | "forum_mention"
-            | "forum_reply"
-            | "forum_reaction"
-            | "post_mention"
-            | "post_reply"
-            | "post_reaction"
-            | "comment_reply"
-            | "comment_mention"
-            | "comment_upvote"
-            | "class_joined"
-            | "class_announcement"
-            | "class_assignment"
-            | "class_removed"
-            | "school_invite"
-            | "school_joined"
-            | "school_role_changed"
-            | "school_removed"
-            | "system"
-          >;
-        },
-        null
-      >;
-      setNotificationEntityMute: FunctionReference<
-        "mutation",
-        "public",
-        {
-          entityId:
-            | Id<"schoolClassForums">
-            | Id<"schoolClassForumPosts">
-            | Id<"schoolClasses">
-            | Id<"schools">
-            | Id<"comments">;
-          entityType:
-            | "schoolClassForums"
-            | "schoolClassForumPosts"
-            | "schoolClasses"
-            | "schools"
-            | "comments"
-            | "system";
-          muted: boolean;
-        },
-        null
-      >;
-      updateNotificationPreferences: FunctionReference<
-        "mutation",
-        "public",
-        { emailDigest: "daily" | "weekly" | "never"; emailEnabled: boolean },
-        null
-      >;
-    };
-    queries: {
-      getNotificationPreferences: FunctionReference<
-        "query",
-        "public",
-        {},
-        {
-          disabledTypes: Array<
-            | "forum_mention"
-            | "forum_reply"
-            | "forum_reaction"
-            | "post_mention"
-            | "post_reply"
-            | "post_reaction"
-            | "comment_reply"
-            | "comment_mention"
-            | "comment_upvote"
-            | "class_joined"
-            | "class_announcement"
-            | "class_assignment"
-            | "class_removed"
-            | "school_invite"
-            | "school_joined"
-            | "school_role_changed"
-            | "school_removed"
-            | "system"
-          >;
-          emailDigest: "daily" | "weekly" | "never";
-          emailEnabled: boolean;
-        }
-      >;
-      listMutedNotificationEntities: FunctionReference<
-        "query",
-        "public",
-        {
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            entityId:
-              | Id<"schoolClassForums">
-              | Id<"schoolClassForumPosts">
-              | Id<"schoolClasses">
-              | Id<"schools">
-              | Id<"comments">;
-            entityType:
-              | "schoolClassForums"
-              | "schoolClassForumPosts"
-              | "schoolClasses"
-              | "schools"
-              | "comments"
-              | "system";
-            mutedAt: number;
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
-    };
-  };
   onboarding: {
     mutations: {
       admit: FunctionReference<
@@ -7723,7 +7584,6 @@ export declare const api: {
         },
         {
           destination:
-            | { kind: "curriculum-index" }
             | { kind: "curriculum-program"; publicSlug: string }
             | { kind: "tryout" };
           locale: "en" | "id" | "de";
@@ -9424,7 +9284,7 @@ export declare const api: {
         {
           credits: number;
           role:
-            null | null | "teacher" | "student" | "parent" | "administrator";
+            "teacher" | "student" | "parent" | "administrator" | null | null;
           userId: Id<"users">;
         }
       >;
@@ -12011,41 +11871,7 @@ export declare const internal: {
       >;
     };
     runtime: {
-      protected: {
-        dispatch: {
-          dispatch: FunctionReference<
-            "action",
-            "internal",
-            { byteLength: number; source: string },
-            { body: string; status: number }
-          >;
-        };
-        internal: {
-          read: FunctionReference<
-            "query",
-            "internal",
-            {
-              bundleHash: string;
-              selectors: Array<{
-                artifactHash: string;
-                contentKey: string;
-                delivery: "authenticated" | "entitled";
-              }>;
-              snapshotId: string;
-            },
-            null | {
-              bundleJson: string;
-              items: Array<{
-                artifactJson: string;
-                delivery: "authenticated" | "entitled";
-                sourcePath: string;
-              }>;
-              rendererJson: string;
-            }
-          >;
-        };
-      };
-      public: {
+      publication: {
         internal: {
           read: FunctionReference<
             "query",
@@ -12083,6 +11909,40 @@ export declare const internal: {
               rendererJson: string;
               sourcePath: string;
             }>
+          >;
+        };
+      };
+      tryout: {
+        dispatch: {
+          dispatch: FunctionReference<
+            "action",
+            "internal",
+            { byteLength: number; source: string },
+            { body: string; status: number }
+          >;
+        };
+        internal: {
+          read: FunctionReference<
+            "query",
+            "internal",
+            {
+              bundleHash: string;
+              selectors: Array<{
+                artifactHash: string;
+                contentKey: string;
+                delivery: "authenticated" | "entitled";
+              }>;
+              snapshotId: string;
+            },
+            null | {
+              bundleJson: string;
+              items: Array<{
+                artifactJson: string;
+                delivery: "authenticated" | "entitled";
+                sourcePath: string;
+              }>;
+              rendererJson: string;
+            }
           >;
         };
       };
@@ -12723,7 +12583,7 @@ export declare const internal: {
           "internal",
           {
             customer: {
-              externalId: null | string;
+              externalId: string | null;
               id: string;
               metadata?: Record<string, string | number | boolean>;
               userId: Id<"users">;
@@ -12739,43 +12599,24 @@ export declare const internal: {
     queries: {
       internal: {
         customer: {
-          getCustomerByPolarId: FunctionReference<
-            "query",
-            "internal",
-            { polarCustomerId: string },
-            null | {
-              _creationTime: number;
-              _id: Id<"customers">;
-              externalId: null | string;
-              id: string;
-              metadata?: Record<string, string | number | boolean>;
-              userId: Id<"users">;
-            }
-          >;
           getCustomerByUserId: FunctionReference<
             "query",
             "internal",
             { userId: Id<"users"> },
-            null | {
+            {
               _creationTime: number;
               _id: Id<"customers">;
-              externalId: null | string;
+              externalId: string | null;
               id: string;
               metadata?: Record<string, string | number | boolean>;
               userId: Id<"users">;
-            }
+            } | null
           >;
           getCustomerDeletionCheckpoint: FunctionReference<
             "query",
             "internal",
             { userId: Id<"users"> },
-            null | string
-          >;
-          hasActiveSubscriptionByCustomerId: FunctionReference<
-            "query",
-            "internal",
-            { customerId: string },
-            boolean
+            string | null
           >;
           resolveWebhookTarget: FunctionReference<
             "query",
@@ -12899,6 +12740,14 @@ export declare const internal: {
       >;
     };
   };
+  storage: {
+    sweep: FunctionReference<
+      "mutation",
+      "internal",
+      { continuation?: { before: number; cursor: string } },
+      { deleted: number; done: boolean; scanned: number }
+    >;
+  };
   subscriptions: {
     mutations: {
       createSubscription: FunctionReference<
@@ -12906,25 +12755,25 @@ export declare const internal: {
         "internal",
         {
           subscription: {
-            amount: null | number;
+            amount: number | null;
             cancelAtPeriodEnd: boolean;
-            checkoutId: null | string;
+            checkoutId: string | null;
             createdAt: string;
-            currency: null | string;
-            currentPeriodEnd: null | string;
+            currency: string | null;
+            currentPeriodEnd: string | null;
             currentPeriodStart: string;
-            customerCancellationComment?: null | string;
-            customerCancellationReason?: null | string;
+            customerCancellationComment?: string | null;
+            customerCancellationReason?: string | null;
             customerId: string;
-            endedAt: null | string;
+            endedAt: string | null;
             id: string;
             metadata: Record<string, string | number | boolean>;
-            modifiedAt: null | string;
+            modifiedAt: string | null;
             priceId?: string;
             productId: string;
-            recurringInterval: null | "day" | "week" | "month" | "year";
+            recurringInterval: "day" | "week" | "month" | "year" | null;
             schoolId?: string;
-            startedAt: null | string;
+            startedAt: string | null;
             status: string;
           };
         },
@@ -12935,25 +12784,25 @@ export declare const internal: {
         "internal",
         {
           subscription: {
-            amount: null | number;
+            amount: number | null;
             cancelAtPeriodEnd: boolean;
-            checkoutId: null | string;
+            checkoutId: string | null;
             createdAt: string;
-            currency: null | string;
-            currentPeriodEnd: null | string;
+            currency: string | null;
+            currentPeriodEnd: string | null;
             currentPeriodStart: string;
-            customerCancellationComment?: null | string;
-            customerCancellationReason?: null | string;
+            customerCancellationComment?: string | null;
+            customerCancellationReason?: string | null;
             customerId: string;
-            endedAt: null | string;
+            endedAt: string | null;
             id: string;
             metadata: Record<string, string | number | boolean>;
-            modifiedAt: null | string;
+            modifiedAt: string | null;
             priceId?: string;
             productId: string;
-            recurringInterval: null | "day" | "week" | "month" | "year";
+            recurringInterval: "day" | "week" | "month" | "year" | null;
             schoolId?: string;
-            startedAt: null | string;
+            startedAt: string | null;
             status: string;
           };
         },
@@ -12991,12 +12840,6 @@ export declare const internal: {
             classId: Id<"schoolClasses">;
             groupId: Id<"schoolClassMaterialGroups">;
           },
-          null
-        >;
-        cleanupDeletedMaterial: FunctionReference<
-          "mutation",
-          "internal",
-          { materialId: Id<"schoolClassMaterials"> },
           null
         >;
       };
@@ -13071,7 +12914,7 @@ export declare const internal: {
         "query",
         "internal",
         { authId: string },
-        null | {
+        {
           _creationTime: number;
           _id: Id<"users">;
           authId: string;
@@ -13087,13 +12930,13 @@ export declare const internal: {
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
-        }
+        } | null
       >;
       getUserById: FunctionReference<
         "query",
         "internal",
         { userId: Id<"users"> },
-        null | {
+        {
           _creationTime: number;
           _id: Id<"users">;
           authId: string;
@@ -13109,7 +12952,7 @@ export declare const internal: {
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
-        }
+        } | null
       >;
     };
   };

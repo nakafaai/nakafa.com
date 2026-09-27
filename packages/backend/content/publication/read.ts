@@ -1,10 +1,9 @@
-import { PublicationSource } from "@repo/backend/content/publication/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   decodeReleaseJson,
   decodeRendererJson,
-} from "@repo/backend/convex/contentRelease/parse";
-import { v } from "convex/values";
+} from "@repo/backend/confect/contentRelease/parse";
+import { PublicationSource } from "@repo/backend/content/publication/source";
 import { Effect, Option } from "effect";
 
 /** Reads and validates the complete active publication snapshot identity. */
@@ -44,7 +43,6 @@ export const loadActiveIdentity = Effect.fn(
       "Active content release lost its runtime identity."
     );
   }
-
   return {
     manifestHash: state.activeManifestHash,
     release,
@@ -55,16 +53,6 @@ export const loadActiveIdentity = Effect.fn(
     state,
   };
 });
-
-export const activeIdentityValidator = v.union(
-  v.null(),
-  v.object({
-    manifestHash: v.string(),
-    releaseId: v.string(),
-    sequence: v.number(),
-  })
-);
-
 /** Projects the exact active identity for public server consumers. */
 export const readActiveIdentity = Effect.fn(
   "contentRelease.readActiveIdentity"

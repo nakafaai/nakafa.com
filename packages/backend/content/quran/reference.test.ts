@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
+import { runConvexProgram } from "@repo/backend/confect/runtime";
+import { convexModules } from "@repo/backend/confect/test.setup";
 import { convexQuranLayer } from "@repo/backend/content/quran/convex";
 import { readQuranPassage } from "@repo/backend/content/quran/reference";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   makeQuranAttribution,
   makeQuranChunk,

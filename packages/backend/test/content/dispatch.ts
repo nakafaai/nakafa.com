@@ -1,7 +1,7 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { PublicationResponseSchema } from "@nakafa/aksara-contracts/transport/response";
-import { dispatchPublication } from "@repo/backend/convex/contentRelease/ingress/dispatch";
+import { dispatchPublication } from "@repo/backend/confect/contentRelease/ingress/dispatch";
 import type schema from "@repo/backend/convex/schema";
 import {
   ingressArtifact,

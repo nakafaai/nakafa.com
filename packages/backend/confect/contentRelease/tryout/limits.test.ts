@@ -1,0 +1,59 @@
+import { describe, expect, it } from "@effect/vitest";
+import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
+import {
+  TRANSACTION_READ_HEADROOM,
+  TRANSACTION_READ_LIMIT,
+} from "@repo/backend/confect/contentRelease/spec";
+import {
+  TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT,
+  TRYOUT_CATALOG_DOCUMENT_LIMIT,
+  TRYOUT_CATALOG_LIMIT,
+  TRYOUT_PLACEMENT_DOCUMENT_LIMIT,
+  TRYOUT_PROGRESS_DOCUMENT_LIMIT,
+  TRYOUT_PROGRESS_READ_LIMIT,
+  TRYOUT_SECTION_LIMIT,
+  TRYOUT_SET_QUESTION_LIMIT,
+} from "@repo/backend/confect/contentRelease/tryout/limits";
+
+describe("contentRelease/tryout/limits", () => {
+  const ownerBytes = 3 * CONTENT_DOCUMENT_LIMIT;
+
+  it("bounds complete catalog, progress, and section reads", () => {
+    const catalogBytes =
+      ownerBytes +
+      TRYOUT_CATALOG_LIMIT * TRYOUT_CATALOG_DOCUMENT_LIMIT +
+      TRYOUT_PROGRESS_READ_LIMIT * TRYOUT_PROGRESS_DOCUMENT_LIMIT;
+    const catalogOverflowBytes =
+      ownerBytes + (TRYOUT_CATALOG_LIMIT + 1) * TRYOUT_CATALOG_DOCUMENT_LIMIT;
+    const sectionBytes =
+      ownerBytes +
+      TRYOUT_CATALOG_DOCUMENT_LIMIT +
+      TRYOUT_SECTION_LIMIT * TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT;
+
+    expect(catalogBytes).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(catalogOverflowBytes).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(sectionBytes).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("bounds one complete set across its sections and placements", () => {
+    const maximumSetBytes =
+      ownerBytes +
+      TRYOUT_CATALOG_DOCUMENT_LIMIT +
+      TRYOUT_SET_QUESTION_LIMIT *
+        (TRYOUT_CATALOG_DOCUMENT_LIMIT +
+          TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT);
+
+    expect(maximumSetBytes).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(TRYOUT_PLACEMENT_DOCUMENT_LIMIT * 2).toBeLessThanOrEqual(
+      TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT
+    );
+  });
+});

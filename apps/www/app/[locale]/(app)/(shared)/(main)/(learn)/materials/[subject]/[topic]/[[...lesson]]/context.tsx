@@ -1,7 +1,7 @@
 "use client";
 
+import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import {
   MATERIAL_CONTEXT_QUERY_PARAM,
   readMaterialContextHint,

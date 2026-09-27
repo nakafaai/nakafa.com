@@ -1,4 +1,5 @@
-import { authComponent } from "@repo/backend/convex/auth/client";
+import registeredFunctions from "../../confect/_generated/registeredFunctions/auth/lifecycle";
 
-/** Better Auth component trigger callbacks executed in the app data model. */
-export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();
+export const onCreate = registeredFunctions.onCreate;
+export const onDelete = registeredFunctions.onDelete;
+export const onUpdate = registeredFunctions.onUpdate;

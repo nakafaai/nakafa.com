@@ -95,7 +95,10 @@ const readQuranMarkdownPublication = Effect.fn(
   const result = yield* readNakafaRuntimeQuery(
     convexUrl,
     api.contentRelease.quran.prose,
-    { appLocale, surahNumber }
+    {
+      appLocale,
+      surahNumber,
+    }
   );
   return yield* decodePublishedQuranMarkdown(result, {
     appLocale,

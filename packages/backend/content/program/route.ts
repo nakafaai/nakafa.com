@@ -1,3 +1,5 @@
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
 import { readProgramModel } from "@repo/backend/content/program/model";
 import { loadProgramOwner } from "@repo/backend/content/program/owner";
 import { ProgramSource } from "@repo/backend/content/program/source";
@@ -7,8 +9,6 @@ import {
 } from "@repo/backend/content/program/verify";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect, Option } from "effect";
 
 /** Reads one complete curriculum page model from immutable indexed sources. */

@@ -4,10 +4,10 @@ import {
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
 import { Effect, Schema } from "effect";
-
 export type AgentSchema = Schema.ConstraintDecoder<unknown, never>;
-
-const parseOptions = { onExcessProperty: "error" } as const;
+const parseOptions = {
+  onExcessProperty: "error",
+} as const;
 
 /** Decodes untrusted public input through an Effect schema. */
 export function decodeAgentInput<SchemaType extends AgentSchema>(
