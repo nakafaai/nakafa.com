@@ -62,7 +62,8 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
             ctx,
             { threadId: turn.threadId, userId: turn.userId },
             {
-              promptMessageId: turn.promptMessageId,
+              prompt:
+                "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
               abortSignal: signal,
               providerOptions,
               output: Output.object({
