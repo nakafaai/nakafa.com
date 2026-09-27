@@ -38,6 +38,21 @@ model-facing evidence. Context compaction changes provider input only; it does
 not discard the stored transcript. Math uses deterministic computation, Nakafa
 uses authenticated signed content, and research admits retrieved sources.
 
+Convex deployments own `AI_GATEWAY_API_KEY`, `FIRECRAWL_API_KEY`,
+`MATH_CAS_API_KEY`, and `NEXT_PUBLIC_CAS_URL`. The CAS key must match the
+production CAS service, and its URL is `https://cas.nakafa.com`. These are
+backend action configuration, not Next.js environment inputs. Resolve CAS
+configuration before asking the math specialist to generate tool calls, so a
+missing service cannot consume generation tokens or masquerade as checked work.
+Release acceptance must run a real Agent math request and verify the stored
+deterministic artifact, not only the answer's text.
+
+Provider history includes calls only for currently registered capabilities.
+The AI SDK prunes unavailable call/result pairs; validated evidence remains in
+its original turn as compact text. The permanent Agent transcript is unchanged.
+An individual tool failure displays a localized verification notice and does
+not mark a completed answer as failed.
+
 Expected generation failures become typed, stable reason codes. The application
 dictionary owns user-facing copy and recovery guidance. Operational exception
 reports carry bounded routing facts and redacted code frames. Optional product

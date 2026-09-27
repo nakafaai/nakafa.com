@@ -78,29 +78,43 @@ describe("Nina provider context", () => {
       })
   );
 
-  it.effect("keeps foreign SDK results and already projected text intact", () =>
-    Effect.gen(function* () {
-      const messages: ModelMessage[] = [
-        {
-          role: "tool",
-          content: [
-            {
-              type: "tool-result",
-              toolCallId: "foreign",
-              toolName: "foreign",
-              output: { type: "json", value: { result: true } },
-            },
-            {
-              type: "tool-result",
-              toolCallId: "math",
-              toolName: "math",
-              output: { type: "text", value: "2" },
-            },
-          ],
-        },
-      ];
-      expect(yield* boundHistory(messages)).toEqual(messages);
-    })
+  it.effect(
+    "prunes unavailable tools while retaining current tool evidence",
+    () =>
+      Effect.gen(function* () {
+        const messages: ModelMessage[] = [
+          {
+            role: "tool",
+            content: [
+              {
+                type: "tool-result",
+                toolCallId: "foreign",
+                toolName: "foreign",
+                output: { type: "json", value: { result: true } },
+              },
+              {
+                type: "tool-result",
+                toolCallId: "math",
+                toolName: "math",
+                output: { type: "text", value: "2" },
+              },
+            ],
+          },
+        ];
+        expect(yield* boundHistory(messages)).toEqual([
+          {
+            role: "tool",
+            content: [
+              {
+                type: "tool-result",
+                toolCallId: "math",
+                toolName: "math",
+                output: { type: "text", value: "2" },
+              },
+            ],
+          },
+        ]);
+      })
   );
 
   it.effect(
@@ -124,18 +138,53 @@ describe("Nina provider context", () => {
           },
         ]);
         expect(result).toEqual([
+          { role: "assistant", content: "Recorded search evidence" },
+        ]);
+      })
+  );
+
+  it.effect(
+    "removes unavailable call pairs without moving evidence into another turn",
+    () =>
+      Effect.gen(function* () {
+        const messages: ModelMessage[] = [
+          { role: "user", content: "Compute the determinant" },
+          {
+            role: "assistant",
+            content: [
+              {
+                type: "tool-call",
+                toolName: "determinant",
+                toolCallId: "old",
+                input: {},
+              },
+            ],
+          },
           {
             role: "tool",
             content: [
               {
                 type: "tool-result",
-                toolCallId: "search-1",
-                toolName: "search",
-                output: { type: "text", value: "Recorded search evidence" },
+                toolName: "determinant",
+                toolCallId: "old",
+                output: {
+                  type: "json",
+                  value: { text: "Verified determinant: -2", artifacts: [] },
+                },
               },
             ],
           },
+          { role: "assistant", content: "The result is -2" },
+          { role: "user", content: "Explain the result" },
+        ];
+        const before = JSON.stringify(messages);
+        expect(yield* boundHistory(messages)).toEqual([
+          messages[0],
+          { role: "assistant", content: "Verified determinant: -2" },
+          messages[3],
+          messages[4],
         ]);
+        expect(JSON.stringify(messages)).toBe(before);
       })
   );
 

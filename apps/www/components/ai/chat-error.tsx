@@ -34,6 +34,17 @@ export function AiChatPersistedError() {
   );
 }
 
+/** A tool failure does not imply that the entire Agent response failed. */
+export function AiToolError() {
+  const t = useTranslations("Ai");
+  return (
+    <Alert>
+      <HugeIcons icon={Alert02Icon} />
+      <AlertDescription>{t("tool-unavailable")}</AlertDescription>
+    </Alert>
+  );
+}
+
 /** Admission failures and failed turns without an Agent assistant message. */
 export function AiChatError() {
   const t = useTranslations("Ai");
