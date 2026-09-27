@@ -46,7 +46,7 @@ analytics remains subject to account consent.
 ## Verification
 
 Contract tests cover typed failures, credit reservation and settlement,
-idempotency, ownership, uploads, context, and history migration. Agent integration
+idempotency, ownership, uploads, context, and retained conversation history. Agent integration
 tests use the real component with controlled provider models. Local production
 browser acceptance checks optimistic sending, reconnects, attachments, scrolling,
 and stable layout. Provider-backed acceptance verifies the configured Gateway

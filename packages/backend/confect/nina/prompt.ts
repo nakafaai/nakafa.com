@@ -50,7 +50,7 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
       } satisfies ModelMessage,
     };
   }
-  if (!chat?.threadId) {
+  if (!chat) {
     return yield* retryUnavailable();
   }
   const original = yield* (yield* DatabaseReader)
@@ -88,19 +88,20 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     try: () => toModelMessage(originalMessage),
     catch: retryUnavailable,
   });
+  const fileIds = stored.fileIds ?? [];
   if (!(original.page && original.user)) {
     if (!input.page) {
       return yield* retryUnavailable();
     }
     return {
       message,
-      fileIds: stored.fileIds ?? [],
+      fileIds,
       ...(yield* resolveNinaContext(input.page, user, capturedAt, chat._id)),
     };
   }
   return {
     message,
-    fileIds: stored.fileIds ?? [],
+    fileIds,
     page: original.page,
     user: original.user,
   };

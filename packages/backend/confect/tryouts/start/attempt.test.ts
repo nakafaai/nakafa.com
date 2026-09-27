@@ -7,7 +7,6 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import {
   type TryoutAttemptAccessSourceKind,
-  tryoutAttemptAccessSourceKindCompetition,
   tryoutAttemptAccessSourceKindFree,
   tryoutAttemptAccessSourceKindSubscription,
 } from "@repo/backend/confect/tryouts/access/source";
@@ -29,7 +28,6 @@ describe("tryouts/start/attempt", () => {
   it.each([
     tryoutAttemptAccessSourceKindFree,
     tryoutAttemptAccessSourceKindSubscription,
-    tryoutAttemptAccessSourceKindCompetition,
   ] satisfies readonly TryoutAttemptAccessSourceKind[])(
     "keeps the full attempt window after %s attribution expires",
     async (accessSourceKind) => {
@@ -59,8 +57,7 @@ describe("tryouts/start/attempt", () => {
             access: {
               accessEndsAt: NOW + 60_000,
               accessSourceKind,
-              countsForCompetition:
-                accessSourceKind === tryoutAttemptAccessSourceKindCompetition,
+              countsForCompetition: false,
             },
             args,
             attemptNumber: 1,

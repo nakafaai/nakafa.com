@@ -6,7 +6,6 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { deleteMessageBatchFromPoint } from "@repo/backend/confect/chats/transcript/write";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import spec from "@repo/backend/confect/triggers/chats/cleanup.spec";
 import { Duration, Effect, Layer } from "effect";
@@ -25,8 +24,7 @@ const cleanupDeletedChat = FunctionImpl.make(
     for (const turn of turns) {
       yield* writer.table("ninaTurns").delete(turn._id).pipe(Effect.orDie);
     }
-    const deleteResult = yield* deleteMessageBatchFromPoint(args.chatId, 0);
-    if (!deleteResult.hasMore && turns.length < 20) {
+    if (turns.length < 20) {
       return null;
     }
     const scheduler = yield* Scheduler;

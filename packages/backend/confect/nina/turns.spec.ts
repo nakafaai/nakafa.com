@@ -2,10 +2,6 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
-import {
-  ChatTurnError,
-  chatTurnValidator,
-} from "@repo/backend/confect/chats/turns/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
@@ -13,6 +9,10 @@ import {
   NinaPageSchema,
   NinaUserSchema,
 } from "@repo/backend/confect/nina/contract/turn";
+import {
+  NinaCreditError,
+  NinaCreditHold,
+} from "@repo/backend/confect/nina/credits/schema";
 import {
   NinaContextSnapshotSchema,
   NinaContextTransitionSchema,
@@ -126,7 +126,7 @@ export const NinaTurnFacts = Schema.Struct({
 /** Only active generation owns a refundable reservation and verified run context. */
 export const NinaActiveTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
-  ...chatTurnValidator.fields,
+  ...NinaCreditHold.fields,
   phase: Schema.Literal("active"),
   modelId: ModelIdSchema,
   requestId: NinaRequestId,
@@ -166,7 +166,6 @@ export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
       "NINA_BUSY",
       "NINA_RETRY_UNAVAILABLE",
       "NINA_REQUEST_CONFLICT",
-      "NINA_HISTORY_PENDING",
       "NINA_WRITE_FAILED",
       "NINA_CONTEXT_FAILED",
     ]),
@@ -212,7 +211,7 @@ export default GroupSpec.make().addFunction(
       Schema.Union([
         AuthFailure,
         ChatAccessError,
-        ChatTurnError,
+        NinaCreditError,
         NinaTurnError,
         NinaUploadError,
       ]),

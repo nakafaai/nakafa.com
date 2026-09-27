@@ -13,6 +13,7 @@ const page = [
   {
     _creationTime: 1,
     _id: firstId,
+    threadId: "thread-1",
     title: "First",
     type: "study",
     updatedAt: 1,
@@ -22,6 +23,7 @@ const page = [
   {
     _creationTime: 2,
     _id: secondId,
+    threadId: "thread-2",
     title: "Second",
     type: "study",
     updatedAt: 2,

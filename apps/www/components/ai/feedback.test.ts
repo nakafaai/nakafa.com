@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { captureException } from "@repo/analytics/posthog/browser";
-import { ChatTurnError } from "@repo/backend/confect/chats/turns/spec";
+import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
 import { Effect } from "effect";
 import { toast } from "sonner";
 import {
@@ -29,7 +29,7 @@ describe("chat runtime feedback", () => {
     it.effect(`shows ${code} without recording an operational exception`, () =>
       Effect.gen(function* () {
         yield* reportNinaFailure(
-          new ChatTurnError({
+          new NinaCreditError({
             code,
             message: "The request could not be admitted.",
           }),

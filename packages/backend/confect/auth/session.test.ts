@@ -23,8 +23,8 @@ const currentUser = Ref.getFunctionReference(
 const schoolLanding = Ref.getFunctionReference(
   refs.public.schools.queries.getMySchoolLandingState
 );
-const createChat = Ref.getFunctionReference(
-  refs.public.chats.mutations.createChat
+const updateName = Ref.getFunctionReference(
+  refs.public.users.mutations.updateUserName
 );
 const admitOnboarding = Ref.getFunctionReference(
   refs.public.onboarding.mutations.admit
@@ -52,10 +52,7 @@ describe("session-validated app identity", () => {
     expect(await authenticated.query(schoolLanding, {})).toEqual({
       kind: "none",
     });
-    const chatId = await authenticated.mutation(createChat, { type: "study" });
-    expect(await t.query((ctx) => ctx.db.get(chatId))).toMatchObject({
-      userId: identity.userId,
-    });
+    await authenticated.mutation(updateName, { name: "Verified user" });
     expect(await authenticated.mutation(admitOnboarding, {})).toMatchObject({
       isAuthenticated: true,
     });
@@ -80,11 +77,11 @@ describe("session-validated app identity", () => {
         isAuthenticated: false,
       });
       const failure = await caller
-        .mutation(createChat, { type: "study" })
+        .mutation(updateName, { name: "Verified user" })
         .catch((error: unknown) => error);
       assert(Ref.isConvexError(failure));
       const decoded = Ref.decodeErrorOption(
-        refs.public.chats.mutations.createChat,
+        refs.public.users.mutations.updateUserName,
         failure.data
       );
       assert(Option.isSome(decoded));
@@ -117,7 +114,7 @@ describe("session-validated app identity", () => {
     );
     expect(await authenticated.query(currentUser, {})).toBeNull();
     await expect(
-      authenticated.mutation(createChat, { type: "study" })
+      authenticated.mutation(updateName, { name: "Verified user" })
     ).rejects.toMatchObject({
       data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
@@ -182,7 +179,7 @@ describe("session-validated app identity", () => {
       appUser: { _id: identity.userId },
     });
     await expect(
-      authenticated.mutation(createChat, { type: "study" })
+      authenticated.mutation(updateName, { name: "Verified user" })
     ).rejects.toMatchObject({
       data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });

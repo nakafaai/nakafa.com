@@ -3,38 +3,11 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
-import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import spec from "@repo/backend/confect/chats/mutations.spec";
-import {
-  insertParts,
-  rewriteTranscript,
-} from "@repo/backend/confect/chats/transcript/write";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { DEFAULT_TITLE } from "@repo/backend/confect/nina/presentation.spec";
-import { Clock, Effect, Layer, Struct } from "effect";
+import { Effect, Layer } from "effect";
 
-/** Creates a new chat for the authenticated user. */
-const createChat = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "createChat",
-  Effect.fn("chats.mutations.createChat")(function* (args) {
-    const database = yield* DatabaseWriter;
-    const user = yield* requireAuth();
-    const chatId = yield* database
-      .table("chats")
-      .insert({
-        updatedAt: yield* Clock.currentTimeMillis,
-        title: args.title || DEFAULT_TITLE,
-        userId: user.appUser._id,
-        visibility: "private",
-        type: args.type,
-      })
-      .pipe(Effect.orDie);
-    return chatId;
-  })
-);
 const updateChatTitle = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -77,76 +50,6 @@ const updateChatVisibility = FunctionImpl.make(
     return chat._id;
   })
 );
-const saveMessage = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "saveMessage",
-  Effect.fn("chats.mutations.saveMessage")(function* (args) {
-    const database = yield* DatabaseWriter;
-    const { message, parts } = args;
-    const user = yield* requireAuth();
-    const chat = yield* requireChatOwner(message.chatId, user.appUser._id);
-    if (chat.threadId) {
-      return yield* new ChatAccessError({
-        code: "FORBIDDEN",
-        message: "Reload this chat to continue with Nina.",
-      });
-    }
-    yield* rewriteTranscript(message.chatId, message.identifier, "user");
-    const messageId = yield* database
-      .table("messages")
-      .insert({
-        chatId: message.chatId,
-        role: message.role,
-        identifier: message.identifier,
-        ...Struct.pick(message, ["modelId"]),
-        ...Struct.pick(message, ["ninaContextSnapshot"]),
-        ...Struct.pick(message, ["ninaContextTransition"]),
-      })
-      .pipe(Effect.orDie);
-    const partIds = yield* insertParts(messageId, parts);
-    return {
-      messageId,
-      partIds,
-    };
-  })
-);
-const createChatWithMessage = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "createChatWithMessage",
-  Effect.fn("chats.mutations.createChatWithMessage")(function* (args) {
-    const database = yield* DatabaseWriter;
-    const user = yield* requireAuth();
-    const chatId = yield* database
-      .table("chats")
-      .insert({
-        updatedAt: yield* Clock.currentTimeMillis,
-        title: args.title || DEFAULT_TITLE,
-        userId: user.appUser._id,
-        visibility: "private",
-        type: args.type,
-      })
-      .pipe(Effect.orDie);
-    const messageId = yield* database
-      .table("messages")
-      .insert({
-        chatId,
-        role: args.message.role,
-        identifier: args.message.identifier,
-        ...Struct.pick(args.message, ["modelId"]),
-        ...Struct.pick(args.message, ["ninaContextSnapshot"]),
-        ...Struct.pick(args.message, ["ninaContextTransition"]),
-      })
-      .pipe(Effect.orDie);
-    const partIds = yield* insertParts(messageId, args.parts);
-    return {
-      chatId,
-      messageId,
-      partIds,
-    };
-  })
-);
 const deleteChat = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -164,11 +67,8 @@ const deleteChat = FunctionImpl.make(
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(createChat),
   Layer.provide(updateChatTitle),
   Layer.provide(updateChatVisibility),
-  Layer.provide(saveMessage),
-  Layer.provide(createChatWithMessage),
   Layer.provide(deleteChat),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),

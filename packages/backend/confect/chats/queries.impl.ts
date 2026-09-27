@@ -4,11 +4,6 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import spec from "@repo/backend/confect/chats/queries.spec";
-import {
-  hydrateMessagePage,
-  loadPinnedContextMessages,
-} from "@repo/backend/confect/chats/transcript/read";
-import { getMessageByIdentifier } from "@repo/backend/confect/chats/transcript/write";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
 
@@ -177,55 +172,11 @@ const getChatTitle = FunctionImpl.make(
     return chat.title ?? null;
   })
 );
-const getPinnedNinaContextForTurn = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "getPinnedNinaContextForTurn",
-  Effect.fn("chats.queries.getPinnedNinaContextForTurn")(function* (args) {
-    const viewer = yield* getOptionalAppUserForRead();
-    const viewerUserId = viewer?.appUser._id ?? null;
-    yield* readChat(args.chatId, viewerUserId);
-    const existingMessage = yield* getMessageByIdentifier(
-      args.chatId,
-      args.messageIdentifier
-    );
-    const messages = yield* loadPinnedContextMessages(
-      args.chatId,
-      existingMessage?._creationTime
-    );
-    return (
-      messages.find((message) => message.ninaContextSnapshot)
-        ?.ninaContextSnapshot ?? null
-    );
-  })
-);
-const loadMessagesPage = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "loadMessagesPage",
-  Effect.fn("chats.queries.loadMessagesPage")(function* (args) {
-    const database = yield* DatabaseReader;
-    const viewer = yield* getOptionalAppUserForRead();
-    const viewerUserId = viewer?.appUser._id ?? null;
-    yield* readChat(args.chatId, viewerUserId);
-    const page = yield* database
-      .table("messages")
-      .index("by_chatId", (q) => q.eq("chatId", args.chatId), "desc")
-      .paginate(args.paginationOpts)
-      .pipe(Effect.orDie);
-    return {
-      ...page,
-      page: yield* hydrateMessagePage(page.page),
-    };
-  })
-);
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getChat),
   Layer.provide(getChats),
   Layer.provide(getOwnChats),
   Layer.provide(getChatTitle),
-  Layer.provide(getPinnedNinaContextForTurn),
-  Layer.provide(loadMessagesPage),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

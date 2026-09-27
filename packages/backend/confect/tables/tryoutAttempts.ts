@@ -1,4 +1,4 @@
-import { GenericId, Table } from "@confect/core";
+import { Table } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/confect/lib/attempts";
@@ -27,12 +27,6 @@ export default Table.make(() =>
     setKey: tryoutRouteKeyValidator,
     appLocale: appLocaleValidator,
     scaleVersionId: Schema.optionalKey(IdSchema("irtScaleVersions")),
-    accessCampaignId: Schema.optionalKey(
-      GenericId.GenericId("tryoutAccessCampaigns")
-    ),
-    accessGrantId: Schema.optionalKey(
-      GenericId.GenericId("tryoutAccessGrants")
-    ),
     accessSubscriptionId: Schema.optionalKey(Schema.String),
     accessEndsAt: Schema.Finite,
     accessSourceKind: tryoutAttemptAccessSourceKindValidator,

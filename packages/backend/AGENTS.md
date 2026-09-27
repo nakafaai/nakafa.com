@@ -81,7 +81,7 @@ Use the installed Confect v10 source and matching documentation:
 - https://confect.dev/v10/server/plain-convex-functions
 
 Prefer one clear capability token per folder or filename. CamelCase domain
-terms such as `assistantResponses` are acceptable when they name an
+terms such as `contentRelease` are acceptable when they name an
 established concept. `.spec.ts` and `.impl.ts` are Confect-owned conventions.
 Import the owning module directly; do not add facade modules or re-exports.
 

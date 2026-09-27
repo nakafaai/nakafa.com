@@ -41,7 +41,7 @@ function optimisticPrompt(
     const conversation = store.getQuery(refs.public.nina.conversation.get, {
       chatId: args.chatId,
     });
-    if (Option.isNone(conversation) || !conversation.value.chat.threadId) {
+    if (Option.isNone(conversation)) {
       return;
     }
     const threadId = conversation.value.chat.threadId;

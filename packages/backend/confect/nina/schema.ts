@@ -1,7 +1,6 @@
 import { PaginationResult } from "@confect/core";
 import type { UIMessage } from "@convex-dev/agent/react";
 import { vMessageStatus, vStreamMessage } from "@convex-dev/agent/validators";
-import { messageRoleValidator } from "@repo/backend/confect/chats/schema";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/conversation.spec";
 import { Schema } from "effect";
 
@@ -17,7 +16,7 @@ export const AgentMessage = Schema.Struct({
     "streaming",
     ...vMessageStatus.members.map((status) => status.value),
   ]),
-  role: messageRoleValidator,
+  role: Schema.Literals(["user", "assistant", "system"]),
   text: Schema.String,
   parts: Schema.mutable(Schema.Array(Schema.Unknown)),
   metadata: Schema.optional(NinaTurnSummary),

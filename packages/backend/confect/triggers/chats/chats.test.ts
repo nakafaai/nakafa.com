@@ -105,6 +105,20 @@ describe("native Nina deletion lifecycle", () => {
   });
   it("cancels queued generation and removes the Agent journal before late writes can recreate it", async () => {
     const { t, owner, identity, receipt, fileId } = await fixture();
+    await t.mutation(async (ctx) => {
+      for (let order = 1; order <= 25; order += 1) {
+        await ctx.db.insert("ninaTurns", {
+          userId: identity.userId,
+          chatId: receipt.chatId,
+          threadId: receipt.threadId,
+          promptMessageId: receipt.promptMessageId,
+          order,
+          usage: [],
+          phase: "unanswered",
+          state: { status: "unanswered" },
+        });
+      }
+    });
     await owner.mutation(remove, { chatId: receipt.chatId });
     expect(
       Ref.decodeReturnsSync(

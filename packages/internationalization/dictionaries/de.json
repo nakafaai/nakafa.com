@@ -686,7 +686,6 @@
       "busy": "Nina antwortet noch in diesem Chat. Warte auf die Antwort oder stoppe sie, bevor du eine weitere Nachricht sendest.",
       "retry-unavailable": "Diese Nachricht kann nicht erneut verarbeitet werden. Sende deine Frage als neue Nachricht.",
       "request-conflict": "Diese Übermittlung wurde bereits für eine andere Nachricht verwendet. Sende deine Frage als neue Nachricht.",
-      "history": "Dieser ältere Chat kann noch nicht fortgesetzt werden. Dein Verlauf ist weiterhin gespeichert. Starte vorerst einen neuen Chat.",
       "context": "Nina konnte das Lernmaterial für dieses Gespräch nicht laden. Bitte versuche es erneut.",
       "attachment-invalid": "Ein Anhang ist ungültig oder nicht mehr verfügbar. Wähle die Datei erneut aus und prüfe ihren Typ und ihre Größe.",
       "attachment-limit": "Du hast das Limit für Anhänge erreicht. Sende die bereits hochgeladenen Dateien oder warte, bevor du weitere hochlädst.",

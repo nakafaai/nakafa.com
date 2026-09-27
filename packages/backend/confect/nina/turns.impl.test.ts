@@ -250,42 +250,6 @@ describe("native Nina admission", () => {
       owner.mutation(start, { ...args, requestId: "sixth" })
     ).rejects.toMatchObject({ data: { code: "RATE_LIMITED" } });
   });
-  it("protects existing unconverted history and allows an empty chat to start natively", async () => {
-    const f = await fixture();
-    const chatId = await f.t.mutation((ctx) =>
-      ctx.db.insert("chats", {
-        userId: f.identity.userId,
-        type: "study",
-        visibility: "private",
-        updatedAt: NOW,
-      })
-    );
-    await expect(
-      f.owner.mutation(start, {
-        ...args,
-        chatId,
-        input: { kind: "retry", order: 0 },
-      })
-    ).rejects.toMatchObject({ data: { code: "NINA_RETRY_UNAVAILABLE" } });
-    const old = await f.t.mutation((ctx) =>
-      ctx.db.insert("messages", {
-        chatId,
-        identifier: "original",
-        role: "user",
-      })
-    );
-    await expect(
-      f.owner.mutation(start, { ...args, chatId })
-    ).rejects.toMatchObject({ data: { code: "NINA_HISTORY_PENDING" } });
-    await f.t.mutation((ctx) => ctx.db.delete("messages", old));
-    const created = Ref.decodeReturnsSync(
-      refs.public.nina.turns.start,
-      await f.owner.mutation(start, { ...args, chatId })
-    );
-    expect(created.chatId).toBe(chatId);
-    expect(created.prompt.text).toBe(args.input.prompt.text);
-  });
-
   it("rejects retry without a stored conversation before committing a credit hold", async () => {
     const f = await fixture();
     await expect(
@@ -323,6 +287,44 @@ describe("native Nina admission", () => {
       })
     );
     expect(retried.prompt.text).toBe("An owned text-only prompt.");
+  });
+
+  it("retries a saved response without run context only after resolving the current page", async () => {
+    const f = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, args)
+    );
+    await f.owner.mutation(cancel, { chatId: first.chatId });
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("ninaTurns", first.turnId, {
+        page: undefined,
+        user: undefined,
+      })
+    );
+    const retry = {
+      ...args,
+      chatId: first.chatId,
+      requestId: "saved-prompt-retry",
+      input: { kind: "retry", order: first.order },
+    };
+    await expect(f.owner.mutation(start, retry)).rejects.toMatchObject({
+      data: { code: "NINA_RETRY_UNAVAILABLE" },
+    });
+    const retried = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, {
+        ...retry,
+        input: { ...retry.input, page: args.input.page },
+      })
+    );
+    expect(retried.prompt.text).toBe(args.input.prompt.text);
+    expect(vi.mocked(resolveNinaContext)).toHaveBeenLastCalledWith(
+      args.input.page,
+      expect.objectContaining({ _id: f.identity.userId }),
+      new Date(NOW).toISOString(),
+      first.chatId
+    );
   });
 
   it.each(["new", "existing"] as const)(

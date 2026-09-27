@@ -37,17 +37,6 @@ const cleanupAccountHistory = Effect.fn("auth.cleanup.cleanupAccountHistory")(
     if (preferences.length > 0) {
       return true;
     }
-    const turns = yield* database
-      .table("chatTurns")
-      .index("by_userId", (query) => query.eq("userId", userId))
-      .take(SMALL_BATCH_SIZE)
-      .pipe(Effect.orDie);
-    for (const turn of turns) {
-      yield* writer.table("chatTurns").delete(turn._id);
-    }
-    if (turns.length > 0) {
-      return true;
-    }
     const transactions = yield* database
       .table("creditTransactions")
       .index("by_userId", (query) => query.eq("userId", userId))

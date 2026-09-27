@@ -7,7 +7,7 @@ import {
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
-import { refundChatCredits } from "@repo/backend/confect/chats/turns/impl";
+import { refundCredits } from "@repo/backend/confect/nina/credits/ledger";
 import {
   type NinaFailureReason,
   NinaSettledTurn,
@@ -73,7 +73,7 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
         }),
       catch: settlementFailure,
     });
-    yield* refundChatCredits(turn, turn._id);
+    yield* refundCredits(turn, turn._id);
   }
   yield* writer
     .table("creditTransactions")

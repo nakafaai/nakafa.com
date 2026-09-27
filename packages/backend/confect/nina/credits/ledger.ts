@@ -1,19 +1,12 @@
 import { MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
   MutationCtx as MutationCtxService,
-  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
-import {
-  CHAT_TURN_EXPIRY_MS,
-  ChatTurnError,
-  type chatTurnValidator,
-} from "@repo/backend/confect/chats/turns/spec";
 import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
@@ -22,8 +15,11 @@ import {
   getModelCreditCost,
   type ModelId,
 } from "@repo/backend/confect/nina/config/model";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Clock, Duration, Effect, type Schema, Struct } from "effect";
+import {
+  NinaCreditError,
+  type NinaCreditHold,
+} from "@repo/backend/confect/nina/credits/schema";
+import { Clock, Effect, type Schema, Struct } from "effect";
 
 // Admission quota is independent of refundable credits. Five starts may burst;
 // ten per minute permits interactive retries without unbounded hold cycling.
@@ -37,22 +33,22 @@ const chatRateLimiter = new RateLimiter(components.agentRateLimiter, {
 });
 
 /** Atomically hold credits before provider work, using the SDK's transaction. */
-export const reserveChatCredits = Effect.fn("chats.credits.reserve")(
+export const reserveCredits = Effect.fn("nina.credits.reserve")(
   function* (user: Docs["users"], modelId: ModelId) {
     const ctx = yield* MutationCtxService;
     const now = yield* Clock.currentTimeMillis;
     const state = yield* resolveEffectiveCreditState(user, now).pipe(
       Effect.mapError(
         () =>
-          new ChatTurnError({
-            code: "CHAT_TURN_IO_FAILED",
+          new NinaCreditError({
+            code: "NINA_CREDIT_IO_FAILED",
             message: "Unable to resolve chat credits.",
           })
       )
     );
     const credits = getModelCreditCost(modelId);
     if (state.credits < credits) {
-      return yield* new ChatTurnError({
+      return yield* new NinaCreditError({
         code: "INSUFFICIENT_CREDITS",
         message: "Not enough credits to start this response.",
       });
@@ -64,13 +60,13 @@ export const reserveChatCredits = Effect.fn("chats.credits.reserve")(
           key: user._id,
         }),
       catch: () =>
-        new ChatTurnError({
-          code: "CHAT_TURN_IO_FAILED",
+        new NinaCreditError({
+          code: "NINA_CREDIT_IO_FAILED",
           message: "Unable to check chat admission quota.",
         }),
     });
     if (!quota.ok) {
-      return yield* new ChatTurnError({
+      return yield* new NinaCreditError({
         code: "RATE_LIMITED",
         message: "Too many chat requests. Try again shortly.",
       });
@@ -120,78 +116,17 @@ export const reserveChatCredits = Effect.fn("chats.credits.reserve")(
   // expected insufficient-credit, quota, or ownership failures.
   Effect.catchDefect(
     () =>
-      new ChatTurnError({
-        code: "CHAT_TURN_IO_FAILED",
+      new NinaCreditError({
+        code: "NINA_CREDIT_IO_FAILED",
         message: "Unable to reserve chat credits.",
-      })
-  )
-);
-
-/** Holds credit for the deployed HTTP caller until its rollout retires. */
-export const reserveChatTurn = Effect.fn("chats.turns.reserve")(
-  function* (user: Docs["users"], modelId: ModelId) {
-    const reservation = yield* reserveChatCredits(user, modelId);
-    const database = yield* DatabaseWriter;
-    const turnId = yield* database
-      .table("chatTurns")
-      .insert(reservation)
-      .pipe(Effect.orDie);
-    const scheduler = yield* Scheduler;
-    yield* scheduler.runAfter(
-      Duration.millis(CHAT_TURN_EXPIRY_MS),
-      refs.internal.chats.turns.mutations.expire,
-      { turnId }
-    );
-    return turnId;
-  },
-  Effect.catchDefect(
-    () =>
-      new ChatTurnError({
-        code: "CHAT_TURN_IO_FAILED",
-        message: "Unable to reserve chat credits.",
-      })
-  )
-);
-
-/** Resolve an unguessable hold once; browsers cannot enumerate reservations. */
-export const readChatTurn = Effect.fn("chats.turns.read")(
-  function* (
-    turnId: Id<"chatTurns">,
-    userId: Id<"users">,
-    modelId: string | undefined
-  ) {
-    const turn = yield* (yield* DatabaseReader)
-      .table("chatTurns")
-      .get(turnId)
-      .pipe(
-        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
-    if (
-      turn &&
-      (turn.userId !== userId ||
-        (modelId !== undefined && turn.modelId !== modelId))
-    ) {
-      return yield* new ChatTurnError({
-        code: "CHAT_TURN_FORBIDDEN",
-        message: "The chat credit hold does not belong to this response.",
-      });
-    }
-    return turn;
-  },
-  Effect.catchDefect(
-    () =>
-      new ChatTurnError({
-        code: "CHAT_TURN_IO_FAILED",
-        message: "Unable to read the chat credit hold.",
       })
   )
 );
 
 /** Refund a failed or abandoned turn at most once, within its credit period. */
-export const refundChatCredits = Effect.fn("chats.credits.refund")(
+export const refundCredits = Effect.fn("nina.credits.refund")(
   function* (
-    turn: Schema.Schema.Type<typeof chatTurnValidator>,
+    turn: Schema.Schema.Type<typeof NinaCreditHold>,
     reservationId: string
   ) {
     const now = yield* Clock.currentTimeMillis;
@@ -208,8 +143,8 @@ export const refundChatCredits = Effect.fn("chats.credits.refund")(
       const state = yield* resolveEffectiveCreditState(user, now).pipe(
         Effect.mapError(
           () =>
-            new ChatTurnError({
-              code: "CHAT_TURN_IO_FAILED",
+            new NinaCreditError({
+              code: "NINA_CREDIT_IO_FAILED",
               message: "Unable to release chat credits.",
             })
         )
@@ -255,23 +190,8 @@ export const refundChatCredits = Effect.fn("chats.credits.refund")(
   },
   Effect.catchDefect(
     () =>
-      new ChatTurnError({
-        code: "CHAT_TURN_IO_FAILED",
-        message: "Unable to release chat credits.",
-      })
-  )
-);
-
-/** Retires the deployed HTTP reservation after its refundable ledger write. */
-export const refundChatTurn = Effect.fn("chats.turns.refund")(
-  function* (turn: Docs["chatTurns"]) {
-    yield* refundChatCredits(turn, turn._id);
-    yield* (yield* DatabaseWriter).table("chatTurns").delete(turn._id);
-  },
-  Effect.catchDefect(
-    () =>
-      new ChatTurnError({
-        code: "CHAT_TURN_IO_FAILED",
+      new NinaCreditError({
+        code: "NINA_CREDIT_IO_FAILED",
         message: "Unable to release chat credits.",
       })
   )

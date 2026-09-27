@@ -3,16 +3,18 @@ import {
   DatabaseWriter,
   RegisteredConvexFunction,
 } from "@confect/server";
+import { createThread } from "@convex-dev/agent";
 import { describe, expect, it } from "@effect/vitest";
+import { components } from "@repo/backend/confect/_generated/components";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { drainDeletedUserDataProgram } from "@repo/backend/confect/auth/cleanup";
 import { cleanupDeletedUserProgram } from "@repo/backend/confect/auth/cleanup/impl";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
-import { convexModules } from "@repo/backend/confect/test.setup";
+import {
+  createConvexTestWithBetterAuth,
+  seedAnalyticsConsent,
+} from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
-import schema from "@repo/backend/convex/schema";
-import { convexTest } from "convex-test";
 import { Effect, Layer } from "effect";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
@@ -34,7 +36,7 @@ describe("auth/cleanup", () => {
   );
   it.effect("stops after the first cleanup batch that makes progress", () =>
     Effect.gen(function* () {
-      const t = convexTest(schema, convexModules);
+      const t = createConvexTestWithBetterAuth();
       const state = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const userId = await ctx.db.insert("users", {
@@ -103,7 +105,7 @@ describe("auth/cleanup", () => {
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
-        const t = convexTest(schema, convexModules);
+        const t = createConvexTestWithBetterAuth();
         const result = yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const userId = await ctx.db.insert("users", {
@@ -148,38 +150,12 @@ describe("auth/cleanup", () => {
               slug: "material/algebra",
               userId,
             });
-            const chatId = await ctx.db.insert("chats", {
+            await ctx.db.insert("chats", {
+              threadId: await createThread(ctx, components.nina, { userId }),
               type: "study",
               updatedAt: NOW,
               userId,
               visibility: "private",
-            });
-            const messageId = await ctx.db.insert("messages", {
-              chatId,
-              identifier: "user-1",
-              role: "user",
-            });
-            await ctx.db.insert("messageParts", {
-              messageId,
-              order: 0,
-              textText: "Private question",
-              type: "text",
-            });
-            await ctx.db.insert("ninaCapabilityTraces", {
-              capability: "nakafa",
-              chatId,
-              durationMs: 10,
-              endedAt: NOW,
-              evidence: {
-                capability: "nakafa",
-                status: "available",
-                summary: "Found a relevant lesson.",
-              },
-              expiresAt: NOW + 1000,
-              responseMessageIdentifier: "response-1",
-              startedAt: NOW - 10,
-              status: "available",
-              userId,
             });
             await ctx.db.insert("creditTransactions", {
               amount: -1,
@@ -391,16 +367,6 @@ describe("auth/cleanup", () => {
                 .query("learningPreferences")
                 .withIndex("by_userId", (query) => query.eq("userId", userId))
                 .collect(),
-              messageParts: await ctx.db
-                .query("messageParts")
-                .withIndex("by_messageId_and_order", (query) =>
-                  query.eq("messageId", messageId)
-                )
-                .collect(),
-              messages: await ctx.db
-                .query("messages")
-                .withIndex("by_chatId", (query) => query.eq("chatId", chatId))
-                .collect(),
               referencedComment: await ctx.db.get(
                 "comments",
                 referencedCommentId
@@ -413,12 +379,6 @@ describe("auth/cleanup", () => {
                 .query("schoolActivityLogs")
                 .withIndex("by_schoolId", (query) =>
                   query.eq("schoolId", schoolId)
-                )
-                .collect(),
-              traces: await ctx.db
-                .query("ninaCapabilityTraces")
-                .withIndex("by_chatId_and_startedAt", (query) =>
-                  query.eq("chatId", chatId)
                 )
                 .collect(),
               user: await ctx.db.get("users", userId),
@@ -436,8 +396,6 @@ describe("auth/cleanup", () => {
           deletedForumPosts: [],
           deletedForumReactions: [],
           learningPreferences: [],
-          messageParts: [],
-          messages: [],
           referencedComment: expect.objectContaining({
             text: "Reply without retained personal preview",
           }),
@@ -445,7 +403,6 @@ describe("auth/cleanup", () => {
             body: "Retained reply",
           }),
           schoolActivity: [],
-          traces: [],
           user: expect.objectContaining({
             authId: expect.stringMatching(deletedAuthIdPattern),
             credits: 0,

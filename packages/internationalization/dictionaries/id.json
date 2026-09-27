@@ -686,7 +686,6 @@
       "busy": "Nina masih menjawab di chat ini. Tunggu jawabannya selesai atau hentikan sebelum mengirim pesan berikutnya.",
       "retry-unavailable": "Pesan ini sudah tidak bisa dicoba ulang. Kirim pertanyaanmu sebagai pesan baru.",
       "request-conflict": "Pengiriman ini sudah digunakan untuk pesan lain. Kirim pertanyaanmu lagi sebagai pesan baru.",
-      "history": "Chat lama ini belum bisa dilanjutkan. Riwayatmu tetap tersimpan; mulai chat baru untuk sementara.",
       "context": "Nina belum bisa memuat materi belajar untuk percakapan ini. Silakan coba lagi.",
       "attachment-invalid": "Ada lampiran yang tidak valid atau sudah tidak tersedia. Pilih ulang berkasnya dan periksa jenis serta ukurannya.",
       "attachment-limit": "Batas lampiran sudah tercapai. Kirim berkas yang sudah diunggah atau tunggu sebelum mengunggah lagi.",

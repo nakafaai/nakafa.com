@@ -49,12 +49,11 @@ export const ninaFailureFeedback = {
     report: false,
   },
   FORBIDDEN: { message: "chat-access", action: "new-chat", report: false },
-  CHAT_TURN_FORBIDDEN: {
-    message: "chat-access",
-    action: "new-chat",
-    report: false,
+  NINA_CREDIT_IO_FAILED: {
+    message: "admission",
+    action: "retry",
+    report: true,
   },
-  CHAT_TURN_IO_FAILED: { message: "admission", action: "retry", report: true },
   NINA_BUSY: { message: "busy", action: "wait", report: false },
   NINA_RETRY_UNAVAILABLE: {
     message: "retry-unavailable",
@@ -65,11 +64,6 @@ export const ninaFailureFeedback = {
     message: "request-conflict",
     action: "edit",
     report: true,
-  },
-  NINA_HISTORY_PENDING: {
-    message: "history",
-    action: "new-chat",
-    report: false,
   },
   NINA_WRITE_FAILED: { message: "admission", action: "retry", report: true },
   NINA_CONTEXT_FAILED: { message: "context", action: "retry", report: true },

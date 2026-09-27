@@ -52,9 +52,7 @@ export type TryoutPaywallSource = Schema.Schema.Type<
 >;
 export type AttemptAccessFields = Pick<
   Docs["tryoutAttempts"],
-  | "accessCampaignId"
   | "accessEndsAt"
-  | "accessGrantId"
   | "accessSourceKind"
   | "accessSubscriptionId"
   | "countsForCompetition"

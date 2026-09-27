@@ -1,36 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { ninaContextSnapshotValidator } from "@repo/backend/confect/chats/context";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Schema } from "effect";
 
 const NOW = Date.UTC(2026, 4, 13, 12, 0, 0);
-
-/** Builds a compact Nina context snapshot for query behavior tests. */
-function testNinaContext(
-  slug: string
-): Schema.Schema.Type<typeof ninaContextSnapshotValidator> {
-  return {
-    capturedAt: new Date(NOW).toISOString(),
-    learning: {
-      locale: "id",
-      slug,
-      url: `https://nakafa.com/id/${slug}`,
-      verified: true,
-    },
-    source: "current-page",
-    tools: {
-      allowDeepResearch: true,
-      allowMath: true,
-      allowNakafa: true,
-      allowPageFetch: true,
-      evidenceScope: "verified-page",
-    },
-  };
-}
 
 describe("chats/queries", () => {
   it("allows signed-out viewers to read public chat details", async () => {
@@ -39,6 +14,7 @@ describe("chats/queries", () => {
       const user = await seedAuthenticatedUser(ctx, { now: NOW });
 
       return ctx.db.insert("chats", {
+        threadId: "fixture-thread",
         title: "Public transcript",
         type: "study",
         updatedAt: NOW,
@@ -64,6 +40,7 @@ describe("chats/queries", () => {
       const user = await seedAuthenticatedUser(ctx, { now: NOW });
 
       await ctx.db.insert("chats", {
+        threadId: "fixture-thread",
         title: "Public one",
         type: "study",
         updatedAt: NOW + 3,
@@ -71,6 +48,7 @@ describe("chats/queries", () => {
         visibility: "public",
       });
       await ctx.db.insert("chats", {
+        threadId: "fixture-thread",
         title: "Public two",
         type: "study",
         updatedAt: NOW + 2,
@@ -78,6 +56,7 @@ describe("chats/queries", () => {
         visibility: "public",
       });
       await ctx.db.insert("chats", {
+        threadId: "fixture-thread",
         title: "Private one",
         type: "study",
         updatedAt: NOW + 1,
@@ -126,6 +105,7 @@ describe("chats/queries", () => {
       const user = await seedAuthenticatedUser(ctx, { now: NOW });
 
       await ctx.db.insert("chats", {
+        threadId: "fixture-thread",
         title: "Public",
         type: "study",
         updatedAt: NOW + 2,
@@ -133,6 +113,7 @@ describe("chats/queries", () => {
         visibility: "public",
       });
       await ctx.db.insert("chats", {
+        threadId: "fixture-thread",
         title: "Private",
         type: "study",
         updatedAt: NOW + 1,
@@ -179,6 +160,7 @@ describe("chats/queries", () => {
       });
 
       await ctx.db.insert("chats", {
+        threadId: "fixture-thread",
         title: "Private owner chat",
         type: "study",
         updatedAt: NOW + 1,
@@ -186,6 +168,7 @@ describe("chats/queries", () => {
         visibility: "private",
       });
       await ctx.db.insert("chats", {
+        threadId: "fixture-thread",
         title: "Viewer chat",
         type: "study",
         updatedAt: NOW + 2,
@@ -216,80 +199,6 @@ describe("chats/queries", () => {
       expect.objectContaining({ title: "Viewer chat" }),
     ]);
   });
-
-  it("resolves pinned Nina context from the transcript retained after a rewrite", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "pinned-context",
-      });
-      const chatId = await ctx.db.insert("chats", {
-        title: "Pinned context",
-        type: "study",
-        updatedAt: NOW,
-        userId: user.userId,
-        visibility: "private",
-      });
-
-      return { chatId, user };
-    });
-    const owner = t.withIdentity({
-      sessionId: identity.user.sessionId,
-      subject: identity.user.authUserId,
-    });
-    const retainedContext = testNinaContext(
-      "materi/matematika/integral/jumlahan-riemann"
-    );
-    const deletedTailContext = testNinaContext(
-      "materi/fisika/mekanika/hukum-newton"
-    );
-
-    await t.mutation(async (ctx) => {
-      await ctx.db.insert("messages", {
-        chatId: identity.chatId,
-        identifier: "retained-anchor",
-        modelId: "nakafa-lite",
-        ninaContextSnapshot: retainedContext,
-        role: "user",
-      });
-    });
-    await t.mutation(async (ctx) => {
-      await ctx.db.insert("messages", {
-        chatId: identity.chatId,
-        identifier: "rewrite-target",
-        modelId: "nakafa-lite",
-        role: "user",
-      });
-    });
-    await t.mutation(async (ctx) => {
-      await ctx.db.insert("messages", {
-        chatId: identity.chatId,
-        identifier: "deleted-tail",
-        modelId: "nakafa-lite",
-        ninaContextSnapshot: deletedTailContext,
-        role: "assistant",
-      });
-    });
-
-    const pinnedForRewrite = await owner.query(
-      api.chats.queries.getPinnedNinaContextForTurn,
-      {
-        chatId: identity.chatId,
-        messageIdentifier: "rewrite-target",
-      }
-    );
-    const pinnedForContinuation = await owner.query(
-      api.chats.queries.getPinnedNinaContextForTurn,
-      {
-        chatId: identity.chatId,
-        messageIdentifier: "new-message",
-      }
-    );
-
-    expect(pinnedForRewrite).toEqual(retainedContext);
-    expect(pinnedForContinuation).toEqual(deletedTailContext);
-  });
 });
 
 it("keeps search and every optional list filter scoped to the right owner and visibility", async () => {
@@ -306,6 +215,7 @@ it("keeps search and every optional list filter scoped to the right owner and vi
     for (const userId of [owner.userId, stranger.userId]) {
       for (const visibility of ["public", "private"] as const) {
         await ctx.db.insert("chats", {
+          threadId: "fixture-thread",
           title: "Algebra practice",
           userId,
           visibility,
@@ -358,7 +268,7 @@ it("keeps search and every optional list filter scoped to the right owner and vi
   }
 });
 
-it("protects titles and transcript context when chats are private, missing, or untitled", async () => {
+it("protects titles when chats are private, missing, or untitled", async () => {
   const t = createConvexTestWithBetterAuth();
   const fixture = await t.mutation(async (ctx) => {
     const owner = await seedAuthenticatedUser(ctx, { now: NOW });
@@ -368,24 +278,29 @@ it("protects titles and transcript context when chats are private, missing, or u
       updatedAt: NOW,
     };
     const privateId = await ctx.db.insert("chats", {
+      threadId: "fixture-thread",
       ...base,
       visibility: "private",
       title: "Secret",
     });
     const publicId = await ctx.db.insert("chats", {
+      threadId: "fixture-thread",
       ...base,
       visibility: "public",
       title: "Shared",
     });
     const emptyPublic = await ctx.db.insert("chats", {
+      threadId: "fixture-thread",
       ...base,
       visibility: "public",
     });
     const emptyPrivate = await ctx.db.insert("chats", {
+      threadId: "fixture-thread",
       ...base,
       visibility: "private",
     });
     const missingId = await ctx.db.insert("chats", {
+      threadId: "fixture-thread",
       ...base,
       visibility: "public",
     });
@@ -422,22 +337,4 @@ it("protects titles and transcript context when chats are private, missing, or u
   await expect(
     t.query(api.chats.queries.getChat, { chatId: fixture.missingId })
   ).rejects.toThrow("CHAT_NOT_FOUND");
-  await expect(
-    t.query(api.chats.queries.getPinnedNinaContextForTurn, {
-      chatId: fixture.missingId,
-      messageIdentifier: "new",
-    })
-  ).rejects.toThrow("CHAT_NOT_FOUND");
-  await expect(
-    t.query(api.chats.queries.loadMessagesPage, {
-      chatId: fixture.missingId,
-      paginationOpts: { cursor: null, numItems: 10 },
-    })
-  ).rejects.toThrow("CHAT_NOT_FOUND");
-  expect(
-    await t.query(api.chats.queries.getPinnedNinaContextForTurn, {
-      chatId: fixture.publicId,
-      messageIdentifier: "new",
-    })
-  ).toBeNull();
 });

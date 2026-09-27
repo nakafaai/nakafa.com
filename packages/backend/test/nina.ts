@@ -2,8 +2,8 @@ import { RegisteredConvexFunction } from "@confect/server";
 import { createThread, saveMessage } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
-import { reserveChatCredits } from "@repo/backend/confect/chats/turns/impl";
 import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
+import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/memory/pack";
 import {
   createConvexTestWithBetterAuth,
@@ -32,7 +32,7 @@ export async function createNinaTest({
       return Promise.reject(new Error("Fixture user missing"));
     }
     const reservation = await Effect.runPromise(
-      reserveChatCredits(user, ModelIdSchema.make("nakafa-lite")).pipe(
+      reserveCredits(user, ModelIdSchema.make("nakafa-lite")).pipe(
         Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
       )
     );

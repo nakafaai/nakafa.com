@@ -3,9 +3,9 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import turns from "@repo/backend/confect/_generated/tables/ninaTurns";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
-import { ChatTurnError } from "@repo/backend/confect/chats/turns/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
 import {
   NinaFailureReason,
   NinaTurnError,
@@ -21,7 +21,7 @@ export default GroupSpec.make()
         Schema.NullOr(
           turns.Doc.pipe(Schema.refine((turn) => turn.phase === "active"))
         ),
-      error: () => Schema.Union([ChatTurnError, NinaTurnError]),
+      error: () => Schema.Union([NinaCreditError, NinaTurnError]),
     }).middleware(Atomic)
   )
   .addFunction(
@@ -32,7 +32,7 @@ export default GroupSpec.make()
         failure: Schema.optionalKey(NinaFailureReason),
       }),
       returns: () => Schema.Null,
-      error: () => Schema.Union([ChatTurnError, NinaTurnError]),
+      error: () => Schema.Union([NinaCreditError, NinaTurnError]),
     }).middleware(Atomic)
   )
   .addFunction(
@@ -44,7 +44,7 @@ export default GroupSpec.make()
         Schema.Union([
           AuthFailure,
           ChatAccessError,
-          ChatTurnError,
+          NinaCreditError,
           NinaTurnError,
         ]),
     })

@@ -12,7 +12,6 @@ import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import bookmarkCollections from "./tables/bookmarkCollections";
 import bookmarks from "./tables/bookmarks";
-import chatTurns from "./tables/chatTurns";
 import chats from "./tables/chats";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
@@ -45,9 +44,6 @@ import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
-import messageParts from "./tables/messageParts";
-import messages from "./tables/messages";
-import ninaCapabilityTraces from "./tables/ninaCapabilityTraces";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
 import onboardingProfiles from "./tables/onboardingProfiles";
@@ -97,7 +93,6 @@ export default $defineSchema({
   articleCategories: $Table.tableDefinition(articleCategories),
   bookmarkCollections: $Table.tableDefinition(bookmarkCollections),
   bookmarks: $Table.tableDefinition(bookmarks),
-  chatTurns: $Table.tableDefinition(chatTurns),
   chats: $Table.tableDefinition(chats),
   commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),
@@ -130,9 +125,6 @@ export default $defineSchema({
   learningViews: $Table.tableDefinition(learningViews),
   materialBuckets: $Table.tableDefinition(materialBuckets),
   materialCatalog: $Table.tableDefinition(materialCatalog),
-  messageParts: $Table.tableDefinition(messageParts),
-  messages: $Table.tableDefinition(messages),
-  ninaCapabilityTraces: $Table.tableDefinition(ninaCapabilityTraces),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),
   onboardingProfiles: $Table.tableDefinition(onboardingProfiles),

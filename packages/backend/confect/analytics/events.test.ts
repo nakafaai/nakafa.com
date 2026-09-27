@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
-import { chatResponseFailureCode } from "@repo/backend/confect/nina/config/generation";
 import {
   getModelCreditCost,
   ModelIdSchema,
@@ -190,7 +189,7 @@ describe("analytics/events", () => {
             name: "chat response failed",
             properties: {
               chat_type: "study",
-              error_code: chatResponseFailureCode,
+              error_code: "provider-unavailable",
               model_id: "nakafa-lite",
             },
           },

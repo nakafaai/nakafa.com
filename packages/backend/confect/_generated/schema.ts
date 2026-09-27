@@ -11,7 +11,6 @@ import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import bookmarkCollections from "./tables/bookmarkCollections";
 import bookmarks from "./tables/bookmarks";
-import chatTurns from "./tables/chatTurns";
 import chats from "./tables/chats";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
@@ -44,9 +43,6 @@ import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
-import messageParts from "./tables/messageParts";
-import messages from "./tables/messages";
-import ninaCapabilityTraces from "./tables/ninaCapabilityTraces";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
 import onboardingProfiles from "./tables/onboardingProfiles";
@@ -96,7 +92,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleCategories: typeof articleCategories;
   readonly bookmarkCollections: typeof bookmarkCollections;
   readonly bookmarks: typeof bookmarks;
-  readonly chatTurns: typeof chatTurns;
   readonly chats: typeof chats;
   readonly commentVotes: typeof commentVotes;
   readonly comments: typeof comments;
@@ -129,9 +124,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly learningViews: typeof learningViews;
   readonly materialBuckets: typeof materialBuckets;
   readonly materialCatalog: typeof materialCatalog;
-  readonly messageParts: typeof messageParts;
-  readonly messages: typeof messages;
-  readonly ninaCapabilityTraces: typeof ninaCapabilityTraces;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
   readonly onboardingProfiles: typeof onboardingProfiles;
@@ -180,7 +172,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleCategories,
   bookmarkCollections,
   bookmarks,
-  chatTurns,
   chats,
   commentVotes,
   comments,
@@ -213,9 +204,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   learningViews,
   materialBuckets,
   materialCatalog,
-  messageParts,
-  messages,
-  ninaCapabilityTraces,
   ninaTurns,
   ninaUploads,
   onboardingProfiles,

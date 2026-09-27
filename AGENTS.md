@@ -16,7 +16,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Runtime: Node `24.x` through pnpm `devEngines.runtime`
 - Monorepo: Turborepo
 - Frontend: Next.js 16, React 19, native TypeScript 7
-- Backend: Convex
+- Backend: Confect v10 and Effect v4 on Convex
 - Lint and format: Biome through Ultracite
 - Tests: Vitest
 - Apps: `apps/www`, `apps/api`, `apps/mcp`, `apps/email`
@@ -68,6 +68,10 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Follow the official source-vendoring guidance at `https://www.effect.website/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive`.
 
 ## React And Next.js
+
+- Confect React owns application queries and mutations. Use the official Agent streaming hook and Better Auth integration at their component boundaries, without a custom transport or vanilla preload adapter.
+- Use optimistic updates for predictable user mutations with rollback on failure. Use React transitions for asynchronous UI boundaries; do not maintain separate `useState` loading or pending flags. Keep stable content visible while optional data arrives.
+- Share compound-component state through the owning context and compose children directly. Do not forward props through components that do not consume them.
 
 - Before React composition work, use the globally installed upstream `vercel-composition-patterns` skill. Use the official Vercel React, Next.js, and shadcn plugin skills when their focused guidance applies.
 - Before Next.js work, find the installed version-matched documentation with `find . -path '*/node_modules/next/dist/docs' -type d -print`. Installed docs and source are authoritative for APIs, file conventions, and deprecations.

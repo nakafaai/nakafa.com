@@ -686,7 +686,6 @@
       "busy": "Nina is still answering in this chat. Wait for the response or stop it before sending another message.",
       "retry-unavailable": "This message can no longer be retried. Send your question as a new message.",
       "request-conflict": "This submission has already been used for a different message. Send your question again as a new message.",
-      "history": "This older chat is not ready to continue yet. Your history is still saved; start a new chat for now.",
       "context": "Nina could not load the learning material for this conversation. Please try again.",
       "attachment-invalid": "An attachment is invalid or no longer available. Choose it again and check its file type and size.",
       "attachment-limit": "You have reached the attachment limit. Send the files already uploaded or wait before uploading more.",

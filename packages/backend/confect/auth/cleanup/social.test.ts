@@ -1,6 +1,5 @@
 import { afterEach, expect, it } from "@effect/vitest";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import { CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE } from "@repo/backend/confect/chats/constants";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -90,65 +89,6 @@ it("deletes both directions of comment votes before their owning comment while k
     sharedComment: { userId: retained, upvoteCount: 0 },
     ownVote: null,
     sharedVote: null,
-  });
-  await expect(cleanup()).resolves.toBe(false);
-  await t.finishAllScheduledFunctions(vi.runAllTimers);
-});
-
-it("retains a chat until every bounded transcript page is removed", async () => {
-  const { t, owner, retained, now } = await createDeletedOwner("transcript");
-  const seeded = await t.mutation(async (ctx) => {
-    const chatId = await ctx.db.insert("chats", {
-      userId: owner,
-      type: "study",
-      visibility: "private",
-      updatedAt: now,
-    });
-    const retainedChatId = await ctx.db.insert("chats", {
-      userId: retained,
-      type: "study",
-      visibility: "private",
-      updatedAt: now,
-    });
-    for (
-      let index = 0;
-      index <= CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE;
-      index += 1
-    ) {
-      const messageId = await ctx.db.insert("messages", {
-        chatId,
-        role: "user",
-        identifier: `message-${index}`,
-      });
-      await ctx.db.insert("messageParts", {
-        messageId,
-        order: 0,
-        type: "text",
-        textText: `Private question ${index}`,
-      });
-    }
-    return { chatId, retainedChatId };
-  });
-  const cleanup = () =>
-    t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner });
-  const read = () =>
-    t.query(async (ctx) => ({
-      chat: await ctx.db.get(seeded.chatId),
-      retainedChat: await ctx.db.get(seeded.retainedChatId),
-      messages: await ctx.db.query("messages").collect(),
-      parts: await ctx.db.query("messageParts").collect(),
-    }));
-  await expect(cleanup()).resolves.toBe(true);
-  const continued = await read();
-  expect(continued.chat).not.toBeNull();
-  expect(continued.messages).toHaveLength(1);
-  expect(continued.parts).toHaveLength(1);
-  await expect(cleanup()).resolves.toBe(true);
-  expect(await read()).toMatchObject({
-    chat: null,
-    messages: [],
-    parts: [],
-    retainedChat: { userId: retained },
   });
   await expect(cleanup()).resolves.toBe(false);
   await t.finishAllScheduledFunctions(vi.runAllTimers);

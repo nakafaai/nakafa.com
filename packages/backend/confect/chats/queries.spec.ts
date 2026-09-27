@@ -3,13 +3,10 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import chatsTable from "@repo/backend/confect/_generated/tables/chats";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
-import { ninaContextSnapshotValidator } from "@repo/backend/confect/chats/context";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
 } from "@repo/backend/confect/chats/schema";
-import { TranscriptLimitExceeded } from "@repo/backend/confect/chats/transcript/spec";
-import { messageWithPartsDocValidator } from "@repo/backend/confect/chats/validators";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
@@ -55,27 +52,5 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.NullOr(Schema.String),
       error: () => AuthFailure,
-    }).middleware(Session)
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "getPinnedNinaContextForTurn",
-      args: () => ({
-        chatId: IdSchema("chats"),
-        messageIdentifier: Schema.String,
-      }),
-      returns: () => Schema.NullOr(ninaContextSnapshotValidator),
-      error: () => Schema.Union([AuthFailure, ChatAccessError]),
-    }).middleware(Session)
-  )
-  .addFunction(
-    FunctionSpec.publicPaginatedQuery({
-      name: "loadMessagesPage",
-      args: () => ({
-        chatId: IdSchema("chats"),
-      }),
-      item: () => messageWithPartsDocValidator,
-      error: () =>
-        Schema.Union([AuthFailure, ChatAccessError, TranscriptLimitExceeded]),
     }).middleware(Session)
   );

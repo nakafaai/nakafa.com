@@ -6,7 +6,7 @@ import {
 const languageMetadata = {
   de: {
     countryCode: "DE",
-    label: "Deutsch",
+    label: "Deutsch (Deutschland)",
   },
   en: {
     countryCode: "GB",

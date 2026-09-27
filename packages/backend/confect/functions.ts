@@ -7,7 +7,6 @@ const runTrigger = RegisteredFunction.runHandlerPromise(undefined, {
 });
 
 import { chatsHandler } from "@repo/backend/confect/triggers/chats/chats";
-import { messagesHandler } from "@repo/backend/confect/triggers/chats/messages";
 import { commentsHandler } from "@repo/backend/confect/triggers/comments/comments";
 import { commentVotesHandler } from "@repo/backend/confect/triggers/comments/commentVotes";
 import { learningViewsHandler } from "@repo/backend/confect/triggers/contents/views";
@@ -41,12 +40,6 @@ export const internalMutation = customMutation(
 // Active triggers with custom logic
 triggers.register("subscriptions", (ctx, change) =>
   subscriptionsHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-triggers.register("messages", (ctx, change) =>
-  messagesHandler(change).pipe(
     Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
     runTrigger
   )

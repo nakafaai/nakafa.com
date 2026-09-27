@@ -16,7 +16,7 @@ const productionConfig = ConfigProvider.fromEnvRecord({
 
 function checkRequest(headers: HeadersInit, provider = productionConfig) {
   return isCorsRequestAllowed(
-    new Request("https://nakafa.com/api/chat", { headers })
+    new Request("https://nakafa.com/api/weather", { headers })
   ).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
 }
 

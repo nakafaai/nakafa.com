@@ -12,13 +12,13 @@ import {
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
-import { reserveChatCredits } from "@repo/backend/confect/chats/turns/impl";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { DEFAULT_TITLE } from "@repo/backend/confect/nina/presentation.spec";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
-import { Clock, Duration, Effect, Layer, Option } from "effect";
+import { Clock, Duration, Effect, Layer } from "effect";
 
 const writeFailure = () =>
   new NinaTurnError({
@@ -95,22 +95,8 @@ const start = FunctionImpl.make(
         message: "A Nina response is already running in this chat.",
       });
     }
-    if (chat && !chat.threadId) {
-      const previous = yield* reader
-        .table("messages")
-        .index("by_chatId", (q) => q.eq("chatId", chat._id))
-        .first()
-        .pipe(Effect.orDie);
-      if (Option.isSome(previous)) {
-        return yield* new NinaTurnError({
-          code: "NINA_HISTORY_PENDING",
-          message:
-            "This chat history is being prepared. Please try again shortly.",
-        });
-      }
-    }
     const now = yield* Clock.currentTimeMillis;
-    const reservation = yield* reserveChatCredits(appUser, args.modelId);
+    const reservation = yield* reserveCredits(appUser, args.modelId);
     const prompt = yield* preparePrompt(
       appUser,
       chat,

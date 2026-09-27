@@ -3,7 +3,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
-import { deleteMessageBatchFromPoint } from "@repo/backend/confect/chats/transcript/write";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
 
@@ -11,7 +10,6 @@ const BOOKMARK_BATCH_SIZE = 25;
 const COLLECTION_BATCH_SIZE = 25;
 const COMMENT_VOTE_BATCH_SIZE = 50;
 const COMMENT_REFERENCE_BATCH_SIZE = 25;
-const CHAT_TRACE_BATCH_SIZE = 50;
 
 /** Deletes one bounded batch of bookmarks and their collections. */
 const cleanupBookmarks = Effect.fn("auth.cleanup.cleanupBookmarks")(
@@ -120,25 +118,7 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
 
-/** Deletes one bounded batch of Nina traces, including orphaned chat traces. */
-const cleanupChatTraces = Effect.fn("auth.cleanup.cleanupChatTraces")(
-  function* (userId: Id<"users">) {
-    const database = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const traces = yield* database
-      .table("ninaCapabilityTraces")
-      .index("by_userId", (query) => query.eq("userId", userId))
-      .take(CHAT_TRACE_BATCH_SIZE)
-      .pipe(Effect.orDie);
-    for (const trace of traces) {
-      yield* writer.table("ninaCapabilityTraces").delete(trace._id);
-    }
-    return traces.length > 0;
-  },
-  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-);
-
-/** Deletes one chat and its bounded transcript batches after traces are gone. */
+/** Deletes one chat; its trigger owns the Agent journal cascade. */
 const cleanupChats = Effect.fn("auth.cleanup.cleanupChats")(
   function* (userId: Id<"users">) {
     const database = yield* DatabaseReader;
@@ -150,10 +130,6 @@ const cleanupChats = Effect.fn("auth.cleanup.cleanupChats")(
       .pipe(Effect.map(Option.getOrNull), Effect.orDie);
     if (!chat) {
       return false;
-    }
-    const transcript = yield* deleteMessageBatchFromPoint(chat._id, 0);
-    if (transcript.hasMore) {
-      return true;
     }
     yield* writer.table("chats").delete(chat._id);
     return true;
@@ -187,9 +163,6 @@ export const cleanupUserSocialData = Effect.fn(
     return true;
   }
   if (yield* cleanupComments(userId)) {
-    return true;
-  }
-  if (yield* cleanupChatTraces(userId)) {
     return true;
   }
   if (yield* cleanupNinaUploads(userId)) {

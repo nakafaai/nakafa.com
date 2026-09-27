@@ -12,7 +12,6 @@ export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "arti
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
 export type BookmarkCollectionsDoc = Document.Document<typeof schemaDefinition, "bookmarkCollections">;
 export type BookmarksDoc = Document.Document<typeof schemaDefinition, "bookmarks">;
-export type ChatTurnsDoc = Document.Document<typeof schemaDefinition, "chatTurns">;
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
 export type CommentVotesDoc = Document.Document<typeof schemaDefinition, "commentVotes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
@@ -45,9 +44,6 @@ export type LearningPreferencesDoc = Document.Document<typeof schemaDefinition, 
 export type LearningViewsDoc = Document.Document<typeof schemaDefinition, "learningViews">;
 export type MaterialBucketsDoc = Document.Document<typeof schemaDefinition, "materialBuckets">;
 export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "materialCatalog">;
-export type MessagePartsDoc = Document.Document<typeof schemaDefinition, "messageParts">;
-export type MessagesDoc = Document.Document<typeof schemaDefinition, "messages">;
-export type NinaCapabilityTracesDoc = Document.Document<typeof schemaDefinition, "ninaCapabilityTraces">;
 export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
 export type OnboardingProfilesDoc = Document.Document<typeof schemaDefinition, "onboardingProfiles">;
@@ -97,7 +93,6 @@ export interface Docs {
   articleCategories: ArticleCategoriesDoc;
   bookmarkCollections: BookmarkCollectionsDoc;
   bookmarks: BookmarksDoc;
-  chatTurns: ChatTurnsDoc;
   chats: ChatsDoc;
   commentVotes: CommentVotesDoc;
   comments: CommentsDoc;
@@ -130,9 +125,6 @@ export interface Docs {
   learningViews: LearningViewsDoc;
   materialBuckets: MaterialBucketsDoc;
   materialCatalog: MaterialCatalogDoc;
-  messageParts: MessagePartsDoc;
-  messages: MessagesDoc;
-  ninaCapabilityTraces: NinaCapabilityTracesDoc;
   ninaTurns: NinaTurnsDoc;
   ninaUploads: NinaUploadsDoc;
   onboardingProfiles: OnboardingProfilesDoc;

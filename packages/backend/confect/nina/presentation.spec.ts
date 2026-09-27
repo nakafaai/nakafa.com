@@ -26,3 +26,5 @@ export default GroupSpec.make().addFunction(
     returns: () => Schema.Null,
   })
 );
+
+export const NINA_MESSAGES_PAGE_SIZE = 50;

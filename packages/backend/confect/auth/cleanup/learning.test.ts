@@ -14,14 +14,13 @@ import { Effect } from "effect";
 const learningTables = [
   "onboardingProfiles",
   "learningPreferences",
-  "chatTurns",
   "creditTransactions",
   "learningViews",
   "userLearningRecents",
   "learningEngagementQueue",
   "learningPopularityViewerSignals",
 ] as const;
-it("drains deleted-user holds before their ledger, keeps each batch bounded, and preserves another learner", async () => {
+it("drains deleted-user credit history, keeps each batch bounded, and preserves another learner", async () => {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation(async (ctx) => {
     const removed = await seedAuthenticatedUser(ctx, {
@@ -50,21 +49,14 @@ it("drains deleted-user holds before their ledger, keeps each batch bounded, and
       });
       for (
         let index = 0;
-        index < (userId === removed.userId ? 26 : 1);
+        index < (userId === removed.userId ? 51 : 1);
         index += 1
       ) {
-        const transactionId = await ctx.db.insert("creditTransactions", {
+        await ctx.db.insert("creditTransactions", {
           userId,
           amount: -2,
           balanceAfter: 8,
           type: "usage",
-        });
-        await ctx.db.insert("chatTurns", {
-          userId,
-          modelId: "nakafa-lite",
-          credits: 2,
-          creditsResetAt: now,
-          transactionId,
         });
       }
       const graph = {
@@ -136,17 +128,12 @@ it("drains deleted-user holds before their ledger, keeps each batch bounded, and
     ).toBe(true);
   }
   const during = await t.query(async (ctx) => ({
-    holds: await ctx.db
-      .query("chatTurns")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.removed.userId))
-      .collect(),
     transactions: await ctx.db
       .query("creditTransactions")
       .withIndex("by_userId", (q) => q.eq("userId", identity.removed.userId))
       .collect(),
   }));
-  expect(during.holds).toHaveLength(1);
-  expect(during.transactions).toHaveLength(26);
+  expect(during.transactions).toHaveLength(1);
   let finished = false;
   for (let batch = 0; batch < 10; batch += 1) {
     if (

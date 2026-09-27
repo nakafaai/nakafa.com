@@ -1,6 +1,6 @@
 "use client";
 
-import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/chats/constants";
+import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/nina/presentation.spec";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 
 import { useChat } from "@/components/ai/context/use-chat";
@@ -14,7 +14,7 @@ export function AiChatPaginationTrigger() {
 
   return (
     <Intersection
-      onIntersect={() => pagination.loadMore(CHAT_MESSAGES_PAGE_SIZE)}
+      onIntersect={() => pagination.loadMore(NINA_MESSAGES_PAGE_SIZE)}
     />
   );
 }

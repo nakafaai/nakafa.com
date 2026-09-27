@@ -22,6 +22,7 @@ describe("transcript read authorization", () => {
         suffix: "read-stranger",
       });
       const chatId = await ctx.db.insert("chats", {
+        threadId: "fixture-thread",
         userId: owner.userId,
         type: "study",
         visibility: "private",

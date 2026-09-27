@@ -10,7 +10,7 @@ import {
 import { type UIMessagesQuery, useUIMessages } from "@convex-dev/agent/react";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/chats/constants";
+import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/nina/presentation.spec";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useConvexAuth } from "convex/react";
@@ -105,8 +105,7 @@ function useMessages(
     order: number;
     createdAt: number;
   } | null>(null);
-  const isLoading =
-    !chat || (!!chat.threadId && pagination.status === "LoadingFirstPage");
+  const isLoading = !chat || pagination.status === "LoadingFirstPage";
   const opening = openingChat?.receipt.chatId === chatId ? openingChat : null;
   useEffect(() => {
     if (opening && !isLoading) {
@@ -182,7 +181,7 @@ function useConversation(chatId: Id<"chats">) {
   const pagination = useUIMessages(
     messagesQuery,
     chat?.threadId ? { chatId, threadId: chat.threadId } : "skip",
-    { initialNumItems: CHAT_MESSAGES_PAGE_SIZE, stream: true }
+    { initialNumItems: NINA_MESSAGES_PAGE_SIZE, stream: true }
   );
   if (QueryResult.isFailure(result)) {
     throw result.error;
