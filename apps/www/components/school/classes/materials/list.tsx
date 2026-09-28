@@ -9,9 +9,9 @@ import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { MaterialGroupCard } from "@/components/school/classes/materials/item";
 import { DataFailure } from "@/components/shared/failure";
-import { useClass } from "@/lib/context/use-class";
-import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 import { searchParsers } from "@/lib/nuqs/search";
+import { useClass } from "@/lib/school/classes/context";
+import { useClassPermissions } from "@/lib/school/classes/permissions";
 
 const DEBOUNCE_TIME = 500;
 

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { AiContextProvider } from "@/components/ai/context/use-ai";
-import { ContentViewsProvider } from "@/lib/context/use-content-views";
-import { SearchContextProvider } from "@/lib/context/use-search";
+import { AiContextProvider } from "@/components/ai/context";
+import { ContentViewsProvider } from "@/lib/content/views/context";
+import { SearchContextProvider } from "@/lib/search/context";
 
 /**
  * Mounts shared feature-state providers for the marketing, main, and tryout

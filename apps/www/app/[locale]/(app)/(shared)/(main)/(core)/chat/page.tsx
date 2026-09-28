@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { ChatNew } from "@/components/ai/chat-new";
-import { HomeTitle } from "@/components/ai/title";
-import { Videos } from "@/components/ai/videos";
-import { Weather } from "@/components/ai/weather";
+import { ChatNew } from "@/components/ai/chat/new";
+import { HomeTitle } from "@/components/ai/home/title";
+import { Videos } from "@/components/ai/home/videos";
+import { Weather } from "@/components/ai/home/weather";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getAppSocialArtwork } from "@/lib/og/app-artwork";
+import { getAppSocialArtwork } from "@/lib/og/app";
 import { getSocialMetadata } from "@/lib/utils/metadata";
 
 /** Builds localized metadata for Nakafa's new learning chat. */

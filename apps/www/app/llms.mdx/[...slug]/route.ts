@@ -2,10 +2,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { NextRequest } from "next/server";
 import { hasLocale } from "next-intl";
-import {
-  AGENT_DISCOVERY_LINK_HEADER,
-  LLMS_TEXT_PATH,
-} from "@/lib/agent-discovery";
+import { AGENT_DISCOVERY_LINK_HEADER, LLMS_TEXT_PATH } from "@/lib/discovery";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";

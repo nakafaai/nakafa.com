@@ -9,7 +9,7 @@ import type {
   regionOptions,
   roleOptions,
 } from "@/components/programs/onboarding/options";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { CountryFlagIcon } from "@/components/shared/flag";
 
 type DisplayOption =
   | (typeof focusOptions)[number]

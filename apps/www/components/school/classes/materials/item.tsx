@@ -36,13 +36,13 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Activity, useTransition } from "react";
 import { toast } from "sonner";
-import { getMaterialStatus } from "@/components/school/classes/data/material-status";
-import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
-import { EditMaterialGroupDialog } from "@/components/school/classes/materials/editor-dialog";
+import { SchoolClassesDeleteDialog } from "@/components/school/classes/deletion";
+import { EditMaterialGroupDialog } from "@/components/school/classes/materials/editor";
 import {
   useDeleteMaterialGroupMutation,
   useReorderMaterialGroupMutation,
 } from "@/components/school/classes/materials/mutation.client";
+import { getMaterialStatus } from "@/components/school/classes/materials/status";
 import type { MaterialGroup } from "@/components/school/classes/materials/types";
 import { formatScheduledAt } from "@/components/school/classes/schedule";
 import { reportClientException } from "@/lib/analytics/client";

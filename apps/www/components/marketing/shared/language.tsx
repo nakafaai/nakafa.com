@@ -14,7 +14,7 @@ import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { cn } from "cn";
 import { type Locale, useLocale, useTranslations } from "next-intl";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 /**

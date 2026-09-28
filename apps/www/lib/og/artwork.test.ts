@@ -3,7 +3,7 @@
 import { glob, readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { describe, expect, it } from "@effect/vitest";
-import { getAppSocialArtwork } from "@/lib/og/app-artwork";
+import { getAppSocialArtwork } from "@/lib/og/app";
 import {
   listStaticArtworkPaths,
   resolveSocialArtwork,

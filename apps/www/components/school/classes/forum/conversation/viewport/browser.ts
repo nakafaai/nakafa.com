@@ -12,7 +12,7 @@ import {
   ViewportSessionError,
 } from "@/components/school/classes/forum/conversation/viewport/adapter";
 import { createViewportScroller } from "@/components/school/classes/forum/conversation/viewport/scroller";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/session/store";
 
 export type BrowserViewportScroller = ReturnType<typeof createViewportScroller>;
 

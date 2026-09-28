@@ -6,7 +6,7 @@ import type {
   ViewportMeasurement,
   ViewportPlacement,
 } from "@/components/school/classes/forum/conversation/viewport/model";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/session/store";
 
 /** Expected failure while syncing the latest visible Forum post read marker. */
 export class ViewportReadError extends Schema.TaggedError<ViewportReadError>()(

@@ -7,8 +7,8 @@ import { useForm } from "@tanstack/react-form";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { FormBlock } from "@/components/shared/form-block";
 import { useUpdateUserNameMutation } from "@/components/user/mutation.client";
+import { FormBlock } from "@/components/user/settings/block";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 

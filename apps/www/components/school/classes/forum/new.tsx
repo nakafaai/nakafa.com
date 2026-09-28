@@ -38,10 +38,10 @@ import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { toast } from "sonner";
 import { getTag, getTagsByRole } from "@/components/school/classes/data/tag";
-import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
+import { getSchoolClassesForumHref } from "@/components/school/classes/forum/routes";
 import { reportClientException } from "@/lib/analytics/client";
-import { useClass } from "@/lib/context/use-class";
-import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
+import { useClass } from "@/lib/school/classes/context";
+import { useClassPermissions } from "@/lib/school/classes/permissions";
 
 const form = Schema.Struct({
   title: Schema.Trim.pipe(

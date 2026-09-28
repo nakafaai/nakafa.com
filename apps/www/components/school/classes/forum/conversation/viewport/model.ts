@@ -7,7 +7,7 @@ import {
   areConversationViewsEqual,
   type ConversationView,
 } from "@/components/school/classes/forum/conversation/data/view/model";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/session/store";
 
 type PlacementAlign = NonNullable<ScrollToIndexOpts["align"]>;
 type PlacementMotion = "instant" | "smooth";

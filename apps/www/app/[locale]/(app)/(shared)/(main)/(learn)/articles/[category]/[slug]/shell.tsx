@@ -4,21 +4,21 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import type { ArticlePageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/content";
-import { AiMenuItem } from "@/components/ai/menu";
+import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { ContentDates } from "@/components/content/dates";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
-import { ComingSoon } from "@/components/shared/coming-soon";
-import { FooterContent } from "@/components/shared/footer-content";
-import { LayoutContent } from "@/components/shared/layout-content";
+import { OpenContent } from "@/components/shared/content/actions";
+import { FooterContent } from "@/components/shared/content/footer";
+import { LayoutContent } from "@/components/shared/content/layout";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { MaterialOutline } from "@/components/shared/material/toc";
-import { OpenContent } from "@/components/shared/open-content/actions";
 import {
   SidebarRightHeader,
   SidebarRightProvider,
-} from "@/components/shared/sidebar-right";
+} from "@/components/shared/outline/panel";
+import { ComingSoon } from "@/components/shared/upcoming";
 
 /** Renders a signed article body and its route-owned navigation. */
 export async function ArticleShell({

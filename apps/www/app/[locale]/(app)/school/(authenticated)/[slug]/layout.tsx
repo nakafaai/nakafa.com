@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getToken } from "@/lib/auth/server";
-import { SchoolContextProvider } from "@/lib/context/use-school";
+import { SchoolContextProvider } from "@/lib/school/context";
 import { getSchoolRouteSnapshot } from "@/lib/school/server";
 
 /** Generate the school page title from the slug-resolved school metadata. */

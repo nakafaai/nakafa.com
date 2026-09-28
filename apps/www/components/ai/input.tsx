@@ -34,8 +34,8 @@ import { type ReactNode, useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
 
-import { AiChatModel } from "@/components/ai/chat-model";
-import { useAi } from "@/components/ai/context/use-ai";
+import { AiChatModel } from "@/components/ai/chat/model";
+import { useAi } from "@/components/ai/context";
 
 interface Props {
   autoFocus?: boolean;

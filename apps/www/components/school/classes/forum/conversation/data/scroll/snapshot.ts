@@ -1,5 +1,5 @@
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/session/store";
 
 /**
  * Builds the persisted scroll snapshot for one settled transcript position.

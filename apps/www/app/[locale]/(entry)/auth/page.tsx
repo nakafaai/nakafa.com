@@ -2,12 +2,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { Auth } from "@/components/auth";
-import { Theme } from "@/components/marketing/shared/footer-action";
-import { BackButton } from "@/components/shared/back-button";
-import {
-  EntryShellBody,
-  EntryShellHeader,
-} from "@/components/shared/entry-shell";
+import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
+import { Theme } from "@/components/marketing/shared/footer/action";
+import { BackButton } from "@/components/shared/back";
 import {
   getShellPageNavigation,
   type PageNavigation,

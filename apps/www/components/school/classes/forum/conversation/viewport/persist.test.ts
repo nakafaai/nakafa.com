@@ -28,7 +28,7 @@ import {
   flushCurrentSnapshot,
   persistCurrentSnapshot,
 } from "@/components/school/classes/forum/conversation/viewport/persist";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/session/store";
 
 function makeExpectedSnapshot(
   overrides: Partial<ConversationScrollSnapshot> = {}

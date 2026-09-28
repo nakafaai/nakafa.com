@@ -11,7 +11,6 @@ import {
 } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import type { VirtualizerHandle } from "virtua";
-import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/transcript/unread";
 import { ConversationViewportAdapters } from "@/components/school/classes/forum/conversation/viewport/adapter";
@@ -34,7 +33,8 @@ import {
   makeConversationViewport,
 } from "@/components/school/classes/forum/conversation/viewport/service";
 import { useMarkForumReadMutation } from "@/components/school/classes/forum/read/mutation.client";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import { useForumSession } from "@/components/school/classes/forum/session/context";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/session/store";
 
 interface ViewportActions {
   /** Clears the current unread cue once the UI has acknowledged it. */

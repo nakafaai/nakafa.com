@@ -27,8 +27,8 @@ import {
   type InviteRole,
   inviteRoleList,
   mapInviteCodesByRole,
-} from "@/components/school/classes/people/invite-data";
-import { useClass } from "@/lib/context/use-class";
+} from "@/components/school/classes/people/roles";
+import { useClass } from "@/lib/school/classes/context";
 
 /** Render the class invite flow for teacher and student join codes. */
 export function SchoolClassesPeopleInvite() {

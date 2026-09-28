@@ -11,8 +11,8 @@ import {
 import { IconCommand, IconLetterK } from "@tabler/icons-react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { preloadSearchCommand } from "@/components/shared/search-command-module";
-import { useSearch } from "@/lib/context/use-search";
+import { preloadSearchCommand } from "@/components/search/command/module";
+import { useSearch } from "@/lib/search/context";
 
 /** Preloads the search command module ahead of the first open. */
 function usePreloadSearchCommand() {

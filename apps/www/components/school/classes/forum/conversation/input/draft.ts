@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import type { ForumReplyTarget } from "@/components/school/classes/forum/store/session";
+import type { ForumReplyTarget } from "@/components/school/classes/forum/session/store";
 
 /** Composer draft captured before an optimistic submit clears the input. */
 export interface ForumPostInputDraft {

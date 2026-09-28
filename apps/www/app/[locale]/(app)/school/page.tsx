@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { School } from "@/components/school";
-import { SchoolAuthScreen } from "@/components/school/auth-screen";
+import { SchoolAuthScreen } from "@/components/school/auth";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /**

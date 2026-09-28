@@ -29,7 +29,7 @@ import { cn } from "cn";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type * as React from "react";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 const BASE_THEMES_COUNT = 3;

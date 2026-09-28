@@ -1,0 +1,62 @@
+"use client";
+
+import { ArrowDown01Icon, BookOpen02Icon } from "@hugeicons/core-free-icons";
+import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@repo/design-system/components/ui/collapsible";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { cn } from "cn";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+
+interface Props {
+  message: Extract<NakafaDataPart, { kind: "content"; status: "done" }>;
+}
+
+/** Renders a bounded preview for one retrieved Nakafa content page. */
+export function ContentPart({ message }: Props) {
+  const t = useTranslations("Ai");
+  const [open, setOpen] = useState(true);
+
+  return (
+    <Collapsible
+      className="overflow-hidden rounded-md border"
+      onOpenChange={setOpen}
+      open={open}
+    >
+      <CollapsibleTrigger className="group/content flex w-full cursor-pointer items-center justify-between bg-muted/80 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <HugeIcons className="size-4 shrink-0" icon={BookOpen02Icon} />
+          <span className="truncate text-sm">{t("nakafa-content")}</span>
+        </div>
+        <HugeIcons
+          className={cn(
+            "size-4 shrink-0 transition-[opacity,rotate] duration-150 group-hover/content:opacity-100 group-focus-visible/content:opacity-100 motion-reduce:transition-none [@media(hover:hover)]:opacity-0",
+            open ? "rotate-180" : "rotate-0"
+          )}
+          icon={ArrowDown01Icon}
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="border-t bg-muted/40">
+        <a
+          className="grid gap-2 p-4"
+          href={message.result.url}
+          rel="noopener noreferrer"
+          target="_blank"
+          title={message.result.url}
+        >
+          <p className="text-sm">{message.result.title}</p>
+          {message.result.description ? (
+            <span className="text-muted-foreground text-sm">
+              {message.result.description}
+            </span>
+          ) : null}
+        </a>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+ContentPart.displayName = "ContentPart";

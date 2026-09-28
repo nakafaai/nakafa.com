@@ -11,7 +11,7 @@ import {
   CatalogCardImage,
 } from "@/components/shared/catalog/card";
 import { ChoiceCardIcon } from "@/components/shared/choice/visual";
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 

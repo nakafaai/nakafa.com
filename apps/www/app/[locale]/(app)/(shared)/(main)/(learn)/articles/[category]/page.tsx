@@ -13,12 +13,12 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { getArticleCategoryIcon } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
-import { CardArticle } from "@/components/shared/card-article";
-import { ContainerList } from "@/components/shared/container-list";
-import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
-import { LayoutContent } from "@/components/shared/layout-content";
-import { RefContent } from "@/components/shared/ref-content";
+import { CardArticle } from "@/components/shared/card/article";
+import { ContainerList } from "@/components/shared/card/list";
+import { FooterContent } from "@/components/shared/content/footer";
+import { HeaderContent } from "@/components/shared/content/header";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { RefContent } from "@/components/shared/content/references";
 import {
   ARTICLE_SOURCE_ROOT,
   type PublishedArticleSummary,

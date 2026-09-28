@@ -4,11 +4,8 @@ import { captureException } from "@repo/analytics/posthog/browser";
 import { Button } from "@repo/design-system/components/ui/button";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
-import { Theme } from "@/components/marketing/shared/footer-action";
-import {
-  EntryShellBody,
-  EntryShellHeader,
-} from "@/components/shared/entry-shell";
+import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
+import { Theme } from "@/components/marketing/shared/footer/action";
 
 /** Keeps entry failures on a localized, recoverable Nakafa surface. */
 export default function EntryError({

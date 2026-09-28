@@ -11,9 +11,11 @@ import { cva } from "class-variance-authority";
  * `variant` chooses the surface. `warning` is the default because a marked
  * phrase still has to be learned. `success` marks a phrase whose condition the
  * learner has already met, such as a satisfied requirement or a completed step.
+ * Math needs an inline block so the surface encloses tall matrices and fractions;
+ * ordinary phrases keep their cloned inline decoration when wrapping.
  */
 export const emphasisVariants = cva(
-  "rounded-sm box-decoration-clone p-1 font-[weight:inherit]",
+  "rounded-sm box-decoration-clone p-1 font-[weight:inherit] has-[.katex]:inline-block",
   {
     variants: {
       variant: {

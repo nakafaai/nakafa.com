@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
-import { UserSettingsProfilePage } from "@/components/user/settings/profile-page";
+import { UserSettingsProfilePage } from "@/components/user/settings/profile";
 import { env } from "@/env";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { admitUserSettingsRoute } from "@/lib/settings/server";

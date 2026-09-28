@@ -13,7 +13,7 @@ import {
   CatalogCardImage,
 } from "@/components/shared/catalog/card";
 import { ChoiceCardIcon } from "@/components/shared/choice/visual";
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { getTryoutTrackCatalogArtwork } from "@/lib/tryout/artwork";

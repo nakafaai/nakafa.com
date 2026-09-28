@@ -4,12 +4,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { Theme } from "@/components/marketing/shared/footer-action";
+import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
+import { Theme } from "@/components/marketing/shared/footer/action";
 import { OnboardingQuestionnaire } from "@/components/programs/onboarding/questionnaire";
-import {
-  EntryShellBody,
-  EntryShellHeader,
-} from "@/components/shared/entry-shell";
 import {
   getPostAuthDestination,
   getPostAuthSignInHref,

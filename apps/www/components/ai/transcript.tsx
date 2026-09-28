@@ -10,11 +10,11 @@ import {
 } from "@repo/design-system/components/ui/scroller";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
 import { useTranslations } from "next-intl";
-import { AiChatError } from "@/components/ai/chat-error";
-import { AiChatMessage } from "@/components/ai/chat-message";
-import { AiChatPending } from "@/components/ai/chat-pending";
-import { useChat } from "@/components/ai/context/use-chat";
-import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
+import { useChat } from "@/components/ai/chat/context";
+import { AiChatError } from "@/components/ai/chat/error";
+import { AiChatPaginationTrigger } from "@/components/ai/chat/pagination";
+import { AiChatPending } from "@/components/ai/chat/pending";
+import { AiChatMessage } from "@/components/ai/message/view";
 
 /** Agent supplies messages; shadcn preserves the reader's position. */
 export function NinaTranscript() {

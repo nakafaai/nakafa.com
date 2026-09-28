@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
-import { BackButton } from "@/components/shared/back-button";
+import { BackButton } from "@/components/shared/back";
 import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";

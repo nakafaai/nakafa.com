@@ -1,8 +1,8 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
 import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
 import { type ReactNode, Suspense } from "react";
-import { DeferredAiSheet } from "@/components/ai/deferred-sheet";
-import { DeferredSearchCommand } from "@/components/shared/deferred-search-command";
+import { DeferredAiSheet } from "@/components/ai/sheet/deferred";
+import { DeferredSearchCommand } from "@/components/search/command/deferred";
 import { NavExplore } from "@/components/sidebar/explore";
 import { Header } from "@/components/sidebar/header/bar";
 import { SidebarNavigation } from "@/components/sidebar/navigation";

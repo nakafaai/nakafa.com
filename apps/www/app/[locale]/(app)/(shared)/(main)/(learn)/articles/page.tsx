@@ -8,12 +8,12 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { getArticleCategoryIcon } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
-import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
-import { LayoutContent } from "@/components/shared/layout-content";
-import { RefContent } from "@/components/shared/ref-content";
-import { SubjectItem } from "@/components/shared/subject-item";
-import { SubjectList } from "@/components/shared/subject-list";
+import { FooterContent } from "@/components/shared/content/footer";
+import { HeaderContent } from "@/components/shared/content/header";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { RefContent } from "@/components/shared/content/references";
+import { SubjectItem } from "@/components/shared/subject/item";
+import { SubjectList } from "@/components/shared/subject/list";
 import {
   ARTICLE_SOURCE_ROOT,
   type ArticlePageCursor,

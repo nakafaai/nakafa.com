@@ -1,8 +1,8 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useLocale, useTranslations } from "next-intl";
-import { HeaderContainer } from "@/components/marketing/shared/header-container";
-import { HeaderCta, LogoCta } from "@/components/marketing/shared/header-cta";
+import { HeaderContainer } from "@/components/marketing/shared/header/container";
+import { HeaderCta, LogoCta } from "@/components/marketing/shared/header/cta";
 import { Language } from "@/components/marketing/shared/language";
 
 export function Header() {

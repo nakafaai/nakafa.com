@@ -1,6 +1,6 @@
 import { SchoolClassesPeopleHeader } from "@/components/school/classes/people/header";
 import { SchoolClassesPeopleList } from "@/components/school/classes/people/list";
-import { SchoolLayoutContent } from "@/components/school/layout-content";
+import { SchoolLayoutContent } from "@/components/school/content";
 import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
 import { searchParsers } from "@/lib/nuqs/search";

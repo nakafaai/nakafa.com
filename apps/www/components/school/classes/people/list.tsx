@@ -18,8 +18,8 @@ import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
 import { DataFailure } from "@/components/shared/failure";
-import { useClass } from "@/lib/context/use-class";
 import { searchParsers } from "@/lib/nuqs/search";
+import { useClass } from "@/lib/school/classes/context";
 import { getInitialName } from "@/lib/utils/helper";
 
 const DEBOUNCE_TIME = 500;

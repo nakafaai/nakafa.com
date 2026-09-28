@@ -1,0 +1,71 @@
+"use client";
+
+import { ArrowUpRight01Icon, StarsIcon } from "@hugeicons/core-free-icons";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Effect } from "effect";
+import { domAnimation, LazyMotion } from "motion/react";
+// biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
+import * as m from "motion/react-m";
+import { useTranslations } from "next-intl";
+import { useAi } from "@/components/ai/context";
+import { preloadAiSheet } from "@/components/ai/sheet/module";
+
+const SLIDE_DISTANCE = 200;
+
+/** Starts loading Nina before the learner activates the entry button. */
+function preloadAiSheetOnIntent() {
+  Effect.runFork(preloadAiSheet());
+}
+
+/** Renders the sticky Nina entry button for the current page. */
+export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
+  const open = useAi((state) => state.open);
+  const setContextTitle = useAi((state) => state.setContextTitle);
+  const setOpen = useAi((state) => state.setOpen);
+  const t = useTranslations("Ai");
+
+  /** Opens Nina with the current page title ready for default suggestions. */
+  function handleOpen() {
+    Effect.runFork(preloadAiSheet());
+    setContextTitle(contextTitle.trim() || null);
+    setOpen(!open);
+  }
+
+  return (
+    <LazyMotion features={domAnimation} strict>
+      <m.aside
+        animate={{
+          opacity: open ? 0 : 1,
+          y: open ? SLIDE_DISTANCE : 0,
+        }}
+        className="sticky right-0 bottom-0 left-0 z-50 px-6 pb-6"
+        initial={{ y: SLIDE_DISTANCE, opacity: 0 }}
+        key="button"
+        transition={{
+          duration: 0.3,
+          ease: "easeOut",
+        }}
+      >
+        <div className="mx-auto sm:max-w-xs">
+          <Button
+            className="w-full justify-between transition-transform duration-200 hover:scale-105"
+            onClick={handleOpen}
+            onFocus={preloadAiSheetOnIntent}
+            onMouseEnter={preloadAiSheetOnIntent}
+            onTouchStart={preloadAiSheetOnIntent}
+            size="lg"
+            variant="default-outline"
+          >
+            <div className="flex items-center gap-2">
+              <HugeIcons icon={StarsIcon} />
+              <span>{t("ask-nina")}</span>
+            </div>
+
+            <HugeIcons icon={ArrowUpRight01Icon} />
+          </Button>
+        </div>
+      </m.aside>
+    </LazyMotion>
+  );
+}

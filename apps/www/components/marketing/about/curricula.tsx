@@ -5,8 +5,8 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "cn";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { CurriculaArt } from "@/components/marketing/about/curricula-art";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { CurriculaArt } from "@/components/marketing/about/curricula/art";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import {
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,

@@ -39,7 +39,7 @@ import { useConvexAuth } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { DataFailure } from "@/components/shared/failure";
-import { useSchool } from "@/lib/context/use-school";
+import { useSchool } from "@/lib/school/context";
 
 type SchoolSwitcherPage = Ref.Returns<
   typeof refs.public.schools.queries.getMySchoolsPage

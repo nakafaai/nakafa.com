@@ -14,16 +14,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
-import {
-  AGENT_DISCOVERY_LINK_HEADER,
-  LLMS_TEXT_PATH,
-} from "@/lib/agent-discovery";
 import { readSchoolAuthRedirect } from "@/lib/auth/school";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   matchesInternalPreviewRoute,
   matchesPreviewPathname,
 } from "@/lib/content/preview/route";
+import { AGENT_DISCOVERY_LINK_HEADER, LLMS_TEXT_PATH } from "@/lib/discovery";
 import {
   LLMS_REPRESENTATION_VARY_FIELDS,
   type LocalizedLlmsRoute,

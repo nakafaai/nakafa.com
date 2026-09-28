@@ -20,7 +20,7 @@ import { useConvexAuth } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 import { isActiveLocale } from "@/lib/i18n/active";

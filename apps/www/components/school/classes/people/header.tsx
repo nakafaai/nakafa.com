@@ -4,7 +4,7 @@ import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { SchoolClassesPeopleInvite } from "@/components/school/classes/people/invite";
 import { SchoolClassesPeopleSearch } from "@/components/school/classes/people/search";
-import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
+import { useClassPermissions } from "@/lib/school/classes/permissions";
 
 /** Render the people toolbar for the active class. */
 export function SchoolClassesPeopleHeader() {

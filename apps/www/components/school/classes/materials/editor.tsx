@@ -1,0 +1,452 @@
+"use client";
+import { useMutation } from "@confect/react";
+import {
+  Add01Icon,
+  ArrowDown01Icon,
+  Calendar03Icon,
+  Edit01Icon,
+  Tick01Icon,
+  Time04Icon,
+} from "@hugeicons/core-free-icons";
+import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
+import refs from "@repo/backend/confect/_generated/refs";
+import { Button } from "@repo/design-system/components/ui/button";
+import { Calendar } from "@repo/design-system/components/ui/calendar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Input } from "@repo/design-system/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@repo/design-system/components/ui/popover";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { useForm } from "@tanstack/react-form";
+import { cn } from "cn";
+import { startOfDay } from "date-fns";
+import { Effect } from "effect";
+import { useLocale, useTranslations } from "next-intl";
+import { Activity, useState } from "react";
+import { toast } from "sonner";
+import { useUpdateMaterialGroupMutation } from "@/components/school/classes/materials/mutation.client";
+import {
+  type MaterialGroupFormValues,
+  materialGroupFormSchema,
+} from "@/components/school/classes/materials/schema";
+import {
+  getMaterialStatus,
+  materialStatusList,
+} from "@/components/school/classes/materials/status";
+import type { MaterialGroup } from "@/components/school/classes/materials/types";
+import {
+  formatScheduledAt,
+  getDefaultScheduledAt,
+  getMinTime,
+  getTimeString,
+  updateDate,
+  updateTime,
+} from "@/components/school/classes/schedule";
+import { reportClientException } from "@/lib/analytics/client";
+import { useClass } from "@/lib/school/classes/context";
+
+interface MaterialGroupDialogShellProps<E> {
+  defaultValues: MaterialGroupFormValues;
+  description: string;
+  errorContext: OperationalExceptionProperties;
+  errorMessage: string;
+  formId: string;
+  onSubmit: (value: MaterialGroupFormValues) => Effect.Effect<void, E>;
+  open: boolean;
+  setOpenAction: (open: boolean) => void;
+  submitIcon: React.ComponentProps<typeof HugeIcons>["icon"];
+  submitLabel: string;
+  title: string;
+}
+/** Render the material-group create dialog for the active class. */
+export function CreateMaterialGroupDialog({
+  open,
+  setOpenAction,
+}: {
+  open: boolean;
+  setOpenAction: (open: boolean) => void;
+}) {
+  const t = useTranslations("School.Classes");
+  const classId = useClass((state) => state.class._id);
+  const createMaterialGroup = useMutation(
+    refs.public.classes.materials.mutations.createMaterialGroup
+  );
+  return (
+    <MaterialGroupDialogShell
+      defaultValues={{
+        name: "",
+        description: "",
+        status: "published",
+        scheduledAt: getDefaultScheduledAt(),
+      }}
+      description={t("new-module-description")}
+      errorContext={{ source: "school-material-group-create" }}
+      errorMessage={t("create-material-group-failed")}
+      formId="school-classes-materials-new-form"
+      onSubmit={(value) => {
+        const { scheduledAt, ...fields } = value;
+        return Effect.tryPromise(() =>
+          createMaterialGroup({
+            ...fields,
+            classId,
+            ...(value.status === "scheduled" && scheduledAt !== undefined
+              ? { scheduledAt }
+              : {}),
+          })
+        ).pipe(Effect.flatMap(Effect.fromResult), Effect.asVoid);
+      }}
+      open={open}
+      setOpenAction={setOpenAction}
+      submitIcon={Add01Icon}
+      submitLabel={t("create")}
+      title={t("new-module-title")}
+    />
+  );
+}
+/** Render the material-group edit dialog for one existing group. */
+export function EditMaterialGroupDialog({
+  group,
+  open,
+  setOpenAction,
+}: {
+  group: MaterialGroup;
+  open: boolean;
+  setOpenAction: (open: boolean) => void;
+}) {
+  const t = useTranslations("School.Classes");
+  const updateMaterialGroup = useUpdateMaterialGroupMutation();
+  return (
+    <MaterialGroupDialogShell
+      defaultValues={{
+        name: group.name,
+        description: group.description,
+        status: group.status,
+        scheduledAt: group.scheduledAt,
+      }}
+      description={t("edit-material-description")}
+      errorContext={{
+        source: "school-material-group-update",
+      }}
+      errorMessage={t("update-material-group-failed")}
+      formId={`edit-material-group-${group._id}`}
+      onSubmit={(value) => {
+        const { scheduledAt, ...fields } = value;
+        return Effect.tryPromise(() =>
+          updateMaterialGroup({
+            groupId: group._id,
+            ...fields,
+            ...(value.status === "scheduled" && scheduledAt !== undefined
+              ? { scheduledAt }
+              : {}),
+          })
+        ).pipe(Effect.flatMap(Effect.fromResult), Effect.asVoid);
+      }}
+      open={open}
+      setOpenAction={setOpenAction}
+      submitIcon={Edit01Icon}
+      submitLabel={t("save")}
+      title={t("edit-material-title")}
+    />
+  );
+}
+/** Render the shared material-group form shell used by create and edit variants. */
+function MaterialGroupDialogShell<E>({
+  defaultValues,
+  description,
+  errorContext,
+  errorMessage,
+  formId,
+  onSubmit,
+  open,
+  setOpenAction,
+  submitIcon,
+  submitLabel,
+  title,
+}: MaterialGroupDialogShellProps<E>) {
+  const [minimumDate] = useState(() => startOfDay(new Date()));
+  const t = useTranslations("School.Classes");
+  const locale = useLocale();
+  const form = useForm({
+    defaultValues,
+    validators: {
+      onChange: materialGroupFormSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await Effect.runPromise(
+        onSubmit(value).pipe(
+          Effect.matchEffect({
+            onSuccess: () =>
+              Effect.sync(() => {
+                form.reset();
+                setOpenAction(false);
+              }),
+            onFailure: (error) =>
+              reportClientException(error, errorContext).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error(errorMessage);
+                  })
+                )
+              ),
+          })
+        )
+      );
+    },
+  });
+  return (
+    <form action={() => form.handleSubmit()} id={formId}>
+      <ResponsiveDialog
+        description={description}
+        footer={
+          <form.Subscribe
+            selector={(state) => [state.isValid, state.isSubmitting]}
+          >
+            {([isValid, isSubmitting]) => (
+              <Button
+                disabled={!isValid || isSubmitting}
+                form={formId}
+                type="submit"
+              >
+                <Spinner icon={submitIcon} isLoading={isSubmitting} />
+                {submitLabel}
+              </Button>
+            )}
+          </form.Subscribe>
+        }
+        open={open}
+        setOpen={setOpenAction}
+        title={title}
+      >
+        <FieldGroup>
+          <form.Field name="name">
+            {(field) => {
+              const isInvalid =
+                Boolean(field.state.meta.isTouched) &&
+                Boolean(!field.state.meta.isValid);
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={`${formId}-name`}>
+                    {t("material-name-label")}
+                  </FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    id={`${formId}-name`}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    placeholder={t("material-name-placeholder")}
+                    value={field.state.value}
+                  />
+                </Field>
+              );
+            }}
+          </form.Field>
+
+          <form.Field name="description">
+            {(field) => {
+              const isInvalid =
+                Boolean(field.state.meta.isTouched) &&
+                Boolean(!field.state.meta.isValid);
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={`${formId}-description`}>
+                    {t("material-description-label")}
+                  </FieldLabel>
+                  <Textarea
+                    aria-invalid={isInvalid}
+                    className="min-h-24"
+                    id={`${formId}-description`}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    placeholder={t("material-description-placeholder")}
+                    value={field.state.value}
+                  />
+                </Field>
+              );
+            }}
+          </form.Field>
+
+          <form.Field name="status">
+            {(field) => {
+              const isInvalid =
+                Boolean(field.state.meta.isTouched) &&
+                Boolean(!field.state.meta.isValid);
+              const currentStatus = getMaterialStatus(field.state.value);
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={`${formId}-status`}>
+                    {t("material-status-label")}
+                  </FieldLabel>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          aria-invalid={isInvalid}
+                          className="w-full font-normal"
+                          id={`${formId}-status`}
+                          name={field.name}
+                          type="button"
+                          variant="outline"
+                        >
+                          <HugeIcons icon={currentStatus.icon} />
+                          {t(currentStatus.labelKey)}
+                          <HugeIcons
+                            className="ml-auto"
+                            icon={ArrowDown01Icon}
+                          />
+                        </Button>
+                      }
+                    />
+                    <DropdownMenuContent
+                      align="start"
+                      className="w-(--anchor-width)"
+                    >
+                      {materialStatusList.map((status) => (
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          key={status.value}
+                          onClick={() => field.handleChange(status.value)}
+                        >
+                          <HugeIcons icon={status.icon} />
+                          {t(status.labelKey)}
+                          <HugeIcons
+                            className={cn(
+                              "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                              field.state.value === status.value &&
+                                "opacity-100"
+                            )}
+                            icon={Tick01Icon}
+                          />
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </Field>
+              );
+            }}
+          </form.Field>
+
+          <form.Subscribe selector={(state) => [state.values.status]}>
+            {([status]) => (
+              <Activity mode={status === "scheduled" ? "visible" : "hidden"}>
+                <form.Field name="scheduledAt">
+                  {(field) => {
+                    const isInvalid =
+                      Boolean(field.state.meta.isTouched) &&
+                      Boolean(!field.state.meta.isValid);
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={`${formId}-scheduled-at`}>
+                          {t("material-scheduled-at-label")}
+                        </FieldLabel>
+                        <Popover>
+                          <PopoverTrigger
+                            render={
+                              <Button
+                                aria-invalid={isInvalid}
+                                className="w-full font-normal"
+                                id={`${formId}-scheduled-at`}
+                                name={field.name}
+                                type="button"
+                                variant="outline"
+                              />
+                            }
+                          >
+                            <HugeIcons icon={Calendar03Icon} />
+                            {field.state.value
+                              ? formatScheduledAt(field.state.value, locale)
+                              : t("material-scheduled-at-placeholder")}
+                            <HugeIcons
+                              className="ml-auto"
+                              icon={ArrowDown01Icon}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent
+                            align="start"
+                            className="w-auto overflow-hidden p-0"
+                          >
+                            <Calendar
+                              disabled={{ before: minimumDate }}
+                              mode="single"
+                              onSelect={(date) => {
+                                if (!date) {
+                                  return;
+                                }
+                                field.handleChange(
+                                  updateDate(field.state.value, date)
+                                );
+                              }}
+                              selected={
+                                field.state.value
+                                  ? new Date(field.state.value)
+                                  : undefined
+                              }
+                            />
+                            <div className="border-t p-3">
+                              <div className="flex flex-col gap-2">
+                                <FieldLabel
+                                  htmlFor={`${formId}-scheduled-time`}
+                                >
+                                  {t("material-scheduled-time-label")}
+                                </FieldLabel>
+                                <div className="relative flex w-full items-center">
+                                  <HugeIcons
+                                    className="pointer-events-none absolute left-3 size-4 select-none text-muted-foreground"
+                                    icon={Time04Icon}
+                                  />
+                                  <Input
+                                    className="cursor-text appearance-none pl-9 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                                    id={`${formId}-scheduled-time`}
+                                    min={getMinTime(field.state.value)}
+                                    onChange={(event) => {
+                                      if (!field.state.value) {
+                                        return;
+                                      }
+                                      field.handleChange(
+                                        updateTime(
+                                          field.state.value,
+                                          event.target.value
+                                        )
+                                      );
+                                    }}
+                                    type="time"
+                                    value={
+                                      field.state.value
+                                        ? getTimeString(field.state.value)
+                                        : ""
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </Field>
+                    );
+                  }}
+                </form.Field>
+              </Activity>
+            )}
+          </form.Subscribe>
+        </FieldGroup>
+      </ResponsiveDialog>
+    </form>
+  );
+}

@@ -7,7 +7,7 @@ import {
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 
-import { SharedTabs } from "@/components/user/shared-tabs";
+import { SharedTabs } from "@/components/user/navigation";
 
 export function UserTabs({ userId }: { userId: string }) {
   const t = useTranslations("Common");

@@ -14,7 +14,7 @@ import {
   readArticlePage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/content";
 import { ArticleShell } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/shell";
-import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
+import { DeferredAiSheetOpen } from "@/components/ai/sheet/trigger";
 import { DeferredComments } from "@/components/comments/deferred";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { ContentViewTracker } from "@/components/tracking/tracker";
