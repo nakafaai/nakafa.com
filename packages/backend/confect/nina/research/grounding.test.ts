@@ -63,6 +63,37 @@ describe("research Google Search grounding", () => {
     ]);
   });
 
+  it("keeps one normalized source identity across queries in first-seen order", () => {
+    const data = createGroundingWebSearchData({
+      providerMetadata: {
+        google: {
+          groundingMetadata: { webSearchQueries: ["first", "second"] },
+        },
+      },
+      sources: [
+        {
+          sourceType: "url",
+          title: "First title",
+          url: "https://example.com/guide",
+        },
+        {
+          sourceType: "url",
+          title: "Another source",
+          url: "https://example.com/reference",
+        },
+        {
+          sourceType: "url",
+          title: "Repeated title",
+          url: "https://example.com/guide",
+        },
+      ],
+    });
+    expect(data?.sources.map(({ url, title }) => ({ url, title }))).toEqual([
+      { url: "https://example.com/guide", title: "First title" },
+      { url: "https://example.com/reference", title: "Another source" },
+    ]);
+  });
+
   it("falls back to grounding chunks when source parts are unavailable", () => {
     const data = createGroundingWebSearchData({
       providerMetadata: {

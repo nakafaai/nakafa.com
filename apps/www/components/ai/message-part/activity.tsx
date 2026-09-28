@@ -99,6 +99,8 @@ function ActivityTrigger() {
 
   return (
     <CollapsibleTrigger
+      aria-atomic="true"
+      aria-live="polite"
       className={cn(
         "group/activity flex min-h-6 w-fit max-w-full items-center gap-2 rounded-sm text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default",
         failed || denied
@@ -108,6 +110,7 @@ function ActivityTrigger() {
       disabled={artifacts.length === 0}
     >
       <Spinner
+        aria-hidden="true"
         className="size-4"
         icon={failed || denied ? Sad02Icon : icon}
         isLoading={running}

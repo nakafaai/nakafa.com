@@ -39,9 +39,17 @@ export function createGroundingWebSearchData({
   sources: unknown;
 }) {
   const groundingMetadata = getGroundingMetadata(providerMetadata);
+  const seen = new Set<string>();
+  // A source shared by multiple queries owns one evidence identity and chip.
   const groundedSources = getGroundedSources({
     ...(groundingMetadata === undefined ? {} : { groundingMetadata }),
     sources,
+  }).filter((source) => {
+    if (seen.has(source.url)) {
+      return false;
+    }
+    seen.add(source.url);
+    return true;
   });
   if (!Arr.isArrayNonEmpty(groundedSources)) {
     return;
