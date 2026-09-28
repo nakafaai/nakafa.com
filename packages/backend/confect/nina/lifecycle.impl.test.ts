@@ -89,6 +89,9 @@ describe("native Nina settlement", () => {
       ctx.db.system.query("_scheduled_functions").collect()
     );
     expect(
+      events.filter((job) => job.name === "nina/response:present")
+    ).toHaveLength(0);
+    expect(
       events
         .filter((job) => job.name.includes("deliverProductEvent"))
         .map((job) => job.args)
@@ -151,6 +154,9 @@ describe("native Nina settlement", () => {
     const events = await f.t.query((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );
+    expect(
+      events.filter((job) => job.name === "nina/response:present")
+    ).toHaveLength(1);
     expect(
       events
         .filter((job) => job.name.includes("deliverProductEvent"))

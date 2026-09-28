@@ -1,11 +1,7 @@
-import { Agent, type UsageHandler } from "@convex-dev/agent";
+import { Agent } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
-import {
-  ActionCtx,
-  MutationRunner,
-} from "@repo/backend/confect/_generated/services";
+import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { createCapabilities } from "@repo/backend/confect/nina/capabilities";
 import { getModelProviderOptions } from "@repo/backend/confect/nina/config/model";
 import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
@@ -17,38 +13,22 @@ import {
   NinaGenerationError,
 } from "@repo/backend/confect/nina/failure";
 import { boundHistory } from "@repo/backend/confect/nina/history";
-import { generatePresentation } from "@repo/backend/confect/nina/presentation";
 import { createNinaSystemPrompt } from "@repo/backend/confect/nina/prompt/system";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { createNinaPrepareStep } from "@repo/backend/confect/nina/step";
-import { NinaUsage } from "@repo/backend/confect/nina/usage.spec";
+import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 
 /** The scheduled Confect action owns generation; Agent owns its persistent stream. */
 export const generateResponse = Effect.fn("nina.generate")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>
 ) {
   const ctx = yield* ActionCtx;
-  const mutate = yield* MutationRunner;
   const services = yield* Effect.context<ActionCtx>();
   // SDK callbacks are framework boundaries. Domain programs keep composing Effects.
   const runPromise = Effect.runPromiseWith(services);
-  const usageHandler: UsageHandler = (_ctx, event) =>
-    runPromise(
-      Schema.decodeUnknownEffect(NinaUsage)({
-        agent: event.agentName,
-        model: event.model,
-        provider: event.provider,
-        input: event.usage.inputTokens ?? 0,
-        output: event.usage.outputTokens ?? 0,
-      }).pipe(
-        Effect.flatMap((usage) =>
-          mutate(refs.internal.nina.usage.record, { turnId: turn._id, usage })
-        ),
-        Effect.asVoid
-      )
-    );
+  const usageHandler = yield* createUsageHandler(turn._id);
   const runtime = {
     currentDate: new Date(turn._creationTime).toISOString(),
   };
@@ -139,7 +119,6 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     catch: generationFailure,
   });
   if (completed[0] === "stop" && completed[1].trim()) {
-    yield* generatePresentation(turn, usageHandler);
     return;
   }
   if (completed[0] === "content-filter") {

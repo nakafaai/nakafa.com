@@ -23,6 +23,14 @@ in one transaction. A stable request key makes retries idempotent. The scheduled
 action invokes Agent with a Vercel AI Gateway model. Lifecycle mutations settle
 successful responses or refund failed and cancelled responses once.
 
+A committed final answer releases the chat immediately. The settlement mutation
+also schedules optional title and follow-up generation exactly once through
+Confect's Scheduler. That action rechecks the retained conversation and account,
+and anchors its Agent context to the completed prompt so a newer turn cannot
+change its suggestions. Optional generation never reserves or refunds credits.
+The completion event records answer-time usage; the durable turn's usage and
+token totals continue to include later presentation calls.
+
 The Agent component owns threads, messages, tool results, and stream deltas.
 Application tables retain product ownership, visibility, credit transactions,
 turn state, and learning context. They do not duplicate the Agent transcript.
@@ -79,6 +87,8 @@ follows ADR 0008 and does not reconstruct lifetime totals from expired inputs.
 - https://confect.dev/v10/concepts/services
 - https://confect.dev/v10/server/components
 - https://confect.dev/v10/clients/react
+- https://confect.dev/v10/server/scheduling
+- https://docs.convex.dev/agents/context
 - https://docs.convex.dev/agents/streaming
 - https://docs.convex.dev/agents/messages#optimistic-updates-for-sending-messages
 - https://docs.convex.dev/agents/usage-tracking

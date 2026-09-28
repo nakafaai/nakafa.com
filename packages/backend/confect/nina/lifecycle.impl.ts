@@ -77,6 +77,37 @@ const claim = FunctionImpl.make(
   }, Effect.catchDefect(lifecycleFailure))
 );
 
+const presentation = FunctionImpl.make(
+  schema,
+  spec,
+  "presentation",
+  Effect.fn("nina.lifecycle.presentation")(function* (args) {
+    const turn = yield* readTurn(args.turnId);
+    if (turn?.phase !== "settled" || turn.state.status !== "complete") {
+      return null;
+    }
+    const reader = yield* DatabaseReader;
+    const user = yield* reader
+      .table("users")
+      .get(turn.userId)
+      .pipe(
+        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    const chat = yield* reader
+      .table("chats")
+      .get(turn.chatId)
+      .pipe(
+        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    if (!user || isAccountDeletionPending(user) || !chat) {
+      return null;
+    }
+    return turn;
+  })
+);
+
 /** Reconcile committed Agent output before releasing an interrupted turn's credits. */
 const recover = FunctionImpl.make(
   schema,
@@ -118,6 +149,7 @@ const cancel = FunctionImpl.make(
 
 export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(claim),
+  Layer.provide(presentation),
   Layer.provide(recover),
   Layer.provide(cancel),
   Layer.provide(atomic),

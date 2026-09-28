@@ -1,7 +1,7 @@
 import { GatewayRateLimitError } from "@ai-sdk/gateway";
 import { Ref } from "@confect/core";
 import { Agent, listUIMessages } from "@convex-dev/agent";
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -56,7 +56,11 @@ async function fixture(withTool = false) {
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 
-afterEach(() => vi.restoreAllMocks());
+beforeEach(() => vi.useFakeTimers());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
 
 describe("Nina generation through the real Agent component", () => {
   it.effect.each([
@@ -319,7 +323,7 @@ describe("Nina generation through the real Agent component", () => {
     })
   );
 
-  it("persists reasoning, sources and the final answer, with presentation grounded in the saved prompt", async () => {
+  it("persists reasoning, sources and the final answer before optional presentation", async () => {
     const languageModel = ninaModel();
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
     const f = await fixture();
@@ -339,15 +343,10 @@ describe("Nina generation through the real Agent component", () => {
     await f.t.action(run, { turnId: f.turnId });
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
-    expect(state.turn?.suggestions).toEqual([
-      "How does this relate to continuity?",
-    ]);
-    expect(state.turn?.usage.map((row) => row.agent).sort()).toEqual([
-      "nina",
-      "suggestions",
-      "title",
-    ]);
-    expect(state.chat?.title).toBe("Understanding A Function Limit");
+    expect(state.turn?.suggestions).toBeUndefined();
+    expect(state.turn?.usage.map((row) => row.agent)).toEqual(["nina"]);
+    expect(state.chat?.activeTurnId).toBeUndefined();
+    expect(languageModel.doGenerateCalls).toHaveLength(0);
     expect(state.user?.credits).toBe(8);
     expect(state.messages.page).toHaveLength(2);
     const answer = state.messages.page.find(
@@ -375,22 +374,10 @@ describe("Nina generation through the real Agent component", () => {
     expect(JSON.stringify(languageModel.doStreamCalls[0]?.prompt)).toContain(
       "teacher"
     );
-    const [suggestionCall, titleCall] = languageModel.doGenerateCalls;
-    expect(JSON.stringify(suggestionCall?.prompt)).toContain(
-      "Explain a function limit."
-    );
-    expect(JSON.stringify(suggestionCall?.prompt)).toContain(
-      "A limit describes the value approached."
-    );
-    expect(JSON.stringify(titleCall?.prompt)).toContain(
-      "Explain a function limit."
-    );
-    expect(JSON.stringify(titleCall?.prompt)).not.toContain(
-      "A limit describes the value approached."
-    );
   });
 
   it("keeps progressive tool cards in permanent messages after the live stream ends", async () => {
+    vi.useRealTimers();
     const languageModel = ninaModel(true);
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
     vi.mocked(read).mockImplementation(({ input, toolCallId, publish }) =>
@@ -415,6 +402,7 @@ describe("Nina generation through the real Agent component", () => {
     );
     const f = await fixture(true);
     await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => undefined);
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
     expect(languageModel.doStreamCalls).toHaveLength(2);
@@ -478,11 +466,13 @@ describe("Nina generation through the real Agent component", () => {
   });
 
   it("repairs the first page fetch using verified context without another model request", async () => {
+    vi.useRealTimers();
     const languageModel = ninaModel(true, false, {});
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
     vi.mocked(read).mockReturnValue(Effect.succeed("Verified page evidence"));
     const f = await fixture(true);
     await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => undefined);
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
     expect(read).toHaveBeenCalledWith(

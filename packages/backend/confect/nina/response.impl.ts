@@ -1,11 +1,16 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
-import { MutationRunner } from "@repo/backend/confect/_generated/services";
+import {
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { reportFailure } from "@repo/backend/confect/nina/diagnostics";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
 import { generateResponse } from "@repo/backend/confect/nina/generation";
+import { generatePresentation } from "@repo/backend/confect/nina/presentation";
 import spec from "@repo/backend/confect/nina/response.spec";
+import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { Cause, Effect, Exit, Layer, Option, Schema } from "effect";
 
 const run = FunctionImpl.make(
@@ -42,7 +47,32 @@ const run = FunctionImpl.make(
   })
 );
 
+const present = FunctionImpl.make(
+  schema,
+  spec,
+  "present",
+  Effect.fn("nina.response.present")(function* (args) {
+    const turn = yield* (yield* QueryRunner)(
+      refs.internal.nina.lifecycle.presentation,
+      args
+    ).pipe(Effect.orDie);
+    if (!turn) {
+      return null;
+    }
+    yield* generatePresentation(turn, yield* createUsageHandler(turn._id)).pipe(
+      Effect.catchTag("GatewayConfigurationError", () =>
+        Effect.logWarning("Nina presentation configuration unavailable", {
+          turnId: turn._id,
+        })
+      ),
+      Effect.orDie
+    );
+    return null;
+  })
+);
+
 export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(run),
+  Layer.provide(present),
   GroupImpl.finalize
 );
