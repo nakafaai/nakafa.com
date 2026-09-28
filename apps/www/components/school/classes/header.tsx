@@ -2,11 +2,11 @@
 
 import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { SchoolClassesHeaderAdd } from "@/components/school/classes/add/trigger";
-import { SchoolClassesHeaderJoin } from "@/components/school/classes/header-join";
-import { SchoolClassesHeaderSearch } from "@/components/school/classes/header-search";
-import { HeaderContainer } from "@/components/school/header-container";
-import { useSchool } from "@/lib/context/use-school";
-import { useSchoolPermissions } from "@/lib/hooks/use-school-permissions";
+import { SchoolClassesHeaderJoin } from "@/components/school/classes/header/join";
+import { SchoolClassesHeaderSearch } from "@/components/school/classes/header/search";
+import { HeaderContainer } from "@/components/school/header";
+import { useSchool } from "@/lib/school/context";
+import { useSchoolPermissions } from "@/lib/school/permissions";
 export function SchoolClassesHeader() {
   return (
     <HeaderContainer>

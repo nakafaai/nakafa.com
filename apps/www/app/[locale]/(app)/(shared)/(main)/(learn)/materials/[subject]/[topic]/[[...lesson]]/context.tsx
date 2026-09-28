@@ -15,8 +15,8 @@ import {
   readMaterialNavigation,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import { BreadcrumbHeaderSegment } from "@/components/shared/breadcrumb/header";
-import { PaginationContent } from "@/components/shared/pagination-content";
-import { SidebarRightHeader } from "@/components/shared/sidebar-right";
+import { PaginationContent } from "@/components/shared/content/pagination";
+import { SidebarRightHeader } from "@/components/shared/outline/panel";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { decodePublishedMaterialContext } from "@/lib/content/material/projection";
 

@@ -2,9 +2,9 @@
 
 import { useDebouncedValue } from "@mantine/hooks";
 import { useQueryStates } from "nuqs";
-import { SearchResults } from "@/components/shared/search-results";
-import { useSearchQuery } from "@/lib/content/use-search-query";
+import { SearchResults } from "@/components/search/list";
 import { searchParsers } from "@/lib/nuqs/search";
+import { useSearchQuery } from "@/lib/search/query";
 import { getErrorMessage } from "@/lib/utils/error";
 
 const DEBOUNCE_TIME = 500;

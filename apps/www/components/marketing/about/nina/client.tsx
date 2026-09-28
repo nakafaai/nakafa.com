@@ -42,8 +42,8 @@ import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-import { AiChatModel } from "@/components/ai/chat-model";
-import { useAi } from "@/components/ai/context/use-ai";
+import { AiChatModel } from "@/components/ai/chat/model";
+import { useAi } from "@/components/ai/context";
 
 interface NinaPromptProps {
   readonly placeholder: string;

@@ -18,7 +18,7 @@ import {
 } from "@/components/sidebar/data/subject";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { landingFaqNumbers, type MarketingFaqItem } from "@/lib/marketing/faq";
-import { getAppSocialArtwork } from "@/lib/og/app-artwork";
+import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 
 export async function generateMetadata({

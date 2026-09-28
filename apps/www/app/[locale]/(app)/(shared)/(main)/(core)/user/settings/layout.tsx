@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LayoutContent } from "@/components/shared/layout-content";
+import { LayoutContent } from "@/components/shared/content/layout";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { UserSettingsHeader } from "@/components/user/settings/header";

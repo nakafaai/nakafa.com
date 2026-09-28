@@ -3,7 +3,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useLocale, useTranslations } from "next-intl";
-import { HeroArt } from "@/components/marketing/about/hero-art";
+import { HeroArt } from "@/components/marketing/about/hero/art";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /**

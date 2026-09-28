@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { SchoolSelectList } from "@/components/school/select-list";
+import { SchoolSelectList } from "@/components/school/selection";
 import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";

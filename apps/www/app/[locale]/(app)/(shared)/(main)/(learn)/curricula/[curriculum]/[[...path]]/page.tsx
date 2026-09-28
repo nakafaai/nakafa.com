@@ -10,16 +10,16 @@ import {
   CurriculumRootHeader,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
 import { readCurriculumSeoContext } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/seo";
-import { CardMaterial } from "@/components/shared/card-material";
-import { ComingSoon } from "@/components/shared/coming-soon";
-import { ContainerList } from "@/components/shared/container-list";
-import { FooterContent } from "@/components/shared/footer-content";
-import { LayoutContent } from "@/components/shared/layout-content";
+import { ContainerList } from "@/components/shared/card/list";
+import { CardMaterial } from "@/components/shared/card/material";
+import { FooterContent } from "@/components/shared/content/footer";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { RefContent } from "@/components/shared/content/references";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
-import { RefContent } from "@/components/shared/ref-content";
-import { SidebarRightHeader } from "@/components/shared/sidebar-right";
+import { SidebarRightHeader } from "@/components/shared/outline/panel";
+import { ComingSoon } from "@/components/shared/upcoming";
 import { readPublishedProgramPrerenderRoute } from "@/lib/content/program/catalog";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/artwork";
 import {

@@ -3,7 +3,7 @@ import { MarkdownContent } from "@repo/design-system/components/markdown/content
 import { MessageContent } from "@repo/design-system/components/ui/message";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { MathEvidence } from "@/components/ai/message-part/math/evidence";
+import { MathEvidence } from "@/components/ai/message/evidence/math/result";
 import {
   NinaExample,
   NinaMath,

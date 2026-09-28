@@ -9,7 +9,7 @@ import {
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Effect, Schema } from "effect";
-import { domainRenderers as aiDsRenderers } from "@/lib/content/renderer/domain/ai-ds";
+import { domainRenderers as aiDsRenderers } from "@/lib/content/renderer/domain/ai";
 import { baseRenderers } from "@/lib/content/renderer/domain/base";
 import { domainRenderers as biologyRenderers } from "@/lib/content/renderer/domain/biology";
 import { domainRenderers as chemistryRenderers } from "@/lib/content/renderer/domain/chemistry";
@@ -17,11 +17,11 @@ import { domainRenderers as mathematicsRenderers } from "@/lib/content/renderer/
 import { domainRenderers as physicsRenderers } from "@/lib/content/renderer/domain/physics";
 import { domainRenderers as politicsRenderers } from "@/lib/content/renderer/domain/politics";
 import { domainRenderers as siteRenderers } from "@/lib/content/renderer/domain/site";
-import { domainRenderers as snbtGeneralRenderers } from "@/lib/content/renderer/domain/snbt-general";
-import { domainRenderers as snbtMathRenderers } from "@/lib/content/renderer/domain/snbt-math";
-import { domainRenderers as snbtPlainRenderers } from "@/lib/content/renderer/domain/snbt-plain";
-import { domainRenderers as snbtQuantRenderers } from "@/lib/content/renderer/domain/snbt-quant";
-import { domainRenderers as tkaMathRenderers } from "@/lib/content/renderer/domain/tka-math";
+import { domainRenderers as snbtGeneralRenderers } from "@/lib/content/renderer/domain/snbt/general";
+import { domainRenderers as snbtMathRenderers } from "@/lib/content/renderer/domain/snbt/math";
+import { domainRenderers as snbtPlainRenderers } from "@/lib/content/renderer/domain/snbt/plain";
+import { domainRenderers as snbtQuantRenderers } from "@/lib/content/renderer/domain/snbt/quant";
+import { domainRenderers as tkaMathRenderers } from "@/lib/content/renderer/domain/tka/math";
 
 export type RendererSelection = Pick<
   CompiledContentPayload,

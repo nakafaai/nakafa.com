@@ -1,4 +1,4 @@
-import { SchoolAuthBoundary } from "@/components/school/auth-screen";
+import { SchoolAuthBoundary } from "@/components/school/auth";
 
 /**
  * Presents the protected school subtree only while Convex auth is active.

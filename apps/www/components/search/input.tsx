@@ -12,9 +12,8 @@ import {
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
-
-import { useSearch } from "@/lib/context/use-search";
 import { searchParsers } from "@/lib/nuqs/search";
+import { useSearch } from "@/lib/search/context";
 
 export function InputSearch() {
   const t = useTranslations("Utils");

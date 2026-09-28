@@ -3,8 +3,8 @@ import { Virtualizer } from "virtua";
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import { getConversationRowKey } from "@/components/school/classes/forum/conversation/data/transcript/pages";
-import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
-import { VirtualTranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
+import { JumpBar } from "@/components/school/classes/forum/conversation/jump";
+import { VirtualTranscriptRow } from "@/components/school/classes/forum/conversation/transcript/row";
 import {
   useControls,
   useViewport,

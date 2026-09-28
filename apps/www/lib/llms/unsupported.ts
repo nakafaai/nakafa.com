@@ -1,4 +1,4 @@
-import { LLMS_TEXT_PATH } from "@/lib/agent-discovery";
+import { LLMS_TEXT_PATH } from "@/lib/discovery";
 import { BASE_URL } from "@/lib/llms/constants";
 
 const ROOT_ROUTE_PATTERN = /^\/$/;

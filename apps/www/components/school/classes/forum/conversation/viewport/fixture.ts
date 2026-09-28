@@ -27,7 +27,7 @@ import type {
 } from "@/components/school/classes/forum/conversation/viewport/runtime";
 import type { ConversationViewport } from "@/components/school/classes/forum/conversation/viewport/service";
 import { makeConversationViewport } from "@/components/school/classes/forum/conversation/viewport/service";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/session/store";
 
 export const viewportTestTranscript = {
   lastPostId: secondPost._id,

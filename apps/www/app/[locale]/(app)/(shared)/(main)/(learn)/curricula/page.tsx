@@ -9,12 +9,12 @@ import {
   CurriculumCatalogCards,
   CurriculumIndexHeader,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
-import { ComingSoon } from "@/components/shared/coming-soon";
-import { FooterContent } from "@/components/shared/footer-content";
-import { LayoutContent } from "@/components/shared/layout-content";
+import { FooterContent } from "@/components/shared/content/footer";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { RefContent } from "@/components/shared/content/references";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { RefContent } from "@/components/shared/ref-content";
+import { ComingSoon } from "@/components/shared/upcoming";
 import { getCurriculumIndexSocialImage } from "@/lib/curriculum/artwork";
 import {
   type CurriculumCatalogModel,

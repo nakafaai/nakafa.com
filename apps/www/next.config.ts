@@ -12,12 +12,12 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
 import {
   CONTENT_CACHE_LIFETIME,
   CONTENT_CACHE_PROFILE,
 } from "@/lib/content/profile";
+import { AGENT_DISCOVERY_HEADERS } from "@/lib/discovery";
 import { createOgRouteAliasRewrites } from "@/lib/og/route";
 import { readRuntimeConfig } from "@/runtime";
 

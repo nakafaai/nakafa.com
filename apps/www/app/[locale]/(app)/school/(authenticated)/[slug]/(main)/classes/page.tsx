@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { SchoolClassesHeader } from "@/components/school/classes/header";
 import { SchoolClassesList } from "@/components/school/classes/list";
-import { SchoolLayoutContent } from "@/components/school/layout-content";
+import { SchoolLayoutContent } from "@/components/school/content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export async function generateMetadata({

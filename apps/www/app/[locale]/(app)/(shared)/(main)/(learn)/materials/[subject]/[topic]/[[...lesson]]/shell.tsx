@@ -15,24 +15,24 @@ import {
   readMaterialNavigation,
   toMaterialHref,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
-import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
-import { AiMenuItem } from "@/components/ai/menu";
+import { AiMenuItem } from "@/components/ai/sheet/menu";
+import { DeferredAiSheetOpen } from "@/components/ai/sheet/trigger";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ContentDates } from "@/components/content/dates";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
-import { ComingSoon } from "@/components/shared/coming-soon";
-import { FooterContent } from "@/components/shared/footer-content";
-import { LayoutContent } from "@/components/shared/layout-content";
+import { OpenContent } from "@/components/shared/content/actions";
+import { FooterContent } from "@/components/shared/content/footer";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { PaginationContent } from "@/components/shared/content/pagination";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { MaterialOutline } from "@/components/shared/material/toc";
-import { OpenContent } from "@/components/shared/open-content/actions";
-import { PaginationContent } from "@/components/shared/pagination-content";
 import {
   SidebarRightHeader,
   SidebarRightProvider,
-} from "@/components/shared/sidebar-right";
+} from "@/components/shared/outline/panel";
+import { ComingSoon } from "@/components/shared/upcoming";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getOgUrl } from "@/lib/utils/metadata";
 

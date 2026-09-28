@@ -1,14 +1,14 @@
 "use client";
 
+import { useData } from "@/components/school/classes/forum/conversation/context";
+import { ForumPostInput } from "@/components/school/classes/forum/conversation/input";
+import { ForumConversationTranscript } from "@/components/school/classes/forum/conversation/transcript";
+import { useTranscriptData } from "@/components/school/classes/forum/conversation/transcript/query";
+import { ConversationViewportProvider } from "@/components/school/classes/forum/conversation/viewport/context";
 import {
   useForumSession,
   useForumSessionStoreApi,
-} from "@/components/school/classes/forum/context/use-session";
-import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import { useTranscriptData } from "@/components/school/classes/forum/conversation/hooks/transcript/use-data";
-import { ForumPostInput } from "@/components/school/classes/forum/conversation/input";
-import { ForumConversationTranscript } from "@/components/school/classes/forum/conversation/transcript";
-import { ConversationViewportProvider } from "@/components/school/classes/forum/conversation/viewport/context";
+} from "@/components/school/classes/forum/session/context";
 
 /** Loads and wires one Forum Conversation body into the viewport service. */
 export function ForumConversationBody() {

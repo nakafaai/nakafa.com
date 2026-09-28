@@ -20,8 +20,8 @@ import { useConvexAuth } from "convex/react";
 
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
-import { FormBlock } from "@/components/shared/form-block";
+import { CountryFlagIcon } from "@/components/shared/flag";
+import { FormBlock } from "@/components/user/settings/block";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 import { isActiveLocale } from "@/lib/i18n/active";

@@ -42,8 +42,8 @@ import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
 import { DataFailure } from "@/components/shared/failure";
-import { useSchool } from "@/lib/context/use-school";
 import { searchParsers } from "@/lib/nuqs/search";
+import { useSchool } from "@/lib/school/context";
 
 const DEBOUNCE_TIME = 300;
 

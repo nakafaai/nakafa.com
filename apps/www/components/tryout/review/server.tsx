@@ -10,7 +10,7 @@ import { TryoutReviewUpgrade } from "@/components/tryout/review/upgrade.client";
 import {
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
-} from "@/components/tryout/runtime/question-shell.client";
+} from "@/components/tryout/runtime/question/shell.client";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 

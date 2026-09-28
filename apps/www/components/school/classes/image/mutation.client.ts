@@ -6,7 +6,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import type { SchoolClassImage } from "@repo/backend/confect/classes/schema";
 import { Option } from "effect";
 import { updateClassImageState } from "@/components/school/classes/image/state";
-import { useClass } from "@/lib/context/use-class";
+import { useClass } from "@/lib/school/classes/context";
 
 /** Replace the class image across every loaded school class page. */
 function updateClassLists(

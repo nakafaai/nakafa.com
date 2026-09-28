@@ -1,6 +1,6 @@
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { FeaturesBento } from "@/components/marketing/about/features-bento";
+import { FeaturesBento } from "@/components/marketing/about/features/grid";
 import { readFeaturedTryout } from "@/components/tryout/catalog/server";
 import { getPublishedProgramSubjects } from "@/lib/content/program/catalog";
 import { readCurriculumRouteIcon } from "@/lib/curriculum/icons";

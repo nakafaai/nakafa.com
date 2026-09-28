@@ -13,7 +13,7 @@ import type { FileUIPart } from "ai";
 import { Effect, Exit, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { useAi } from "@/components/ai/context/use-ai";
+import { useAi } from "@/components/ai/context";
 import {
   NinaConnectionError,
   type NinaFailure,

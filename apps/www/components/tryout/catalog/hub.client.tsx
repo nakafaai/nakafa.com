@@ -14,8 +14,8 @@ import {
   CatalogCardGradient,
   CatalogCardImage,
 } from "@/components/shared/catalog/card";
-import { ComingSoon } from "@/components/shared/coming-soon";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { CountryFlagIcon } from "@/components/shared/flag";
+import { ComingSoon } from "@/components/shared/upcoming";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { getTryoutCountryCatalogArtwork } from "@/lib/tryout/artwork";

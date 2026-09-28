@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getAppSocialArtwork } from "@/lib/og/app-artwork";
+import { getAppSocialArtwork } from "@/lib/og/app";
 
 export async function generateMetadata({
   params,

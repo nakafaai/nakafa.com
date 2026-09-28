@@ -1,7 +1,7 @@
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import type { ReactNode } from "react";
 import { QuranVerseItem } from "@/components/shared/quran/verses/item";
-import { WindowVirtualized } from "@/components/shared/window-virtualized";
+import { WindowVirtualized } from "@/components/shared/quran/verses/virtual";
 
 interface VerseItem {
   id: string;

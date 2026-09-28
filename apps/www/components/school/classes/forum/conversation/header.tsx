@@ -34,7 +34,7 @@ import { format } from "date-fns";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
+import { useData } from "@/components/school/classes/forum/conversation/context";
 import { useForumReactionMutation } from "@/components/school/classes/forum/reaction/mutation.client";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";

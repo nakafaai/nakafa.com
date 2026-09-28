@@ -9,7 +9,7 @@ import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { MaterialRow } from "@/components/home/material-row";
+import { MaterialRow } from "@/components/home/material";
 import { env } from "@/env";
 import { isActiveLocale } from "@/lib/i18n/active";
 

@@ -11,8 +11,8 @@ import { useConvexAuth } from "convex/react";
 
 import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
-import { FormBlock } from "@/components/shared/form-block";
-import { useBillingNavigation } from "@/lib/billing/use-navigation.client";
+import { FormBlock } from "@/components/user/settings/block";
+import { useBillingNavigation } from "@/lib/billing/navigation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 interface UserSettingsSubscriptionsProps {

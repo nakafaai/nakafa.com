@@ -713,7 +713,6 @@
       "nakafa": "Lernmaterial suchen",
       "deepResearch": "Quellen im Web recherchieren",
       "unknown": "Informationen prüfen",
-      "steps": "{count, plural, one {# Schritt} other {# Schritte}}",
       "failures": "{count} fehlgeschlagen",
       "stopped": "Beendet",
       "denied": "Prüfung nicht erlaubt"

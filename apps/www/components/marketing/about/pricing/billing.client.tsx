@@ -17,7 +17,7 @@ import {
 } from "@/lib/auth/admission";
 import { startGoogleSignIn } from "@/lib/auth/social";
 import { requestGoogleSignIn } from "@/lib/auth/social.client";
-import { useBillingNavigation } from "@/lib/billing/use-navigation.client";
+import { useBillingNavigation } from "@/lib/billing/navigation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { useViewer } from "@/lib/identity/client";
 

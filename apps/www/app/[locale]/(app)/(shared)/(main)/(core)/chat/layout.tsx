@@ -1,6 +1,6 @@
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
-import { AiChatSidebar } from "@/components/ai/chat-sidebar";
+import { AiChatSidebar } from "@/components/ai/chat/sidebar";
 
 export default function Layout(props: LayoutProps<"/[locale]/chat">) {
   const { children } = props;

@@ -23,8 +23,8 @@ import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useClassImageMutation } from "@/components/school/classes/image/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
-import { useClass } from "@/lib/context/use-class";
-import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
+import { useClass } from "@/lib/school/classes/context";
+import { useClassPermissions } from "@/lib/school/classes/permissions";
 
 /** Render the active class hero using the resolved class route snapshot. */
 export function SchoolClassesHeaderInfo() {

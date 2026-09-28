@@ -9,7 +9,7 @@ import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import type { PriceProps } from "@/components/marketing/about/pricing/price";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
-import { getAppSocialArtwork } from "@/lib/og/app-artwork";
+import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/utils/metadata";

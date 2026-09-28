@@ -1,5 +1,7 @@
-import type { ReactNode } from "react";
-import { SchoolClassesForumPageContent } from "@/components/school/classes/forum/page-content";
+import { type ReactNode, Suspense } from "react";
+import { SchoolClassesForumHeader } from "@/components/school/classes/forum/header";
+import { SchoolClassesForumList } from "@/components/school/classes/forum/list";
+import { SchoolLayoutContent } from "@/components/school/content";
 
 /**
  * Keep the shared forum surface mounted while forum child routes switch between
@@ -8,7 +10,14 @@ import { SchoolClassesForumPageContent } from "@/components/school/classes/forum
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <>
-      <SchoolClassesForumPageContent />
+      <SchoolLayoutContent>
+        <Suspense fallback={null}>
+          <SchoolClassesForumHeader />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SchoolClassesForumList />
+        </Suspense>
+      </SchoolLayoutContent>
       {children}
     </>
   );

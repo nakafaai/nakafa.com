@@ -3,8 +3,8 @@ import type { ComponentProps } from "react";
 import {
   SidebarRight,
   SidebarRightPanel,
-} from "@/components/shared/sidebar-right";
-import { SidebarTree } from "@/components/shared/sidebar-tree";
+} from "@/components/shared/outline/panel";
+import { SidebarTree } from "@/components/shared/outline/tree";
 
 interface LayoutMaterialTocProps {
   chapters: {

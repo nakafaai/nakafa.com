@@ -24,12 +24,12 @@ import { useQueryStates } from "nuqs";
 import { Activity, Suspense, useTransition } from "react";
 import { toast } from "sonner";
 import { getTagIcon } from "@/components/school/classes/data/tag";
-import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
 import { useForumReactionMutation } from "@/components/school/classes/forum/reaction/mutation.client";
+import { getSchoolClassesForumHref } from "@/components/school/classes/forum/routes";
 import { DataFailure } from "@/components/shared/failure";
 import { reportClientException } from "@/lib/analytics/client";
-import { useClass } from "@/lib/context/use-class";
 import { searchParsers } from "@/lib/nuqs/search";
+import { useClass } from "@/lib/school/classes/context";
 import { getLocale } from "@/lib/utils/date";
 
 type ForumListItem = Docs["schoolClassForums"] & {

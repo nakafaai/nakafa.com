@@ -25,7 +25,7 @@ import { HeaderAddSubjectField } from "@/components/school/classes/add/subject";
 import { HeaderAddVisibilityField } from "@/components/school/classes/add/visibility";
 import { HeaderAddYearField } from "@/components/school/classes/add/year";
 import { reportClientException } from "@/lib/analytics/client";
-import { useSchool } from "@/lib/context/use-school";
+import { useSchool } from "@/lib/school/context";
 /** Render the school class creation dialog. */
 export function CreateSchoolClassDialog({
   open,

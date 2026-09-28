@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { TryoutActiveQuestionShell } from "@/components/tryout/runtime/question-shell.client";
+import { TryoutActiveQuestionShell } from "@/components/tryout/runtime/question/shell.client";
 import { TryoutResponse } from "@/components/tryout/runtime/response/input.client";
 import type { TryoutRuntimeQuestion as RuntimeQuestion } from "@/components/tryout/runtime/types";
 

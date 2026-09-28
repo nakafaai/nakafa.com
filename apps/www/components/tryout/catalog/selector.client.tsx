@@ -14,7 +14,7 @@ import { useConvexAuth } from "convex/react";
 
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
 import type {
   TryoutCountrySelectorOption,

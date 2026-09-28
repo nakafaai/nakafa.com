@@ -7,13 +7,13 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Suspense } from "react";
-import { SchoolClassesDetailPanel } from "@/components/school/classes/detail-panel";
-import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
-import { SchoolClassesForumPanelContent } from "@/components/school/classes/forum/panel-content";
-import { SchoolClassesForumPanelError } from "@/components/school/classes/forum/panel-error";
-import { SchoolClassesForumPanelInfo } from "@/components/school/classes/forum/panel-info";
+import { type ReactNode, Suspense } from "react";
+import { SchoolClassesDetailPanel } from "@/components/school/classes/detail";
+import { ForumPostConversation } from "@/components/school/classes/forum/conversation/shell";
+import { SchoolClassesForumPanelInfo } from "@/components/school/classes/forum/panel/info";
+import { getSchoolClassesForumHref } from "@/components/school/classes/forum/routes";
 import { DataFailure } from "@/components/shared/failure";
+import { useViewer } from "@/lib/identity/client";
 
 /**
  * Render the active forum conversation inside the reusable class detail slot,
@@ -38,6 +38,7 @@ function SchoolClassesForumPanelFrame({
   forumId: Id<"schoolClassForums">;
 }) {
   const t = useTranslations("School.Classes");
+  const user = useViewer((state) => state.account);
   const router = useRouter();
   const { id: classRouteId, slug } = useParams<{
     id: string;
@@ -59,9 +60,22 @@ function SchoolClassesForumPanelFrame({
     router.replace(closeHref);
   }
 
+  let content: ReactNode = null;
+  if (QueryResult.isFailure(query)) {
+    content = <DataFailure />;
+  } else if (user) {
+    content = (
+      <ForumPostConversation
+        currentUserId={user.appUser._id}
+        forum={forum}
+        forumId={forumId}
+      />
+    );
+  }
+
   return (
     <ErrorBoundary
-      fallback={<SchoolClassesForumPanelError />}
+      fallback={null}
       onError={() => {
         handleClose();
       }}
@@ -71,11 +85,7 @@ function SchoolClassesForumPanelFrame({
         onClose={handleClose}
         title={<SchoolClassesForumPanelInfo forum={forum} />}
       >
-        {QueryResult.isFailure(query) ? (
-          <DataFailure />
-        ) : (
-          <SchoolClassesForumPanelContent forum={forum} forumId={forumId} />
-        )}
+        {content}
       </SchoolClassesDetailPanel>
     </ErrorBoundary>
   );

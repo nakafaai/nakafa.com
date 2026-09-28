@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import { ForumSessionProvider } from "@/components/school/classes/forum/context/use-session";
+import { ForumSessionProvider } from "@/components/school/classes/forum/session/context";
 import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
-import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
+import { SchoolClassesJoinForm } from "@/components/school/classes/join";
 import { SchoolClassesTabs } from "@/components/school/classes/tabs";
-import { SchoolClassesWorkspaceShell } from "@/components/school/classes/workspace-shell";
-import { ClassContextProvider } from "@/lib/context/use-class";
+import { SchoolClassesWorkspaceShell } from "@/components/school/classes/workspace";
+import { ClassContextProvider } from "@/lib/school/classes/context";
 import { getClassRouteSnapshot } from "@/lib/school/server";
 
 /** Bind the authenticated class route to the class subtree. */

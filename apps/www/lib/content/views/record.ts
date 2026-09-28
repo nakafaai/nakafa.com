@@ -15,8 +15,8 @@ import { useConvexAuth } from "convex/react";
 import { Effect, Result } from "effect";
 import { nanoid } from "nanoid";
 import { useEffect } from "react";
+import { useContentViews } from "@/lib/content/views/context";
 import { createContentViewKey } from "@/lib/content/views/key";
-import { useContentViews } from "@/lib/context/use-content-views";
 import { useViewer } from "@/lib/identity/client";
 
 const DEVICE_STORAGE_KEY = "nakafa-device-id";

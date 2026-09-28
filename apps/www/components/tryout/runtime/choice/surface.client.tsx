@@ -6,11 +6,11 @@ import { Radio } from "@repo/design-system/components/ui/radio-group";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import type { ReactNode } from "react";
-import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/choice-variant";
+import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/appearance";
 import {
   getTryoutPreviewChoiceVariant,
   getTryoutReviewedChoiceVariant,
-} from "@/lib/tryout/choice-variant";
+} from "@/lib/tryout/appearance";
 
 interface TryoutSelectableRadioOptionProps {
   readonly appearance?: TryoutPreviewChoiceAppearance;

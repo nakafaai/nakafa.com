@@ -22,22 +22,22 @@ import { FetchHttpClient } from "effect/unstable/http";
 import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import {
-  useForumSession,
-  useForumSessionStoreApi,
-} from "@/components/school/classes/forum/context/use-session";
-import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/attachment-previews";
-import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
+import { useData } from "@/components/school/classes/forum/conversation/context";
+import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments";
+import { useCreateForumPost } from "@/components/school/classes/forum/conversation/input/create";
 import {
   type ForumPostInputDraft,
   restoreForumPostInputDraft,
 } from "@/components/school/classes/forum/conversation/input/draft";
-import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
-import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
+import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji";
+import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/previews";
+import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply";
 import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
-import { useCreateForumPost } from "@/components/school/classes/forum/conversation/input/use-create";
 import { useControls } from "@/components/school/classes/forum/conversation/viewport/context";
+import {
+  useForumSession,
+  useForumSessionStoreApi,
+} from "@/components/school/classes/forum/session/context";
 
 interface ForumPostFailureReport {
   draft?: ForumPostInputDraft;

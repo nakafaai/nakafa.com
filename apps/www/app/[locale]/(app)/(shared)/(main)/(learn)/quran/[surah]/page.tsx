@@ -9,12 +9,16 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
-import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
-import { LayoutContent } from "@/components/shared/layout-content";
+import { DeferredAiSheetOpen } from "@/components/ai/sheet/trigger";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { PaginationContent } from "@/components/shared/content/pagination";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { MaterialOutline } from "@/components/shared/material/toc";
-import { PaginationContent } from "@/components/shared/pagination-content";
+import {
+  SidebarRightHeader,
+  SidebarRightProvider,
+} from "@/components/shared/outline/panel";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
 import {
@@ -24,19 +28,15 @@ import {
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import {
-  SidebarRightHeader,
-  SidebarRightProvider,
-} from "@/components/shared/sidebar-right";
-import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
 } from "@/lib/content/quran/publication";
 import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import { getQuranReferences } from "@/lib/content/quran/references";
-import { VirtualProvider } from "@/lib/context/use-virtual";
+import { VirtualProvider } from "@/lib/content/virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
-import { getAppSocialArtwork } from "@/lib/og/app-artwork";
+import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
