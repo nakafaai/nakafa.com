@@ -58,8 +58,9 @@ deterministic artifact, not only the answer's text.
 Provider history includes calls only for currently registered capabilities.
 The AI SDK prunes unavailable call/result pairs; validated evidence remains in
 its original turn as compact text. The permanent Agent transcript is unchanged.
-An individual tool failure displays a localized verification notice and does
-not mark a completed answer as failed.
+An individual tool failure displays a localized destructive-color row at the
+failed capability or evidence item. It does not mark a completed answer as
+failed. Response-level alerts are reserved for admission or generation failure.
 
 Expected generation failures become typed, stable reason codes. The application
 dictionary owns user-facing copy and recovery guidance. Operational exception

@@ -37,11 +37,9 @@ export function NakafaPart({ message }: Props) {
 
   if (message.status === "error") {
     return (
-      <div className="flex items-center gap-2">
-        <HugeIcons className="size-4 text-destructive" icon={Sad02Icon} />
-        <span className="text-muted-foreground text-sm">
-          {t("nakafa-error", { kind })}
-        </span>
+      <div className="flex items-center gap-2 text-destructive text-sm">
+        <HugeIcons className="size-4 shrink-0" icon={Sad02Icon} />
+        <span>{t("nakafa-error", { kind })}</span>
       </div>
     );
   }

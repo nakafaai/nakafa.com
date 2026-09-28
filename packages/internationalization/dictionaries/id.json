@@ -671,7 +671,12 @@
     "total-tokens": "Total",
     "recent-chats": "Obrolan Terbaru",
     "speed": "Kecepatan pemutaran",
-    "tool-unavailable": "Salah satu langkah pemeriksaan belum berhasil. Jawaban tetap tersedia, tetapi sebagian hasil belum terverifikasi. Coba lagi jika kamu memerlukan hasil pemeriksaan tersebut.",
+    "tool-failures": {
+      "math": "Pemeriksaan matematika gagal",
+      "nakafa": "Pencarian materi gagal",
+      "deepResearch": "Riset web gagal",
+      "unknown": "Pemeriksaan gagal"
+    },
     "review-credits": "Lihat kredit",
     "sign-in-again": "Masuk kembali",
     "failures": {

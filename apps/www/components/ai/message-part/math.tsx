@@ -30,12 +30,16 @@ export function MathPart({ message }: Props) {
       onOpenChange={set}
       open={expanded}
     >
-      <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground">
+      <CollapsibleTrigger
+        className={cn(
+          "flex w-full cursor-pointer items-center gap-2 text-sm transition-colors",
+          message.status === "error"
+            ? "text-destructive"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
         <HugeIcons
-          className={cn(
-            "size-4 shrink-0",
-            message.status === "error" ? "text-destructive" : undefined
-          )}
+          className="size-4 shrink-0"
           icon={getMathIcon(message.kind)}
         />
         <span className="truncate">{t(`math-${message.kind}`)}</span>

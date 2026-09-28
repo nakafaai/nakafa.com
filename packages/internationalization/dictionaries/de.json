@@ -671,7 +671,12 @@
     "total-tokens": "Gesamt",
     "recent-chats": "Letzte Chats",
     "speed": "Wiedergabegeschwindigkeit",
-    "tool-unavailable": "Ein Prüfschritt konnte nicht abgeschlossen werden. Die Antwort ist weiterhin verfügbar, aber ein Teil ist noch nicht überprüft. Versuche es erneut, wenn du diese Prüfung benötigst.",
+    "tool-failures": {
+      "math": "Mathematische Prüfung fehlgeschlagen",
+      "nakafa": "Inhaltssuche fehlgeschlagen",
+      "deepResearch": "Webrecherche fehlgeschlagen",
+      "unknown": "Prüfung fehlgeschlagen"
+    },
     "review-credits": "Credits ansehen",
     "sign-in-again": "Erneut anmelden",
     "failures": {

@@ -52,7 +52,7 @@ function AiChatMessageBody() {
     status === "complete" || status === "cancelled" || status === "failed";
 
   return (
-    <MessageContent>
+    <MessageContent className="gap-4">
       <AiChatMessageContent />
       {status === "failed" ? <AiChatPersistedError /> : null}
       {settled ? (

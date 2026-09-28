@@ -1,9 +1,11 @@
 "use client";
 
+import { Sad02Icon } from "@hugeicons/core-free-icons";
 import {
   type CapabilityArtifact,
   CapabilityOutputSchema,
 } from "@repo/backend/confect/nina/capability/progress";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import {
   Reasoning,
@@ -15,10 +17,16 @@ import {
   Source,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
-import { type DynamicToolUIPart, isToolUIPart, type ToolUIPart } from "ai";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  type DynamicToolUIPart,
+  getToolName,
+  isToolUIPart,
+  type ToolUIPart,
+} from "ai";
 import { Match, Result, Schema } from "effect";
+import { useTranslations } from "next-intl";
 import { NinaAttachment } from "@/components/ai/attachment";
-import { AiToolError } from "@/components/ai/chat-error";
 import { useMessage } from "@/components/ai/context/use-message";
 import { MathPart } from "@/components/ai/message-part/math";
 import { NakafaPart } from "@/components/ai/message-part/nakafa";
@@ -84,7 +92,7 @@ export function AiMessagePart({
 /** Decode the capability result only after the Agent has completed its tool. */
 function ToolOutput({ part }: { part: ToolUIPart | DynamicToolUIPart }) {
   if (part.state === "output-error") {
-    return <AiToolError />;
+    return <ToolFailure part={part} />;
   }
   if (part.state !== "output-available") {
     return null;
@@ -93,11 +101,26 @@ function ToolOutput({ part }: { part: ToolUIPart | DynamicToolUIPart }) {
     part.output
   );
   if (Result.isFailure(output)) {
-    return <AiToolError />;
+    return <ToolFailure part={part} />;
   }
   return output.success.artifacts.map((artifact) => (
     <Evidence artifact={artifact} key={`${artifact.type}:${artifact.id}`} />
   ));
+}
+
+/** A failed capability stays in its own evidence row, separate from the answer. */
+function ToolFailure({ part }: { part: ToolUIPart | DynamicToolUIPart }) {
+  const t = useTranslations("Ai");
+  const name = getToolName(part);
+  const capability = Schema.is(LearningCapabilityNameSchema)(name)
+    ? name
+    : "unknown";
+  return (
+    <div className="flex items-start gap-2 text-destructive text-sm">
+      <HugeIcons className="mt-0.5 size-4 shrink-0" icon={Sad02Icon} />
+      <span>{t(`tool-failures.${capability}`)}</span>
+    </div>
+  );
 }
 
 function Evidence({ artifact }: { artifact: CapabilityArtifact }) {

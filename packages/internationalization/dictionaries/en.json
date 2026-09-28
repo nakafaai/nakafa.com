@@ -671,7 +671,12 @@
     "total-tokens": "Total",
     "recent-chats": "Recent Chats",
     "speed": "Playback speed",
-    "tool-unavailable": "One verification step could not be completed. The answer is still available, but part of it remains unverified. Retry if you need that check.",
+    "tool-failures": {
+      "math": "Math check failed",
+      "nakafa": "Content search failed",
+      "deepResearch": "Web research failed",
+      "unknown": "Check failed"
+    },
     "review-credits": "View credits",
     "sign-in-again": "Sign in again",
     "failures": {
