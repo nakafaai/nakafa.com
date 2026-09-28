@@ -42,7 +42,9 @@ export function createAgentEdgeRoutes({
       src: path.source,
       dest: `${deploymentEnv(contract.originEnvironment)}${contract.originPath}${path.suffix}`,
       env: [contract.originEnvironment],
-      respectOriginCacheControl: false,
+      // Only discovery is public cacheable data; runtime responses stay live.
+      respectOriginCacheControl:
+        "documentPath" in contract && path.suffix === contract.documentPath,
       transforms: [
         {
           type: "request.headers",
