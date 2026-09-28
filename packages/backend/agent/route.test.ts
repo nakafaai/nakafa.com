@@ -14,13 +14,14 @@ import {
 function expectedRoute(
   contract: AgentEdgeContract,
   source: string,
-  destination: string
+  destination: string,
+  respectOriginCacheControl = false
 ) {
   return {
     src: source,
     dest: destination,
     env: [contract.originEnvironment],
-    respectOriginCacheControl: false,
+    respectOriginCacheControl,
     transforms: [
       {
         type: "request.headers",
@@ -56,7 +57,7 @@ function expectedRoute(
 }
 
 describe("agent Vercel routes", () => {
-  it("maps the versioned public API to separated protected capabilities", () => {
+  it("caches public discovery while keeping protected runtime routes live", () => {
     expect(
       createAgentEdgeRoutes({
         contract: NAKAFA_API_EDGE_CONTRACT,
@@ -67,7 +68,8 @@ describe("agent Vercel routes", () => {
         expectedRoute(
           NAKAFA_API_EDGE_CONTRACT,
           "^/openapi\\.json$",
-          "$NAKAFA_CONVEX_SITE_URL/internal/agent/openapi"
+          "$NAKAFA_CONVEX_SITE_URL/internal/agent/openapi",
+          true
         ),
         expectedRoute(
           NAKAFA_API_EDGE_CONTRACT,
