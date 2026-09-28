@@ -41,9 +41,16 @@ const record = FunctionImpl.make(
     } else {
       totals.push({ ...usage, calls: 1 });
     }
+    const input = totals.reduce((total, row) => total + row.input, 0);
+    const output = totals.reduce((total, row) => total + row.output, 0);
     yield* (yield* DatabaseWriter)
       .table("ninaTurns")
-      .patch(turnId, { usage: totals })
+      .patch(turnId, {
+        usage: totals,
+        ...(turn.phase === "settled"
+          ? { tokens: { input, output, total: input + output } }
+          : {}),
+      })
       .pipe(Effect.orDie);
     return null;
   })

@@ -18,7 +18,6 @@ import { makeResearchGenerationError } from "@repo/backend/confect/nina/research
 import {
   createGroundingEvidence,
   createGroundingWebSearchData,
-  hasSingleGroundingQuery,
 } from "@repo/backend/confect/nina/research/grounding";
 import {
   createResearchMessages,
@@ -30,6 +29,8 @@ import {
   researchPrompt,
 } from "@repo/backend/confect/nina/research/prompt";
 import {
+  ResearchSourceLimitError,
+  researchMaxSources,
   researchOutputSchema,
   webSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
@@ -52,7 +53,7 @@ import {
 } from "ai";
 import { Effect } from "effect";
 
-// Keep exact user source scraping parallel without allowing unlimited fan-out.
+// Keep exact source fetching within the admitted count and provider concurrency.
 const exactSourceScrapeConcurrency = 3;
 const exactSourceContentMaxLength = 8000;
 const synthesisRetryAttempts = 3;
@@ -72,6 +73,16 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     publish,
     usageHandler,
   }: ResearchAgentParams & { readonly usageHandler: UsageHandler }) {
+    const sourceReferences = getUniqueSourceReferences([
+      ...messageSourceReferences,
+      ...getSourceReferences(task),
+    ]);
+    if (sourceReferences.length > researchMaxSources) {
+      return yield* new ResearchSourceLimitError({
+        maximum: researchMaxSources,
+        received: sourceReferences.length,
+      });
+    }
     const ctx = yield* ActionCtx;
     const model = yield* getGatewayModel(modelId);
     const agent = new Agent(components.nina, {
@@ -81,10 +92,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     });
     const services = yield* Effect.context<never>();
     const runPromise = Effect.runPromiseWith(services);
-    const sourceReferences = getUniqueSourceReferences([
-      ...messageSourceReferences,
-      ...getSourceReferences(task),
-    ]);
     const sourceOutputs = yield* scrapeSourceReferences({
       task,
       sourceReferences,
@@ -186,9 +193,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 
       collectedEvidence.push(groundingEvidence);
       addEligibleSourceUrls(eligibleCitationUrls, groundedSearchData.sources);
-    }
-
-    if (groundedSearchData && hasSingleGroundingQuery(groundedSearchData)) {
       yield* publish({
         id: `${toolCallId}-grounding`,
         type: "data-web-search",

@@ -57,7 +57,7 @@ export function MathEvidence({ message }: MathEvidenceProps) {
   }
 
   if (message.status === "error") {
-    return <p className="text-muted-foreground">{t("math-error")}</p>;
+    return <p className="text-destructive">{t("math-error")}</p>;
   }
 
   return (

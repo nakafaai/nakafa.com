@@ -158,7 +158,7 @@ export const ReasoningTrigger = memo(
     return (
       <CollapsibleTrigger
         className={cn(
-          "grid w-full cursor-pointer grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-2 text-left text-muted-foreground text-sm transition-colors hover:text-foreground",
+          "flex w-fit max-w-full cursor-pointer items-center gap-2 text-start text-muted-foreground text-sm transition-colors hover:text-foreground",
           !hasContent && "cursor-default hover:text-muted-foreground",
           className
         )}
@@ -175,7 +175,7 @@ export const ReasoningTrigger = memo(
             {hasContent ? (
               <HugeIcons
                 className={cn(
-                  "size-4 transition-transform",
+                  "size-4 shrink-0 transition-transform",
                   isOpen ? "rotate-180" : "rotate-0"
                 )}
                 icon={ArrowDown01Icon}

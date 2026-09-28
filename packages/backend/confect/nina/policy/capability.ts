@@ -1,7 +1,6 @@
+import type { CapabilityOutput } from "@repo/backend/confect/nina/capability/progress";
 import {
-  EvidenceEnvelope,
   type LearningCapabilityName,
-  LearningCapabilityResult,
   MATH_CAPABILITY,
   NAKAFA_CAPABILITY,
   RESEARCH_CAPABILITY,
@@ -71,13 +70,8 @@ export function deniedCapabilityResult({
     "Use only evidence already available in the conversation.",
     "Do not invent unavailable Nakafa, research, or math evidence.",
   ].join("\n");
-  return LearningCapabilityResult.make({
-    evidence: EvidenceEnvelope.make({
-      capability,
-      limitations: [decision.reason],
-      status: "denied",
-      summary: text,
-    }),
-    text,
-  });
+  return { failure: "denied", text } satisfies Pick<
+    CapabilityOutput,
+    "text" | "failure"
+  >;
 }

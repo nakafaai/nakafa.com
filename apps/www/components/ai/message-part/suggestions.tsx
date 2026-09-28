@@ -14,7 +14,7 @@ export function SuggestionsPart({ suggestions }: Props) {
   const t = useTranslations("Ai");
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mt-2 flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <HugeIcons className="size-4" icon={QuoteDownIcon} />
         <span>{t("follow-up")}</span>

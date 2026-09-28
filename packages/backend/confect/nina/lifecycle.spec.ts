@@ -14,6 +14,16 @@ import { Schema } from "effect";
 
 export default GroupSpec.make()
   .addFunction(
+    FunctionSpec.internalQuery({
+      name: "presentation",
+      args: () => ({ turnId: Id("ninaTurns") }),
+      returns: () =>
+        Schema.NullOr(
+          turns.Doc.pipe(Schema.refine((turn) => turn.phase === "settled"))
+        ),
+    })
+  )
+  .addFunction(
     FunctionSpec.internalMutation({
       name: "claim",
       args: () => ({ turnId: Id("ninaTurns") }),

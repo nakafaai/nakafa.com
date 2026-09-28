@@ -87,6 +87,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                 }).pipe(
                   Effect.catchTag("NakafaGenerationError", () =>
                     Effect.succeed({
+                      failure: "failed" as const,
                       text: "Nakafa retrieval failed. Use only evidence already available; do not invent content.",
                     })
                   )
@@ -128,11 +129,18 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   publish,
                   usageHandler,
                 }).pipe(
-                  Effect.catchTag("ResearchGenerationError", () =>
-                    Effect.succeed({
-                      text: "External research failed. State the limitation and use only retrieved evidence; do not invent sources.",
-                    })
-                  )
+                  Effect.catchTags({
+                    ResearchGenerationError: () =>
+                      Effect.succeed({
+                        failure: "failed" as const,
+                        text: "External research failed. State the limitation and use only retrieved evidence; do not invent sources.",
+                      }),
+                    ResearchSourceLimitError: ({ maximum }) =>
+                      Effect.succeed({
+                        failure: "sourceLimit" as const,
+                        text: `No sources were fetched. Ask the user to send at most ${maximum} source URLs per request. Do not silently omit their sources or start another research call for this request.`,
+                      }),
+                  })
                 );
               }),
             abortSignal
@@ -171,6 +179,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                 }).pipe(
                   Effect.catchTag("MathGenerationError", () =>
                     Effect.succeed({
+                      failure: "failed" as const,
                       text: "Deterministic math verification failed. State the limitation; do not claim an unverified calculation is correct.",
                     })
                   )

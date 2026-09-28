@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
+import { researchMaxSources } from "@repo/backend/confect/nina/research/schema";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import {
@@ -82,9 +83,15 @@ const groundingCall = providerStep(
 const final = providerStep([{ type: "text", text: JSON.stringify(output) }]);
 
 describe("research Agent evidence boundary", () => {
-  it.each([false, true])(
-    "allows only retrieved citations with grounding: %s",
-    async (grounded) => {
+  it.each([
+    null,
+    [],
+    ["official agents"],
+    ["official agents", "Agent context"],
+  ])(
+    "allows only retrieved citations and publishes actual grounding queries: %j",
+    async (queries) => {
+      const grounded = queries !== null;
       vi.mocked(searchWeb).mockReturnValue(
         Effect.succeed({
           text: "Inspectable source evidence.",
@@ -130,7 +137,7 @@ describe("research Agent evidence boundary", () => {
           ? {
               providerMetadata: {
                 google: {
-                  groundingMetadata: { webSearchQueries: ["official agents"] },
+                  groundingMetadata: { webSearchQueries: queries },
                 },
               },
             }
@@ -147,7 +154,12 @@ describe("research Agent evidence boundary", () => {
           ...specialistRequest,
           userId,
           task: `Verify ${url}`,
-          sourceReferences: [source],
+          sourceReferences: grounded
+            ? [source]
+            : Array.from({ length: researchMaxSources }, (_, i) => ({
+                ...source,
+                href: i === 0 ? url : `${url}/${i}`,
+              })),
           toolCallId: "research",
           publish,
           usageHandler,
@@ -155,7 +167,9 @@ describe("research Agent evidence boundary", () => {
       );
       expect(result.text).toContain("Verified finding.");
       expect(result.text).not.toContain("Invented finding.");
-      expect(scrapeUrl).toHaveBeenCalledTimes(1);
+      expect(scrapeUrl).toHaveBeenCalledTimes(
+        grounded ? 1 : researchMaxSources
+      );
       expect(usageHandler).toHaveBeenCalledTimes(3);
       expect(model.doGenerateCalls[0]?.toolChoice).toEqual({
         type: "tool",
@@ -167,13 +181,46 @@ describe("research Agent evidence boundary", () => {
       if (grounded) {
         expect(artifacts.at(-1)).toMatchObject({
           type: "data-web-search",
-          data: { queries: ["official agents"], status: "done" },
+          data: { queries, status: "done" },
         });
       } else {
         expect(artifacts).toEqual([]);
       }
     }
   );
+
+  it("rejects excess exact sources before any provider call without silently dropping URLs", async () => {
+    const sources = Array.from({ length: researchMaxSources + 1 }, (_, i) => ({
+      ...source,
+      href: `${url}/${i}`,
+    }));
+    const failure = await runSpecialist((userId) =>
+      runResearchAgent({
+        ...specialistRequest,
+        userId,
+        sourceReferences: sources,
+        toolCallId: "research",
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(
+        Effect.catchTag("ResearchSourceLimitError", (error) =>
+          Effect.succeed({
+            _tag: error._tag,
+            maximum: error.maximum,
+            received: error.received,
+          })
+        )
+      )
+    );
+    expect(failure).toMatchObject({
+      _tag: "ResearchSourceLimitError",
+      maximum: researchMaxSources,
+      received: researchMaxSources + 1,
+    });
+    expect(getGatewayModel).not.toHaveBeenCalled();
+    expect(scrapeUrl).not.toHaveBeenCalled();
+    expect(searchWeb).not.toHaveBeenCalled();
+  });
 
   it("does not convert uncited provider notes or failed scrapes into factual claims", async () => {
     vi.mocked(searchWeb).mockReturnValue(

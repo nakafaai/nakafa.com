@@ -1,6 +1,6 @@
 "use client";
 
-import { Sad02Icon } from "@hugeicons/core-free-icons";
+import { BookOpen02Icon, Sad02Icon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -18,10 +18,6 @@ interface Props {
 export function NakafaPart({ message }: Props) {
   const t = useTranslations("Ai");
 
-  if (message.kind === "taxonomy") {
-    return null;
-  }
-
   const kind = getKindLabel(message.kind, t);
 
   if (message.status === "loading") {
@@ -37,16 +33,21 @@ export function NakafaPart({ message }: Props) {
 
   if (message.status === "error") {
     return (
-      <div className="flex items-center gap-2">
-        <HugeIcons className="size-4 text-destructive" icon={Sad02Icon} />
-        <span className="text-muted-foreground text-sm">
-          {t("nakafa-error", { kind })}
-        </span>
+      <div className="flex items-center gap-2 text-destructive text-sm">
+        <HugeIcons className="size-4 shrink-0" icon={Sad02Icon} />
+        <span>{t("nakafa-error", { kind })}</span>
       </div>
     );
   }
 
   switch (message.kind) {
+    case "taxonomy":
+      return (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <HugeIcons className="size-4 shrink-0" icon={BookOpen02Icon} />
+          <span>{t("nakafa-taxonomy")}</span>
+        </div>
+      );
     case "search":
       return <SearchPart message={message} />;
     case "content":
@@ -71,6 +72,8 @@ function getKindLabel(
       return t("nakafa-content");
     case "quran":
       return t("nakafa-quran");
+    case "taxonomy":
+      return t("nakafa-taxonomy");
     default:
       return t("nakafa");
   }

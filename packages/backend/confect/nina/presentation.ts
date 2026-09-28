@@ -34,9 +34,12 @@ class NinaPresentationError extends Schema.TaggedError<NinaPresentationError>()(
 /** Small Agent generations use the existing thread as context without adding messages. */
 export const generatePresentation = Effect.fn("nina.presentation.generate")(
   function* (
-    turn: Extract<NinaTurnsDoc, { phase: "active" }>,
+    turn: Extract<NinaTurnsDoc, { phase: "settled" }>,
     usageHandler: UsageHandler
   ) {
+    if (!turn.page) {
+      return;
+    }
     const ctx = yield* ActionCtx;
     const mutate = yield* MutationRunner;
     const model = yield* getGatewayModel(defaultModel);
@@ -48,7 +51,16 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
       instructions: nakafaSuggestions({ locale: turn.page.locale }),
       contextOptions: { recentMessages: 50, excludeToolMessages: true },
       contextHandler: (_ctx, { allMessages }) =>
-        runPromise(boundHistory(allMessages)),
+        runPromise(
+          boundHistory([
+            ...allMessages,
+            {
+              role: "user",
+              content:
+                "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
+            },
+          ])
+        ),
     });
     const providerOptions = {
       gateway: gatewayProviderOptions,
@@ -62,8 +74,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
             ctx,
             { threadId: turn.threadId, userId: turn.userId },
             {
-              prompt:
-                "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
+              promptMessageId: turn.promptMessageId,
               abortSignal: signal,
               providerOptions,
               output: Output.object({

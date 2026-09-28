@@ -87,7 +87,7 @@ export function NinaInput({
       {children}
       <InputGroup
         className={cn(
-          "rounded-3xl bg-muted/50 p-2 text-chat shadow-none",
+          "rounded-3xl bg-muted/50 text-chat shadow-none",
           className
         )}
       >
@@ -95,7 +95,7 @@ export function NinaInput({
         <PromptInputTextarea
           aria-label={t("text-placeholder")}
           autoFocus={autoFocus}
-          className="text-(length:--text-chat) md:text-(length:--text-chat) px-2 py-2"
+          className="text-(length:--text-chat) md:text-(length:--text-chat) px-3 py-3"
           onChange={(event) => setText(event.target.value)}
           onFocus={() => {
             // Load the stylesheet's math faces before streamed formulas arrive.
@@ -113,7 +113,7 @@ export function NinaInput({
         />
         <InputGroupAddon
           align="block-end"
-          className="justify-between gap-2 px-1 pb-1"
+          className="justify-between gap-2 group-has-[>[data-slot=input-group-control]]/input-group:pb-3"
         >
           <NinaAttach />
           <div className="flex items-center gap-1">

@@ -23,6 +23,14 @@ in one transaction. A stable request key makes retries idempotent. The scheduled
 action invokes Agent with a Vercel AI Gateway model. Lifecycle mutations settle
 successful responses or refund failed and cancelled responses once.
 
+A committed final answer releases the chat immediately. The settlement mutation
+also schedules optional title and follow-up generation exactly once through
+Confect's Scheduler. That action rechecks the retained conversation and account,
+and anchors its Agent context to the completed prompt so a newer turn cannot
+change its suggestions. Optional generation never reserves or refunds credits.
+The completion event records answer-time usage; the durable turn's usage and
+token totals continue to include later presentation calls.
+
 The Agent component owns threads, messages, tool results, and stream deltas.
 Application tables retain product ownership, visibility, credit transactions,
 turn state, and learning context. They do not duplicate the Agent transcript.
@@ -38,6 +46,21 @@ model-facing evidence. Context compaction changes provider input only; it does
 not discard the stored transcript. Math uses deterministic computation, Nakafa
 uses authenticated signed content, and research admits retrieved sources.
 
+One collapsed Activity maps to one native `toolCallId`. Its children are the
+capability's published evidence artifacts, not an exhaustive specialist trace.
+Each specialist runs without the main thread ID, so its internal transcript does
+not inflate the conversation. A typed failed or denied result retains already
+published artifacts while keeping failure local to that activity. A failed child
+does not mark a recovered parent or completed answer as failed.
+
+The main Agent receives at most 50 projected history messages and 24,000 tokens.
+Old reasoning and verbose artifact payloads are excluded from provider history;
+full conversation data stays in Agent storage. External research admits at most
+8 exact source URLs before provider work, with 3 concurrent fetches and 8,000
+selected characters per source. Excess requests receive an explicit limit;
+sources are never silently omitted. Public grounding sources are published for
+zero, one, or multiple provider-reported queries without inventing query labels.
+
 Convex deployments own `AI_GATEWAY_API_KEY`, `FIRECRAWL_API_KEY`,
 `MATH_CAS_API_KEY`, and `NEXT_PUBLIC_CAS_URL`. The CAS key must match the
 production CAS service, and its URL is `https://cas.nakafa.com`. These are
@@ -50,8 +73,9 @@ deterministic artifact, not only the answer's text.
 Provider history includes calls only for currently registered capabilities.
 The AI SDK prunes unavailable call/result pairs; validated evidence remains in
 its original turn as compact text. The permanent Agent transcript is unchanged.
-An individual tool failure displays a localized verification notice and does
-not mark a completed answer as failed.
+An individual tool failure displays a localized destructive-color row at the
+failed capability or evidence item. It does not mark a completed answer as
+failed. Response-level alerts are reserved for admission or generation failure.
 
 Expected generation failures become typed, stable reason codes. The application
 dictionary owns user-facing copy and recovery guidance. Operational exception
@@ -79,6 +103,8 @@ follows ADR 0008 and does not reconstruct lifetime totals from expired inputs.
 - https://confect.dev/v10/concepts/services
 - https://confect.dev/v10/server/components
 - https://confect.dev/v10/clients/react
+- https://confect.dev/v10/server/scheduling
+- https://docs.convex.dev/agents/context
 - https://docs.convex.dev/agents/streaming
 - https://docs.convex.dev/agents/messages#optimistic-updates-for-sending-messages
 - https://docs.convex.dev/agents/usage-tracking

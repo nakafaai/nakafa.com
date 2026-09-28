@@ -6,7 +6,6 @@ import {
 import {
   createGroundingEvidence,
   createGroundingWebSearchData,
-  hasSingleGroundingQuery,
 } from "@repo/backend/confect/nina/research/grounding";
 
 describe("research Google Search grounding", () => {
@@ -35,12 +34,17 @@ describe("research Google Search grounding", () => {
     expect(data).toBeUndefined();
   });
 
-  it("marks one-query grounding as safe for a query-scoped search row", () => {
+  it("preserves actual unique queries in one grouped search activity", () => {
     const data = createGroundingWebSearchData({
       providerMetadata: {
         vertex: {
           groundingMetadata: {
-            webSearchQueries: ["official AI SDK DevTools documentation"],
+            webSearchQueries: [
+              ' "official AI SDK DevTools documentation" ',
+              "",
+              "agents",
+              "agents",
+            ],
           },
         },
       },
@@ -53,7 +57,41 @@ describe("research Google Search grounding", () => {
       ],
     });
 
-    expect(data && hasSingleGroundingQuery(data)).toBe(true);
+    expect(data?.queries).toEqual([
+      "official AI SDK DevTools documentation",
+      "agents",
+    ]);
+  });
+
+  it("keeps one normalized source identity across queries in first-seen order", () => {
+    const data = createGroundingWebSearchData({
+      providerMetadata: {
+        google: {
+          groundingMetadata: { webSearchQueries: ["first", "second"] },
+        },
+      },
+      sources: [
+        {
+          sourceType: "url",
+          title: "First title",
+          url: "https://example.com/guide",
+        },
+        {
+          sourceType: "url",
+          title: "Another source",
+          url: "https://example.com/reference",
+        },
+        {
+          sourceType: "url",
+          title: "Repeated title",
+          url: "https://example.com/guide",
+        },
+      ],
+    });
+    expect(data?.sources.map(({ url, title }) => ({ url, title }))).toEqual([
+      { url: "https://example.com/guide", title: "First title" },
+      { url: "https://example.com/reference", title: "Another source" },
+    ]);
   });
 
   it("falls back to grounding chunks when source parts are unavailable", () => {

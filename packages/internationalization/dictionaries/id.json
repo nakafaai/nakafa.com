@@ -585,7 +585,7 @@
     "math-variance": "Mencari varians",
     "math-variance_probability": "Mencari varians",
     "math-z_score": "Mencari z-score",
-    "math-error": "Bagian ini belum bisa dicek. Tulis ekspresi atau data matematikanya lebih lengkap.",
+    "math-error": "Perhitungan ini belum berhasil.",
     "math-loading": "Mengolah perhitungan...",
     "math-step": "Langkah {number}",
     "math-relation-differentiate": "turunannya",
@@ -630,7 +630,7 @@
     "scrape-error": "Gagal membaca sumber.",
     "web-search": "Pencarian web",
     "web-search-loading": "Lagi nyari info terkait...",
-    "web-search-error": "Gagal nemu info terkait nih.",
+    "web-search-error": "Pencarian belum berhasil.",
     "web-search-empty": "Tidak ada sumber yang didapatkan.",
     "model": "Model",
     "model-subtitle-nakafa-lite": "Belajar harian",
@@ -671,7 +671,12 @@
     "total-tokens": "Total",
     "recent-chats": "Obrolan Terbaru",
     "speed": "Kecepatan pemutaran",
-    "tool-unavailable": "Salah satu langkah pemeriksaan belum berhasil. Jawaban tetap tersedia, tetapi sebagian hasil belum terverifikasi. Coba lagi jika kamu memerlukan hasil pemeriksaan tersebut.",
+    "tool-failures": {
+      "math": "Pemeriksaan matematika gagal",
+      "nakafa": "Pencarian materi gagal",
+      "deepResearch": "Riset web gagal",
+      "unknown": "Pemeriksaan gagal"
+    },
     "review-credits": "Lihat kredit",
     "sign-in-again": "Masuk kembali",
     "failures": {
@@ -701,7 +706,19 @@
       "response-limit": "Nina mencapai batas respons sebelum jawaban selesai. Coba pertanyaan yang lebih terarah atau pecah menjadi beberapa bagian.",
       "interrupted": "Jawaban terhenti sebelum selesai. Silakan coba lagi.",
       "unknown": "Nina belum berhasil menyelesaikan jawaban ini. Silakan coba lagi. Jika masalah berlanjut, hubungi dukungan Nakafa."
-    }
+    },
+    "activity": {
+      "source-limit": "Kirim maksimal {count} tautan sekaligus",
+      "math": "Memeriksa perhitungan",
+      "nakafa": "Mencari materi belajar",
+      "deepResearch": "Menelusuri sumber di web",
+      "unknown": "Memeriksa informasi",
+      "steps": "{count} langkah",
+      "failures": "{count} gagal",
+      "stopped": "Dihentikan",
+      "denied": "Pemeriksaan tidak diizinkan"
+    },
+    "nakafa-taxonomy": "Menelusuri koleksi materi"
   },
   "Pricing": {
     "headline": "<mark>Kita juga pernah jadi pelajar.</mark> Ngerti rasanya milih antara belajar atau makan. Akses dasar gratis. Selamanya.",

@@ -56,7 +56,7 @@ export function AiChatModel() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button size="sm" variant="ghost">
+          <Button className="rounded-full" size="default" variant="ghost">
             <HugeIcons icon={selectedModel.icon} />
             {selectedModel.label}
             <HugeIcons icon={ArrowDown01Icon} />

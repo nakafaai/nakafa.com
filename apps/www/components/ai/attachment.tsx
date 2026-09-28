@@ -127,7 +127,7 @@ export function NinaAttach() {
       aria-label={t("attach-files")}
       className="rounded-full"
       onClick={attachments.openFileDialog}
-      size="icon-sm"
+      size="icon"
       type="button"
       variant="outline"
     >

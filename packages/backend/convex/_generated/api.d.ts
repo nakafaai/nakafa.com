@@ -7988,6 +7988,470 @@ export declare const internal: {
           }
         | null
       >;
+      presentation: FunctionReference<
+        "query",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        | {
+            _creationTime: number;
+            _id: Id<"ninaTurns">;
+            chatId: Id<"chats">;
+            credits: number;
+            creditsResetAt: number;
+            fingerprint: string;
+            modelId: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            page: {
+              locale: "en" | "id" | "de";
+              needsFetch: boolean;
+              nina: {
+                learning: {
+                  assetId?: string;
+                  contentId?: string;
+                  locale: "en" | "id" | "de";
+                  materialKey?: string;
+                  section?: string;
+                  slug: string;
+                  sourcePath?: string;
+                  title?: string;
+                  url: string;
+                  verified: boolean;
+                };
+                placement?: {
+                  mode: "placement";
+                  nodeKey: string;
+                  parentHref: string;
+                  parentTitle: string;
+                  programKey: string;
+                };
+                snapshot: {
+                  capturedAt: string;
+                  learning: {
+                    assetId?: string;
+                    contentId?: string;
+                    locale: "en" | "id" | "de";
+                    materialKey?: string;
+                    section?: string;
+                    slug: string;
+                    sourcePath?: string;
+                    title?: string;
+                    url: string;
+                    verified: boolean;
+                  };
+                  placement?: {
+                    mode: "placement";
+                    nodeKey: string;
+                    parentHref: string;
+                    parentTitle: string;
+                    programKey: string;
+                  };
+                  source: "current-page" | "pinned-chat" | "message";
+                  tools: {
+                    allowDeepResearch: boolean;
+                    allowMath: boolean;
+                    allowNakafa: boolean;
+                    allowPageFetch: boolean;
+                    evidenceScope: "verified-page" | "general-learning";
+                  };
+                };
+                tools: {
+                  allowDeepResearch: boolean;
+                  allowMath: boolean;
+                  allowNakafa: boolean;
+                  allowPageFetch: boolean;
+                  evidenceScope: "verified-page" | "general-learning";
+                };
+                transition: {
+                  fromContextKey?: string;
+                  reason: "same-context" | "page-context";
+                  toContextKey: string;
+                };
+              };
+              slug: string;
+              url: string;
+              verified: boolean;
+            };
+            phase: "active";
+            planCreditGrantId?: Id<"creditTransactions">;
+            promptMessageId: string;
+            promptedAt?: number;
+            requestId: string;
+            snapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            state:
+              { status: "queued" } | { startedAt: number; status: "running" };
+            suggestions?: Array<string>;
+            threadId: string;
+            tokens?: { input?: number; output?: number; total?: number };
+            transactionId: Id<"creditTransactions">;
+            transition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+            user: {
+              curriculumPreference?: {
+                program: { key: string; title: string };
+              };
+              role?: "teacher" | "student" | "parent" | "administrator";
+            };
+            userId: Id<"users">;
+          }
+        | {
+            _creationTime: number;
+            _id: Id<"ninaTurns">;
+            chatId: Id<"chats">;
+            credits?: number;
+            fingerprint?: string;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            page?: {
+              locale: "en" | "id" | "de";
+              needsFetch: boolean;
+              nina: {
+                learning: {
+                  assetId?: string;
+                  contentId?: string;
+                  locale: "en" | "id" | "de";
+                  materialKey?: string;
+                  section?: string;
+                  slug: string;
+                  sourcePath?: string;
+                  title?: string;
+                  url: string;
+                  verified: boolean;
+                };
+                placement?: {
+                  mode: "placement";
+                  nodeKey: string;
+                  parentHref: string;
+                  parentTitle: string;
+                  programKey: string;
+                };
+                snapshot: {
+                  capturedAt: string;
+                  learning: {
+                    assetId?: string;
+                    contentId?: string;
+                    locale: "en" | "id" | "de";
+                    materialKey?: string;
+                    section?: string;
+                    slug: string;
+                    sourcePath?: string;
+                    title?: string;
+                    url: string;
+                    verified: boolean;
+                  };
+                  placement?: {
+                    mode: "placement";
+                    nodeKey: string;
+                    parentHref: string;
+                    parentTitle: string;
+                    programKey: string;
+                  };
+                  source: "current-page" | "pinned-chat" | "message";
+                  tools: {
+                    allowDeepResearch: boolean;
+                    allowMath: boolean;
+                    allowNakafa: boolean;
+                    allowPageFetch: boolean;
+                    evidenceScope: "verified-page" | "general-learning";
+                  };
+                };
+                tools: {
+                  allowDeepResearch: boolean;
+                  allowMath: boolean;
+                  allowNakafa: boolean;
+                  allowPageFetch: boolean;
+                  evidenceScope: "verified-page" | "general-learning";
+                };
+                transition: {
+                  fromContextKey?: string;
+                  reason: "same-context" | "page-context";
+                  toContextKey: string;
+                };
+              };
+              slug: string;
+              url: string;
+              verified: boolean;
+            };
+            phase: "settled";
+            promptMessageId: string;
+            promptedAt?: number;
+            requestId?: string;
+            snapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            state:
+              | { finishedAt: number; status: "complete" }
+              | {
+                  finishedAt: number;
+                  reason?:
+                    | "provider-busy"
+                    | "provider-unavailable"
+                    | "service-configuration"
+                    | "request-rejected"
+                    | "input-too-large"
+                    | "response-timeout"
+                    | "content-blocked"
+                    | "response-limit"
+                    | "interrupted"
+                    | "unknown";
+                  status: "failed";
+                }
+              | { finishedAt: number; status: "cancelled" };
+            suggestions?: Array<string>;
+            threadId: string;
+            tokens?: { input?: number; output?: number; total?: number };
+            transactionId?: Id<"creditTransactions">;
+            transition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+            user?: {
+              curriculumPreference?: {
+                program: { key: string; title: string };
+              };
+              role?: "teacher" | "student" | "parent" | "administrator";
+            };
+            userId: Id<"users">;
+          }
+        | {
+            _creationTime: number;
+            _id: Id<"ninaTurns">;
+            chatId: Id<"chats">;
+            credits?: number;
+            fingerprint?: string;
+            modelId?: "nakafa-lite" | "nakafa-pro";
+            order: number;
+            page?: {
+              locale: "en" | "id" | "de";
+              needsFetch: boolean;
+              nina: {
+                learning: {
+                  assetId?: string;
+                  contentId?: string;
+                  locale: "en" | "id" | "de";
+                  materialKey?: string;
+                  section?: string;
+                  slug: string;
+                  sourcePath?: string;
+                  title?: string;
+                  url: string;
+                  verified: boolean;
+                };
+                placement?: {
+                  mode: "placement";
+                  nodeKey: string;
+                  parentHref: string;
+                  parentTitle: string;
+                  programKey: string;
+                };
+                snapshot: {
+                  capturedAt: string;
+                  learning: {
+                    assetId?: string;
+                    contentId?: string;
+                    locale: "en" | "id" | "de";
+                    materialKey?: string;
+                    section?: string;
+                    slug: string;
+                    sourcePath?: string;
+                    title?: string;
+                    url: string;
+                    verified: boolean;
+                  };
+                  placement?: {
+                    mode: "placement";
+                    nodeKey: string;
+                    parentHref: string;
+                    parentTitle: string;
+                    programKey: string;
+                  };
+                  source: "current-page" | "pinned-chat" | "message";
+                  tools: {
+                    allowDeepResearch: boolean;
+                    allowMath: boolean;
+                    allowNakafa: boolean;
+                    allowPageFetch: boolean;
+                    evidenceScope: "verified-page" | "general-learning";
+                  };
+                };
+                tools: {
+                  allowDeepResearch: boolean;
+                  allowMath: boolean;
+                  allowNakafa: boolean;
+                  allowPageFetch: boolean;
+                  evidenceScope: "verified-page" | "general-learning";
+                };
+                transition: {
+                  fromContextKey?: string;
+                  reason: "same-context" | "page-context";
+                  toContextKey: string;
+                };
+              };
+              slug: string;
+              url: string;
+              verified: boolean;
+            };
+            phase: "unanswered";
+            promptMessageId: string;
+            promptedAt?: number;
+            requestId?: string;
+            snapshot?: {
+              capturedAt: string;
+              learning: {
+                assetId?: string;
+                contentId?: string;
+                locale: "en" | "id" | "de";
+                materialKey?: string;
+                section?: string;
+                slug: string;
+                sourcePath?: string;
+                title?: string;
+                url: string;
+                verified: boolean;
+              };
+              placement?: {
+                mode: "placement";
+                nodeKey: string;
+                parentHref: string;
+                parentTitle: string;
+                programKey: string;
+              };
+              source: "current-page" | "pinned-chat" | "message";
+              tools: {
+                allowDeepResearch: boolean;
+                allowMath: boolean;
+                allowNakafa: boolean;
+                allowPageFetch: boolean;
+                evidenceScope: "verified-page" | "general-learning";
+              };
+            };
+            state: { status: "unanswered" };
+            suggestions?: Array<string>;
+            threadId: string;
+            tokens?: { input?: number; output?: number; total?: number };
+            transactionId?: Id<"creditTransactions">;
+            transition?: {
+              fromContextKey?: string;
+              reason: "same-context" | "page-context";
+              toContextKey: string;
+            };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair";
+              calls: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+            }>;
+            user?: {
+              curriculumPreference?: {
+                program: { key: string; title: string };
+              };
+              role?: "teacher" | "student" | "parent" | "administrator";
+            };
+            userId: Id<"users">;
+          }
+        | null
+      >;
       recover: FunctionReference<
         "mutation",
         "internal",
@@ -8021,6 +8485,12 @@ export declare const internal: {
       >;
     };
     response: {
+      present: FunctionReference<
+        "action",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
+      >;
       run: FunctionReference<
         "action",
         "internal",

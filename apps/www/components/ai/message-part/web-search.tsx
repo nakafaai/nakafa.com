@@ -41,11 +41,9 @@ export function WebSearchPart({ message }: Props) {
   if (isError) {
     return (
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <HugeIcons className="size-4 text-destructive" icon={Sad02Icon} />
-          <span className="text-muted-foreground text-sm">
-            {t("web-search-error")}
-          </span>
+        <div className="flex items-center gap-2 text-destructive text-sm">
+          <HugeIcons className="size-4 shrink-0" icon={Sad02Icon} />
+          <span>{t("web-search-error")}</span>
         </div>
         <WebSearchPartQueries queries={message.queries} />
       </div>

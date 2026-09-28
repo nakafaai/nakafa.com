@@ -1,10 +1,12 @@
 import { abortStream, listMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
   MutationCtx,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { refundCredits } from "@repo/backend/confect/nina/credits/ledger";
@@ -13,7 +15,7 @@ import {
   NinaSettledTurn,
   NinaTurnError,
 } from "@repo/backend/confect/nina/turns.spec";
-import { Clock, Effect, Schema } from "effect";
+import { Clock, Duration, Effect, Schema } from "effect";
 
 const settlementFailure = () =>
   new NinaTurnError({
@@ -115,6 +117,14 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
     .table("ninaTurns")
     .replace(turn._id, settled)
     .pipe(Effect.orDie);
+  if (completed) {
+    // Settlement schedules this once, including recovery after an interrupted action.
+    yield* (yield* Scheduler).runAfter(
+      Duration.zero,
+      refs.internal.nina.response.present,
+      { turnId: turn._id }
+    );
+  }
   if (chat && status !== "cancelled") {
     yield* captureProductEvent({
       distinctId: turn.userId,
