@@ -585,7 +585,7 @@
     "math-variance": "Finding variance",
     "math-variance_probability": "Finding variance",
     "math-z_score": "Finding z-score",
-    "math-error": "This part could not be checked. Write the math expression or data more completely.",
+    "math-error": "This calculation could not be completed.",
     "math-loading": "Working on calculation...",
     "math-step": "Step {number}",
     "math-relation-differentiate": "has derivative",
@@ -630,7 +630,7 @@
     "scrape-error": "Couldn't read source.",
     "web-search": "Web search",
     "web-search-loading": "Looking for info...",
-    "web-search-error": "Couldn't find any info.",
+    "web-search-error": "The search could not be completed.",
     "web-search-empty": "No sources returned.",
     "model": "Model",
     "model-subtitle-nakafa-lite": "Everyday learning",
@@ -706,7 +706,19 @@
       "response-limit": "Nina reached the response limit before finishing. Try a more focused question or split it into smaller parts.",
       "interrupted": "The response was interrupted before it finished. Please try again.",
       "unknown": "Nina could not finish this response. Please try again. If this continues, contact Nakafa support."
-    }
+    },
+    "activity": {
+      "source-limit": "Send up to {count} links at a time",
+      "math": "Checking the calculations",
+      "nakafa": "Finding learning materials",
+      "deepResearch": "Researching web sources",
+      "unknown": "Checking information",
+      "steps": "{count, plural, one {# step} other {# steps}}",
+      "failures": "{count} failed",
+      "stopped": "Stopped",
+      "denied": "Check not allowed"
+    },
+    "nakafa-taxonomy": "Browsing the content collection"
   },
   "Pricing": {
     "headline": "<mark>We were students too.</mark> We know what it is like to choose between learning and eating. Core access is free. Always.",

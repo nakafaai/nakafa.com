@@ -585,7 +585,7 @@
     "math-variance": "Varianz bestimmen",
     "math-variance_probability": "Varianz bestimmen",
     "math-z_score": "z-Wert bestimmen",
-    "math-error": "Dieser Teil konnte nicht geprüft werden. Gib den mathematischen Ausdruck oder die Daten vollständiger an.",
+    "math-error": "Diese Berechnung konnte nicht abgeschlossen werden.",
     "math-loading": "Berechnung läuft...",
     "math-step": "Schritt {number}",
     "math-relation-differentiate": "hat die Ableitung",
@@ -630,7 +630,7 @@
     "scrape-error": "Quelle konnte nicht gelesen werden.",
     "web-search": "Websuche",
     "web-search-loading": "Informationen werden gesucht...",
-    "web-search-error": "Es konnten keine Informationen gefunden werden.",
+    "web-search-error": "Die Suche konnte nicht abgeschlossen werden.",
     "web-search-empty": "Keine Quellen zurückgegeben.",
     "model": "Modell",
     "model-subtitle-nakafa-lite": "Lernen im Alltag",
@@ -706,7 +706,19 @@
       "response-limit": "Nina hat das Antwortlimit erreicht, bevor die Antwort fertig war. Stelle eine gezieltere Frage oder teile sie in kleinere Fragen auf.",
       "interrupted": "Die Antwort wurde unterbrochen, bevor sie fertig war. Bitte versuche es erneut.",
       "unknown": "Nina konnte diese Antwort nicht abschließen. Bitte versuche es erneut. Falls das Problem bestehen bleibt, kontaktiere den Nakafa-Support."
-    }
+    },
+    "activity": {
+      "source-limit": "Bitte höchstens {count} Links auf einmal senden",
+      "math": "Berechnungen prüfen",
+      "nakafa": "Lernmaterial suchen",
+      "deepResearch": "Quellen im Web recherchieren",
+      "unknown": "Informationen prüfen",
+      "steps": "{count, plural, one {# Schritt} other {# Schritte}}",
+      "failures": "{count} fehlgeschlagen",
+      "stopped": "Beendet",
+      "denied": "Prüfung nicht erlaubt"
+    },
+    "nakafa-taxonomy": "Materialsammlung durchsuchen"
   },
   "Pricing": {
     "headline": "<mark>Auch wir waren einmal Lernende.</mark> Wir wissen, wie es ist, zwischen Lernen und Essen wählen zu müssen. Der grundlegende Zugang ist kostenlos. Immer.",

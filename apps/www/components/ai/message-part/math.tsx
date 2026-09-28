@@ -42,7 +42,11 @@ export function MathPart({ message }: Props) {
           className="size-4 shrink-0"
           icon={getMathIcon(message.kind)}
         />
-        <span className="truncate">{t(`math-${message.kind}`)}</span>
+        <span className="truncate">
+          {message.status === "error"
+            ? t("tool-failures.math")
+            : t(`math-${message.kind}`)}
+        </span>
         <HugeIcons
           className={cn(
             "size-4 shrink-0 transition-transform",

@@ -1,5 +1,6 @@
 "use client";
 
+import { isToolUIPart } from "ai";
 import { useChat } from "@/components/ai/context/use-chat";
 import { useMessage } from "@/components/ai/context/use-message";
 import { AiChatMessageLoading } from "@/components/ai/message-loading";
@@ -16,8 +17,8 @@ export function AiChatMessageContent() {
     <div className="flex flex-col gap-6 empty:hidden">
       {parts.map((part, i) => (
         <AiMessagePart
-          // biome-ignore lint/suspicious/noArrayIndexKey: AI SDK 7.0.77 appends parts in place; text parts expose no id. https://github.com/vercel/ai/blob/ai%407.0.77/packages/ai/src/ui/process-ui-message-stream.ts#L427-L438
-          key={`part-${part.type}-${i}`}
+          // Agent appends text parts without IDs; tool invocations retain their native identity.
+          key={isToolUIPart(part) ? part.toolCallId : `part-${part.type}-${i}`}
           part={part}
           partIndex={i}
         />

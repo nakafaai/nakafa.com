@@ -1,6 +1,7 @@
 "use client";
 
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
+import { isToolUIPart } from "ai";
 
 import { useChat } from "@/components/ai/context/use-chat";
 import { useMessage } from "@/components/ai/context/use-message";
@@ -26,8 +27,9 @@ export function AiChatMessageLoading() {
   if (busy && currentMessage.status !== "failed") {
     const hasContent = currentMessage.parts.some(
       (p) =>
-        (p.type === "text" || p.type === "reasoning") &&
-        p.text.trim().length > 0
+        isToolUIPart(p) ||
+        ((p.type === "text" || p.type === "reasoning") &&
+          p.text.trim().length > 0)
     );
 
     if (!hasContent) {

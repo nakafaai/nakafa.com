@@ -1,6 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import {
   type CapabilityArtifact,
+  CapabilityOutputSchema,
   streamCapability,
 } from "@repo/backend/confect/nina/capability/progress";
 import {
@@ -67,6 +68,24 @@ it.effect("emits pending evidence before the provider finishes", () =>
       { text: "", artifacts: [loading] },
       { text: "Finished", artifacts: [loading] },
     ]);
+  })
+);
+
+it.effect("retains gathered steps with a typed specialist failure", () =>
+  Effect.gen(function* () {
+    const snapshots = yield* streamCapability((publish) =>
+      publish(loading).pipe(
+        Effect.as({ text: "Research unavailable", failure: "failed" as const })
+      )
+    ).pipe(Stream.runCollect);
+    const final = yield* Schema.decodeUnknownEffect(CapabilityOutputSchema)(
+      snapshots.at(-1)
+    );
+    expect(final).toEqual({
+      artifacts: [loading],
+      failure: "failed",
+      text: "Research unavailable",
+    });
   })
 );
 

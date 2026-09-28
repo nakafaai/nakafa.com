@@ -47,9 +47,9 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Nina turn**: One admitted user prompt, credit reservation, immutable learning context, provider usage, and durable response lifecycle. Confect owns admission and settlement; the Convex Agent component owns messages and streaming.
 - **LearningCapability**: An internal education Module Nina can invoke for bounded evidence such as Nakafa retrieval, deterministic math, or external research.
 - **Evidence**: Schema-derived facts, calculations, citations, content references, and limitations that constrain Nina's answer.
-- **EvidenceEnvelope**: The schema-derived LearningCapability result that carries status, compact model-visible evidence, references, and limitations.
-- **Capability output**: A persisted Agent tool result with model-facing evidence and progressive UI cards. Agent stores the final result with the conversation so it survives reconnects.
-- **Capability policy**: The per-turn decision that returns Allowed, Denied, or NeedsConfirmation for a LearningCapability.
+- **Capability output**: A persisted Agent tool result with compact model-facing evidence, progressive artifacts, and an explicit failure when the invocation cannot finish. Agent stores the final result with the conversation so it survives reconnects.
+- **Activity**: One native Agent tool invocation shown as a collapsed purpose row. Its children are published evidence artifacts, not an exhaustive specialist transcript.
+- **Capability policy**: The per-turn decision that returns Allowed or Denied for a LearningCapability.
 - **Pinned context**: The latest stored NinaContextPack reused when a continued chat is opened away from a verified learning asset.
 - **Page fetch**: The one permitted current-page Nakafa content read for a verified learning page.
 

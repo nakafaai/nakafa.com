@@ -32,6 +32,9 @@ export type CapabilityArtifact = Schema.Schema.Type<
 /** The final output owns every card; model context can project only its text. */
 export const CapabilityOutputSchema = Schema.Struct({
   artifacts: Schema.Array(CapabilityArtifactSchema),
+  failure: Schema.optionalKey(
+    Schema.Literals(["failed", "denied", "sourceLimit"])
+  ),
   text: Schema.String,
 });
 
@@ -50,7 +53,9 @@ export type CapabilityProgress = (
  * interrupts the scoped capability, including its provider and tool requests.
  */
 export function streamCapability<E, R>(
-  run: (publish: CapabilityProgress) => Effect.Effect<{ text: string }, E, R>,
+  run: (
+    publish: CapabilityProgress
+  ) => Effect.Effect<Pick<CapabilityOutput, "text" | "failure">, E, R>,
   signal?: AbortSignal
 ): Stream.Stream<CapabilityOutput, E, R> {
   return Stream.callback<CapabilityOutput, E, R>(
@@ -68,8 +73,12 @@ export function streamCapability<E, R>(
         });
 
         yield* run(publish).pipe(
-          Effect.tap(({ text }) =>
-            Queue.offer(queue, { artifacts: [...artifacts.values()], text })
+          Effect.tap(({ text, failure }) =>
+            Queue.offer(queue, {
+              artifacts: [...artifacts.values()],
+              ...(failure ? { failure } : {}),
+              text,
+            })
           ),
           Effect.onExit((exit) =>
             Exit.isFailure(exit)

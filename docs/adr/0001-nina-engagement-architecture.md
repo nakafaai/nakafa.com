@@ -46,6 +46,21 @@ model-facing evidence. Context compaction changes provider input only; it does
 not discard the stored transcript. Math uses deterministic computation, Nakafa
 uses authenticated signed content, and research admits retrieved sources.
 
+One collapsed Activity maps to one native `toolCallId`. Its children are the
+capability's published evidence artifacts, not an exhaustive specialist trace.
+Each specialist runs without the main thread ID, so its internal transcript does
+not inflate the conversation. A typed failed or denied result retains already
+published artifacts while keeping failure local to that activity. A failed child
+does not mark a recovered parent or completed answer as failed.
+
+The main Agent receives at most 50 projected history messages and 24,000 tokens.
+Old reasoning and verbose artifact payloads are excluded from provider history;
+full conversation data stays in Agent storage. External research admits at most
+8 exact source URLs before provider work, with 3 concurrent fetches and 8,000
+selected characters per source. Excess requests receive an explicit limit;
+sources are never silently omitted. Public grounding sources are published for
+zero, one, or multiple provider-reported queries without inventing query labels.
+
 Convex deployments own `AI_GATEWAY_API_KEY`, `FIRECRAWL_API_KEY`,
 `MATH_CAS_API_KEY`, and `NEXT_PUBLIC_CAS_URL`. The CAS key must match the
 production CAS service, and its URL is `https://cas.nakafa.com`. These are

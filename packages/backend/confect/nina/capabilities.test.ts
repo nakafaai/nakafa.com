@@ -10,7 +10,11 @@ import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { NakafaGenerationError } from "@repo/backend/confect/nina/nakafa/error";
 import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
-import { ResearchGenerationError } from "@repo/backend/confect/nina/research/schema";
+import {
+  ResearchGenerationError,
+  ResearchSourceLimitError,
+  researchMaxSources,
+} from "@repo/backend/confect/nina/research/schema";
 import { ninaToolInput } from "@repo/backend/test/nina";
 import {
   providerStep,
@@ -70,7 +74,11 @@ function toolCall(
 
 describe("Nina capability execution policy", () => {
   for (const capability of ["nakafa", "math", "deepResearch"] as const) {
-    it.each(["allowed", "denied", "failed", "missing"] as const)(
+    const states =
+      capability === "deepResearch"
+        ? (["allowed", "denied", "failed", "missing", "sourceLimit"] as const)
+        : (["allowed", "denied", "failed", "missing"] as const);
+    it.each(states)(
       `${capability} keeps %s execution within the authenticated turn`,
       async (state) => {
         vi.mocked(runNakafaAgent).mockReturnValue(
@@ -93,16 +101,27 @@ describe("Nina capability execution policy", () => {
               )
             : Effect.succeed({ text: "Verified calculation." })
         );
-        vi.mocked(runResearchAgent).mockReturnValue(
-          state === "failed"
-            ? Effect.fail(
-                new ResearchGenerationError({
-                  phase: "evidence",
-                  message: "Private provider detail",
-                })
-              )
-            : Effect.succeed({ text: "Verified source." })
-        );
+        if (state === "sourceLimit") {
+          vi.mocked(runResearchAgent).mockReturnValue(
+            Effect.fail(
+              new ResearchSourceLimitError({
+                maximum: researchMaxSources,
+                received: researchMaxSources + 1,
+              })
+            )
+          );
+        } else {
+          vi.mocked(runResearchAgent).mockReturnValue(
+            state === "failed"
+              ? Effect.fail(
+                  new ResearchGenerationError({
+                    phase: "evidence",
+                    message: "Private provider detail",
+                  })
+                )
+              : Effect.succeed({ text: "Verified source." })
+          );
+        }
         const model = new MockLanguageModelV4({
           doGenerate: [toolCall(capability), request],
         });
@@ -159,6 +178,7 @@ describe("Nina capability execution policy", () => {
         expect(JSON.stringify(result)).not.toContain("Private provider detail");
         if (state === "denied" || state === "missing") {
           expect(result[0]).toMatchObject({
+            failure: "denied",
             text: expect.stringContaining("Status: denied"),
           });
           expect(runNakafaAgent).not.toHaveBeenCalled();
@@ -177,11 +197,21 @@ describe("Nina capability execution policy", () => {
               modelId: specialistRequest.modelId,
             })
           );
+          const expectedText = {
+            allowed: "Verified",
+            failed: "failed",
+            sourceLimit: `at most ${researchMaxSources}`,
+          }[state];
           expect(result[0]).toMatchObject({
-            text: expect.stringContaining(
-              state === "allowed" ? "Verified" : "failed"
-            ),
+            text: expect.stringContaining(expectedText),
           });
+          if (state === "sourceLimit") {
+            expect(result[0]).toHaveProperty("failure", "sourceLimit");
+          } else if (state === "failed") {
+            expect(result[0]).toHaveProperty("failure", "failed");
+          } else {
+            expect(result[0]).not.toHaveProperty("failure");
+          }
         }
       }
     );

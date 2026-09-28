@@ -56,10 +56,6 @@ export function createGroundingWebSearchData({
     status: "done",
   } satisfies DataPart["web-search"];
 }
-/** Checks whether source-backed grounding can be shown as one query-scoped row. */
-export function hasSingleGroundingQuery(data: DataPart["web-search"]) {
-  return data.queries.length === 1;
-}
 /**
  * Converts sanitized AI SDK Google grounding sources into synthesis evidence.
  *

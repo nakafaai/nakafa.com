@@ -6,7 +6,7 @@ import type { TimeoutConfiguration, ToolSet } from "ai";
  * AI SDK treats `stepMs` as a per-step abort timer and `chunkMs` as the
  * maximum gap between streamed chunks, so the main chat window must allow
  * slower Pro reasoning and web-search steps. The app request deadline covers
- * preparation, the main answer, and optional suggestions together.
+ * preparation and the main answer. Optional presentation has separate deadlines.
  *
  * @see https://ai-sdk.dev/docs/ai-sdk-core/settings#timeout
  */

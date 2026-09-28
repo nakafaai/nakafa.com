@@ -3,6 +3,13 @@ import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
+/** Eight exact sources bound selected scrape context to 64,000 characters. */
+export const researchMaxSources = 8;
+/** Reject excess sources before provider work instead of silently dropping any. */
+export class ResearchSourceLimitError extends Schema.TaggedError<ResearchSourceLimitError>()(
+  "ResearchSourceLimitError",
+  { maximum: Schema.Literal(researchMaxSources), received: Schema.Int }
+) {}
 const urlInputSchema = Schema.NonEmptyString.pipe(
   Schema.check(
     Schema.makeFilter(isPublicHttpUrlSyntax, {
