@@ -27,12 +27,14 @@ import { readInvocation } from "@/components/ai/message/invocation";
 /** Agent owns SDK parts; evidence card payloads obey Nina's runtime contract. */
 export function AiMessagePart({
   part,
-  partIndex,
+  partKey,
 }: {
   part: NinaMessage["parts"][number];
-  partIndex: number;
+  partKey: string;
 }) {
-  const messageId = useMessage((state) => state.message.id);
+  // The message key, unlike its id, survives the handoff from stream to saved.
+  const messageKey = useMessage((state) => state.message.key);
+  const id = `${messageKey}-${partKey}`;
   if (part.type === "file") {
     return <NinaAttachment file={part} />;
   }
@@ -52,7 +54,7 @@ export function AiMessagePart({
     );
   }
   if (part.type === "text") {
-    return <NinaText id={`${messageId}-part-${partIndex}`} part={part} />;
+    return <NinaText id={id} part={part} />;
   }
   if (part.type === "reasoning") {
     const hasContent = part.text.trim().length > 0;
@@ -66,9 +68,7 @@ export function AiMessagePart({
         <ReasoningTrigger />
         {hasContent ? (
           <ReasoningContent>
-            <Response id={`${messageId}-part-${partIndex}`}>
-              {part.text}
-            </Response>
+            <Response id={id}>{part.text}</Response>
           </ReasoningContent>
         ) : null}
       </Reasoning>
