@@ -3,7 +3,6 @@
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
-import { useChat } from "@/components/ai/chat/context";
 
 interface MessageContextValue {
   message: NinaMessage;
@@ -15,11 +14,13 @@ const MessageContext = createContext<MessageContextValue | null>(null);
 /** Provides one AI message to message-part components. */
 export function MessageProvider({
   message,
+  turn,
   children,
-}: PropsWithChildren<{ message: NinaMessage }>) {
-  const latest = useChat((state) => state.turn);
-  const turn = latest?.order === message.order ? latest : message.metadata;
-  const value = { message, turn };
+}: PropsWithChildren<{
+  message: NinaMessage;
+  turn?: NinaMessage["metadata"];
+}>) {
+  const value = { message, turn: turn ?? message.metadata };
 
   return (
     <MessageContext.Provider value={value}>{children}</MessageContext.Provider>

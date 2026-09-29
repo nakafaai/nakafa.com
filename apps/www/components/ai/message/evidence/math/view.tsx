@@ -11,15 +11,19 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
-import { getMathIcon } from "@/components/ai/message/evidence/math/icons";
-import { MathEvidence } from "@/components/ai/message/evidence/math/result";
+import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
+  children: ReactNode;
+  icon: ComponentProps<typeof HugeIcons>["icon"];
   message: DataPart["math"];
 }
 
-/** Renders one deterministic math evidence part in the chat transcript. */
-export function MathPart({ message }: Props) {
+/**
+ * Frames one deterministic math result. Callers render its evidence body and
+ * choose its operation icon, so this shell never loads the full icon map.
+ */
+export function MathPart({ children, icon, message }: Props) {
   const t = useTranslations("Ai");
   const [expanded, { set }] = useDisclosure(false);
 
@@ -37,10 +41,7 @@ export function MathPart({ message }: Props) {
             : "text-muted-foreground hover:text-foreground"
         )}
       >
-        <HugeIcons
-          className="size-4 shrink-0"
-          icon={getMathIcon(message.kind)}
-        />
+        <HugeIcons className="size-4 shrink-0" icon={icon} />
         <span className="truncate">
           {message.status === "error"
             ? t("tool-failures.math")
@@ -55,7 +56,7 @@ export function MathPart({ message }: Props) {
         />
       </CollapsibleTrigger>
       <CollapsibleContent className="max-w-full overflow-hidden text-muted-foreground text-sm outline-none">
-        <MathEvidence message={message} />
+        {children}
       </CollapsibleContent>
     </Collapsible>
   );

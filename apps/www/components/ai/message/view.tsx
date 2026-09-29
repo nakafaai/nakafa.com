@@ -1,10 +1,12 @@
 "use client";
 
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
+import { Response } from "@repo/design-system/components/ai/response";
 import {
   MessageContent,
   MessageFooter,
 } from "@repo/design-system/components/ui/message";
+import { useChat } from "@/components/ai/chat/context";
 import { AiChatPersistedError } from "@/components/ai/chat/error";
 import { AiChatMessageActions } from "@/components/ai/message/actions";
 import {
@@ -13,6 +15,7 @@ import {
 } from "@/components/ai/message/content";
 import { MessageProvider, useMessage } from "@/components/ai/message/context";
 import { AiChatMessageCredits } from "@/components/ai/message/credits";
+import { AiChatMessageLoading } from "@/components/ai/message/loading";
 import { NinaPrompt } from "@/components/ai/message/prompt";
 
 interface Props {
@@ -20,21 +23,22 @@ interface Props {
 }
 
 export function AiChatMessage({ message }: Props) {
+  const latest = useChat((state) => state.turn);
+  const turn = latest?.order === message.order ? latest : message.metadata;
   if (message.role === "user") {
     return (
-      <MessageProvider message={message}>
+      <MessageProvider message={message} turn={turn}>
         <NinaPrompt
+          actions={<AiChatMessageActions />}
           files={message.parts.filter((part) => part.type === "file")}
-          id={message.id}
-          text={message.text}
         >
-          <AiChatMessageActions />
+          <Response id={message.id}>{message.text}</Response>
         </NinaPrompt>
       </MessageProvider>
     );
   }
   return (
-    <MessageProvider message={message}>
+    <MessageProvider message={message} turn={turn}>
       <AiChatMessageBody />
     </MessageProvider>
   );
@@ -51,6 +55,7 @@ function AiChatMessageBody() {
     <MessageContent className="gap-6">
       <div className="flex min-w-0 flex-col gap-4">
         <AiChatMessageContent />
+        <AiChatMessageLoading />
         {status === "failed" ? <AiChatPersistedError /> : null}
         {settled ? (
           <MessageFooter className="min-h-9 justify-between gap-4">
