@@ -1,7 +1,11 @@
 import { Agent } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import { ActionCtx } from "@repo/backend/confect/_generated/services";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  ActionCtx,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { createCapabilities } from "@repo/backend/confect/nina/capabilities";
 import { getModelProviderOptions } from "@repo/backend/confect/nina/config/model";
 import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
@@ -13,12 +17,27 @@ import {
   NinaGenerationError,
 } from "@repo/backend/confect/nina/failure";
 import { boundHistory } from "@repo/backend/confect/nina/history";
+import { formatFocusPrompt } from "@repo/backend/confect/nina/prompt/focus";
 import { createNinaSystemPrompt } from "@repo/backend/confect/nina/prompt/system";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { createNinaPrepareStep } from "@repo/backend/confect/nina/step";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
 import { Effect } from "effect";
+
+/** A focused turn never answers without its rechecked, signed question. */
+const readFocus = Effect.fn("nina.generate.focus")(
+  function* (turnId: NinaTurnsDoc["_id"]) {
+    const source = yield* (yield* QueryRunner)(refs.internal.nina.focus.read, {
+      turnId,
+    });
+    if (!source) {
+      return yield* new NinaGenerationError({ reason: "unknown" });
+    }
+    return yield* formatFocusPrompt(source);
+  },
+  Effect.mapError(() => new NinaGenerationError({ reason: "unknown" }))
+);
 
 /** The scheduled Confect action owns generation; Agent owns its persistent stream. */
 export const generateResponse = Effect.fn("nina.generate")(function* (
@@ -37,7 +56,9 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     user: turn.user,
     runtime,
   });
+  const focus = turn.page.nina.focus ? yield* readFocus(turn._id) : undefined;
   const instructions = createNinaSystemPrompt({
+    ...(focus === undefined ? {} : { focus }),
     page: turn.page,
     user: turn.user,
     runtime,
