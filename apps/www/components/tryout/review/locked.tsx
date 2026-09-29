@@ -1,6 +1,12 @@
 import "server-only";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -10,6 +16,10 @@ import {
   PricingPrice,
   StaticPrice,
 } from "@/components/marketing/about/pricing/price";
+import {
+  CardSection,
+  CardSectionFooter,
+} from "@/components/shared/card/section";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { projectTryoutPreview } from "@/components/tryout/review/model";
@@ -20,7 +30,6 @@ import {
 } from "@/components/tryout/runtime/question/shell.client";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
-import { FormBlock } from "@/components/user/settings/block";
 
 const PREVIEW_QUESTIONS = 2;
 
@@ -108,31 +117,32 @@ export async function TryoutReviewLocked({
 
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-full max-w-md">
-          <FormBlock
-            description={t("paywall-description")}
-            footer={
-              <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <IntentLink
-                  className={buttonVariants({ variant: "outline" })}
-                  href="/pricing"
-                >
-                  {t("paywall-compare")}
-                </IntentLink>
-                <TryoutReviewCheckout />
-              </div>
-            }
-            title={
-              <h2 id="tryout-review-offer">
-                {t("paywall-title", { count: runtime.questions.length })}
-              </h2>
-            }
-          >
-            <PricingPrice
-              Price={StaticPrice}
-              period={tPricing("pro-period")}
-              plan="pro"
-            />
-          </FormBlock>
+          <CardSection>
+            <CardHeader>
+              <CardTitle>
+                <h2 id="tryout-review-offer">
+                  {t("paywall-title", { count: runtime.questions.length })}
+                </h2>
+              </CardTitle>
+              <CardDescription>{t("paywall-description")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PricingPrice
+                Price={StaticPrice}
+                period={tPricing("pro-period")}
+                plan="pro"
+              />
+            </CardContent>
+            <CardSectionFooter className="flex-col-reverse items-stretch gap-2 sm:flex-row sm:justify-end">
+              <IntentLink
+                className={buttonVariants({ variant: "outline" })}
+                href="/pricing"
+              >
+                {t("paywall-compare")}
+              </IntentLink>
+              <TryoutReviewCheckout />
+            </CardSectionFooter>
+          </CardSection>
         </div>
       </div>
     </section>

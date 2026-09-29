@@ -2,6 +2,12 @@
 
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -16,8 +22,11 @@ import { useForm } from "@tanstack/react-form";
 import { Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import {
+  CardSection,
+  CardSectionFooter,
+} from "@/components/shared/card/section";
 import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
-import { FormBlock } from "@/components/user/settings/block";
 import { reportClientException } from "@/lib/analytics/client";
 import { roles } from "@/lib/data/roles";
 import type { CurrentUser } from "@/lib/identity/client";
@@ -84,9 +93,52 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-role-form">
-      <FormBlock
-        description={t("role-description")}
-        footer={
+      <CardSection>
+        <CardHeader>
+          <CardTitle>{t("role")}</CardTitle>
+          <CardDescription>{t("role-description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form.Field name="role">
+            {(field) => (
+              <Field>
+                <FieldLabel className="sr-only" htmlFor="user-settings-role">
+                  {t("role")}
+                </FieldLabel>
+                <Select
+                  items={roleItems}
+                  name={field.name}
+                  onValueChange={(value) => {
+                    const parsed =
+                      Schema.decodeUnknownOption(roleSchema)(value);
+                    if (Option.isSome(parsed)) {
+                      field.handleChange(parsed.value);
+                    }
+                  }}
+                  value={field.state.value ?? undefined}
+                >
+                  <SelectTrigger
+                    className="w-full max-w-xs"
+                    id="user-settings-role"
+                  >
+                    <SelectValue placeholder={t("role-placeholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {roles.map((role) => (
+                        <SelectItem key={role.value} value={role.value}>
+                          <HugeIcons icon={role.icon} />
+                          {t(role.value)}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
+          </form.Field>
+        </CardContent>
+        <CardSectionFooter>
           <form.Subscribe
             selector={(state) => [state.isDirty, state.isSubmitting]}
           >
@@ -105,47 +157,8 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
               </div>
             )}
           </form.Subscribe>
-        }
-        title={t("role")}
-      >
-        <form.Field name="role">
-          {(field) => (
-            <Field>
-              <FieldLabel className="sr-only" htmlFor="user-settings-role">
-                {t("role")}
-              </FieldLabel>
-              <Select
-                items={roleItems}
-                name={field.name}
-                onValueChange={(value) => {
-                  const parsed = Schema.decodeUnknownOption(roleSchema)(value);
-                  if (Option.isSome(parsed)) {
-                    field.handleChange(parsed.value);
-                  }
-                }}
-                value={field.state.value ?? undefined}
-              >
-                <SelectTrigger
-                  className="w-full max-w-xs"
-                  id="user-settings-role"
-                >
-                  <SelectValue placeholder={t("role-placeholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {roles.map((role) => (
-                      <SelectItem key={role.value} value={role.value}>
-                        <HugeIcons icon={role.icon} />
-                        {t(role.value)}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
-        </form.Field>
-      </FormBlock>
+        </CardSectionFooter>
+      </CardSection>
     </form>
   );
 }
