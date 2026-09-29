@@ -1,4 +1,5 @@
 import { createServer } from "node:net";
+import { availableParallelism } from "node:os";
 import {
   acceptanceRuntimeError,
   sanitizeAcceptanceCommandError,
@@ -126,6 +127,18 @@ export const assertLocalPortsFree = Effect.fn(
   yield* reservePort(runtime.site);
 }, Effect.scoped);
 
+/**
+ * Convex caps active isolates so functions never oversubscribe the CPU. The
+ * local backend leaves that cap unlimited, so a prerender burst runs dozens of
+ * isolates on a few cores and queries exhaust their one-second user time while
+ * waiting for CPU. Waiting for an isolate permit does not count as user time.
+ * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/concurrency_limiter.rs
+ * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/timeout.rs
+ */
+const localBackendEnvironment = {
+  FUNRUN_ISOLATE_ACTIVE_THREADS: String(availableParallelism()),
+};
+
 /** Refreshes Convex bindings and owns the local backend through application acceptance. */
 export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
   function* <A, E, R>(runtime: LocalRuntime, program: Effect.Effect<A, E, R>) {
@@ -150,6 +163,7 @@ export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
         cwd: runtime.backend,
         env: {
           ...localConvexEnvironment,
+          ...localBackendEnvironment,
           AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
           AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
         },
