@@ -116,7 +116,7 @@ If the proxy uses a custom state directory, set `PORTLESS_STATE_DIR` to that
 directory in both terminals.
 
 Stop acceptance services before `pnpm acceptance:clean` removes their database,
-source checkout, signer, and logs. Cleanup verifies filesystem ownership and
+source checkout, signer, logs, and the web app's cached signed fetch responses. Cleanup verifies filesystem ownership and
 refuses a database whose identity changed. To refresh the fixture, clean it and
 repeat preparation. Update the pinned Aksara revision deliberately when the
 acceptance contract needs new reviewed examples.

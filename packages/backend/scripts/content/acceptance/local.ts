@@ -106,6 +106,21 @@ const directoryIdentity = Effect.fn("contentAcceptance.directoryIdentity")(
   }
 );
 
+/**
+ * Next reuses cached fetch responses across builds, but every runtime signs with
+ * a new random key. Responses signed by an earlier runtime can never verify, so
+ * each runtime starts and ends without them.
+ */
+const discardSignedResponses = Effect.fn(
+  "contentAcceptance.discardSignedResponses"
+)(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.remove(`${root}/apps/www/.next/cache/fetch-cache`, {
+    force: true,
+    recursive: true,
+  });
+});
+
 /** Reserves one private runtime without changing the checkout's Convex selection. */
 export const reserveLocalRuntime = Effect.fn(
   "contentAcceptance.reserveLocalRuntime"
@@ -127,6 +142,7 @@ export const reserveLocalRuntime = Effect.fn(
         )
       )
     );
+  yield* discardSignedResponses(root);
   return yield* directoryIdentity(directory);
 });
 
@@ -331,4 +347,5 @@ export const cleanLocalRuntime = Effect.fn(
   yield* leaseLocalRuntime(root);
   yield* assertLocalPortsFree(runtime);
   yield* releaseLocalRuntime(runtime);
+  yield* discardSignedResponses(root);
 });

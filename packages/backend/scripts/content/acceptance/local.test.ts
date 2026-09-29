@@ -124,6 +124,33 @@ describe("owned signed acceptance runtime", () => {
   );
 
   it.live(
+    "drops signed fetch responses when a runtime starts and when it is cleaned",
+    () =>
+      Effect.gen(function* () {
+        initialize();
+        const { fs, root } = yield* fixture;
+        const cache = `${root}/apps/www/.next/cache`;
+        const cacheSignedResponse = () =>
+          Effect.gen(function* () {
+            yield* fs.makeDirectory(`${cache}/fetch-cache`, {
+              recursive: true,
+            });
+            yield* fs.writeFileString(`${cache}/fetch-cache/entry`, "{}");
+          });
+        yield* fs.makeDirectory(`${cache}/images`, { recursive: true });
+        yield* cacheSignedResponse();
+        yield* reserveLocalRuntime(root);
+        expect(yield* fs.exists(`${cache}/fetch-cache`)).toBe(false);
+        expect(yield* fs.exists(`${cache}/images`)).toBe(true);
+        yield* initializeLocalRuntime(root);
+        yield* cacheSignedResponse();
+        yield* cleanLocalRuntime(root);
+        expect(yield* fs.exists(`${cache}/fetch-cache`)).toBe(false);
+        expect(yield* fs.exists(`${cache}/images`)).toBe(true);
+      }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
     "refuses duplicate preparation and cleanup during an active lease",
     () =>
       Effect.gen(function* () {
