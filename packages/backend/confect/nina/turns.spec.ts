@@ -5,6 +5,7 @@ import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
+import { NinaFocusInputSchema } from "@repo/backend/confect/nina/contract/focus";
 import {
   NinaPageSchema,
   NinaUserSchema,
@@ -30,6 +31,7 @@ export const NinaPageInput = Schema.Struct({
   locale: LocaleSchema,
   slug: Schema.String.pipe(Schema.check(Schema.isMaxLength(2048))),
   materialContextHint: Schema.optionalKey(Schema.String),
+  focus: Schema.optionalKey(NinaFocusInputSchema),
 });
 
 export const NinaPrompt = Schema.Struct({

@@ -1,4 +1,5 @@
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
+import { NinaFocusSchema } from "@repo/backend/confect/nina/contract/focus";
 import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Schema, Struct } from "effect";
 export const NINA_CONTEXT_TRANSITION_REASONS = [
@@ -56,6 +57,7 @@ export const NinaContextTransitionSchema = Schema.Struct({
 /** Validated learning context captured before one Nina turn. */
 export const NinaLearningSessionInputSchema = Schema.Struct({
   capturedAt: Schema.String,
+  focus: Schema.optionalKey(NinaFocusSchema),
   learning: NinaLearningContextSchema,
   placement: Schema.optionalKey(LearningPlacementContextSchema),
   source: Schema.Literals(NINA_CONTEXT_SOURCES),
@@ -78,6 +80,7 @@ export type NinaLearningSessionInput = Schema.Schema.Type<
 >;
 /** Nina context pack consumed by prompts, specialists, and message metadata. */
 export const NinaContextPackSchema = Schema.Struct({
+  focus: Schema.optionalKey(NinaFocusSchema),
   learning: NinaLearningContextSchema,
   placement: Schema.optionalKey(LearningPlacementContextSchema),
   snapshot: NinaContextSnapshotSchema,
@@ -200,7 +203,7 @@ export const openNinaLearningSession = Effect.fn(
   return {
     context: {
       learning: sessionInput.learning,
-      ...Struct.pick(sessionInput, ["placement"]),
+      ...Struct.pick(sessionInput, ["focus", "placement"]),
       snapshot,
       tools,
       transition,

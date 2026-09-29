@@ -2,11 +2,13 @@ import "server-only";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
+import { NinaAskProvider } from "@/components/ai/ask";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import { TryoutAskButton } from "@/components/tryout/review/ask";
+import { TryoutReviewLocked } from "@/components/tryout/review/locked";
 import { projectTryoutReview } from "@/components/tryout/review/model";
-import { TryoutReviewUpgrade } from "@/components/tryout/review/upgrade.client";
 import {
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
@@ -25,7 +27,13 @@ export async function TryoutReview({
   readonly runtime: TryoutSectionRuntime;
 }) {
   if (access.answers.length === 0 && runtime.questions.length > 0) {
-    return <TryoutReviewUpgrade />;
+    return (
+      <TryoutReviewLocked
+        access={access}
+        attemptId={attemptId}
+        runtime={runtime}
+      />
+    );
   }
   const resolvedContent = await Effect.runPromise(
     loadSignedTryoutContent(attemptId, access)
@@ -48,27 +56,36 @@ export async function TryoutReview({
   }
 
   return (
-    <section className="space-y-12">
-      {questions.map((question) => (
-        <TryoutReviewQuestionShell
-          key={question.questionOrder}
-          questionOrder={question.questionOrder}
-        >
-          <section className="my-6">{question.content}</section>
-          <section className="my-8">
-            <TryoutReviewedResponse
-              questionOrder={question.questionOrder}
-              responseSpec={question.responseSpec}
-              selection={question.response?.selection ?? null}
-            />
-          </section>
-          <TryoutReviewQuestionExplanation
+    <NinaAskProvider>
+      <section className="space-y-12">
+        {questions.map((question) => (
+          <TryoutReviewQuestionShell
+            action={
+              <TryoutAskButton
+                attemptId={attemptId}
+                placementId={question.placementId}
+                questionOrder={question.questionOrder}
+              />
+            }
+            key={question.questionOrder}
             questionOrder={question.questionOrder}
           >
-            {question.answer}
-          </TryoutReviewQuestionExplanation>
-        </TryoutReviewQuestionShell>
-      ))}
-    </section>
+            <section className="my-6">{question.content}</section>
+            <section className="my-8">
+              <TryoutReviewedResponse
+                questionOrder={question.questionOrder}
+                responseSpec={question.responseSpec}
+                selection={question.response?.selection ?? null}
+              />
+            </section>
+            <TryoutReviewQuestionExplanation
+              questionOrder={question.questionOrder}
+            >
+              {question.answer}
+            </TryoutReviewQuestionExplanation>
+          </TryoutReviewQuestionShell>
+        ))}
+      </section>
+    </NinaAskProvider>
   );
 }

@@ -3,30 +3,33 @@
 import { useMutation } from "@confect/react";
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@repo/design-system/components/ui/empty";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { buttonVariants } from "@repo/design-system/lib/button";
+import { Button } from "@repo/design-system/components/ui/button";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { Data, Effect } from "effect";
-import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
+import { useBillingNavigation } from "@/lib/billing/navigation.client";
+import { isActiveLocale } from "@/lib/i18n/active";
+import { useViewer } from "@/lib/identity/client";
 
 /** A failed optional paywall impression never changes access to free scores. */
 class TryoutReviewImpressionError extends Data.TaggedError(
   "TryoutReviewImpressionError"
 )<{ readonly cause: unknown }> {}
 
-/** Offers detailed solutions after the learner has received a free score. */
-export function TryoutReviewUpgrade() {
-  const t = useTranslations("Tryouts");
+/**
+ * Starts Pro checkout from a locked review. Checkout returns to this page, and
+ * the review reloads as soon as the account's plan becomes Pro.
+ */
+export function TryoutReviewCheckout() {
+  const t = useTranslations("Pricing");
+  const locale = useLocale();
+  const router = useRouter();
+  const billing = useBillingNavigation();
+  const [isRefreshing, startRefresh] = useTransition();
+  const plan = useViewer((state) => state.viewer?.plan);
   const trackPaywall = useMutation(
     refs.public.tryouts.mutations.access.trackPaywallView
   );
@@ -51,20 +54,30 @@ export function TryoutReviewUpgrade() {
     );
   }, [trackPaywall]);
 
+  useEffect(() => {
+    if (plan === "pro") {
+      startRefresh(() => router.refresh());
+    }
+  }, [plan, router]);
+
+  const pending = billing.isPending || isRefreshing;
+
   return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <HugeIcons icon={Diamond02Icon} />
-        </EmptyMedia>
-        <EmptyTitle>{t("paywall-title")}</EmptyTitle>
-        <EmptyDescription>{t("paywall-description")}</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        <IntentLink className={buttonVariants()} href="/pricing">
-          {t("checkout-cta")}
-        </IntentLink>
-      </EmptyContent>
-    </Empty>
+    <Button
+      disabled={pending || !isActiveLocale(locale)}
+      onClick={() => {
+        if (!isActiveLocale(locale)) {
+          return;
+        }
+        billing.openCheckout({ locale, source: "tryout-review-checkout" });
+      }}
+    >
+      <Spinner
+        data-icon="inline-start"
+        icon={Diamond02Icon}
+        isLoading={pending}
+      />
+      {t("pro-cta")}
+    </Button>
   );
 }
