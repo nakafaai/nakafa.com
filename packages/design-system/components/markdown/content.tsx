@@ -1,9 +1,12 @@
+import {
+  MarkdownFrame,
+  type MarkdownFrameVariant,
+} from "@repo/design-system/components/markdown/frame";
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react/mdx";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
-import { cn } from "cn";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 import ReactMarkdown from "react-markdown";
 import { harden } from "rehype-harden";
 import remarkGfm from "remark-gfm";
@@ -28,12 +31,8 @@ export type MarkdownContentProps = {
   readonly children: string;
   readonly className?: string;
   readonly id: string;
-} & MarkdownSecurityProps;
-
-interface MarkdownFrameProps {
-  readonly children: ReactNode;
-  readonly className?: string | undefined;
-}
+} & MarkdownSecurityProps &
+  MarkdownFrameVariant;
 
 /** Renders one normalized, hardened markdown block. */
 export function MarkdownBlock({
@@ -62,20 +61,6 @@ export function MarkdownBlock({
   );
 }
 
-/** Preserves the shared response frame around any rendered block collection. */
-export function MarkdownFrame({ children, className }: MarkdownFrameProps) {
-  return (
-    <div
-      className={cn(
-        "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
 /** Renders one complete non-streaming Markdown document. */
 export function MarkdownContent({
   allowedImagePrefixes,
@@ -84,11 +69,12 @@ export function MarkdownContent({
   className,
   defaultOrigin,
   id,
+  variant,
 }: MarkdownContentProps) {
   const blocks = readMarkdownBlocks(id, normalizeText(children));
 
   return (
-    <MarkdownFrame className={className}>
+    <MarkdownFrame className={className} variant={variant}>
       {blocks.map((block) => (
         <MarkdownBlock
           allowedImagePrefixes={allowedImagePrefixes}
