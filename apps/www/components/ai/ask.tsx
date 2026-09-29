@@ -27,6 +27,7 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
   const { send } = useNinaSubmission();
   const openAsk = useAi((state) => state.openAsk);
   const resolveAsk = useAi((state) => state.resolveAsk);
+  const openAskId = useAi((state) => state.ask?.id);
   const waiting = useRef<{ id: string; prompt: NinaDraft } | null>(null);
 
   function submit(id: string, prompt: NinaDraft) {
@@ -57,7 +58,8 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
   const settleWaiting = useEffectEvent((admit: boolean) => {
     const pending = waiting.current;
     waiting.current = null;
-    if (!pending) {
+    // An account change clears the ask while it waits; its prompt is dropped.
+    if (!pending || pending.id !== openAskId) {
       return;
     }
     if (admit && gate.admit()) {
