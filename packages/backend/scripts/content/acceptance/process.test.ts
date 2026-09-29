@@ -1,5 +1,5 @@
 import { createServer } from "node:net";
-import { tmpdir } from "node:os";
+import { availableParallelism, tmpdir } from "node:os";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
@@ -145,6 +145,7 @@ describe("application process ownership", () => {
                 ...localConvexEnvironment,
                 AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
                 AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
+                FUNRUN_ISOLATE_ACTIVE_THREADS: String(availableParallelism()),
               },
             }),
           }),
