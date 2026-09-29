@@ -11,10 +11,12 @@ import {
   Source,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
-import { isToolUIPart } from "ai";
+import { type DynamicToolUIPart, isToolUIPart, type ToolUIPart } from "ai";
 import { NinaAttachment } from "@/components/ai/attachment";
-import { NinaActivity } from "@/components/ai/message/activity";
+import { Activity } from "@/components/ai/message/activity";
 import { useMessage } from "@/components/ai/message/context";
+import { EvidenceList } from "@/components/ai/message/evidence/list";
+import { readInvocation } from "@/components/ai/message/invocation";
 
 /** Agent owns SDK parts; evidence card payloads obey Nina's runtime contract. */
 export function AiMessagePart({
@@ -59,8 +61,10 @@ export function AiMessagePart({
       >
         <ReasoningTrigger />
         {hasContent ? (
-          <ReasoningContent id={`${messageId}-part-${partIndex}`}>
-            {part.text}
+          <ReasoningContent>
+            <Response id={`${messageId}-part-${partIndex}`}>
+              {part.text}
+            </Response>
           </ReasoningContent>
         ) : null}
       </Reasoning>
@@ -70,4 +74,16 @@ export function AiMessagePart({
     return <NinaActivity part={part} />;
   }
   return null;
+}
+
+/** One native Agent invocation owns its live progress and persisted evidence. */
+function NinaActivity({ part }: { part: ToolUIPart | DynamicToolUIPart }) {
+  const status = useMessage((state) => state.turn?.state.status);
+  const settled =
+    status === "cancelled" || status === "failed" || status === "complete";
+  return (
+    <Activity invocation={readInvocation(part, settled)}>
+      <EvidenceList />
+    </Activity>
+  );
 }

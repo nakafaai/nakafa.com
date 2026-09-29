@@ -64,51 +64,77 @@ const prepareFeaturesPage = Effect.fn("NakafaE2E.prepareFeaturesPage")(
   }
 );
 
-const expectConversationAtBottom = Effect.fn(
-  "NakafaE2E.expectConversationAtBottom"
-)(function* (scroller: Locator) {
+/**
+ * Centers one control instantly. The page scrolls smoothly, so letting the
+ * pointer action scroll races the animation and hits the sticky header.
+ */
+const centerControl = Effect.fn("NakafaE2E.centerControl")(function* (
+  control: Locator
+) {
   yield* Effect.promise(() =>
-    expect
-      .poll(() =>
-        scroller.evaluate(
-          (element) =>
-            element.scrollHeight - element.clientHeight - element.scrollTop
-        )
-      )
-      .toBeLessThanOrEqual(2)
+    control.evaluate((element) =>
+      element.scrollIntoView({ behavior: "instant", block: "center" })
+    )
   );
 });
 
-const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
+/** Clicks one centered control without a second, smooth scroll. */
+const clickCentered = Effect.fn("NakafaE2E.clickCentered")(function* (
+  control: Locator
+) {
+  yield* centerControl(control);
+  yield* Effect.promise(() => control.click({ scroll: "none" }));
+});
+
+const expectNinaPageFlow = Effect.fn("NakafaE2E.expectNinaPageFlow")(function* (
   page: Page
 ) {
-  const conversation = page
-    .locator('[data-slot="message-scroller"]')
-    .filter({ hasText: NINA_ANSWER_TEXT });
-  const scroller = conversation.locator(
-    '[data-slot="message-scroller-viewport"]'
-  );
-  const reasoningTrigger = page.getByRole("button", {
+  const conversation = page.locator('[data-slot="nina-showcase"]');
+  const reasoningTrigger = conversation.getByRole("button", {
     name: "Thought for a few seconds",
   });
-  const mathTrigger = page.getByRole("button", { name: "Calculating" });
+  const activityTrigger = conversation.getByRole("button", {
+    name: "Checking the calculations",
+    exact: true,
+  });
+  const mathTrigger = conversation.getByRole("button", {
+    name: "Calculating",
+    exact: true,
+  });
 
   yield* Effect.promise(() => expect(conversation).toHaveCount(1));
-  yield* Effect.promise(() => conversation.scrollIntoViewIfNeeded());
-  yield* expectConversationAtBottom(scroller);
-  yield* Effect.promise(() => reasoningTrigger.click());
   yield* Effect.promise(() =>
-    expect(page.getByText(NINA_REASONING_TEXT, { exact: false })).toBeVisible()
+    expect(
+      conversation.getByText(NINA_ANSWER_TEXT, { exact: false })
+    ).toBeVisible()
   );
-
-  // A real upward wheel gives the reader control of the native scroller.
-  yield* Effect.promise(() => scroller.hover({ scroll: "none" }));
-  yield* Effect.promise(() => page.mouse.wheel(0, -1));
-  yield* Effect.promise(() => mathTrigger.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => expect(mathTrigger).toBeInViewport({ ratio: 1 }));
-  yield* Effect.promise(() => mathTrigger.click({ scroll: "none" }));
+  const reasoning = conversation.getByText(NINA_REASONING_TEXT, {
+    exact: false,
+  });
+  yield* clickCentered(reasoningTrigger);
+  yield* Effect.promise(() => expect(reasoning).toBeVisible());
+  yield* clickCentered(reasoningTrigger);
+  // The collapse moves every row below it, so wait before the next target.
+  yield* Effect.promise(() => expect(reasoning).toBeHidden());
+  yield* clickCentered(activityTrigger);
+  yield* clickCentered(mathTrigger);
   yield* Effect.promise(() =>
     expect(mathTrigger).toHaveAttribute("aria-expanded", "true")
+  );
+  yield* clickCentered(activityTrigger);
+  yield* Effect.promise(() => expect(mathTrigger).toBeHidden());
+
+  // The marketing transcript belongs to the page, so wheel input must not be trapped.
+  yield* centerControl(activityTrigger);
+  yield* Effect.promise(() => activityTrigger.hover({ scroll: "none" }));
+  const before = yield* Effect.promise(() =>
+    page.evaluate(() => window.scrollY)
+  );
+  yield* Effect.promise(() => page.mouse.wheel(0, 400));
+  yield* Effect.promise(() =>
+    expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(before + 100)
   );
 });
 
@@ -350,7 +376,7 @@ for (const viewport of targetViewports) {
                 if (viewport.name === "desktop") {
                   yield* expectFeaturedTryoutResponse(page);
                 }
-                yield* expectNinaAtBottom(page);
+                yield* expectNinaPageFlow(page);
                 yield* expectProjectileInteraction(page);
               })
             );
