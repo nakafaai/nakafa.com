@@ -1,9 +1,7 @@
 import {
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
 } from "@repo/design-system/components/ui/sidebar-content";
-import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
@@ -24,11 +22,7 @@ export function AppSidebar({
         <SearchMenu />
       </SidebarHeader>
       <SidebarContent>{navigation}</SidebarContent>
-      <SidebarFooter className="border-t">
-        <SidebarMenu>
-          <NavUser />
-        </SidebarMenu>
-      </SidebarFooter>
+      <NavUser />
     </Sidebar>
   );
 }
