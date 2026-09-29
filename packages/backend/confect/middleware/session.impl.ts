@@ -42,7 +42,7 @@ const readSessionAuthId = Effect.fn("auth.readSession")(function* (
 const readTokenAuthId = Effect.fn("auth.readToken")(function* () {
   return yield* (yield* Auth).getUserIdentity.pipe(
     Effect.map((identity) => identity.subject),
-    Effect.catchTag("NoUserIdentityFoundError", () => Effect.succeed(undefined))
+    Effect.catchTag("NoUserIdentityFoundError", () => Effect.undefined)
   );
 });
 const readAppUser = Effect.fn("auth.readAppUser")(function* (authId: string) {
