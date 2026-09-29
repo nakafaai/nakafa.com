@@ -1,4 +1,3 @@
-import { Response } from "@repo/design-system/components/ai/response";
 import { AttachmentGroup } from "@repo/design-system/components/ui/attachment";
 import {
   Bubble,
@@ -12,17 +11,18 @@ import type { FileUIPart } from "ai";
 import type { ReactNode } from "react";
 import { NinaAttachment } from "@/components/ai/attachment";
 
-/** The same prompt geometry before admission, during navigation and in history. */
+/**
+ * The same prompt geometry before admission, during navigation and in history.
+ * Streamed surfaces pass `Response`; static server pages pass `MarkdownContent`.
+ */
 export function NinaPrompt({
+  actions,
   children,
   files = [],
-  id,
-  text,
 }: {
-  children?: ReactNode;
+  actions?: ReactNode;
+  children: ReactNode;
   files?: readonly FileUIPart[];
-  id: string;
-  text: string;
 }) {
   return (
     <MessageContent>
@@ -34,11 +34,9 @@ export function NinaPrompt({
         </AttachmentGroup>
       ) : null}
       <Bubble variant="muted">
-        <BubbleContent>
-          <Response id={id}>{text}</Response>
-        </BubbleContent>
+        <BubbleContent>{children}</BubbleContent>
       </Bubble>
-      <MessageFooter className="h-9">{children}</MessageFooter>
+      <MessageFooter className="h-9">{actions}</MessageFooter>
     </MessageContent>
   );
 }

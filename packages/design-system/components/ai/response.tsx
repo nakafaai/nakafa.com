@@ -3,16 +3,15 @@
 import {
   MarkdownBlock,
   type MarkdownContentProps,
-  MarkdownFrame,
   type MarkdownSecurityProps,
 } from "@repo/design-system/components/markdown/content";
+import { MarkdownFrame } from "@repo/design-system/components/markdown/frame";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
-import { cn } from "cn";
 import { memo, useMemo } from "react";
 
 export type HardenedMarkdownProps = MarkdownSecurityProps;
-export type ResponseProps = MarkdownContentProps;
+export type ResponseProps = Omit<MarkdownContentProps, "variant">;
 
 const MemoizedMarkdownBlock = memo(MarkdownBlock);
 
@@ -55,12 +54,7 @@ export function Response({
   const normalizedChildren = useMemo(() => normalizeText(children), [children]);
 
   return (
-    <MarkdownFrame
-      className={cn(
-        "text-chat [&_[data-math-block]]:[contain-intrinsic-size:none] [&_[data-math-block]]:[content-visibility:visible] [&_[data-nakafa^=heading-]]:font-semibold [&_[data-nakafa^=heading-]]:text-chat",
-        className
-      )}
-    >
+    <MarkdownFrame className={className} variant="chat">
       <MemoizedBlocks
         allowedImagePrefixes={allowedImagePrefixes}
         allowedLinkPrefixes={allowedLinkPrefixes}

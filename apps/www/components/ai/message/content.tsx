@@ -4,8 +4,11 @@ import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { isToolUIPart } from "ai";
 import { useChat } from "@/components/ai/chat/context";
 import { useMessage } from "@/components/ai/message/context";
-import { AiChatMessageLoading } from "@/components/ai/message/loading";
 import { AiMessagePart } from "@/components/ai/message/part";
+import {
+  MessageSection,
+  MessageSections,
+} from "@/components/ai/message/section";
 import { SuggestionsPart } from "@/components/ai/message/suggestions";
 import { useViewer } from "@/lib/identity/client";
 
@@ -13,7 +16,7 @@ export function AiChatMessageContent() {
   const parts = useMessage((state) => state.message.parts);
   const sections: {
     key: string;
-    activity: boolean;
+    kind: "activity" | "response";
     parts: { part: NinaMessage["parts"][number]; index: number; key: string }[];
   }[] = [];
 
@@ -26,32 +29,27 @@ export function AiChatMessageContent() {
       continue;
     }
     const tool = isToolUIPart(part);
-    const activity = part.type === "reasoning" || tool;
+    const kind = part.type === "reasoning" || tool ? "activity" : "response";
     const key = tool ? part.toolCallId : `part-${part.type}-${index}`;
     const section = sections.at(-1);
     const entry = { part, index, key };
-    if (section?.activity === activity) {
+    if (section?.kind === kind) {
       section.parts.push(entry);
     } else {
-      sections.push({ key, activity, parts: [entry] });
+      sections.push({ key, kind, parts: [entry] });
     }
   }
 
   return (
-    <div className="flex flex-col gap-6 empty:hidden">
+    <MessageSections>
       {sections.map((section) => (
-        <div
-          className="flex min-w-0 flex-col gap-4 empty:hidden"
-          data-slot={section.activity ? "message-activity" : "message-response"}
-          key={section.key}
-        >
+        <MessageSection key={section.key} kind={section.kind}>
           {section.parts.map(({ part, index, key }) => (
             <AiMessagePart key={key} part={part} partIndex={index} />
           ))}
-        </div>
+        </MessageSection>
       ))}
-      <AiChatMessageLoading />
-    </div>
+    </MessageSections>
   );
 }
 AiChatMessageContent.displayName = "AiChatMessageContent";
