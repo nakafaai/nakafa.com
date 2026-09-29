@@ -62,7 +62,14 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
       previousOwnerId !== undefined && previousOwnerId !== ownerId;
     const mustResetDraft = ownerChanged && previousOwnerId !== null;
     if (ownerChanged) {
-      store.setState({ activeChatId: null, chatDrafts: [], openingChat: null });
+      // A pending ask belongs to the previous owner; its receipt must not
+      // open that owner's chat in this session.
+      store.setState({
+        activeChatId: null,
+        ask: null,
+        chatDrafts: [],
+        openingChat: null,
+      });
     }
     if (mustResetDraft) {
       activeDraftOwnerIdRef.current = undefined;
