@@ -6,20 +6,13 @@ import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { PricingPageFaq } from "@/components/marketing/about/faq/pricing";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
-import type { PriceProps } from "@/components/marketing/about/pricing/price";
+import { StaticPrice } from "@/components/marketing/about/pricing/price";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/utils/metadata";
-
-/** Keeps the dedicated route price static and out of the landing animation. */
-function StaticPrice({ price }: PriceProps) {
-  return (
-    <span className="font-semibold text-4xl tracking-tight">{price.text}</span>
-  );
-}
 
 /** Owns the dedicated pricing introduction and shared plan comparison. */
 function PricingPagePlans() {

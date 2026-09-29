@@ -7,6 +7,10 @@ import type {
   NinaPage,
   NinaUser,
 } from "@repo/backend/confect/nina/contract/turn";
+import {
+  resolveQuestionFocus,
+  retainQuestionFocus,
+} from "@repo/backend/confect/nina/focus";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/memory/pack";
 import {
   type NinaPageInput,
@@ -59,8 +63,13 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
     const pinned = published.learning.verified
       ? undefined
       : (previous?.page?.nina.snapshot ?? previous?.snapshot);
+    // A question focus stays with its conversation for follow-up turns.
+    const focus = input.focus
+      ? yield* resolveQuestionFocus(input.focus, user._id)
+      : yield* retainQuestionFocus(previous?.page?.nina.focus, user._id);
     const session = yield* openNinaLearningSession({
       capturedAt,
+      ...(focus ? { focus } : {}),
       learning: pinned?.learning ?? published.learning,
       ...((pinned?.placement ?? published.placement)
         ? { placement: pinned?.placement ?? published.placement }
@@ -161,7 +170,8 @@ const resolvePublishedContext = Effect.fn("nina.context.publication")(
         locale: input.locale,
         slug,
         url,
-        verified: reference !== null,
+        // Page fetch reads signed Markdown; try-out and topic pages have none.
+        verified: reference?.markdown_url !== undefined,
       },
       placement: undefined,
     };

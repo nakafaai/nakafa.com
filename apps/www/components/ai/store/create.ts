@@ -17,11 +17,33 @@ export function createAiStore() {
             state.chatDrafts.unshift(key);
           }),
         getModel: () => get().model,
+        // One new-chat admission at a time: a pending ask or composer draft
+        // owns it, so a second one is refused atomically.
+        openAsk: (ask) => {
+          const state = get();
+          if (state.ask || state.chatDrafts.length > 0) {
+            return false;
+          }
+          set({ activeChatId: null, ask, open: true, sheetActivated: true });
+          return true;
+        },
         removeChatDraft: (key) =>
           set((state) => {
             state.chatDrafts = state.chatDrafts.filter(
               (draft) => draft !== key
             );
+          }),
+        // The admitted chat opens only while the sheet still shows its prompt,
+        // so a conversation the learner picked meanwhile stays open.
+        resolveAsk: (id, chatId) =>
+          set((state) => {
+            if (state.ask?.id !== id) {
+              return;
+            }
+            state.ask = null;
+            if (chatId && state.activeChatId === null) {
+              state.activeChatId = chatId;
+            }
           }),
         resolveChatDraft: (key, receipt) =>
           set((state) => {
