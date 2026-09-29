@@ -93,7 +93,11 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   )
                 );
               }),
-            abortSignal
+            {
+              continuation:
+                "Ask Nakafa for a named section or a narrower request to read the omitted part.",
+              signal: abortSignal,
+            }
           ),
           services
         ),
@@ -143,7 +147,11 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   })
                 );
               }),
-            abortSignal
+            {
+              continuation:
+                "Ask a narrower research question to gather the omitted sources.",
+              signal: abortSignal,
+            }
           ),
           services
         ),
@@ -185,7 +193,11 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   )
                 );
               }),
-            abortSignal
+            {
+              continuation:
+                "Verify fewer expressions per request to get the omitted results.",
+              signal: abortSignal,
+            }
           ),
           services
         ),

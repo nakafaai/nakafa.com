@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
+  countTextTokens,
+  NINA_BUDGET,
+} from "@repo/backend/confect/nina/budget";
+import {
   formatQuran,
   formatRead,
   formatSearch,
@@ -65,6 +69,51 @@ describe("Nakafa formatter", () => {
 
     expect(text).toContain("- Title: Contoh Materi");
     expect(text).not.toContain("- Description:");
+  });
+
+  it("reads long content in budgeted sections and lists the rest", () => {
+    const lesson = (heading: string) =>
+      `## ${heading}\n\n${"Fungsi memetakan setiap anggota domain. ".repeat(400)}`;
+    const content = {
+      ...readNakafaContentRefFixture("id", subjectRoute, "material"),
+      text: [
+        "Pengantar singkat.",
+        lesson("Definisi"),
+        lesson("Contoh"),
+        lesson("Contoh"),
+      ].join("\n\n"),
+      title: "Fungsi",
+    };
+    const first = formatRead(content);
+    expect(countTextTokens(first)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
+    expect(first).toContain("Pengantar singkat.");
+    expect(first).toContain("## Other Sections");
+    expect(first).toContain("- Contoh (section: contoh)");
+    expect(first).toContain("- Contoh (section: contoh-2)");
+
+    const later = formatRead(content, "contoh-2");
+    expect(later).toContain("## Contoh");
+    expect(later).not.toContain("Pengantar singkat.");
+    expect(later).toContain("- Start (section: top)");
+
+    const missing = formatRead(content, "latihan");
+    expect(missing).toContain("Section latihan was not found in this content.");
+    expect(missing).toContain("- Definisi (section: definisi)");
+  });
+
+  it("caps the outline for content with many sections", () => {
+    const text = Array.from(
+      { length: 40 },
+      (_, index) =>
+        `### Verse ${index + 1}\n\n${"Ayat panjang dengan tafsir. ".repeat(120)}`
+    ).join("\n\n");
+    const read = formatRead({
+      ...readNakafaContentRefFixture("id", subjectRoute, "material"),
+      text,
+      title: "Surah",
+    });
+    expect(countTextTokens(read)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
+    expect(read).toMatch(/- \d+ more sections$/);
   });
 
   it("formats Quran references with and without tafsir", () => {
