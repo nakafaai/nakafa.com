@@ -12,7 +12,50 @@ import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/conversation.spec";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
+import type { StreamRequest } from "@repo/backend/confect/nina/schema";
 import { Effect, Layer, Schema } from "effect";
+
+/** Reads active streams or their deltas for one authorized thread. */
+const readStreams = Effect.fn("nina.messages.streams")(function* (
+  threadId: string,
+  request: typeof StreamRequest.Type
+) {
+  const ctx = yield* QueryCtx;
+  let streamArgs = request;
+  if (streamArgs.kind === "deltas") {
+    // A cursor is untrusted input. Scope it to this thread before asking the
+    // SDK for deltas; expired streams intentionally produce no more chunks.
+    const available = yield* Effect.tryPromise({
+      try: () =>
+        listStreams(ctx, components.nina, {
+          threadId,
+          includeStatuses: ["streaming", "finished", "aborted"],
+        }),
+      catch: () =>
+        new NinaReadError({ message: "Unable to read Nina streams." }),
+    });
+    const allowed = new Set(available.map((stream) => stream.streamId));
+    streamArgs = {
+      kind: "deltas",
+      cursors: [
+        ...new Map(
+          streamArgs.cursors
+            .filter((cursor) => allowed.has(cursor.streamId))
+            .map((cursor) => [cursor.streamId, cursor])
+        ).values(),
+      ],
+    };
+  }
+  // The SDK answers every stream request; a missing result is a read failure.
+  return yield* Effect.tryPromise(() =>
+    syncStreams(ctx, components.nina, { threadId, streamArgs })
+  ).pipe(
+    Effect.flatMap(Effect.fromNullishOr),
+    Effect.mapError(
+      () => new NinaReadError({ message: "Unable to read Nina streams." })
+    )
+  );
+});
 
 const list = FunctionImpl.make(
   schema,
@@ -27,46 +70,22 @@ const list = FunctionImpl.make(
         message: "The conversation does not belong to this chat.",
       });
     }
-    // The component SDK owns message projection and the resumable delta protocol.
     const ctx = yield* QueryCtx;
+    if (args.streamArgs) {
+      // Agent's streaming hook sends stream requests with an empty page, so a
+      // delta round trip reads stream state only and skips the transcript.
+      return {
+        page: [],
+        isDone: true,
+        continueCursor: "",
+        streams: yield* readStreams(args.threadId, args.streamArgs),
+      };
+    }
+    // The component SDK owns message projection and the resumable delta protocol.
     const page = yield* Effect.tryPromise({
       try: () => listUIMessages(ctx, components.nina, args),
       catch: () =>
         new NinaReadError({ message: "Unable to read Nina messages." }),
-    });
-    let streamArgs = args.streamArgs;
-    if (streamArgs?.kind === "deltas") {
-      // A cursor is untrusted input. Scope it to this thread before asking the
-      // SDK for deltas; expired streams intentionally produce no more chunks.
-      const available = yield* Effect.tryPromise({
-        try: () =>
-          listStreams(ctx, components.nina, {
-            threadId: args.threadId,
-            includeStatuses: ["streaming", "finished", "aborted"],
-          }),
-        catch: () =>
-          new NinaReadError({ message: "Unable to read Nina streams." }),
-      });
-      const allowed = new Set(available.map((stream) => stream.streamId));
-      streamArgs = {
-        kind: "deltas",
-        cursors: [
-          ...new Map(
-            streamArgs.cursors
-              .filter((cursor) => allowed.has(cursor.streamId))
-              .map((cursor) => [cursor.streamId, cursor])
-          ).values(),
-        ],
-      };
-    }
-    const streams = yield* Effect.tryPromise({
-      try: () =>
-        syncStreams(ctx, components.nina, {
-          threadId: args.threadId,
-          streamArgs,
-        }),
-      catch: () =>
-        new NinaReadError({ message: "Unable to read Nina streams." }),
     });
     const reader = yield* DatabaseReader;
     // Hydrate only the orders present in this bounded message page. Agent keeps
@@ -104,7 +123,7 @@ const list = FunctionImpl.make(
         }
         return { ...message, _creationTime: createdAt, metadata };
       }),
-      streams: streams ?? { kind: "list" as const, messages: [] },
+      streams: { kind: "list" as const, messages: [] },
     };
   })
 );

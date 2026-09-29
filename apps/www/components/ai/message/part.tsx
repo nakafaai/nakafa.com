@@ -1,5 +1,6 @@
 "use client";
 
+import { useSmoothText } from "@convex-dev/agent/react";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import {
   Reasoning,
@@ -11,7 +12,12 @@ import {
   Source,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
-import { type DynamicToolUIPart, isToolUIPart, type ToolUIPart } from "ai";
+import {
+  type DynamicToolUIPart,
+  isToolUIPart,
+  type TextUIPart,
+  type ToolUIPart,
+} from "ai";
 import { NinaAttachment } from "@/components/ai/attachment";
 import { Activity } from "@/components/ai/message/activity";
 import { useMessage } from "@/components/ai/message/context";
@@ -46,9 +52,7 @@ export function AiMessagePart({
     );
   }
   if (part.type === "text") {
-    return (
-      <Response id={`${messageId}-part-${partIndex}`}>{part.text}</Response>
-    );
+    return <NinaText id={`${messageId}-part-${partIndex}`} part={part} />;
   }
   if (part.type === "reasoning") {
     const hasContent = part.text.trim().length > 0;
@@ -74,6 +78,17 @@ export function AiMessagePart({
     return <NinaActivity part={part} />;
   }
   return null;
+}
+
+/**
+ * Paces streamed text at the rate it arrives, so throttled Agent deltas read as
+ * steady writing instead of bursts. Finished parts render at once.
+ */
+function NinaText({ id, part }: { id: string; part: TextUIPart }) {
+  const [text] = useSmoothText(part.text, {
+    startStreaming: part.state === "streaming",
+  });
+  return <Response id={id}>{text}</Response>;
 }
 
 /** One native Agent invocation owns its live progress and persisted evidence. */
