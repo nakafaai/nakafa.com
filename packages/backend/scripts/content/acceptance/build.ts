@@ -31,6 +31,18 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
   );
 });
 
+/**
+ * Convex runs functions on dedicated hosts, but acceptance shares one machine
+ * between the local backend and the app. The build runs below the backend's
+ * CPU priority so prerender workers cannot starve queries past Convex's
+ * one-second limit, while the served app keeps normal priority for browsers.
+ * @see https://man7.org/linux/man-pages/man1/nice.1.html
+ */
+const applicationCommands = {
+  build: ["nice", "-n", "10", "pnpm", "run", "build"],
+  start: ["pnpm", "run", "start"],
+} as const;
+
 /** Starts only the owned native database for a normal app build or start. */
 export const runAcceptance = Effect.fn("acceptance.run")(function* (
   root: string,
@@ -48,7 +60,7 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
     runtime,
     runBuildCommand(
       root,
-      ["pnpm", "run", operation, ...args],
+      [...applicationCommands[operation], ...args],
       localApplicationEnvironment(runtime)
     )
   );
