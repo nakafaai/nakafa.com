@@ -1,7 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaContextPack } from "@repo/backend/confect/nina/memory/pack";
-import { formatNinaContextPackPrompt } from "@repo/backend/confect/nina/prompt/system";
+import {
+  createNinaSystemPrompt,
+  formatNinaContextPackPrompt,
+} from "@repo/backend/confect/nina/prompt/system";
 
 const placementProgramKey = LearningProgramKeySchema.make(
   "cambridge-lower-secondary"
@@ -129,5 +132,39 @@ describe("formatNinaContextPackPrompt", () => {
     expect(prompt).toContain("- parentTitle: Vector");
     expect(prompt).toContain("- current page fetch allowed: yes");
     expect(prompt).toContain("- evidence scope: verified-page");
+  });
+});
+
+describe("createNinaSystemPrompt", () => {
+  const input = {
+    page: {
+      locale: "en",
+      needsFetch: false,
+      nina: canonicalContext,
+      slug: "chat",
+      url: "https://nakafa.com/en/chat",
+      verified: false,
+    },
+    runtime: { currentDate: "2026-09-29T00:00:00.000Z" },
+    user: {},
+  } as const;
+
+  it("adds a focused question and its teaching rules only when present", () => {
+    const plain = createNinaSystemPrompt(input);
+    const focused = createNinaSystemPrompt({
+      ...input,
+      focus: "# Focused Try-out Question\n\n## Question\n\nWhat is 2 + 2?",
+    });
+
+    expect(plain).not.toContain("Focused Try-out Question");
+    expect(plain).not.toContain("# Focused Question Instructions");
+    expect(focused).toContain("## Question\n\nWhat is 2 + 2?");
+    expect(focused).toContain("# Focused Question Instructions");
+    expect(focused.indexOf("# Focused Try-out Question")).toBeLessThan(
+      focused.indexOf("# Task Instructions")
+    );
+    expect(
+      focused.split("\n").every((line) => !line.startsWith("      "))
+    ).toBe(true);
   });
 });

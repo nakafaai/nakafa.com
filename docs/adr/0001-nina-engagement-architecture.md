@@ -53,6 +53,16 @@ not inflate the conversation. A typed failed or denied result retains already
 published artifacts while keeping failure local to that activity. A failed child
 does not mark a recovered parent or completed answer as failed.
 
+A finished try-out review can ask Nina about one question. The browser sends
+only the attempt and placement identities. Admission accepts the Question focus
+only when the learner owns the attempt, the section is finished, and the plan
+grants review answers, then stores the question order and section in the context
+pack. Continued turns keep the focus while that entitlement holds and drop it
+otherwise. Generation re-reads the signed question, the official explanation in
+the learner's language, and the learner's recorded answer through an internal
+query, so question text and answer keys never come from the client. The official
+explanation is the source of truth for the answer.
+
 The main Agent receives at most 50 projected history messages and 24,000 tokens.
 Old reasoning and verbose artifact payloads are excluded from provider history;
 full conversation data stays in Agent storage. External research admits at most
