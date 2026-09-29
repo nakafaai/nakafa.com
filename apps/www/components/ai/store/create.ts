@@ -17,9 +17,11 @@ export function createAiStore() {
             state.chatDrafts.unshift(key);
           }),
         getModel: () => get().model,
-        // A pending ask owns the sheet, so a second one is refused atomically.
+        // One new-chat admission at a time: a pending ask or composer draft
+        // owns it, so a second one is refused atomically.
         openAsk: (ask) => {
-          if (get().ask) {
+          const state = get();
+          if (state.ask || state.chatDrafts.length > 0) {
             return false;
           }
           set({ activeChatId: null, ask, open: true, sheetActivated: true });
