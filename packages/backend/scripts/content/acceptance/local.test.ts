@@ -4,6 +4,7 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   cleanLocalRuntime,
+  discardSignedResponses,
   initializeLocalRuntime,
   leaseLocalRuntime,
   localApplicationEnvironment,
@@ -124,7 +125,7 @@ describe("owned signed acceptance runtime", () => {
   );
 
   it.live(
-    "drops signed fetch responses when a runtime starts and when it is cleaned",
+    "drops signed fetch responses on demand and at cleanup, keeping other caches",
     () =>
       Effect.gen(function* () {
         initialize();
@@ -139,9 +140,10 @@ describe("owned signed acceptance runtime", () => {
           });
         yield* fs.makeDirectory(`${cache}/images`, { recursive: true });
         yield* cacheSignedResponse();
-        yield* reserveLocalRuntime(root);
+        yield* discardSignedResponses(root);
         expect(yield* fs.exists(`${cache}/fetch-cache`)).toBe(false);
         expect(yield* fs.exists(`${cache}/images`)).toBe(true);
+        yield* reserveLocalRuntime(root);
         yield* initializeLocalRuntime(root);
         yield* cacheSignedResponse();
         yield* cleanLocalRuntime(root);

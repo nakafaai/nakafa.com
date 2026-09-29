@@ -37,9 +37,10 @@ The [root README](../../../README.md) describes the pinned Aksara fixture.
 Preparation publishes a fixed, independently signed corpus into a new native
 local database. Build and start reopen that owned database. After stopping its
 services, `pnpm acceptance:clean` removes the exact task-owned reservation.
-Each runtime signs with a new key, so preparation and cleanup also drop the web
-app's cached fetch responses (`apps/www/.next/cache/fetch-cache`); responses
-signed by an earlier runtime could never verify.
+Each runtime signs with a new key, and other builds share the web app's fetch
+cache (`apps/www/.next/cache/fetch-cache`). Responses signed by another key can
+never verify, so every acceptance build starts without that cache and cleanup
+removes it.
 These commands never read production tables or use production credentials.
 
 ## Customer verification

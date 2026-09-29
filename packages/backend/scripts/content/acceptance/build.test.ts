@@ -10,6 +10,7 @@ import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/loca
 import { Effect, Exit } from "effect";
 
 const mocks = vi.hoisted(() => ({
+  discard: vi.fn(),
   initialize: vi.fn(),
   lease: vi.fn(),
   read: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock("@repo/backend/scripts/content/acceptance/local", async (load) => ({
   ...(await load<
     typeof import("@repo/backend/scripts/content/acceptance/local")
   >()),
+  discardSignedResponses: mocks.discard,
   initializeLocalRuntime: mocks.initialize,
   leaseLocalRuntime: mocks.lease,
   readLocalRuntime: mocks.read,
@@ -69,6 +71,7 @@ layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
     mocks.initialize.mockReturnValue(Effect.succeed(runtime));
     mocks.read.mockReturnValue(Effect.succeed(runtime));
     for (const mock of [
+      mocks.discard,
       mocks.lease,
       mocks.release,
       mocks.command,
@@ -151,6 +154,27 @@ layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
         })
     );
   }
+
+  it.effect("builds only after dropping responses signed by other keys", () =>
+    Effect.gen(function* () {
+      yield* runAcceptance("/test", "build", []);
+      expect(mocks.discard).toHaveBeenCalledWith("/test");
+      expect(mocks.discard.mock.invocationCallOrder[0]).toBeGreaterThan(
+        mocks.lease.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY
+      );
+      expect(mocks.discard.mock.invocationCallOrder[0]).toBeLessThan(
+        mocks.command.mock.invocationCallOrder[0] ?? 0
+      );
+      yield* runAcceptance("/test", "start", []);
+      expect(mocks.discard).toHaveBeenCalledOnce();
+      const failure = acceptanceRuntimeError("test cache failure");
+      mocks.discard.mockReturnValue(Effect.fail(failure));
+      expect(yield* runAcceptance("/test", "build", []).pipe(Effect.flip)).toBe(
+        failure
+      );
+      expect(mocks.command).toHaveBeenCalledTimes(2);
+    })
+  );
 
   it.effect("refuses an unprepared acceptance build", () =>
     Effect.gen(function* () {

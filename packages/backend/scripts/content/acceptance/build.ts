@@ -1,5 +1,6 @@
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
+  discardSignedResponses,
   initializeLocalRuntime,
   leaseLocalRuntime,
   localApplicationEnvironment,
@@ -56,6 +57,9 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
     );
   }
   yield* leaseLocalRuntime(root);
+  if (operation === "build") {
+    yield* discardSignedResponses(root);
+  }
   yield* withLocalBackend(
     runtime,
     runBuildCommand(

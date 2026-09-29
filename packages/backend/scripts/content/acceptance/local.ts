@@ -108,10 +108,11 @@ const directoryIdentity = Effect.fn("contentAcceptance.directoryIdentity")(
 
 /**
  * Next reuses cached fetch responses across builds, but every runtime signs with
- * a new random key. Responses signed by an earlier runtime can never verify, so
- * each runtime starts and ends without them.
+ * a new random key, and any other build may write the same cache. Responses
+ * signed by another key can never verify, so every acceptance build starts
+ * without them and cleanup leaves none behind.
  */
-const discardSignedResponses = Effect.fn(
+export const discardSignedResponses = Effect.fn(
   "contentAcceptance.discardSignedResponses"
 )(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -142,7 +143,6 @@ export const reserveLocalRuntime = Effect.fn(
         )
       )
     );
-  yield* discardSignedResponses(root);
   return yield* directoryIdentity(directory);
 });
 
