@@ -126,7 +126,10 @@ layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
     })
   );
 
-  for (const operation of ["build", "start"] as const) {
+  for (const [operation, command] of [
+    ["build", ["nice", "-n", "10", "pnpm", "run", "build"]],
+    ["start", ["pnpm", "run", "start"]],
+  ] as const) {
     it.effect(
       `runs normal ${operation} with the retained local selection and arguments`,
       () =>
@@ -134,7 +137,7 @@ layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
           yield* runAcceptance("/test", operation, ["--filter=www"]);
           expect(mocks.command).toHaveBeenCalledWith(
             "/test",
-            ["pnpm", "run", operation, "--filter=www"],
+            [...command, "--filter=www"],
             expect.objectContaining({
               NEXT_PUBLIC_CONVEX_URL: runtime.query,
               AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
