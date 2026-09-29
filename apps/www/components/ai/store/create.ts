@@ -31,14 +31,15 @@ export function createAiStore() {
               (draft) => draft !== key
             );
           }),
-        // One update hands the sheet from the pending prompt to its admitted chat.
+        // The admitted chat opens only while the sheet still shows its prompt,
+        // so a conversation the learner picked meanwhile stays open.
         resolveAsk: (id, chatId) =>
           set((state) => {
             if (state.ask?.id !== id) {
               return;
             }
             state.ask = null;
-            if (chatId) {
+            if (chatId && state.activeChatId === null) {
               state.activeChatId = chatId;
             }
           }),

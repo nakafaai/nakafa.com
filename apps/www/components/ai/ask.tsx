@@ -2,6 +2,7 @@
 
 import { Effect } from "effect";
 import { createContext, type ReactNode, use } from "react";
+import { useAdmissionGate } from "@/components/ai/chat/admission";
 import { useAi } from "@/components/ai/context";
 import { preloadAiSheet } from "@/components/ai/sheet/module";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
@@ -13,13 +14,14 @@ const AskContext = createContext<((prompt: NinaDraft) => void) | null>(null);
  * one submission admits it, and the sheet moves to the admitted chat.
  */
 export function NinaAskProvider({ children }: { children: ReactNode }) {
+  const gate = useAdmissionGate();
   const { send } = useNinaSubmission();
   const openAsk = useAi((state) => state.openAsk);
   const resolveAsk = useAi((state) => state.resolveAsk);
 
   function ask(prompt: NinaDraft) {
     const id = crypto.randomUUID();
-    if (!openAsk({ id, text: prompt.text })) {
+    if (!(gate.admit() && openAsk({ id, text: prompt.text }))) {
       return;
     }
     Effect.runFork(preloadAiSheet());
