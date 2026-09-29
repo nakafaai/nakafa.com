@@ -4,7 +4,6 @@ import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { isToolUIPart } from "ai";
 import { useChat } from "@/components/ai/chat/context";
 import { useMessage } from "@/components/ai/message/context";
-import { AiChatMessageLoading } from "@/components/ai/message/loading";
 import { AiMessagePart } from "@/components/ai/message/part";
 import { SuggestionsPart } from "@/components/ai/message/suggestions";
 import { useViewer } from "@/lib/identity/client";
@@ -50,7 +49,6 @@ export function AiChatMessageContent() {
           ))}
         </div>
       ))}
-      <AiChatMessageLoading />
     </div>
   );
 }

@@ -1,15 +1,15 @@
+import type { CapabilityOutput } from "@repo/backend/confect/nina/capability/progress";
 import type { DataPart } from "@repo/backend/confect/nina/contract/data";
-import { MarkdownContent } from "@repo/design-system/components/markdown/content";
-import { MessageContent } from "@repo/design-system/components/ui/message";
-import { getLocale, getTranslations } from "next-intl/server";
-
-import { MathEvidence } from "@/components/ai/message/evidence/math/result";
+import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import {
-  NinaExample,
-  NinaMath,
-  NinaPrompt,
-  NinaReasoning,
-} from "@/components/marketing/about/nina/client";
+  Message,
+  MessageContent,
+} from "@repo/design-system/components/ui/message";
+import { getLocale, getTranslations } from "next-intl/server";
+import { AiChatMessageContent } from "@/components/ai/message/content";
+import { MessageProvider } from "@/components/ai/message/context";
+import { NinaPrompt } from "@/components/ai/message/prompt";
+import { NinaComposer } from "@/components/marketing/about/nina/client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 const featuresNinaMathInput: DataPart["math"]["input"] = {
@@ -61,46 +61,64 @@ const featuresNinaMath: DataPart["math"] = {
   summary: "verified",
 };
 
-/** Renders Nina's fixed example transcript on the server. */
+/** The fixed example uses the same presentation contract as a live Nina message. */
 export async function FeaturesNina() {
   const locale = getLocaleOrThrow(await getLocale());
-  const [t, aiT] = await Promise.all([
-    getTranslations({ locale, namespace: "Features" }),
-    getTranslations({ locale, namespace: "Ai" }),
-  ]);
+  const t = await getTranslations({ locale, namespace: "Features" });
+  const answer: string = t.raw("nina-answer");
+  const message: NinaMessage = {
+    id: "features-nina-answer",
+    key: "features-nina-answer",
+    order: 0,
+    stepOrder: 0,
+    status: "success",
+    role: "assistant",
+    text: answer,
+    _creationTime: 0,
+    parts: [
+      { type: "reasoning", text: t.raw("nina-reasoning"), state: "done" },
+      {
+        type: "tool-math",
+        toolCallId: "features-nina-math",
+        state: "output-available",
+        input: { task: featuresNinaMathInput.expression },
+        output: {
+          artifacts: [
+            { id: "calculation", type: "data-math", data: featuresNinaMath },
+          ],
+          text: "19",
+        } satisfies CapabilityOutput,
+      },
+      { type: "text", text: answer, state: "done" },
+    ],
+  };
 
   return (
-    <div className="flex min-h-[38rem] flex-col border-b bg-background lg:col-span-5 lg:min-h-[44rem] lg:border-r lg:border-b-0">
+    <div
+      className="flex min-h-152 min-w-0 flex-col border-b bg-background lg:col-span-5 lg:min-h-176 lg:border-r lg:border-b-0"
+      data-slot="nina-showcase"
+    >
       <h3 className="text-balance p-8 text-3xl tracking-tight sm:text-4xl lg:p-10">
         {t.rich("nina-title", {
           mark: (chunks) => <mark>{chunks}</mark>,
         })}
       </h3>
 
-      <NinaExample
-        question={
-          <MarkdownContent id="features-nina-question">
-            {t.raw("nina-prompt")}
-          </MarkdownContent>
-        }
-      >
-        <NinaReasoning label={aiT("thought-for-a-few-seconds")}>
-          <MarkdownContent id="features-nina-reasoning">
-            {t.raw("nina-reasoning")}
-          </MarkdownContent>
-        </NinaReasoning>
-        <NinaMath label={aiT("math-evaluate")}>
-          <MathEvidence message={featuresNinaMath} />
-        </NinaMath>
-        <MessageContent>
-          <MarkdownContent id="features-nina-answer">
-            {t.raw("nina-answer")}
-          </MarkdownContent>
-        </MessageContent>
-      </NinaExample>
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6">
+        <Message align="end">
+          <NinaPrompt id="features-nina-question" text={t.raw("nina-prompt")} />
+        </Message>
+        <Message>
+          <MessageContent>
+            <MessageProvider message={message}>
+              <AiChatMessageContent />
+            </MessageProvider>
+          </MessageContent>
+        </Message>
+      </div>
 
-      <div className="mx-auto grid w-full max-w-3xl shrink-0 px-8 pb-8 lg:px-10 lg:pb-10">
-        <NinaPrompt placeholder={aiT("text-placeholder")} />
+      <div className="mx-auto grid w-full max-w-3xl shrink-0 px-4 pb-4">
+        <NinaComposer />
       </div>
     </div>
   );

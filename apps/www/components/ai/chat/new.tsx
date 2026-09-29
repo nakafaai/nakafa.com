@@ -9,27 +9,15 @@ import {
   MessageScrollerViewport,
 } from "@repo/design-system/components/ui/scroller";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
-import {
-  type ComponentProps,
-  type ReactNode,
-  useEffect,
-  useId,
-  useOptimistic,
-  useRef,
-  useTransition,
-} from "react";
+import type { ReactNode } from "react";
+import { useChatAdmission } from "@/components/ai/chat/admission";
 import { ChatHeader } from "@/components/ai/chat/header";
-import { useAi } from "@/components/ai/context";
 import { NinaInput } from "@/components/ai/input";
 import { NinaPrompt } from "@/components/ai/message/prompt";
-import { useNinaSubmission } from "@/components/ai/submission";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import { useViewer } from "@/lib/identity/client";
 
 /** Moves directly from the welcome screen into the final conversation layout. */
 export function ChatNew({
@@ -41,68 +29,9 @@ export function ChatNew({
 }) {
   const router = useRouter();
   const t = useTranslations("Ai");
-  const authNavigation = useCurrentAuthNavigation();
-
-  const setText = useAi((state) => state.setText);
-
-  const isUserPending = useViewer((state) => state.isPending);
-  const viewer = useViewer((state) => state.viewer);
-
-  const { send } = useNinaSubmission();
-  const [isPending, startTransition] = useTransition();
-  const [prompt, showPrompt] = useOptimistic<Pick<
-    ComponentProps<typeof NinaPrompt>,
-    "text" | "files"
-  > | null>(null);
-  const promptId = useId();
-  const activation = useRef(0);
-  const viewerId = viewer?.id;
-  useEffect(() => {
-    if (!viewerId) {
-      return;
-    }
-    return () => {
-      activation.current += 1;
-    };
-  }, [viewerId]);
-
-  function handleSubmit(message: PromptInputMessage) {
-    const query = message.text?.trim();
-    if (!query || isUserPending || isPending) {
-      return false;
-    }
-    if (viewer === null) {
-      router.push(authNavigation.readHref());
-      return false;
-    }
-    const draft = { ...message, text: query };
-    const submittedFrom = activation.current;
-    const admission = send(draft);
-    startTransition(async () => {
-      showPrompt({ text: draft.text, files: draft.files ?? [] });
-      setText("");
-      const receipt = await admission;
-      if (activation.current !== submittedFrom) {
-        return;
-      }
-      if (!receipt) {
-        setText((previous) => previous || query);
-        return;
-      }
-      startTransition(() => {
-        showPrompt({
-          text: receipt.prompt.text,
-          files: receipt.prompt.files.map(({ filename, ...file }) => ({
-            ...file,
-            type: "file",
-            ...(filename === undefined ? {} : { filename }),
-          })),
-        });
-        router.push(`/chat/${receipt.chatId}`);
-      });
-    });
-    return admission.then((receipt) => receipt !== undefined);
-  }
+  const { prompt, promptId, submit, disabled } = useChatAdmission({
+    onComplete: (chatId) => router.push(`/chat/${chatId}`),
+  });
 
   return (
     <div
@@ -154,10 +83,7 @@ export function ChatNew({
         )}
         key="composer"
       >
-        <NinaInput
-          disabled={isPending || isUserPending}
-          onSubmit={handleSubmit}
-        />
+        <NinaInput disabled={disabled} onSubmit={submit} />
       </div>
       {prompt ? null : (
         <div className="relative mx-auto w-full max-w-xl px-6">{children}</div>

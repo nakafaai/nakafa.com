@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   withBrowserContext,
@@ -64,51 +64,52 @@ const prepareFeaturesPage = Effect.fn("NakafaE2E.prepareFeaturesPage")(
   }
 );
 
-const expectConversationAtBottom = Effect.fn(
-  "NakafaE2E.expectConversationAtBottom"
-)(function* (scroller: Locator) {
-  yield* Effect.promise(() =>
-    expect
-      .poll(() =>
-        scroller.evaluate(
-          (element) =>
-            element.scrollHeight - element.clientHeight - element.scrollTop
-        )
-      )
-      .toBeLessThanOrEqual(2)
-  );
-});
-
-const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
+const expectNinaPageFlow = Effect.fn("NakafaE2E.expectNinaPageFlow")(function* (
   page: Page
 ) {
-  const conversation = page
-    .locator('[data-slot="message-scroller"]')
-    .filter({ hasText: NINA_ANSWER_TEXT });
-  const scroller = conversation.locator(
-    '[data-slot="message-scroller-viewport"]'
-  );
-  const reasoningTrigger = page.getByRole("button", {
+  const conversation = page.locator('[data-slot="nina-showcase"]');
+  const reasoningTrigger = conversation.getByRole("button", {
     name: "Thought for a few seconds",
   });
-  const mathTrigger = page.getByRole("button", { name: "Calculating" });
+  const activityTrigger = conversation.getByRole("button", {
+    name: "Checking the calculations",
+    exact: true,
+  });
+  const mathTrigger = conversation.getByRole("button", {
+    name: "Calculating",
+    exact: true,
+  });
 
   yield* Effect.promise(() => expect(conversation).toHaveCount(1));
-  yield* Effect.promise(() => conversation.scrollIntoViewIfNeeded());
-  yield* expectConversationAtBottom(scroller);
+  yield* Effect.promise(() =>
+    expect(
+      conversation.getByText(NINA_ANSWER_TEXT, { exact: false })
+    ).toBeVisible()
+  );
   yield* Effect.promise(() => reasoningTrigger.click());
   yield* Effect.promise(() =>
-    expect(page.getByText(NINA_REASONING_TEXT, { exact: false })).toBeVisible()
+    expect(
+      conversation.getByText(NINA_REASONING_TEXT, { exact: false })
+    ).toBeVisible()
   );
-
-  // A real upward wheel gives the reader control of the native scroller.
-  yield* Effect.promise(() => scroller.hover({ scroll: "none" }));
-  yield* Effect.promise(() => page.mouse.wheel(0, -1));
-  yield* Effect.promise(() => mathTrigger.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => expect(mathTrigger).toBeInViewport({ ratio: 1 }));
-  yield* Effect.promise(() => mathTrigger.click({ scroll: "none" }));
+  yield* Effect.promise(() => reasoningTrigger.click());
+  yield* Effect.promise(() => activityTrigger.click());
+  yield* Effect.promise(() => mathTrigger.click());
   yield* Effect.promise(() =>
     expect(mathTrigger).toHaveAttribute("aria-expanded", "true")
+  );
+  yield* Effect.promise(() => activityTrigger.click());
+
+  // The marketing transcript belongs to the page, so wheel input must not be trapped.
+  yield* Effect.promise(() => activityTrigger.hover());
+  const before = yield* Effect.promise(() =>
+    page.evaluate(() => window.scrollY)
+  );
+  yield* Effect.promise(() => page.mouse.wheel(0, 400));
+  yield* Effect.promise(() =>
+    expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(before + 100)
   );
 });
 
@@ -350,7 +351,7 @@ for (const viewport of targetViewports) {
                 if (viewport.name === "desktop") {
                   yield* expectFeaturedTryoutResponse(page);
                 }
-                yield* expectNinaAtBottom(page);
+                yield* expectNinaPageFlow(page);
                 yield* expectProjectileInteraction(page);
               })
             );
