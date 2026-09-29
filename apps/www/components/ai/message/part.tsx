@@ -68,7 +68,9 @@ export function AiMessagePart({
         <ReasoningTrigger />
         {hasContent ? (
           <ReasoningContent>
-            <Response id={id}>{part.text}</Response>
+            <Response id={id} isStreaming={part.state === "streaming"}>
+              {part.text}
+            </Response>
           </ReasoningContent>
         ) : null}
       </Reasoning>
@@ -82,13 +84,19 @@ export function AiMessagePart({
 
 /**
  * Paces streamed text at the rate it arrives, so throttled Agent deltas read as
- * steady writing instead of bursts. Finished parts render at once.
+ * steady writing instead of bursts. Finished parts render at once, and a
+ * formula appears once its source is complete.
  */
 function NinaText({ id, part }: { id: string; part: TextUIPart }) {
-  const [text] = useSmoothText(part.text, {
-    startStreaming: part.state === "streaming",
+  const streaming = part.state === "streaming";
+  const [text, { isStreaming }] = useSmoothText(part.text, {
+    startStreaming: streaming,
   });
-  return <Response id={id}>{text}</Response>;
+  return (
+    <Response id={id} isStreaming={streaming || isStreaming}>
+      {text}
+    </Response>
+  );
 }
 
 /** One native Agent invocation owns its live progress and persisted evidence. */
