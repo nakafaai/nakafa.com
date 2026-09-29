@@ -118,7 +118,10 @@ const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
 
 for (const width of [390, 1440]) {
   test.describe(`Nina surfaces at ${width}px`, () => {
-    test.use({ viewport: { height: 900, width } });
+    // This contract covers composer geometry, not motion. Marketing pages
+    // scroll smoothly unless motion is reduced, and a smooth scroll can keep
+    // Playwright's actionability scroll from settling on the showcase controls.
+    test.use({ reducedMotion: "reduce", viewport: { height: 900, width } });
 
     test("keeps composer controls and attachments consistent across bento, chat and lesson sheet", async ({
       page,
