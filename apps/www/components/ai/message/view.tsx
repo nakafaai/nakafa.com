@@ -1,6 +1,7 @@
 "use client";
 
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
+import { Response } from "@repo/design-system/components/ai/response";
 import {
   MessageContent,
   MessageFooter,
@@ -28,11 +29,10 @@ export function AiChatMessage({ message }: Props) {
     return (
       <MessageProvider message={message} turn={turn}>
         <NinaPrompt
+          actions={<AiChatMessageActions />}
           files={message.parts.filter((part) => part.type === "file")}
-          id={message.id}
-          text={message.text}
         >
-          <AiChatMessageActions />
+          <Response id={message.id}>{message.text}</Response>
         </NinaPrompt>
       </MessageProvider>
     );

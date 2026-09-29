@@ -1,6 +1,7 @@
 "use client";
 
 import { GeometricShapes01Icon } from "@hugeicons/core-free-icons";
+import { Response } from "@repo/design-system/components/ai/response";
 import {
   Empty,
   EmptyDescription,
@@ -43,11 +44,9 @@ export function SheetNew() {
               {prompt ? (
                 <MessageScrollerItem messageId={promptId} scrollAnchor>
                   <Message align="end">
-                    <NinaPrompt
-                      files={prompt.files ?? []}
-                      id={promptId}
-                      text={prompt.text}
-                    />
+                    <NinaPrompt files={prompt.files}>
+                      <Response id={promptId}>{prompt.text}</Response>
+                    </NinaPrompt>
                   </Message>
                 </MessageScrollerItem>
               ) : (

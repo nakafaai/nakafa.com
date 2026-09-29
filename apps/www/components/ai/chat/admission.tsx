@@ -32,10 +32,12 @@ export function useChatAdmission({
   const viewer = useViewer((state) => state.viewer);
   const { send } = useNinaSubmission();
   const [isPending, startTransition] = useTransition();
-  const [prompt, showPrompt] = useOptimistic<Pick<
-    ComponentProps<typeof NinaPrompt>,
-    "text" | "files"
-  > | null>(null);
+  const [prompt, showPrompt] = useOptimistic<
+    | (Required<Pick<ComponentProps<typeof NinaPrompt>, "files">> & {
+        text: string;
+      })
+    | null
+  >(null);
   const promptId = useId();
   const activation = useRef(0);
   const viewerId = viewer?.id;

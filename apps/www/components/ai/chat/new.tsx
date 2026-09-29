@@ -1,5 +1,6 @@
 "use client";
 
+import { Response } from "@repo/design-system/components/ai/response";
 import { Message } from "@repo/design-system/components/ui/message";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import {
@@ -57,11 +58,9 @@ export function ChatNew({
               <MessageScrollerContent className="mx-auto w-full max-w-3xl p-6">
                 <MessageScrollerItem messageId={promptId} scrollAnchor>
                   <Message align="end">
-                    <NinaPrompt
-                      files={prompt.files ?? []}
-                      id={promptId}
-                      text={prompt.text}
-                    />
+                    <NinaPrompt files={prompt.files}>
+                      <Response id={promptId}>{prompt.text}</Response>
+                    </NinaPrompt>
                   </Message>
                 </MessageScrollerItem>
                 <MessageScrollerItem messageId="pending">

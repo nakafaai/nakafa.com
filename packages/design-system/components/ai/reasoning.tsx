@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowDown01Icon, BrainIcon } from "@hugeicons/core-free-icons";
-import { Response } from "@repo/design-system/components/ai/response";
 import {
   Collapsible,
   CollapsibleContent,
@@ -188,21 +187,15 @@ export const ReasoningTrigger = memo(
   }
 );
 
-export type ReasoningContentProps = ComponentProps<
-  typeof CollapsibleContent
-> & {
-  children: string;
-  id: string;
-};
+export type ReasoningContentProps = ComponentProps<typeof CollapsibleContent>;
 
+/** Frames rendered reasoning; streamed and static callers choose the renderer. */
 export const ReasoningContent = memo(
-  ({ className, children, id, ...props }: ReasoningContentProps) => (
+  ({ className, ...props }: ReasoningContentProps) => (
     <CollapsibleContent
       className={cn("text-sm", "text-muted-foreground outline-none", className)}
       {...props}
-    >
-      <Response id={id}>{children}</Response>
-    </CollapsibleContent>
+    />
   )
 );
 

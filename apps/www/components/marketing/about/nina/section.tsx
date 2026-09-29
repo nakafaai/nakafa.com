@@ -1,14 +1,27 @@
 import type { CapabilityOutput } from "@repo/backend/confect/nina/capability/progress";
 import type { DataPart } from "@repo/backend/confect/nina/contract/data";
-import type { NinaMessage } from "@repo/backend/confect/nina/schema";
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from "@repo/design-system/components/ai/reasoning";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
   Message,
   MessageContent,
 } from "@repo/design-system/components/ui/message";
+import type { ToolUIPart } from "ai";
 import { getLocale, getTranslations } from "next-intl/server";
-import { AiChatMessageContent } from "@/components/ai/message/content";
-import { MessageProvider } from "@/components/ai/message/context";
+import { Activity } from "@/components/ai/message/activity";
+import { getMathIcon } from "@/components/ai/message/evidence/math/icons";
+import { MathEvidence } from "@/components/ai/message/evidence/math/result";
+import { MathPart } from "@/components/ai/message/evidence/math/view";
+import { readInvocation } from "@/components/ai/message/invocation";
 import { NinaPrompt } from "@/components/ai/message/prompt";
+import {
+  MessageSection,
+  MessageSections,
+} from "@/components/ai/message/section";
 import { NinaComposer } from "@/components/marketing/about/nina/client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -61,37 +74,29 @@ const featuresNinaMath: DataPart["math"] = {
   summary: "verified",
 };
 
-/** The fixed example uses the same presentation contract as a live Nina message. */
+const featuresNinaActivity = {
+  type: "tool-math",
+  toolCallId: "features-nina-math",
+  state: "output-available",
+  input: { task: featuresNinaMathInput.expression },
+  output: {
+    artifacts: [
+      { id: "calculation", type: "data-math", data: featuresNinaMath },
+    ],
+    text: "19",
+  } satisfies CapabilityOutput,
+} satisfies ToolUIPart;
+
+/**
+ * The fixed example composes the live transcript's components on the server,
+ * so the homepage ships their interactive shells without a Markdown renderer.
+ */
 export async function FeaturesNina() {
   const locale = getLocaleOrThrow(await getLocale());
   const t = await getTranslations({ locale, namespace: "Features" });
+  const prompt: string = t.raw("nina-prompt");
+  const reasoning: string = t.raw("nina-reasoning");
   const answer: string = t.raw("nina-answer");
-  const message: NinaMessage = {
-    id: "features-nina-answer",
-    key: "features-nina-answer",
-    order: 0,
-    stepOrder: 0,
-    status: "success",
-    role: "assistant",
-    text: answer,
-    _creationTime: 0,
-    parts: [
-      { type: "reasoning", text: t.raw("nina-reasoning"), state: "done" },
-      {
-        type: "tool-math",
-        toolCallId: "features-nina-math",
-        state: "output-available",
-        input: { task: featuresNinaMathInput.expression },
-        output: {
-          artifacts: [
-            { id: "calculation", type: "data-math", data: featuresNinaMath },
-          ],
-          text: "19",
-        } satisfies CapabilityOutput,
-      },
-      { type: "text", text: answer, state: "done" },
-    ],
-  };
 
   return (
     <div
@@ -106,13 +111,44 @@ export async function FeaturesNina() {
 
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6">
         <Message align="end">
-          <NinaPrompt id="features-nina-question" text={t.raw("nina-prompt")} />
+          <NinaPrompt>
+            <MarkdownContent id="features-nina-question" variant="chat">
+              {prompt}
+            </MarkdownContent>
+          </NinaPrompt>
         </Message>
         <Message>
           <MessageContent>
-            <MessageProvider message={message}>
-              <AiChatMessageContent />
-            </MessageProvider>
+            <MessageSections>
+              <MessageSection kind="activity">
+                <Reasoning className="w-full" defaultOpen={false}>
+                  <ReasoningTrigger />
+                  <ReasoningContent>
+                    <MarkdownContent
+                      id="features-nina-reasoning"
+                      variant="chat"
+                    >
+                      {reasoning}
+                    </MarkdownContent>
+                  </ReasoningContent>
+                </Reasoning>
+                <Activity
+                  invocation={readInvocation(featuresNinaActivity, true)}
+                >
+                  <MathPart
+                    icon={getMathIcon(featuresNinaMath.kind)}
+                    message={featuresNinaMath}
+                  >
+                    <MathEvidence message={featuresNinaMath} />
+                  </MathPart>
+                </Activity>
+              </MessageSection>
+              <MessageSection kind="response">
+                <MarkdownContent id="features-nina-answer" variant="chat">
+                  {answer}
+                </MarkdownContent>
+              </MessageSection>
+            </MessageSections>
           </MessageContent>
         </Message>
       </div>
