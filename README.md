@@ -98,7 +98,10 @@ groups, exam sets, locales, and structured snapshots before activation.
 
 The acceptance build and start commands run ordinary app commands with that
 isolated backend. They preserve your normal Convex selection and stop the owned
-backend when the operation ends. Use the printed Portless HTTPS URL for browser
+backend when the operation ends. Production Convex runs functions on dedicated
+hosts, so the local backend runs at most one active isolate per core and the
+build runs below its CPU priority. Prerender bursts then queue for a core
+instead of spending Convex's one-second query limit waiting for one. Use the printed Portless HTTPS URL for browser
 verification. `PORTLESS_APP_PORT` selects an internal port; `PORTLESS=0` uses the
 app port directly.
 
